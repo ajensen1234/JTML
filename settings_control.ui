@@ -1,0 +1,881 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>settings_control</class>
+ <widget class="QDialog" name="settings_control">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1089</width>
+    <height>750</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Optimizer Settings</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="mainscreen.qrc">
+    <normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/*
+	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
+
+	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
+
+/*
+	COLOR_DARK     = #191919
+	COLOR_MEDIUM   = #353535
+	COLOR_MEDLIGHT = #5A5A5A
+	COLOR_LIGHT    = #DDDDDD
+	COLOR_BLUE  = #2158AA
+	COLOR_ORANGE = #D66C23
+*/
+* {
+	background: #191919;
+	color: #DDDDDD;
+border: 1px solid #5A5A5A;
+}
+
+ QMenuBar {
+	background: #191919;
+	border-style: none;
+ }
+
+ QMenuBar::item {
+	 background: transparent;
+     spacing: 3px; /* spacing between menu bar items */
+     padding: 5px 25px;
+ }
+
+ QMenuBar::item:selected{
+	background: #353535;
+  	border: 2px solid #D66C23;
+    border-style: none none solid none;
+}
+
+ QMenuBar::item:pressed {
+	background: #5A5A5A;
+}
+
+QCheckBox, QRadioButton {
+	border: none;
+}
+
+QRadioButton::indicator, QCheckBox::indicator {
+	width: 13px;
+	height: 13px;
+}
+
+QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: none;
+}
+
+QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+}
+
+QRadioButton::indicator::checked, QCheckBox::indicator::checked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: #2158AA;
+}
+
+QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+	background: #2158AA;
+}
+
+QGroupBox::title {
+	subcontrol-origin: margin;
+    subcontrol-position: top center;
+}
+
+QScrollBar {
+	border: 1px solid #5A5A5A;
+	background: #191919;
+}
+
+QScrollBar:horizontal {
+	height: 15px;
+	margin: 0px 16px 0px 16px;
+}
+
+QScrollBar:vertical {
+	width: 15px;
+	margin: 16px 0px 16px 0px;
+}
+
+QScrollBar::handle {
+	background: #353535;
+	border: 1px solid #5A5A5A;
+}
+
+QScrollBar::handle:horizontal {
+	border-width: 0px 1px 0px 1px;
+}
+
+QScrollBar::handle:vertical {
+	border-width: 1px 0px 1px 0px;
+}
+
+QScrollBar::handle:horizontal {
+	min-width: 20px;
+}
+
+QScrollBar::handle:vertical {
+	min-height: 20px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+	background:#353535;
+	border: 1px solid #5A5A5A;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::add-line {
+	position: absolute;
+}
+
+QScrollBar::add-line:horizontal {
+	width: 15px;
+	subcontrol-position: right;
+	left: 15px;
+}
+
+QScrollBar::add-line:vertical {
+	height: 15px;
+	subcontrol-position: bottom;
+	top: 15px;
+}
+
+QScrollBar::sub-line:horizontal {
+	width: 15px;
+	subcontrol-position: left;
+}
+
+QScrollBar::sub-line:vertical {
+	height: 15px;
+	subcontrol-position: top;
+}
+
+QScrollBar:left-arrow, QScrollBar::right-arrow, QScrollBar::up-arrow, QScrollBar::down-arrow {
+	border: 1px solid #5A5A5A;
+	width: 3px;
+	height: 3px;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page {
+	background: none;
+}
+
+QAbstractButton {
+	background: #252525;
+}
+
+QAbstractButton:disabled {
+	background: #3F3F3F;
+}
+
+QAbstractButton:hover {
+	background: #353535;
+}
+
+QPushButton:hover {
+	background: #353535;
+  	border: 1px solid #D66C23;
+}
+
+QAbstractButton:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractItemView {
+	show-decoration-selected: 1;
+ 	outline: 0;
+	selection-background-color: #2158AA;
+	selection-color: #DDDDDD;
+	alternate-background-color: #353535;
+}
+
+QHeaderView {
+	border: 1px solid #5A5A5A;
+}
+
+QHeaderView::section {
+	background: #191919;
+	border: 1px solid #5A5A5A;
+	padding: 4px;
+}
+
+QHeaderView::section:selected, QHeaderView::section::checked {
+	background: #353535;
+}
+
+QTableView {
+	gridline-color: #5A5A5A;
+}
+
+QTabBar {
+	margin-left: 2px;
+}
+
+QTabBar::tab {
+	border-radius: 0px;
+	padding: 4px;
+	margin: 4px;
+}
+
+QTabBar::tab:selected {
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::drop-down {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+
+QAbstractSpinBox {
+	padding-right: 15px;
+}
+
+QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+	subcontrol-origin: border;
+}
+QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {
+	border: 1px solid #D66C23;
+}
+QAbstractSpinBox::up-button:pressed, QAbstractSpinBox::down-button:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+QAbstractSpinBox::up-arrow:hover, QAbstractSpinBox::down-arrow:hover {
+	border: 1px solid #D66C23;
+}
+
+QSlider {
+	border: none;
+}
+
+QSlider::groove:horizontal {
+	height: 5px;
+	margin: 4px 0px 4px 0px;
+}
+
+QSlider::groove:vertical {
+	width: 5px;
+	margin: 0px 4px 0px 4px;
+}
+
+QSlider::handle {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QSlider::handle:horizontal {
+	width: 15px;
+	margin: -4px 0px -4px 0px;
+}
+
+QSlider::handle:vertical {
+	height: 15px;
+	margin: 0px -4px 0px -4px;
+}
+
+QSlider::add-page:vertical, QSlider::sub-page:horizontal {
+	background: #2158AA;
+}
+
+QSlider::sub-page:vertical, QSlider::add-page:horizontal {
+	background: #353535;
+}
+
+QLabel {
+	border: none;
+}
+
+QProgressBar {
+	text-align: center;
+}
+
+QProgressBar::chunk {
+	width: 1px;
+	background-color: #2158AA;
+}
+
+QMenu::separator {
+	background: #353535;
+}
+
+QGroupBox {
+	font: bold
+}
+
+QListWidget::item:selected {
+    background-color: #2158AA;
+}
+
+ QMenu::item:selected{
+	background: #353535;
+	border: 2px solid #D66C23;
+    border-style: none solid none none;
+}
+
+ QMenu::pressed {
+	background: #5A5A5A;
+}
+
+QMenu::separator {
+    height: 5px;
+	background: #2158AA;
+}</string>
+  </property>
+  <widget class="QPushButton" name="save_button">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>670</y>
+     <width>112</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="reset_button">
+   <property name="geometry">
+    <rect>
+     <x>530</x>
+     <y>670</y>
+     <width>112</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="general_options_groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>140</y>
+     <width>1041</width>
+     <height>491</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>GENERAL OPTIONS</string>
+   </property>
+   <widget class="QGroupBox" name="range_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>170</y>
+      <width>351</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>RANGE (±)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <widget class="QLabel" name="x_translation_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>24</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>X Translation:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="y_translation_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>54</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Y Translation:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="z_translation_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>84</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Z Translation:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="x_rotation_label">
+     <property name="geometry">
+      <rect>
+       <x>174</x>
+       <y>24</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>X Rotation:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="y_rotation_label">
+     <property name="geometry">
+      <rect>
+       <x>174</x>
+       <y>54</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Y Rotation:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="z_rotation_label">
+     <property name="geometry">
+      <rect>
+       <x>174</x>
+       <y>84</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Z Rotation:</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="x_translation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>20</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+     <property name="value">
+      <number>40</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="y_translation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>50</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+     <property name="value">
+      <number>40</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="z_translation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>80</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+     <property name="value">
+      <number>40</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="x_rotation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>20</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>180</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="y_rotation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>50</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>180</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="z_rotation_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>80</y>
+       <width>47</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>180</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="stage_budget_label">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>100</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stage Budget:</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="budget_spinBox">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>100</y>
+      <width>61</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>999999999</number>
+    </property>
+    <property name="value">
+     <number>6000</number>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="stage_enabled_checkBox">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>40</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stage Enabled</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="stage_specific_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>350</y>
+      <width>301</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>STAGE SPECIFIC OPTIONS</string>
+    </property>
+    <widget class="QSpinBox" name="branch_count_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>40</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>999999999</number>
+     </property>
+     <property name="value">
+      <number>5</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="branch_total_count_label">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>40</y>
+       <width>141</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Branch Count:</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="cost_function_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>40</y>
+      <width>261</width>
+      <height>441</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>CURRENT COST FUNCTION</string>
+    </property>
+    <widget class="QListWidget" name="cost_function_listWidget">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>221</width>
+       <height>371</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="cost_function_parameters_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>710</x>
+      <y>40</y>
+      <width>271</width>
+      <height>271</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>COST FUNCTION PARAMETERS</string>
+    </property>
+    <widget class="QListWidget" name="cost_function_parameters_listWidget">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>231</width>
+       <height>192</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="parameter_value_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>710</x>
+      <y>340</y>
+      <width>271</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>PARAMETER VALUE</string>
+    </property>
+    <widget class="QDoubleSpinBox" name="double_parameter_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>50</y>
+       <width>101</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="decimals">
+      <number>5</number>
+     </property>
+     <property name="minimum">
+      <double>-9999999999999999827367757839185598317239782875580932278577147150336.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>999999999999999929757289024535551219930759168.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="bool_parameter_true_radioButton">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>82</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>True</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="bool_parameter_false_radioButton">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>60</y>
+       <width>82</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>False</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="int_parameter_spinBox">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>60</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>-999999999</number>
+     </property>
+     <property name="maximum">
+      <number>999999999</number>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="optimization_search_stage_groupBox">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>10</y>
+     <width>571</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>OPTIMIZATION SEARCH STAGE</string>
+   </property>
+   <widget class="QRadioButton" name="trunk_radioButton">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>50</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Trunk</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="branch_radioButton">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>50</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Branch</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="leaf_radioButton">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>50</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Leaf</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="cancel_button">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>670</y>
+     <width>112</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cancel</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="mainscreen.qrc"/>
+ </resources>
+ <connections/>
+</ui>

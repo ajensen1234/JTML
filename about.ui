@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>aboutJTA</class>
+ <widget class="QDialog" name="aboutJTA">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>932</width>
+    <height>476</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>About JointTrack Auto</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="mainscreen.qrc">
+    <normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/*
+	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
+
+	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
+
+/*
+	COLOR_DARK     = #191919
+	COLOR_MEDIUM   = #353535
+	COLOR_MEDLIGHT = #5A5A5A
+	COLOR_LIGHT    = #DDDDDD
+	COLOR_BLUE  = #2158AA
+	COLOR_ORANGE = #D66C23
+*/
+* {
+	background: #191919;
+	color: #DDDDDD;
+border: 1px solid #5A5A5A;
+}
+
+ QMenuBar {
+	background: #191919;
+	border-style: none;
+ }
+
+ QMenuBar::item {
+	 background: transparent;
+     spacing: 3px; /* spacing between menu bar items */
+     padding: 5px 25px;
+ }
+
+ QMenuBar::item:selected{
+	background: #353535;
+  	border: 2px solid #D66C23;
+    border-style: none none solid none;
+}
+
+ QMenuBar::item:pressed {
+	background: #5A5A5A;
+}
+
+QCheckBox, QRadioButton {
+	border: none;
+}
+
+QRadioButton::indicator, QCheckBox::indicator {
+	width: 13px;
+	height: 13px;
+}
+
+QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: none;
+}
+
+QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+}
+
+QRadioButton::indicator::checked, QCheckBox::indicator::checked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: #2158AA;
+}
+
+QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+	background: #2158AA;
+}
+
+QGroupBox::title {
+	subcontrol-origin: margin;
+    subcontrol-position: top center;
+}
+
+QScrollBar {
+	border: 1px solid #5A5A5A;
+	background: #191919;
+}
+
+QScrollBar:horizontal {
+	height: 15px;
+	margin: 0px 16px 0px 16px;
+}
+
+QScrollBar:vertical {
+	width: 15px;
+	margin: 16px 0px 16px 0px;
+}
+
+QScrollBar::handle {
+	background: #353535;
+	border: 1px solid #5A5A5A;
+}
+
+QScrollBar::handle:horizontal {
+	border-width: 0px 1px 0px 1px;
+}
+
+QScrollBar::handle:vertical {
+	border-width: 1px 0px 1px 0px;
+}
+
+QScrollBar::handle:horizontal {
+	min-width: 20px;
+}
+
+QScrollBar::handle:vertical {
+	min-height: 20px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+	background:#353535;
+	border: 1px solid #5A5A5A;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::add-line {
+	position: absolute;
+}
+
+QScrollBar::add-line:horizontal {
+	width: 15px;
+	subcontrol-position: right;
+	left: 15px;
+}
+
+QScrollBar::add-line:vertical {
+	height: 15px;
+	subcontrol-position: bottom;
+	top: 15px;
+}
+
+QScrollBar::sub-line:horizontal {
+	width: 15px;
+	subcontrol-position: left;
+}
+
+QScrollBar::sub-line:vertical {
+	height: 15px;
+	subcontrol-position: top;
+}
+
+QScrollBar:left-arrow, QScrollBar::right-arrow, QScrollBar::up-arrow, QScrollBar::down-arrow {
+	border: 1px solid #5A5A5A;
+	width: 3px;
+	height: 3px;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page {
+	background: none;
+}
+
+QAbstractButton {
+	background: #252525;
+}
+
+QAbstractButton:disabled {
+	background: #3F3F3F;
+}
+
+QAbstractButton:hover {
+	background: #353535;
+}
+
+QPushButton:hover {
+	background: #353535;
+  	border: 1px solid #D66C23;
+}
+
+QAbstractButton:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractItemView {
+	show-decoration-selected: 1;
+ 	outline: 0;
+	selection-background-color: #2158AA;
+	selection-color: #DDDDDD;
+	alternate-background-color: #353535;
+}
+
+QHeaderView {
+	border: 1px solid #5A5A5A;
+}
+
+QHeaderView::section {
+	background: #191919;
+	border: 1px solid #5A5A5A;
+	padding: 4px;
+}
+
+QHeaderView::section:selected, QHeaderView::section::checked {
+	background: #353535;
+}
+
+QTableView {
+	gridline-color: #5A5A5A;
+}
+
+QTabBar {
+	margin-left: 2px;
+}
+
+QTabBar::tab {
+	border-radius: 0px;
+	padding: 4px;
+	margin: 4px;
+}
+
+QTabBar::tab:selected {
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::drop-down {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+
+QAbstractSpinBox {
+	padding-right: 15px;
+}
+
+QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+	subcontrol-origin: border;
+}
+QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {
+	border: 1px solid #D66C23;
+}
+QAbstractSpinBox::up-button:pressed, QAbstractSpinBox::down-button:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+QAbstractSpinBox::up-arrow:hover, QAbstractSpinBox::down-arrow:hover {
+	border: 1px solid #D66C23;
+}
+
+QSlider {
+	border: none;
+}
+
+QSlider::groove:horizontal {
+	height: 5px;
+	margin: 4px 0px 4px 0px;
+}
+
+QSlider::groove:vertical {
+	width: 5px;
+	margin: 0px 4px 0px 4px;
+}
+
+QSlider::handle {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QSlider::handle:horizontal {
+	width: 15px;
+	margin: -4px 0px -4px 0px;
+}
+
+QSlider::handle:vertical {
+	height: 15px;
+	margin: 0px -4px 0px -4px;
+}
+
+QSlider::add-page:vertical, QSlider::sub-page:horizontal {
+	background: #2158AA;
+}
+
+QSlider::sub-page:vertical, QSlider::add-page:horizontal {
+	background: #353535;
+}
+
+QLabel {
+	border: none;
+}
+
+QProgressBar {
+	text-align: center;
+}
+
+QProgressBar::chunk {
+	width: 1px;
+	background-color: #2158AA;
+}
+
+QMenu::separator {
+	background: #353535;
+}
+
+QGroupBox {
+	font: bold
+}
+
+QListWidget::item:selected {
+    background-color: #2158AA;
+}
+
+ QMenu::item:selected{
+	background: #353535;
+	border: 2px solid #D66C23;
+    border-style: none solid none none;
+}
+
+ QMenu::pressed {
+	background: #5A5A5A;
+}
+
+QMenu::separator {
+    height: 5px;
+	background: #2158AA;
+}</string>
+  </property>
+  <widget class="QPushButton" name="close_button">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>360</y>
+     <width>112</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="title_label">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>30</y>
+     <width>171</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>JointTrack Auto</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="picture">
+   <property name="geometry">
+    <rect>
+     <x>25</x>
+     <y>25</y>
+     <width>256</width>
+     <height>256</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="mainscreen.qrc">:/Desktop_Icon/Resources/jta_icon.png</pixmap>
+   </property>
+  </widget>
+  <widget class="QLabel" name="version_label">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>130</y>
+     <width>141</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Version X.X.X</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="copyright_label">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>90</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>© 2017 Paris Flood</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="detected_group_box">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>180</y>
+     <width>461</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">/*
+	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
+
+	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
+
+/*
+	COLOR_DARK     = #191919
+	COLOR_MEDIUM   = #353535
+	COLOR_MEDLIGHT = #5A5A5A
+	COLOR_LIGHT    = #DDDDDD
+	COLOR_BLUE  = #2158AA
+	COLOR_ORANGE = #D66C23
+*/
+* {
+	background: #191919;
+	color: #DDDDDD;
+border: 1px solid #5A5A5A;
+}
+
+ QMenuBar {
+	background: #191919;
+	border-style: none;
+ }
+
+ QMenuBar::item {
+	 background: transparent;
+     spacing: 3px; /* spacing between menu bar items */
+     padding: 5px 25px;
+ }
+
+ QMenuBar::item:selected{
+	background: #353535;
+  	border: 2px solid #D66C23;
+    border-style: none none solid none;
+}
+
+ QMenuBar::item:pressed {
+	background: #5A5A5A;
+}
+
+QCheckBox, QRadioButton {
+	border: none;
+}
+
+QRadioButton::indicator, QCheckBox::indicator {
+	width: 13px;
+	height: 13px;
+}
+
+QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: none;
+}
+
+QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+}
+
+QRadioButton::indicator::checked, QCheckBox::indicator::checked {
+	left: 5px;
+	border: 1px solid #5A5A5A;
+	background: #2158AA;
+}
+
+QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {
+	left: 5px;
+	border: 1px solid #D66C23;
+	background: #2158AA;
+}
+
+QGroupBox::title {
+	subcontrol-origin: margin;
+    subcontrol-position: top center;
+}
+
+QScrollBar {
+	border: 1px solid #5A5A5A;
+	background: #191919;
+}
+
+QScrollBar:horizontal {
+	height: 15px;
+	margin: 0px 16px 0px 16px;
+}
+
+QScrollBar:vertical {
+	width: 15px;
+	margin: 16px 0px 16px 0px;
+}
+
+QScrollBar::handle {
+	background: #353535;
+	border: 1px solid #5A5A5A;
+}
+
+QScrollBar::handle:horizontal {
+	border-width: 0px 1px 0px 1px;
+}
+
+QScrollBar::handle:vertical {
+	border-width: 1px 0px 1px 0px;
+}
+
+QScrollBar::handle:horizontal {
+	min-width: 20px;
+}
+
+QScrollBar::handle:vertical {
+	min-height: 20px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+	background:#353535;
+	border: 1px solid #5A5A5A;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::add-line {
+	position: absolute;
+}
+
+QScrollBar::add-line:horizontal {
+	width: 15px;
+	subcontrol-position: right;
+	left: 15px;
+}
+
+QScrollBar::add-line:vertical {
+	height: 15px;
+	subcontrol-position: bottom;
+	top: 15px;
+}
+
+QScrollBar::sub-line:horizontal {
+	width: 15px;
+	subcontrol-position: left;
+}
+
+QScrollBar::sub-line:vertical {
+	height: 15px;
+	subcontrol-position: top;
+}
+
+QScrollBar:left-arrow, QScrollBar::right-arrow, QScrollBar::up-arrow, QScrollBar::down-arrow {
+	border: 1px solid #5A5A5A;
+	width: 3px;
+	height: 3px;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page {
+	background: none;
+}
+
+QAbstractButton {
+	background: #252525;
+}
+
+QAbstractButton:disabled {
+	background: #3F3F3F;
+}
+
+QAbstractButton:hover {
+	background: #353535;
+}
+
+QPushButton:hover {
+	background: #353535;
+  	border: 1px solid #D66C23;
+}
+
+QAbstractButton:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractItemView {
+	show-decoration-selected: 1;
+ 	outline: 0;
+	selection-background-color: #2158AA;
+	selection-color: #DDDDDD;
+	alternate-background-color: #353535;
+}
+
+QHeaderView {
+	border: 1px solid #5A5A5A;
+}
+
+QHeaderView::section {
+	background: #191919;
+	border: 1px solid #5A5A5A;
+	padding: 4px;
+}
+
+QHeaderView::section:selected, QHeaderView::section::checked {
+	background: #353535;
+}
+
+QTableView {
+	gridline-color: #5A5A5A;
+}
+
+QTabBar {
+	margin-left: 2px;
+}
+
+QTabBar::tab {
+	border-radius: 0px;
+	padding: 4px;
+	margin: 4px;
+}
+
+QTabBar::tab:selected {
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::drop-down {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QComboBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+
+QAbstractSpinBox {
+	padding-right: 15px;
+}
+
+QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+	subcontrol-origin: border;
+}
+QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {
+	border: 1px solid #D66C23;
+}
+QAbstractSpinBox::up-button:pressed, QAbstractSpinBox::down-button:pressed {
+	background: #5A5A5A;
+}
+
+QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
+	width: 3px;
+	height: 3px;
+	border: 1px solid #5A5A5A;
+}
+QAbstractSpinBox::up-arrow:hover, QAbstractSpinBox::down-arrow:hover {
+	border: 1px solid #D66C23;
+}
+
+QSlider {
+	border: none;
+}
+
+QSlider::groove:horizontal {
+	height: 5px;
+	margin: 4px 0px 4px 0px;
+}
+
+QSlider::groove:vertical {
+	width: 5px;
+	margin: 0px 4px 0px 4px;
+}
+
+QSlider::handle {
+	border: 1px solid #5A5A5A;
+	background: #353535;
+}
+
+QSlider::handle:horizontal {
+	width: 15px;
+	margin: -4px 0px -4px 0px;
+}
+
+QSlider::handle:vertical {
+	height: 15px;
+	margin: 0px -4px 0px -4px;
+}
+
+QSlider::add-page:vertical, QSlider::sub-page:horizontal {
+	background: #2158AA;
+}
+
+QSlider::sub-page:vertical, QSlider::add-page:horizontal {
+	background: #353535;
+}
+
+QLabel {
+	border: none;
+}
+
+QProgressBar {
+	text-align: center;
+}
+
+QProgressBar::chunk {
+	width: 1px;
+	background-color: #2158AA;
+}
+
+QMenu::separator {
+	background: #353535;
+}
+
+QGroupBox {
+	font: bold
+}
+
+QListWidget::item:selected {
+    background-color: #2158AA;
+}
+
+ QMenu::item:selected{
+	background: #353535;
+	border: 2px solid #D66C23;
+    border-style: none solid none none;
+}
+
+ QMenu::pressed {
+	background: #5A5A5A;
+}
+
+QMenu::separator {
+    height: 5px;
+	background: #2158AA;
+}</string>
+   </property>
+   <property name="title">
+    <string>DETECTED SYSTEM HARDWARE</string>
+   </property>
+   <widget class="QLabel" name="gpu_label">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>40</y>
+      <width>191</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>xxx</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="cc_label">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>70</y>
+      <width>161</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>xxx</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="gpu_description_label">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>40</y>
+      <width>161</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>CUDA Device (GPU):</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="cc_description_label">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>70</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Compute Capability:</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources>
+  <include location="mainscreen.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>close_button</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>aboutJTA</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>405</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>315</x>
+     <y>152</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
