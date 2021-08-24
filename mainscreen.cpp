@@ -1315,7 +1315,18 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		/*Get Scale*/
 		double sum_seg = (double)cv::sum(cv::sum(output_mat_seg))[0] / (double)255.0;
 		double sum_proj = (double)cv::sum(cv::sum(output_mat))[0] / (double)255.0;
-		double z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
+		double z;
+		/* Creating A check to ensure that the z translation is not greater than the principal distance */
+		if (sum_proj/sum_seg > 1)
+		{
+			z = -calibration_file_.camera_A_principal_.principal_distance_;
+		}
+		else
+		{
+			z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
+		}
+		 
+
 		/*Reproject*/
 		/*Render*/
 		gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
@@ -2395,6 +2406,8 @@ void MainScreen::on_load_calibration_button_clicked() {
 			calibration_file_ = Calibration(principal_calibration_file);
 			/*Update Interactor Calibration For Converting Text in Camera B View*/
 			interactor_calibration = calibration_file_;
+
+			// interactor_calibration.camera_A_principal_.principal_distance_ - should return 1198
 			interactor_camera_B = false;
 		}
 		/*Valid Code for Biplane*/
