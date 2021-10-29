@@ -2403,9 +2403,11 @@ void MainScreen::on_load_calibration_button_clicked() {
 			calibrated_for_biplane_viewport_ = false;
 			CameraCalibration principal_calibration_file(InputList[1].toDouble(), -1 * InputList[2].toDouble(), //Negative For Offsets to make consistent with JointTrack
 				-1 * InputList[3].toDouble(), InputList[4].toDouble());
+			float* prin_dist_ = &principal_calibration_file.principal_distance_;
 			calibration_file_ = Calibration(principal_calibration_file);
 			/*Update Interactor Calibration For Converting Text in Camera B View*/
 			interactor_calibration = calibration_file_;
+			Calibration* cal_pointer_ = &calibration_file_;
 
 			// interactor_calibration.camera_A_principal_.principal_distance_ - should return 1198
 			interactor_camera_B = false;

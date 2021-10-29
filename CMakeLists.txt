@@ -3,8 +3,6 @@ project(Joint-Track-Auto-GPU-CMake
         LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
-set(JTA_Cost_Functions_DIR "C:/JTA_libraries/JTA_Cost_Functions/JTA_Cost_Functions")
-set(CostFunctionTools_DIR "C:/JTA_Libraries/CostFunctionTools/CostFunctionTools")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -80,15 +78,37 @@ endif ()
 
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 find_package(Torch REQUIRED)
-find_package(VTK REQUIRED)
+find_package(VTK 7.1.1 REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 include(${VTK_USE_FILE})
+
+
+
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${cuda_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} C:/Users/pflood/Desktop/JTAML/CostFunctionTools/x64/Release/CostFunctionTools.lib
-        C:/Users/pflood/Desktop/JTAML/JTA_Cost_Functions/x64/Release/JTA_Cost_Functions.lib)
-include_directories(BEFORE ${CostFunctionTools_DIR} ${JTA_Cost_Functions_DIR})
+
+
+find_path(COSTFUNCTIONTOOLS_INCLUDE_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+find_path(JTA_COST_FUNCTIONS_INCLUDE_PATH
+	NO_DEFAULT_PATH)
+
+find_file(COSTFUNCTIONTOOLS_LIBRARY_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+find_file(JTA_COST_FUNCTIONS_LIBRARY_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+
+set(JTA_LIBS ${COSTFUNCTIONTOOLS_LIBRARY_PATH} ${JTA_COST_FUNCTIONS_LIBRARY_PATH})
+set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
+
+target_link_libraries(${PROJECT_NAME} ${JTA_LIBS})
+
+target_include_directories(${PROJECT_NAME}
+	PUBLIC ${JTA_INCLUDES})

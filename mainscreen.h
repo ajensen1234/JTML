@@ -60,6 +60,9 @@
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
 
+/*CostFunctionTools*/
+#include "camera_calibration.h"
+
 class MainScreen : public QMainWindow
 {
 	Q_OBJECT
@@ -76,6 +79,8 @@ public:
 
 	/*Bool to see if currently optimizing*/
 	bool currently_optimizing_;
+	
+	
 
 signals:
 	/*Update Whether To Write TO Text Display*/
