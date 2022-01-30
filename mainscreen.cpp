@@ -882,6 +882,50 @@ void MainScreen::on_actionLoad_Pose_triggered()
 		inputFile.close();
 	}
 }
+/*Copy Previous Pose*/
+void MainScreen::on_actionCopy_Previous_Pose_triggered()
+{
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return;
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return;
+	}
+	Point6D prev_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() - 1, selected[0].row());
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), prev_pose);
+	model_actor_list[selected[0].row()]->SetPosition(prev_pose.x, prev_pose.y, prev_pose.z);
+	model_actor_list[selected[0].row()]->SetOrientation(prev_pose.xa, prev_pose.ya, prev_pose.za);
+	ui.qvtk_widget->update();
+}
+
+
+/*Copy Next Pose*/
+
+void MainScreen::on_actionCopy_Next_Pose_triggered()
+{
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return;
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return;
+	}
+	Point6D next_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() + 1, selected[0].row());
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), next_pose);
+
+	model_actor_list[selected[0].row()]->SetPosition(next_pose.x, next_pose.y, next_pose.z);
+	model_actor_list[selected[0].row()]->SetOrientation(next_pose.xa, next_pose.ya, next_pose.za);
+	ui.qvtk_widget->update();
+}
 /*Load Kinematics*/
 void MainScreen::on_actionLoad_Kinematics_triggered()
 {

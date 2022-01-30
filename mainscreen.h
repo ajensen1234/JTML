@@ -192,6 +192,7 @@ public Q_SLOTS:
 	void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/
 	void on_load_image_button_clicked(); /*Load Images*/
 	void on_load_model_button_clicked(); /*Load Models*/
+	
 
 	/*Biplane View Button (Monoplane is Biplane A, Biplans is Biplane B*/
 	void on_camera_A_radio_button_clicked();
@@ -249,6 +250,9 @@ public Q_SLOTS:
 	void on_actionEstimate_Tibial_Implant_s_triggered();
 	void on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered();
 	void on_actionEstimate_Scapula_s_triggered();
+
+	void on_actionCopy_Next_Pose_triggered();
+	void on_actionCopy_Previous_Pose_triggered();
 
 	/*Optimization Buttons*/
 	void on_optimize_button_clicked();
