@@ -882,6 +882,50 @@ void MainScreen::on_actionLoad_Pose_triggered()
 		inputFile.close();
 	}
 }
+/*Copy Previous Pose*/
+void MainScreen::on_actionCopy_Previous_Pose_triggered()
+{
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return;
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return;
+	}
+	Point6D prev_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() - 1, selected[0].row());
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), prev_pose);
+	model_actor_list[selected[0].row()]->SetPosition(prev_pose.x, prev_pose.y, prev_pose.z);
+	model_actor_list[selected[0].row()]->SetOrientation(prev_pose.xa, prev_pose.ya, prev_pose.za);
+	ui.qvtk_widget->update();
+}
+
+
+/*Copy Next Pose*/
+
+void MainScreen::on_actionCopy_Next_Pose_triggered()
+{
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return;
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return;
+	}
+	Point6D next_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() + 1, selected[0].row());
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), next_pose);
+
+	model_actor_list[selected[0].row()]->SetPosition(next_pose.x, next_pose.y, next_pose.z);
+	model_actor_list[selected[0].row()]->SetOrientation(next_pose.xa, next_pose.ya, next_pose.za);
+	ui.qvtk_widget->update();
+}
 /*Load Kinematics*/
 void MainScreen::on_actionLoad_Kinematics_triggered()
 {
@@ -1315,7 +1359,18 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		/*Get Scale*/
 		double sum_seg = (double)cv::sum(cv::sum(output_mat_seg))[0] / (double)255.0;
 		double sum_proj = (double)cv::sum(cv::sum(output_mat))[0] / (double)255.0;
-		double z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
+		double z;
+		/* Creating A check to ensure that the z translation is not greater than the principal distance */
+		if (sum_proj/sum_seg > 1)
+		{
+			z = -calibration_file_.camera_A_principal_.principal_distance_;
+		}
+		else
+		{
+			z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
+		}
+		 
+
 		/*Reproject*/
 		/*Render*/
 		gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
@@ -2392,9 +2447,13 @@ void MainScreen::on_load_calibration_button_clicked() {
 			calibrated_for_biplane_viewport_ = false;
 			CameraCalibration principal_calibration_file(InputList[1].toDouble(), -1 * InputList[2].toDouble(), //Negative For Offsets to make consistent with JointTrack
 				-1 * InputList[3].toDouble(), InputList[4].toDouble());
+			float* prin_dist_ = &principal_calibration_file.principal_distance_;
 			calibration_file_ = Calibration(principal_calibration_file);
 			/*Update Interactor Calibration For Converting Text in Camera B View*/
 			interactor_calibration = calibration_file_;
+			Calibration* cal_pointer_ = &calibration_file_;
+
+			// interactor_calibration.camera_A_principal_.principal_distance_ - should return 1198
 			interactor_camera_B = false;
 		}
 		/*Valid Code for Biplane*/
