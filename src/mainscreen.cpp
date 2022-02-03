@@ -2404,6 +2404,11 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 	//Open Optimizer Settings Window
 	settings_control->show();
 }
+/*Symmetry Trap Window*/
+
+void MainScreen::on_actionLaunch_Tool_triggered() {
+	sym_trap_control->show();
+}
 
 /*DRR Settings Window*/
 void MainScreen::on_actionDRR_Settings_triggered() {

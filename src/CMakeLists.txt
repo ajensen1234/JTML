@@ -6,21 +6,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_executable(${PROJECT_NAME} 
+add_executable(${PROJECT_NAME}
         direct_data_storage.h
         direct_data_storage.cpp
-        gpu_dilated_frame.cu
         data_structures_6D.cpp
         mainscreen.qrc
         location_storage.h
         calibration.h
         settings_control.ui
         about.ui
-        gpu_model.cu
         stl_reader.cpp
         PropertySheet.props
-        gpu_image_functions.cu
-        gpu_intensity_frame.cu
         STLReader.h
         resource3.h
         controls.h
@@ -30,7 +26,6 @@ add_executable(${PROJECT_NAME}
         mainscreen_size_constants.h
         JointTrackAuto.rc
         optimizer_manager.cpp
-        gpu_edge_frame.cu
         about.h
         stl_reader.h
         controls.ui
@@ -40,13 +35,11 @@ add_executable(${PROJECT_NAME}
         data_structures_6D.h
         frame.h
         settings_control.h
-        gpu_image.cu
         resource2.h
         drr_tool.ui
         resource.h
         settings_window_size_constants.h
         resource1.h
-        gpu_metrics.cu
         settings_constants.h
         mainscreen.cpp
         mainscreen.ui
@@ -61,10 +54,12 @@ add_executable(${PROJECT_NAME}
         location_storage.cpp
         about.cpp
         frame.cpp
-        gpu_frame.cu
         STLReader.cpp
         interactor.h
-        cost_function_selection.ui)
+        cost_function_selection.ui
+        sym_trap.cpp
+        sym_trap.h
+        sym_trap.ui)
 
 
 
@@ -111,7 +106,16 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC ${JTA_INCLUDES})
 
 
-	
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+# need to remove a pervasive vtk lib
+get_target_property(LINKED_LIBS ${PROJECT_NAME} LINK_LIBRARIES)
+
+message("Linked Libs: ${LINKED_LIBS}")
+list(REMOVE_ITEM LINKED_LIBS vtkViewsGeovis)
+set_property(TARGET ${PROJECT_NAME} PROPERTY LINK_LIBRARIES ${LINKED_LIBS})
+get_target_property(NEW_LINKED ${PROJECT_NAME} LINK_LIBRARIES)
+message("Linked Libs: ${NEW_LINKED}")
+
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #fix to overall source directory
 	add_subdirectory(packaging)
 endif()
