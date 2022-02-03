@@ -35,7 +35,6 @@ add_executable(${PROJECT_NAME}
         data_structures_6D.h
         frame.h
         settings_control.h
-        gpu_image.cu
         resource2.h
         drr_tool.ui
         resource.h
@@ -107,7 +106,16 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC ${JTA_INCLUDES})
 
 
+# need to remove a pervasive vtk lib
+get_target_property(LINKED_LIBS ${PROJECT_NAME} LINK_LIBRARIES)
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+message("Linked Libs: ${LINKED_LIBS}")
+list(REMOVE_ITEM LINKED_LIBS vtkViewsGeovis)
+set_property(TARGET ${PROJECT_NAME} PROPERTY LINK_LIBRARIES ${LINKED_LIBS})
+get_target_property(NEW_LINKED ${PROJECT_NAME} LINK_LIBRARIES)
+message("Linked Libs: ${NEW_LINKED}")
+
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #fix to overall source directory
 	add_subdirectory(packaging)
 endif()
