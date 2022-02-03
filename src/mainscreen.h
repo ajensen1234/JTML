@@ -57,6 +57,9 @@
 /*DRR Settings Control Window*/
 #include "drr_tool.h"
 
+/* Symmetry Trap Analysis Window*/
+#include "sym_trap.h"
+
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
 
@@ -181,6 +184,9 @@ private:
 	/*Optimizer Window Control*/
 	SettingsControl* settings_control;
 
+	/*Sym Trap Window*/
+	sym_trap* sym_trap_control = new sym_trap();
+
 	/*Calculate Viewing Angle (Accounts for Offsets)*/
 	double CalculateViewingAngle(int width, int height, bool CameraA);
 
@@ -253,6 +259,8 @@ public Q_SLOTS:
 
 	void on_actionCopy_Next_Pose_triggered();
 	void on_actionCopy_Previous_Pose_triggered();
+
+	void on_actionLaunch_Tool_triggered();
 
 	/*Optimization Buttons*/
 	void on_optimize_button_clicked();

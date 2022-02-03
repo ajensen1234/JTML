@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_executable(${PROJECT_NAME} 
+add_executable(${PROJECT_NAME}
         direct_data_storage.h
         direct_data_storage.cpp
         gpu_dilated_frame.cu
@@ -64,7 +64,10 @@ add_executable(${PROJECT_NAME}
         gpu_frame.cu
         STLReader.cpp
         interactor.h
-        cost_function_selection.ui)
+        cost_function_selection.ui
+        sym_trap.cpp
+        sym_trap.h
+        sym_trap.ui)
 
 
 
@@ -111,7 +114,7 @@ target_include_directories(${PROJECT_NAME}
 	PUBLIC ${JTA_INCLUDES})
 
 
-	
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	add_subdirectory(packaging)
 endif()
