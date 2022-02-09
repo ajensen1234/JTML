@@ -116,6 +116,6 @@ get_target_property(NEW_LINKED ${PROJECT_NAME} LINK_LIBRARIES)
 message("Linked Libs: ${NEW_LINKED}")
 
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #fix to overall source directory
-	add_subdirectory(packaging)
-endif()
+
+
+#comment
