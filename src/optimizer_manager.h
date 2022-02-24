@@ -58,6 +58,9 @@ public:
 		QString &error_message);
 	~OptimizerManager();
 
+	/* get cost numbers for symmetry plotting */
+	double EvaluateCostFunctionAtPoint(Point6D point, int stage);
+
 signals:
 	/*Update Blue Current Optimum*/
 	void UpdateOptimum(double, double, double, double, double, double, unsigned int);

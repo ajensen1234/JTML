@@ -918,6 +918,35 @@ void OptimizerManager::Optimize() {
 	return;
 }
 
+double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) { 
+	enum Dilation { Trunk, Branch, Leaf };
+
+	/*Get Actual Pose from Normalized Version and Send to Cost Function Manager*/
+	Point6D denormalized_point = DenormalizeFromCenter(point);
+	gpu_cost_function::Pose pose(denormalized_point.x, denormalized_point.y, denormalized_point.z,
+		denormalized_point.xa, denormalized_point.ya, denormalized_point.za);
+	gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
+	if (calibration_.biplane_calibration) {
+		Point6D denormalized_point_B = calibration_.convert_Pose_A_to_Pose_B(denormalized_point);
+		gpu_cost_function::Pose pose_B(denormalized_point_B.x, denormalized_point_B.y, denormalized_point_B.z,
+			denormalized_point_B.xa, denormalized_point_B.ya, denormalized_point_B.za);
+		gpu_principal_model_->SetCurrentSecondaryCameraPose(pose_B);
+	}
+
+	double result = 0;
+	switch (stage) {
+	case Trunk: result = trunk_manager_.callActiveCostFunction();
+		break;
+	case Branch: result = branch_manager_.callActiveCostFunction();
+		break;
+	case Leaf: result = leaf_manager_.callActiveCostFunction();
+		break;
+	}
+	// cost_function_calls_++;
+
+	return result;
+}
+
 double OptimizerManager::EvaluateCostFunction(Point6D point){
 	/*Get Actual Pose from Normalized Version and Send to Cost Function Manager*/
 	Point6D denormalized_point = DenormalizeFromCenter(point);
