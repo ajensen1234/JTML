@@ -82,8 +82,8 @@ public:
 
 	/*Bool to see if currently optimizing*/
 	bool currently_optimizing_;
-	
-	
+
+
 
 signals:
 	/*Update Whether To Write TO Text Display*/
@@ -185,7 +185,7 @@ private:
 	SettingsControl* settings_control;
 
 	/*Sym Trap Window*/
-	sym_trap* sym_trap_control = new sym_trap();
+	sym_trap *sym_trap_control = new sym_trap();
 
 	/*Calculate Viewing Angle (Accounts for Offsets)*/
 	double CalculateViewingAngle(int width, int height, bool CameraA);
@@ -198,7 +198,7 @@ public Q_SLOTS:
 	void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/
 	void on_load_image_button_clicked(); /*Load Images*/
 	void on_load_model_button_clicked(); /*Load Models*/
-	
+
 
 	/*Biplane View Button (Monoplane is Biplane A, Biplans is Biplane B*/
 	void on_camera_A_radio_button_clicked();

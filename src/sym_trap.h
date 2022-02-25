@@ -3,7 +3,7 @@
 #include "optimizer_manager.h"
 #include "optimizer_settings.h"
 #include "ui_sym_trap.h"
-#include "mainscreen.h"
+
 #include <vector>
 
 class sym_trap :public QDialog
@@ -15,6 +15,7 @@ public:
 	~sym_trap();
 	OptimizerManager* sym_trap_optimizer = new OptimizerManager();
 
+public slots:
 	void gather_dataset();
 
 private:
@@ -23,5 +24,6 @@ private:
 
 signals:
 	void Done();
+
 
 };

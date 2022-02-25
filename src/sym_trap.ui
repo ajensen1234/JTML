@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>905</width>
-    <height>736</height>
+    <width>1068</width>
+    <height>734</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -359,17 +359,23 @@ QMenu::separator {
 	background: #2158AA;
 }</string>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="gather_dataset">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>260</y>
-     <width>471</width>
-     <height>181</height>
+     <x>190</x>
+     <y>40</y>
+     <width>679</width>
+     <height>361</height>
     </rect>
    </property>
+   <property name="maximumSize">
+    <size>
+     <width>679</width>
+     <height>16777215</height>
+    </size>
+   </property>
    <property name="text">
-    <string>HELLO FRIENDS</string>
+    <string>Gather Dataset</string>
    </property>
   </widget>
  </widget>

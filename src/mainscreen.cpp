@@ -1361,7 +1361,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		double sum_proj = (double)cv::sum(cv::sum(output_mat))[0] / (double)255.0;
 		double z;
 		/* Creating A check to ensure that the z translation is not greater than the principal distance */
-		if (sum_proj/sum_seg > 1)
+		if (sum_proj / sum_seg > 1)
 		{
 			z = -calibration_file_.camera_A_principal_.principal_distance_;
 		}
@@ -1369,7 +1369,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		{
 			z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
 		}
-		 
+
 
 		/*Reproject*/
 		/*Render*/
