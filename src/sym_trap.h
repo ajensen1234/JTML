@@ -1,11 +1,14 @@
 #pragma once
 #include <qdialog.h>
-
+#include "optimizer_manager.h"
+#include "optimizer_settings.h"
 #include "ui_sym_trap.h"
 
 #include "CostFunctionManager.h"
 #include "data_structures_6D.h"
 #include <cmath>
+#include <vector>
+
 
 class sym_trap :public QDialog
 {
@@ -14,6 +17,10 @@ class sym_trap :public QDialog
 public:
 	sym_trap(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 	~sym_trap();
+	OptimizerManager* sym_trap_optimizer = new OptimizerManager();
+
+public slots:
+	void gather_dataset();
 
 	Point6D compute_mirror_pose(Point6D point);
 	void matmult4(float ans[4][4], float matrix1[4][4], float matrix2[4][4]);
@@ -30,10 +37,12 @@ public:
 
 private:
 	Ui::symTrap ui;
+	std::vector<Point6D> search_space;
 
 	
 
 signals:
 	void Done();
+
 
 };

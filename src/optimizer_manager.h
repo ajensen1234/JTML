@@ -4,11 +4,11 @@
 #define OPTIMIZER_MANAGER_H
 
 /*Custom CUDA Headers*/
-#include "gpu_model.cuh"
-#include "gpu_intensity_frame.cuh"
-#include "gpu_edge_frame.cuh"
-#include "gpu_dilated_frame.cuh"
-#include "gpu_metrics.cuh"
+#include <gpu_model.cuh>
+#include <gpu_intensity_frame.cuh>
+#include <gpu_edge_frame.cuh>
+#include <gpu_dilated_frame.cuh>
+#include <gpu_metrics.cuh>
 #include "calibration.h"
 
 /*QT Threading*/
@@ -57,6 +57,9 @@ public:
 		QString opt_directive,
 		QString &error_message);
 	~OptimizerManager();
+
+	/* get cost numbers for symmetry plotting */
+	double EvaluateCostFunctionAtPoint(Point6D point, int stage);
 
 signals:
 	/*Update Blue Current Optimum*/
