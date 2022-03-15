@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1703</width>
-    <height>954</height>
+    <width>1701</width>
+    <height>947</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -2074,7 +2074,7 @@ QMenu::separator {
      </property>
     </widget>
    </widget>
-   <widget class="QVTKWidget" name="qvtk_widget" native="true">
+   <widget class="QVTKWidget" name="qvtk_widget">
     <property name="geometry">
      <rect>
       <x>410</x>
@@ -3707,8 +3707,8 @@ QProgressBar::chunk {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1703</width>
-     <height>28</height>
+     <width>1701</width>
+     <height>25</height>
     </rect>
    </property>
    <property name="font">
@@ -3818,6 +3818,12 @@ QProgressBar::chunk {
     </property>
     <addaction name="actionLaunch_Tool"/>
    </widget>
+   <widget class="QMenu" name="menuOPTIMZER">
+    <property name="title">
+     <string>OPTIMZER</string>
+    </property>
+    <addaction name="actionOptimize_Backward"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVIEW"/>
    <addaction name="menuOptions"/>
@@ -3826,6 +3832,7 @@ QProgressBar::chunk {
    <addaction name="menuSegment"/>
    <addaction name="menuPOSE_ESTIMATE"/>
    <addaction name="menuSYMMETRY_TRAP_ANALYSIS"/>
+   <addaction name="menuOPTIMZER"/>
   </widget>
   <action name="actionOptions">
    <property name="text">
@@ -4011,6 +4018,11 @@ QProgressBar::chunk {
   <action name="actionLaunch_Tool">
    <property name="text">
     <string>Launch Tool</string>
+   </property>
+  </action>
+  <action name="actionOptimize_Backward">
+   <property name="text">
+    <string>Optimize Backward</string>
    </property>
   </action>
  </widget>

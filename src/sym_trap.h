@@ -25,7 +25,6 @@ public:
 	void rotation_matrix(float R[3][3], Point6D pose);
 	void create_312_transform(float transform[4][4], Point6D pose);
 	void getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]);
-	void axis_angle_rotation_increments(vector<float[3][3]> rot, float m[3], int increments, float angle);
 	
 
 private:

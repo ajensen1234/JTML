@@ -3953,6 +3953,10 @@ void MainScreen::on_optimize_from_button_clicked() {
 	LaunchOptimizer("From");
 }
 
+void MainScreen::on_actionOptimize_Backward_triggered() {
+	LaunchOptimizer("Backward");
+}
+
 /*Disable/Enable During Optimization*/
 void MainScreen::DisableAll() {
 	ui.load_calibration_button->setDisabled(1);
@@ -4081,8 +4085,8 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	QObject::connect(optimizer_manager, SIGNAL(OptimizerError(QString)), this, SLOT(onOptimizerError(QString))); //Optimizer Error Check
 	QObject::connect(optimizer_manager, SIGNAL(UpdateOptimum(double, double, double, double, double, double, unsigned int)),
 		this, SLOT(onUpdateOptimum(double, double, double, double, double, double, unsigned int))); // Update Guess Connection
-	QObject::connect(optimizer_manager, SIGNAL(OptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool)),
-		this, SLOT(onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool)));  // Update Optimized Frame/View
+	QObject::connect(optimizer_manager, SIGNAL(OptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString)),
+		this, SLOT(onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString)));  // Update Optimized Frame/View
 	QObject::connect(this, SIGNAL(StopOptimizer()), optimizer_manager, SLOT(onStopOptimizer()), Qt::DirectConnection); /*Stops Optimizer*/
 	QObject::connect(optimizer_manager, SIGNAL(UpdateDilationBackground()), this, SLOT(onUpdateDilationBackground())); /*UPDATE DILATION BACKGROUND	*/
 
@@ -4114,7 +4118,7 @@ void MainScreen::onUpdateOptimum(double x, double y, double z, double xa, double
 
 }
 /*Finished Optimizing Frame, Send Optimum to MainScreen*/
-void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, double ya, double za, bool move_next_frame, unsigned int primary_model_index, bool error_occurred) {
+void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, double ya, double za, bool move_next_frame, unsigned int primary_model_index, bool error_occurred, QString optimizer_directive) {
 	/*Update Actor*/
 	Point6D CurrentPose = Point6D(x, y, z, xa, ya, za);
 	if (ui.camera_B_radio_button->isChecked() == true) {
@@ -4134,27 +4138,46 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 	/*Save Indices*/
 	int current_frame_index = ui.image_list_widget->currentIndex().row();
 
-	/*If Commanded to Move To Next Frame Do So*/
-	if (move_next_frame && current_frame_index + 1 < ui.image_list_widget->count()) {
-		/*Bring Up Next Frame*/
-		ui.image_list_widget->setCurrentRow(current_frame_index + 1);
-		/*Save Pose To Storage*/
-		model_locations_.SavePose(current_frame_index, primary_model_index,
-			Point6D(x, y, z, xa, ya, za));
+	if (optimizer_directive == "Backward") {
+		if (move_next_frame && current_frame_index > 0) {
+			ui.image_list_widget->setCurrentRow(current_frame_index - 1);
+			model_locations_.SavePose(current_frame_index, primary_model_index,
+				Point6D(x, y, z, xa, ya, za));
+		}
+		else {
+			/*Save Pose To Storage*/
+			model_locations_.SavePose(current_frame_index, primary_model_index,
+				Point6D(x, y, z, xa, ya, za));
+			/*Not Currently Optimzing*/
+			currently_optimizing_ = false;
+			EnableAll();
+			/*Display Finished*/
+			if (!error_occurred)
+				QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+		}
+
 	}
 	else {
-		/*Save Pose To Storage*/
-		model_locations_.SavePose(current_frame_index, primary_model_index,
-			Point6D(x, y, z, xa, ya, za));
-		/*Not Currently Optimzing*/
-		currently_optimizing_ = false;
-		EnableAll();
-		/*Display Finished*/
-		if (!error_occurred)
-			QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+		/*If Commanded to Move To Next Frame Do So*/
+		if (move_next_frame && current_frame_index + 1 < ui.image_list_widget->count()) {
+			/*Bring Up Next Frame*/
+			ui.image_list_widget->setCurrentRow(current_frame_index + 1);
+			/*Save Pose To Storage*/
+			model_locations_.SavePose(current_frame_index, primary_model_index,
+				Point6D(x, y, z, xa, ya, za));
+		}
+		else {
+			/*Save Pose To Storage*/
+			model_locations_.SavePose(current_frame_index, primary_model_index,
+				Point6D(x, y, z, xa, ya, za));
+			/*Not Currently Optimzing*/
+			currently_optimizing_ = false;
+			EnableAll();
+			/*Display Finished*/
+			if (!error_occurred)
+				QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+		}
 	}
-
-
 }
 /*Uh oh There was an Error. The int is the code.
 1: Could not update comparison image

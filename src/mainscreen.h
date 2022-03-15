@@ -267,12 +267,13 @@ public Q_SLOTS:
 	void on_optimize_all_button_clicked();
 	void on_optimize_each_button_clicked();
 	void on_optimize_from_button_clicked();
+	void on_actionOptimize_Backward_triggered();
 
 	/*OPTIMIZATION SLOTS*/
 	/*Update Blue Current Optimum*/
 	void onUpdateOptimum(double, double, double, double, double, double, unsigned int);
 	/*Finished Optimizing Frame, Send Optimum to MainScreen*/
-	void onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool);
+	void onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString);
 	/*Uh oh There was an Error. String contains the message
 	*/
 	void onOptimizerError(QString error_message);
