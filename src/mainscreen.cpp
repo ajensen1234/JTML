@@ -903,6 +903,22 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered()
 	ui.qvtk_widget->update();
 }
 
+// For passing current pose into sym_trap window
+Point6D MainScreen::copy_current_pose() {
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return Point6D();
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return Point6D();
+	}
+	Point6D pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
+	return pose;
+}
 
 /*Copy Next Pose*/
 
@@ -1051,6 +1067,9 @@ void MainScreen::on_actionModel_Interaction_Mode_triggered() {
 	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 	ui.qvtk_widget->update();
 };
+
+
+
 void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
 	if (loaded_models.size() == 0 || loaded_frames.size() == 0)
 	{
@@ -1361,7 +1380,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		double sum_proj = (double)cv::sum(cv::sum(output_mat))[0] / (double)255.0;
 		double z;
 		/* Creating A check to ensure that the z translation is not greater than the principal distance */
-		if (sum_proj/sum_seg > 1)
+		if (sum_proj / sum_seg > 1)
 		{
 			z = -calibration_file_.camera_A_principal_.principal_distance_;
 		}
@@ -1369,7 +1388,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		{
 			z = -calibration_file_.camera_A_principal_.principal_distance_ * sqrt(sum_proj / sum_seg);
 		}
-		 
+
 
 		/*Reproject*/
 		/*Render*/
@@ -2407,7 +2426,12 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 /*Symmetry Trap Window*/
 
 void MainScreen::on_actionLaunch_Tool_triggered() {
+	Point6D current_pose = copy_current_pose();
+	//sym_trap_control->feedCurrentPose(ui.GetPose___)
+	//sym_trap_control->set_pose(current_pose);
+	LaunchOptimizer("Sym_Trap");
 	sym_trap_control->show();
+
 }
 
 /*DRR Settings Window*/
@@ -4085,6 +4109,7 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		this, SLOT(onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool)));  // Update Optimized Frame/View
 	QObject::connect(this, SIGNAL(StopOptimizer()), optimizer_manager, SLOT(onStopOptimizer()), Qt::DirectConnection); /*Stops Optimizer*/
 	QObject::connect(optimizer_manager, SIGNAL(UpdateDilationBackground()), this, SLOT(onUpdateDilationBackground())); /*UPDATE DILATION BACKGROUND	*/
+	QObject::connect(optimizer_manager, SIGNAL(onUpdateOrientationSymTrap(double, double, double, double, double, double)), this, SLOT(updateOrientationSymTrap_MS(double, double, double, double, double, double)));
 
 	/*Start*/
 	if (directive == "Each" || directive == "All") {
@@ -4095,6 +4120,19 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	DisableAll();
 	display_optimizer_settings_ = optimizer_settings_;
 	optimizer_thread->start();
+}
+
+void MainScreen::updateOrientationSymTrap_MS(double x,  double y, double z, double xa, double ya, double za ) {
+	//put the update logic here
+	// look at loading kinematics for help
+	// or copy pose
+	// need to update the current model
+	Point6D new_orientation(x, y, z, xa, ya, za);
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), new_orientation);
+	model_actor_list[selected[0].row()]->SetPosition(new_orientation.x, new_orientation.y, new_orientation.z);
+	model_actor_list[selected[0].row()]->SetOrientation(new_orientation.xa, new_orientation.ya, new_orientation.za);
+	ui.qvtk_widget->update();
 }
 
 /*OPTIMIZATION

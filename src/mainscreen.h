@@ -82,8 +82,8 @@ public:
 
 	/*Bool to see if currently optimizing*/
 	bool currently_optimizing_;
-	
-	
+
+
 
 signals:
 	/*Update Whether To Write TO Text Display*/
@@ -169,7 +169,6 @@ private:
 	QThread* optimizer_thread;
 	OptimizerManager* optimizer_manager;
 
-
 	/*Disable and Enable MainScreen During and After Optimization*/
 	void DisableAll();
 	void EnableAll();
@@ -192,13 +191,17 @@ private:
 
 	/*Helper Function To Segment And Update Frames According to Model File*/
 	void segmentHelperFunction(std::string pt_model_location, unsigned int input_width, unsigned int input_height);
+
+	// Helper function for sym_trap to get information about the current pose
+	Point6D copy_current_pose();
+
 public Q_SLOTS:
 
 	/*Load Buttons*/
 	void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/
 	void on_load_image_button_clicked(); /*Load Images*/
 	void on_load_model_button_clicked(); /*Load Models*/
-	
+
 
 	/*Biplane View Button (Monoplane is Biplane A, Biplans is Biplane B*/
 	void on_camera_A_radio_button_clicked();
@@ -280,6 +283,7 @@ public Q_SLOTS:
 	void onUpdateDisplay(double, int, double, unsigned int);
 	/*Update Dilation Background if Radio Button is on Dilation and Moving Betweeen Trunks and Branches*/
 	void onUpdateDilationBackground();
+	void updateOrientationSymTrap_MS(double, double, double, double, double, double);
 
 	/*On Optimizer Control Windows Save Setting*/
 	void onSaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager);

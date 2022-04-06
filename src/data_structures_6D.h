@@ -3,6 +3,7 @@
 
 /*Standard*/
 #include <algorithm>
+#include "render_engine.cuh"
 
 /*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/
 
@@ -17,6 +18,7 @@ struct Point6D
 {
 	Point6D(double xval, double yval, double zval, double xaval, double yaval, double zaval);
 	Point6D();
+	Point6D(gpu_cost_function::Pose p);
 
 	double x; double y; double z; double xa; double ya; double za;
 
