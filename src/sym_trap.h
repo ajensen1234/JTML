@@ -23,9 +23,12 @@
 #include <vtkWarpScalar.h>
 #include <vtkAxisActor2D.h>
 
+#include <QVTKWidget.h>
+
 
 #include "CostFunctionManager.h"
 #include "data_structures_6D.h"
+#include "MainScreen.h"
 
 
 #include <cmath>
@@ -60,21 +63,21 @@ public:
 	template<typename T>
 	std::vector<double> static linspace(T start_in, T end_in, int num_in);
 
+
 	//void set_pose(Point6D desired_pose);
 
 public Q_SLOTS:
-	void gather_dataset();
-	double onCostFuncAtPoint(double);
+	double onCostFuncAtPoint(double result);
 	void graphResults();
+	void saveData();
+	void loadData();
 
 private:
 	Ui::symTrap ui;
 	std::vector<Point6D> search_space;
-
+	QVTKWidget* plot_widget;
 
 
 signals:
 	void Done();
-
-
 };

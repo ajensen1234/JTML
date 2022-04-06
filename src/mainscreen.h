@@ -84,15 +84,19 @@ public:
 	bool currently_optimizing_;
 
 
-
 signals:
 	/*Update Whether To Write TO Text Display*/
 	void UpdateDisplayText(bool);
 	/*Stop Optimizer*/
 	void StopOptimizer();
+	
+	// Send out optimizer time remaining
+	int UpdateTimeRemaining(float);
 
 private:
 	Ui::MainScreenClass ui;
+
+	float start_time;
 
 	/*GUI FUNCTIONS*/
 	/*Arrange Layout (Do this in code so scales across different DPI monitors and handles weird fonts)*/
@@ -162,12 +166,13 @@ private:
 
 	/*Optimization Function: Packages Off The Optimization process in
 	a new thread*/
+
 	/*Launch Optimizer*/
 	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each
 
 	/*Optimizer Thread and Manager*/
 	QThread* optimizer_thread;
-	OptimizerManager* optimizer_manager;
+	OptimizerManager *optimizer_manager;
 
 	/*Disable and Enable MainScreen During and After Optimization*/
 	void DisableAll();

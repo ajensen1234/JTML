@@ -15,12 +15,15 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 
 	//when button is clicked, call gather_dataset()
 	QObject::connect(ui.gather_dataset, SIGNAL(clicked()), this, SLOT(graphResults()));
+	//QObject::connect(ui.optimize, SIGNAL(clicked()), this, SLOT(mainscreen->LaunchOptimizer("Sym_Trap")));
+	//QObject::connect(this, SIGNAL(UpdateTimeRemaining()), ui.progressBar, SLOT(setValue(int)));
 
+	this->plot_widget = nullptr;
 }
 
 sym_trap::~sym_trap()
 {
-
+	delete this->plot_widget;
 }
 
 
@@ -296,25 +299,6 @@ void sym_trap::copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_m
 	}
 }
 
-// remove this function
-void sym_trap::gather_dataset() {
-	/*
-	std::vector<double> cost_vals;
-	// loop over points and get their relevant costs
-	cout << "Point Size: " << all_inc.size() << endl;
-	//return; // TEMP, REMOVE
-
-	for (const Point6D& pt : all_inc) {
-		//double val = EvaluateCostFunctionAtPoint(pt, 0);
-
-		// TODO: Fix crash
-		//cost_vals.push_back(val);
-		//cout << val << ", ";
-	}
-
-	// store the vectors in a CSV file for reading later
-	*/
-}
 
 void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose) {
 	// convert curr_pose into a Point6D
@@ -454,34 +438,6 @@ double sym_trap::onCostFuncAtPoint(double result) {
 	return result;
 }
 
-template<typename T>
-std::vector<double> sym_trap::linspace(T start_in, T end_in, int num_in)
-{
-
-	std::vector<double> linspaced;
-
-	double start = static_cast<double>(start_in);
-	double end = static_cast<double>(end_in);
-	double num = static_cast<double>(num_in);
-
-	if (num == 0) { return linspaced; }
-	if (num == 1)
-	{
-		linspaced.push_back(start);
-		return linspaced;
-	}
-
-	double delta = (end - start) / (num - 1);
-
-	for (int i = 0; i < num - 1; ++i)
-	{
-		linspaced.push_back(start + delta * i);
-	}
-	linspaced.push_back(end); // I want to ensure that start and end
-							  // are exactly the same as the input
-	return linspaced;
-}
-
 void sym_trap::graphResults() {
 	//runs when you click gatherdataset button
 	//read Results.csv and graph them
@@ -517,6 +473,14 @@ void sym_trap::graphResults() {
 		zrot.push_back(stod(row.at(i+2)));
 		costs.push_back(stod(row.at(i+3)));
 	}
+
+	// Create QVTK widget and add it to layout box
+	if (!plot_widget) {
+		this->plot_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->insertWidget(0,plot_widget); // insert widget at first index of layout box
+		this->ui.verticalLayout->update();
+	}
+	
 	// Read the file
 	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
 	reader->SetFileName("Results.xyz");
@@ -542,14 +506,19 @@ void sym_trap::graphResults() {
 	actor->SetMapper(mapper);
 
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-	vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-	renderWindow->AddRenderer(renderer);
+	plot_widget->GetRenderWindow()->AddRenderer(renderer);
+	
+	
+	//vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+	//renderWindow->AddRenderer(renderer);
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	renderWindowInteractor->SetRenderWindow(renderWindow);
+	renderWindowInteractor->SetRenderWindow(plot_widget->GetRenderWindow());
+
 
 	renderer->AddActor(actor);
 	renderer->SetBackground(.3, .6, .3);
-	renderWindow->Render();
+
+	plot_widget->GetRenderWindow()->Render();
 
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
 	renderWindowInteractor->SetInteractorStyle(style);
@@ -557,13 +526,43 @@ void sym_trap::graphResults() {
 	// add & render CubeAxes
 	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
 	axes->SetInputData(warp->GetOutput());
-	axes->SetFontFactor(.5);
+	axes->SetFontFactor(1.2);
 	axes->SetFlyModeToNone();
 	axes->SetCamera(renderer->GetActiveCamera());
 
 	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
 	xAxis->SetAdjustLabels(1);
 
+
 	renderer->AddViewProp(axes);
 	renderWindowInteractor->Start();
+	
+}
+
+template<typename T>
+std::vector<double> sym_trap::linspace(T start_in, T end_in, int num_in)
+{
+
+	std::vector<double> linspaced;
+
+	double start = static_cast<double>(start_in);
+	double end = static_cast<double>(end_in);
+	double num = static_cast<double>(num_in);
+
+	if (num == 0) { return linspaced; }
+	if (num == 1)
+	{
+		linspaced.push_back(start);
+		return linspaced;
+	}
+
+	double delta = (end - start) / (num - 1);
+
+	for (int i = 0; i < num - 1; ++i)
+	{
+		linspaced.push_back(start + delta * i);
+	}
+	linspaced.push_back(end); // I want to ensure that start and end
+							  // are exactly the same as the input
+	return linspaced;
 }

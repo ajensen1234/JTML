@@ -126,6 +126,8 @@ MainScreen::MainScreen(QWidget* parent)
 {
 	ui.setupUi(this);
 
+	this->start_time = 0;
+
 	/*Set Minimum and Maximum for Sliders*/
 	ui.low_threshold_slider->setMinimum(0);
 	ui.high_threshold_slider->setMinimum(0);
@@ -2427,11 +2429,8 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 
 void MainScreen::on_actionLaunch_Tool_triggered() {
 	Point6D current_pose = copy_current_pose();
-	//sym_trap_control->feedCurrentPose(ui.GetPose___)
-	//sym_trap_control->set_pose(current_pose);
 	LaunchOptimizer("Sym_Trap");
 	sym_trap_control->show();
-
 }
 
 /*DRR Settings Window*/
@@ -4233,6 +4232,12 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
+
+	// update est time
+	cout << "TIME TEST: " << divresult.quot << " | " << divresult.rem << endl;
+	
+	emit UpdateTimeRemaining((float) divresult.quot + (float) divresult.rem /100);
+	
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","
 		+ std::to_string((long double)CurrentPose.z) + ">\nOptimum Orientation: <"
