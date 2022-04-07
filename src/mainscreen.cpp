@@ -126,7 +126,7 @@ MainScreen::MainScreen(QWidget* parent)
 {
 	ui.setupUi(this);
 
-	this->start_time = 0;
+	this->start_time = -1;
 
 	/*Set Minimum and Maximum for Sliders*/
 	ui.low_threshold_slider->setMinimum(0);
@@ -149,6 +149,12 @@ MainScreen::MainScreen(QWidget* parent)
 	settings_control = new SettingsControl(this);
 	connect(settings_control, SIGNAL(SaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)),
 		this, SLOT(onSaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)), Qt::DirectConnection);
+
+	// Setup Sym Trap Window
+	this->sym_trap_control = new sym_trap();
+	connect(sym_trap_control->ui.optimize, SIGNAL(clicked()), this, SLOT(optimizer_launch_slot()));
+	connect(this, SIGNAL(UpdateTimeRemaining(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Disable Stop Optimizer*/
 	ui.actionStop_Optimizer->setDisabled(1);
@@ -1006,6 +1012,12 @@ void MainScreen::on_actionLoad_Kinematics_triggered()
 		inputFile.close();
 	}
 }
+
+// Start Symtrap Optimizer
+void MainScreen::optimizer_launch_slot() {
+	LaunchOptimizer("Sym_Trap");
+}
+
 
 /*Stop Optimizer*/
 void MainScreen::on_actionStop_Optimizer_triggered() {
@@ -2429,7 +2441,6 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 
 void MainScreen::on_actionLaunch_Tool_triggered() {
 	Point6D current_pose = copy_current_pose();
-	LaunchOptimizer("Sym_Trap");
 	sym_trap_control->show();
 }
 
@@ -4233,10 +4244,13 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
 
-	// update est time
-	cout << "TIME TEST: " << divresult.quot << " | " << divresult.rem << endl;
-	
-	emit UpdateTimeRemaining((float) divresult.quot + (float) divresult.rem /100);
+	// update est time for sym_trap progress bar
+	float est_time = (float) divresult.quot * 60 + divresult.rem;
+	if (this->start_time == -1) { 
+		this->start_time = est_time;
+	}
+	std::cout << "TIME CHECK EST: " << est_time << " | Start: " << start_time << " | Val: " << static_cast<int>(((start_time - est_time) / start_time) * 100) << std::endl;
+	emit UpdateTimeRemaining(static_cast<int>(((start_time - est_time) / start_time) * 100));
 	
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","

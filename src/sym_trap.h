@@ -28,8 +28,6 @@
 
 #include "CostFunctionManager.h"
 #include "data_structures_6D.h"
-#include "MainScreen.h"
-
 
 #include <cmath>
 #include <vector>
@@ -65,15 +63,15 @@ public:
 
 
 	//void set_pose(Point6D desired_pose);
+	Ui::symTrap ui;
 
 public Q_SLOTS:
 	double onCostFuncAtPoint(double result);
 	void graphResults();
-	void saveData();
-	void loadData();
+	//void saveData();
+	//void loadData();
 
 private:
-	Ui::symTrap ui;
 	std::vector<Point6D> search_space;
 	QVTKWidget* plot_widget;
 

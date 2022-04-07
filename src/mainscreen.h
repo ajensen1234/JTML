@@ -91,7 +91,7 @@ signals:
 	void StopOptimizer();
 	
 	// Send out optimizer time remaining
-	int UpdateTimeRemaining(float);
+	void UpdateTimeRemaining(int);
 
 private:
 	Ui::MainScreenClass ui;
@@ -166,7 +166,7 @@ private:
 
 	/*Optimization Function: Packages Off The Optimization process in
 	a new thread*/
-
+	
 	/*Launch Optimizer*/
 	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each
 
@@ -189,7 +189,7 @@ private:
 	SettingsControl* settings_control;
 
 	/*Sym Trap Window*/
-	sym_trap* sym_trap_control = new sym_trap();
+	sym_trap* sym_trap_control;
 
 	/*Calculate Viewing Angle (Accounts for Offsets)*/
 	double CalculateViewingAngle(int width, int height, bool CameraA);
@@ -201,6 +201,9 @@ private:
 	Point6D copy_current_pose();
 
 public Q_SLOTS:
+
+	// Call Optimizer Launch
+	void optimizer_launch_slot();
 
 	/*Load Buttons*/
 	void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/

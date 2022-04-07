@@ -15,9 +15,6 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 
 	//when button is clicked, call gather_dataset()
 	QObject::connect(ui.gather_dataset, SIGNAL(clicked()), this, SLOT(graphResults()));
-	//QObject::connect(ui.optimize, SIGNAL(clicked()), this, SLOT(mainscreen->LaunchOptimizer("Sym_Trap")));
-	//QObject::connect(this, SIGNAL(UpdateTimeRemaining()), ui.progressBar, SLOT(setValue(int)));
-
 	this->plot_widget = nullptr;
 }
 

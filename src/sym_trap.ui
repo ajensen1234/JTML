@@ -457,6 +457,9 @@ QMenu::separator {
    <property name="text">
     <string>Analyze</string>
    </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
