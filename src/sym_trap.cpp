@@ -306,7 +306,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	printf("Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n", pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za);
 
 	// number of intermediary poses
-	int numPoses = 20; // read this in from UI in the future
+	int numPoses = ui.iterBox->value(); // read this in from UI in the future
 	cout << "Using " << numPoses << " intermediary poses" << endl;
 
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
@@ -368,7 +368,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 
 	std::cout << "Desired Rotation: " << desired_rotation << std::endl;
 
-	std::vector<double> rotToEval = linspace(0.0f, desired_rotation, numPoses);
+	std::vector<double> rotToEval = linspace(-1 * desired_rotation, desired_rotation*2, numPoses);
 	double inc = desired_rotation / numPoses;
 
 	// calculate initial cost for pos 0 and put that in our dataset
@@ -451,9 +451,9 @@ void sym_trap::graphResults() {
 		while (std::getline(fname, line))
 		{
 
-			std::stringstream str(line);
+			std::stringstream str_s(line);
 
-			while (std::getline(str, data, ','))
+			while (std::getline(str_s, data, ','))
 				row.push_back(data);
 		}
 	}

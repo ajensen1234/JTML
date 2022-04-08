@@ -362,7 +362,7 @@ QMenu::separator {
   <widget class="QPushButton" name="gather_dataset">
    <property name="geometry">
     <rect>
-     <x>420</x>
+     <x>460</x>
      <y>20</y>
      <width>211</width>
      <height>61</height>
@@ -487,7 +487,7 @@ QMenu::separator {
     <rect>
      <x>280</x>
      <y>20</y>
-     <width>81</width>
+     <width>71</width>
      <height>61</height>
     </rect>
    </property>
@@ -503,10 +503,16 @@ QMenu::separator {
     <bool>false</bool>
    </property>
    <property name="minimum">
-    <number>1</number>
+    <number>9</number>
+   </property>
+   <property name="maximum">
+    <number>999</number>
+   </property>
+   <property name="singleStep">
+    <number>3</number>
    </property>
    <property name="value">
-    <number>20</number>
+    <number>60</number>
    </property>
   </widget>
   <widget class="QProgressBar" name="progressBar">
@@ -523,6 +529,30 @@ QMenu::separator {
    </property>
    <property name="format">
     <string>%p% Optimized</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="save_plot">
+   <property name="geometry">
+    <rect>
+     <x>1060</x>
+     <y>20</y>
+     <width>101</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>679</width>
+     <height>16777215</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>16</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Save Plot</string>
    </property>
   </widget>
  </widget>

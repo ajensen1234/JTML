@@ -150,8 +150,10 @@ MainScreen::MainScreen(QWidget* parent)
 	connect(settings_control, SIGNAL(SaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)),
 		this, SLOT(onSaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)), Qt::DirectConnection);
 
-	// Setup Sym Trap Window
+	/* SYM TRAP */
+	// Setup Sym Trap Window Obj
 	this->sym_trap_control = new sym_trap();
+	// Connect signals for launching sym trap optimizer and updating progress bar
 	connect(sym_trap_control->ui.optimize, SIGNAL(clicked()), this, SLOT(optimizer_launch_slot()));
 	connect(this, SIGNAL(UpdateTimeRemaining(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
 
@@ -4101,7 +4103,8 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		optimizer_settings_,
 		trunk_manager_, branch_manager_, leaf_manager_,
 		directive,
-		error_mess);
+		error_mess,
+		(directive == "Sym_Trap") ? sym_trap_control : nullptr);
 
 	/*If Didnt't Initialize Correctly DESTROY*/
 	if (!initialized_correctly) {
@@ -4120,6 +4123,10 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	QObject::connect(this, SIGNAL(StopOptimizer()), optimizer_manager, SLOT(onStopOptimizer()), Qt::DirectConnection); /*Stops Optimizer*/
 	QObject::connect(optimizer_manager, SIGNAL(UpdateDilationBackground()), this, SLOT(onUpdateDilationBackground())); /*UPDATE DILATION BACKGROUND	*/
 	QObject::connect(optimizer_manager, SIGNAL(onUpdateOrientationSymTrap(double, double, double, double, double, double)), this, SLOT(updateOrientationSymTrap_MS(double, double, double, double, double, double)));
+	
+	// Connect sym trap progress bar to thread
+	QObject::connect(optimizer_manager, SIGNAL(onProgressBarUpdte(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Start*/
 	if (directive == "Each" || directive == "All") {
@@ -4249,8 +4256,7 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	if (this->start_time == -1) { 
 		this->start_time = est_time;
 	}
-	std::cout << "TIME CHECK EST: " << est_time << " | Start: " << start_time << " | Val: " << static_cast<int>(((start_time - est_time) / start_time) * 100) << std::endl;
-	emit UpdateTimeRemaining(static_cast<int>(((start_time - est_time) / start_time) * 100));
+	emit UpdateTimeRemaining(static_cast<int>(((start_time - est_time) / start_time) * 50));
 	
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","

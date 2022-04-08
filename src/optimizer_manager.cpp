@@ -10,6 +10,7 @@
 OptimizerManager::OptimizerManager(QObject* parent) :
 	QObject(parent)
 {
+	this->sym_trap_obj = nullptr;
 }
 
 /*Initialize*/
@@ -22,7 +23,13 @@ bool OptimizerManager::Initialize(
 	OptimizerSettings opt_settings,
 	jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 	QString opt_directive,
-	QString& error_message) {
+	QString& error_message,
+	sym_trap* sym_trap_obj_) {
+
+	if (this->sym_trap_obj == nullptr && sym_trap_obj_ != nullptr) {
+		this->sym_trap_obj = sym_trap_obj_;
+	}
+
 	/*Success?*/
 	succesfull_initialization_ = true;
 
@@ -918,14 +925,16 @@ void OptimizerManager::Optimize() {
 		if (sym_trap_call) {
 			std::vector<Point6D> pose_list;
 			Point6D pose_6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_);
-			sym_trap::create_vector_of_poses(pose_list, pose_6D); // static function doesn't require instantiation of object
-
+			sym_trap_obj->create_vector_of_poses(pose_list, pose_6D); // static function doesn't require instantiation of object
+			int last_bar_val = sym_trap_obj->ui.progressBar->value();
 			for (int i = 0; i < pose_list.size(); i++) {
 				emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y, pose_list.at(i).z, pose_list.at(i).xa, pose_list.at(i).ya, pose_list.at(i).za);
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				double myCost = EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
 				Costs.push_back(myCost);
 				std::cout << i + 1 << ": " << myCost << " @ rotation (" << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << pose_list.at(i).za << ")" << std::endl;
+				emit onProgressBarUpdate(last_bar_val + (50 / pose_list.size()));
+				last_bar_val += (50 / pose_list.size());
 			}
 
 			//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
@@ -944,6 +953,9 @@ void OptimizerManager::Optimize() {
 
 			}
 			myfile2.close();
+
+			emit onProgressBarUpdate(100);
+
 			//EvaluateCostFunctionAtPoint(Point6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_));
 		}
 

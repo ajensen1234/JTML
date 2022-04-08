@@ -1,8 +1,5 @@
 #pragma once
 #include <qdialog.h>
-
-#include "optimizer_manager.h"
-#include "optimizer_settings.h"
 #include "ui_sym_trap.h"
 
 
@@ -32,6 +29,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 
 class sym_trap :public QDialog
@@ -56,7 +54,7 @@ public:
 	static void getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]);
 
 	static void copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_matrix)[3][3]);
-	static void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose);
+	void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose);
 
 	template<typename T>
 	std::vector<double> static linspace(T start_in, T end_in, int num_in);

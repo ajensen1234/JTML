@@ -90,7 +90,7 @@ signals:
 	/*Stop Optimizer*/
 	void StopOptimizer();
 	
-	// Send out optimizer time remaining
+	// [SYM TRAP] Send out optimizer time remaining 
 	void UpdateTimeRemaining(int);
 
 private:
@@ -168,7 +168,7 @@ private:
 	a new thread*/
 	
 	/*Launch Optimizer*/
-	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each
+	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each (or Sym_Trap)
 
 	/*Optimizer Thread and Manager*/
 	QThread* optimizer_thread;
