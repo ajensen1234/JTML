@@ -66,6 +66,7 @@ public:
 public Q_SLOTS:
 	double onCostFuncAtPoint(double result);
 	void graphResults();
+	void graphResults2D();
 	//void saveData();
 	//void loadData();
 

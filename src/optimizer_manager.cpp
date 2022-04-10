@@ -954,6 +954,14 @@ void OptimizerManager::Optimize() {
 			}
 			myfile2.close();
 
+			std::ofstream myfile3;
+			myfile3.open("Results2D.xyz");
+			for (int i = 0; i < pose_list.size(); i++) {
+				myfile3 << i << " " << Costs.at(i) << " " << 0 << "\n";
+
+			}
+			myfile3.close();
+
 			emit onProgressBarUpdate(100);
 
 			//EvaluateCostFunctionAtPoint(Point6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_));

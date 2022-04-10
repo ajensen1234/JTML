@@ -14,7 +14,9 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 	int group_box_to_top_button_y = font_metrics.height() / 2;
 
 	//when button is clicked, call gather_dataset()
-	QObject::connect(ui.gather_dataset, SIGNAL(clicked()), this, SLOT(graphResults()));
+	QObject::connect(ui.Plot_3D, SIGNAL(clicked()), this, SLOT(graphResults()));
+	QObject::connect(ui.Plot_2D, SIGNAL(clicked()), this, SLOT(graphResults2D()));
+
 	this->plot_widget = nullptr;
 }
 
@@ -499,7 +501,7 @@ void sym_trap::graphResults() {
 
 
 	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	actor->GetProperty()->SetPointSize(20);
+	actor->GetProperty()->SetPointSize(10);
 	actor->SetMapper(mapper);
 
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
@@ -513,7 +515,7 @@ void sym_trap::graphResults() {
 
 
 	renderer->AddActor(actor);
-	renderer->SetBackground(.3, .6, .3);
+	renderer->SetBackground(0, 0, 0);
 
 	plot_widget->GetRenderWindow()->Render();
 
@@ -523,7 +525,7 @@ void sym_trap::graphResults() {
 	// add & render CubeAxes
 	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
 	axes->SetInputData(warp->GetOutput());
-	axes->SetFontFactor(1.2);
+	axes->SetFontFactor(1);
 	axes->SetFlyModeToNone();
 	axes->SetCamera(renderer->GetActiveCamera());
 
@@ -534,6 +536,75 @@ void sym_trap::graphResults() {
 	renderer->AddViewProp(axes);
 	renderWindowInteractor->Start();
 	
+}
+
+void sym_trap::graphResults2D() {
+	//runs when you click gatherdataset button
+	//read Results.csv and graph them
+	//how to show to Gui?
+	// Create QVTK widget and add it to layout box
+	if (!plot_widget) {
+		this->plot_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->insertWidget(0, plot_widget); // insert widget at first index of layout box
+		this->ui.verticalLayout->update();
+	}
+
+	// Read the file
+	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
+	reader->SetFileName("Results2D.xyz");
+	reader->Update();
+
+	vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
+	inputPolyData->CopyStructure(reader->GetOutput());
+
+
+	// warp plane
+	vtkSmartPointer<vtkWarpScalar> warp = vtkSmartPointer<vtkWarpScalar>::New();
+	warp->SetInputData(inputPolyData);
+	warp->SetScaleFactor(0.0);
+
+	// Visualize
+	vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+	mapper->SetInputConnection(warp->GetOutputPort());
+
+
+
+	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+	actor->GetProperty()->SetPointSize(10);
+	actor->SetMapper(mapper);
+
+	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+	plot_widget->GetRenderWindow()->AddRenderer(renderer);
+
+
+	//vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+	//renderWindow->AddRenderer(renderer);
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	renderWindowInteractor->SetRenderWindow(plot_widget->GetRenderWindow());
+
+
+	renderer->AddActor(actor);
+	renderer->SetBackground(0, 0, 0);
+
+	plot_widget->GetRenderWindow()->Render();
+
+	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+	renderWindowInteractor->SetInteractorStyle(style);
+
+	// add & render CubeAxes
+	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
+	axes->SetInputData(warp->GetOutput());
+	axes->SetFontFactor(1);
+	axes->SetFlyModeToNone();
+	axes->SetCamera(renderer->GetActiveCamera());
+
+	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
+	xAxis->SetAdjustLabels(1);
+
+
+	renderer->AddViewProp(axes);
+	renderWindowInteractor->Start();
+
 }
 
 template<typename T>
