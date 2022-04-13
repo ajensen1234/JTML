@@ -4125,7 +4125,7 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	QObject::connect(optimizer_manager, SIGNAL(onUpdateOrientationSymTrap(double, double, double, double, double, double)), this, SLOT(updateOrientationSymTrap_MS(double, double, double, double, double, double)));
 	
 	// Connect sym trap progress bar to thread
-	QObject::connect(optimizer_manager, SIGNAL(onProgressBarUpdte(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+	QObject::connect(optimizer_manager, SIGNAL(onProgressBarUpdate(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
 
 
 	/*Start*/

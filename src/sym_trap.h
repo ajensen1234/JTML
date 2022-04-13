@@ -40,6 +40,7 @@ public:
 	sym_trap(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 	~sym_trap();
 
+
 	//Point6D pose;
 
 	Point6D compute_mirror_pose(Point6D point);
@@ -59,6 +60,7 @@ public:
 	template<typename T>
 	std::vector<double> static linspace(T start_in, T end_in, int num_in);
 
+	int getIterCount();
 
 	//void set_pose(Point6D desired_pose);
 	Ui::symTrap ui;
@@ -67,12 +69,14 @@ public Q_SLOTS:
 	double onCostFuncAtPoint(double result);
 	void graphResults();
 	void graphResults2D();
+	void setIterCount(int n);
 	//void saveData();
 	//void loadData();
 
 private:
 	std::vector<Point6D> search_space;
 	QVTKWidget* plot_widget;
+	int iter_count;
 
 
 signals:

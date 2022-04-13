@@ -923,24 +923,24 @@ void OptimizerManager::Optimize() {
 
 		//TODO: VERIFY
 		if (sym_trap_call) {
-			std::vector<Point6D> pose_list;
+			int iter_val = sym_trap_obj->getIterCount() * 3;
+			std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
+			std::vector<Point6D> pose_list(0);
 			Point6D pose_6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_);
-			sym_trap_obj->create_vector_of_poses(pose_list, pose_6D); // static function doesn't require instantiation of object
-			int last_bar_val = sym_trap_obj->ui.progressBar->value();
-			for (int i = 0; i < pose_list.size(); i++) {
+			sym_trap_obj->create_vector_of_poses(pose_list, pose_6D);
+			for (int i = 0; i < iter_val; i++) {
 				emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y, pose_list.at(i).z, pose_list.at(i).xa, pose_list.at(i).ya, pose_list.at(i).za);
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				double myCost = EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
 				Costs.push_back(myCost);
 				std::cout << i + 1 << ": " << myCost << " @ rotation (" << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << pose_list.at(i).za << ")" << std::endl;
-				emit onProgressBarUpdate(last_bar_val + (50 / pose_list.size()));
-				last_bar_val += (50 / pose_list.size());
+				emit onProgressBarUpdate(50+i);
 			}
 
 			//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
 			std::ofstream myfile;
 			myfile.open("Results.csv");
-			for (int i = 0; i < pose_list.size(); i++) {
+			for (int i = 0; i < iter_val; i++) {
 				myfile << pose_list.at(i).xa << "," << pose_list.at(i).ya << "," << pose_list.at(i).za << "," << Costs.at(i) << "\n";
 				
 			}
@@ -948,7 +948,7 @@ void OptimizerManager::Optimize() {
 
 			std::ofstream myfile2;
 			myfile2.open("Results.xyz");
-			for (int i = 0; i < pose_list.size(); i++) {
+			for (int i = 0; i < iter_val; i++) {
 				myfile2 << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << Costs.at(i) << "\n";
 
 			}
@@ -956,7 +956,7 @@ void OptimizerManager::Optimize() {
 
 			std::ofstream myfile3;
 			myfile3.open("Results2D.xyz");
-			for (int i = 0; i < pose_list.size(); i++) {
+			for (int i = 0; i < iter_val; i++) {
 				myfile3 << i << " " << Costs.at(i) << " " << 0 << "\n";
 
 			}
@@ -996,7 +996,6 @@ double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
 	//Point6D denormalized_point = DenormalizeFromCenter(point);
 	gpu_cost_function::Pose pose(point.x, point.y, point.z,
 		point.xa, point.ya, point.za);
-	std::cout << pose.x_angle_ << ", " << pose.y_angle_<<", " << pose.z_angle_ << std::endl;
 	gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
 
 	double result = 0;

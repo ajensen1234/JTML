@@ -16,6 +16,9 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 	//when button is clicked, call gather_dataset()
 	QObject::connect(ui.Plot_3D, SIGNAL(clicked()), this, SLOT(graphResults()));
 	QObject::connect(ui.Plot_2D, SIGNAL(clicked()), this, SLOT(graphResults2D()));
+	QObject::connect(ui.iterBox, SIGNAL(valueChanged(int)), this, SLOT(setIterCount(int)));
+
+	this->iter_count = ui.iterBox->value();
 
 	this->plot_widget = nullptr;
 }
@@ -308,7 +311,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	printf("Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n", pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za);
 
 	// number of intermediary poses
-	int numPoses = ui.iterBox->value(); // read this in from UI in the future
+	int numPoses = getIterCount(); // read this in from UI in the future
 	cout << "Using " << numPoses << " intermediary poses" << endl;
 
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
@@ -370,8 +373,11 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 
 	std::cout << "Desired Rotation: " << desired_rotation << std::endl;
 
-	std::vector<double> rotToEval = linspace(-1 * desired_rotation, desired_rotation*2, numPoses);
-	double inc = desired_rotation / numPoses;
+	// Prepare linspace with a 0 at numPoses #
+	std::vector<double> rotToEval = linspace(-1 * desired_rotation, 0.0f, numPoses+1);
+	std::vector<double> rotAfter = linspace(0.0f, desired_rotation*2, numPoses*2+1);
+	rotToEval.insert(rotToEval.end(), rotAfter.begin() + 1, rotAfter.end()-1);
+
 
 	// calculate initial cost for pos 0 and put that in our dataset
 
@@ -410,12 +416,20 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 		cout << s << endl;
 	}
 
-	// initialize r_old (To current pose?)
+	// initialize r_base to current pose
+	float r_base[3][3]; // base pose rotation matrix
+	rotation_matrix(r_base, pose);
+	
+	std::vector<Point6D> pose_list_half;
+	pose_list_half.push_back(pose);
+
+	// start r_old at base pose
 	float r_old[3][3];
-	rotation_matrix(r_old, pose);
-	pose_list.push_back(pose);
+	copy_matrix_by_value(r_old, r_base);
 	// for loop to compute all_inc. Index 0 = start, Index n = end (skip?)
-	for (int i = 1; i < rotToEval.size(); i++) {
+	// Start by going forward from pose, then go in reverse
+	// Need to floor numposes/3 ?
+	for (int i = numPoses + 1; i < rotToEval.size(); i++) {
 		float r_new[3][3];
 		matmult3(r_new, rotInc, r_old);
 
@@ -425,11 +439,49 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 		Point6D n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot, rad2deg * y_rot, rad2deg * z_rot); //xrot yrot zrot, and however we plug x y and z positions in (Do xyz pos stay the same?)
 		printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i, rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
 
-		pose_list.push_back(n);
+		pose_list_half.push_back(n);
+		copy_matrix_by_value(r_old, r_new);
+	}
+	
+	std::vector<Point6D> pose_list_rev;
+	// Reset r_old to r_base
+	copy_matrix_by_value(r_old, r_base);
+	// start reversing through rotToEval
+	for (int i = numPoses - 1; i >= 0; i--) {
+		float r_new[3][3];
+		matmult3(r_new, rotInc, r_old);
+
+		float x_rot, y_rot, z_rot;
+		getRotations312(x_rot, y_rot, z_rot, r_new);
+
+		Point6D n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot, rad2deg * y_rot, rad2deg * z_rot); //xrot yrot zrot, and however we plug x y and z positions in (Do xyz pos stay the same?)
+		printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i, rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
+
+		pose_list_rev.push_back(n);
 		copy_matrix_by_value(r_old, r_new);
 	}
 
+	// push back pose_list_rev to pose_list in reverse order
+	for (int i = pose_list_rev.size() - 1; i >= 0; i--) {
+		pose_list.push_back(pose_list_rev[i]);
+	}
+	
+	// push back pose_list_half to pose_list in normal order
+	for (int i = 0; i < pose_list_half.size(); i++) {
+		pose_list.push_back(pose_list_half[i]);
+	}
+
 	return;
+}
+
+int sym_trap::getIterCount()
+{
+	return this->iter_count;
+}
+
+void sym_trap::setIterCount(int n)
+{
+	this->iter_count = n;
 }
 
 double sym_trap::onCostFuncAtPoint(double result) {
@@ -597,8 +649,9 @@ void sym_trap::graphResults2D() {
 	axes->SetFontFactor(1);
 	axes->SetFlyModeToNone();
 	axes->SetCamera(renderer->GetActiveCamera());
-
+	
 	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
+	xAxis->SetRulerMode(true);
 	xAxis->SetAdjustLabels(1);
 
 
