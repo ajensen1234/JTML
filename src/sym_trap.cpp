@@ -378,6 +378,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	std::vector<double> rotAfter = linspace(0.0f, desired_rotation*2, numPoses*2+1);
 	rotToEval.insert(rotToEval.end(), rotAfter.begin() + 1, rotAfter.end()-1);
 
+	double inc = desired_rotation / numPoses;
 
 	// calculate initial cost for pos 0 and put that in our dataset
 
@@ -444,7 +445,9 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	}
 	
 	std::vector<Point6D> pose_list_rev;
+
 	// Reset r_old to r_base
+	equivalent_axis_angle_rotation(rotInc, M, inc*-1);
 	copy_matrix_by_value(r_old, r_base);
 	// start reversing through rotToEval
 	for (int i = numPoses - 1; i >= 0; i--) {
