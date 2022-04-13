@@ -7,7 +7,9 @@ set(CPACK_PACKAGE_VERSION_MINOR 0)
 set(CPACK_PACKAGE_VERSION_PATCH 0)
 set(CPACK_VERBATIM_VARIABLES YES)
 
-file(GLOB MY_DLL_FILES C:/Users/ajensen123/Desktop/JTML/JTA-CMake/build/Release/*.dll)
+set(build_dir_libs "../build/src/Release/")
+
+file(GLOB MY_DLL_FILES ${build_dir_libs}*.dll)
 install(FILES ${MY_DLL_FILES} DESTINATION bin)
 
 
