@@ -1,7 +1,15 @@
 #pragma once
-#include <qdialog.h>
 #include "ui_sym_trap.h"
+#include "CostFunctionManager.h"
+#include "data_structures_6D.h"
 
+#include <qdialog.h>
+#include <QFile>
+#include <QTextStream>
+#include <QtWidgets/qfiledialog.h>
+
+
+#include <QVTKWidget.h>
 
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
@@ -19,12 +27,6 @@
 #include <vtkSimplePointsReader.h>
 #include <vtkWarpScalar.h>
 #include <vtkAxisActor2D.h>
-
-#include <QVTKWidget.h>
-
-
-#include "CostFunctionManager.h"
-#include "data_structures_6D.h"
 
 #include <cmath>
 #include <vector>
@@ -70,8 +72,8 @@ public Q_SLOTS:
 	void graphResults();
 	void graphResults2D();
 	void setIterCount(int n);
-	//void saveData();
-	//void loadData();
+	void saveData();
+	void loadData();
 
 private:
 	std::vector<Point6D> search_space;

@@ -17,6 +17,9 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 	QObject::connect(ui.Plot_3D, SIGNAL(clicked()), this, SLOT(graphResults()));
 	QObject::connect(ui.Plot_2D, SIGNAL(clicked()), this, SLOT(graphResults2D()));
 	QObject::connect(ui.iterBox, SIGNAL(valueChanged(int)), this, SLOT(setIterCount(int)));
+	
+	QObject::connect(ui.save_data, SIGNAL(clicked()), this, SLOT(saveData()));
+	QObject::connect(ui.load_data, SIGNAL(clicked()), this, SLOT(loadData()));
 
 	this->iter_count = ui.iterBox->value();
 
@@ -485,6 +488,51 @@ int sym_trap::getIterCount()
 void sym_trap::setIterCount(int n)
 {
 	this->iter_count = n;
+}
+
+void sym_trap::saveData()
+{
+	// save a file in Qt selected by user
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("CSV Files (*.csv)"));
+	QFile::copy("Results.csv", fileName);
+}
+
+void sym_trap::loadData()
+{
+	// Load a file from user selected directory
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("CSV Files (*.csv)"));
+	QFile loadedFile(fileName);
+
+	// Copy file to Results.csv
+
+	QFile vtkResults("Results.xyz");
+	QFile vtkResults2D("Results2D.xyz");
+
+	// Copy file to Results.xyz and Results2D.xyz
+	if (loadedFile.open(QIODevice::ReadOnly) && vtkResults.open(QIODevice::WriteOnly) && vtkResults2D.open(QIODevice::WriteOnly)) {
+		QTextStream input(&loadedFile);
+		QTextStream output(&vtkResults);
+		QTextStream output2D(&vtkResults2D);
+
+		// Loop through lines in input
+		QString line;
+		int i = 0;
+		while (input.readLineInto(&line)) {
+			QStringList splitLine = line.split(",");
+
+			// Write to Results.xyz
+			output << splitLine[0] << " " << splitLine[1] << " " << splitLine[3] << endl;
+			output2D << i++ << " " << splitLine[3] << " 0" << endl;
+		}
+
+		loadedFile.close();
+		vtkResults.close();
+		vtkResults2D.close();
+	}
+	// Remove existing results.csv before copy
+	QFile::remove("Results.csv");
+	QFile::copy(fileName, "Results.csv");
+	
 }
 
 double sym_trap::onCostFuncAtPoint(double result) {
