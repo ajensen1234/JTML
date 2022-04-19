@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QtWidgets/qfiledialog.h>
+#include <QMessageBox>
 
 
 #include <QVTKWidget.h>
@@ -27,6 +28,7 @@
 #include <vtkSimplePointsReader.h>
 #include <vtkWarpScalar.h>
 #include <vtkAxisActor2D.h>
+#include <vtkPNGWriter.h>
 
 #include <cmath>
 #include <vector>
@@ -74,6 +76,7 @@ public Q_SLOTS:
 	void setIterCount(int n);
 	void saveData();
 	void loadData();
+	void savePlot();
 
 private:
 	std::vector<Point6D> search_space;

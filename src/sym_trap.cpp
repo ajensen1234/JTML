@@ -20,6 +20,7 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 	
 	QObject::connect(ui.save_data, SIGNAL(clicked()), this, SLOT(saveData()));
 	QObject::connect(ui.load_data, SIGNAL(clicked()), this, SLOT(loadData()));
+	QObject::connect(ui.save_plot, SIGNAL(clicked()), this, SLOT(savePlot()));
 
 	this->iter_count = ui.iterBox->value();
 
@@ -533,6 +534,23 @@ void sym_trap::loadData()
 	QFile::remove("Results.csv");
 	QFile::copy(fileName, "Results.csv");
 	
+}
+
+void sym_trap::savePlot()
+{
+	// Take a screenshot of the plot and save it to a file
+	if (plot_widget) {
+		QPixmap pixmap = QPixmap::grabWidget(plot_widget);
+		QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("PNG Files (*.png)"));
+		pixmap.save(fileName);
+		
+		//vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+		//writer->SetInputData(plot_widget->cachedImage());
+		//writer->SetFileName(fileName);
+	}
+	else {
+		QMessageBox::information(this, "Error", "No plot to save");
+	}
 }
 
 double sym_trap::onCostFuncAtPoint(double result) {
