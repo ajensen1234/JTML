@@ -937,6 +937,9 @@ void OptimizerManager::Optimize() {
 				emit onProgressBarUpdate(50+i);
 			}
 
+			//set model back to intial pose
+			emit onUpdateOrientationSymTrap(pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
+
 			//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
 			std::ofstream myfile;
 			myfile.open("Results.csv");
@@ -946,6 +949,7 @@ void OptimizerManager::Optimize() {
 			}
 			myfile.close();
 
+			// Used for Sym Trap VTK plot
 			std::ofstream myfile2;
 			myfile2.open("Results.xyz");
 			for (int i = 0; i < iter_val; i++) {
@@ -963,8 +967,6 @@ void OptimizerManager::Optimize() {
 			myfile3.close();
 
 			emit onProgressBarUpdate(100);
-
-			//EvaluateCostFunctionAtPoint(Point6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_));
 		}
 
 
