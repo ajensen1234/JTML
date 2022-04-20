@@ -550,6 +550,7 @@ void sym_trap::loadData()
 	QFile::remove("Results.csv");
 	QFile::copy(fileName, "Results.csv");
 	
+	this->graphResults2D();
 }
 
 void sym_trap::savePlot()
