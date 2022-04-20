@@ -776,12 +776,7 @@ void sym_trap::graphResults2D() {
 	chart->ForceAxesToBoundsOn();
 	chart->ZoomWithMouseWheelOn();
 	
-	vtkSmartPointer<vtkPlot> line = chart->AddPlot(vtkChart::LINE);
 	vtkSmartPointer<vtkPlot> plot = chart->AddPlot(vtkChart::POINTS);
-	
-	line->SetInputData(table, 0, 1);
-	line->SetColor(200, 200, 200, 175);
-	line->SetWidth(1.5);
 	
 	plot->SetInputData(table, 0, 1);
 	plot->SetColor(0, 0, 0, 255);
