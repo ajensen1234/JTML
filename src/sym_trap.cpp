@@ -495,6 +495,8 @@ void sym_trap::saveData()
 {
 	// save a file in Qt selected by user
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("CSV Files (*.csv)"));
+	if (fileName == "") { return; }
+	QFile::remove(fileName);
 	QFile::copy("Results.csv", fileName);
 }
 
@@ -502,12 +504,15 @@ void sym_trap::loadData()
 {
 	// Load a file from user selected directory
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("CSV Files (*.csv)"));
+	cout << "Filename: '" << fileName.toStdString() << "'" << endl;
+	if (fileName == "") { return; }
+
 	QFile loadedFile(fileName);
 
 	// Copy file to Results.csv
 
 	QFile vtkResults("Results.xyz");
-	QFile vtkResults2D("Results2D.xyz");
+	QFile vtkResults2D("Results2D.xy");
 
 	// Copy file to Results.xyz and Results2D.xyz
 	if (loadedFile.open(QIODevice::ReadOnly) && vtkResults.open(QIODevice::WriteOnly) && vtkResults2D.open(QIODevice::WriteOnly)) {
@@ -515,15 +520,26 @@ void sym_trap::loadData()
 		QTextStream output(&vtkResults);
 		QTextStream output2D(&vtkResults2D);
 
-		// Loop through lines in input
 		QString line;
+		
+		int count = 0;
+		// Get line count
+		while (!input.atEnd()) {
+			line = input.readLine();
+			count++;
+		}
+		cout << "count: " << count << endl;
+		input.seek(0); // reset stream to beginning
+		
+		// Loop through lines in input
 		int i = 0;
-		while (input.readLineInto(&line)) {
+		while (!input.atEnd()) {
+			line = input.readLine();
 			QStringList splitLine = line.split(",");
 
 			// Write to Results.xyz
 			output << splitLine[0] << " " << splitLine[1] << " " << splitLine[3] << endl;
-			output2D << i++ << " " << splitLine[3] << " 0" << endl;
+			output2D << i++ - count/3 << " " << splitLine[3] << endl;
 		}
 
 		loadedFile.close();
@@ -540,13 +556,17 @@ void sym_trap::savePlot()
 {
 	// Take a screenshot of the plot and save it to a file
 	if (plot_widget) {
-		QPixmap pixmap = QPixmap::grabWidget(plot_widget);
 		QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("PNG Files (*.png)"));
-		pixmap.save(fileName);
+		if (fileName == "") { return; }
+		//QPixmap pixmap = QPixmap::grabWidget(plot_widget);
+		QFile::remove(fileName);
 		
-		//vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
-		//writer->SetInputData(plot_widget->cachedImage());
-		//writer->SetFileName(fileName);
+		/*pixmap.save(fileName);*/
+		
+		vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+		writer->SetFileName(fileName.toStdString().c_str());
+		writer->SetInputData(plot_widget->cachedImage());
+		writer->Write();
 	}
 	else {
 		QMessageBox::information(this, "Error", "No plot to save");
@@ -561,7 +581,13 @@ double sym_trap::onCostFuncAtPoint(double result) {
 void sym_trap::graphResults() {
 	//runs when you click gatherdataset button
 	//read Results.csv and graph them
-	//how to show to Gui?
+
+	if (!QFile::exists("Results.xyz")) {
+		// Error window
+		QMessageBox::information(this, "Error", "No 3D results to graph");
+		return;
+	}
+	
 	fstream fname;
 	fname.open("Results.csv", ios::in);
 	if (!fname.is_open()) { std::cout << "error"; }
@@ -598,6 +624,12 @@ void sym_trap::graphResults() {
 	if (!plot_widget) {
 		this->plot_widget = new QVTKWidget(this);
 		this->ui.verticalLayout->insertWidget(0,plot_widget); // insert widget at first index of layout box
+		this->ui.verticalLayout->update();
+	} else {
+		QVTKWidget* temp_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
+		delete plot_widget;
+		this->plot_widget = temp_widget;
 		this->ui.verticalLayout->update();
 	}
 	
@@ -660,73 +692,105 @@ void sym_trap::graphResults() {
 }
 
 void sym_trap::graphResults2D() {
-	//runs when you click gatherdataset button
-	//read Results.csv and graph them
-	//how to show to Gui?
-	// Create QVTK widget and add it to layout box
+	if (!QFile::exists("Results2D.xy")) {
+		// Error window
+		QMessageBox::information(this, "Error", "No 2D results to graph");
+		return;
+	}
+	
+	// Create QVTK widget and add it to layout 
 	if (!plot_widget) {
 		this->plot_widget = new QVTKWidget(this);
 		this->ui.verticalLayout->insertWidget(0, plot_widget); // insert widget at first index of layout box
 		this->ui.verticalLayout->update();
+	} else {
+		QVTKWidget* temp_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
+		delete plot_widget;
+		this->plot_widget = temp_widget;
+		this->ui.verticalLayout->update();
 	}
-
-	// Read the file
-	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
-	reader->SetFileName("Results2D.xyz");
-	reader->Update();
-
-	vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
-	inputPolyData->CopyStructure(reader->GetOutput());
-
-
-	// warp plane
-	vtkSmartPointer<vtkWarpScalar> warp = vtkSmartPointer<vtkWarpScalar>::New();
-	warp->SetInputData(inputPolyData);
-	warp->SetScaleFactor(0.0);
-
-	// Visualize
-	vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
-	mapper->SetInputConnection(warp->GetOutputPort());
-
-
-
-	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	actor->GetProperty()->SetPointSize(10);
-	actor->SetMapper(mapper);
-
-	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-	plot_widget->GetRenderWindow()->AddRenderer(renderer);
-
-
-	//vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-	//renderWindow->AddRenderer(renderer);
-	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	renderWindowInteractor->SetRenderWindow(plot_widget->GetRenderWindow());
-
-
-	renderer->AddActor(actor);
-	renderer->SetBackground(0, 0, 0);
-
-	plot_widget->GetRenderWindow()->Render();
-
-	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-	renderWindowInteractor->SetInteractorStyle(style);
-
-	// add & render CubeAxes
-	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
-	axes->SetInputData(warp->GetOutput());
-	axes->SetFontFactor(1);
-	axes->SetFlyModeToNone();
-	axes->SetCamera(renderer->GetActiveCamera());
 	
-	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
-	xAxis->SetRulerMode(true);
-	xAxis->SetAdjustLabels(1);
+	// Initialize view
+	vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
+	vtkSmartPointer<vtkContextView> view = vtkSmartPointer<vtkContextView>::New();
+	view->GetRenderer()->SetBackground(colors->GetColor3d("SlateGray").GetData());
 
+	// Setup chart
+	vtkSmartPointer<vtkChartXY> chart = vtkSmartPointer<vtkChartXY>::New();
+	view->GetScene()->AddItem(chart);
+	//chart->SetShowLegend(true);
 
-	renderer->AddViewProp(axes);
-	renderWindowInteractor->Start();
+	// Set axes labels
+	vtkAxis* y = chart->GetAxis(vtkAxis::LEFT);
+	y->SetTitle("Cost");
+	y->GetTitleProperties()->ItalicOn();
 
+	vtkAxis* x = chart->GetAxis(vtkAxis::BOTTOM);
+	x->SetTitle("Pose Deviation Index from Origin Pose");
+	x->GetTitleProperties()->ItalicOn();
+
+	chart->SetTitle("Cost Analysis");
+	chart->GetTitleProperties()->BoldOn();
+	
+	//Create table
+	vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
+	
+	vtkSmartPointer<vtkFloatArray> xAxis = vtkSmartPointer<vtkFloatArray>::New();
+	xAxis->SetName("Index");
+	table->AddColumn(xAxis);
+	
+	vtkSmartPointer<vtkFloatArray> yAxis = vtkSmartPointer<vtkFloatArray>::New();
+	yAxis->SetName("Cost");
+	table->AddColumn(yAxis);
+	
+	// Add data to table
+	QFile file("Results2D.xy");
+	if (file.open(QIODevice::ReadOnly)) {
+		QTextStream in(&file);
+		QString line;
+		// Count number of lines in file to set table size
+		int totalRows = 0;
+		while (!in.atEnd()) {
+			line = in.readLine();
+			totalRows++;
+		}
+		table->SetNumberOfRows(totalRows);
+	
+		// Read file again and fill table
+		in.seek(0);
+		int row = 0;
+		while (!in.atEnd()) {
+			line = in.readLine();
+			QStringList list = line.split(" ");
+			table->SetValue(row, 0, list.at(0).toDouble());
+			table->SetValue(row, 1, list.at(1).toDouble());
+			row++;
+		}
+	}
+	file.close();
+
+	//Add plot and set properties
+	chart->SetInteractive(true);
+	chart->ForceAxesToBoundsOn();
+	chart->ZoomWithMouseWheelOn();
+	
+	vtkSmartPointer<vtkPlot> line = chart->AddPlot(vtkChart::LINE);
+	vtkSmartPointer<vtkPlot> plot = chart->AddPlot(vtkChart::POINTS);
+	
+	line->SetInputData(table, 0, 1);
+	line->SetColor(200, 200, 200, 175);
+	line->SetWidth(1.5);
+	
+	plot->SetInputData(table, 0, 1);
+	plot->SetColor(0, 0, 0, 255);
+	plot->SetWidth(1.5);
+
+	// Render
+	view->SetInteractor(plot_widget->GetInteractor());
+	plot_widget->SetRenderWindow(view->GetRenderWindow());
+	plot_widget->GetRenderWindow()->SetMultiSamples(0);
+	plot_widget->GetRenderWindow()->Render();
 }
 
 template<typename T>

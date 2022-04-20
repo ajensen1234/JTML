@@ -959,9 +959,9 @@ void OptimizerManager::Optimize() {
 			myfile2.close();
 
 			std::ofstream myfile3;
-			myfile3.open("Results2D.xyz");
+			myfile3.open("Results2D.xy");
 			for (int i = 0; i < iter_val; i++) {
-				myfile3 << i << " " << Costs.at(i) << " " << 0 << "\n";
+				myfile3 << i - iter_val/3 << " " << Costs.at(i) << "\n";
 
 			}
 			myfile3.close();

@@ -12,23 +12,34 @@
 
 #include <QVTKWidget.h>
 
-#include <vtkRenderer.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkRenderWindow.h>
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
+#include <vtkImageData.h>
+#include <vtkTextProperty.h>
+#include <vtkAxis.h>
+#include <vtkAxisActor2D.h>
+#include <vtkChartXY.h>
+#include <vtkContextScene.h>
+#include <vtkContextView.h>
+#include <vtkCubeAxesActor2D.h>
+#include <vtkDataSetMapper.h>
+#include <vtkFloatArray.h>
+#include <vtkInteractorStyleTrackball.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkNamedColors.h>
+#include <vtkNew.h>
+#include <vtkPlotPoints.h>
+#include <vtkPNGWriter.h>
 #include <vtkPointData.h>
+#include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkDataSetMapper.h>
 #include <vtkProperty.h>
-#include <vtkCubeAxesActor2D.h>
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkInteractorStyleTrackball.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkSimplePointsReader.h>
+#include <vtkSmartPointer.h>
+#include <vtkTable.h>
 #include <vtkWarpScalar.h>
-#include <vtkAxisActor2D.h>
-#include <vtkPNGWriter.h>
 
 #include <cmath>
 #include <vector>
