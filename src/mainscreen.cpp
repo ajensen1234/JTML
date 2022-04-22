@@ -1018,7 +1018,8 @@ void MainScreen::on_actionLoad_Kinematics_triggered()
 
 // Start Symtrap Optimizer
 void MainScreen::optimizer_launch_slot() {
-	LaunchOptimizer("Sym_Trap");
+	if (!sym_trap_running)
+		LaunchOptimizer("Sym_Trap");
 }
 
 
@@ -4256,13 +4257,6 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
 
-	// update est time for sym_trap progress bar
-	float est_time = (float) divresult.quot * 60 + divresult.rem;
-	if (this->start_time == -1) { 
-		this->start_time = est_time;
-	}
-	emit UpdateTimeRemaining(static_cast<int>(((start_time - est_time) / start_time) * 50));
-	
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","
 		+ std::to_string((long double)CurrentPose.z) + ">\nOptimum Orientation: <"
