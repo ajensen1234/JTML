@@ -127,6 +127,7 @@ MainScreen::MainScreen(QWidget* parent)
 	ui.setupUi(this);
 
 	this->start_time = -1;
+	sym_trap_running = false;
 
 	/*Set Minimum and Maximum for Sliders*/
 	ui.low_threshold_slider->setMinimum(0);
@@ -4060,6 +4061,8 @@ a new thread*/
 void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	SaveLastPose();
 
+	if (directive == "Sym_Trap") sym_trap_running = true;
+
 	/*Can Only Optimize If Chosen Frame and Model*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	if (selected.size() == 0 || previous_frame_index_ < 0 || ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
@@ -4205,8 +4208,10 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 		currently_optimizing_ = false;
 		EnableAll();
 		/*Display Finished*/
-		if (!error_occurred)
+		if (!error_occurred && !sym_trap_running) {
 			QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+		}
+		sym_trap_running = false;
 	}
 
 

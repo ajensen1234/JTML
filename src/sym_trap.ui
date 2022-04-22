@@ -528,7 +528,7 @@ QMenu::separator {
     <number>0</number>
    </property>
    <property name="format">
-    <string>%p% Optimized</string>
+    <string>%p% Analyzed</string>
    </property>
   </widget>
   <widget class="QPushButton" name="save_plot">

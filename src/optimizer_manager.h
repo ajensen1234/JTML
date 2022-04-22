@@ -61,8 +61,10 @@ public:
 		sym_trap* sym_trap_obj);
 	~OptimizerManager();
 
+
 	/* get cost numbers for symmetry plotting */
 	double EvaluateCostFunctionAtPoint(Point6D point, int stage);
+	void CalculateSymTrap();
 
 signals:
 	/*Update Blue Current Optimum*/

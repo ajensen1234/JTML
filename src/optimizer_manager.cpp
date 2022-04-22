@@ -650,6 +650,10 @@ void OptimizerManager::Optimize() {
 	/*Container for String Message*/
 	std::string error_message;
 
+	if (sym_trap_call) {
+		goto LEAF_INIT;
+	}
+
 	/*Loop Over Each Frame Loaded*/
 	for (int frame_index = start_frame_index_; frame_index < frames_A_.size(); frame_index++) {
 		/*Set Up Search Range and Starting Point*/
@@ -830,6 +834,7 @@ void OptimizerManager::Optimize() {
 
 		/*****************LEAF SECTION BEGIN **********************/
 		/*Construct Leaf Initialization*/
+LEAF_INIT:
 		if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
 			if (!leaf_manager_.InitializeActiveCostFunction(error_message)) {
 				emit OptimizerError(QString::fromStdString(error_message));
@@ -841,6 +846,11 @@ void OptimizerManager::Optimize() {
 				cv::dilate(frames_B_[frame_index].GetEdgeImage(), frames_B_[frame_index].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), leaf_dilation_val_); /*Reset Dilation In That Image*/
 			}
 			emit UpdateDilationBackground();
+		}
+
+		if (sym_trap_call) { 
+			CalculateSymTrap();
+			goto SKIP;
 		}
 
 		/*Move to Leaf Search If Necessary*/
@@ -892,7 +902,13 @@ void OptimizerManager::Optimize() {
 			}
 		}
 
-		// Leaf cost func Destructor was here
+		/*Destruct Leaf Initialization CFM*/
+		if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
+			if (!leaf_manager_.DestructActiveCostFunction(error_message)) {
+				emit OptimizerError(QString::fromStdString(error_message));
+				error_occurrred_ = true;
+			}
+		}
 
 		/*****************LEAF SECTION END **********************/
 
@@ -906,10 +922,14 @@ void OptimizerManager::Optimize() {
 		}
 		emit UpdateDilationBackground();
 
-		/*Move on and Wrap Up*/
+SKIP:		/*Move on and Wrap Up*/
 		if (error_occurrred_ || frame_index == frames_A_.size() - 1) progress_next_frame_ = false;
 		emit OptimizedFrame(current_optimum_location_.x, current_optimum_location_.y, current_optimum_location_.z,
 			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, progress_next_frame_, primary_model_index_, error_occurrred_);
+		if (sym_trap_call) {
+			emit finished();
+			return;
+		}
 		emit UpdateDisplay((double)(clock() - start_clock_) / (double)cost_function_calls_, (int)cost_function_calls_, current_optimum_value_, primary_model_index_);
 		update_screen_clock_ = clock();
 
@@ -918,77 +938,77 @@ void OptimizerManager::Optimize() {
 			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za);
 		pose_storage_.UpdatePrincipalModelPose(frame_index, current_opt_pose);
 
-		//Store cost values to input to csv
-		std::vector <double> Costs;
-
-		//TODO: VERIFY
-		if (sym_trap_call) {
-			int iter_val = sym_trap_obj->getIterCount() * 3;
-			std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
-			std::vector<Point6D> pose_list(0);
-			Point6D pose_6D(current_opt_pose.x_location_, current_opt_pose.y_location_, current_opt_pose.z_location_, current_opt_pose.x_angle_, current_opt_pose.y_angle_, current_opt_pose.z_angle_);
-			sym_trap_obj->create_vector_of_poses(pose_list, pose_6D);
-			for (int i = 0; i < iter_val; i++) {
-				emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y, pose_list.at(i).z, pose_list.at(i).xa, pose_list.at(i).ya, pose_list.at(i).za);
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-				double myCost = EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
-				Costs.push_back(myCost);
-				std::cout << i + 1 << ": " << myCost << " @ rotation (" << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << pose_list.at(i).za << ")" << std::endl;
-				emit onProgressBarUpdate(50+i);
-			}
-
-			//set model back to intial pose
-			emit onUpdateOrientationSymTrap(pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
-
-			//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
-			std::ofstream myfile;
-			myfile.open("Results.csv");
-			for (int i = 0; i < iter_val; i++) {
-				myfile << pose_list.at(i).xa << "," << pose_list.at(i).ya << "," << pose_list.at(i).za << "," << Costs.at(i) << "\n";
-				
-			}
-			myfile.close();
-
-			// Used for Sym Trap VTK plot
-			std::ofstream myfile2;
-			myfile2.open("Results.xyz");
-			for (int i = 0; i < iter_val; i++) {
-				myfile2 << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << Costs.at(i) << "\n";
-
-			}
-			myfile2.close();
-
-			std::ofstream myfile3;
-			myfile3.open("Results2D.xy");
-			for (int i = 0; i < iter_val; i++) {
-				myfile3 << i - iter_val/3 << " " << Costs.at(i) << "\n";
-
-			}
-			myfile3.close();
-
-			emit onProgressBarUpdate(100);
-		}
-
-
-		/*Destruct Leaf Initialization CFM*/
-		if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
-			if (!leaf_manager_.DestructActiveCostFunction(error_message)) {
-				emit OptimizerError(QString::fromStdString(error_message));
-				error_occurrred_ = true;
-			}
-		}
-
-
-
 		/*If Error Occurred or Not Progressing Breank (Which Ends)*/
 		if (!progress_next_frame_) {
 			break;
 		}
 	}
 
+	
 	/*Finish And Return*/
 	emit finished();
 	return;
+}
+
+void OptimizerManager::CalculateSymTrap() {
+	if (current_optimum_location_.xa == 0 && current_optimum_location_.ya == 0 && current_optimum_location_.za == 0) {
+		cout << "ERROR: INVALID STARTING POSE FOR SYMMETRY TRAP" << endl;
+		return;
+	}
+	//Store cost values to input to csv
+	std::vector <double> Costs;
+
+	// Get number of iterations from sym_trap spin box
+	int iter_val = sym_trap_obj->getIterCount() * 3;
+	std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
+
+	// Get pose list from sym trap
+	std::vector<Point6D> pose_list(0);
+	Point6D pose_6D(current_optimum_location_);
+	sym_trap_obj->create_vector_of_poses(pose_list, pose_6D);
+
+	// Calculate cost function at each pose
+	int progress_val = 0;
+	for (int i = 0; i < iter_val; i++) {
+		emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y, pose_list.at(i).z, pose_list.at(i).xa, pose_list.at(i).ya, pose_list.at(i).za);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000/iter_val));
+		double myCost = EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
+		Costs.push_back(myCost);
+		std::cout << i + 1 << ": " << myCost << " @ rotation (" << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << pose_list.at(i).za << ")" << std::endl;
+		progress_val += MAX(100 / iter_val, 1);
+		emit onProgressBarUpdate(progress_val);
+	}
+
+	//set model back to intial pose
+	emit onUpdateOrientationSymTrap(pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
+
+	//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
+	std::ofstream myfile;
+	myfile.open("Results.csv");
+	for (int i = 0; i < iter_val; i++) {
+		myfile << pose_list.at(i).xa << "," << pose_list.at(i).ya << "," << pose_list.at(i).za << "," << Costs.at(i) << "\n";
+
+	}
+	myfile.close();
+
+	// Used for Sym Trap VTK plot
+	std::ofstream myfile2;
+	myfile2.open("Results.xyz");
+	for (int i = 0; i < iter_val; i++) {
+		myfile2 << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << Costs.at(i) << "\n";
+
+	}
+	myfile2.close();
+
+	std::ofstream myfile3;
+	myfile3.open("Results2D.xy");
+	for (int i = 0; i < iter_val; i++) {
+		myfile3 << i - iter_val / 3 << " " << Costs.at(i) << "\n";
+
+	}
+	myfile3.close();
+
+	emit onProgressBarUpdate(100);
 }
 
 double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {

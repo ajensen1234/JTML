@@ -199,6 +199,7 @@ private:
 
 	// Helper function for sym_trap to get information about the current pose
 	Point6D copy_current_pose();
+	bool sym_trap_running;
 
 public Q_SLOTS:
 
