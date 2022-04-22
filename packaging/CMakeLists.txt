@@ -12,11 +12,10 @@ set(networks_dir "../build/src/Release/Networks")
 set(platforms_dir "../build/src/Release/platforms")
 
 file(GLOB MY_DLL_FILES ${build_dir_libs}*.dll)
-file(GLOB MY_TRAINED_NETWORKS ${networks_dir}*.pt)
-file(GLOB MY_QT_PLATFORMS ${profiles_dir}*.dll)
+
 install(FILES ${MY_DLL_FILES} DESTINATION bin)
-install(FILES ${MY_TRAINED_NETWORKS} DESTINATION bin/networks)
-install(FILES ${MY_QT_PLATFORMS} DESTINATION bin/platforms)
+install(DIRECTORY ${networks_dir} DESTINATION bin)
+install(DIRECTORY ${platforms} DESTINATION bin)
 
 
 
