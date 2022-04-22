@@ -7,6 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(src)
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) #fix to overall source directory
-	add_subdirectory(packaging)
-endif()
+
+add_subdirectory(packaging)
+
