@@ -84,15 +84,19 @@ public:
 	bool currently_optimizing_;
 
 
-
 signals:
 	/*Update Whether To Write TO Text Display*/
 	void UpdateDisplayText(bool);
 	/*Stop Optimizer*/
 	void StopOptimizer();
+	
+	// [SYM TRAP] Send out optimizer time remaining 
+	void UpdateTimeRemaining(int);
 
 private:
 	Ui::MainScreenClass ui;
+
+	float start_time;
 
 	/*GUI FUNCTIONS*/
 	/*Arrange Layout (Do this in code so scales across different DPI monitors and handles weird fonts)*/
@@ -162,12 +166,13 @@ private:
 
 	/*Optimization Function: Packages Off The Optimization process in
 	a new thread*/
+	
 	/*Launch Optimizer*/
-	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each
+	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each (or Sym_Trap)
 
 	/*Optimizer Thread and Manager*/
 	QThread* optimizer_thread;
-	OptimizerManager* optimizer_manager;
+	OptimizerManager *optimizer_manager;
 
 	/*Disable and Enable MainScreen During and After Optimization*/
 	void DisableAll();
@@ -184,7 +189,7 @@ private:
 	SettingsControl* settings_control;
 
 	/*Sym Trap Window*/
-	sym_trap* sym_trap_control = new sym_trap();
+	sym_trap* sym_trap_control;
 
 	/*Calculate Viewing Angle (Accounts for Offsets)*/
 	double CalculateViewingAngle(int width, int height, bool CameraA);
@@ -194,8 +199,12 @@ private:
 
 	// Helper function for sym_trap to get information about the current pose
 	Point6D copy_current_pose();
+	bool sym_trap_running;
 
 public Q_SLOTS:
+
+	// Call Optimizer Launch
+	void optimizer_launch_slot();
 
 	/*Load Buttons*/
 	void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/

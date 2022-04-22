@@ -57,11 +57,14 @@ public:
 		OptimizerSettings opt_settings,
 		jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 		QString opt_directive,
-		QString& error_message);
+		QString& error_message,
+		sym_trap* sym_trap_obj);
 	~OptimizerManager();
+
 
 	/* get cost numbers for symmetry plotting */
 	double EvaluateCostFunctionAtPoint(Point6D point, int stage);
+	void CalculateSymTrap();
 
 signals:
 	/*Update Blue Current Optimum*/
@@ -79,6 +82,7 @@ signals:
 
 	void CostFuncAtPoint(double);
 	void onUpdateOrientationSymTrap(double, double, double, double, double, double);
+	void onProgressBarUpdate(int);
 
 public slots:
 	/*Optimizer Biplane Single Model*/
@@ -97,7 +101,9 @@ private:
 	/*Optimizer Settings*/
 	OptimizerSettings optimizer_settings_;
 
+	/*SYM TRAP SETTINGS*/
 	bool sym_trap_call;
+	sym_trap* sym_trap_obj;
 
 	/*Frames*/
 	std::vector<Frame> frames_A_;

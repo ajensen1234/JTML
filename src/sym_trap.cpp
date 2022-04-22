@@ -14,13 +14,22 @@ sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, fla
 	int group_box_to_top_button_y = font_metrics.height() / 2;
 
 	//when button is clicked, call gather_dataset()
-	QObject::connect(ui.gather_dataset, SIGNAL(clicked()), this, SLOT(graphResults()));
+	QObject::connect(ui.Plot_3D, SIGNAL(clicked()), this, SLOT(graphResults()));
+	QObject::connect(ui.Plot_2D, SIGNAL(clicked()), this, SLOT(graphResults2D()));
+	QObject::connect(ui.iterBox, SIGNAL(valueChanged(int)), this, SLOT(setIterCount(int)));
+	
+	QObject::connect(ui.save_data, SIGNAL(clicked()), this, SLOT(saveData()));
+	QObject::connect(ui.load_data, SIGNAL(clicked()), this, SLOT(loadData()));
+	QObject::connect(ui.save_plot, SIGNAL(clicked()), this, SLOT(savePlot()));
 
+	this->iter_count = ui.iterBox->value();
+
+	this->plot_widget = nullptr;
 }
 
 sym_trap::~sym_trap()
 {
-
+	delete this->plot_widget;
 }
 
 
@@ -296,25 +305,6 @@ void sym_trap::copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_m
 	}
 }
 
-// remove this function
-void sym_trap::gather_dataset() {
-	/*
-	std::vector<double> cost_vals;
-	// loop over points and get their relevant costs
-	cout << "Point Size: " << all_inc.size() << endl;
-	//return; // TEMP, REMOVE
-
-	for (const Point6D& pt : all_inc) {
-		//double val = EvaluateCostFunctionAtPoint(pt, 0);
-
-		// TODO: Fix crash
-		//cost_vals.push_back(val);
-		//cout << val << ", ";
-	}
-
-	// store the vectors in a CSV file for reading later
-	*/
-}
 
 void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose) {
 	// convert curr_pose into a Point6D
@@ -325,7 +315,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	printf("Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n", pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za);
 
 	// number of intermediary poses
-	int numPoses = 20; // read this in from UI in the future
+	int numPoses = getIterCount(); // read this in from UI in the future
 	cout << "Using " << numPoses << " intermediary poses" << endl;
 
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
@@ -387,7 +377,11 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 
 	std::cout << "Desired Rotation: " << desired_rotation << std::endl;
 
-	std::vector<double> rotToEval = linspace(0.0f, desired_rotation, numPoses);
+	// Prepare linspace with a 0 at numPoses #
+	std::vector<double> rotToEval = linspace(-1 * desired_rotation, 0.0f, numPoses+1);
+	std::vector<double> rotAfter = linspace(0.0f, desired_rotation*2, numPoses*2+1);
+	rotToEval.insert(rotToEval.end(), rotAfter.begin() + 1, rotAfter.end()-1);
+
 	double inc = desired_rotation / numPoses;
 
 	// calculate initial cost for pos 0 and put that in our dataset
@@ -427,12 +421,20 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 		cout << s << endl;
 	}
 
-	// initialize r_old (To current pose?)
+	// initialize r_base to current pose
+	float r_base[3][3]; // base pose rotation matrix
+	rotation_matrix(r_base, pose);
+	
+	std::vector<Point6D> pose_list_half;
+	pose_list_half.push_back(pose);
+
+	// start r_old at base pose
 	float r_old[3][3];
-	rotation_matrix(r_old, pose);
-	pose_list.push_back(pose);
+	copy_matrix_by_value(r_old, r_base);
 	// for loop to compute all_inc. Index 0 = start, Index n = end (skip?)
-	for (int i = 1; i < rotToEval.size(); i++) {
+	// Start by going forward from pose, then go in reverse
+	// Need to floor numposes/3 ?
+	for (int i = numPoses + 1; i < rotToEval.size(); i++) {
 		float r_new[3][3];
 		matmult3(r_new, rotInc, r_old);
 
@@ -442,16 +444,349 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 		Point6D n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot, rad2deg * y_rot, rad2deg * z_rot); //xrot yrot zrot, and however we plug x y and z positions in (Do xyz pos stay the same?)
 		printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i, rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
 
-		pose_list.push_back(n);
+		pose_list_half.push_back(n);
 		copy_matrix_by_value(r_old, r_new);
+	}
+	
+	std::vector<Point6D> pose_list_rev;
+
+	// Reset r_old to r_base
+	equivalent_axis_angle_rotation(rotInc, M, inc*-1);
+	copy_matrix_by_value(r_old, r_base);
+	// start reversing through rotToEval
+	for (int i = numPoses - 1; i >= 0; i--) {
+		float r_new[3][3];
+		matmult3(r_new, rotInc, r_old);
+
+		float x_rot, y_rot, z_rot;
+		getRotations312(x_rot, y_rot, z_rot, r_new);
+
+		Point6D n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot, rad2deg * y_rot, rad2deg * z_rot); //xrot yrot zrot, and however we plug x y and z positions in (Do xyz pos stay the same?)
+		printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i, rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
+
+		pose_list_rev.push_back(n);
+		copy_matrix_by_value(r_old, r_new);
+	}
+
+	// push back pose_list_rev to pose_list in reverse order
+	for (int i = pose_list_rev.size() - 1; i >= 0; i--) {
+		pose_list.push_back(pose_list_rev[i]);
+	}
+	
+	// push back pose_list_half to pose_list in normal order
+	for (int i = 0; i < pose_list_half.size(); i++) {
+		pose_list.push_back(pose_list_half[i]);
 	}
 
 	return;
 }
 
+int sym_trap::getIterCount()
+{
+	return this->iter_count;
+}
+
+void sym_trap::setIterCount(int n)
+{
+	this->iter_count = n;
+}
+
+void sym_trap::saveData()
+{
+	// save a file in Qt selected by user
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("CSV Files (*.csv)"));
+	if (fileName == "") { return; }
+	QFile::remove(fileName);
+	QFile::copy("Results.csv", fileName);
+}
+
+void sym_trap::loadData()
+{
+	// Load a file from user selected directory
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("CSV Files (*.csv)"));
+	cout << "Filename: '" << fileName.toStdString() << "'" << endl;
+	if (fileName == "") { return; }
+
+	QFile loadedFile(fileName);
+
+	// Copy file to Results.csv
+
+	QFile vtkResults("Results.xyz");
+	QFile vtkResults2D("Results2D.xy");
+
+	// Copy file to Results.xyz and Results2D.xyz
+	if (loadedFile.open(QIODevice::ReadOnly) && vtkResults.open(QIODevice::WriteOnly) && vtkResults2D.open(QIODevice::WriteOnly)) {
+		QTextStream input(&loadedFile);
+		QTextStream output(&vtkResults);
+		QTextStream output2D(&vtkResults2D);
+
+		QString line;
+		
+		int count = 0;
+		// Get line count
+		while (!input.atEnd()) {
+			line = input.readLine();
+			count++;
+		}
+		cout << "count: " << count << endl;
+		input.seek(0); // reset stream to beginning
+		
+		// Loop through lines in input
+		int i = 0;
+		while (!input.atEnd()) {
+			line = input.readLine();
+			QStringList splitLine = line.split(",");
+
+			// Write to Results.xyz
+			output << splitLine[0] << " " << splitLine[1] << " " << splitLine[3] << endl;
+			output2D << i++ - count/3 << " " << splitLine[3] << endl;
+		}
+
+		loadedFile.close();
+		vtkResults.close();
+		vtkResults2D.close();
+	}
+	// Remove existing results.csv before copy
+	QFile::remove("Results.csv");
+	QFile::copy(fileName, "Results.csv");
+	
+	this->graphResults2D();
+}
+
+void sym_trap::savePlot()
+{
+	// Take a screenshot of the plot and save it to a file
+	if (plot_widget) {
+		QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("PNG Files (*.png)"));
+		if (fileName == "") { return; }
+		//QPixmap pixmap = QPixmap::grabWidget(plot_widget);
+		QFile::remove(fileName);
+		
+		/*pixmap.save(fileName);*/
+		
+		vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+		writer->SetFileName(fileName.toStdString().c_str());
+		writer->SetInputData(plot_widget->cachedImage());
+		writer->Write();
+	}
+	else {
+		QMessageBox::information(this, "Error", "No plot to save");
+	}
+}
+
 double sym_trap::onCostFuncAtPoint(double result) {
 	std::cout << "grabbed result" << std::endl;
 	return result;
+}
+
+void sym_trap::graphResults() {
+	//runs when you click gatherdataset button
+	//read Results.csv and graph them
+
+	if (!QFile::exists("Results.xyz")) {
+		// Error window
+		QMessageBox::information(this, "Error", "No 3D results to graph");
+		return;
+	}
+	
+	fstream fname;
+	fname.open("Results.csv", ios::in);
+	if (!fname.is_open()) { std::cout << "error"; }
+
+	std::vector<std::string> row;
+	std::string line, data;
+
+	if (fname.is_open())
+	{
+		while (std::getline(fname, line))
+		{
+
+			std::stringstream str_s(line);
+
+			while (std::getline(str_s, data, ','))
+				row.push_back(data);
+		}
+	}
+	fname.close();
+
+	std::vector<double> xrot;
+	std::vector<double> yrot;
+	std::vector<double> zrot;
+	std::vector<double> costs;
+
+	for (int i = 0; i < row.size(); i+=4) {
+		xrot.push_back(stod(row.at(i)));
+		yrot.push_back(stod(row.at(i+1)));
+		zrot.push_back(stod(row.at(i+2)));
+		costs.push_back(stod(row.at(i+3)));
+	}
+
+	// Create QVTK widget and add it to layout box
+	if (!plot_widget) {
+		this->plot_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->insertWidget(0,plot_widget); // insert widget at first index of layout box
+		this->ui.verticalLayout->update();
+	} else {
+		QVTKWidget* temp_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
+		delete plot_widget;
+		this->plot_widget = temp_widget;
+		this->ui.verticalLayout->update();
+	}
+	
+	// Read the file
+	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
+	reader->SetFileName("Results.xyz");
+	reader->Update();
+
+	vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
+	inputPolyData->CopyStructure(reader->GetOutput());
+
+
+	// warp plane
+	vtkSmartPointer<vtkWarpScalar> warp = vtkSmartPointer<vtkWarpScalar>::New();
+	warp->SetInputData(inputPolyData);
+	warp->SetScaleFactor(0.0);
+	
+	// Visualize
+	vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+	mapper->SetInputConnection(warp->GetOutputPort());
+
+
+
+	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+	actor->GetProperty()->SetPointSize(10);
+	actor->SetMapper(mapper);
+
+	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+	plot_widget->GetRenderWindow()->AddRenderer(renderer);
+	
+	
+	//vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+	//renderWindow->AddRenderer(renderer);
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	renderWindowInteractor->SetRenderWindow(plot_widget->GetRenderWindow());
+
+
+	renderer->AddActor(actor);
+	renderer->SetBackground(0, 0, 0);
+
+	plot_widget->GetRenderWindow()->Render();
+
+	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+	renderWindowInteractor->SetInteractorStyle(style);
+
+	// add & render CubeAxes
+	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
+	axes->SetInputData(warp->GetOutput());
+	axes->SetFontFactor(1);
+	axes->SetFlyModeToNone();
+	axes->SetCamera(renderer->GetActiveCamera());
+
+	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
+	xAxis->SetAdjustLabels(1);
+
+
+	renderer->AddViewProp(axes);
+	renderWindowInteractor->Start();
+	
+}
+
+void sym_trap::graphResults2D() {
+	if (!QFile::exists("Results2D.xy")) {
+		// Error window
+		QMessageBox::information(this, "Error", "No 2D results to graph");
+		return;
+	}
+	
+	// Create QVTK widget and add it to layout 
+	if (!plot_widget) {
+		this->plot_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->insertWidget(0, plot_widget); // insert widget at first index of layout box
+		this->ui.verticalLayout->update();
+	} else {
+		QVTKWidget* temp_widget = new QVTKWidget(this);
+		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
+		delete plot_widget;
+		this->plot_widget = temp_widget;
+		this->ui.verticalLayout->update();
+	}
+	
+	// Initialize view
+	vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
+	vtkSmartPointer<vtkContextView> view = vtkSmartPointer<vtkContextView>::New();
+	view->GetRenderer()->SetBackground(colors->GetColor3d("SlateGray").GetData());
+
+	// Setup chart
+	vtkSmartPointer<vtkChartXY> chart = vtkSmartPointer<vtkChartXY>::New();
+	view->GetScene()->AddItem(chart);
+	//chart->SetShowLegend(true);
+
+	// Set axes labels
+	vtkAxis* y = chart->GetAxis(vtkAxis::LEFT);
+	y->SetTitle("Cost");
+	y->GetTitleProperties()->ItalicOn();
+
+	vtkAxis* x = chart->GetAxis(vtkAxis::BOTTOM);
+	x->SetTitle("Pose Deviation Index from Origin Pose");
+	x->GetTitleProperties()->ItalicOn();
+
+	chart->SetTitle("Cost Analysis");
+	chart->GetTitleProperties()->BoldOn();
+	
+	//Create table
+	vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
+	
+	vtkSmartPointer<vtkFloatArray> xAxis = vtkSmartPointer<vtkFloatArray>::New();
+	xAxis->SetName("Index");
+	table->AddColumn(xAxis);
+	
+	vtkSmartPointer<vtkFloatArray> yAxis = vtkSmartPointer<vtkFloatArray>::New();
+	yAxis->SetName("Cost");
+	table->AddColumn(yAxis);
+	
+	// Add data to table
+	QFile file("Results2D.xy");
+	if (file.open(QIODevice::ReadOnly)) {
+		QTextStream in(&file);
+		QString line;
+		// Count number of lines in file to set table size
+		int totalRows = 0;
+		while (!in.atEnd()) {
+			line = in.readLine();
+			totalRows++;
+		}
+		table->SetNumberOfRows(totalRows);
+	
+		// Read file again and fill table
+		in.seek(0);
+		int row = 0;
+		while (!in.atEnd()) {
+			line = in.readLine();
+			QStringList list = line.split(" ");
+			table->SetValue(row, 0, list.at(0).toDouble());
+			table->SetValue(row, 1, list.at(1).toDouble());
+			row++;
+		}
+	}
+	file.close();
+
+	//Add plot and set properties
+	chart->SetInteractive(true);
+	chart->ForceAxesToBoundsOn();
+	chart->ZoomWithMouseWheelOn();
+	
+	vtkSmartPointer<vtkPlot> plot = chart->AddPlot(vtkChart::POINTS);
+	
+	plot->SetInputData(table, 0, 1);
+	plot->SetColor(0, 0, 0, 255);
+	plot->SetWidth(1.5);
+
+	// Render
+	view->SetInteractor(plot_widget->GetInteractor());
+	plot_widget->SetRenderWindow(view->GetRenderWindow());
+	plot_widget->GetRenderWindow()->SetMultiSamples(0);
+	plot_widget->GetRenderWindow()->Render();
 }
 
 template<typename T>
@@ -480,90 +815,4 @@ std::vector<double> sym_trap::linspace(T start_in, T end_in, int num_in)
 	linspaced.push_back(end); // I want to ensure that start and end
 							  // are exactly the same as the input
 	return linspaced;
-}
-
-void sym_trap::graphResults() {
-	//runs when you click gatherdataset button
-	//read Results.csv and graph them
-	//how to show to Gui?
-	fstream fname;
-	fname.open("Results.csv", ios::in);
-	if (!fname.is_open()) { std::cout << "error"; }
-
-	std::vector<std::string> row;
-	std::string line, data;
-
-	if (fname.is_open())
-	{
-		while (std::getline(fname, line))
-		{
-
-			std::stringstream str(line);
-
-			while (std::getline(str, data, ','))
-				row.push_back(data);
-		}
-	}
-	fname.close();
-
-	std::vector<double> xrot;
-	std::vector<double> yrot;
-	std::vector<double> zrot;
-	std::vector<double> costs;
-
-	for (int i = 0; i < row.size(); i+=4) {
-		xrot.push_back(stod(row.at(i)));
-		yrot.push_back(stod(row.at(i+1)));
-		zrot.push_back(stod(row.at(i+2)));
-		costs.push_back(stod(row.at(i+3)));
-	}
-	// Read the file
-	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
-	reader->SetFileName("Results.xyz");
-	reader->Update();
-
-	vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
-	inputPolyData->CopyStructure(reader->GetOutput());
-
-
-	// warp plane
-	vtkSmartPointer<vtkWarpScalar> warp = vtkSmartPointer<vtkWarpScalar>::New();
-	warp->SetInputData(inputPolyData);
-	warp->SetScaleFactor(0.0);
-	
-	// Visualize
-	vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
-	mapper->SetInputConnection(warp->GetOutputPort());
-
-
-
-	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	actor->GetProperty()->SetPointSize(20);
-	actor->SetMapper(mapper);
-
-	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-	vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-	renderWindow->AddRenderer(renderer);
-	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	renderWindowInteractor->SetRenderWindow(renderWindow);
-
-	renderer->AddActor(actor);
-	renderer->SetBackground(.3, .6, .3);
-	renderWindow->Render();
-
-	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-	renderWindowInteractor->SetInteractorStyle(style);
-
-	// add & render CubeAxes
-	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
-	axes->SetInputData(warp->GetOutput());
-	axes->SetFontFactor(.5);
-	axes->SetFlyModeToNone();
-	axes->SetCamera(renderer->GetActiveCamera());
-
-	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
-	xAxis->SetAdjustLabels(1);
-
-	renderer->AddViewProp(axes);
-	renderWindowInteractor->Start();
 }

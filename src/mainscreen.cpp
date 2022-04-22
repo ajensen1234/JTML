@@ -126,6 +126,9 @@ MainScreen::MainScreen(QWidget* parent)
 {
 	ui.setupUi(this);
 
+	this->start_time = -1;
+	sym_trap_running = false;
+
 	/*Set Minimum and Maximum for Sliders*/
 	ui.low_threshold_slider->setMinimum(0);
 	ui.high_threshold_slider->setMinimum(0);
@@ -147,6 +150,14 @@ MainScreen::MainScreen(QWidget* parent)
 	settings_control = new SettingsControl(this);
 	connect(settings_control, SIGNAL(SaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)),
 		this, SLOT(onSaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)), Qt::DirectConnection);
+
+	/* SYM TRAP */
+	// Setup Sym Trap Window Obj
+	this->sym_trap_control = new sym_trap();
+	// Connect signals for launching sym trap optimizer and updating progress bar
+	connect(sym_trap_control->ui.optimize, SIGNAL(clicked()), this, SLOT(optimizer_launch_slot()));
+	connect(this, SIGNAL(UpdateTimeRemaining(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Disable Stop Optimizer*/
 	ui.actionStop_Optimizer->setDisabled(1);
@@ -1004,6 +1015,12 @@ void MainScreen::on_actionLoad_Kinematics_triggered()
 		inputFile.close();
 	}
 }
+
+// Start Symtrap Optimizer
+void MainScreen::optimizer_launch_slot() {
+	LaunchOptimizer("Sym_Trap");
+}
+
 
 /*Stop Optimizer*/
 void MainScreen::on_actionStop_Optimizer_triggered() {
@@ -2427,11 +2444,7 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 
 void MainScreen::on_actionLaunch_Tool_triggered() {
 	Point6D current_pose = copy_current_pose();
-	//sym_trap_control->feedCurrentPose(ui.GetPose___)
-	//sym_trap_control->set_pose(current_pose);
-	LaunchOptimizer("Sym_Trap");
 	sym_trap_control->show();
-
 }
 
 /*DRR Settings Window*/
@@ -4048,6 +4061,8 @@ a new thread*/
 void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	SaveLastPose();
 
+	if (directive == "Sym_Trap") sym_trap_running = true;
+
 	/*Can Only Optimize If Chosen Frame and Model*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	if (selected.size() == 0 || previous_frame_index_ < 0 || ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
@@ -4091,7 +4106,8 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		optimizer_settings_,
 		trunk_manager_, branch_manager_, leaf_manager_,
 		directive,
-		error_mess);
+		error_mess,
+		(directive == "Sym_Trap") ? sym_trap_control : nullptr);
 
 	/*If Didnt't Initialize Correctly DESTROY*/
 	if (!initialized_correctly) {
@@ -4110,6 +4126,10 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	QObject::connect(this, SIGNAL(StopOptimizer()), optimizer_manager, SLOT(onStopOptimizer()), Qt::DirectConnection); /*Stops Optimizer*/
 	QObject::connect(optimizer_manager, SIGNAL(UpdateDilationBackground()), this, SLOT(onUpdateDilationBackground())); /*UPDATE DILATION BACKGROUND	*/
 	QObject::connect(optimizer_manager, SIGNAL(onUpdateOrientationSymTrap(double, double, double, double, double, double)), this, SLOT(updateOrientationSymTrap_MS(double, double, double, double, double, double)));
+	
+	// Connect sym trap progress bar to thread
+	QObject::connect(optimizer_manager, SIGNAL(onProgressBarUpdate(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Start*/
 	if (directive == "Each" || directive == "All") {
@@ -4188,8 +4208,10 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 		currently_optimizing_ = false;
 		EnableAll();
 		/*Display Finished*/
-		if (!error_occurred)
+		if (!error_occurred && !sym_trap_running) {
 			QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+		}
+		sym_trap_running = false;
 	}
 
 
@@ -4233,6 +4255,14 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
+
+	// update est time for sym_trap progress bar
+	float est_time = (float) divresult.quot * 60 + divresult.rem;
+	if (this->start_time == -1) { 
+		this->start_time = est_time;
+	}
+	emit UpdateTimeRemaining(static_cast<int>(((start_time - est_time) / start_time) * 50));
+	
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","
 		+ std::to_string((long double)CurrentPose.z) + ">\nOptimum Orientation: <"

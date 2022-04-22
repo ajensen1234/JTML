@@ -1,36 +1,50 @@
 #pragma once
-#include <qdialog.h>
-
-#include "optimizer_manager.h"
-#include "optimizer_settings.h"
 #include "ui_sym_trap.h"
-
-
-#include <vtkRenderer.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkRenderWindow.h>
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
-#include <vtkPointData.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkDataSetMapper.h>
-#include <vtkProperty.h>
-#include <vtkCubeAxesActor2D.h>
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkInteractorStyleTrackball.h>
-#include <vtkSimplePointsReader.h>
-#include <vtkWarpScalar.h>
-#include <vtkAxisActor2D.h>
-
-
 #include "CostFunctionManager.h"
 #include "data_structures_6D.h"
 
+#include <qdialog.h>
+#include <QFile>
+#include <QTextStream>
+#include <QtWidgets/qfiledialog.h>
+#include <QMessageBox>
+
+
+#include <QVTKWidget.h>
+
+#include <vtkImageData.h>
+#include <vtkTextProperty.h>
+#include <vtkAxis.h>
+#include <vtkAxisActor2D.h>
+#include <vtkChartXY.h>
+#include <vtkContextScene.h>
+#include <vtkContextView.h>
+#include <vtkCubeAxesActor2D.h>
+#include <vtkDataSetMapper.h>
+#include <vtkFloatArray.h>
+#include <vtkInteractorStyleTrackball.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkNamedColors.h>
+#include <vtkNew.h>
+#include <vtkPlotPoints.h>
+#include <vtkPNGWriter.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkSimplePointsReader.h>
+#include <vtkSmartPointer.h>
+#include <vtkTable.h>
+#include <vtkWarpScalar.h>
 
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 
 class sym_trap :public QDialog
@@ -40,6 +54,7 @@ class sym_trap :public QDialog
 public:
 	sym_trap(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 	~sym_trap();
+
 
 	//Point6D pose;
 
@@ -55,26 +70,31 @@ public:
 	static void getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]);
 
 	static void copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_matrix)[3][3]);
-	static void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose);
+	void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose);
 
 	template<typename T>
 	std::vector<double> static linspace(T start_in, T end_in, int num_in);
 
+	int getIterCount();
+
 	//void set_pose(Point6D desired_pose);
+	Ui::symTrap ui;
 
 public Q_SLOTS:
-	void gather_dataset();
-	double onCostFuncAtPoint(double);
+	double onCostFuncAtPoint(double result);
 	void graphResults();
+	void graphResults2D();
+	void setIterCount(int n);
+	void saveData();
+	void loadData();
+	void savePlot();
 
 private:
-	Ui::symTrap ui;
 	std::vector<Point6D> search_space;
-
+	QVTKWidget* plot_widget;
+	int iter_count;
 
 
 signals:
 	void Done();
-
-
 };
