@@ -137,7 +137,7 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = true;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
-		end_frame_index_ = frames_A_.size();
+		end_frame_index_ = frames_A_.size() - 1;
 	}
 	else if (opt_directive == "Backward") {
 		progress_next_frame_ = true;
