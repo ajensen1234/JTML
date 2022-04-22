@@ -37,11 +37,12 @@ bool OptimizerManager::Initialize(
 
 	/*Store Calibration File Locally*/
 	calibration_ = calibration_file;
+	optimization_directive_ = opt_directive;
 
 	/*Just In Case Have to Delete*/
 	gpu_principal_model_ = 0;
 	gpu_metrics_ = 0;
-
+	
 	/*Store Camera Frame Lists Locally and Check That, if Biplane is Enabled -> both lists are the same size.
 	Also Check that the current frame index is within the range of the frame list sizes.*/
 	frames_A_ = camera_A_frame_list;
@@ -56,7 +57,7 @@ bool OptimizerManager::Initialize(
 		succesfull_initialization_ = false;
 		return succesfull_initialization_;
 	}
-
+	
 	/*Store Model List, Non-Primary Selected Models (Blue) and Primary Model
 	Also store indices of all models and the index of the primary model*/
 	all_models_ = model_list;
@@ -108,6 +109,8 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = false;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
+		end_frame_index_ = current_frame_index;
+		
 	}
 	else if (opt_directive == "All") {
 		/*Should we progess to next frame?*/
@@ -116,6 +119,7 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = true;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = 0;
+		end_frame_index_ = frames_A_.size() - 1;
 	} 
 	else if (opt_directive == "Each") {
 		/*Should we progess to next frame?*/
@@ -124,6 +128,7 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = false;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = 0;
+		end_frame_index_ = frames_A_.size() -1;
 	}
 	else if (opt_directive == "From") {
 		/*Should we progess to next frame?*/
@@ -132,13 +137,21 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = true;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
+		end_frame_index_ = frames_A_.size() - 1;
+	}
+	else if (opt_directive == "Backward") {
+		progress_next_frame_ = true;
+		init_prev_frame_ = true;
+		start_frame_index_ = current_frame_index;
+		end_frame_index_ = 0;
 	}
 	else {
 		error_message = "Unrecognized optimization directive: " + opt_directive;
 		succesfull_initialization_ = false;
 		return succesfull_initialization_;
 	}
-
+	/*Setting Up image indices based on the directive launched*/
+	create_image_indices(img_indices_, start_frame_index_, end_frame_index_);
 	/*Set Up Settings*/
 	SetSearchRange(optimizer_settings_.trunk_range);
 	SetStartingPoint(pose_matrix.GetPose(start_frame_index_, primary_model_index_));
@@ -629,7 +642,7 @@ void OptimizerManager::Optimize() {
 	std::string error_message;
 		
 	/*Loop Over Each Frame Loaded*/
-	for (int frame_index = start_frame_index_; frame_index < frames_A_.size(); frame_index++) {
+	for (int frame_index : img_indices_) {
 		/*Set Up Search Range and Starting Point*/
 		SetSearchRange(optimizer_settings_.trunk_range);
 		if (!init_prev_frame_ || frame_index == 0) {
@@ -896,9 +909,9 @@ void OptimizerManager::Optimize() {
 		emit UpdateDilationBackground();
 		
 		/*Move on and Wrap Up*/
-		if (error_occurrred_ || frame_index == frames_A_.size() - 1) progress_next_frame_ = false;
+		if (error_occurrred_ || frame_index == end_frame_index_) progress_next_frame_ = false;
 		emit OptimizedFrame(current_optimum_location_.x, current_optimum_location_.y, current_optimum_location_.z,
-			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, progress_next_frame_, primary_model_index_, error_occurrred_);
+			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, progress_next_frame_, primary_model_index_, error_occurrred_, optimization_directive_);
 		emit UpdateDisplay((double)(clock() - start_clock_) / (double)cost_function_calls_, (int)cost_function_calls_, current_optimum_value_, primary_model_index_);
 		update_screen_clock_ = clock();
 
@@ -1118,6 +1131,23 @@ Point6D OptimizerManager::DenormalizeFromCenter(Point6D unit_point) {
 
 void OptimizerManager::onStopOptimizer() {
 	error_occurrred_ = true;
+}
+
+void OptimizerManager::create_image_indices(std::vector<int> &img_indices, int start, int end) {
+	if (start < end) {
+		for (int i = start; i <= end; i++) {
+			img_indices.push_back(i);
+		}
+	}
+	else if (start > end) {
+		for (int i = start; i >= end; i--) {
+			img_indices.push_back(i);
+		}
+	}
+	else if (start == end) {
+		int i = start;
+		img_indices.push_back(i);
+	}
 }
 
 /*Destructor*/

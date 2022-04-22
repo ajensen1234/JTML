@@ -241,9 +241,7 @@ void sym_trap::equivalent_axis_angle_rotation(float rot[3][3], const float m[3],
 
 }
 
-void sym_trap::axis_angle_rotation_increments(vector) {
 
-}
 
 void sym_trap::rotation_matrix(float R[3][3], Point6D pose) {
 
