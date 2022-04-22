@@ -3,15 +3,19 @@
 
 /*Pose Matrix Class*/
 #include "pose_matrix.h"
+#include<stdlib.h>
+#include<chrono>
+#include<thread>
 
-OptimizerManager::OptimizerManager(QObject *parent) :
-QObject(parent)
+OptimizerManager::OptimizerManager(QObject* parent) :
+	QObject(parent)
 {
+	this->sym_trap_obj = nullptr;
 }
 
 /*Initialize*/
 bool OptimizerManager::Initialize(
-	QThread &optimizer_thread,
+	QThread& optimizer_thread,
 	Calibration calibration_file,
 	std::vector<Frame> camera_A_frame_list, std::vector<Frame> camera_B_frame_list, unsigned int current_frame_index,
 	std::vector<Model> model_list, QModelIndexList selected_models, unsigned int primary_model_index,
@@ -19,7 +23,13 @@ bool OptimizerManager::Initialize(
 	OptimizerSettings opt_settings,
 	jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 	QString opt_directive,
-	QString &error_message) {
+	QString& error_message,
+	sym_trap* sym_trap_obj_) {
+
+	if (this->sym_trap_obj == nullptr && sym_trap_obj_ != nullptr) {
+		this->sym_trap_obj = sym_trap_obj_;
+	}
+
 	/*Success?*/
 	succesfull_initialization_ = true;
 
@@ -37,12 +47,11 @@ bool OptimizerManager::Initialize(
 
 	/*Store Calibration File Locally*/
 	calibration_ = calibration_file;
-	optimization_directive_ = opt_directive;
 
 	/*Just In Case Have to Delete*/
 	gpu_principal_model_ = 0;
 	gpu_metrics_ = 0;
-	
+
 	/*Store Camera Frame Lists Locally and Check That, if Biplane is Enabled -> both lists are the same size.
 	Also Check that the current frame index is within the range of the frame list sizes.*/
 	frames_A_ = camera_A_frame_list;
@@ -57,7 +66,7 @@ bool OptimizerManager::Initialize(
 		succesfull_initialization_ = false;
 		return succesfull_initialization_;
 	}
-	
+
 	/*Store Model List, Non-Primary Selected Models (Blue) and Primary Model
 	Also store indices of all models and the index of the primary model*/
 	all_models_ = model_list;
@@ -79,7 +88,7 @@ bool OptimizerManager::Initialize(
 	/*Store Cost Function Managers Locally*/
 	trunk_manager_ = trunk_manager;
 	branch_manager_ = branch_manager;
-	leaf_manager_ = leaf_manager;	
+	leaf_manager_ = leaf_manager;
 
 	/*Store Post Matrix on Cost Functions*/
 	for (int i = 0; i < selected_models.size(); i++) {
@@ -101,6 +110,8 @@ bool OptimizerManager::Initialize(
 		}
 	}
 
+	sym_trap_call = false;
+
 	/*Use Optimization Directive To Resolve the Following local variables*/
 	if (opt_directive == "Single") {
 		/*Should we progess to next frame?*/
@@ -109,8 +120,6 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = false;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
-		end_frame_index_ = current_frame_index;
-		
 	}
 	else if (opt_directive == "All") {
 		/*Should we progess to next frame?*/
@@ -119,8 +128,7 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = true;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = 0;
-		end_frame_index_ = frames_A_.size() - 1;
-	} 
+	}
 	else if (opt_directive == "Each") {
 		/*Should we progess to next frame?*/
 		progress_next_frame_ = true;
@@ -128,7 +136,6 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = false;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = 0;
-		end_frame_index_ = frames_A_.size() -1;
 	}
 	else if (opt_directive == "From") {
 		/*Should we progess to next frame?*/
@@ -137,21 +144,23 @@ bool OptimizerManager::Initialize(
 		init_prev_frame_ = true;
 		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
-		end_frame_index_ = frames_A_.size() - 1;
 	}
-	else if (opt_directive == "Backward") {
-		progress_next_frame_ = true;
-		init_prev_frame_ = true;
+	else if (opt_directive == "Sym_Trap") {
+		/*Should we progess to next frame?*/
+		progress_next_frame_ = false;
+		/*Should we initialize with previous frame's best guess?*/
+		init_prev_frame_ = false;
+		/*Index For Starting Frame in Optimization*/
 		start_frame_index_ = current_frame_index;
-		end_frame_index_ = 0;
+
+		sym_trap_call = true;
 	}
 	else {
 		error_message = "Unrecognized optimization directive: " + opt_directive;
 		succesfull_initialization_ = false;
 		return succesfull_initialization_;
 	}
-	/*Setting Up image indices based on the directive launched*/
-	create_image_indices(img_indices_, start_frame_index_, end_frame_index_);
+
 	/*Set Up Settings*/
 	SetSearchRange(optimizer_settings_.trunk_range);
 	SetStartingPoint(pose_matrix.GetPose(start_frame_index_, primary_model_index_));
@@ -189,7 +198,7 @@ bool OptimizerManager::Initialize(
 	trunk_dilation_val_ = 0;
 	std::vector<jta_cost_function::Parameter<int>> active_int_params = trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
 	for (int i = 0; i < active_int_params.size(); i++) {
-		if (active_int_params[i].getParameterName() == "Dilation" || active_int_params[i].getParameterName() == "DILATION" || active_int_params[i].getParameterName() == "dilation" ) {
+		if (active_int_params[i].getParameterName() == "Dilation" || active_int_params[i].getParameterName() == "DILATION" || active_int_params[i].getParameterName() == "dilation") {
 			trunk_dilation_val_ = trunk_manager_.getActiveCostFunctionClass()->getIntParameters().at(i).getParameterValue();
 		}
 	}
@@ -226,8 +235,8 @@ bool OptimizerManager::Initialize(
 	std::vector<jta_cost_function::Parameter<bool>> active_bool_params = trunk_manager_.getActiveCostFunctionClass()->getBoolParameters();
 	for (int i = 0; i < active_bool_params.size(); i++) {
 		if (active_bool_params[i].getParameterName() == "Black_Silhouette" || active_bool_params[i].getParameterName() == "Dark_Silhouette" ||
-			active_bool_params[i].getParameterName() == "BLACK_SILHOUETTE" || active_bool_params[i].getParameterName() == "DARK_SILHOUETTE" || 
-			active_bool_params[i].getParameterName() == "black_silhouette" || active_bool_params[i].getParameterName() == "dark_silhouette" ) {
+			active_bool_params[i].getParameterName() == "BLACK_SILHOUETTE" || active_bool_params[i].getParameterName() == "DARK_SILHOUETTE" ||
+			active_bool_params[i].getParameterName() == "black_silhouette" || active_bool_params[i].getParameterName() == "dark_silhouette") {
 			trunk_dark_silhouette_val_ = trunk_manager_.getActiveCostFunctionClass()->getBoolParameters().at(i).getParameterValue();
 		}
 	}
@@ -358,7 +367,7 @@ bool OptimizerManager::Initialize(
 	}
 	for (int i = 0; i < frames_A_.size(); i++) {
 		GPUDilatedFrame* dilated_frame = new GPUDilatedFrame(width, height, cuda_device_id,
-			frames_A_[i].GetDilationImage().data,leaf_dilation_val_);
+			frames_A_[i].GetDilationImage().data, leaf_dilation_val_);
 		if (dilated_frame->IsInitializedCorrectly()) {
 			gpu_dilated_frames_leaf_A_.push_back(dilated_frame);
 		}
@@ -477,7 +486,7 @@ bool OptimizerManager::Initialize(
 		if (edge_frame->IsInitializedCorrectly()) {
 			gpu_edge_frames_A_.push_back(edge_frame);
 		}
-		else{
+		else {
 			delete edge_frame;
 			error_message = "Error uploading edge frame to GPU!";
 			succesfull_initialization_ = false;
@@ -505,7 +514,7 @@ bool OptimizerManager::Initialize(
 	/*Monoplane Calibration*/
 	if (!calibration_.biplane_calibration) {
 		/*Principal Model*/
-		gpu_principal_model_ = new GPUModel(primary_model_.model_name_ , true, width, height, cuda_device_id, true,
+		gpu_principal_model_ = new GPUModel(primary_model_.model_name_, true, width, height, cuda_device_id, true,
 			&primary_model_.triangle_vertices_[0], &primary_model_.triangle_normals_[0], primary_model_.triangle_vertices_.size() / 9, calibration_.camera_A_principal_);
 		if (!gpu_principal_model_->IsInitializedCorrectly()) {
 			delete gpu_principal_model_;
@@ -532,7 +541,7 @@ bool OptimizerManager::Initialize(
 	/*Biplane Calibration*/
 	else {
 		/*Principal Model*/
-		gpu_principal_model_ = new GPUModel(primary_model_.model_name_, true, width, height, cuda_device_id, cuda_device_id, true,true,
+		gpu_principal_model_ = new GPUModel(primary_model_.model_name_, true, width, height, cuda_device_id, cuda_device_id, true, true,
 			&primary_model_.triangle_vertices_[0], &primary_model_.triangle_normals_[0], primary_model_.triangle_vertices_.size() / 9, calibration_.camera_A_principal_, calibration_.camera_B_principal_);
 		if (!gpu_principal_model_->IsInitializedCorrectly()) {
 			delete gpu_principal_model_;
@@ -599,7 +608,7 @@ bool OptimizerManager::Initialize(
 		gpu_metrics_,
 		&pose_storage_,
 		calibration_.biplane_calibration);
-	
+
 	return succesfull_initialization_;
 };
 
@@ -618,13 +627,13 @@ void OptimizerManager::SetStartingPoint(Point6D starting_point) {
 }
 
 void OptimizerManager::Optimize() {
-	
+
 	/*Check That Succesfull Initialization*/
 	if (!succesfull_initialization_) {
 
 		/*Restore Dilation OpenCV Images*/
 		for (int i = 0; i < frames_A_.size(); i++) {
-		cv::dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), trunk_dilation_val_); /*Reset Dilation In That Image*/
+			cv::dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), trunk_dilation_val_); /*Reset Dilation In That Image*/
 		}
 		/*Camera B*/
 		if (calibration_.biplane_calibration) {
@@ -640,17 +649,21 @@ void OptimizerManager::Optimize() {
 
 	/*Container for String Message*/
 	std::string error_message;
-		
+
+	if (sym_trap_call) {
+		goto LEAF_INIT;
+	}
+
 	/*Loop Over Each Frame Loaded*/
-	for (int frame_index : img_indices_) {
+	for (int frame_index = start_frame_index_; frame_index < frames_A_.size(); frame_index++) {
 		/*Set Up Search Range and Starting Point*/
 		SetSearchRange(optimizer_settings_.trunk_range);
 		if (!init_prev_frame_ || frame_index == 0) {
 			Pose starting_pose;
 			pose_storage_.GetModelPose(frame_index, &starting_pose);
-			SetStartingPoint(Point6D(starting_pose.x_location_, starting_pose.y_location_, starting_pose.z_location_, 
-				starting_pose.x_angle_,starting_pose.y_angle_,starting_pose.z_angle_));
-		}		
+			SetStartingPoint(Point6D(starting_pose.x_location_, starting_pose.y_location_, starting_pose.z_location_,
+				starting_pose.x_angle_, starting_pose.y_angle_, starting_pose.z_angle_));
+		}
 		else SetStartingPoint(current_optimum_location_);
 
 		/*Set Current Primary (and if biplane, secondary) Poses for Non Principal Models*/
@@ -660,7 +673,7 @@ void OptimizerManager::Optimize() {
 				gpu_non_principal_models_[non_prin_model_ind]->SetCurrentPrimaryCameraPose(temp_primary_pose);
 			}
 			else {
-				emit OptimizerError(QString::fromStdString("Could not retrieve pose for non-principal model \"" + gpu_non_principal_models_[non_prin_model_ind]->GetModelName() + "\" at frame " + QString::number(frame_index).toStdString() +"!"));
+				emit OptimizerError(QString::fromStdString("Could not retrieve pose for non-principal model \"" + gpu_non_principal_models_[non_prin_model_ind]->GetModelName() + "\" at frame " + QString::number(frame_index).toStdString() + "!"));
 				error_occurrred_ = true;
 				break;
 			}
@@ -709,7 +722,7 @@ void OptimizerManager::Optimize() {
 			cv::dilate(frames_B_[frame_index].GetEdgeImage(), frames_B_[frame_index].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), trunk_dilation_val_); /*Reset Dilation In That Image*/
 		}
 		emit UpdateDilationBackground();
-		
+
 		/*Main Loop*/
 		if (!error_occurrred_) {
 			while (cost_function_calls_ < budget_) {
@@ -746,7 +759,7 @@ void OptimizerManager::Optimize() {
 			error_occurrred_ = true;
 		}
 		/*****************TRUNK SECTION END **********************/
-		
+
 
 		/*****************BRANCH SECTION BEGIN **********************/
 		/*Construct Branch Manager Initialization*/
@@ -766,13 +779,13 @@ void OptimizerManager::Optimize() {
 
 
 		/*Move to Branch If Necessary*/
-		for (int branch_index = 0; branch_index < optimizer_settings_.enable_branch_*optimizer_settings_.number_branches; branch_index++) {
+		for (int branch_index = 0; branch_index < optimizer_settings_.enable_branch_ * optimizer_settings_.number_branches; branch_index++) {
 			/*If Error*/
 			if (error_occurrred_) break;
 
 			/*Update Search Stage Flag as Branch*/
 			search_stage_flag_ = SearchStageFlag::Branch;
-			
+
 			/*Reset Storage, Starting Point, Range, new budget, comparison image*/
 			/*Reset Starting Point*/
 			SetStartingPoint(current_optimum_location_);
@@ -786,7 +799,7 @@ void OptimizerManager::Optimize() {
 			current_optimum_value_ = EvaluateCostFunction(Point6D(.5, .5, .5, .5, .5, .5));
 			current_optimum_location_ = starting_point_;
 			data_ = DirectDataStorage(current_optimum_value_);
-			
+
 			/*Main Loop*/
 			while (cost_function_calls_ < budget_) {
 				/*Scroll Through Convex Hull to Get List of Potentially
@@ -809,24 +822,19 @@ void OptimizerManager::Optimize() {
 				if (error_occurrred_) break;
 
 				/*Update Screen at Rate of 30 FPS*/
-				if ((clock() - update_screen_clock_) > 33){
+				if ((clock() - update_screen_clock_) > 33) {
 					emit UpdateDisplay((double)(clock() - start_clock_) / (double)cost_function_calls_, (int)cost_function_calls_, current_optimum_value_, primary_model_index_);
 					update_screen_clock_ = clock();
 				}
 			}
 		}
+
 		
-		/*Destruct Branch Manager Initialization*/
-		if (optimizer_settings_.enable_branch_ && optimizer_settings_.number_branches > 0 && !error_occurrred_) {
-			if (!branch_manager_.DestructActiveCostFunction(error_message)) {
-				emit OptimizerError(QString::fromStdString(error_message));
-				error_occurrred_ = true;
-			}
-		}
 		/*****************BRANCH SECTION END **********************/
 
 		/*****************LEAF SECTION BEGIN **********************/
 		/*Construct Leaf Initialization*/
+LEAF_INIT:
 		if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
 			if (!leaf_manager_.InitializeActiveCostFunction(error_message)) {
 				emit OptimizerError(QString::fromStdString(error_message));
@@ -838,6 +846,11 @@ void OptimizerManager::Optimize() {
 				cv::dilate(frames_B_[frame_index].GetEdgeImage(), frames_B_[frame_index].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), leaf_dilation_val_); /*Reset Dilation In That Image*/
 			}
 			emit UpdateDilationBackground();
+		}
+
+		if (sym_trap_call) { 
+			CalculateSymTrap();
+			goto SKIP;
 		}
 
 		/*Move to Leaf Search If Necessary*/
@@ -882,7 +895,7 @@ void OptimizerManager::Optimize() {
 				if (error_occurrred_) break;
 
 				/*Update Screen at Rate of 30 FPS*/
-				if ((clock() - update_screen_clock_) > 33){
+				if ((clock() - update_screen_clock_) > 33) {
 					emit UpdateDisplay((double)(clock() - start_clock_) / (double)cost_function_calls_, (int)cost_function_calls_, current_optimum_value_, primary_model_index_);
 					update_screen_clock_ = clock();
 				}
@@ -896,6 +909,7 @@ void OptimizerManager::Optimize() {
 				error_occurrred_ = true;
 			}
 		}
+
 		/*****************LEAF SECTION END **********************/
 
 		/*Clean Up and Return true*/
@@ -907,11 +921,15 @@ void OptimizerManager::Optimize() {
 			cv::dilate(frames_B_[frame_index].GetEdgeImage(), frames_B_[frame_index].GetDilationImage(), cv::Mat(), cv::Point(-1, -1), trunk_dilation_val_); /*Reset Dilation In That Image*/
 		}
 		emit UpdateDilationBackground();
-		
-		/*Move on and Wrap Up*/
-		if (error_occurrred_ || frame_index == end_frame_index_) progress_next_frame_ = false;
+
+SKIP:		/*Move on and Wrap Up*/
+		if (error_occurrred_ || frame_index == frames_A_.size() - 1) progress_next_frame_ = false;
 		emit OptimizedFrame(current_optimum_location_.x, current_optimum_location_.y, current_optimum_location_.z,
-			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, progress_next_frame_, primary_model_index_, error_occurrred_, optimization_directive_);
+			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, progress_next_frame_, primary_model_index_, error_occurrred_);
+		if (sym_trap_call) {
+			emit finished();
+			return;
+		}
 		emit UpdateDisplay((double)(clock() - start_clock_) / (double)cost_function_calls_, (int)cost_function_calls_, current_optimum_value_, primary_model_index_);
 		update_screen_clock_ = clock();
 
@@ -925,26 +943,82 @@ void OptimizerManager::Optimize() {
 			break;
 		}
 	}
+
 	
 	/*Finish And Return*/
 	emit finished();
 	return;
 }
 
-double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) { 
+void OptimizerManager::CalculateSymTrap() {
+	if (current_optimum_location_.xa == 0 && current_optimum_location_.ya == 0 && current_optimum_location_.za == 0) {
+		cout << "ERROR: INVALID STARTING POSE FOR SYMMETRY TRAP" << endl;
+		return;
+	}
+	//Store cost values to input to csv
+	std::vector <double> Costs;
+
+	// Get number of iterations from sym_trap spin box
+	int iter_val = sym_trap_obj->getIterCount() * 3;
+	std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
+
+	// Get pose list from sym trap
+	std::vector<Point6D> pose_list(0);
+	Point6D pose_6D(current_optimum_location_);
+	sym_trap_obj->create_vector_of_poses(pose_list, pose_6D);
+
+	// Calculate cost function at each pose
+	int progress_val = 0;
+	for (int i = 0; i < iter_val; i++) {
+		emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y, pose_list.at(i).z, pose_list.at(i).xa, pose_list.at(i).ya, pose_list.at(i).za);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000/iter_val));
+		double myCost = EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
+		Costs.push_back(myCost);
+		std::cout << i + 1 << ": " << myCost << " @ rotation (" << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << pose_list.at(i).za << ")" << std::endl;
+		progress_val += MAX(100 / iter_val, 1);
+		emit onProgressBarUpdate(progress_val);
+	}
+
+	//set model back to intial pose
+	emit onUpdateOrientationSymTrap(pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
+
+	//Csv of position and cost value (xangle,yangle,zangle,cost value \n)
+	std::ofstream myfile;
+	myfile.open("Results.csv");
+	for (int i = 0; i < iter_val; i++) {
+		myfile << pose_list.at(i).xa << "," << pose_list.at(i).ya << "," << pose_list.at(i).za << "," << Costs.at(i) << "\n";
+
+	}
+	myfile.close();
+
+	// Used for Sym Trap VTK plot
+	std::ofstream myfile2;
+	myfile2.open("Results.xyz");
+	for (int i = 0; i < iter_val; i++) {
+		myfile2 << pose_list.at(i).xa << " " << pose_list.at(i).ya << " " << Costs.at(i) << "\n";
+
+	}
+	myfile2.close();
+
+	std::ofstream myfile3;
+	myfile3.open("Results2D.xy");
+	for (int i = 0; i < iter_val; i++) {
+		myfile3 << i - iter_val / 3 << " " << Costs.at(i) << "\n";
+
+	}
+	myfile3.close();
+
+	emit onProgressBarUpdate(100);
+}
+
+double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
 	enum Dilation { Trunk, Branch, Leaf };
 
-	/*Get Actual Pose from Normalized Version and Send to Cost Function Manager*/
-	Point6D denormalized_point = DenormalizeFromCenter(point);
-	gpu_cost_function::Pose pose(denormalized_point.x, denormalized_point.y, denormalized_point.z,
-		denormalized_point.xa, denormalized_point.ya, denormalized_point.za);
+	/*Send normal pose not denormalized pose*/
+	//Point6D denormalized_point = DenormalizeFromCenter(point);
+	gpu_cost_function::Pose pose(point.x, point.y, point.z,
+		point.xa, point.ya, point.za);
 	gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
-	if (calibration_.biplane_calibration) {
-		Point6D denormalized_point_B = calibration_.convert_Pose_A_to_Pose_B(denormalized_point);
-		gpu_cost_function::Pose pose_B(denormalized_point_B.x, denormalized_point_B.y, denormalized_point_B.z,
-			denormalized_point_B.xa, denormalized_point_B.ya, denormalized_point_B.za);
-		gpu_principal_model_->SetCurrentSecondaryCameraPose(pose_B);
-	}
 
 	double result = 0;
 	switch (stage) {
@@ -956,11 +1030,13 @@ double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
 		break;
 	}
 	// cost_function_calls_++;
+	emit CostFuncAtPoint(result);
+	
 
 	return result;
 }
 
-double OptimizerManager::EvaluateCostFunction(Point6D point){
+double OptimizerManager::EvaluateCostFunction(Point6D point) {
 	/*Get Actual Pose from Normalized Version and Send to Cost Function Manager*/
 	Point6D denormalized_point = DenormalizeFromCenter(point);
 	gpu_cost_function::Pose pose(denormalized_point.x, denormalized_point.y, denormalized_point.z,
@@ -989,10 +1065,10 @@ double OptimizerManager::EvaluateCostFunction(Point6D point){
 	if (result < current_optimum_value_) { //<= should be better like this
 		current_optimum_value_ = result;
 		current_optimum_location_ = denormalized_point;
-			emit UpdateOptimum(current_optimum_location_.x, current_optimum_location_.y, current_optimum_location_.z,
+		emit UpdateOptimum(current_optimum_location_.x, current_optimum_location_.y, current_optimum_location_.z,
 			current_optimum_location_.xa, current_optimum_location_.ya, current_optimum_location_.za, primary_model_index_);
 	}
-	
+
 	return result;
 }
 
@@ -1116,8 +1192,8 @@ void OptimizerManager::TrisectPotentiallyOptimal() {
 }
 
 Point6D OptimizerManager::DenormalizeRange(Point6D unit_point) {
-	return Point6D(unit_point.x*range_.x*2.0, unit_point.y*range_.y*2.0, unit_point.z*range_.z*2.0,
-		unit_point.xa*range_.xa*2.0, unit_point.ya*range_.ya*2.0, unit_point.za*range_.za*2.0);
+	return Point6D(unit_point.x * range_.x * 2.0, unit_point.y * range_.y * 2.0, unit_point.z * range_.z * 2.0,
+		unit_point.xa * range_.xa * 2.0, unit_point.ya * range_.ya * 2.0, unit_point.za * range_.za * 2.0);
 }
 
 Point6D OptimizerManager::DenormalizeFromCenter(Point6D unit_point) {
@@ -1131,23 +1207,6 @@ Point6D OptimizerManager::DenormalizeFromCenter(Point6D unit_point) {
 
 void OptimizerManager::onStopOptimizer() {
 	error_occurrred_ = true;
-}
-
-void OptimizerManager::create_image_indices(std::vector<int> &img_indices, int start, int end) {
-	if (start < end) {
-		for (int i = start; i <= end; i++) {
-			img_indices.push_back(i);
-		}
-	}
-	else if (start > end) {
-		for (int i = start; i >= end; i--) {
-			img_indices.push_back(i);
-		}
-	}
-	else if (start == end) {
-		int i = start;
-		img_indices.push_back(i);
-	}
 }
 
 /*Destructor*/
