@@ -126,6 +126,9 @@ MainScreen::MainScreen(QWidget* parent)
 {
 	ui.setupUi(this);
 
+	this->start_time = -1;
+	sym_trap_running = false;
+
 	/*Set Minimum and Maximum for Sliders*/
 	ui.low_threshold_slider->setMinimum(0);
 	ui.high_threshold_slider->setMinimum(0);
@@ -147,6 +150,14 @@ MainScreen::MainScreen(QWidget* parent)
 	settings_control = new SettingsControl(this);
 	connect(settings_control, SIGNAL(SaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)),
 		this, SLOT(onSaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager)), Qt::DirectConnection);
+
+	/* SYM TRAP */
+	// Setup Sym Trap Window Obj
+	this->sym_trap_control = new sym_trap();
+	// Connect signals for launching sym trap optimizer and updating progress bar
+	connect(sym_trap_control->ui.optimize, SIGNAL(clicked()), this, SLOT(optimizer_launch_slot()));
+	connect(this, SIGNAL(UpdateTimeRemaining(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Disable Stop Optimizer*/
 	ui.actionStop_Optimizer->setDisabled(1);
@@ -903,6 +914,22 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered()
 	ui.qvtk_widget->update();
 }
 
+// For passing current pose into sym_trap window
+Point6D MainScreen::copy_current_pose() {
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0)
+	{
+		QMessageBox::critical(this, "Error!", "Select Model and Load Frames First!", QMessageBox::Ok);
+		return Point6D();
+	}
+
+	if (ui.multiple_model_radio_button->isChecked()) {
+		QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Load Kinematics!", QMessageBox::Ok);
+		return Point6D();
+	}
+	Point6D pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
+	return pose;
+}
 
 /*Copy Next Pose*/
 
@@ -989,6 +1016,13 @@ void MainScreen::on_actionLoad_Kinematics_triggered()
 	}
 }
 
+// Start Symtrap Optimizer
+void MainScreen::optimizer_launch_slot() {
+	if (!sym_trap_running)
+		LaunchOptimizer("Sym_Trap");
+}
+
+
 /*Stop Optimizer*/
 void MainScreen::on_actionStop_Optimizer_triggered() {
 	if (ui.actionStop_Optimizer->isEnabled() == true) {
@@ -1051,6 +1085,9 @@ void MainScreen::on_actionModel_Interaction_Mode_triggered() {
 	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 	ui.qvtk_widget->update();
 };
+
+
+
 void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
 	if (loaded_models.size() == 0 || loaded_frames.size() == 0)
 	{
@@ -2407,6 +2444,7 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 /*Symmetry Trap Window*/
 
 void MainScreen::on_actionLaunch_Tool_triggered() {
+	Point6D current_pose = copy_current_pose();
 	sym_trap_control->show();
 }
 
@@ -4028,6 +4066,8 @@ a new thread*/
 void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	SaveLastPose();
 
+	if (directive == "Sym_Trap") sym_trap_running = true;
+
 	/*Can Only Optimize If Chosen Frame and Model*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	if (selected.size() == 0 || previous_frame_index_ < 0 || ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
@@ -4071,7 +4111,8 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		optimizer_settings_,
 		trunk_manager_, branch_manager_, leaf_manager_,
 		directive,
-		error_mess);
+		error_mess,
+		(directive == "Sym_Trap") ? sym_trap_control : nullptr);
 
 	/*If Didnt't Initialize Correctly DESTROY*/
 	if (!initialized_correctly) {
@@ -4089,6 +4130,11 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		this, SLOT(onOptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString)));  // Update Optimized Frame/View
 	QObject::connect(this, SIGNAL(StopOptimizer()), optimizer_manager, SLOT(onStopOptimizer()), Qt::DirectConnection); /*Stops Optimizer*/
 	QObject::connect(optimizer_manager, SIGNAL(UpdateDilationBackground()), this, SLOT(onUpdateDilationBackground())); /*UPDATE DILATION BACKGROUND	*/
+	QObject::connect(optimizer_manager, SIGNAL(onUpdateOrientationSymTrap(double, double, double, double, double, double)), this, SLOT(updateOrientationSymTrap_MS(double, double, double, double, double, double)));
+	
+	// Connect sym trap progress bar to thread
+	QObject::connect(optimizer_manager, SIGNAL(onProgressBarUpdate(int)), sym_trap_control->ui.progressBar, SLOT(setValue(int)));
+
 
 	/*Start*/
 	if (directive == "Each" || directive == "All") {
@@ -4099,6 +4145,19 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	DisableAll();
 	display_optimizer_settings_ = optimizer_settings_;
 	optimizer_thread->start();
+}
+
+void MainScreen::updateOrientationSymTrap_MS(double x,  double y, double z, double xa, double ya, double za ) {
+	//put the update logic here
+	// look at loading kinematics for help
+	// or copy pose
+	// need to update the current model
+	Point6D new_orientation(x, y, z, xa, ya, za);
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), new_orientation);
+	model_actor_list[selected[0].row()]->SetPosition(new_orientation.x, new_orientation.y, new_orientation.z);
+	model_actor_list[selected[0].row()]->SetOrientation(new_orientation.xa, new_orientation.ya, new_orientation.za);
+	ui.qvtk_widget->update();
 }
 
 /*OPTIMIZATION
@@ -4174,8 +4233,10 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 			currently_optimizing_ = false;
 			EnableAll();
 			/*Display Finished*/
-			if (!error_occurred)
+			if (!error_occurred && !sym_trap_running) {
 				QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+			}
+			sym_trap_running = false;
 		}
 	}
 }
@@ -4218,6 +4279,7 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
+
 	infoText += std::to_string((long double)CurrentPose.x) + ","
 		+ std::to_string((long double)CurrentPose.y) + ","
 		+ std::to_string((long double)CurrentPose.z) + ">\nOptimum Orientation: <"
