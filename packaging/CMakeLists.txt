@@ -15,7 +15,7 @@ file(GLOB MY_DLL_FILES ${build_dir_libs}*.dll)
 
 install(FILES ${MY_DLL_FILES} DESTINATION bin)
 install(DIRECTORY ${networks_dir} DESTINATION bin)
-install(DIRECTORY ${platforms} DESTINATION bin)
+install(DIRECTORY ${platforms_dir} DESTINATION bin)
 
 
 
