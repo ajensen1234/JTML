@@ -8,6 +8,7 @@
 #include <QTextStream>
 #include <QtWidgets/qfiledialog.h>
 #include <QMessageBox>
+#include "optimizer_manager.h"
 
 
 #include <QVTKWidget.h>
@@ -54,7 +55,7 @@ class sym_trap :public QDialog
 public:
 	sym_trap(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 	~sym_trap();
-	OptimizerManager* sym_trap_optimizer = new OptimizerManager();
+	//OptimizerManager* sym_trap_optimizer = new OptimizerManager();
 
 
 	//Point6D pose;

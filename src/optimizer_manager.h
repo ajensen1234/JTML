@@ -39,9 +39,6 @@
 
 #include "sym_trap.h"
 
-#include <vector>
-#include <string>
-
 using namespace gpu_cost_function;
 
 class OptimizerManager : public QObject
@@ -75,7 +72,7 @@ signals:
 	/*Finished*/
 	void finished();
 	/*Finished Optimizing Frame, Send Optimum to MainScreen, The last bool indicates if should move to next frame*/
-	void OptimizedFrame(double, double, double, double, double, double,bool, unsigned int, bool, QString);
+	void OptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString);
 	/*Uh oh There was an Error. The string is the message*/
 	void OptimizerError(QString);
 	/*Update Display with Speed, Cost Function Calls, Current Minimum*/
@@ -106,7 +103,7 @@ private:
 
 	/*SYM TRAP SETTINGS*/
 	bool sym_trap_call;
-	sym_trap* sym_trap_obj;
+	sym_trap *sym_trap_obj;
 
 	/*Frames*/
 	std::vector<Frame> frames_A_;
@@ -139,7 +136,7 @@ private:
 
 	QString optimization_directive_;
 
-	void create_image_indices(std::vector<int> &img_indices, int start, int end);
+	void create_image_indices(std::vector<int>& img_indices, int start, int end);
 
 	/*Error Check*/
 	cudaError_t cuda_status_;
@@ -249,6 +246,5 @@ private:
 	unsigned int search_stage_flag_;
 
 };
-
 
 #endif /* OPTIMIZER_MANAGER_H */
