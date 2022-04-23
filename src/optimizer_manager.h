@@ -37,8 +37,7 @@
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
 
-#include <vector>
-#include <string>
+#include "sym_trap.h"
 
 using namespace gpu_cost_function;
 
@@ -47,10 +46,10 @@ class OptimizerManager : public QObject
 	Q_OBJECT
 
 public:
-	explicit OptimizerManager(QObject *parent = 0);
+	explicit OptimizerManager(QObject* parent = 0);
 	/*Sets up Everything for Optimizer and Also Handles CUDA Initialization, Can Fail!*/
 	bool Initialize(
-		QThread &optimizer_thread,
+		QThread& optimizer_thread,
 		Calibration calibration_file,
 		std::vector<Frame> camera_A_frame_list, std::vector<Frame> camera_B_frame_list, unsigned int current_frame_index,
 		std::vector<Model> model_list, QModelIndexList selected_models, unsigned int primary_model_index,
@@ -58,11 +57,14 @@ public:
 		OptimizerSettings opt_settings,
 		jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 		QString opt_directive,
-		QString &error_message);
+		QString& error_message,
+		sym_trap* sym_trap_obj);
 	~OptimizerManager();
+
 
 	/* get cost numbers for symmetry plotting */
 	double EvaluateCostFunctionAtPoint(Point6D point, int stage);
+	void CalculateSymTrap();
 
 signals:
 	/*Update Blue Current Optimum*/
@@ -70,7 +72,7 @@ signals:
 	/*Finished*/
 	void finished();
 	/*Finished Optimizing Frame, Send Optimum to MainScreen, The last bool indicates if should move to next frame*/
-	void OptimizedFrame(double, double, double, double, double, double,bool, unsigned int, bool, QString);
+	void OptimizedFrame(double, double, double, double, double, double, bool, unsigned int, bool, QString);
 	/*Uh oh There was an Error. The string is the message*/
 	void OptimizerError(QString);
 	/*Update Display with Speed, Cost Function Calls, Current Minimum*/
@@ -78,7 +80,11 @@ signals:
 	/*Update Dilation Background*/
 	void UpdateDilationBackground();
 
-public slots :
+	void CostFuncAtPoint(double);
+	void onUpdateOrientationSymTrap(double, double, double, double, double, double);
+	void onProgressBarUpdate(int);
+
+public slots:
 	/*Optimizer Biplane Single Model*/
 	void Optimize();
 
@@ -94,6 +100,10 @@ private:
 
 	/*Optimizer Settings*/
 	OptimizerSettings optimizer_settings_;
+
+	/*SYM TRAP SETTINGS*/
+	bool sym_trap_call;
+	sym_trap *sym_trap_obj;
 
 	/*Frames*/
 	std::vector<Frame> frames_A_;
@@ -111,7 +121,7 @@ private:
 
 	/*Cost Function Managers For Each Stage*/
 	jta_cost_function::CostFunctionManager trunk_manager_;
-	jta_cost_function::CostFunctionManager branch_manager_; 
+	jta_cost_function::CostFunctionManager branch_manager_;
 	jta_cost_function::CostFunctionManager leaf_manager_;
 
 	/*Should we progess to next frame?*/
@@ -126,7 +136,7 @@ private:
 
 	QString optimization_directive_;
 
-	void create_image_indices(std::vector<int> &img_indices, int start, int end);
+	void create_image_indices(std::vector<int>& img_indices, int start, int end);
 
 	/*Error Check*/
 	cudaError_t cuda_status_;
@@ -155,7 +165,7 @@ private:
 	std::vector<GPUIntensityFrame*> gpu_intensity_frames_leaf_A_;
 	std::vector<GPUEdgeFrame*> gpu_edge_frames_A_;
 	std::vector<GPUDilatedFrame*> gpu_dilated_frames_trunk_A_;
-	std::vector<GPUDilatedFrame*> gpu_dilated_frames_branch_A_;
+	std::vector<GPUDilatedFrame*> gpu_dilated_frames_branch_A_; 
 	std::vector<GPUDilatedFrame*> gpu_dilated_frames_leaf_A_;
 	/*Camera B (Biplane only)*/
 	std::vector<GPUIntensityFrame*> gpu_intensity_frames_trunk_B_;
@@ -165,11 +175,11 @@ private:
 	std::vector<GPUDilatedFrame*> gpu_dilated_frames_trunk_B_;
 	std::vector<GPUDilatedFrame*> gpu_dilated_frames_branch_B_;
 	std::vector<GPUDilatedFrame*> gpu_dilated_frames_leaf_B_;
-	
+
 	/*Models*/
 	GPUModel* gpu_principal_model_;
 	std::vector<GPUModel*> gpu_non_principal_models_;
-	
+
 	/*Set Search Range*/
 	void SetSearchRange(Point6D range);
 
@@ -236,6 +246,5 @@ private:
 	unsigned int search_stage_flag_;
 
 };
-
 
 #endif /* OPTIMIZER_MANAGER_H */
