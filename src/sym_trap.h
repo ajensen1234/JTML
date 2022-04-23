@@ -8,7 +8,7 @@
 #include <QTextStream>
 #include <QtWidgets/qfiledialog.h>
 #include <QMessageBox>
-#include "optimizer_manager.h"
+//#include "optimizer_manager.h"
 
 
 #include <QVTKWidget.h>
