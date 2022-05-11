@@ -21,6 +21,8 @@
 #include <qfiledialog.h>
 #include <qtextstream.h>
 
+
+
 /*Messages*/
 #include <qmessagebox.h>
 
@@ -44,6 +46,8 @@
 #include <torch/torch.h>
 #include <torch/script.h>
 #include <c10/cuda/CUDAMacros.h>
+
+
 
 using namespace std;
 
@@ -222,6 +226,7 @@ MainScreen::MainScreen(QWidget* parent)
 	/*Have NOT Loaded Calibration Files Yet*/
 	calibrated_for_monoplane_viewport_ = false;
 	calibrated_for_biplane_viewport_ = false;
+	
 
 	/*Index of Previously Selected Frame/Models*/
 	previous_frame_index_ = -1;
@@ -2423,6 +2428,22 @@ void MainScreen::on_actionEstimate_Scapula_s_triggered() {
 	/*Pose Estimate Progress and Label Not Visible*/
 	ui.pose_progress->setVisible(0);
 	ui.pose_label->setVisible(0);
+}
+
+void MainScreen::on_actionNFD_Pose_Estimate_triggered()
+{
+	JTML_NFD nfd_obj;
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	if (selected.size() == 0 || previous_frame_index_ < 0 || ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
+		ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
+		ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
+		QMessageBox::critical(this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
+		return;
+	}
+	QString error_mess;
+	nfd_obj.Initialize(calibration_file_, loaded_models, loaded_frames, selected,
+		ui.image_list_widget->currentIndex().row(), error_mess);
+	nfd_obj.Run();
 }
 
 /*Viewing Controls*/

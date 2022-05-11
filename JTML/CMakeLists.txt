@@ -74,6 +74,7 @@ find_package(VTK 7.1.1 REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 include(${VTK_USE_FILE})
+find_package(fitpackpp)
 
 
 
@@ -82,6 +83,8 @@ target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${cuda_LIBRARIES})
+
+
 
 
 find_path(COSTFUNCTIONTOOLS_INCLUDE_PATH

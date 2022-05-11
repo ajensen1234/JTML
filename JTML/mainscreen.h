@@ -12,6 +12,8 @@
 /*Key Event*/
 #include <QKeyEvent>
 
+#include "../nfd/nfd.h"
+
 /*Direct Data Structures*/
 #include "data_structures_6D.h"
 
@@ -66,6 +68,8 @@
 /*CostFunctionTools*/
 #include "camera_calibration.h"
 
+#include "../nfd/nfd.h"
+
 class MainScreen : public QMainWindow
 {
 	Q_OBJECT
@@ -82,6 +86,7 @@ public:
 
 	/*Bool to see if currently optimizing*/
 	bool currently_optimizing_;
+	
 
 
 signals:
@@ -268,6 +273,8 @@ public Q_SLOTS:
 	void on_actionEstimate_Tibial_Implant_s_triggered();
 	void on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered();
 	void on_actionEstimate_Scapula_s_triggered();
+
+	void on_actionNFD_Pose_Estimate_triggered();
 
 	void on_actionCopy_Next_Pose_triggered();
 	void on_actionCopy_Previous_Pose_triggered();
