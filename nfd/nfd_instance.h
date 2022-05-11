@@ -9,9 +9,10 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "splines.hpp"
-#include "fitpackpp/BSplineCurve.h"
+#include "../alglib/interpolation.h"
 
 using namespace gpu_cost_function;
+using namespace alglib;
 /*
 This class is beeing used to store a single instance of the NFD libarary data.
 
@@ -45,6 +46,9 @@ public:
 	nfd_instance(GPUModel &gpu_mod,float xt, float yt, float zt, float xr, float yr, float zr);
 	~nfd_instance();
 
+	void print_contour_points();
+	void print_raw_points();
+
 	/*Set the pose of the instance - 312 rotation order when projected*/
 	
 
@@ -57,11 +61,13 @@ private:
 	float rot_x_;
 	float rot_y_;
 	Pose instance_pose_;
-	std::vector<vec2d> contour_pts_;
-	std::vector<std::vector<int>> ctr_pts_;
-
-	
+	std::vector<std::vector<int>> contour_pts_;
+	//std::vector<int[2]> cntr_pts_;
+	real_2d_array contour_points_raw_;
+	std::vector<double> y_points_resampled_;
+	std::vector<double> x_points_resampled_;
+	pspline2interpolant contour_spline_;
+	int sz_;
 	void get_contour_points(cv::Mat img);
 
 };
-

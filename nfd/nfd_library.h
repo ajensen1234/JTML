@@ -37,7 +37,7 @@ private:
 	std::vector<nfd_instance> library_;
 	Calibration calibration_;
 
-	void testing_projection();
+	nfd_instance testing_projection();
 	
 };
 

@@ -12,8 +12,9 @@ add_library(JTML_NFD STATIC
 	nfd_instance.cpp
 	nfd_library.cpp
 	nfd_library.h
-	bspline.h
-	bspline.cpp)
+	)
+
+set(CMAKE_CXX_STANDARD 17)
 
 	
 	

@@ -10,7 +10,9 @@ nfd_library::nfd_library(Calibration cal_file,GPUModel &gpu_model,int x_range,in
 
 	create_rot_indices(x_range_, y_range_, x_inc_, y_inc_);
 
-	testing_projection();
+	nfd_instance my_inst = testing_projection();
+
+	my_inst.print_contour_points();
 }
 
 
@@ -20,8 +22,6 @@ void nfd_library::create_nfd_library()
 	for (std::array<float, 2> rots : rot_indices_) {
 		nfd_instance temp_instance(*gpu_mod,0,0, -0.9*this->calibration_.camera_A_principal_.principal_distance_, 
 			rots[0], rots[1], 0);
-
-
 
 	}
 }
@@ -36,8 +36,11 @@ void nfd_library::create_rot_indices(int x_range, int y_range, float x_inc, floa
 	}
 }
 
-void nfd_library::testing_projection() {
+
+nfd_instance nfd_library::testing_projection() {
 	nfd_instance inst(*gpu_mod, 40, -20, -1000, 0, 0, 0);
+
+	return inst;
 }
 
 nfd_library::~nfd_library() {
