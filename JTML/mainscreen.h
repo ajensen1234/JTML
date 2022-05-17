@@ -69,7 +69,6 @@
 #include "camera_calibration.h"
 
 /*machine_learning_tools*/
-#include "machine_learning_tools.h"
 
 
 class MainScreen : public QMainWindow
