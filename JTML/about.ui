@@ -430,12 +430,12 @@ QMenu::separator {
     <rect>
      <x>360</x>
      <y>90</y>
-     <width>171</width>
+     <width>181</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>© 2017 Paris Flood</string>
+    <string>© 2022 Andrew Jensen, Paris Flood</string>
    </property>
   </widget>
   <widget class="QGroupBox" name="detected_group_box">
