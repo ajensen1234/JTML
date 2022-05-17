@@ -8,7 +8,6 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-#include "splines.hpp"
 #include "../alglib/interpolation.h"
 
 using namespace gpu_cost_function;
