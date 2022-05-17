@@ -276,7 +276,6 @@ public Q_SLOTS:
 	void on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered();
 	void on_actionEstimate_Scapula_s_triggered();
 
-	void on_actionNFD_Pose_Estimate_triggered();
 
 	void on_actionCopy_Next_Pose_triggered();
 	void on_actionCopy_Previous_Pose_triggered();
