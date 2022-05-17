@@ -91,7 +91,7 @@ public:
 	
 
 
-signals:
+Q_SIGNALS:
 	/*Update Whether To Write TO Text Display*/
 	void UpdateDisplayText(bool);
 	/*Stop Optimizer*/

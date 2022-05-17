@@ -1191,7 +1191,7 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 	ui.qvtk_widget->update();
 
 	/*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted Image*/
-	torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
+	//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
 	bool black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
 	for (int i = 0; i < ui.image_list_widget->count(); i++) {
 		//cv::Mat correct_inversion = (255 * black_sil_used) + ((1 - 2 * black_sil_used) * loaded_frames[i].GetOriginalImage());
@@ -1213,16 +1213,28 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 		//	input_width * input_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 		//cv::resize(padded, padded, cv::Size(padded_width, padded_height));
 		//cv::Mat unpadded = padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows));
+	
 		cv::Mat unpadded = segment_image(loaded_frames[i].GetOriginalImage(), black_sil_used, model, input_width, input_height);
 		unpadded.copyTo(loaded_frames[i].GetInvertedImage());
 		int dilation_val = 0;
 		trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue("Dilation", dilation_val);
 		loaded_frames[i].SetEdgeImage(ui.aperture_spin_box->value(),
-			ui.low_threshold_slider->value(),
-			ui.high_threshold_slider->value(), true);
+		ui.low_threshold_slider->value(),
+		ui.high_threshold_slider->value(), true);
 		loaded_frames[i].SetDilatedImage(dilation_val);
+		if (calibrated_for_biplane_viewport_)
+		{
+			cv::Mat unpadded_biplane = segment_image(loaded_frames_B[i].GetOriginalImage(), black_sil_used, model, input_width, input_height);
+			unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
+			loaded_frames_B[i].SetEdgeImage(ui.aperture_spin_box->value(),
+				ui.low_threshold_slider->value(),
+				ui.high_threshold_slider->value(),true);
+			loaded_frames_B[i].SetDilatedImage(dilation_val);
+		}
+
 		ui.pose_progress->setValue(20 + 30 * (double)(i + 1) / (double)ui.image_list_widget->count());
 		ui.qvtk_widget->update();
+		
 		
 	}
 
