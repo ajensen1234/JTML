@@ -59,7 +59,9 @@ add_executable(${PROJECT_NAME}
         cost_function_selection.ui
         sym_trap.cpp
         sym_trap.h
-        sym_trap.ui)
+        sym_trap.ui
+		machine_learning_tools.h
+		machine_learning_tools.cpp)
 
 
 
