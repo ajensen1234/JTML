@@ -68,7 +68,9 @@
 /*CostFunctionTools*/
 #include "camera_calibration.h"
 
-#include "../nfd/nfd.h"
+/*machine_learning_tools*/
+#include "machine_learning_tools.h"
+
 
 class MainScreen : public QMainWindow
 {
