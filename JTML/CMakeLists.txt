@@ -76,7 +76,6 @@ find_package(VTK 7.1.1 REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 include(${VTK_USE_FILE})
-find_package(fitpackpp)
 
 
 
