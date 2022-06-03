@@ -12,7 +12,7 @@
 /*Key Event*/
 #include <QKeyEvent>
 
-//#include "../nfd/nfd.h"
+#include "../nfd/nfd.h"
 
 /*Direct Data Structures*/
 #include "data_structures_6D.h"
@@ -69,6 +69,7 @@
 #include "camera_calibration.h"
 
 /*machine_learning_tools*/
+#include "machine_learning_tools.h"
 
 
 class MainScreen : public QMainWindow
@@ -275,6 +276,7 @@ public Q_SLOTS:
 	void on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered();
 	void on_actionEstimate_Scapula_s_triggered();
 
+	void on_actionNFD_Pose_Estimate_triggered();
 
 	void on_actionCopy_Next_Pose_triggered();
 	void on_actionCopy_Previous_Pose_triggered();

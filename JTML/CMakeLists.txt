@@ -59,7 +59,9 @@ add_executable(${PROJECT_NAME}
         cost_function_selection.ui
         sym_trap.cpp
         sym_trap.h
-        sym_trap.ui)
+        sym_trap.ui
+		machine_learning_tools.h
+		machine_learning_tools.cpp)
 
 
 
@@ -82,6 +84,8 @@ target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${cuda_LIBRARIES})
+
+
 
 
 find_path(COSTFUNCTIONTOOLS_INCLUDE_PATH

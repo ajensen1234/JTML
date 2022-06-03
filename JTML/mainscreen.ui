@@ -2074,7 +2074,7 @@ QMenu::separator {
      </property>
     </widget>
    </widget>
-   <widget class="QVTKWidget" name="qvtk_widget">
+   <widget class="QVTKWidget" name="qvtk_widget" native="true">
     <property name="geometry">
      <rect>
       <x>410</x>
@@ -3708,7 +3708,7 @@ QProgressBar::chunk {
      <x>0</x>
      <y>0</y>
      <width>1701</width>
-     <height>25</height>
+     <height>29</height>
     </rect>
    </property>
    <property name="font">
@@ -3811,6 +3811,7 @@ QProgressBar::chunk {
     <addaction name="separator"/>
     <addaction name="actionEstimate_Tibial_Implant_s"/>
     <addaction name="separator"/>
+    <addaction name="actionNFD_Pose_Estimate"/>
    </widget>
    <widget class="QMenu" name="menuSYMMETRY_TRAP_ANALYSIS">
     <property name="title">
@@ -4023,6 +4024,11 @@ QProgressBar::chunk {
   <action name="actionOptimize_Backward">
    <property name="text">
     <string>Optimize Backward</string>
+   </property>
+  </action>
+  <action name="actionNFD_Pose_Estimate">
+   <property name="text">
+    <string>NFD Pose Estimate</string>
    </property>
   </action>
  </widget>
