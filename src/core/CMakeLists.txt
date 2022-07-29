@@ -18,7 +18,7 @@ add_library(jtml_core STATIC
 	STLReader.cpp
 	${HEADER_FILES}
 	${PROJECT_SOURCE_DIR}/src/gui/sym_trap.cpp
-	)
+	${PROJECT_SOURCE_DIR}/include/gui/sym_trap.h)
 
 # Linking Necessary Libraries
 target_link_libraries(jtml_core ${REQUIRED_LIBS_QUALIFIED})
