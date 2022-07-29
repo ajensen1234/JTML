@@ -38,7 +38,8 @@ add_executable(${PROJECT_NAME}
 	mainscreen.cpp
 	settings_control.cpp
 	sym_trap.cpp
-	${HEADER_FILES})
+	${HEADER_FILES}
+	${HEADER_DIR}/mainscreen.qrc)
 
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(${PROJECT_NAME} jtml_core)

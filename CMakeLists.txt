@@ -39,6 +39,6 @@ set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_
 
 # Adding Subdirectories
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
 add_subdirectory(lib)
 #add_subdirectory(packaging)

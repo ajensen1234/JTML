@@ -1,0 +1,26 @@
+<RCC>
+  <qresource prefix="Menu_Icons">
+    <file>Resources/normaluppink.png</file>
+    <file>Resources/normalup.png</file>
+    <file>Resources/camerared.png</file>
+    <file>Resources/cameragreen.png</file>
+    <file>Resources/camerapink.png</file>
+    <file>Resources/camerayellow.png</file>
+    <file>Resources/save_icon.png</file>
+    <file>Resources/stop_icon.png</file>
+    <file>Resources/selection_icon.ico</file>
+    <file>Resources/load_icon.png</file>
+    <file>Resources/controls_icon.png</file>
+    <file>Resources/center_placement_icon.png</file>
+    <file>Resources/help_icon.png</file>
+    <file>Resources/optimizer_settings_icon.png</file>
+    <file>Resources/quit_icon.ico</file>
+  </qresource>
+  <qresource prefix="Desktop_Icon">
+    <file>Resources/jta_icon.png</file>
+    <file>Resources/jta_dime_icon.png</file>
+  </qresource>
+  <qresource prefix="Controls">
+    <file>Resources/control_list_new.png</file>
+  </qresource>
+</RCC>
