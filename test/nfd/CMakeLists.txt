@@ -2,6 +2,6 @@
 add_executable(nfd_speed_test
     nfd_speed_test.cpp)
 
-target_link_libraries(nfd_speed_test
-    jtml_core
+
+target_link_libraries(nfd_speed_test PRIVATE
     jtml_nfd)
