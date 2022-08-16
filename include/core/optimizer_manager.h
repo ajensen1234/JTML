@@ -37,7 +37,7 @@
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
 
-#include "gui/sym_trap.h"
+#include "core/sym_trap_functions.h"
 
 using namespace gpu_cost_function;
 
@@ -58,7 +58,7 @@ public:
 		jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 		QString opt_directive,
 		QString& error_message,
-		sym_trap* sym_trap_obj);
+		int iter_count);
 	~OptimizerManager();
 
 
@@ -83,6 +83,7 @@ signals:
 	void CostFuncAtPoint(double);
 	void onUpdateOrientationSymTrap(double, double, double, double, double, double);
 	void onProgressBarUpdate(int);
+	void get_iter_count();
 
 public slots:
 	/*Optimizer Biplane Single Model*/
@@ -103,7 +104,7 @@ private:
 
 	/*SYM TRAP SETTINGS*/
 	bool sym_trap_call;
-	sym_trap *sym_trap_obj;
+	//sym_trap *sym_trap_obj;
 
 	/*Frames*/
 	std::vector<Frame> frames_A_;
@@ -131,6 +132,7 @@ private:
 	/*Index For Starting Frame in Optimization*/
 	unsigned int start_frame_index_;
 	unsigned int end_frame_index_;
+	int iter_count;
 
 	std::vector<int> img_indices_;
 

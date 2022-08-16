@@ -4100,9 +4100,15 @@ a new thread*/
 /*Launch Optimizer*/
 void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 	SaveLastPose();
+	int iter_count;
 
-	if (directive == "Sym_Trap") sym_trap_running = true;
-
+	if (directive == "Sym_Trap") {
+		sym_trap_running = true;
+		iter_count = sym_trap_control->getIterCount();
+	} else
+	{
+		iter_count = 0;
+	}
 	/*Can Only Optimize If Chosen Frame and Model*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	if (selected.size() == 0 || previous_frame_index_ < 0 || ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
@@ -4147,7 +4153,7 @@ void MainScreen::LaunchOptimizer(QString directive) {/*Save Last Pair Pose*/
 		trunk_manager_, branch_manager_, leaf_manager_,
 		directive,
 		error_mess,
-		(directive == "Sym_Trap") ? sym_trap_control : nullptr);
+		iter_count);
 
 	/*If Didnt't Initialize Correctly DESTROY*/
 	if (!initialized_correctly) {
