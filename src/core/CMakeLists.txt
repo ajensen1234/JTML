@@ -16,6 +16,7 @@ add_library(jtml_core STATIC
 	optimizer_settings.cpp
 	stl_reader.cpp
 	STLReader.cpp
+	machine_learning_tools.cpp
 	${HEADER_FILES}
 	)
 

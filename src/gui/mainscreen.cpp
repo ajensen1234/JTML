@@ -1,5 +1,5 @@
 /*Main Screen Header*/
-#include "gui/mainscreen.h"
+#include "mainscreen.h"
 
 /*Font Manipulation*/
 #include <qfontmetrics.h>
@@ -34,10 +34,10 @@
 #include "core/interactor.h"
 
 /*About Window*/
-#include "gui/about.h"
+#include "about.h"
 
 /*Control Window*/
-#include "gui/controls.h"
+#include "controls.h"
 
 /*STL Reader*/
 #include "core/STLReader.h"
@@ -47,7 +47,7 @@
 #include <torch/script.h>
 #include <c10/cuda/CUDAMacros.h>
 
-
+#include "core/machine_learning_tools.h"
 
 using namespace std;
 
@@ -1191,37 +1191,51 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 	ui.qvtk_widget->update();
 
 	/*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted Image*/
-	torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
+	//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
 	bool black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
 	for (int i = 0; i < ui.image_list_widget->count(); i++) {
-		cv::Mat correct_inversion = (255 * black_sil_used) + ((1 - 2 * black_sil_used) * loaded_frames[i].GetOriginalImage());
-		cv::Mat padded;
-		if (correct_inversion.cols > correct_inversion.rows)
-			padded.create(correct_inversion.cols, correct_inversion.cols, correct_inversion.type());
-		else
-			padded.create(correct_inversion.rows, correct_inversion.rows, correct_inversion.type());
-		unsigned int padded_width = padded.cols;
-		unsigned int padded_height = padded.rows;
-		padded.setTo(cv::Scalar::all(0));
-		correct_inversion.copyTo(padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows)));
-		cv::resize(padded, padded, cv::Size(input_width, input_height));
-		cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
-			input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
-		std::vector<torch::jit::IValue> inputs;
-		inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
-		cudaMemcpy(padded.data, (255 * (model->forward(inputs).toTensor() > 0)).to(torch::dtype(torch::kByte)).flip({ 2 }).data_ptr(),
-			input_width * input_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-		cv::resize(padded, padded, cv::Size(padded_width, padded_height));
-		cv::Mat unpadded = padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows));
+		//cv::Mat correct_inversion = (255 * black_sil_used) + ((1 - 2 * black_sil_used) * loaded_frames[i].GetOriginalImage());
+		//cv::Mat padded;
+		//if (correct_inversion.cols > correct_inversion.rows)
+		//	padded.create(correct_inversion.cols, correct_inversion.cols, correct_inversion.type());
+		//else
+		//	padded.create(correct_inversion.rows, correct_inversion.rows, correct_inversion.type());
+		//unsigned int padded_width = padded.cols;
+		//unsigned int padded_height = padded.rows;
+		//padded.setTo(cv::Scalar::all(0));
+		//correct_inversion.copyTo(padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows)));
+		//cv::resize(padded, padded, cv::Size(input_width, input_height));
+		//cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
+		//	input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
+		//std::vector<torch::jit::IValue> inputs;
+		//inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
+		//cudaMemcpy(padded.data, (255 * (model->forward(inputs).toTensor() > 0)).to(torch::dtype(torch::kByte)).flip({ 2 }).data_ptr(),
+		//	input_width * input_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+		//cv::resize(padded, padded, cv::Size(padded_width, padded_height));
+		//cv::Mat unpadded = padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows));
+	
+		cv::Mat unpadded = segment_image(loaded_frames[i].GetOriginalImage(), black_sil_used, model, input_width, input_height);
 		unpadded.copyTo(loaded_frames[i].GetInvertedImage());
 		int dilation_val = 0;
 		trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue("Dilation", dilation_val);
 		loaded_frames[i].SetEdgeImage(ui.aperture_spin_box->value(),
-			ui.low_threshold_slider->value(),
-			ui.high_threshold_slider->value(), true);
+		ui.low_threshold_slider->value(),
+		ui.high_threshold_slider->value(), true);
 		loaded_frames[i].SetDilatedImage(dilation_val);
+		if (calibrated_for_biplane_viewport_)
+		{
+			cv::Mat unpadded_biplane = segment_image(loaded_frames_B[i].GetOriginalImage(), black_sil_used, model, input_width, input_height);
+			unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
+			loaded_frames_B[i].SetEdgeImage(ui.aperture_spin_box->value(),
+				ui.low_threshold_slider->value(),
+				ui.high_threshold_slider->value(),true);
+			loaded_frames_B[i].SetDilatedImage(dilation_val);
+		}
+
 		ui.pose_progress->setValue(20 + 30 * (double)(i + 1) / (double)ui.image_list_widget->count());
 		ui.qvtk_widget->update();
+		
+		
 	}
 
 	/*If Viewing Inverted Images Update*/
