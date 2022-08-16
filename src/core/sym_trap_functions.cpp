@@ -1,39 +1,8 @@
-#include "gui/sym_trap.h"
+#include "core/sym_trap_functions.h"
 
+using namespace std;
 
-sym_trap::sym_trap(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags)
-
-{
-	ui.setupUi(this);
-
-	QObject::connect(this, SIGNAL(Done()), this, SLOT(close()));
-	
-	QFontMetrics font_metrics(this->font());
-
-	this->setStyleSheet(this->styleSheet() += "QGroupBox { margin-top: " + QString::number(font_metrics.height() / 2) + "px; }");
-	int group_box_to_top_button_y = font_metrics.height() / 2;
-
-	//when button is clicked, call gather_dataset()
-	QObject::connect(ui.Plot_3D, SIGNAL(clicked()), this, SLOT(graphResults()));
-	QObject::connect(ui.Plot_2D, SIGNAL(clicked()), this, SLOT(graphResults2D()));
-	QObject::connect(ui.iterBox, SIGNAL(valueChanged(int)), this, SLOT(setIterCount(int)));
-	
-	QObject::connect(ui.save_data, SIGNAL(clicked()), this, SLOT(saveData()));
-	QObject::connect(ui.load_data, SIGNAL(clicked()), this, SLOT(loadData()));
-	QObject::connect(ui.save_plot, SIGNAL(clicked()), this, SLOT(savePlot()));
-
-	this->iter_count = ui.iterBox->value();
-
-	this->plot_widget = nullptr;
-}
-
-sym_trap::~sym_trap()
-{
-	delete this->plot_widget;
-}
-
-
-Point6D sym_trap::compute_mirror_pose(Point6D pose) {
+Point6D compute_mirror_pose(Point6D pose) {
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
 	// This is important when it comes to determining the different symmetry traps that might be present
 
@@ -67,7 +36,7 @@ Point6D sym_trap::compute_mirror_pose(Point6D pose) {
 	// Next, take the cross product of the two vectors (z-ax and normed) to get the axis of rotation.
 	// call this axis M (Crane and Duffy reference)
 	float M_temp[3];
-	sym_trap::cross_product(M_temp, z_ax, view_normed);
+	cross_product(M_temp, z_ax, view_normed);
 
 	//need to normalize M
 	float M_mag = sqrt(pow(M_temp[0], 2) + pow(M_temp[1], 2) + pow(M_temp[2], 2));
@@ -83,7 +52,7 @@ Point6D sym_trap::compute_mirror_pose(Point6D pose) {
 	// we will keep this in radians for now 
 
 	float temp_dot = 0;
-	sym_trap::dot_product(temp_dot, z_ax, view_normed);
+	dot_product(temp_dot, z_ax, view_normed);
 
 	std::cout << "temp_dot" << temp_dot << std::endl;
 	float angle_between = acos(temp_dot);
@@ -144,7 +113,7 @@ Point6D sym_trap::compute_mirror_pose(Point6D pose) {
 }
 
 
-void sym_trap::create_312_transform(float transform[4][4], Point6D pose)
+void create_312_transform(float transform[4][4], Point6D pose)
 {
 	float degtorad = 3.1415928 / 180.0;
 	float zr_rad = pose.za * degtorad;
@@ -177,7 +146,7 @@ void sym_trap::create_312_transform(float transform[4][4], Point6D pose)
 	transform[3][3] = 1.0f;
 }
 
-void sym_trap::invert_transform(float result[4][4], const float tran[4][4])
+void invert_transform(float result[4][4], const float tran[4][4])
 {
 	int     i, j;
 	/* Upper left 3x3 of result is transpose of upper left 3x3 of tran. */
@@ -196,7 +165,7 @@ void sym_trap::invert_transform(float result[4][4], const float tran[4][4])
 	}
 }
 
-void sym_trap::matmult4(float ans[4][4], float matrix1[4][4], float matrix2[4][4])
+void matmult4(float ans[4][4], float matrix1[4][4], float matrix2[4][4])
 {
 	int   i, j, k;
 	for (i = 0; i < 4; i++)
@@ -208,7 +177,7 @@ void sym_trap::matmult4(float ans[4][4], float matrix1[4][4], float matrix2[4][4
 				ans[i][j] += matrix1[i][k] * matrix2[k][j];
 }
 
-void sym_trap::matmult3(float ans[3][3], const float matrix1[3][3], const float matrix2[3][3]) {
+void matmult3(float ans[3][3], const float matrix1[3][3], const float matrix2[3][3]) {
 	int   i, j, k;
 	for (i = 0; i < 3; i++)
 		for (j = 0; j < 3; j++)
@@ -219,20 +188,20 @@ void sym_trap::matmult3(float ans[3][3], const float matrix1[3][3], const float 
 				ans[i][j] += matrix1[i][k] * matrix2[k][j];
 }
 
-void sym_trap::dot_product(float& result, const float vector1[3], const float vector2[3]) {
+void dot_product(float& result, const float vector1[3], const float vector2[3]) {
 
 	for (int i = 0; i < 3; i++) {
 		result += (vector1[i] * vector2[i]);
 	}
 }
 
-void sym_trap::cross_product(float CP[3], const float v1[3], const float v2[3]) {
+void cross_product(float CP[3], const float v1[3], const float v2[3]) {
 	CP[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	CP[1] = -(v1[0] * v2[2] - v1[2] * v2[0]);
 	CP[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-void sym_trap::equivalent_axis_angle_rotation(float rot[3][3], const float m[3], const float angle) {
+void equivalent_axis_angle_rotation(float rot[3][3], const float m[3], const float angle) {
 	float c = cos(angle);
 	float s = sin(angle);
 	float v = 1.0 - c;
@@ -251,7 +220,7 @@ void sym_trap::equivalent_axis_angle_rotation(float rot[3][3], const float m[3],
 
 }
 
-void sym_trap::rotation_matrix(float R[3][3], Point6D pose) {
+void rotation_matrix(float R[3][3], Point6D pose) {
 
 	float degtorad = 3.1415928 / 180.0;
 	float zr_rad = pose.za * degtorad;
@@ -280,7 +249,7 @@ void sym_trap::rotation_matrix(float R[3][3], Point6D pose) {
 }
 
 
-void sym_trap::getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]) {
+void getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]) {
 
 	float sx = Rot[2][1];
 	xr = asin(sx);
@@ -297,7 +266,7 @@ void sym_trap::getRotations312(float& xr, float& yr, float& zr, const float Rot[
 
 }
 
-void sym_trap::copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_matrix)[3][3]) {
+void copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_matrix)[3][3]) {
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			new_matrix[i][j] = old_matrix[i][j];
@@ -306,7 +275,7 @@ void sym_trap::copy_matrix_by_value(float(&new_matrix)[3][3], const float(&old_m
 }
 
 
-void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose) {
+void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose, int numPoses) {
 	// convert curr_pose into a Point6D
 	//Point6D pose = Point6D(curr_pose.x_location_, curr_pose.y_location_, curr_pose.z_location_, curr_pose.x_angle_, curr_pose.y_angle_, curr_pose.z_angle_);
 
@@ -315,9 +284,8 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	printf("Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n", pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za);
 
 	// number of intermediary poses
-	int numPoses = getIterCount(); // read this in from UI in the future
+	//int numPoses = getIterCount(); // read this in from UI in the future
 	cout << "Using " << numPoses << " intermediary poses" << endl;
-	cout << "IM IN THE WRONG PLACE" << endl;
 
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
 	// This is important when it comes to determining the different symmetry traps that might be present
@@ -352,7 +320,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	// Next, take the cross product of the two vectors (z-ax and normed) to get the axis of rotation.
 	// call this axis M (Crane and Duffy reference)
 	float M_temp[3];
-	sym_trap::cross_product(M_temp, z_ax, view_normed);
+	cross_product(M_temp, z_ax, view_normed);
 
 	//need to normalize M
 	float M_mag = sqrt(pow(M_temp[0], 2) + pow(M_temp[1], 2) + pow(M_temp[2], 2));
@@ -368,7 +336,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	// we will keep this in radians for now 
 
 	float temp_dot = 0;
-	sym_trap::dot_product(temp_dot, z_ax, view_normed);
+	dot_product(temp_dot, z_ax, view_normed);
 
 	std::cout << "temp_dot: " << temp_dot << std::endl;
 	float angle_between = acos(temp_dot);
@@ -482,317 +450,10 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	return;
 }
 
-int sym_trap::getIterCount()
-{
-	return this->iter_count;
-}
 
-void sym_trap::setIterCount(int n)
-{
-	this->iter_count = n;
-}
-
-
-void sym_trap::saveData()
-{
-	// save a file in Qt selected by user
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("CSV Files (*.csv)"));
-	if (fileName == "") { return; }
-	QFile::remove(fileName);
-	QFile::copy("Results.csv", fileName);
-}
-
-void sym_trap::loadData()
-{
-	// Load a file from user selected directory
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("CSV Files (*.csv)"));
-	cout << "Filename: '" << fileName.toStdString() << "'" << endl;
-	if (fileName == "") { return; }
-
-	QFile loadedFile(fileName);
-
-	// Copy file to Results.csv
-
-	QFile vtkResults("Results.xyz");
-	QFile vtkResults2D("Results2D.xy");
-
-	// Copy file to Results.xyz and Results2D.xyz
-	if (loadedFile.open(QIODevice::ReadOnly) && vtkResults.open(QIODevice::WriteOnly) && vtkResults2D.open(QIODevice::WriteOnly)) {
-		QTextStream input(&loadedFile);
-		QTextStream output(&vtkResults);
-		QTextStream output2D(&vtkResults2D);
-
-		QString line;
-		
-		int count = 0;
-		// Get line count
-		while (!input.atEnd()) {
-			line = input.readLine();
-			count++;
-		}
-		cout << "count: " << count << endl;
-		input.seek(0); // reset stream to beginning
-		
-		// Loop through lines in input
-		int i = 0;
-		while (!input.atEnd()) {
-			line = input.readLine();
-			QStringList splitLine = line.split(",");
-
-			// Write to Results.xyz
-			output << splitLine[0] << " " << splitLine[1] << " " << splitLine[3] << endl;
-			output2D << i++ - count/3 << " " << splitLine[3] << endl;
-		}
-
-		loadedFile.close();
-		vtkResults.close();
-		vtkResults2D.close();
-	}
-	// Remove existing results.csv before copy
-	QFile::remove("Results.csv");
-	QFile::copy(fileName, "Results.csv");
-	
-	this->graphResults2D();
-}
-
-void sym_trap::savePlot()
-{
-	// Take a screenshot of the plot and save it to a file
-	if (plot_widget) {
-		QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("PNG Files (*.png)"));
-		if (fileName == "") { return; }
-		//QPixmap pixmap = QPixmap::grabWidget(plot_widget);
-		QFile::remove(fileName);
-		
-		/*pixmap.save(fileName);*/
-		
-		vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
-		writer->SetFileName(fileName.toStdString().c_str());
-		writer->SetInputData(plot_widget->cachedImage());
-		writer->Write();
-	}
-	else {
-		QMessageBox::information(this, "Error", "No plot to save");
-	}
-}
-
-double sym_trap::onCostFuncAtPoint(double result) {
-	std::cout << "grabbed result" << std::endl;
-	return result;
-}
-
-void sym_trap::graphResults() {
-	//runs when you click gatherdataset button
-	//read Results.csv and graph them
-
-	if (!QFile::exists("Results.xyz")) {
-		// Error window
-		QMessageBox::information(this, "Error", "No 3D results to graph");
-		return;
-	}
-	
-	fstream fname;
-	fname.open("Results.csv", ios::in);
-	if (!fname.is_open()) { std::cout << "error"; }
-
-	std::vector<std::string> row;
-	std::string line, data;
-
-	if (fname.is_open())
-	{
-		while (std::getline(fname, line))
-		{
-
-			std::stringstream str_s(line);
-
-			while (std::getline(str_s, data, ','))
-				row.push_back(data);
-		}
-	}
-	fname.close();
-
-	std::vector<double> xrot;
-	std::vector<double> yrot;
-	std::vector<double> zrot;
-	std::vector<double> costs;
-
-	for (int i = 0; i < row.size(); i+=4) {
-		xrot.push_back(stod(row.at(i)));
-		yrot.push_back(stod(row.at(i+1)));
-		zrot.push_back(stod(row.at(i+2)));
-		costs.push_back(stod(row.at(i+3)));
-	}
-
-	// Create QVTK widget and add it to layout box
-	if (!plot_widget) {
-		this->plot_widget = new QVTKWidget(this);
-		this->ui.verticalLayout->insertWidget(0,plot_widget); // insert widget at first index of layout box
-		this->ui.verticalLayout->update();
-	} else {
-		QVTKWidget* temp_widget = new QVTKWidget(this);
-		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
-		delete plot_widget;
-		this->plot_widget = temp_widget;
-		this->ui.verticalLayout->update();
-	}
-	
-	// Read the file
-	vtkSmartPointer<vtkSimplePointsReader> reader = vtkSmartPointer<vtkSimplePointsReader>::New();
-	reader->SetFileName("Results.xyz");
-	reader->Update();
-
-	vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
-	inputPolyData->CopyStructure(reader->GetOutput());
-
-
-	// warp plane
-	vtkSmartPointer<vtkWarpScalar> warp = vtkSmartPointer<vtkWarpScalar>::New();
-	warp->SetInputData(inputPolyData);
-	warp->SetScaleFactor(0.0);
-	
-	// Visualize
-	vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
-	mapper->SetInputConnection(warp->GetOutputPort());
-
-
-
-	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	actor->GetProperty()->SetPointSize(10);
-	actor->SetMapper(mapper);
-
-	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-	plot_widget->GetRenderWindow()->AddRenderer(renderer);
-	
-	
-	//vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-	//renderWindow->AddRenderer(renderer);
-	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	renderWindowInteractor->SetRenderWindow(plot_widget->GetRenderWindow());
-
-
-	renderer->AddActor(actor);
-	renderer->SetBackground(0, 0, 0);
-
-	plot_widget->GetRenderWindow()->Render();
-
-	vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-	renderWindowInteractor->SetInteractorStyle(style);
-
-	// add & render CubeAxes
-	vtkSmartPointer<vtkCubeAxesActor2D> axes = vtkSmartPointer<vtkCubeAxesActor2D>::New();
-	axes->SetInputData(warp->GetOutput());
-	axes->SetFontFactor(1);
-	axes->SetFlyModeToNone();
-	axes->SetCamera(renderer->GetActiveCamera());
-
-	vtkSmartPointer<vtkAxisActor2D> xAxis = axes->GetXAxisActor2D();
-	xAxis->SetAdjustLabels(1);
-
-
-	renderer->AddViewProp(axes);
-	renderWindowInteractor->Start();
-	
-}
-
-void sym_trap::graphResults2D() {
-	if (!QFile::exists("Results2D.xy")) {
-		// Error window
-		QMessageBox::information(this, "Error", "No 2D results to graph");
-		return;
-	}
-	
-	// Create QVTK widget and add it to layout 
-	if (!plot_widget) {
-		this->plot_widget = new QVTKWidget(this);
-		this->ui.verticalLayout->insertWidget(0, plot_widget); // insert widget at first index of layout box
-		this->ui.verticalLayout->update();
-	} else {
-		QVTKWidget* temp_widget = new QVTKWidget(this);
-		this->ui.verticalLayout->replaceWidget(plot_widget, temp_widget);
-		delete plot_widget;
-		this->plot_widget = temp_widget;
-		this->ui.verticalLayout->update();
-	}
-	
-	// Initialize view
-	vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
-	vtkSmartPointer<vtkContextView> view = vtkSmartPointer<vtkContextView>::New();
-	view->GetRenderer()->SetBackground(colors->GetColor3d("SlateGray").GetData());
-
-	// Setup chart
-	vtkSmartPointer<vtkChartXY> chart = vtkSmartPointer<vtkChartXY>::New();
-	view->GetScene()->AddItem(chart);
-	//chart->SetShowLegend(true);
-
-	// Set axes labels
-	vtkAxis* y = chart->GetAxis(vtkAxis::LEFT);
-	y->SetTitle("Cost");
-	y->GetTitleProperties()->ItalicOn();
-
-	vtkAxis* x = chart->GetAxis(vtkAxis::BOTTOM);
-	x->SetTitle("Pose Deviation Index from Origin Pose");
-	x->GetTitleProperties()->ItalicOn();
-
-	chart->SetTitle("Cost Analysis");
-	chart->GetTitleProperties()->BoldOn();
-	
-	//Create table
-	vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
-	
-	vtkSmartPointer<vtkFloatArray> xAxis = vtkSmartPointer<vtkFloatArray>::New();
-	xAxis->SetName("Index");
-	table->AddColumn(xAxis);
-	
-	vtkSmartPointer<vtkFloatArray> yAxis = vtkSmartPointer<vtkFloatArray>::New();
-	yAxis->SetName("Cost");
-	table->AddColumn(yAxis);
-	
-	// Add data to table
-	QFile file("Results2D.xy");
-	if (file.open(QIODevice::ReadOnly)) {
-		QTextStream in(&file);
-		QString line;
-		// Count number of lines in file to set table size
-		int totalRows = 0;
-		while (!in.atEnd()) {
-			line = in.readLine();
-			totalRows++;
-		}
-		table->SetNumberOfRows(totalRows);
-	
-		// Read file again and fill table
-		in.seek(0);
-		int row = 0;
-		while (!in.atEnd()) {
-			line = in.readLine();
-			QStringList list = line.split(" ");
-			table->SetValue(row, 0, list.at(0).toDouble());
-			table->SetValue(row, 1, list.at(1).toDouble());
-			row++;
-		}
-	}
-	file.close();
-
-	//Add plot and set properties
-	chart->SetInteractive(true);
-	chart->ForceAxesToBoundsOn();
-	chart->ZoomWithMouseWheelOn();
-	
-	vtkSmartPointer<vtkPlot> plot = chart->AddPlot(vtkChart::POINTS);
-	
-	plot->SetInputData(table, 0, 1);
-	plot->SetColor(0, 0, 0, 255);
-	plot->SetWidth(1.5);
-
-	// Render
-	view->SetInteractor(plot_widget->GetInteractor());
-	plot_widget->SetRenderWindow(view->GetRenderWindow());
-	plot_widget->GetRenderWindow()->SetMultiSamples(0);
-	plot_widget->GetRenderWindow()->Render();
-}
 
 template<typename T>
-std::vector<double> sym_trap::linspace(T start_in, T end_in, int num_in)
+std::vector<double> linspace(T start_in, T end_in, int num_in)
 {
 
 	std::vector<double> linspaced;

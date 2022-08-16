@@ -17,6 +17,7 @@ add_library(jtml_core STATIC
 	stl_reader.cpp
 	STLReader.cpp
 	machine_learning_tools.cpp
+	sym_trap_functions.cpp
 	${HEADER_FILES}
 	)
 

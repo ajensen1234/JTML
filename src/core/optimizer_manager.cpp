@@ -10,7 +10,7 @@
 OptimizerManager::OptimizerManager(QObject* parent) :
 	QObject(parent)
 {
-	this->sym_trap_obj = nullptr;
+	//this->sym_trap_obj = nullptr;
 }
 
 /*Initialize*/
@@ -24,11 +24,11 @@ bool OptimizerManager::Initialize(
 	jta_cost_function::CostFunctionManager trunk_manager, jta_cost_function::CostFunctionManager branch_manager, jta_cost_function::CostFunctionManager leaf_manager,
 	QString opt_directive,
 	QString& error_message,
-	sym_trap* sym_trap_obj_) {
+	int iter_count) {
 
-	if (this->sym_trap_obj == nullptr && sym_trap_obj_ != nullptr) {
+/*	if (this->sym_trap_obj == nullptr && sym_trap_obj_ != nullptr) {
 		this->sym_trap_obj = sym_trap_obj_;
-	}
+	} */
 
 	/*Success?*/
 	succesfull_initialization_ = true;
@@ -970,13 +970,14 @@ void OptimizerManager::CalculateSymTrap() {
 	std::vector <double> Costs;
 
 	// Get number of iterations from sym_trap spin box
-	int iter_val = sym_trap_obj->getIterCount() * 3;
+	//int iter_val = sym_trap_obj->getIterCount() * 3;
+	int iter_val = 60;// iter_count * 3;
 	std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
 
 	// Get pose list from sym trap
 	std::vector<Point6D> pose_list(0);
 	Point6D pose_6D(current_optimum_location_);
-	sym_trap_obj->create_vector_of_poses(pose_list, pose_6D);
+	create_vector_of_poses(pose_list, pose_6D, 20);
 
 	int progress_val = 0;
 	// Calculate cost function at each pose
