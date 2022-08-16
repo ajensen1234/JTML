@@ -38,4 +38,5 @@ target_include_directories(jtml_core
 target_include_directories(jtml_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(jtml_core PUBLIC ${CUDA_INCLUDE_DIRS})
 target_include_directories(jtml_core PUBLIC ${CMAKE_BINARY_DIR}/src/gui/${PROJECT_NAME}_autogen/include_Release)
+target_include_directories(jtml_core PUBLIC ${PROJECT_SOURCE_DIR}/lib/)
 message(${CMAKE_BINARY_DIR}/src/gui/${PROJECT_NAME}_autogen/include_Release)

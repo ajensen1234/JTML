@@ -1,5 +1,5 @@
 /*Main Screen Header*/
-#include "mainscreen.h"
+#include "gui/mainscreen.h"
 
 /*Font Manipulation*/
 #include <qfontmetrics.h>
@@ -34,10 +34,10 @@
 #include "core/interactor.h"
 
 /*About Window*/
-#include "about.h"
+#include "gui/about.h"
 
 /*Control Window*/
-#include "controls.h"
+#include "gui/controls.h"
 
 /*STL Reader*/
 #include "core/STLReader.h"
