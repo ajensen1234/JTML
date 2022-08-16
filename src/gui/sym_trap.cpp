@@ -317,6 +317,7 @@ void sym_trap::create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D p
 	// number of intermediary poses
 	int numPoses = getIterCount(); // read this in from UI in the future
 	cout << "Using " << numPoses << " intermediary poses" << endl;
+	cout << "IM IN THE WRONG PLACE" << endl;
 
 	// The main function of this equation is to find the mirror pose of a specific projection geometry
 	// This is important when it comes to determining the different symmetry traps that might be present

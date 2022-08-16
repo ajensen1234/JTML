@@ -971,13 +971,13 @@ void OptimizerManager::CalculateSymTrap() {
 
 	// Get number of iterations from sym_trap spin box
 	//int iter_val = sym_trap_obj->getIterCount() * 3;
-	int iter_val = iter_count * 3;
+	int iter_val = 60;// iter_count * 3;
 	std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
 
 	// Get pose list from sym trap
 	std::vector<Point6D> pose_list(0);
 	Point6D pose_6D(current_optimum_location_);
-	create_vector_of_poses(pose_list, pose_6D, iter_count);
+	create_vector_of_poses(pose_list, pose_6D, 20);
 
 	int progress_val = 0;
 	// Calculate cost function at each pose
