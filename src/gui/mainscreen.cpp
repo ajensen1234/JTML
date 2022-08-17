@@ -48,6 +48,7 @@
 #include <c10/cuda/CUDAMacros.h>
 
 #include "core/machine_learning_tools.h"
+#include "core/ambiguous_pose_processing.h"
 
 using namespace std;
 
@@ -4835,4 +4836,8 @@ void MainScreen::UpdateDilationFrames() {
 		}
 		ui.qvtk_widget->update();
 	}
-};
+}
+
+void MainScreen::on_actionAmbiguous_Pose_Analysis_triggered(){
+	std::cout <<"This is where you would run the ambiguous pose analysis!!" << std::endl;
+}

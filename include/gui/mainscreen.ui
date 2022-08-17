@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1701</width>
-    <height>947</height>
+    <width>1703</width>
+    <height>954</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>JointTrack Auto</string>
+   <string>JointTrack Machine Learning</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="mainscreen.qrc">
+   <iconset resource="../../../brio/JTA-CMake/src/mainscreen.qrc">
     <normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</normaloff>:/Desktop_Icon/Resources/jta_dime_icon.png</iconset>
   </property>
   <property name="autoFillBackground">
@@ -3707,7 +3707,7 @@ QProgressBar::chunk {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1701</width>
+     <width>1703</width>
      <height>29</height>
     </rect>
    </property>
@@ -3811,19 +3811,13 @@ QProgressBar::chunk {
     <addaction name="separator"/>
     <addaction name="actionEstimate_Tibial_Implant_s"/>
     <addaction name="separator"/>
-    <addaction name="actionNFD_Pose_Estimate"/>
    </widget>
    <widget class="QMenu" name="menuSYMMETRY_TRAP_ANALYSIS">
     <property name="title">
      <string>SYMMETRY TRAP ANALYSIS</string>
     </property>
     <addaction name="actionLaunch_Tool"/>
-   </widget>
-   <widget class="QMenu" name="menuOPTIMZER">
-    <property name="title">
-     <string>OPTIMZER</string>
-    </property>
-    <addaction name="actionOptimize_Backward"/>
+    <addaction name="actionAmbiguous_Pose_Analysis"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVIEW"/>
@@ -3833,7 +3827,6 @@ QProgressBar::chunk {
    <addaction name="menuSegment"/>
    <addaction name="menuPOSE_ESTIMATE"/>
    <addaction name="menuSYMMETRY_TRAP_ANALYSIS"/>
-   <addaction name="menuOPTIMZER"/>
   </widget>
   <action name="actionOptions">
    <property name="text">
@@ -4021,14 +4014,9 @@ QProgressBar::chunk {
     <string>Launch Tool</string>
    </property>
   </action>
-  <action name="actionOptimize_Backward">
+  <action name="actionAmbiguous_Pose_Analysis">
    <property name="text">
-    <string>Optimize Backward</string>
-   </property>
-  </action>
-  <action name="actionNFD_Pose_Estimate">
-   <property name="text">
-    <string>NFD Pose Estimate</string>
+    <string>Ambiguous Pose Analysis</string>
    </property>
   </action>
  </widget>
@@ -4041,7 +4029,7 @@ QProgressBar::chunk {
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="mainscreen.qrc"/>
+  <include location="../../../brio/JTA-CMake/src/mainscreen.qrc"/>
  </resources>
  <connections>
   <connection>

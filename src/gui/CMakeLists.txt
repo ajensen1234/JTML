@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
 	mainscreen.cpp
 	settings_control.cpp
 	sym_trap.cpp
+	pose_analysis_functions.cpp
 	${HEADER_FILES}
 	${HEADER_DIR}/mainscreen.qrc)
 
