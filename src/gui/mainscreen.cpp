@@ -4839,5 +4839,11 @@ void MainScreen::UpdateDilationFrames() {
 }
 
 void MainScreen::on_actionAmbiguous_Pose_Analysis_triggered(){
-	std::cout <<"This is where you would run the ambiguous pose analysis!!" << std::endl;
+	if (ui.model_list_widget->selectionModel()->selectedRows().size() != 2){
+		QMessageBox::critical(this, "Error!", "Must Be in Multiple Model Selection Mode to Run Ambiguous Pose Analysis!", QMessageBox::Ok);
+		return;
+	};
+
+	ui.model_list_widget->selectionModel()->selectedRows();
+
 }
