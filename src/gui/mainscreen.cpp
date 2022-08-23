@@ -4838,12 +4838,53 @@ void MainScreen::UpdateDilationFrames() {
 	}
 }
 
-void MainScreen::on_actionAmbiguous_Pose_Analysis_triggered(){
+void MainScreen::on_actionAmbiguous_Pose_Processing_triggered(){
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() != 2){
 		QMessageBox::critical(this, "Error!", "Must Be in Multiple Model Selection Mode to Run Ambiguous Pose Analysis!", QMessageBox::Ok);
 		return;
 	};
 
-	ui.model_list_widget->selectionModel()->selectedRows();
+	// Loop through each of the frames
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+
+	// save the current location of the image
+
+
+
+	for (int i = 0; i < ui.image_list_widget->count(); i++){
+	//	double* pos = model_actor_list[selected[0].row()]->GetPosition();
+		//double* ori = model_actor_list[selected[0].row()]->GetOrientation();
+		//Point6D curr_tib_pose(pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]);
+
+		//model_locations_.SavePose(i,selected[0].row(), curr_tib_pose);
+		
+		Point6D fem_pose = model_locations_.GetPose(i, selected[1].row());
+		Point6D tib_pose_orig = model_locations_.GetPose(i, selected[0].row());
+
+		//std::cout << tib_pose_orig.x << ", " <<
+					//tib_pose_orig.y << ", " <<
+					//tib_pose_orig.z << ", " <<
+					//tib_pose_orig.xa << ", " <<
+					//tib_pose_orig.ya << ", " <<
+					//tib_pose_orig.za <<", " << std::endl;
+
+		//std::cout << fem_pose.x << ", " <<
+					//fem_pose.y << ", " <<
+					//fem_pose.z << ", " <<
+					//fem_pose.xa << ", " <<
+					//fem_pose.ya << ", " <<
+					//fem_pose.za <<", " << std::endl;
+
+		Point6D tib_pose_final = tibial_pose_selector(fem_pose, tib_pose_orig);
+		model_locations_.SavePose(i, selected[0].row(),tib_pose_final);
+
+	}
+	// Need to update the location of the frame that is currently on screen
+	int selected_img_idx = ui.image_list_widget->selectionModel()->selectedRows()[0].row();
+	Point6D current_img_pos = model_locations_.GetPose(selected_img_idx,selected[0].row());
+	model_actor_list[selected[0].row()]->SetPosition(current_img_pos.x, current_img_pos.y,current_img_pos.z);
+	model_actor_list[selected[0].row()]->SetOrientation(current_img_pos.xa, current_img_pos.ya, current_img_pos.za);
+
+	ui.qvtk_widget->update();
 
 }
