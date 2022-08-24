@@ -280,7 +280,7 @@ public Q_SLOTS:
 	void on_actionCopy_Previous_Pose_triggered();
 
 	void on_actionLaunch_Tool_triggered();
-
+	void on_actionAmbiguous_Pose_Processing_triggered();
 	/*Optimization Buttons*/
 	void on_optimize_button_clicked();
 	void on_optimize_all_button_clicked();
