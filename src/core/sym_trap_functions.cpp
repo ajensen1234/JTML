@@ -23,16 +23,12 @@ Point6D compute_mirror_pose(Point6D pose) {
 	// pull out the z-axis of the pose, determined from the transformation matrix
 	float z_ax[3];
 	z_ax[0] = Rot[0][2]; z_ax[1] = Rot[1][2]; z_ax[2] = Rot[2][2];
-	std::cout << "[" << z_ax[0] << " " << z_ax[1] << " " << z_ax[2] << "]" << std::endl;
 	// normalize viewing vector, take negative to point from object -> camera
 	float view_normed[3];
 	float view_mag = sqrt(pow(viewing[0], 2) + pow(viewing[1], 2) + pow(viewing[2], 2));
-	std::cout << "View normed : \n [";
 	for (int i = 0; i < 3; ++i) {
 		view_normed[i] = -viewing[i] / view_mag;
-		std::cout << view_normed[i] << " ";
 	}
-	std::cout << "]" << std::endl;
 	// Next, take the cross product of the two vectors (z-ax and normed) to get the axis of rotation.
 	// call this axis M (Crane and Duffy reference)
 	float M_temp[3];
@@ -41,12 +37,9 @@ Point6D compute_mirror_pose(Point6D pose) {
 	//need to normalize M
 	float M_mag = sqrt(pow(M_temp[0], 2) + pow(M_temp[1], 2) + pow(M_temp[2], 2));
 	float M[3];
-	std::cout << "View M : \n [";
 	for (int i = 0; i < 3; i++) {
 		M[i] = M_temp[i] / M_mag;
-		std::cout << M[i] << " ";
 	}
-	std::cout << "]" << std::endl;
 
 	// Take the dot product between the two to determine the angle between them
 	// we will keep this in radians for now 
@@ -54,9 +47,7 @@ Point6D compute_mirror_pose(Point6D pose) {
 	float temp_dot = 0;
 	dot_product(temp_dot, z_ax, view_normed);
 
-	std::cout << "temp_dot" << temp_dot << std::endl;
 	float angle_between = acos(temp_dot);
-	std::cout << "Angle Between: " << angle_between << std::endl;
 
 	float desired_rotation = 2 * angle_between;
 
@@ -77,23 +68,8 @@ Point6D compute_mirror_pose(Point6D pose) {
 	matmult3(Rot_dual, pose2dual, Rot);
 
 	// write a for loop w "rotation_increment" instead of "pose2dual"
-	std::cout << "X-Axis: \n";
-	for (int i = 0; i < 3; i++) {
-		std::cout << Rot[i][0] << std::endl;
-	}
-	std::cout << std::endl;
 
-	std::cout << "Y-Axis: \n";
-	for (int i = 0; i < 3; i++) {
-		std::cout << Rot[i][1] << std::endl;
-	}
-	std::cout << std::endl;
 
-	std::cout << "Z-Axis: \n";
-	for (int i = 0; i < 3; i++) {
-		std::cout << Rot[i][2] << std::endl;
-	}
-	std::cout << std::endl;
 
 	// extract out each of the relevent values from the final rotation matrix
 	float xr_dual;

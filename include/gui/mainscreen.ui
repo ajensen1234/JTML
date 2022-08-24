@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>JointTrack Auto</string>
+   <string>JointTrack Machine Learning</string>
   </property>
   <property name="windowIcon">
    <iconset resource="mainscreen.qrc">
@@ -3818,6 +3818,7 @@ QProgressBar::chunk {
      <string>SYMMETRY TRAP ANALYSIS</string>
     </property>
     <addaction name="actionLaunch_Tool"/>
+    <addaction name="actionAmbiguous_Pose_Processing"/>
    </widget>
    <widget class="QMenu" name="menuOPTIMZER">
     <property name="title">
@@ -4029,6 +4030,11 @@ QProgressBar::chunk {
   <action name="actionNFD_Pose_Estimate">
    <property name="text">
     <string>NFD Pose Estimate</string>
+   </property>
+  </action>
+  <action name="actionAmbiguous_Pose_Processing">
+   <property name="text">
+    <string>Ambiguous Pose Processing</string>
    </property>
   </action>
  </widget>

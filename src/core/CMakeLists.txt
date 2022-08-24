@@ -18,6 +18,7 @@ add_library(jtml_core STATIC
 	STLReader.cpp
 	machine_learning_tools.cpp
 	sym_trap_functions.cpp
+	ambiguous_pose_processing.cpp
 	${HEADER_FILES}
 	)
 
