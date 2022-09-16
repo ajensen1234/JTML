@@ -1143,7 +1143,10 @@ void MainScreen::on_actionSegment_FemHR_triggered() {
 	convert to Torch Script via Annotation.*/
 	/* std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETSeg_BS6_LIMA1024Actual_070519_2_TORCH_SCRIPT.pt"; */
 	QString pt_model_location = QFileDialog::getOpenFileName(this, tr("Load Trained Femoral Segmentation Architecture"), ".", tr("Torch File (*.pt)"));
-	segmentHelperFunction(pt_model_location.toStdString(), 1024, 1024);
+	if(pt_model_location.toStdString() != "")
+	{
+		segmentHelperFunction(pt_model_location.toStdString(), 1024, 1024);
+	}
 }
 void MainScreen::on_actionSegment_TibHR_triggered() {
 	/*Deserialize the ScriptModule from a file using torch::jit::load().
@@ -1153,7 +1156,10 @@ void MainScreen::on_actionSegment_TibHR_triggered() {
 	/*Removed the code below to allow for the user to pick and choose which network they want to load instead of using hard-coded paths*/
 	/* std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNET_BS8_LIMA1024TibActual_070619_BS8_LIMA1024TibActual_070619_TORCH_SCRIPT.pt";*/
 	QString pt_model_location = QFileDialog::getOpenFileName(this, tr("Load Trained Tibial Segmentation Architecture"), ".", tr("Torch File (*.pt)"));
-	segmentHelperFunction(pt_model_location.toStdString(), 1024, 1024);
+	if(pt_model_location.toStdString() != "")
+	{
+		segmentHelperFunction(pt_model_location.toStdString(), 1024, 1024);
+	}
 }
 void MainScreen::on_actionCustom_Segmentation_triggered() {
 	/*Deserialize the ScriptModule from a file using torch::jit::load().
