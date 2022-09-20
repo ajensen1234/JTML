@@ -3,7 +3,7 @@
 
 /*Standard*/
 #include <algorithm>
-#include "render_engine.cuh"
+#include "gpu/render_engine.cuh"
 
 /*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "ui_sym_trap.h"
-#include "CostFunctionManager.h"
+#include "cost_functions/CostFunctionManager.h"
 #include "core/data_structures_6D.h"
 
 #include <qdialog.h>

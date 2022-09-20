@@ -63,7 +63,7 @@
 #include "gui/sym_trap.h"
 
 /*Cost Function Library*/
-#include "CostFunctionManager.h"
+#include "cost_functions/CostFunctionManager.h"
 
 /*CostFunctionTools*/
 #include "camera_calibration.h"

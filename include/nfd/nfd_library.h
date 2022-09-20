@@ -3,7 +3,7 @@
 #include "nfd_instance.h"
 #include "nfd.h"
 #include <array>
-#include "gpu_model.cuh"
+#include "gpu/gpu_model.cuh"
 
 /*
 This NFD library is going to store a vector of each of the NFD instances at a given pose, as well as some metadata

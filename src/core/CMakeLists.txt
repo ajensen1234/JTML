@@ -28,16 +28,10 @@ target_link_libraries(jtml_core ${TORCH_LIBRARIES})
 target_link_libraries(jtml_core ${VTK_LIBRARIES})
 target_link_libraries(jtml_core ${OpenCV_LIBRARIES})
 target_link_libraries(jtml_core ${cuda_LIBRARIES})
-target_link_libraries(jtml_core ${JTA_LIBS})
-#target_link_libraries(jtml_core ${PROJECT_NAME})
 
-get_target_property(OUT jtml_core LINK_LIBRARIES)
-message(STATUS ${OUT})
 
 # Linking In House LIbs and Directories
-target_include_directories(jtml_core
-	PUBLIC ${JTA_INCLUDES})
-	target_link_libraries(jtml_core ${JTA_LIBS})
+target_link_libraries(jtml_core ${JTA_LIBS})
 
 # Adding Include Directories
 target_include_directories(jtml_core PUBLIC ${PROJECT_SOURCE_DIR}/include)

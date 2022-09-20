@@ -2,8 +2,8 @@
 #include<complex>
 #include<vector>
 #include<array>
-#include "render_engine.cuh"
-#include "gpu_model.cuh"
+#include "gpu/render_engine.cuh"
+#include "gpu/gpu_model.cuh"
 #include <opencv2/core/mat.hpp>
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"

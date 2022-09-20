@@ -21,6 +21,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(${PROJECT_NAME} jtml_core)
 target_link_libraries(${PROJECT_NAME} jtml_nfd)
+target_link_libraries(${PROJECT_NAME} ${JTA_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/res)

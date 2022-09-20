@@ -35,7 +35,7 @@
 #include "metric_enum.h"
 
 /*Cost Function Library*/
-#include "CostFunctionManager.h"
+#include "cost_functions/CostFunctionManager.h"
 
 #include "core/sym_trap_functions.h"
 
