@@ -69,7 +69,7 @@
 #include "camera_calibration.h"
 
 /*machine_learning_tools*/
-#include "machine_learning_tools.h"
+#include "core/machine_learning_tools.h"
 
 #include "nfd/nfd.h"
 
