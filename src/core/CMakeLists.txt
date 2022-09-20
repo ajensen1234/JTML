@@ -31,6 +31,9 @@ target_link_libraries(jtml_core ${cuda_LIBRARIES})
 target_link_libraries(jtml_core ${JTA_LIBS})
 #target_link_libraries(jtml_core ${PROJECT_NAME})
 
+get_target_property(OUT jtml_core LINK_LIBRARIES)
+message(STATUS ${OUT})
+
 # Linking In House LIbs and Directories
 target_include_directories(jtml_core
 	PUBLIC ${JTA_INCLUDES})
