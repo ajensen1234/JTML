@@ -10,9 +10,12 @@ nfd_library::nfd_library(Calibration cal_file,GPUModel &gpu_model,int x_range,in
 
 	create_rot_indices(x_range_, y_range_, x_inc_, y_inc_);
 
+
+	/*My Testing Code - delete when you are ready*/
 	nfd_instance my_inst = testing_projection();
 
 	my_inst.print_contour_points();
+	/*End testing code*/
 }
 
 
