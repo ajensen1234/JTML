@@ -60,7 +60,7 @@
 #include "drr_tool.h"
 
 /* Symmetry Trap Analysis Window*/
-#include "sym_trap.h"
+#include "gui/sym_trap.h"
 
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
@@ -71,6 +71,7 @@
 /*machine_learning_tools*/
 #include "machine_learning_tools.h"
 
+#include "nfd/nfd.h"
 
 class MainScreen : public QMainWindow
 {
