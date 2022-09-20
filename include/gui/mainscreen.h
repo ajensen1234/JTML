@@ -60,7 +60,7 @@
 #include "drr_tool.h"
 
 /* Symmetry Trap Analysis Window*/
-#include "sym_trap.h"
+#include "gui/sym_trap.h"
 
 /*Cost Function Library*/
 #include "CostFunctionManager.h"
@@ -68,7 +68,7 @@
 /*CostFunctionTools*/
 #include "camera_calibration.h"
 
-#include "../nfd/nfd.h"
+#include "nfd/nfd.h"
 
 class MainScreen : public QMainWindow
 {
