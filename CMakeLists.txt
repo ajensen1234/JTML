@@ -3,10 +3,42 @@ project(Joint-Track-Machine-Learning
         LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
-add_subdirectory(nfd)
-add_subdirectory(JTML)
-add_subdirectory(alglib)
 
-target_link_libraries(Joint-Track-Machine-Learning JTML_NFD)
-target_link_libraries(JTML_NFD alglib)
-add_subdirectory(packaging)
+set(QT_VERSION 5)
+set(REQUIRED_LIBS Core Gui Widgets)
+set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+# Finding Required Packages
+find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
+find_package(Torch REQUIRED)
+find_package(VTK 7.1.1 REQUIRED)
+find_package(cuda REQUIRED)
+find_package(OpenCV REQUIRED)
+include(${VTK_USE_FILE})
+
+# Finding In-House Packages and Libraries
+find_path(COSTFUNCTIONTOOLS_INCLUDE_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+find_path(JTA_COST_FUNCTIONS_INCLUDE_PATH
+	NO_DEFAULT_PATH)
+
+find_file(COSTFUNCTIONTOOLS_LIBRARY_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+find_file(JTA_COST_FUNCTIONS_LIBRARY_PATH
+	NO_DEFAULT_PATH
+	REQUIRED)
+
+set(JTA_LIBS ${COSTFUNCTIONTOOLS_LIBRARY_PATH} ${JTA_COST_FUNCTIONS_LIBRARY_PATH})
+set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
+
+# Adding Subdirectories
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(lib)
+#add_subdirectory(packaging)
