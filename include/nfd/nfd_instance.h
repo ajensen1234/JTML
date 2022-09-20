@@ -8,11 +8,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-<<<<<<< HEAD:nfd/nfd_instance.h
-#include "../alglib/interpolation.h"
-=======
 #include "alglib/interpolation.h"
->>>>>>> update-directory-structure-main:include/nfd/nfd_instance.h
 
 using namespace gpu_cost_function;
 using namespace alglib;

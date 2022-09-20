@@ -7,11 +7,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-<<<<<<< HEAD:JTML/machine_learning_tools.h
-#include "mainscreen.h"
-=======
 #include "gui/mainscreen.h"
->>>>>>> update-directory-structure-main:include/core/machine_learning_tools.h
 
 cv::Mat segment_image(const cv::Mat& orig_image, bool black_sil_used, torch::jit::Module* model,
                       unsigned int input_width, unsigned int input_height);
