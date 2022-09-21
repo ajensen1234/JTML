@@ -14,6 +14,8 @@
 /*Kernels*/
 __global__ void DilateEdgeDetectedImage_DilateKernel(unsigned char *dev_image, int width, int height,
 	int sub_left_x, int sub_bottom_y, int sub_cropped_width, int dilation)
+
+	
 {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;

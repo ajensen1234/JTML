@@ -7,11 +7,11 @@ set(CPACK_PACKAGE_VERSION_MINOR 0)
 set(CPACK_PACKAGE_VERSION_PATCH 0)
 set(CPACK_VERBATIM_VARIABLES YES)
 
-set(build_dir_libs "../build/JTML/Release/")
-set(networks_dir "../build/JTML/Release/Networks")
-set(platforms_dir "../build/JTML/Release/platforms")
+set(build_dir_libs ${CMAKE_BINARY_DIR}/src/gui/Release)
+set(networks_dir ${build_dir_libs}/Networks)
+set(platforms_dir ${build_dir_libs}/platforms)
 
-file(GLOB MY_DLL_FILES ${build_dir_libs}*.dll)
+file(GLOB MY_DLL_FILES ${build_dir_libs}/*.dll)
 
 install(FILES ${MY_DLL_FILES} DESTINATION bin)
 install(DIRECTORY ${networks_dir} DESTINATION bin)

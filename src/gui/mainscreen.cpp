@@ -4357,6 +4357,7 @@ void MainScreen::onUpdateDilationBackground() {
 	}
 }
 
+
 /*Function to load settings from registry and also check if First Time Loading*/
 void MainScreen::LoadSettingsBetweenSessions()
 {
@@ -4634,6 +4635,7 @@ void MainScreen::LoadSettingsBetweenSessions()
 		setting.setValue("TRUNK@RANGE_YA", optimizer_settings_.trunk_range.ya);
 		setting.setValue("TRUNK@RANGE_ZA", optimizer_settings_.trunk_range.za);
 		setting.setValue("TRUNK@BUDGET", optimizer_settings_.trunk_budget);
+		
 
 		/*Branch*/
 		setting.setValue("BRANCH@RANGE_X", optimizer_settings_.branch_range.x);
