@@ -299,6 +299,7 @@ namespace gpu_cost_function {
 		return renderer_output_;
 	}
 
+
 	__global__ void ResetKernel(int *dev_bounding_box, int width, int height)
 	{
 		dev_bounding_box[0] = width - 1; /*Left Most X -> initialize with width - 1 (we are zero based) since can only be brought down*/
@@ -461,6 +462,7 @@ namespace gpu_cost_function {
 		}
 	}
 
+	
 	__global__ void PrepareLaunchPacketKernel(int *dev_fragment_fill, int *dev_bounding_box_triangles_sizes, int *dev_bounding_box_triangles_sizes_prefix,
 		int triangle_count)
 	{
@@ -614,7 +616,7 @@ namespace gpu_cost_function {
 		ResetKernel << <1, 1 >> > (dev_bounding_box_, width_, height_);
 		
 		/*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
-		WorldToPixelKernel << <dim_grid_vertices_, threads_per_block >> >(dev_triangles_, dev_projected_triangles_,
+		WorldToPixelKernel <<<dim_grid_vertices_, threads_per_block>>> (dev_triangles_, dev_projected_triangles_,
 			dev_projected_triangles_snapped_, 3 * triangle_count_,
 			dist_over_pix_pitch_, pix_conversion_x_, pix_conversion_y_,
 			model_pose_.x_location_, model_pose_.y_location_, model_pose_.z_location_,
@@ -625,7 +627,7 @@ namespace gpu_cost_function {
 			dev_projected_triangles_snapped_, triangle_count_, width_, height_);
 		
 		/*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
-		BoundingBoxSizesKernel << <dim_grid_triangles_, threads_per_block >> >(dev_bounding_box_triangles_, dev_bounding_box_triangles_sizes_,
+		BoundingBoxSizesKernel <<<dim_grid_triangles_, threads_per_block>>>(dev_bounding_box_triangles_, dev_bounding_box_triangles_sizes_,
 			triangle_count_, dev_bounding_box_, dev_backface_);
 	
 		/*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
@@ -635,7 +637,7 @@ namespace gpu_cost_function {
 		/*Prepare Launch Packet and Send it to Host*/
 		/*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to process
 		(last element in dev_boundingBoxTrianglesSizePrefix and last element in dev_boundingBoxTrianglesSize)*/
-		PrepareLaunchPacketKernel << <1, 1 >> >(dev_fragment_fill_, dev_bounding_box_triangles_sizes_,
+		PrepareLaunchPacketKernel <<<1, 1 >>>(dev_fragment_fill_, dev_bounding_box_triangles_sizes_,
 			dev_bounding_box_triangles_sizes_prefix_, triangle_count_);
 
 		cudaMemcpy(renderer_output_->GetBoundingBox(), dev_bounding_box_, 4 * sizeof(int), cudaMemcpyDeviceToHost);
