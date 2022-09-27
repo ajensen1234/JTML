@@ -20,6 +20,7 @@
 /*File Processing*/
 #include <qfiledialog.h>
 #include <qtextstream.h>
+#include "gui/interactor.h"
 
 
 
@@ -31,7 +32,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 /*Custom Interactor*/
-#include "core/interactor.h"
+#include "gui/interactor.h"
 
 /*About Window*/
 #include "gui/about.h"

@@ -5,6 +5,7 @@ set(CMAKE_AUTOUIC ON)
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/gui)
 file(GLOB HEADER_FILES ${HEADER_DIR}/*.ui ${HEADER_DIR}/*.h)
 set(res ${PROJECT_SOURCE_DIR}/res)
+message("HELLO")
 
 
 add_executable(${PROJECT_NAME}
