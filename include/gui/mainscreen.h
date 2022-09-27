@@ -272,17 +272,11 @@ public Q_SLOTS:
 	void on_actionReset_Normal_Up_triggered();
 	void on_actionModel_Interaction_Mode_triggered();
 	void on_actionCamera_Interaction_Mode_triggered();
-	void on_actionSegment_Femoral_Implant_s_triggered();
-	void on_actionSegment_Tibial_Implant_s_triggered();
 	void on_actionSegment_FemHR_triggered();
 	void on_actionSegment_TibHR_triggered();
-	void on_actionCustom_Segmentation_triggered();
 	void on_actionReset_Remove_All_Segmentation_triggered();
 	void on_actionEstimate_Femoral_Implant_s_triggered();
-	void on_actionEstimate_Femoral_Implant_s_Algorithm_2_triggered();
 	void on_actionEstimate_Tibial_Implant_s_triggered();
-	void on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered();
-	void on_actionEstimate_Scapula_s_triggered();
 
 	void on_actionNFD_Pose_Estimate_triggered();
 

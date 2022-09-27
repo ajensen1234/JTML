@@ -3793,7 +3793,6 @@ QProgressBar::chunk {
      <string>SEGMENT</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionSegment_FemHR"/>
     <addaction name="actionSegment_TibHR"/>
     <addaction name="separator"/>
     <addaction name="actionBlack_Implant_Silhouettes_in_Original_Image_s"/>
@@ -3801,7 +3800,6 @@ QProgressBar::chunk {
     <addaction name="separator"/>
     <addaction name="actionReset_Remove_All_Segmentation"/>
     <addaction name="separator"/>
-    <addaction name="actionCustom_Segmentation"/>
    </widget>
    <widget class="QMenu" name="menuPOSE_ESTIMATE">
     <property name="title">
@@ -3994,7 +3992,7 @@ QProgressBar::chunk {
   </action>
   <action name="actionSegment_TibHR">
    <property name="text">
-    <string>Segment Tibial Implant(s) in High Resolution</string>
+    <string>Segment Images</string>
    </property>
   </action>
   <action name="actionEstimate_Femoral_Implant_s">
