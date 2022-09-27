@@ -5,7 +5,7 @@
 #include <QtWidgets/QMainWindow>
 #include <qactiongroup.h>
 #include "ui_mainscreen.h"
-
+#include <memory.h>
 /*Font*/
 #include <qfont.h>
 
@@ -73,6 +73,8 @@
 
 #include "nfd/nfd.h"
 
+#include "gui/viewer.h"
+
 class MainScreen : public QMainWindow
 {
 	Q_OBJECT
@@ -89,6 +91,7 @@ public:
 
 	/*Bool to see if currently optimizing*/
 	bool currently_optimizing_;
+
 	
 
 
@@ -137,6 +140,10 @@ private:
 	vtkSmartPointer<vtkTextActor> actor_text;
 	vtkSmartPointer<vtkImageImport> importer;
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera_style_interactor;
+
+	
+	std::shared_ptr<viewer> vw = std::make_shared<viewer>();
+	
 
 	/*View Menu Radio Button Container*/
 	QActionGroup* alignmentGroup, * alignmentGroupSegment;
