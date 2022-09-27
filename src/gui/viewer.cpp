@@ -3,6 +3,7 @@
 viewer::viewer()
 {
     std::cout << "I have initialized the viewer" <<std::endl;
+    initialize_vtk_pointers();
 }
 
 viewer::~viewer()
