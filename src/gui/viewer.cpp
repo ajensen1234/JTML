@@ -17,15 +17,15 @@ void viewer::initialize_vtk_pointers(){
     background_renderer_ = vtkSmartPointer<vtkRenderer>::New();
     std::cout << "that far (2)" <<std::endl;
     this->actor_image_ = vtkSmartPointer<vtkActor>::New();
-    //this->current_background_ = vtkSmartPointer<vtkImageData>::New();
-    //this->stl_reader_ = vtkSmartPointer<vtkSTLReader>::New();
-    //this->image_mapper_ = vtkSmartPointer<vtkDataSetMapper>::New();
-    //this->actor_text_ = vtkSmartPointer<vtkTextActor>::New();
-    //this->importer_ = vtkSmartPointer<vtkImageImport>::New();
-	//this->actor_text_->GetTextProperty()->SetFontSize(16);
-	//this->actor_text_->GetTextProperty()->SetFontFamilyToCourier();
-	//this->actor_text_->SetPosition2(0, 0);
-	//this->actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Red
+    this->current_background_ = vtkSmartPointer<vtkImageData>::New();
+    this->stl_reader_ = vtkSmartPointer<vtkSTLReader>::New();
+    this->image_mapper_ = vtkSmartPointer<vtkDataSetMapper>::New();
+    this->actor_text_ = vtkSmartPointer<vtkTextActor>::New();
+    this->importer_ = vtkSmartPointer<vtkImageImport>::New();
+	this->actor_text_->GetTextProperty()->SetFontSize(16);
+	this->actor_text_->GetTextProperty()->SetFontFamilyToCourier();
+	this->actor_text_->SetPosition2(0, 0);
+	this->actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Red
 }
 
 void viewer::initialize_vtk_mappers(){
