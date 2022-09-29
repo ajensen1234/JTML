@@ -17,11 +17,25 @@ set(CMAKE_AUTOUIC ON)
 # Finding Required Packages
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 find_package(Torch REQUIRED)
-find_package(VTK 7.1.1 REQUIRED)
+#find_package(VTK 7.1.1 REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
-include(${VTK_USE_FILE})
 
+find_package(VTK COMPONENTS
+vtkRenderingCore
+vtkRenderingOpenGL2
+vtkIOCore
+vtkIOGeometry
+vtkGUISupportQt
+vtkChartsCore
+vtkViewsContext2D
+vtkRenderingAnnotation
+
+)
+
+
+include(${VTK_USE_FILE})
+message(${VTK_LIBRARIES})
 
 set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})

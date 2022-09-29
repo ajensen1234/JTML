@@ -25,11 +25,16 @@ add_library(JTA_Cost_Functions
 include(${VTK_USE_FILE})
 target_link_libraries(JTA_Cost_Functions ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(JTA_Cost_Functions ${TORCH_LIBRARIES})
-target_link_libraries(JTA_Cost_Functions ${VTK_LIBRARIES})
+#target_link_libraries(JTA_Cost_Functions ${VTK_LIBRARIES})
 target_link_libraries(JTA_Cost_Functions ${OpenCV_LIBRARIES})
 target_link_libraries(JTA_Cost_Functions ${CUDA_LIBRARIES})
 
 
+get_target_property(TARGET_LIBRARIES JTA_Cost_Functions LINK_LIBRARIES)
+message(${TARGET_LIBRARIES})
+list(REMOVE_ITEM ${TARGET_LIBRARIES} vtkRenderingQt vtkViewsGeovis vtkViewsQt vtkRenderingQt.lib vtkRenderingQt.lib)
+set_property(TARGET JTA_Cost_Functions PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
+message(${TARGET_LIBRARIES})
 
 target_link_libraries(JTA_Cost_Functions jtml_gpu)
 target_include_directories(JTA_Cost_Functions PUBLIC ${PROJECT_SOURCE_DIR}/include)

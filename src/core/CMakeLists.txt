@@ -29,6 +29,10 @@ target_link_libraries(jtml_core ${VTK_LIBRARIES})
 target_link_libraries(jtml_core ${OpenCV_LIBRARIES})
 target_link_libraries(jtml_core ${cuda_LIBRARIES})
 
+get_target_property(TARGET_LIBRARIES jtml_core LINK_LIBRARIES)
+list(REMOVE_ITEM TARGET_LIBRARIES vtkRenderingQt vtkViewsGeovis vtkViewsQt)
+set_property(TARGET jtml_core PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
+
 
 # Linking In House LIbs and Directories
 target_link_libraries(jtml_core ${JTA_LIBS})
