@@ -35,7 +35,6 @@ vtkRenderingAnnotation
 
 
 include(${VTK_USE_FILE})
-message(${VTK_LIBRARIES})
 
 set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
