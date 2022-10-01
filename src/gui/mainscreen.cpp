@@ -2553,6 +2553,15 @@ void MainScreen::on_load_calibration_button_clicked() {
 			/*Update Interactor Calibration For Converting Text in Camera B View*/
 			interactor_calibration = calibration_file_;
 		}
+		else if (InputList[0] == "image"){
+			CameraCalibration denver_calibration_A(InputList[6].toFloat(),InputList[7].toFloat(),InputList[8].toFloat(),InputList[10].toFloat(),InputList[11].toFloat());
+
+			calibrated_for_monoplane_viewport_ = true;
+			calibrated_for_biplane_viewport_ = false;
+			calibration_file_ = Calibration(denver_calibration_A);
+			inputFile.close();
+			return;
+		}
 		/*Invalid Code*/
 		else {
 			QMessageBox::critical(this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
@@ -2568,10 +2577,14 @@ void MainScreen::on_load_calibration_button_clicked() {
 	/*Monoplane (Left Viewport)*/
 	if (calibrated_for_monoplane_viewport_) {
 		/*Set Up Calibration to Home QVTKWidget*/
-		renderer->GetActiveCamera()->SetFocalPoint(0, 0,
+		/*renderer->GetActiveCamera()->SetFocalPoint(0, 0,
 			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		*/
+		renderer->GetActiveCamera()->SetFocalPoint(0,0,-1);
 		renderer->GetActiveCamera()->SetPosition(0, 0, 0);
 		renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		auto mat = renderer->GetActiveCamera()->GetProjectionTransformMatrix();
+		
 
 		/*Set Checked To Monoplane but disable from further clicking*/
 		ui.camera_A_radio_button->setChecked(true);
@@ -2670,12 +2683,13 @@ void MainScreen::on_load_image_button_clicked() {
 			/*Add Blank Model Locations for Loaded Models*/
 			model_locations_.LoadNewFrame();
 		}
-
 		/*Exit Label*/
 	stop:;
 
 		//If No Loaded Frames, Default Select First
-		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0) ui.image_list_widget->setCurrentRow(0);
+		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0) {
+		 ui.image_list_widget->setCurrentRow(loaded_frames.size() - 1);
+		}	
 	}
 	else if (calibrated_for_biplane_viewport_) {
 		//Load TIFF images for Camera A and Camera B - Must Be Same Amount or Error and None Will Load!
@@ -2727,6 +2741,7 @@ void MainScreen::on_load_image_button_clicked() {
 		//If No Loaded Frames, Default Select First
 		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0) ui.image_list_widget->setCurrentRow(0);
 	}
+	getchar();
 }
 /*Load Model Button*/
 void MainScreen::on_load_model_button_clicked() {
@@ -3025,8 +3040,9 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 
 /*List Widgets (Model and Frame)*/
 /*Frame Widget*/
+/* this is where we are setting the current background */
 void MainScreen::on_image_list_widget_itemSelectionChanged()
-{
+{	
 	/*Make Sure A View is Selected*/
 	if (ui.original_image_radio_button->isChecked() == false && ui.inverted_image_radio_button->isChecked() == false
 		&& ui.edges_image_radio_button->isChecked() == false && ui.dilation_image_radio_button->isChecked() == false)

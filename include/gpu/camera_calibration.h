@@ -12,13 +12,31 @@ struct CameraCalibration {
 		camera_matrix_[1] = 0;
 		camera_matrix_[2] = principal_x_ / pixel_pitch_;
 		camera_matrix_[3] = 0;
-		camera_matrix_[4] = principal_distance_/pixel_pitch_;
-		camera_matrix_[5] = principal_y_/pixel_pitch_;
+		camera_matrix_[4] = principal_distance_ / pixel_pitch_;
+		camera_matrix_[5] = principal_y_ / pixel_pitch_;
 		camera_matrix_[6] = 0;
 		camera_matrix_[7] = 0;
 		camera_matrix_[8] = 1;
-		
 	};
+	/**
+	 * @brief Constructor that accepts the parameters for the standard camera matrix.
+	 * @param fx X focal length [px].
+	 * @param sc Scale factor[unitless].
+	 * @param cx X principal point[px].
+	 * @param fy Y focal length[px].
+	 * @param cy Y principal point[px].
+	 */
+	CameraCalibration(float fx, float sc, float cx, float fy, float cy){
+		camera_matrix_[0] = fx;
+		camera_matrix_[1] = 0;
+		camera_matrix_[2] = cx;
+		camera_matrix_[3] = 0;
+		camera_matrix_[4] = fy;
+		camera_matrix_[5] = cy;
+		camera_matrix_[6] = 0;
+		camera_matrix_[7] = 0;
+		camera_matrix_[8] = 1;
+	}
 	CameraCalibration() {
 		principal_distance_ = 0;
 		principal_x_ = 0;

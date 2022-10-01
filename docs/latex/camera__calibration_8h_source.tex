@@ -11,20 +11,43 @@
 \DoxyCodeLine{7         principal\_x\_ = principal\_x;}
 \DoxyCodeLine{8         principal\_y\_ = principal\_y;}
 \DoxyCodeLine{9         pixel\_pitch\_ = pixel\_pitch;}
-\DoxyCodeLine{10     \};}
-\DoxyCodeLine{11     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}}() \{}
-\DoxyCodeLine{12         principal\_distance\_ = 0;}
-\DoxyCodeLine{13         principal\_x\_ = 0;}
-\DoxyCodeLine{14         principal\_y\_ = 0;}
-\DoxyCodeLine{15         pixel\_pitch\_ = 0;}
-\DoxyCodeLine{16     \}}
-\DoxyCodeLine{17     \textcolor{comment}{/*Camera Location \& Calibration Locations \string~ Right Hand Axis System (Positive Z Towards Oneself)*/}}
-\DoxyCodeLine{18     \textcolor{keywordtype}{float} principal\_distance\_; \textcolor{comment}{/* (mm) */}}
-\DoxyCodeLine{19     \textcolor{keywordtype}{float} principal\_x\_; \textcolor{comment}{/* (mm) */}}
-\DoxyCodeLine{20     \textcolor{keywordtype}{float} principal\_y\_; \textcolor{comment}{/* (mm) */}}
-\DoxyCodeLine{21     \textcolor{keywordtype}{float} pixel\_pitch\_; \textcolor{comment}{/* pixel size in mm (mm/pixel) */}}
-\DoxyCodeLine{22 \};}
-\DoxyCodeLine{23 }
-\DoxyCodeLine{24 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* CAMERA\_CALIBRATION\_H */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11         camera\_matrix\_[0] = principal\_distance\_ / pixel\_pitch\_;}
+\DoxyCodeLine{12         camera\_matrix\_[1] = 0;}
+\DoxyCodeLine{13         camera\_matrix\_[2] = principal\_x\_ / pixel\_pitch\_;}
+\DoxyCodeLine{14         camera\_matrix\_[3] = 0;}
+\DoxyCodeLine{15         camera\_matrix\_[4] = principal\_distance\_ / pixel\_pitch\_;}
+\DoxyCodeLine{16         camera\_matrix\_[5] = principal\_y\_ / pixel\_pitch\_;}
+\DoxyCodeLine{17         camera\_matrix\_[6] = 0;}
+\DoxyCodeLine{18         camera\_matrix\_[7] = 0;}
+\DoxyCodeLine{19         camera\_matrix\_[8] = 1;}
+\DoxyCodeLine{20     \};}
+\DoxyCodeLine{29     \mbox{\hyperlink{struct_camera_calibration_adb1eb6f6aa3b088dec93a4acd5c3b6eb}{CameraCalibration}}(\textcolor{keywordtype}{float} fx, \textcolor{keywordtype}{float} sc, \textcolor{keywordtype}{float} cx, \textcolor{keywordtype}{float} fy, \textcolor{keywordtype}{float} cy)\{}
+\DoxyCodeLine{30         camera\_matrix\_[0] = fx;}
+\DoxyCodeLine{31         camera\_matrix\_[1] = 0;}
+\DoxyCodeLine{32         camera\_matrix\_[2] = cx;}
+\DoxyCodeLine{33         camera\_matrix\_[3] = 0;}
+\DoxyCodeLine{34         camera\_matrix\_[4] = fy;}
+\DoxyCodeLine{35         camera\_matrix\_[5] = cy;}
+\DoxyCodeLine{36         camera\_matrix\_[6] = 0;}
+\DoxyCodeLine{37         camera\_matrix\_[7] = 0;}
+\DoxyCodeLine{38         camera\_matrix\_[8] = 1;}
+\DoxyCodeLine{39     \}}
+\DoxyCodeLine{40     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}}() \{}
+\DoxyCodeLine{41         principal\_distance\_ = 0;}
+\DoxyCodeLine{42         principal\_x\_ = 0;}
+\DoxyCodeLine{43         principal\_y\_ = 0;}
+\DoxyCodeLine{44         pixel\_pitch\_ = 0;}
+\DoxyCodeLine{45     \}}
+\DoxyCodeLine{46     \textcolor{comment}{/*Camera Location \& Calibration Locations \string~ Right Hand Axis System (Positive Z Towards Oneself)*/}}
+\DoxyCodeLine{47     \textcolor{keywordtype}{float} principal\_distance\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{48     \textcolor{keywordtype}{float} principal\_x\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{49     \textcolor{keywordtype}{float} principal\_y\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{50     \textcolor{keywordtype}{float} pixel\_pitch\_; \textcolor{comment}{/* pixel size in mm (mm/pixel) */}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52     \textcolor{keywordtype}{float} camera\_matrix\_[9];}
+\DoxyCodeLine{53 \};}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* CAMERA\_CALIBRATION\_H */}\textcolor{preprocessor}{}}
 
 \end{DoxyCode}

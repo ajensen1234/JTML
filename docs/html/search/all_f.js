@@ -1,9 +1,13 @@
 var searchData=
 [
-  ['ui_5faboutjta_0',['Ui_aboutJTA',['../class_ui__about_j_t_a.html',1,'']]],
-  ['ui_5fcontrols_1',['Ui_controls',['../class_ui__controls.html',1,'']]],
-  ['ui_5fdrrtool_2',['Ui_drrTool',['../class_ui__drr_tool.html',1,'']]],
-  ['ui_5fmainscreenclass_3',['Ui_MainScreenClass',['../class_ui___main_screen_class.html',1,'']]],
-  ['ui_5fsettings_5fcontrol_4',['Ui_settings_control',['../class_ui__settings__control.html',1,'']]],
-  ['ui_5fsymtrap_5',['Ui_symTrap',['../class_ui__sym_trap.html',1,'']]]
+  ['odesolverreport_0',['odesolverreport',['../classalglib_1_1odesolverreport.html',1,'alglib::odesolverreport'],['../structalglib__impl_1_1odesolverreport.html',1,'alglib_impl::odesolverreport']]],
+  ['odesolverstate_1',['odesolverstate',['../classalglib_1_1odesolverstate.html',1,'alglib::odesolverstate'],['../structalglib__impl_1_1odesolverstate.html',1,'alglib_impl::odesolverstate']]],
+  ['on_5factionestimate_5ftibial_5fimplant_5fs_5ftriggered_2',['on_actionEstimate_Tibial_Implant_s_triggered',['../class_main_screen.html#a0bfc0663046bcdc1e51a50e4c1a49e02',1,'MainScreen']]],
+  ['on_5factionnfd_5fpose_5festimate_5ftriggered_3',['on_actionNFD_Pose_Estimate_triggered',['../class_main_screen.html#a8f57346258fda3ef7f259efaaaa091b7',1,'MainScreen']]],
+  ['optguardnonc0report_4',['optguardnonc0report',['../classalglib_1_1optguardnonc0report.html',1,'alglib::optguardnonc0report'],['../structalglib__impl_1_1optguardnonc0report.html',1,'alglib_impl::optguardnonc0report']]],
+  ['optguardnonc1test0report_5',['optguardnonc1test0report',['../classalglib_1_1optguardnonc1test0report.html',1,'alglib::optguardnonc1test0report'],['../structalglib__impl_1_1optguardnonc1test0report.html',1,'alglib_impl::optguardnonc1test0report']]],
+  ['optguardnonc1test1report_6',['optguardnonc1test1report',['../classalglib_1_1optguardnonc1test1report.html',1,'alglib::optguardnonc1test1report'],['../structalglib__impl_1_1optguardnonc1test1report.html',1,'alglib_impl::optguardnonc1test1report']]],
+  ['optguardreport_7',['optguardreport',['../classalglib_1_1optguardreport.html',1,'alglib::optguardreport'],['../structalglib__impl_1_1optguardreport.html',1,'alglib_impl::optguardreport']]],
+  ['optimizermanager_8',['OptimizerManager',['../class_optimizer_manager.html',1,'']]],
+  ['optimizersettings_9',['OptimizerSettings',['../struct_optimizer_settings.html',1,'']]]
 ];

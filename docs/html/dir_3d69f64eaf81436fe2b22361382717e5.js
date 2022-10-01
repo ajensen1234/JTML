@@ -2,7 +2,6 @@ var dir_3d69f64eaf81436fe2b22361382717e5 =
 [
     [ "ambiguous_pose_processing.h", "ambiguous__pose__processing_8h.html", "ambiguous__pose__processing_8h" ],
     [ "calibration.h", "calibration_8h_source.html", null ],
-    [ "camera_matrix.h", "camera__matrix_8h_source.html", null ],
     [ "data_structures_6D.h", "data__structures__6_d_8h_source.html", null ],
     [ "direct_data_storage.h", "direct__data__storage_8h_source.html", null ],
     [ "drr_interactor.h", "drr__interactor_8h_source.html", null ],

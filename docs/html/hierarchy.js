@@ -1,7 +1,6 @@
 var hierarchy =
 [
     [ "Calibration", "struct_calibration.html", null ],
-    [ "camera_matrix", "classcamera__matrix.html", null ],
     [ "CameraCalibration", "struct_camera_calibration.html", null ],
     [ "jta_cost_function::CostFunction", "classjta__cost__function_1_1_cost_function.html", null ],
     [ "jta_cost_function::CostFunctionManager", "classjta__cost__function_1_1_cost_function_manager.html", null ],

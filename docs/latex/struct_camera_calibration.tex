@@ -5,7 +5,9 @@
 \item 
 \mbox{\Hypertarget{struct_camera_calibration_ac7c9b4a5d0029e2bc9a6b50b36eb949a}\label{struct_camera_calibration_ac7c9b4a5d0029e2bc9a6b50b36eb949a}} 
 {\bfseries Camera\+Calibration} (float principal\+\_\+distance, float principal\+\_\+x, float principal\+\_\+y, float pixel\+\_\+pitch)
-\end{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_camera_calibration_adb1eb6f6aa3b088dec93a4acd5c3b6eb}{Camera\+Calibration}} (float fx, float sc, float cx, float fy, float cy)
+\begin{DoxyCompactList}\small\item\em Constructor that accepts the parameters for the standard camera matrix. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -20,7 +22,36 @@ float {\bfseries principal\+\_\+y\+\_\+}
 \item 
 \mbox{\Hypertarget{struct_camera_calibration_ab393780ab7ec24b17f2fb16409643677}\label{struct_camera_calibration_ab393780ab7ec24b17f2fb16409643677}} 
 float {\bfseries pixel\+\_\+pitch\+\_\+}
+\item 
+\mbox{\Hypertarget{struct_camera_calibration_a82a62157b8e9427606dbfcb558522dd9}\label{struct_camera_calibration_a82a62157b8e9427606dbfcb558522dd9}} 
+float {\bfseries camera\+\_\+matrix\+\_\+} \mbox{[}9\mbox{]}
 \end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{struct_camera_calibration_adb1eb6f6aa3b088dec93a4acd5c3b6eb}\label{struct_camera_calibration_adb1eb6f6aa3b088dec93a4acd5c3b6eb}} 
+\index{CameraCalibration@{CameraCalibration}!CameraCalibration@{CameraCalibration}}
+\index{CameraCalibration@{CameraCalibration}!CameraCalibration@{CameraCalibration}}
+\doxysubsubsection{\texorpdfstring{CameraCalibration()}{CameraCalibration()}}
+{\footnotesize\ttfamily Camera\+Calibration\+::\+Camera\+Calibration (\begin{DoxyParamCaption}\item[{float}]{fx,  }\item[{float}]{sc,  }\item[{float}]{cx,  }\item[{float}]{fy,  }\item[{float}]{cy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Constructor that accepts the parameters for the standard camera matrix. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fx} & X focal length \mbox{[}px\mbox{]}. \\
+\hline
+{\em sc} & Scale factor\mbox{[}unitless\mbox{]}. \\
+\hline
+{\em cx} & X principal point\mbox{[}px\mbox{]}. \\
+\hline
+{\em fy} & Y focal length\mbox{[}px\mbox{]}. \\
+\hline
+{\em cy} & Y principal point\mbox{[}px\mbox{]}. \\
+\hline
+\end{DoxyParams}
 
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}

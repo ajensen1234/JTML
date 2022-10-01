@@ -1,3 +1,13 @@
+/**
+ * @file mainscreen.h
+ * @author Andrew Jensen (andrewjensen321@gmail.com)
+ * @brief This is the MainScreen object class that controls the GUI. 
+ * @version 0.1
+ * @date 2022-10-01
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #ifndef MAINSCREEN_H
 #define MAINSCREEN_H
 
@@ -75,6 +85,9 @@
 
 #include "gui/viewer.h"
 
+/**
+ * @brief The MainScreen object that inherits the QMainWindow object type. This object serves as the class hosting all the items on the main window.
+ */
 class MainScreen : public QMainWindow
 {
 	Q_OBJECT
@@ -90,6 +103,7 @@ public:
 	void VTKMakePrincipalSignal(vtkActor* new_principal_actor);
 
 	/*Bool to see if currently optimizing*/
+	
 	bool currently_optimizing_;
 
 	
@@ -183,6 +197,8 @@ private:
 	a new thread*/
 	
 	/*Launch Optimizer*/
+
+
 	void LaunchOptimizer(QString directive); //Directive Says whether it is Optimize Single, From, All, or Each (or Sym_Trap)
 
 	/*Optimizer Thread and Manager*/

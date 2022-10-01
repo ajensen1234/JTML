@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['ui_5faboutjta_0',['Ui_aboutJTA',['../class_ui__about_j_t_a.html',1,'']]],
-  ['ui_5fcontrols_1',['Ui_controls',['../class_ui__controls.html',1,'']]],
-  ['ui_5fdrrtool_2',['Ui_drrTool',['../class_ui__drr_tool.html',1,'']]],
-  ['ui_5fmainscreenclass_3',['Ui_MainScreenClass',['../class_ui___main_screen_class.html',1,'']]],
-  ['ui_5fsettings_5fcontrol_4',['Ui_settings_control',['../class_ui__settings__control.html',1,'']]],
-  ['ui_5fsymtrap_5',['Ui_symTrap',['../class_ui__sym_trap.html',1,'']]]
+  ['nfd_5finstance_0',['nfd_instance',['../classnfd__instance.html',1,'']]],
+  ['nfd_5flibrary_1',['nfd_library',['../classnfd__library.html',1,'']]],
+  ['nleqreport_2',['nleqreport',['../classalglib_1_1nleqreport.html',1,'alglib::nleqreport'],['../structalglib__impl_1_1nleqreport.html',1,'alglib_impl::nleqreport']]],
+  ['nleqstate_3',['nleqstate',['../classalglib_1_1nleqstate.html',1,'alglib::nleqstate'],['../structalglib__impl_1_1nleqstate.html',1,'alglib_impl::nleqstate']]],
+  ['normestimatorstate_4',['normestimatorstate',['../classalglib_1_1normestimatorstate.html',1,'alglib::normestimatorstate'],['../structalglib__impl_1_1normestimatorstate.html',1,'alglib_impl::normestimatorstate']]]
 ];
