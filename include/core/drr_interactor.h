@@ -1,5 +1,6 @@
 #pragma once
 /*VTK*/
+
 #include <vtkObjectFactory.h>
 #include <vtkInteractorStyleTrackballActor.h>
 #include <vtkRendererCollection.h>

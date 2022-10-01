@@ -1,0 +1,276 @@
+\hypertarget{diffequations_8h_source}{}\doxysection{diffequations.\+h}
+\label{diffequations_8h_source}\index{lib/alglib/diffequations.h@{lib/alglib/diffequations.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_diffequations\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_diffequations\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{26 \textcolor{comment}{//}}
+\DoxyCodeLine{27 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{28 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{31 \{}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ODESOLVER) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{33 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{34 \{}
+\DoxyCodeLine{35     ae\_int\_t n;}
+\DoxyCodeLine{36     ae\_int\_t m;}
+\DoxyCodeLine{37     \textcolor{keywordtype}{double} xscale;}
+\DoxyCodeLine{38     \textcolor{keywordtype}{double} h;}
+\DoxyCodeLine{39     \textcolor{keywordtype}{double} eps;}
+\DoxyCodeLine{40     ae\_bool fraceps;}
+\DoxyCodeLine{41     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} yc;}
+\DoxyCodeLine{42     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} escale;}
+\DoxyCodeLine{43     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} xg;}
+\DoxyCodeLine{44     ae\_int\_t solvertype;}
+\DoxyCodeLine{45     ae\_bool needdy;}
+\DoxyCodeLine{46     \textcolor{keywordtype}{double} x;}
+\DoxyCodeLine{47     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} y;}
+\DoxyCodeLine{48     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} dy;}
+\DoxyCodeLine{49     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} ytbl;}
+\DoxyCodeLine{50     ae\_int\_t repterminationtype;}
+\DoxyCodeLine{51     ae\_int\_t repnfev;}
+\DoxyCodeLine{52     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} yn;}
+\DoxyCodeLine{53     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} yns;}
+\DoxyCodeLine{54     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} rka;}
+\DoxyCodeLine{55     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} rkc;}
+\DoxyCodeLine{56     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} rkcs;}
+\DoxyCodeLine{57     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} rkb;}
+\DoxyCodeLine{58     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} rkk;}
+\DoxyCodeLine{59     \mbox{\hyperlink{structalglib__impl_1_1rcommstate}{rcommstate}} rstate;}
+\DoxyCodeLine{60 \} \mbox{\hyperlink{structalglib__impl_1_1odesolverstate}{odesolverstate}};}
+\DoxyCodeLine{61 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{62 \{}
+\DoxyCodeLine{63     ae\_int\_t nfev;}
+\DoxyCodeLine{64     ae\_int\_t terminationtype;}
+\DoxyCodeLine{65 \} \mbox{\hyperlink{structalglib__impl_1_1odesolverreport}{odesolverreport}};}
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68 \}}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{71 \textcolor{comment}{//}}
+\DoxyCodeLine{72 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{73 \textcolor{comment}{//}}
+\DoxyCodeLine{75 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{76 \{}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{78 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ODESOLVER) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{79 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{80 \textcolor{comment}{}}
+\DoxyCodeLine{81 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{82 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}}}
+\DoxyCodeLine{83 \{}
+\DoxyCodeLine{84 \textcolor{keyword}{public}:}
+\DoxyCodeLine{85     \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}}();}
+\DoxyCodeLine{86     \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}} \&rhs);}
+\DoxyCodeLine{87     \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}} \&rhs);}
+\DoxyCodeLine{88     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\string~\_odesolverstate\_owner}}();}
+\DoxyCodeLine{89     \mbox{\hyperlink{structalglib__impl_1_1odesolverstate}{alglib\_impl::odesolverstate}}* c\_ptr();}
+\DoxyCodeLine{90     \mbox{\hyperlink{structalglib__impl_1_1odesolverstate}{alglib\_impl::odesolverstate}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{91 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{92     \mbox{\hyperlink{structalglib__impl_1_1odesolverstate}{alglib\_impl::odesolverstate}} *p\_struct;}
+\DoxyCodeLine{93 \};}
+\DoxyCodeLine{94 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__odesolverstate__owner}{\_odesolverstate\_owner}}}
+\DoxyCodeLine{95 \{}
+\DoxyCodeLine{96 \textcolor{keyword}{public}:}
+\DoxyCodeLine{97     \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}}();}
+\DoxyCodeLine{98     \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&rhs);}
+\DoxyCodeLine{99     \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&rhs);}
+\DoxyCodeLine{100     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1odesolverstate}{\string~odesolverstate}}();}
+\DoxyCodeLine{101     ae\_bool \&needdy;}
+\DoxyCodeLine{102     \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} y;}
+\DoxyCodeLine{103     \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} dy;}
+\DoxyCodeLine{104     \textcolor{keywordtype}{double} \&x;}
+\DoxyCodeLine{105 }
+\DoxyCodeLine{106 \};}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108 }
+\DoxyCodeLine{109 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{110 \textcolor{comment}{}}
+\DoxyCodeLine{111 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{112 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}}}
+\DoxyCodeLine{113 \{}
+\DoxyCodeLine{114 \textcolor{keyword}{public}:}
+\DoxyCodeLine{115     \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}}();}
+\DoxyCodeLine{116     \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}} \&rhs);}
+\DoxyCodeLine{117     \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}} \&rhs);}
+\DoxyCodeLine{118     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\string~\_odesolverreport\_owner}}();}
+\DoxyCodeLine{119     \mbox{\hyperlink{structalglib__impl_1_1odesolverreport}{alglib\_impl::odesolverreport}}* c\_ptr();}
+\DoxyCodeLine{120     \mbox{\hyperlink{structalglib__impl_1_1odesolverreport}{alglib\_impl::odesolverreport}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{121 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{122     \mbox{\hyperlink{structalglib__impl_1_1odesolverreport}{alglib\_impl::odesolverreport}} *p\_struct;}
+\DoxyCodeLine{123 \};}
+\DoxyCodeLine{124 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__odesolverreport__owner}{\_odesolverreport\_owner}}}
+\DoxyCodeLine{125 \{}
+\DoxyCodeLine{126 \textcolor{keyword}{public}:}
+\DoxyCodeLine{127     \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}}();}
+\DoxyCodeLine{128     \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}} \&rhs);}
+\DoxyCodeLine{129     \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}} \&rhs);}
+\DoxyCodeLine{130     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1odesolverreport}{\string~odesolverreport}}();}
+\DoxyCodeLine{131     ae\_int\_t \&nfev;}
+\DoxyCodeLine{132     ae\_int\_t \&terminationtype;}
+\DoxyCodeLine{133 }
+\DoxyCodeLine{134 \};}
+\DoxyCodeLine{135 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{136 }
+\DoxyCodeLine{137 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ODESOLVER) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{138 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{139 \textcolor{comment}{Cash-\/Karp adaptive ODE solver.}}
+\DoxyCodeLine{140 \textcolor{comment}{}}
+\DoxyCodeLine{141 \textcolor{comment}{This subroutine solves ODE  Y'=f(Y,x)  with  initial  conditions  Y(xs)=Ys}}
+\DoxyCodeLine{142 \textcolor{comment}{(here Y may be single variable or vector of N variables).}}
+\DoxyCodeLine{143 \textcolor{comment}{}}
+\DoxyCodeLine{144 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{145 \textcolor{comment}{    Y       -\/   initial conditions, array[0..N-\/1].}}
+\DoxyCodeLine{146 \textcolor{comment}{                contains values of Y[] at X[0]}}
+\DoxyCodeLine{147 \textcolor{comment}{    N       -\/   system size}}
+\DoxyCodeLine{148 \textcolor{comment}{    X       -\/   points at which Y should be tabulated, array[0..M-\/1]}}
+\DoxyCodeLine{149 \textcolor{comment}{                integrations starts at X[0], ends at X[M-\/1],  intermediate}}
+\DoxyCodeLine{150 \textcolor{comment}{                values at X[i] are returned too.}}
+\DoxyCodeLine{151 \textcolor{comment}{                SHOULD BE ORDERED BY ASCENDING OR BY DESCENDING!}}
+\DoxyCodeLine{152 \textcolor{comment}{    M       -\/   number of intermediate points + first point + last point:}}
+\DoxyCodeLine{153 \textcolor{comment}{                * M>2 means that you need both Y(X[M-\/1]) and M-\/2 values at}}
+\DoxyCodeLine{154 \textcolor{comment}{                  intermediate points}}
+\DoxyCodeLine{155 \textcolor{comment}{                * M=2 means that you want just to integrate from  X[0]  to}}
+\DoxyCodeLine{156 \textcolor{comment}{                  X[1] and don't interested in intermediate values.}}
+\DoxyCodeLine{157 \textcolor{comment}{                * M=1 means that you don't want to integrate :)}}
+\DoxyCodeLine{158 \textcolor{comment}{                  it is degenerate case, but it will be handled correctly.}}
+\DoxyCodeLine{159 \textcolor{comment}{                * M<1 means error}}
+\DoxyCodeLine{160 \textcolor{comment}{    Eps     -\/   tolerance (absolute/relative error on each  step  will  be}}
+\DoxyCodeLine{161 \textcolor{comment}{                less than Eps). When passing:}}
+\DoxyCodeLine{162 \textcolor{comment}{                * Eps>0, it means desired ABSOLUTE error}}
+\DoxyCodeLine{163 \textcolor{comment}{                * Eps<0, it means desired RELATIVE error.  Relative errors}}
+\DoxyCodeLine{164 \textcolor{comment}{                  are calculated with respect to maximum values of  Y seen}}
+\DoxyCodeLine{165 \textcolor{comment}{                  so far. Be careful to use this criterion  when  starting}}
+\DoxyCodeLine{166 \textcolor{comment}{                  from Y[] that are close to zero.}}
+\DoxyCodeLine{167 \textcolor{comment}{    H       -\/   initial  step  lenth,  it  will  be adjusted automatically}}
+\DoxyCodeLine{168 \textcolor{comment}{                after the first  step.  If  H=0,  step  will  be  selected}}
+\DoxyCodeLine{169 \textcolor{comment}{                automatically  (usualy  it  will  be  equal  to  0.001  of}}
+\DoxyCodeLine{170 \textcolor{comment}{                min(x[i]-\/x[j])).}}
+\DoxyCodeLine{171 \textcolor{comment}{}}
+\DoxyCodeLine{172 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{173 \textcolor{comment}{    State   -\/   structure which stores algorithm state between  subsequent}}
+\DoxyCodeLine{174 \textcolor{comment}{                calls of OdeSolverIteration. Used for reverse communication.}}
+\DoxyCodeLine{175 \textcolor{comment}{                This structure should be passed  to the OdeSolverIteration}}
+\DoxyCodeLine{176 \textcolor{comment}{                subroutine.}}
+\DoxyCodeLine{177 \textcolor{comment}{}}
+\DoxyCodeLine{178 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{179 \textcolor{comment}{    AutoGKSmoothW, AutoGKSingular, AutoGKIteration, AutoGKResults.}}
+\DoxyCodeLine{180 \textcolor{comment}{}}
+\DoxyCodeLine{181 \textcolor{comment}{}}
+\DoxyCodeLine{182 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{183 \textcolor{comment}{     Copyright 01.09.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{184 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{185 \textcolor{keywordtype}{void} odesolverrkck(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \textcolor{keywordtype}{double} h, \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{186 \textcolor{keywordtype}{void} odesolverrkck(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&y, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \textcolor{keywordtype}{double} h, \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{187 }
+\DoxyCodeLine{188 }
+\DoxyCodeLine{189 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{190 \textcolor{comment}{This function provides reverse communication interface}}
+\DoxyCodeLine{191 \textcolor{comment}{Reverse communication interface is not documented or recommended to use.}}
+\DoxyCodeLine{192 \textcolor{comment}{See below for functions which provide better documented API}}
+\DoxyCodeLine{193 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{194 \textcolor{keywordtype}{bool} odesolveriteration(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{195 }
+\DoxyCodeLine{196 }
+\DoxyCodeLine{197 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{198 \textcolor{comment}{This function is used to launcn iterations of ODE solver}}
+\DoxyCodeLine{199 \textcolor{comment}{}}
+\DoxyCodeLine{200 \textcolor{comment}{It accepts following parameters:}}
+\DoxyCodeLine{201 \textcolor{comment}{    diff    -\/   callback which calculates dy/dx for given y and x}}
+\DoxyCodeLine{202 \textcolor{comment}{    ptr     -\/   optional pointer which is passed to diff; can be NULL}}
+\DoxyCodeLine{203 \textcolor{comment}{}}
+\DoxyCodeLine{204 \textcolor{comment}{}}
+\DoxyCodeLine{205 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{206 \textcolor{comment}{     Copyright 01.09.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{207 \textcolor{comment}{}}
+\DoxyCodeLine{208 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{209 \textcolor{keywordtype}{void} odesolversolve(\mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&state,}
+\DoxyCodeLine{210     \textcolor{keywordtype}{void} (*diff)(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&y, \textcolor{keywordtype}{double} x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&dy, \textcolor{keywordtype}{void} *ptr),}
+\DoxyCodeLine{211     \textcolor{keywordtype}{void} *ptr = NULL, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{212 }
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{215 \textcolor{comment}{ODE solver results}}
+\DoxyCodeLine{216 \textcolor{comment}{}}
+\DoxyCodeLine{217 \textcolor{comment}{Called after OdeSolverIteration returned False.}}
+\DoxyCodeLine{218 \textcolor{comment}{}}
+\DoxyCodeLine{219 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{220 \textcolor{comment}{    State   -\/   algorithm state (used by OdeSolverIteration).}}
+\DoxyCodeLine{221 \textcolor{comment}{}}
+\DoxyCodeLine{222 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{223 \textcolor{comment}{    M       -\/   number of tabulated values, M>=1}}
+\DoxyCodeLine{224 \textcolor{comment}{    XTbl    -\/   array[0..M-\/1], values of X}}
+\DoxyCodeLine{225 \textcolor{comment}{    YTbl    -\/   array[0..M-\/1,0..N-\/1], values of Y in X[i]}}
+\DoxyCodeLine{226 \textcolor{comment}{    Rep     -\/   solver report:}}
+\DoxyCodeLine{227 \textcolor{comment}{                * Rep.TerminationType completetion code:}}
+\DoxyCodeLine{228 \textcolor{comment}{                    * -\/2    X is not ordered  by  ascending/descending  or}}
+\DoxyCodeLine{229 \textcolor{comment}{                            there are non-\/distinct X[],  i.e.  X[i]=X[i+1]}}
+\DoxyCodeLine{230 \textcolor{comment}{                    * -\/1    incorrect parameters were specified}}
+\DoxyCodeLine{231 \textcolor{comment}{                    *  1    task has been solved}}
+\DoxyCodeLine{232 \textcolor{comment}{                * Rep.NFEV contains number of function calculations}}
+\DoxyCodeLine{233 \textcolor{comment}{}}
+\DoxyCodeLine{234 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{235 \textcolor{comment}{     Copyright 01.09.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{236 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{237 \textcolor{keywordtype}{void} odesolverresults(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1odesolverstate}{odesolverstate}} \&state, ae\_int\_t \&m, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&xtbl, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&ytbl, \mbox{\hyperlink{classalglib_1_1odesolverreport}{odesolverreport}} \&rep, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{238 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{239 \}}
+\DoxyCodeLine{240 }
+\DoxyCodeLine{242 \textcolor{comment}{//}}
+\DoxyCodeLine{243 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{244 \textcolor{comment}{//}}
+\DoxyCodeLine{246 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{247 \{}
+\DoxyCodeLine{248 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ODESOLVER) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{249 \textcolor{keywordtype}{void} odesolverrkck(\textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{250      ae\_int\_t n,}
+\DoxyCodeLine{251      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{252      ae\_int\_t m,}
+\DoxyCodeLine{253      \textcolor{keywordtype}{double} eps,}
+\DoxyCodeLine{254      \textcolor{keywordtype}{double} h,}
+\DoxyCodeLine{255      odesolverstate* state,}
+\DoxyCodeLine{256      ae\_state *\_state);}
+\DoxyCodeLine{257 ae\_bool odesolveriteration(odesolverstate* state, ae\_state *\_state);}
+\DoxyCodeLine{258 \textcolor{keywordtype}{void} odesolverresults(odesolverstate* state,}
+\DoxyCodeLine{259      ae\_int\_t* m,}
+\DoxyCodeLine{260      \textcolor{comment}{/* Real    */} ae\_vector* xtbl,}
+\DoxyCodeLine{261      \textcolor{comment}{/* Real    */} ae\_matrix* ytbl,}
+\DoxyCodeLine{262      odesolverreport* rep,}
+\DoxyCodeLine{263      ae\_state *\_state);}
+\DoxyCodeLine{264 \textcolor{keywordtype}{void} \_odesolverstate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{265 \textcolor{keywordtype}{void} \_odesolverstate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{266 \textcolor{keywordtype}{void} \_odesolverstate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{267 \textcolor{keywordtype}{void} \_odesolverstate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{268 \textcolor{keywordtype}{void} \_odesolverreport\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{269 \textcolor{keywordtype}{void} \_odesolverreport\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{270 \textcolor{keywordtype}{void} \_odesolverreport\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{271 \textcolor{keywordtype}{void} \_odesolverreport\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{272 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{273 }
+\DoxyCodeLine{274 \}}
+\DoxyCodeLine{275 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{276 }
+
+\end{DoxyCode}

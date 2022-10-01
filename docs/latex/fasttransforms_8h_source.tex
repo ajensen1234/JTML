@@ -1,0 +1,731 @@
+\hypertarget{fasttransforms_8h_source}{}\doxysection{fasttransforms.\+h}
+\label{fasttransforms_8h_source}\index{lib/alglib/fasttransforms.h@{lib/alglib/fasttransforms.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_fasttransforms\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_fasttransforms\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{26 \textcolor{comment}{//}}
+\DoxyCodeLine{27 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{28 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{31 \{}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FFT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{33 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FHT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CONV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{44 \textcolor{comment}{//}}
+\DoxyCodeLine{45 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{46 \textcolor{comment}{//}}
+\DoxyCodeLine{48 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{49 \{}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FFT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FHT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CONV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{63 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FFT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{68 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{69 \textcolor{comment}{1-\/dimensional complex FFT.}}
+\DoxyCodeLine{70 \textcolor{comment}{}}
+\DoxyCodeLine{71 \textcolor{comment}{Array size N may be arbitrary number (composite or prime).  Composite  N's}}
+\DoxyCodeLine{72 \textcolor{comment}{are handled with cache-\/oblivious variation of  a  Cooley-\/Tukey  algorithm.}}
+\DoxyCodeLine{73 \textcolor{comment}{Small prime-\/factors are transformed using hard coded  codelets (similar to}}
+\DoxyCodeLine{74 \textcolor{comment}{FFTW codelets, but without low-\/level  optimization),  large  prime-\/factors}}
+\DoxyCodeLine{75 \textcolor{comment}{are handled with Bluestein's algorithm.}}
+\DoxyCodeLine{76 \textcolor{comment}{}}
+\DoxyCodeLine{77 \textcolor{comment}{Fastests transforms are for smooth N's (prime factors are 2, 3,  5  only),}}
+\DoxyCodeLine{78 \textcolor{comment}{most fast for powers of 2. When N have prime factors  larger  than  these,}}
+\DoxyCodeLine{79 \textcolor{comment}{but orders of magnitude smaller than N, computations will be about 4 times}}
+\DoxyCodeLine{80 \textcolor{comment}{slower than for nearby highly composite N's. When N itself is prime, speed}}
+\DoxyCodeLine{81 \textcolor{comment}{will be 6 times lower.}}
+\DoxyCodeLine{82 \textcolor{comment}{}}
+\DoxyCodeLine{83 \textcolor{comment}{Algorithm has O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{84 \textcolor{comment}{}}
+\DoxyCodeLine{85 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{86 \textcolor{comment}{    A   -\/   array[0..N-\/1] -\/ complex function to be transformed}}
+\DoxyCodeLine{87 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{88 \textcolor{comment}{}}
+\DoxyCodeLine{89 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{90 \textcolor{comment}{    A   -\/   DFT of a input array, array[0..N-\/1]}}
+\DoxyCodeLine{91 \textcolor{comment}{            A\_out[j] = SUM(A\_in[k]*exp(-\/2*pi*sqrt(-\/1)*j*k/N), k = 0..N-\/1)}}
+\DoxyCodeLine{92 \textcolor{comment}{}}
+\DoxyCodeLine{93 \textcolor{comment}{}}
+\DoxyCodeLine{94 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{95 \textcolor{comment}{     Copyright 29.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{96 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{97 \textcolor{keywordtype}{void} fftc1d(complex\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{98 \textcolor{keywordtype}{void} fftc1d(complex\_1d\_array \&a, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100 }
+\DoxyCodeLine{101 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{102 \textcolor{comment}{1-\/dimensional complex inverse FFT.}}
+\DoxyCodeLine{103 \textcolor{comment}{}}
+\DoxyCodeLine{104 \textcolor{comment}{Array size N may be arbitrary number (composite or prime).  Algorithm  has}}
+\DoxyCodeLine{105 \textcolor{comment}{O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{106 \textcolor{comment}{}}
+\DoxyCodeLine{107 \textcolor{comment}{See FFTC1D() description for more information about algorithm performance.}}
+\DoxyCodeLine{108 \textcolor{comment}{}}
+\DoxyCodeLine{109 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{110 \textcolor{comment}{    A   -\/   array[0..N-\/1] -\/ complex array to be transformed}}
+\DoxyCodeLine{111 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{112 \textcolor{comment}{}}
+\DoxyCodeLine{113 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{114 \textcolor{comment}{    A   -\/   inverse DFT of a input array, array[0..N-\/1]}}
+\DoxyCodeLine{115 \textcolor{comment}{            A\_out[j] = SUM(A\_in[k]/N*exp(+2*pi*sqrt(-\/1)*j*k/N), k = 0..N-\/1)}}
+\DoxyCodeLine{116 \textcolor{comment}{}}
+\DoxyCodeLine{117 \textcolor{comment}{}}
+\DoxyCodeLine{118 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{119 \textcolor{comment}{     Copyright 29.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{120 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{121 \textcolor{keywordtype}{void} fftc1dinv(complex\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{122 \textcolor{keywordtype}{void} fftc1dinv(complex\_1d\_array \&a, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{124 }
+\DoxyCodeLine{125 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{126 \textcolor{comment}{1-\/dimensional real FFT.}}
+\DoxyCodeLine{127 \textcolor{comment}{}}
+\DoxyCodeLine{128 \textcolor{comment}{Algorithm has O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{129 \textcolor{comment}{}}
+\DoxyCodeLine{130 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{131 \textcolor{comment}{    A   -\/   array[0..N-\/1] -\/ real function to be transformed}}
+\DoxyCodeLine{132 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{133 \textcolor{comment}{}}
+\DoxyCodeLine{134 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{135 \textcolor{comment}{    F   -\/   DFT of a input array, array[0..N-\/1]}}
+\DoxyCodeLine{136 \textcolor{comment}{            F[j] = SUM(A[k]*exp(-\/2*pi*sqrt(-\/1)*j*k/N), k = 0..N-\/1)}}
+\DoxyCodeLine{137 \textcolor{comment}{}}
+\DoxyCodeLine{138 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{139 \textcolor{comment}{    F[] satisfies symmetry property F[k] = conj(F[N-\/k]),  so just one half}}
+\DoxyCodeLine{140 \textcolor{comment}{of  array  is  usually needed. But for convinience subroutine returns full}}
+\DoxyCodeLine{141 \textcolor{comment}{complex array (with frequencies above N/2), so its result may be  used  by}}
+\DoxyCodeLine{142 \textcolor{comment}{other FFT-\/related subroutines.}}
+\DoxyCodeLine{143 \textcolor{comment}{}}
+\DoxyCodeLine{144 \textcolor{comment}{}}
+\DoxyCodeLine{145 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{146 \textcolor{comment}{     Copyright 01.06.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{147 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{148 \textcolor{keywordtype}{void} fftr1d(\textcolor{keyword}{const} real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&f, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{149 \textcolor{keywordtype}{void} fftr1d(\textcolor{keyword}{const} real\_1d\_array \&a, complex\_1d\_array \&f, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{151 }
+\DoxyCodeLine{152 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{153 \textcolor{comment}{1-\/dimensional real inverse FFT.}}
+\DoxyCodeLine{154 \textcolor{comment}{}}
+\DoxyCodeLine{155 \textcolor{comment}{Algorithm has O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{156 \textcolor{comment}{}}
+\DoxyCodeLine{157 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{158 \textcolor{comment}{    F   -\/   array[0..floor(N/2)] -\/ frequencies from forward real FFT}}
+\DoxyCodeLine{159 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{160 \textcolor{comment}{}}
+\DoxyCodeLine{161 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{162 \textcolor{comment}{    A   -\/   inverse DFT of a input array, array[0..N-\/1]}}
+\DoxyCodeLine{163 \textcolor{comment}{}}
+\DoxyCodeLine{164 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{165 \textcolor{comment}{    F[] should satisfy symmetry property F[k] = conj(F[N-\/k]), so just  one}}
+\DoxyCodeLine{166 \textcolor{comment}{half of frequencies array is needed -\/ elements from 0 to floor(N/2).  F[0]}}
+\DoxyCodeLine{167 \textcolor{comment}{is ALWAYS real. If N is even F[floor(N/2)] is real too. If N is odd,  then}}
+\DoxyCodeLine{168 \textcolor{comment}{F[floor(N/2)] has no special properties.}}
+\DoxyCodeLine{169 \textcolor{comment}{}}
+\DoxyCodeLine{170 \textcolor{comment}{Relying on properties noted above, FFTR1DInv subroutine uses only elements}}
+\DoxyCodeLine{171 \textcolor{comment}{from 0th to floor(N/2)-\/th. It ignores imaginary part of F[0],  and in case}}
+\DoxyCodeLine{172 \textcolor{comment}{N is even it ignores imaginary part of F[floor(N/2)] too.}}
+\DoxyCodeLine{173 \textcolor{comment}{}}
+\DoxyCodeLine{174 \textcolor{comment}{When you call this function using full arguments list -\/ "{}FFTR1DInv(F,N,A)"{}}}
+\DoxyCodeLine{175 \textcolor{comment}{-\/ you can pass either either frequencies array with N elements or  reduced}}
+\DoxyCodeLine{176 \textcolor{comment}{array with roughly N/2 elements -\/ subroutine will  successfully  transform}}
+\DoxyCodeLine{177 \textcolor{comment}{both.}}
+\DoxyCodeLine{178 \textcolor{comment}{}}
+\DoxyCodeLine{179 \textcolor{comment}{If you call this function using reduced arguments list -\/  "{}FFTR1DInv(F,A)"{}}}
+\DoxyCodeLine{180 \textcolor{comment}{-\/ you must pass FULL array with N elements (although higher  N/2 are still}}
+\DoxyCodeLine{181 \textcolor{comment}{not used) because array size is used to automatically determine FFT length}}
+\DoxyCodeLine{182 \textcolor{comment}{}}
+\DoxyCodeLine{183 \textcolor{comment}{}}
+\DoxyCodeLine{184 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{185 \textcolor{comment}{     Copyright 01.06.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{186 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{187 \textcolor{keywordtype}{void} fftr1dinv(\textcolor{keyword}{const} complex\_1d\_array \&f, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&a, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{188 \textcolor{keywordtype}{void} fftr1dinv(\textcolor{keyword}{const} complex\_1d\_array \&f, real\_1d\_array \&a, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{189 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{190 }
+\DoxyCodeLine{191 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FHT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{192 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{193 \textcolor{comment}{1-\/dimensional Fast Hartley Transform.}}
+\DoxyCodeLine{194 \textcolor{comment}{}}
+\DoxyCodeLine{195 \textcolor{comment}{Algorithm has O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{196 \textcolor{comment}{}}
+\DoxyCodeLine{197 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{198 \textcolor{comment}{    A   -\/   array[0..N-\/1] -\/ real function to be transformed}}
+\DoxyCodeLine{199 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{200 \textcolor{comment}{}}
+\DoxyCodeLine{201 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{202 \textcolor{comment}{    A   -\/   FHT of a input array, array[0..N-\/1],}}
+\DoxyCodeLine{203 \textcolor{comment}{            A\_out[k] = sum(A\_in[j]*(cos(2*pi*j*k/N)+sin(2*pi*j*k/N)), j=0..N-\/1)}}
+\DoxyCodeLine{204 \textcolor{comment}{}}
+\DoxyCodeLine{205 \textcolor{comment}{}}
+\DoxyCodeLine{206 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{207 \textcolor{comment}{     Copyright 04.06.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{208 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{209 \textcolor{keywordtype}{void} fhtr1d(real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{211 }
+\DoxyCodeLine{212 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{213 \textcolor{comment}{1-\/dimensional inverse FHT.}}
+\DoxyCodeLine{214 \textcolor{comment}{}}
+\DoxyCodeLine{215 \textcolor{comment}{Algorithm has O(N*logN) complexity for any N (composite or prime).}}
+\DoxyCodeLine{216 \textcolor{comment}{}}
+\DoxyCodeLine{217 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{218 \textcolor{comment}{    A   -\/   array[0..N-\/1] -\/ complex array to be transformed}}
+\DoxyCodeLine{219 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{220 \textcolor{comment}{}}
+\DoxyCodeLine{221 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{222 \textcolor{comment}{    A   -\/   inverse FHT of a input array, array[0..N-\/1]}}
+\DoxyCodeLine{223 \textcolor{comment}{}}
+\DoxyCodeLine{224 \textcolor{comment}{}}
+\DoxyCodeLine{225 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{226 \textcolor{comment}{     Copyright 29.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{227 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{228 \textcolor{keywordtype}{void} fhtr1dinv(real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{229 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{230 }
+\DoxyCodeLine{231 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CONV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{232 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{233 \textcolor{comment}{1-\/dimensional complex convolution.}}
+\DoxyCodeLine{234 \textcolor{comment}{}}
+\DoxyCodeLine{235 \textcolor{comment}{For given A/B returns conv(A,B) (non-\/circular). Subroutine can automatically}}
+\DoxyCodeLine{236 \textcolor{comment}{choose between three implementations: straightforward O(M*N)  formula  for}}
+\DoxyCodeLine{237 \textcolor{comment}{very small N (or M), overlap-\/add algorithm for  cases  where  max(M,N)  is}}
+\DoxyCodeLine{238 \textcolor{comment}{significantly larger than min(M,N), but O(M*N) algorithm is too slow,  and}}
+\DoxyCodeLine{239 \textcolor{comment}{general FFT-\/based formula for cases where two previois algorithms are  too}}
+\DoxyCodeLine{240 \textcolor{comment}{slow.}}
+\DoxyCodeLine{241 \textcolor{comment}{}}
+\DoxyCodeLine{242 \textcolor{comment}{Algorithm has max(M,N)*log(max(M,N)) complexity for any M/N.}}
+\DoxyCodeLine{243 \textcolor{comment}{}}
+\DoxyCodeLine{244 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{245 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ complex function to be transformed}}
+\DoxyCodeLine{246 \textcolor{comment}{    M   -\/   problem size}}
+\DoxyCodeLine{247 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ complex function to be transformed}}
+\DoxyCodeLine{248 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{249 \textcolor{comment}{}}
+\DoxyCodeLine{250 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{251 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..N+M-\/2].}}
+\DoxyCodeLine{252 \textcolor{comment}{}}
+\DoxyCodeLine{253 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{254 \textcolor{comment}{    It is assumed that A is zero at T<0, B is zero too.  If  one  or  both}}
+\DoxyCodeLine{255 \textcolor{comment}{functions have non-\/zero values at negative T's, you  can  still  use  this}}
+\DoxyCodeLine{256 \textcolor{comment}{subroutine -\/ just shift its result correspondingly.}}
+\DoxyCodeLine{257 \textcolor{comment}{}}
+\DoxyCodeLine{258 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{259 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{260 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{261 \textcolor{keywordtype}{void} convc1d(\textcolor{keyword}{const} complex\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} complex\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{262 }
+\DoxyCodeLine{263 }
+\DoxyCodeLine{264 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{265 \textcolor{comment}{1-\/dimensional complex non-\/circular deconvolution (inverse of ConvC1D()).}}
+\DoxyCodeLine{266 \textcolor{comment}{}}
+\DoxyCodeLine{267 \textcolor{comment}{Algorithm has M*log(M)) complexity for any M (composite or prime).}}
+\DoxyCodeLine{268 \textcolor{comment}{}}
+\DoxyCodeLine{269 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{270 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ convolved signal, A = conv(R, B)}}
+\DoxyCodeLine{271 \textcolor{comment}{    M   -\/   convolved signal length}}
+\DoxyCodeLine{272 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ response}}
+\DoxyCodeLine{273 \textcolor{comment}{    N   -\/   response length, N<=M}}
+\DoxyCodeLine{274 \textcolor{comment}{}}
+\DoxyCodeLine{275 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{276 \textcolor{comment}{    R   -\/   deconvolved signal. array[0..M-\/N].}}
+\DoxyCodeLine{277 \textcolor{comment}{}}
+\DoxyCodeLine{278 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{279 \textcolor{comment}{    deconvolution is unstable process and may result in division  by  zero}}
+\DoxyCodeLine{280 \textcolor{comment}{(if your response function is degenerate, i.e. has zero Fourier coefficient).}}
+\DoxyCodeLine{281 \textcolor{comment}{}}
+\DoxyCodeLine{282 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{283 \textcolor{comment}{    It is assumed that A is zero at T<0, B is zero too.  If  one  or  both}}
+\DoxyCodeLine{284 \textcolor{comment}{functions have non-\/zero values at negative T's, you  can  still  use  this}}
+\DoxyCodeLine{285 \textcolor{comment}{subroutine -\/ just shift its result correspondingly.}}
+\DoxyCodeLine{286 \textcolor{comment}{}}
+\DoxyCodeLine{287 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{288 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{289 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{290 \textcolor{keywordtype}{void} convc1dinv(\textcolor{keyword}{const} complex\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} complex\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{291 }
+\DoxyCodeLine{292 }
+\DoxyCodeLine{293 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{294 \textcolor{comment}{1-\/dimensional circular complex convolution.}}
+\DoxyCodeLine{295 \textcolor{comment}{}}
+\DoxyCodeLine{296 \textcolor{comment}{For given S/R returns conv(S,R) (circular). Algorithm has linearithmic}}
+\DoxyCodeLine{297 \textcolor{comment}{complexity for any M/N.}}
+\DoxyCodeLine{298 \textcolor{comment}{}}
+\DoxyCodeLine{299 \textcolor{comment}{IMPORTANT:  normal convolution is commutative,  i.e.   it  is symmetric  -\/}}
+\DoxyCodeLine{300 \textcolor{comment}{conv(A,B)=conv(B,A).  Cyclic convolution IS NOT.  One function -\/ S -\/ is  a}}
+\DoxyCodeLine{301 \textcolor{comment}{signal,  periodic function, and another -\/ R -\/ is a response,  non-\/periodic}}
+\DoxyCodeLine{302 \textcolor{comment}{function with limited length.}}
+\DoxyCodeLine{303 \textcolor{comment}{}}
+\DoxyCodeLine{304 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{305 \textcolor{comment}{    S   -\/   array[0..M-\/1] -\/ complex periodic signal}}
+\DoxyCodeLine{306 \textcolor{comment}{    M   -\/   problem size}}
+\DoxyCodeLine{307 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ complex non-\/periodic response}}
+\DoxyCodeLine{308 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{309 \textcolor{comment}{}}
+\DoxyCodeLine{310 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{311 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..M-\/1].}}
+\DoxyCodeLine{312 \textcolor{comment}{}}
+\DoxyCodeLine{313 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{314 \textcolor{comment}{    It is assumed that B is zero at T<0. If  it  has  non-\/zero  values  at}}
+\DoxyCodeLine{315 \textcolor{comment}{negative T's, you can still use this subroutine -\/ just  shift  its  result}}
+\DoxyCodeLine{316 \textcolor{comment}{correspondingly.}}
+\DoxyCodeLine{317 \textcolor{comment}{}}
+\DoxyCodeLine{318 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{319 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{320 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{321 \textcolor{keywordtype}{void} convc1dcircular(\textcolor{keyword}{const} complex\_1d\_array \&s, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} complex\_1d\_array \&r, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{322 }
+\DoxyCodeLine{323 }
+\DoxyCodeLine{324 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{325 \textcolor{comment}{1-\/dimensional circular complex deconvolution (inverse of ConvC1DCircular()).}}
+\DoxyCodeLine{326 \textcolor{comment}{}}
+\DoxyCodeLine{327 \textcolor{comment}{Algorithm has M*log(M)) complexity for any M (composite or prime).}}
+\DoxyCodeLine{328 \textcolor{comment}{}}
+\DoxyCodeLine{329 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{330 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ convolved periodic signal, A = conv(R, B)}}
+\DoxyCodeLine{331 \textcolor{comment}{    M   -\/   convolved signal length}}
+\DoxyCodeLine{332 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ non-\/periodic response}}
+\DoxyCodeLine{333 \textcolor{comment}{    N   -\/   response length}}
+\DoxyCodeLine{334 \textcolor{comment}{}}
+\DoxyCodeLine{335 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{336 \textcolor{comment}{    R   -\/   deconvolved signal. array[0..M-\/1].}}
+\DoxyCodeLine{337 \textcolor{comment}{}}
+\DoxyCodeLine{338 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{339 \textcolor{comment}{    deconvolution is unstable process and may result in division  by  zero}}
+\DoxyCodeLine{340 \textcolor{comment}{(if your response function is degenerate, i.e. has zero Fourier coefficient).}}
+\DoxyCodeLine{341 \textcolor{comment}{}}
+\DoxyCodeLine{342 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{343 \textcolor{comment}{    It is assumed that B is zero at T<0. If  it  has  non-\/zero  values  at}}
+\DoxyCodeLine{344 \textcolor{comment}{negative T's, you can still use this subroutine -\/ just  shift  its  result}}
+\DoxyCodeLine{345 \textcolor{comment}{correspondingly.}}
+\DoxyCodeLine{346 \textcolor{comment}{}}
+\DoxyCodeLine{347 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{348 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{349 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{350 \textcolor{keywordtype}{void} convc1dcircularinv(\textcolor{keyword}{const} complex\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} complex\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{351 }
+\DoxyCodeLine{352 }
+\DoxyCodeLine{353 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{354 \textcolor{comment}{1-\/dimensional real convolution.}}
+\DoxyCodeLine{355 \textcolor{comment}{}}
+\DoxyCodeLine{356 \textcolor{comment}{Analogous to ConvC1D(), see ConvC1D() comments for more details.}}
+\DoxyCodeLine{357 \textcolor{comment}{}}
+\DoxyCodeLine{358 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{359 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ real function to be transformed}}
+\DoxyCodeLine{360 \textcolor{comment}{    M   -\/   problem size}}
+\DoxyCodeLine{361 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ real function to be transformed}}
+\DoxyCodeLine{362 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{363 \textcolor{comment}{}}
+\DoxyCodeLine{364 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{365 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..N+M-\/2].}}
+\DoxyCodeLine{366 \textcolor{comment}{}}
+\DoxyCodeLine{367 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{368 \textcolor{comment}{    It is assumed that A is zero at T<0, B is zero too.  If  one  or  both}}
+\DoxyCodeLine{369 \textcolor{comment}{functions have non-\/zero values at negative T's, you  can  still  use  this}}
+\DoxyCodeLine{370 \textcolor{comment}{subroutine -\/ just shift its result correspondingly.}}
+\DoxyCodeLine{371 \textcolor{comment}{}}
+\DoxyCodeLine{372 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{373 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{374 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{375 \textcolor{keywordtype}{void} convr1d(\textcolor{keyword}{const} real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} real\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{376 }
+\DoxyCodeLine{377 }
+\DoxyCodeLine{378 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{379 \textcolor{comment}{1-\/dimensional real deconvolution (inverse of ConvC1D()).}}
+\DoxyCodeLine{380 \textcolor{comment}{}}
+\DoxyCodeLine{381 \textcolor{comment}{Algorithm has M*log(M)) complexity for any M (composite or prime).}}
+\DoxyCodeLine{382 \textcolor{comment}{}}
+\DoxyCodeLine{383 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{384 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ convolved signal, A = conv(R, B)}}
+\DoxyCodeLine{385 \textcolor{comment}{    M   -\/   convolved signal length}}
+\DoxyCodeLine{386 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ response}}
+\DoxyCodeLine{387 \textcolor{comment}{    N   -\/   response length, N<=M}}
+\DoxyCodeLine{388 \textcolor{comment}{}}
+\DoxyCodeLine{389 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{390 \textcolor{comment}{    R   -\/   deconvolved signal. array[0..M-\/N].}}
+\DoxyCodeLine{391 \textcolor{comment}{}}
+\DoxyCodeLine{392 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{393 \textcolor{comment}{    deconvolution is unstable process and may result in division  by  zero}}
+\DoxyCodeLine{394 \textcolor{comment}{(if your response function is degenerate, i.e. has zero Fourier coefficient).}}
+\DoxyCodeLine{395 \textcolor{comment}{}}
+\DoxyCodeLine{396 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{397 \textcolor{comment}{    It is assumed that A is zero at T<0, B is zero too.  If  one  or  both}}
+\DoxyCodeLine{398 \textcolor{comment}{functions have non-\/zero values at negative T's, you  can  still  use  this}}
+\DoxyCodeLine{399 \textcolor{comment}{subroutine -\/ just shift its result correspondingly.}}
+\DoxyCodeLine{400 \textcolor{comment}{}}
+\DoxyCodeLine{401 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{402 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{403 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{404 \textcolor{keywordtype}{void} convr1dinv(\textcolor{keyword}{const} real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} real\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{405 }
+\DoxyCodeLine{406 }
+\DoxyCodeLine{407 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{408 \textcolor{comment}{1-\/dimensional circular real convolution.}}
+\DoxyCodeLine{409 \textcolor{comment}{}}
+\DoxyCodeLine{410 \textcolor{comment}{Analogous to ConvC1DCircular(), see ConvC1DCircular() comments for more details.}}
+\DoxyCodeLine{411 \textcolor{comment}{}}
+\DoxyCodeLine{412 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{413 \textcolor{comment}{    S   -\/   array[0..M-\/1] -\/ real signal}}
+\DoxyCodeLine{414 \textcolor{comment}{    M   -\/   problem size}}
+\DoxyCodeLine{415 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ real response}}
+\DoxyCodeLine{416 \textcolor{comment}{    N   -\/   problem size}}
+\DoxyCodeLine{417 \textcolor{comment}{}}
+\DoxyCodeLine{418 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{419 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..M-\/1].}}
+\DoxyCodeLine{420 \textcolor{comment}{}}
+\DoxyCodeLine{421 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{422 \textcolor{comment}{    It is assumed that B is zero at T<0. If  it  has  non-\/zero  values  at}}
+\DoxyCodeLine{423 \textcolor{comment}{negative T's, you can still use this subroutine -\/ just  shift  its  result}}
+\DoxyCodeLine{424 \textcolor{comment}{correspondingly.}}
+\DoxyCodeLine{425 \textcolor{comment}{}}
+\DoxyCodeLine{426 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{427 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{428 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{429 \textcolor{keywordtype}{void} convr1dcircular(\textcolor{keyword}{const} real\_1d\_array \&s, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} real\_1d\_array \&r, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{430 }
+\DoxyCodeLine{431 }
+\DoxyCodeLine{432 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{433 \textcolor{comment}{1-\/dimensional complex deconvolution (inverse of ConvC1D()).}}
+\DoxyCodeLine{434 \textcolor{comment}{}}
+\DoxyCodeLine{435 \textcolor{comment}{Algorithm has M*log(M)) complexity for any M (composite or prime).}}
+\DoxyCodeLine{436 \textcolor{comment}{}}
+\DoxyCodeLine{437 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{438 \textcolor{comment}{    A   -\/   array[0..M-\/1] -\/ convolved signal, A = conv(R, B)}}
+\DoxyCodeLine{439 \textcolor{comment}{    M   -\/   convolved signal length}}
+\DoxyCodeLine{440 \textcolor{comment}{    B   -\/   array[0..N-\/1] -\/ response}}
+\DoxyCodeLine{441 \textcolor{comment}{    N   -\/   response length}}
+\DoxyCodeLine{442 \textcolor{comment}{}}
+\DoxyCodeLine{443 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{444 \textcolor{comment}{    R   -\/   deconvolved signal. array[0..M-\/N].}}
+\DoxyCodeLine{445 \textcolor{comment}{}}
+\DoxyCodeLine{446 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{447 \textcolor{comment}{    deconvolution is unstable process and may result in division  by  zero}}
+\DoxyCodeLine{448 \textcolor{comment}{(if your response function is degenerate, i.e. has zero Fourier coefficient).}}
+\DoxyCodeLine{449 \textcolor{comment}{}}
+\DoxyCodeLine{450 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{451 \textcolor{comment}{    It is assumed that B is zero at T<0. If  it  has  non-\/zero  values  at}}
+\DoxyCodeLine{452 \textcolor{comment}{negative T's, you can still use this subroutine -\/ just  shift  its  result}}
+\DoxyCodeLine{453 \textcolor{comment}{correspondingly.}}
+\DoxyCodeLine{454 \textcolor{comment}{}}
+\DoxyCodeLine{455 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{456 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{457 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{458 \textcolor{keywordtype}{void} convr1dcircularinv(\textcolor{keyword}{const} real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} real\_1d\_array \&b, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{459 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{460 }
+\DoxyCodeLine{461 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{462 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{463 \textcolor{comment}{1-\/dimensional complex cross-\/correlation.}}
+\DoxyCodeLine{464 \textcolor{comment}{}}
+\DoxyCodeLine{465 \textcolor{comment}{For given Pattern/Signal returns corr(Pattern,Signal) (non-\/circular).}}
+\DoxyCodeLine{466 \textcolor{comment}{}}
+\DoxyCodeLine{467 \textcolor{comment}{Correlation is calculated using reduction to  convolution.  Algorithm with}}
+\DoxyCodeLine{468 \textcolor{comment}{max(N,N)*log(max(N,N)) complexity is used (see  ConvC1D()  for  more  info}}
+\DoxyCodeLine{469 \textcolor{comment}{about performance).}}
+\DoxyCodeLine{470 \textcolor{comment}{}}
+\DoxyCodeLine{471 \textcolor{comment}{IMPORTANT:}}
+\DoxyCodeLine{472 \textcolor{comment}{    for  historical reasons subroutine accepts its parameters in  reversed}}
+\DoxyCodeLine{473 \textcolor{comment}{    order: CorrC1D(Signal, Pattern) = Pattern x Signal (using  traditional}}
+\DoxyCodeLine{474 \textcolor{comment}{    definition of cross-\/correlation, denoting cross-\/correlation as "{}x"{}).}}
+\DoxyCodeLine{475 \textcolor{comment}{}}
+\DoxyCodeLine{476 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{477 \textcolor{comment}{    Signal  -\/   array[0..N-\/1] -\/ complex function to be transformed,}}
+\DoxyCodeLine{478 \textcolor{comment}{                signal containing pattern}}
+\DoxyCodeLine{479 \textcolor{comment}{    N       -\/   problem size}}
+\DoxyCodeLine{480 \textcolor{comment}{    Pattern -\/   array[0..M-\/1] -\/ complex function to be transformed,}}
+\DoxyCodeLine{481 \textcolor{comment}{                pattern to search withing signal}}
+\DoxyCodeLine{482 \textcolor{comment}{    M       -\/   problem size}}
+\DoxyCodeLine{483 \textcolor{comment}{}}
+\DoxyCodeLine{484 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{485 \textcolor{comment}{    R       -\/   cross-\/correlation, array[0..N+M-\/2]:}}
+\DoxyCodeLine{486 \textcolor{comment}{                * positive lags are stored in R[0..N-\/1],}}
+\DoxyCodeLine{487 \textcolor{comment}{                  R[i] = sum(conj(pattern[j])*signal[i+j]}}
+\DoxyCodeLine{488 \textcolor{comment}{                * negative lags are stored in R[N..N+M-\/2],}}
+\DoxyCodeLine{489 \textcolor{comment}{                  R[N+M-\/1-\/i] = sum(conj(pattern[j])*signal[-\/i+j]}}
+\DoxyCodeLine{490 \textcolor{comment}{}}
+\DoxyCodeLine{491 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{492 \textcolor{comment}{    It is assumed that pattern domain is [0..M-\/1].  If Pattern is non-\/zero}}
+\DoxyCodeLine{493 \textcolor{comment}{on [-\/K..M-\/1],  you can still use this subroutine, just shift result by K.}}
+\DoxyCodeLine{494 \textcolor{comment}{}}
+\DoxyCodeLine{495 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{496 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{497 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{498 \textcolor{keywordtype}{void} corrc1d(\textcolor{keyword}{const} complex\_1d\_array \&signal, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} complex\_1d\_array \&pattern, \textcolor{keyword}{const} ae\_int\_t m, complex\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{499 }
+\DoxyCodeLine{500 }
+\DoxyCodeLine{501 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{502 \textcolor{comment}{1-\/dimensional circular complex cross-\/correlation.}}
+\DoxyCodeLine{503 \textcolor{comment}{}}
+\DoxyCodeLine{504 \textcolor{comment}{For given Pattern/Signal returns corr(Pattern,Signal) (circular).}}
+\DoxyCodeLine{505 \textcolor{comment}{Algorithm has linearithmic complexity for any M/N.}}
+\DoxyCodeLine{506 \textcolor{comment}{}}
+\DoxyCodeLine{507 \textcolor{comment}{IMPORTANT:}}
+\DoxyCodeLine{508 \textcolor{comment}{    for  historical reasons subroutine accepts its parameters in  reversed}}
+\DoxyCodeLine{509 \textcolor{comment}{    order:   CorrC1DCircular(Signal, Pattern) = Pattern x Signal    (using}}
+\DoxyCodeLine{510 \textcolor{comment}{    traditional definition of cross-\/correlation, denoting cross-\/correlation}}
+\DoxyCodeLine{511 \textcolor{comment}{    as "{}x"{}).}}
+\DoxyCodeLine{512 \textcolor{comment}{}}
+\DoxyCodeLine{513 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{514 \textcolor{comment}{    Signal  -\/   array[0..N-\/1] -\/ complex function to be transformed,}}
+\DoxyCodeLine{515 \textcolor{comment}{                periodic signal containing pattern}}
+\DoxyCodeLine{516 \textcolor{comment}{    N       -\/   problem size}}
+\DoxyCodeLine{517 \textcolor{comment}{    Pattern -\/   array[0..M-\/1] -\/ complex function to be transformed,}}
+\DoxyCodeLine{518 \textcolor{comment}{                non-\/periodic pattern to search withing signal}}
+\DoxyCodeLine{519 \textcolor{comment}{    M       -\/   problem size}}
+\DoxyCodeLine{520 \textcolor{comment}{}}
+\DoxyCodeLine{521 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{522 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..M-\/1].}}
+\DoxyCodeLine{523 \textcolor{comment}{}}
+\DoxyCodeLine{524 \textcolor{comment}{}}
+\DoxyCodeLine{525 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{526 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{527 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{528 \textcolor{keywordtype}{void} corrc1dcircular(\textcolor{keyword}{const} complex\_1d\_array \&signal, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} complex\_1d\_array \&pattern, \textcolor{keyword}{const} ae\_int\_t n, complex\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{529 }
+\DoxyCodeLine{530 }
+\DoxyCodeLine{531 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{532 \textcolor{comment}{1-\/dimensional real cross-\/correlation.}}
+\DoxyCodeLine{533 \textcolor{comment}{}}
+\DoxyCodeLine{534 \textcolor{comment}{For given Pattern/Signal returns corr(Pattern,Signal) (non-\/circular).}}
+\DoxyCodeLine{535 \textcolor{comment}{}}
+\DoxyCodeLine{536 \textcolor{comment}{Correlation is calculated using reduction to  convolution.  Algorithm with}}
+\DoxyCodeLine{537 \textcolor{comment}{max(N,N)*log(max(N,N)) complexity is used (see  ConvC1D()  for  more  info}}
+\DoxyCodeLine{538 \textcolor{comment}{about performance).}}
+\DoxyCodeLine{539 \textcolor{comment}{}}
+\DoxyCodeLine{540 \textcolor{comment}{IMPORTANT:}}
+\DoxyCodeLine{541 \textcolor{comment}{    for  historical reasons subroutine accepts its parameters in  reversed}}
+\DoxyCodeLine{542 \textcolor{comment}{    order: CorrR1D(Signal, Pattern) = Pattern x Signal (using  traditional}}
+\DoxyCodeLine{543 \textcolor{comment}{    definition of cross-\/correlation, denoting cross-\/correlation as "{}x"{}).}}
+\DoxyCodeLine{544 \textcolor{comment}{}}
+\DoxyCodeLine{545 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{546 \textcolor{comment}{    Signal  -\/   array[0..N-\/1] -\/ real function to be transformed,}}
+\DoxyCodeLine{547 \textcolor{comment}{                signal containing pattern}}
+\DoxyCodeLine{548 \textcolor{comment}{    N       -\/   problem size}}
+\DoxyCodeLine{549 \textcolor{comment}{    Pattern -\/   array[0..M-\/1] -\/ real function to be transformed,}}
+\DoxyCodeLine{550 \textcolor{comment}{                pattern to search withing signal}}
+\DoxyCodeLine{551 \textcolor{comment}{    M       -\/   problem size}}
+\DoxyCodeLine{552 \textcolor{comment}{}}
+\DoxyCodeLine{553 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{554 \textcolor{comment}{    R       -\/   cross-\/correlation, array[0..N+M-\/2]:}}
+\DoxyCodeLine{555 \textcolor{comment}{                * positive lags are stored in R[0..N-\/1],}}
+\DoxyCodeLine{556 \textcolor{comment}{                  R[i] = sum(pattern[j]*signal[i+j]}}
+\DoxyCodeLine{557 \textcolor{comment}{                * negative lags are stored in R[N..N+M-\/2],}}
+\DoxyCodeLine{558 \textcolor{comment}{                  R[N+M-\/1-\/i] = sum(pattern[j]*signal[-\/i+j]}}
+\DoxyCodeLine{559 \textcolor{comment}{}}
+\DoxyCodeLine{560 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{561 \textcolor{comment}{    It is assumed that pattern domain is [0..M-\/1].  If Pattern is non-\/zero}}
+\DoxyCodeLine{562 \textcolor{comment}{on [-\/K..M-\/1],  you can still use this subroutine, just shift result by K.}}
+\DoxyCodeLine{563 \textcolor{comment}{}}
+\DoxyCodeLine{564 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{565 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{566 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{567 \textcolor{keywordtype}{void} corrr1d(\textcolor{keyword}{const} real\_1d\_array \&signal, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} real\_1d\_array \&pattern, \textcolor{keyword}{const} ae\_int\_t m, real\_1d\_array \&r, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{568 }
+\DoxyCodeLine{569 }
+\DoxyCodeLine{570 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{571 \textcolor{comment}{1-\/dimensional circular real cross-\/correlation.}}
+\DoxyCodeLine{572 \textcolor{comment}{}}
+\DoxyCodeLine{573 \textcolor{comment}{For given Pattern/Signal returns corr(Pattern,Signal) (circular).}}
+\DoxyCodeLine{574 \textcolor{comment}{Algorithm has linearithmic complexity for any M/N.}}
+\DoxyCodeLine{575 \textcolor{comment}{}}
+\DoxyCodeLine{576 \textcolor{comment}{IMPORTANT:}}
+\DoxyCodeLine{577 \textcolor{comment}{    for  historical reasons subroutine accepts its parameters in  reversed}}
+\DoxyCodeLine{578 \textcolor{comment}{    order:   CorrR1DCircular(Signal, Pattern) = Pattern x Signal    (using}}
+\DoxyCodeLine{579 \textcolor{comment}{    traditional definition of cross-\/correlation, denoting cross-\/correlation}}
+\DoxyCodeLine{580 \textcolor{comment}{    as "{}x"{}).}}
+\DoxyCodeLine{581 \textcolor{comment}{}}
+\DoxyCodeLine{582 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{583 \textcolor{comment}{    Signal  -\/   array[0..N-\/1] -\/ real function to be transformed,}}
+\DoxyCodeLine{584 \textcolor{comment}{                periodic signal containing pattern}}
+\DoxyCodeLine{585 \textcolor{comment}{    N       -\/   problem size}}
+\DoxyCodeLine{586 \textcolor{comment}{    Pattern -\/   array[0..M-\/1] -\/ real function to be transformed,}}
+\DoxyCodeLine{587 \textcolor{comment}{                non-\/periodic pattern to search withing signal}}
+\DoxyCodeLine{588 \textcolor{comment}{    M       -\/   problem size}}
+\DoxyCodeLine{589 \textcolor{comment}{}}
+\DoxyCodeLine{590 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{591 \textcolor{comment}{    R   -\/   convolution: A*B. array[0..M-\/1].}}
+\DoxyCodeLine{592 \textcolor{comment}{}}
+\DoxyCodeLine{593 \textcolor{comment}{}}
+\DoxyCodeLine{594 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{595 \textcolor{comment}{     Copyright 21.07.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{596 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{597 \textcolor{keywordtype}{void} corrr1dcircular(\textcolor{keyword}{const} real\_1d\_array \&signal, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} real\_1d\_array \&pattern, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{598 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{599 \}}
+\DoxyCodeLine{600 }
+\DoxyCodeLine{602 \textcolor{comment}{//}}
+\DoxyCodeLine{603 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{604 \textcolor{comment}{//}}
+\DoxyCodeLine{606 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{607 \{}
+\DoxyCodeLine{608 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FFT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{609 \textcolor{keywordtype}{void} fftc1d(\textcolor{comment}{/* Complex */} ae\_vector* a, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{610 \textcolor{keywordtype}{void} fftc1dinv(\textcolor{comment}{/* Complex */} ae\_vector* a, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{611 \textcolor{keywordtype}{void} fftr1d(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{612      ae\_int\_t n,}
+\DoxyCodeLine{613      \textcolor{comment}{/* Complex */} ae\_vector* f,}
+\DoxyCodeLine{614      ae\_state *\_state);}
+\DoxyCodeLine{615 \textcolor{keywordtype}{void} fftr1dinv(\textcolor{comment}{/* Complex */} ae\_vector* f,}
+\DoxyCodeLine{616      ae\_int\_t n,}
+\DoxyCodeLine{617      \textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{618      ae\_state *\_state);}
+\DoxyCodeLine{619 \textcolor{keywordtype}{void} fftr1dinternaleven(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{620      ae\_int\_t n,}
+\DoxyCodeLine{621      \textcolor{comment}{/* Real    */} ae\_vector* buf,}
+\DoxyCodeLine{622      fasttransformplan* plan,}
+\DoxyCodeLine{623      ae\_state *\_state);}
+\DoxyCodeLine{624 \textcolor{keywordtype}{void} fftr1dinvinternaleven(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{625      ae\_int\_t n,}
+\DoxyCodeLine{626      \textcolor{comment}{/* Real    */} ae\_vector* buf,}
+\DoxyCodeLine{627      fasttransformplan* plan,}
+\DoxyCodeLine{628      ae\_state *\_state);}
+\DoxyCodeLine{629 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{630 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FHT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{631 \textcolor{keywordtype}{void} fhtr1d(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{632 \textcolor{keywordtype}{void} fhtr1dinv(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{633 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{634 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CONV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{635 \textcolor{keywordtype}{void} convc1d(\textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{636      ae\_int\_t m,}
+\DoxyCodeLine{637      \textcolor{comment}{/* Complex */} ae\_vector* b,}
+\DoxyCodeLine{638      ae\_int\_t n,}
+\DoxyCodeLine{639      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{640      ae\_state *\_state);}
+\DoxyCodeLine{641 \textcolor{keywordtype}{void} convc1dinv(\textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{642      ae\_int\_t m,}
+\DoxyCodeLine{643      \textcolor{comment}{/* Complex */} ae\_vector* b,}
+\DoxyCodeLine{644      ae\_int\_t n,}
+\DoxyCodeLine{645      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{646      ae\_state *\_state);}
+\DoxyCodeLine{647 \textcolor{keywordtype}{void} convc1dcircular(\textcolor{comment}{/* Complex */} ae\_vector* s,}
+\DoxyCodeLine{648      ae\_int\_t m,}
+\DoxyCodeLine{649      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{650      ae\_int\_t n,}
+\DoxyCodeLine{651      \textcolor{comment}{/* Complex */} ae\_vector* c,}
+\DoxyCodeLine{652      ae\_state *\_state);}
+\DoxyCodeLine{653 \textcolor{keywordtype}{void} convc1dcircularinv(\textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{654      ae\_int\_t m,}
+\DoxyCodeLine{655      \textcolor{comment}{/* Complex */} ae\_vector* b,}
+\DoxyCodeLine{656      ae\_int\_t n,}
+\DoxyCodeLine{657      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{658      ae\_state *\_state);}
+\DoxyCodeLine{659 \textcolor{keywordtype}{void} convr1d(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{660      ae\_int\_t m,}
+\DoxyCodeLine{661      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{662      ae\_int\_t n,}
+\DoxyCodeLine{663      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{664      ae\_state *\_state);}
+\DoxyCodeLine{665 \textcolor{keywordtype}{void} convr1dinv(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{666      ae\_int\_t m,}
+\DoxyCodeLine{667      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{668      ae\_int\_t n,}
+\DoxyCodeLine{669      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{670      ae\_state *\_state);}
+\DoxyCodeLine{671 \textcolor{keywordtype}{void} convr1dcircular(\textcolor{comment}{/* Real    */} ae\_vector* s,}
+\DoxyCodeLine{672      ae\_int\_t m,}
+\DoxyCodeLine{673      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{674      ae\_int\_t n,}
+\DoxyCodeLine{675      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{676      ae\_state *\_state);}
+\DoxyCodeLine{677 \textcolor{keywordtype}{void} convr1dcircularinv(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{678      ae\_int\_t m,}
+\DoxyCodeLine{679      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{680      ae\_int\_t n,}
+\DoxyCodeLine{681      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{682      ae\_state *\_state);}
+\DoxyCodeLine{683 \textcolor{keywordtype}{void} convc1dx(\textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{684      ae\_int\_t m,}
+\DoxyCodeLine{685      \textcolor{comment}{/* Complex */} ae\_vector* b,}
+\DoxyCodeLine{686      ae\_int\_t n,}
+\DoxyCodeLine{687      ae\_bool circular,}
+\DoxyCodeLine{688      ae\_int\_t alg,}
+\DoxyCodeLine{689      ae\_int\_t q,}
+\DoxyCodeLine{690      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{691      ae\_state *\_state);}
+\DoxyCodeLine{692 \textcolor{keywordtype}{void} convr1dx(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{693      ae\_int\_t m,}
+\DoxyCodeLine{694      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{695      ae\_int\_t n,}
+\DoxyCodeLine{696      ae\_bool circular,}
+\DoxyCodeLine{697      ae\_int\_t alg,}
+\DoxyCodeLine{698      ae\_int\_t q,}
+\DoxyCodeLine{699      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{700      ae\_state *\_state);}
+\DoxyCodeLine{701 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{702 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{703 \textcolor{keywordtype}{void} corrc1d(\textcolor{comment}{/* Complex */} ae\_vector* signal,}
+\DoxyCodeLine{704      ae\_int\_t n,}
+\DoxyCodeLine{705      \textcolor{comment}{/* Complex */} ae\_vector* pattern,}
+\DoxyCodeLine{706      ae\_int\_t m,}
+\DoxyCodeLine{707      \textcolor{comment}{/* Complex */} ae\_vector* r,}
+\DoxyCodeLine{708      ae\_state *\_state);}
+\DoxyCodeLine{709 \textcolor{keywordtype}{void} corrc1dcircular(\textcolor{comment}{/* Complex */} ae\_vector* signal,}
+\DoxyCodeLine{710      ae\_int\_t m,}
+\DoxyCodeLine{711      \textcolor{comment}{/* Complex */} ae\_vector* pattern,}
+\DoxyCodeLine{712      ae\_int\_t n,}
+\DoxyCodeLine{713      \textcolor{comment}{/* Complex */} ae\_vector* c,}
+\DoxyCodeLine{714      ae\_state *\_state);}
+\DoxyCodeLine{715 \textcolor{keywordtype}{void} corrr1d(\textcolor{comment}{/* Real    */} ae\_vector* signal,}
+\DoxyCodeLine{716      ae\_int\_t n,}
+\DoxyCodeLine{717      \textcolor{comment}{/* Real    */} ae\_vector* pattern,}
+\DoxyCodeLine{718      ae\_int\_t m,}
+\DoxyCodeLine{719      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{720      ae\_state *\_state);}
+\DoxyCodeLine{721 \textcolor{keywordtype}{void} corrr1dcircular(\textcolor{comment}{/* Real    */} ae\_vector* signal,}
+\DoxyCodeLine{722      ae\_int\_t m,}
+\DoxyCodeLine{723      \textcolor{comment}{/* Real    */} ae\_vector* pattern,}
+\DoxyCodeLine{724      ae\_int\_t n,}
+\DoxyCodeLine{725      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{726      ae\_state *\_state);}
+\DoxyCodeLine{727 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{728 }
+\DoxyCodeLine{729 \}}
+\DoxyCodeLine{730 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{731 }
+
+\end{DoxyCode}

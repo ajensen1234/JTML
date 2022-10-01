@@ -1,0 +1,76 @@
+\hypertarget{ambiguous__pose__processing_8h}{}\doxysection{include/core/ambiguous\+\_\+pose\+\_\+processing.h File Reference}
+\label{ambiguous__pose__processing_8h}\index{include/core/ambiguous\_pose\_processing.h@{include/core/ambiguous\_pose\_processing.h}}
+
+
+This is a file that handles all of the different types of post-\/processing that we can do for each of the input poses. The main goal is to help with symmetry traps.  
+
+
+{\ttfamily \#include \char`\"{}core/sym\+\_\+trap\+\_\+functions.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}core/data\+\_\+structures\+\_\+6\+D.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_point6_d}{Point6D}} \mbox{\hyperlink{ambiguous__pose__processing_8h_a0e8c0e372c93eefbf0b19fcdf00aa91b}{tibial\+\_\+pose\+\_\+selector}} (\mbox{\hyperlink{struct_point6_d}{Point6D}} \&femur\+\_\+pose, \mbox{\hyperlink{struct_point6_d}{Point6D}} \&tibia\+\_\+pose)
+\begin{DoxyCompactList}\small\item\em This function will take a relative pose between a femur and tibia and choose either the current tibial pose or it\textquotesingle{}s mirror. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{ambiguous__pose__processing_8h_af3058444c221f688a3ed6337c35b3051}{varus\+\_\+valgus\+\_\+calculation}} (\mbox{\hyperlink{struct_point6_d}{Point6D}} \&femur\+\_\+pose, \mbox{\hyperlink{struct_point6_d}{Point6D}} \&tibia\+\_\+pose)
+\begin{DoxyCompactList}\small\item\em This is a function that calculates the varus/valgus angle between tibia and the femur. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This is a file that handles all of the different types of post-\/processing that we can do for each of the input poses. The main goal is to help with symmetry traps. 
+
+\begin{DoxyAuthor}{Author}
+Andrew Jensen (\href{mailto:andrewjensen321@gmail.com}{\texttt{ andrewjensen321@gmail.\+com}}) 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+1 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+2022-\/09-\/30
+\end{DoxyDate}
+\begin{DoxyCopyright}{Copyright}
+Copyright (c) 2022 
+\end{DoxyCopyright}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{ambiguous__pose__processing_8h_a0e8c0e372c93eefbf0b19fcdf00aa91b}\label{ambiguous__pose__processing_8h_a0e8c0e372c93eefbf0b19fcdf00aa91b}} 
+\index{ambiguous\_pose\_processing.h@{ambiguous\_pose\_processing.h}!tibial\_pose\_selector@{tibial\_pose\_selector}}
+\index{tibial\_pose\_selector@{tibial\_pose\_selector}!ambiguous\_pose\_processing.h@{ambiguous\_pose\_processing.h}}
+\doxysubsubsection{\texorpdfstring{tibial\_pose\_selector()}{tibial\_pose\_selector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_point6_d}{Point6D}} tibial\+\_\+pose\+\_\+selector (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_point6_d}{Point6D}} \&}]{femur\+\_\+pose,  }\item[{\mbox{\hyperlink{struct_point6_d}{Point6D}} \&}]{tibia\+\_\+pose }\end{DoxyParamCaption})}
+
+
+
+This function will take a relative pose between a femur and tibia and choose either the current tibial pose or it\textquotesingle{}s mirror. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em femur\+\_\+pose} & This is a 6D representation of the femur pose for the current frame. \\
+\hline
+{\em tibia\+\_\+pose} & This is a 6D representation of the tibial pose for the current frame. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{struct_point6_d}{Point6D}}. This function will return the (hopefully) correct tibial pose from the current pose and the mirror. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{ambiguous__pose__processing_8h_af3058444c221f688a3ed6337c35b3051}\label{ambiguous__pose__processing_8h_af3058444c221f688a3ed6337c35b3051}} 
+\index{ambiguous\_pose\_processing.h@{ambiguous\_pose\_processing.h}!varus\_valgus\_calculation@{varus\_valgus\_calculation}}
+\index{varus\_valgus\_calculation@{varus\_valgus\_calculation}!ambiguous\_pose\_processing.h@{ambiguous\_pose\_processing.h}}
+\doxysubsubsection{\texorpdfstring{varus\_valgus\_calculation()}{varus\_valgus\_calculation()}}
+{\footnotesize\ttfamily float varus\+\_\+valgus\+\_\+calculation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_point6_d}{Point6D}} \&}]{femur\+\_\+pose,  }\item[{\mbox{\hyperlink{struct_point6_d}{Point6D}} \&}]{tibia\+\_\+pose }\end{DoxyParamCaption})}
+
+
+
+This is a function that calculates the varus/valgus angle between tibia and the femur. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em femur\+\_\+pose} & The femur\textquotesingle{}s 6D pose. \\
+\hline
+{\em tibia\+\_\+pose} & The tibia\textquotesingle{}s 6D pose. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+float The varus/valgus angle between the two. 
+\end{DoxyReturn}

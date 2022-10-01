@@ -1,0 +1,67 @@
+\hypertarget{data__structures__6_d_8h_source}{}\doxysection{data\+\_\+structures\+\_\+6\+D.\+h}
+\label{data__structures__6_d_8h_source}\index{include/core/data\_structures\_6D.h@{include/core/data\_structures\_6D.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef DATA\_STRUCTURES\_6D\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define DATA\_STRUCTURES\_6D\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Standard*/}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}gpu/render\_engine.cuh"{}}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{comment}{/*Enum Structure for Directions*/}}
+\DoxyCodeLine{11 \textcolor{keyword}{enum} Direction \{}
+\DoxyCodeLine{12     X\_DIRECTION, Y\_DIRECTION, Z\_DIRECTION,}
+\DoxyCodeLine{13     XA\_DIRECTION, YA\_DIRECTION, ZA\_DIRECTION}
+\DoxyCodeLine{14 \};}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{comment}{/*Point6D to store Pose Information*/}}
+\DoxyCodeLine{17 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_point6_d}{Point6D}}}
+\DoxyCodeLine{18 \{}
+\DoxyCodeLine{19     \mbox{\hyperlink{struct_point6_d}{Point6D}}(\textcolor{keywordtype}{double} xval, \textcolor{keywordtype}{double} yval, \textcolor{keywordtype}{double} zval, \textcolor{keywordtype}{double} xaval, \textcolor{keywordtype}{double} yaval, \textcolor{keywordtype}{double} zaval);}
+\DoxyCodeLine{20     \mbox{\hyperlink{struct_point6_d}{Point6D}}();}
+\DoxyCodeLine{21     \mbox{\hyperlink{struct_point6_d}{Point6D}}(gpu\_cost\_function::Pose p);}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{keywordtype}{double} x; \textcolor{keywordtype}{double} y; \textcolor{keywordtype}{double} z; \textcolor{keywordtype}{double} xa; \textcolor{keywordtype}{double} ya; \textcolor{keywordtype}{double} za;}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{keywordtype}{double} GetDistanceFrom(\mbox{\hyperlink{struct_point6_d}{Point6D}} otherPoint);}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27     Direction GetLargestDirection();}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29     \textcolor{keywordtype}{double} GetDirection(Direction direction);}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31     \textcolor{keywordtype}{void} UpdateDirection(Direction direction, \textcolor{keywordtype}{double} updated\_value);}
+\DoxyCodeLine{32 \};}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 \textcolor{comment}{/*Storage Class (Linked List of HyperMatrices/Columns) for DIRECT optimization algorithm*/}}
+\DoxyCodeLine{35 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_hyper_box6_d}{HyperBox6D}} \textcolor{comment}{//Stores HyperCube Info}}
+\DoxyCodeLine{36 \{}
+\DoxyCodeLine{37     \mbox{\hyperlink{struct_hyper_box6_d}{HyperBox6D}}(\textcolor{keywordtype}{double} value, \mbox{\hyperlink{struct_point6_d}{Point6D}} center, \mbox{\hyperlink{struct_point6_d}{Point6D}} sides);}
+\DoxyCodeLine{38     \mbox{\hyperlink{struct_hyper_box6_d}{HyperBox6D}}();}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \textcolor{keywordtype}{double} value\_;}
+\DoxyCodeLine{41     \textcolor{keywordtype}{double} size\_;}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43     \mbox{\hyperlink{struct_point6_d}{Point6D}} sides\_;}
+\DoxyCodeLine{44     \mbox{\hyperlink{struct_point6_d}{Point6D}} center\_;}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46     \textcolor{keywordtype}{void} SetSides(\mbox{\hyperlink{struct_point6_d}{Point6D}} new\_sides);}
+\DoxyCodeLine{47     \mbox{\hyperlink{struct_point6_d}{Point6D}} GetSides();}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49     \textcolor{keywordtype}{bool} containsPoint(\mbox{\hyperlink{struct_point6_d}{Point6D}} point);}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51     \mbox{\hyperlink{struct_point6_d}{Point6D}} GetCenter();}
+\DoxyCodeLine{52     \textcolor{keywordtype}{void} SetCenter(\mbox{\hyperlink{struct_point6_d}{Point6D}} new\_center);}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54     \textcolor{comment}{/*Divide a Side in Three*/}}
+\DoxyCodeLine{55     \textcolor{keywordtype}{void} TrisectSide(Direction trisect\_side);}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57     \textcolor{keywordtype}{void} PrintCenter();}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59 \};}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/*DATA\_STRUCTURES\_6D\_H*/}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

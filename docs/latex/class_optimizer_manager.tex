@@ -1,0 +1,71 @@
+\hypertarget{class_optimizer_manager}{}\doxysection{Optimizer\+Manager Class Reference}
+\label{class_optimizer_manager}\index{OptimizerManager@{OptimizerManager}}
+Inheritance diagram for Optimizer\+Manager\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_optimizer_manager}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a90652b3ffb79464620456a9730d3d8f1}\label{class_optimizer_manager_a90652b3ffb79464620456a9730d3d8f1}} 
+void {\bfseries Optimize} ()
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a538b6b6b97a2f67718608c2a5c3d372b}\label{class_optimizer_manager_a538b6b6b97a2f67718608c2a5c3d372b}} 
+void {\bfseries on\+Stop\+Optimizer} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_aca8e0fa95544eaeb251c3a3c4e8255c4}\label{class_optimizer_manager_aca8e0fa95544eaeb251c3a3c4e8255c4}} 
+void {\bfseries Update\+Optimum} (double, double, double, double, double, double, unsigned int)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a5aa562356eb192212be8adcc804312b4}\label{class_optimizer_manager_a5aa562356eb192212be8adcc804312b4}} 
+void {\bfseries finished} ()
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a567eec0ee317cc2c9eaa8a946ff1ba4b}\label{class_optimizer_manager_a567eec0ee317cc2c9eaa8a946ff1ba4b}} 
+void {\bfseries Optimized\+Frame} (double, double, double, double, double, double, bool, unsigned int, bool, QString)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a930169d9bf1b735814fa48db8d1336c4}\label{class_optimizer_manager_a930169d9bf1b735814fa48db8d1336c4}} 
+void {\bfseries Optimizer\+Error} (QString)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a1a2f9683eb0d4413ba0c8d41457496c7}\label{class_optimizer_manager_a1a2f9683eb0d4413ba0c8d41457496c7}} 
+void {\bfseries Update\+Display} (double, int, double, unsigned int)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_ad27b6c91dbf664c97a8fa3517d3de4f8}\label{class_optimizer_manager_ad27b6c91dbf664c97a8fa3517d3de4f8}} 
+void {\bfseries Update\+Dilation\+Background} ()
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_af856820cba70fd2f3e9559f8601e6ecd}\label{class_optimizer_manager_af856820cba70fd2f3e9559f8601e6ecd}} 
+void {\bfseries Cost\+Func\+At\+Point} (double)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_aaba9e5b0f7a4a4192d518d7081452866}\label{class_optimizer_manager_aaba9e5b0f7a4a4192d518d7081452866}} 
+void {\bfseries on\+Update\+Orientation\+Sym\+Trap} (double, double, double, double, double, double)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a4fd5264507b398cb2a1b0412d216c43e}\label{class_optimizer_manager_a4fd5264507b398cb2a1b0412d216c43e}} 
+void {\bfseries on\+Progress\+Bar\+Update} (int)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a64b946145330fdd884029f40585dfe27}\label{class_optimizer_manager_a64b946145330fdd884029f40585dfe27}} 
+void {\bfseries get\+\_\+iter\+\_\+count} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a7c1bd801658a389367e85a5cb537d0b2}\label{class_optimizer_manager_a7c1bd801658a389367e85a5cb537d0b2}} 
+{\bfseries Optimizer\+Manager} (QObject $\ast$parent=0)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a454d4a44ef44acc3990ac9cf573b4cc9}\label{class_optimizer_manager_a454d4a44ef44acc3990ac9cf573b4cc9}} 
+bool {\bfseries Initialize} (QThread \&optimizer\+\_\+thread, \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\+\_\+file, std\+::vector$<$ \mbox{\hyperlink{class_frame}{Frame}} $>$ camera\+\_\+\+A\+\_\+frame\+\_\+list, std\+::vector$<$ \mbox{\hyperlink{class_frame}{Frame}} $>$ camera\+\_\+\+B\+\_\+frame\+\_\+list, unsigned int current\+\_\+frame\+\_\+index, std\+::vector$<$ \mbox{\hyperlink{class_model}{Model}} $>$ model\+\_\+list, QModel\+Index\+List selected\+\_\+models, unsigned int primary\+\_\+model\+\_\+index, \mbox{\hyperlink{class_location_storage}{Location\+Storage}} pose\+\_\+matrix, \mbox{\hyperlink{struct_optimizer_settings}{Optimizer\+Settings}} opt\+\_\+settings, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\+\_\+cost\+\_\+function\+::\+Cost\+Function\+Manager}} trunk\+\_\+manager, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\+\_\+cost\+\_\+function\+::\+Cost\+Function\+Manager}} branch\+\_\+manager, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\+\_\+cost\+\_\+function\+::\+Cost\+Function\+Manager}} leaf\+\_\+manager, QString opt\+\_\+directive, QString \&error\+\_\+message, int iter\+\_\+count)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_aa3095ec80475cb8a991062ea2d285f74}\label{class_optimizer_manager_aa3095ec80475cb8a991062ea2d285f74}} 
+double {\bfseries Evaluate\+Cost\+Function\+At\+Point} (\mbox{\hyperlink{struct_point6_d}{Point6D}} point, int stage)
+\item 
+\mbox{\Hypertarget{class_optimizer_manager_a2719d105f3e1c5172a4d27e43ca2f344}\label{class_optimizer_manager_a2719d105f3e1c5172a4d27e43ca2f344}} 
+void {\bfseries Calculate\+Sym\+Trap} ()
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/core/optimizer\+\_\+manager.\+h\item 
+src/core/optimizer\+\_\+manager.\+cpp\end{DoxyCompactItemize}

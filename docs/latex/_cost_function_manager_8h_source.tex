@@ -1,0 +1,217 @@
+\hypertarget{_cost_function_manager_8h_source}{}\doxysection{Cost\+Function\+Manager.\+h}
+\label{_cost_function_manager_8h_source}\index{include/cost\_functions/CostFunctionManager.h@{include/cost\_functions/CostFunctionManager.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef COSTFUNCTIONMANAGER\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define COSTFUNCTIONMANAGER\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Class for Storing Cost Function Info*/}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}CostFunction.h"{}}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{/*Cost Function Tools Library*/}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}gpu/gpu\_image.cuh"{}}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include "{}gpu/gpu\_frame.cuh"{}}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include "{}gpu/gpu\_dilated\_frame.cuh"{}}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include "{}gpu/gpu\_edge\_frame.cuh"{}}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include "{}gpu/gpu\_intensity\_frame.cuh"{}}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include "{}gpu/gpu\_model.cuh"{}}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include "{}gpu/gpu\_metrics.cuh"{}}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include "{}gpu/render\_engine.cuh"{}}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{comment}{/*Stage Enum*/}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include "{}Stage.h"{}}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }jta\_cost\_function \{}
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{CostFunctionManager}} \{}
+\DoxyCodeLine{25     \textcolor{keyword}{public}:}
+\DoxyCodeLine{26 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{27 \textcolor{comment}{        /**************************PUBLIC DLL FUNCTIONS BEGIN *************************/}}
+\DoxyCodeLine{28 \textcolor{comment}{        /******************************(DO NOT EDIT)  *********************************/}}
+\DoxyCodeLine{29 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{30         \textcolor{comment}{/*Constructor}}
+\DoxyCodeLine{31 \textcolor{comment}{        Called once when the client initially loads and populates the list of available}}
+\DoxyCodeLine{32 \textcolor{comment}{        cost functions. There will be three instances, one for each stage of DIRECT.}}
+\DoxyCodeLine{33 \textcolor{comment}{        Also sets an active cost function (default is the DIRECT\_DILATION).}}
+\DoxyCodeLine{34 \textcolor{comment}{        The parameters are all default. To load previously saved session parameters, the constructor}}
+\DoxyCodeLine{35 \textcolor{comment}{        for the client will call the updateCostFunctionParameterValues(...)*/}}
+\DoxyCodeLine{36         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{CostFunctionManager}}(Stage stage);}
+\DoxyCodeLine{37         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{CostFunctionManager}}();}
+\DoxyCodeLine{38         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{\string~CostFunctionManager}}();}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \textcolor{comment}{/*Set Active Cost Function*/}}
+\DoxyCodeLine{41         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setActiveCostFunction(std::string cost\_function\_name);}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43         \textcolor{comment}{/*Update Cost Function Values from Saved Session*/}}
+\DoxyCodeLine{44         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} updateCostFunctionParameterValues(std::string cost\_function\_name, std::string parameter\_name, \textcolor{keywordtype}{double} value);}
+\DoxyCodeLine{45         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} updateCostFunctionParameterValues(std::string cost\_function\_name, std::string parameter\_name, \textcolor{keywordtype}{int} value);}
+\DoxyCodeLine{46         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} updateCostFunctionParameterValues(std::string cost\_function\_name, std::string parameter\_name, \textcolor{keywordtype}{bool} value);}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48         \textcolor{comment}{/*Call Initialization for Active Cost Function*/}}
+\DoxyCodeLine{49         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} InitializeActiveCostFunction(std::string \&error\_message);}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51         \textcolor{comment}{/*Call Destructor for Active Cost Function*/}}
+\DoxyCodeLine{52         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} DestructActiveCostFunction(std::string \&error\_message);}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         \textcolor{comment}{/*Call Active Cost Function*/}}
+\DoxyCodeLine{55         \_\_declspec(dllexport) \textcolor{keywordtype}{double} callActiveCostFunction();}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57         \textcolor{comment}{/*Get Active Cost Function*/}}
+\DoxyCodeLine{58         \_\_declspec(dllexport) std::string getActiveCostFunction();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61         \textcolor{comment}{/*Get Active Cost Function Class*/}}
+\DoxyCodeLine{62         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{CostFunction}}* getActiveCostFunctionClass();}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64         \textcolor{comment}{/*Get Cost Function Class*/}}
+\DoxyCodeLine{65         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{CostFunction}}* getCostFunctionClass(std::string cost\_function\_name);}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67         \textcolor{comment}{/*Get Vector of Cost Functions*/}}
+\DoxyCodeLine{68         \_\_declspec(dllexport) std::vector<CostFunction> getAvailableCostFunctions();}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70         \textcolor{comment}{/*Set Current Frame Index*/}}
+\DoxyCodeLine{71         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setCurrentFrameIndex(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} current\_frame\_index);}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73         \textcolor{comment}{/*Upload Data (Images,Poses etc.)*/}}
+\DoxyCodeLine{74         \_\_declspec(dllexport) \textcolor{keywordtype}{void} UploadData(std::vector<gpu\_cost\_function::GPUEdgeFrame*>* gpu\_edge\_frames\_A,}
+\DoxyCodeLine{75         std::vector<gpu\_cost\_function::GPUDilatedFrame*>* gpu\_dilated\_frames\_A,}
+\DoxyCodeLine{76         std::vector<gpu\_cost\_function::GPUIntensityFrame*>* gpu\_intensity\_frames\_A,}
+\DoxyCodeLine{77         std::vector<gpu\_cost\_function::GPUEdgeFrame*>* gpu\_edge\_frames\_B,}
+\DoxyCodeLine{78         std::vector<gpu\_cost\_function::GPUDilatedFrame*>* gpu\_dilated\_frames\_B,}
+\DoxyCodeLine{79         std::vector<gpu\_cost\_function::GPUIntensityFrame*>* gpu\_intensity\_frames\_B,}
+\DoxyCodeLine{80         gpu\_cost\_function::GPUModel* gpu\_principal\_model,}
+\DoxyCodeLine{81         std::vector<gpu\_cost\_function::GPUModel*>* gpu\_non\_principal\_models,}
+\DoxyCodeLine{82         gpu\_cost\_function::GPUMetrics* gpu\_metrics,}
+\DoxyCodeLine{83         \mbox{\hyperlink{class_pose_matrix}{PoseMatrix}}* pose\_storage,}
+\DoxyCodeLine{84         \textcolor{keywordtype}{bool} biplane\_mode);}
+\DoxyCodeLine{85 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{86 \textcolor{comment}{        /***************************PUBLIC DLL FUNCTIONS END **************************/}}
+\DoxyCodeLine{87 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{88 }
+\DoxyCodeLine{89     \textcolor{keyword}{private}:}
+\DoxyCodeLine{90 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{91         \textcolor{comment}{/* *******************ESSENTIAL CLASS VARIABLES BEGIN *************************/}}
+\DoxyCodeLine{92 \textcolor{comment}{        /******************************(DO NOT EDIT)  *********************************/}}
+\DoxyCodeLine{93 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95         \textcolor{comment}{/*List Cost Functions}}
+\DoxyCodeLine{96 \textcolor{comment}{        In this function a cost function that will be loaded to the client and optimizer}}
+\DoxyCodeLine{97 \textcolor{comment}{        must be listed by name. The parameters should also be specified.*/}}
+\DoxyCodeLine{98         \textcolor{keywordtype}{void} listCostFunctions();}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100         \textcolor{comment}{/*Vector of Cost Functions*/}}
+\DoxyCodeLine{101         std::vector<CostFunction> available\_cost\_functions\_;}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{103         \textcolor{comment}{/*Active Cost Function*/}}
+\DoxyCodeLine{104         std::string active\_cost\_function\_;}
+\DoxyCodeLine{105 }
+\DoxyCodeLine{106 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{107 \textcolor{comment}{        /*********************ESSENTIAL CLASS VARIABLES END ***************************/}}
+\DoxyCodeLine{108 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110 }
+\DoxyCodeLine{111 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{112 \textcolor{comment}{        /*********************COST FUNCTION VARIABLES BEGIN ***************************/}}
+\DoxyCodeLine{113 \textcolor{comment}{        /******************************(DO NOT EDIT)  *********************************/}}
+\DoxyCodeLine{114 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{115 }
+\DoxyCodeLine{116         \textcolor{comment}{/*Stage Enum*/}}
+\DoxyCodeLine{117         Stage stage\_;}
+\DoxyCodeLine{118 }
+\DoxyCodeLine{119         \textcolor{comment}{/*Storage for GPU Metrics class*/}}
+\DoxyCodeLine{120         gpu\_cost\_function::GPUMetrics* gpu\_metrics\_;}
+\DoxyCodeLine{121 }
+\DoxyCodeLine{122         \textcolor{comment}{/*Storage for Data (images, poses ,etc.)*/}}
+\DoxyCodeLine{123         \textcolor{comment}{/*Pointer to Vector of GPU Frame Pointers*/}}
+\DoxyCodeLine{124         \textcolor{comment}{/*Camera A*/}}
+\DoxyCodeLine{125         std::vector<gpu\_cost\_function::GPUEdgeFrame*>* gpu\_edge\_frames\_A\_;}
+\DoxyCodeLine{126         std::vector<gpu\_cost\_function::GPUDilatedFrame*>* gpu\_dilated\_frames\_A\_;}
+\DoxyCodeLine{127         std::vector<gpu\_cost\_function::GPUIntensityFrame*>* gpu\_intensity\_frames\_A\_;}
+\DoxyCodeLine{128         \textcolor{comment}{/*Camera B*/}}
+\DoxyCodeLine{129         std::vector<gpu\_cost\_function::GPUEdgeFrame*>* gpu\_edge\_frames\_B\_;}
+\DoxyCodeLine{130         std::vector<gpu\_cost\_function::GPUDilatedFrame*>* gpu\_dilated\_frames\_B\_;}
+\DoxyCodeLine{131         std::vector<gpu\_cost\_function::GPUIntensityFrame*>* gpu\_intensity\_frames\_B\_;}
+\DoxyCodeLine{132 }
+\DoxyCodeLine{133         \textcolor{comment}{/*Pointer to Vector of principal GPU Model Pointer*/}}
+\DoxyCodeLine{134         gpu\_cost\_function::GPUModel* gpu\_principal\_model\_;}
+\DoxyCodeLine{135         \textcolor{comment}{/*Pointer to Vector of non-\/principal GPU Model Pointers*/}}
+\DoxyCodeLine{136         std::vector<gpu\_cost\_function::GPUModel*>* gpu\_non\_principal\_models\_;}
+\DoxyCodeLine{137         \textcolor{keywordtype}{float}* prin\_dist\_;}
+\DoxyCodeLine{138         \textcolor{comment}{/*Current Frame Index (0 based)*/}}
+\DoxyCodeLine{139         \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} current\_frame\_index\_;}
+\DoxyCodeLine{140 }
+\DoxyCodeLine{141         \textcolor{comment}{/*Pose Matrix*/}}
+\DoxyCodeLine{142         \mbox{\hyperlink{class_pose_matrix}{PoseMatrix}}* pose\_storage\_;}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{144         \textcolor{comment}{/*Biplane Mode?*/}}
+\DoxyCodeLine{145         \textcolor{keywordtype}{bool} biplane\_mode\_;}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{147 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{148 \textcolor{comment}{        /************************COST FUNCTION VARIABLES END***************************/}}
+\DoxyCodeLine{149 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{151 }
+\DoxyCodeLine{152         }
+\DoxyCodeLine{153 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{154 \textcolor{comment}{        /*********************CUSTOM COST FUNCTION VARIABLES BEGIN ********************/}}
+\DoxyCodeLine{155 \textcolor{comment}{        /******************************(DO NOT EDIT)  *********************************/}}
+\DoxyCodeLine{156 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{157         \textcolor{comment}{/*HEADERS THAT INTERACT WITH WIZARD*/}}
+\DoxyCodeLine{158         \textcolor{comment}{/*Custom Variable Headers for Cost Functions*/}}
+\DoxyCodeLine{159 \textcolor{preprocessor}{        \#include "{}sym\_trap\_functionCustomVariables.h"{}}}
+\DoxyCodeLine{160 \textcolor{preprocessor}{        \#include "{}DD\_NEW\_POLE\_CONSTRAINTCustomVariables.h"{}}}
+\DoxyCodeLine{161 \textcolor{preprocessor}{        \#include "{}DIRECT\_DILATION\_POLE\_CONSTRAINTCustomVariables.h"{}}}
+\DoxyCodeLine{162 \textcolor{preprocessor}{        \#include "{}DIRECT\_DILATION\_SAME\_ZCustomVariables.h"{}}}
+\DoxyCodeLine{163 \textcolor{preprocessor}{        \#include "{}DIRECT\_DILATION\_T1CustomVariables.h"{}}}
+\DoxyCodeLine{164 \textcolor{preprocessor}{        \#include "{}DIRECT\_DILATIONCustomVariables.h"{}}}
+\DoxyCodeLine{165 \textcolor{preprocessor}{        \#include "{}DIRECT\_MAHFOUZCustomVariables.h"{}}}
+\DoxyCodeLine{166         \textcolor{comment}{/*END HEADERS THAT INTERACT WITH WIZARD*/}}
+\DoxyCodeLine{167 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{168 \textcolor{comment}{        /************************CUSTOM COST FUNCTION VARIABLES END********************/}}
+\DoxyCodeLine{169 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{170 }
+\DoxyCodeLine{171 }
+\DoxyCodeLine{172 }
+\DoxyCodeLine{173 }
+\DoxyCodeLine{174 \textcolor{comment}{        /******************************** WARNING *************************************/}}
+\DoxyCodeLine{175 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{176 \textcolor{comment}{        /*************************DO NOT EDIT FUNCTIONS BELOW *************************/}}
+\DoxyCodeLine{177 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{178         \textcolor{comment}{/*FUNCTIONS THAT INTERACT WITH WIZARD*/}}
+\DoxyCodeLine{179         \textcolor{comment}{/*Cost Function Implementations*/}}
+\DoxyCodeLine{180         \textcolor{keywordtype}{double} costFunctionsym\_trap\_function();}
+\DoxyCodeLine{181         \textcolor{keywordtype}{double} costFunctionDD\_NEW\_POLE\_CONSTRAINT();}
+\DoxyCodeLine{182         \textcolor{keywordtype}{double} costFunctionDIRECT\_DILATION\_POLE\_CONSTRAINT();}
+\DoxyCodeLine{183         \textcolor{keywordtype}{double} costFunctionDIRECT\_DILATION\_SAME\_Z();}
+\DoxyCodeLine{184         \textcolor{keywordtype}{double} costFunctionDIRECT\_DILATION\_T1();}
+\DoxyCodeLine{185         \textcolor{keywordtype}{double} costFunctionDIRECT\_DILATION();}
+\DoxyCodeLine{186         \textcolor{keywordtype}{double} costFunctionDIRECT\_MAHFOUZ();}
+\DoxyCodeLine{187         \textcolor{comment}{/*Cost Function Initializations*/}}
+\DoxyCodeLine{188         \textcolor{keywordtype}{bool} initializesym\_trap\_function(std::string\& error\_message);}
+\DoxyCodeLine{189         \textcolor{keywordtype}{bool} initializeDD\_NEW\_POLE\_CONSTRAINT(std::string\& error\_message);}
+\DoxyCodeLine{190         \textcolor{keywordtype}{bool} initializeDIRECT\_DILATION\_POLE\_CONSTRAINT(std::string\& error\_message);}
+\DoxyCodeLine{191         \textcolor{keywordtype}{bool} initializeDIRECT\_DILATION\_SAME\_Z(std::string\& error\_message);}
+\DoxyCodeLine{192         \textcolor{keywordtype}{bool} initializeDIRECT\_DILATION\_T1(std::string\& error\_message);}
+\DoxyCodeLine{193         \textcolor{keywordtype}{bool} initializeDIRECT\_DILATION(std::string\& error\_message);}
+\DoxyCodeLine{194         \textcolor{keywordtype}{bool} initializeDIRECT\_MAHFOUZ(std::string\& error\_message);}
+\DoxyCodeLine{195         \textcolor{comment}{/*Cost Function Destructors*/}}
+\DoxyCodeLine{196         \textcolor{keywordtype}{bool} destructsym\_trap\_function(std::string\& error\_message);}
+\DoxyCodeLine{197         \textcolor{keywordtype}{bool} destructDD\_NEW\_POLE\_CONSTRAINT(std::string\& error\_message);}
+\DoxyCodeLine{198         \textcolor{keywordtype}{bool} destructDIRECT\_DILATION\_POLE\_CONSTRAINT(std::string\& error\_message);}
+\DoxyCodeLine{199         \textcolor{keywordtype}{bool} destructDIRECT\_DILATION\_SAME\_Z(std::string\& error\_message);}
+\DoxyCodeLine{200         \textcolor{keywordtype}{bool} destructDIRECT\_DILATION\_T1(std::string\& error\_message);}
+\DoxyCodeLine{201         \textcolor{keywordtype}{bool} destructDIRECT\_DILATION(std::string\& error\_message);}
+\DoxyCodeLine{202         \textcolor{keywordtype}{bool} destructDIRECT\_MAHFOUZ(std::string\& error\_message);}
+\DoxyCodeLine{203         \textcolor{comment}{/*END FUNCTIONS THAT INTERACT WITH WIZARD*/}}
+\DoxyCodeLine{204 \textcolor{comment}{        /******************************** END WARNING *********************************/}}
+\DoxyCodeLine{205 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{206 \textcolor{comment}{        /*************************DO NOT EDIT FUNCTIONS ABOVE *************************/}}
+\DoxyCodeLine{207 \textcolor{comment}{        /******************************************************************************/}}
+\DoxyCodeLine{208     \};}
+\DoxyCodeLine{209 \}}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{211 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//COSTFUNCTIONMANAGER\_H}}
+
+\end{DoxyCode}

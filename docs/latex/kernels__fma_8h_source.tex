@@ -1,0 +1,121 @@
+\hypertarget{kernels__fma_8h_source}{}\doxysection{kernels\+\_\+fma.\+h}
+\label{kernels__fma_8h_source}\index{lib/alglib/kernels\_fma.h@{lib/alglib/kernels\_fma.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_kernels\_fma\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_kernels\_fma\_h}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#define AE\_USE\_CPP}}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29 \textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{30 \{}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#if !defined(ALGLIB\_NO\_FAST\_KERNELS) \&\& defined(\_ALGLIB\_HAS\_AVX2\_INTRINSICS)}}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33 \textcolor{keywordtype}{double} rdotv\_fma(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{34     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{35     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{36     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{37 \textcolor{keywordtype}{double} rdotv2\_fma(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{38     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{39     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{40 \textcolor{keywordtype}{void} raddv\_fma(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{41      \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{42      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{43      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{44      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{45 \textcolor{keywordtype}{void} raddvx\_fma(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y, \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state *\_state);}
+\DoxyCodeLine{46 \textcolor{keywordtype}{void} rgemv\_straight\_fma(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{47     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a,}
+\DoxyCodeLine{48     \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{49 \textcolor{keywordtype}{void} rgemv\_transposed\_fma(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{50     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a,}
+\DoxyCodeLine{51     \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{52 \textcolor{keywordtype}{void} rgemvx\_straight\_fma(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{53     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a, \textcolor{keyword}{const} ae\_int\_t ia,}
+\DoxyCodeLine{54     \textcolor{keyword}{const} ae\_int\_t ja, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{55     \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{56 \textcolor{keywordtype}{void} rgemvx\_transposed\_fma(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{57     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a, \textcolor{keyword}{const} ae\_int\_t ia,}
+\DoxyCodeLine{58     \textcolor{keyword}{const} ae\_int\_t ja, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{59     ae\_state* \_state);}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61 \textcolor{keywordtype}{void} ablasf\_dotblkh\_fma(}
+\DoxyCodeLine{62     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src\_a,}
+\DoxyCodeLine{63     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src\_b,}
+\DoxyCodeLine{64     ae\_int\_t round\_length,}
+\DoxyCodeLine{65     ae\_int\_t block\_size,}
+\DoxyCodeLine{66     ae\_int\_t micro\_size,}
+\DoxyCodeLine{67     \textcolor{keywordtype}{double} *dst,}
+\DoxyCodeLine{68     ae\_int\_t dst\_stride);}
+\DoxyCodeLine{69 \textcolor{keywordtype}{void} spchol\_propagatefwd\_fma(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{70      ae\_int\_t cols0,}
+\DoxyCodeLine{71      ae\_int\_t blocksize,}
+\DoxyCodeLine{72      \textcolor{comment}{/* Integer */} ae\_vector* superrowidx,}
+\DoxyCodeLine{73      ae\_int\_t rbase,}
+\DoxyCodeLine{74      ae\_int\_t offdiagsize,}
+\DoxyCodeLine{75      \textcolor{comment}{/* Real    */} ae\_vector* rowstorage,}
+\DoxyCodeLine{76      ae\_int\_t offss,}
+\DoxyCodeLine{77      ae\_int\_t sstride,}
+\DoxyCodeLine{78      \textcolor{comment}{/* Real    */} ae\_vector* simdbuf,}
+\DoxyCodeLine{79      ae\_int\_t simdwidth,}
+\DoxyCodeLine{80      ae\_state *\_state);}
+\DoxyCodeLine{81 ae\_bool spchol\_updatekernelabc4\_fma(\textcolor{keywordtype}{double}* rowstorage,}
+\DoxyCodeLine{82      ae\_int\_t offss,}
+\DoxyCodeLine{83      ae\_int\_t twidth,}
+\DoxyCodeLine{84      ae\_int\_t offsu,}
+\DoxyCodeLine{85      ae\_int\_t uheight,}
+\DoxyCodeLine{86      ae\_int\_t urank,}
+\DoxyCodeLine{87      ae\_int\_t urowstride,}
+\DoxyCodeLine{88      ae\_int\_t uwidth,}
+\DoxyCodeLine{89      \textcolor{keywordtype}{double}* diagd,}
+\DoxyCodeLine{90      ae\_int\_t offsd,}
+\DoxyCodeLine{91      ae\_int\_t* raw2smap,}
+\DoxyCodeLine{92      ae\_int\_t* superrowidx,}
+\DoxyCodeLine{93      ae\_int\_t urbase,}
+\DoxyCodeLine{94      ae\_state *\_state);}
+\DoxyCodeLine{95 ae\_bool spchol\_updatekernel4444\_fma(}
+\DoxyCodeLine{96      \textcolor{keywordtype}{double}*  rowstorage,}
+\DoxyCodeLine{97      ae\_int\_t offss,}
+\DoxyCodeLine{98      ae\_int\_t sheight,}
+\DoxyCodeLine{99      ae\_int\_t offsu,}
+\DoxyCodeLine{100      ae\_int\_t uheight,}
+\DoxyCodeLine{101      \textcolor{keywordtype}{double}*  diagd,}
+\DoxyCodeLine{102      ae\_int\_t offsd,}
+\DoxyCodeLine{103      ae\_int\_t* raw2smap,}
+\DoxyCodeLine{104      ae\_int\_t* superrowidx,}
+\DoxyCodeLine{105      ae\_int\_t urbase,}
+\DoxyCodeLine{106      ae\_state *\_state);}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108 }
+\DoxyCodeLine{109 \textcolor{comment}{/* ALGLIB\_NO\_FAST\_KERNELS, \_ALGLIB\_HAS\_AVX2\_INTRINSICS */}}
+\DoxyCodeLine{110 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{112 \}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{115 }
+
+\end{DoxyCode}

@@ -1,0 +1,108 @@
+\hypertarget{sym__trap_8h_source}{}\doxysection{sym\+\_\+trap.\+h}
+\label{sym__trap_8h_source}\index{include/gui/sym\_trap.h@{include/gui/sym\_trap.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#include "{}ui\_sym\_trap.h"{}}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include "{}cost\_functions/CostFunctionManager.h"{}}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}core/data\_structures\_6D.h"{}}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <qdialog.h>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <QFile>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <QTextStream>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <QtWidgets/qfiledialog.h>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <QMessageBox>}}
+\DoxyCodeLine{11 \textcolor{comment}{//\#include "{}optimizer\_manager.h"{}}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <QVTKWidget.h>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <vtkImageData.h>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <vtkTextProperty.h>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <vtkAxis.h>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <vtkAxisActor2D.h>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <vtkChartXY.h>}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <vtkContextScene.h>}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <vtkContextView.h>}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <vtkCubeAxesActor2D.h>}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <vtkDataSetMapper.h>}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#include <vtkFloatArray.h>}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackball.h>}}
+\DoxyCodeLine{27 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballCamera.h>}}
+\DoxyCodeLine{28 \textcolor{preprocessor}{\#include <vtkNamedColors.h>}}
+\DoxyCodeLine{29 \textcolor{preprocessor}{\#include <vtkNew.h>}}
+\DoxyCodeLine{30 \textcolor{preprocessor}{\#include <vtkPlotPoints.h>}}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#include <vtkPNGWriter.h>}}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#include <vtkPointData.h>}}
+\DoxyCodeLine{33 \textcolor{preprocessor}{\#include <vtkPoints.h>}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#include <vtkPolyData.h>}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#include <vtkPolyDataMapper.h>}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#include <vtkProperty.h>}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#include <vtkRenderer.h>}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#include <vtkRenderWindow.h>}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#include <vtkRenderWindowInteractor.h>}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#include <vtkSimplePointsReader.h>}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#include <vtkSmartPointer.h>}}
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#include <vtkTable.h>}}
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#include <vtkWarpScalar.h>}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#include <iostream>}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#include <sstream>}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51 \textcolor{keyword}{class }\mbox{\hyperlink{classsym__trap}{sym\_trap}} :\textcolor{keyword}{public} QDialog}
+\DoxyCodeLine{52 \{}
+\DoxyCodeLine{53     Q\_OBJECT}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{keyword}{public}:}
+\DoxyCodeLine{56     \mbox{\hyperlink{classsym__trap}{sym\_trap}}(QWidget* parent = 0, Qt::WindowFlags flags = 0);}
+\DoxyCodeLine{57     \mbox{\hyperlink{classsym__trap}{\string~sym\_trap}}();}
+\DoxyCodeLine{58     \textcolor{comment}{//OptimizerManager* sym\_trap\_optimizer = new OptimizerManager();}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61     \textcolor{comment}{//Point6D pose;}}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{63     \mbox{\hyperlink{struct_point6_d}{Point6D}} compute\_mirror\_pose(\mbox{\hyperlink{struct_point6_d}{Point6D}} point);}
+\DoxyCodeLine{64     \textcolor{keyword}{static} \textcolor{keywordtype}{void} matmult4(\textcolor{keywordtype}{float} ans[4][4], \textcolor{keywordtype}{float} matrix1[4][4], \textcolor{keywordtype}{float} matrix2[4][4]);}
+\DoxyCodeLine{65     \textcolor{keyword}{static} \textcolor{keywordtype}{void} matmult3(\textcolor{keywordtype}{float} ans[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} matrix1[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} matrix2[3][3]);}
+\DoxyCodeLine{66     \textcolor{keyword}{static} \textcolor{keywordtype}{void} invert\_transform(\textcolor{keywordtype}{float} result[4][4], \textcolor{keyword}{const} \textcolor{keywordtype}{float} tran[4][4]);}
+\DoxyCodeLine{67     \textcolor{keyword}{static} \textcolor{keywordtype}{void} equivalent\_axis\_angle\_rotation(\textcolor{keywordtype}{float} rot[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} m[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} angle);}
+\DoxyCodeLine{68     \textcolor{keyword}{static} \textcolor{keywordtype}{void} cross\_product(\textcolor{keywordtype}{float} CP[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} v1[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} v2[3]);}
+\DoxyCodeLine{69     \textcolor{keyword}{static} \textcolor{keywordtype}{void} dot\_product(\textcolor{keywordtype}{float}\& result, \textcolor{keyword}{const} \textcolor{keywordtype}{float} vector1[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} vector2[3]);}
+\DoxyCodeLine{70     \textcolor{keyword}{static} \textcolor{keywordtype}{void} rotation\_matrix(\textcolor{keywordtype}{float} R[3][3], \mbox{\hyperlink{struct_point6_d}{Point6D}} pose);}
+\DoxyCodeLine{71     \textcolor{keyword}{static} \textcolor{keywordtype}{void} create\_312\_transform(\textcolor{keywordtype}{float} transform[4][4], \mbox{\hyperlink{struct_point6_d}{Point6D}} pose);}
+\DoxyCodeLine{72     \textcolor{keyword}{static} \textcolor{keywordtype}{void} getRotations312(\textcolor{keywordtype}{float}\& xr, \textcolor{keywordtype}{float}\& yr, \textcolor{keywordtype}{float}\& zr, \textcolor{keyword}{const} \textcolor{keywordtype}{float} Rot[3][3]);}
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74     \textcolor{keyword}{static} \textcolor{keywordtype}{void} copy\_matrix\_by\_value(\textcolor{keywordtype}{float}(\&new\_matrix)[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float}(\&old\_matrix)[3][3]);}
+\DoxyCodeLine{75     \textcolor{keywordtype}{void} create\_vector\_of\_poses(std::vector<Point6D>\& pose\_list, \mbox{\hyperlink{struct_point6_d}{Point6D}} pose);}
+\DoxyCodeLine{76 }
+\DoxyCodeLine{77     \textcolor{keyword}{template}<\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{78     std::vector<double> \textcolor{keyword}{static} linspace(T start\_in, T end\_in, \textcolor{keywordtype}{int} num\_in);}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80     \textcolor{keywordtype}{int} getIterCount();}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82     \textcolor{comment}{//void set\_pose(Point6D desired\_pose);}}
+\DoxyCodeLine{83     Ui::symTrap ui;}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{85 \textcolor{keyword}{public} Q\_SLOTS:}
+\DoxyCodeLine{86     \textcolor{keywordtype}{double} onCostFuncAtPoint(\textcolor{keywordtype}{double} result);}
+\DoxyCodeLine{87     \textcolor{keywordtype}{void} graphResults();}
+\DoxyCodeLine{88     \textcolor{keywordtype}{void} graphResults2D();}
+\DoxyCodeLine{89     \textcolor{keywordtype}{void} setIterCount(\textcolor{keywordtype}{int} n);}
+\DoxyCodeLine{90     \textcolor{keywordtype}{void} saveData();}
+\DoxyCodeLine{91     \textcolor{keywordtype}{void} loadData();}
+\DoxyCodeLine{92     \textcolor{keywordtype}{void} savePlot();}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{94 \textcolor{keyword}{private}:}
+\DoxyCodeLine{95     std::vector<Point6D> search\_space;}
+\DoxyCodeLine{96     QVTKWidget* plot\_widget;}
+\DoxyCodeLine{97     \textcolor{keywordtype}{int} iter\_count;}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100 signals:}
+\DoxyCodeLine{101     \textcolor{keywordtype}{void} Done();}
+\DoxyCodeLine{102 \};}
+
+\end{DoxyCode}

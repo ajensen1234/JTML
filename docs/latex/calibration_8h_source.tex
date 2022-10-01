@@ -1,0 +1,239 @@
+\hypertarget{calibration_8h_source}{}\doxysection{calibration.\+h}
+\label{calibration_8h_source}\index{include/core/calibration.h@{include/core/calibration.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef CALIBRATION\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define CALIBRATION\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Includes*/}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}camera\_calibration.h"{}} \textcolor{comment}{//*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*Vec 3*/}}
+\DoxyCodeLine{9 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_vect__3}{Vect\_3}} \{}
+\DoxyCodeLine{10     \mbox{\hyperlink{struct_vect__3}{Vect\_3}}(\textcolor{keywordtype}{float} v\_1, \textcolor{keywordtype}{float} v\_2, \textcolor{keywordtype}{float} v\_3) \{}
+\DoxyCodeLine{11         v\_1\_ = v\_1;}
+\DoxyCodeLine{12         v\_2\_ = v\_2;}
+\DoxyCodeLine{13         v\_3\_ = v\_3;}
+\DoxyCodeLine{14     \}}
+\DoxyCodeLine{15     \mbox{\hyperlink{struct_vect__3}{Vect\_3}}() \{}
+\DoxyCodeLine{16         v\_1\_ = 0;}
+\DoxyCodeLine{17         v\_2\_ = 0;}
+\DoxyCodeLine{18         v\_3\_ = 0;}
+\DoxyCodeLine{19     \}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21     \textcolor{comment}{/*Storage*/}}
+\DoxyCodeLine{22     \textcolor{keywordtype}{float} v\_1\_; \textcolor{keywordtype}{float} v\_2\_; \textcolor{keywordtype}{float} v\_3\_;}
+\DoxyCodeLine{23 \};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 \textcolor{comment}{/*3 by 3 Matrix*/}}
+\DoxyCodeLine{26 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} \{}
+\DoxyCodeLine{27     \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}}(\textcolor{keywordtype}{float} A\_11, \textcolor{keywordtype}{float} A\_12, \textcolor{keywordtype}{float} A\_13,}
+\DoxyCodeLine{28         \textcolor{keywordtype}{float} A\_21, \textcolor{keywordtype}{float} A\_22, \textcolor{keywordtype}{float} A\_23,}
+\DoxyCodeLine{29         \textcolor{keywordtype}{float} A\_31, \textcolor{keywordtype}{float} A\_32, \textcolor{keywordtype}{float} A\_33) \{}
+\DoxyCodeLine{30         A\_11\_ = A\_11; A\_12\_ = A\_12; A\_13\_ = A\_13;}
+\DoxyCodeLine{31         A\_21\_ = A\_21; A\_22\_ = A\_22; A\_23\_ = A\_23;}
+\DoxyCodeLine{32         A\_31\_ = A\_31; A\_32\_ = A\_32; A\_33\_ = A\_33;}
+\DoxyCodeLine{33     \};}
+\DoxyCodeLine{34     \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}}() \{}
+\DoxyCodeLine{35         A\_11\_ = 0; A\_12\_ = 0; A\_13\_ = 0;}
+\DoxyCodeLine{36         A\_21\_ = 0; A\_22\_ = 0; A\_23\_ = 0;}
+\DoxyCodeLine{37         A\_31\_ = 0; A\_32\_ = 0; A\_33\_ = 0;}
+\DoxyCodeLine{38     \}}
+\DoxyCodeLine{39     \textcolor{comment}{/*Storage*/}}
+\DoxyCodeLine{40     \textcolor{keywordtype}{float} A\_11\_; \textcolor{keywordtype}{float} A\_12\_; \textcolor{keywordtype}{float} A\_13\_;}
+\DoxyCodeLine{41     \textcolor{keywordtype}{float} A\_21\_; \textcolor{keywordtype}{float} A\_22\_; \textcolor{keywordtype}{float} A\_23\_;}
+\DoxyCodeLine{42     \textcolor{keywordtype}{float} A\_31\_; \textcolor{keywordtype}{float} A\_32\_; \textcolor{keywordtype}{float} A\_33\_;}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{comment}{/*Perform Transpose*/}}
+\DoxyCodeLine{45     \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} tranpose() \{}
+\DoxyCodeLine{46         \textcolor{keywordflow}{return} \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}}(}
+\DoxyCodeLine{47             A\_11\_, A\_21\_, A\_31\_,}
+\DoxyCodeLine{48             A\_12\_, A\_22\_, A\_32\_,}
+\DoxyCodeLine{49             A\_13\_, A\_23\_, A\_33\_);}
+\DoxyCodeLine{50     \};}
+\DoxyCodeLine{51 \};}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_calibration}{Calibration}} \{}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55     \textcolor{comment}{/* Constructors for Monoplane and Biplane*/}}
+\DoxyCodeLine{56     \mbox{\hyperlink{struct_calibration}{Calibration}}(\mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} monoplane\_principal) \{}
+\DoxyCodeLine{57         biplane\_calibration = \textcolor{keyword}{false};}
+\DoxyCodeLine{58         camera\_A\_principal\_ = monoplane\_principal;}
+\DoxyCodeLine{59     \};}
+\DoxyCodeLine{67     \mbox{\hyperlink{struct_calibration_a78e8ba05a938728a2d70bf792914ff51}{Calibration}}(\mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} biplane\_A\_principal, \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} biplane\_B\_principal,}
+\DoxyCodeLine{68         \mbox{\hyperlink{struct_vect__3}{Vect\_3}} origin\_B, \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} axes\_B) \{}
+\DoxyCodeLine{69         biplane\_calibration = \textcolor{keyword}{true};}
+\DoxyCodeLine{70         camera\_A\_principal\_ = biplane\_A\_principal;}
+\DoxyCodeLine{71         camera\_B\_principal\_ = biplane\_B\_principal;}
+\DoxyCodeLine{72         origin\_B\_ = origin\_B;}
+\DoxyCodeLine{73         axes\_B\_ = axes\_B;}
+\DoxyCodeLine{74     \};}
+\DoxyCodeLine{75     \mbox{\hyperlink{struct_calibration}{Calibration}}() \{}
+\DoxyCodeLine{76         biplane\_calibration = \textcolor{keyword}{false};}
+\DoxyCodeLine{77     \};}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{79     \textcolor{comment}{/*Calibrated For Biplane?*/}}
+\DoxyCodeLine{80     \textcolor{keywordtype}{bool} biplane\_calibration;}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82     \textcolor{comment}{/*Storage*/}}
+\DoxyCodeLine{83     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} camera\_A\_principal\_; \textcolor{comment}{/*used for both monoplane and biplane*/}}
+\DoxyCodeLine{84     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} camera\_B\_principal\_; \textcolor{comment}{/*only used for biplane*/}}
+\DoxyCodeLine{85     \mbox{\hyperlink{struct_vect__3}{Vect\_3}} origin\_B\_; \textcolor{comment}{/*Origin of Camera B with respect o A which is assumed to be at (0,0,0) */}}
+\DoxyCodeLine{86     \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} axes\_B\_; \textcolor{comment}{/*Orthogonal Coordinate System of B where A is assumed to have standard unit system*/}}
+\DoxyCodeLine{87 }
+\DoxyCodeLine{88     \textcolor{comment}{/*Perform Multiplication*/}}
+\DoxyCodeLine{89     \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} multiplication\_mat\_mat(\mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} X, \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} Y) \{}
+\DoxyCodeLine{90         \textcolor{keywordflow}{return} \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}}(}
+\DoxyCodeLine{91             X.A\_11\_*Y.A\_11\_ + X.A\_12\_*Y.A\_21\_ + X.A\_13\_*Y.A\_31\_,}
+\DoxyCodeLine{92             X.A\_11\_*Y.A\_12\_ + X.A\_12\_*Y.A\_22\_ + X.A\_13\_*Y.A\_32\_,}
+\DoxyCodeLine{93             X.A\_11\_*Y.A\_13\_ + X.A\_12\_*Y.A\_23\_ + X.A\_13\_*Y.A\_33\_,}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95             X.A\_21\_*Y.A\_11\_ + X.A\_22\_*Y.A\_21\_ + X.A\_23\_*Y.A\_31\_,}
+\DoxyCodeLine{96             X.A\_21\_*Y.A\_12\_ + X.A\_22\_*Y.A\_22\_ + X.A\_23\_*Y.A\_32\_,}
+\DoxyCodeLine{97             X.A\_21\_*Y.A\_13\_ + X.A\_22\_*Y.A\_23\_ + X.A\_23\_*Y.A\_33\_,}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{99             X.A\_31\_*Y.A\_11\_ + X.A\_32\_*Y.A\_21\_ + X.A\_33\_*Y.A\_31\_,}
+\DoxyCodeLine{100             X.A\_31\_*Y.A\_12\_ + X.A\_32\_*Y.A\_22\_ + X.A\_33\_*Y.A\_32\_,}
+\DoxyCodeLine{101             X.A\_31\_*Y.A\_13\_ + X.A\_32\_*Y.A\_23\_ + X.A\_33\_*Y.A\_33\_}
+\DoxyCodeLine{102             );}
+\DoxyCodeLine{103     \};}
+\DoxyCodeLine{104     \mbox{\hyperlink{struct_vect__3}{Vect\_3}} multiplication\_mat\_vec(\mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} X, \mbox{\hyperlink{struct_vect__3}{Vect\_3}} u) \{}
+\DoxyCodeLine{105         \textcolor{keywordflow}{return} \mbox{\hyperlink{struct_vect__3}{Vect\_3}}(}
+\DoxyCodeLine{106             X.A\_11\_*u.v\_1\_ + X.A\_12\_*u.v\_2\_ + X.A\_13\_*u.v\_3\_,}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108             X.A\_21\_*u.v\_1\_ + X.A\_22\_*u.v\_2\_ + X.A\_23\_*u.v\_3\_,}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110             X.A\_31\_*u.v\_1\_ + X.A\_32\_*u.v\_2\_ + X.A\_33\_*u.v\_3\_}
+\DoxyCodeLine{111             );}
+\DoxyCodeLine{112     \};}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114     \textcolor{comment}{/*Camera A Pose to Camera B Pose*/}}
+\DoxyCodeLine{115     \mbox{\hyperlink{struct_point6_d}{Point6D}} convert\_Pose\_A\_to\_Pose\_B(\mbox{\hyperlink{struct_point6_d}{Point6D}} poseA)\{}
+\DoxyCodeLine{116         \textcolor{keywordflow}{if} (biplane\_calibration) \{}
+\DoxyCodeLine{117             \textcolor{comment}{/*Deal with Location*/}}
+\DoxyCodeLine{118             \mbox{\hyperlink{struct_vect__3}{Vect\_3}} location\_B = multiplication\_mat\_vec(axes\_B\_.tranpose(),}
+\DoxyCodeLine{119                 \mbox{\hyperlink{struct_vect__3}{Vect\_3}}(poseA.x -\/ origin\_B\_.v\_1\_,}
+\DoxyCodeLine{120                 poseA.y -\/ origin\_B\_.v\_2\_,}
+\DoxyCodeLine{121                 poseA.z -\/ origin\_B\_.v\_3\_));}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{123             \textcolor{comment}{/*Deal with Orientation*/}}
+\DoxyCodeLine{124             \textcolor{comment}{/*Construct ROtation Matrices for A: Rz, Rx, Ry}}
+\DoxyCodeLine{125 \textcolor{comment}{            Then Find R = Rz*Rx*Ry}}
+\DoxyCodeLine{126 \textcolor{comment}{            Then Tranform as R\_B = Q'*R where Q is the axes\_B\_ matrix}}
+\DoxyCodeLine{127 \textcolor{comment}{            Then recover theta\_x,y, and z for camera B (may not be unique)*/}}
+\DoxyCodeLine{128             \textcolor{comment}{/*Convert To Rads*/}}
+\DoxyCodeLine{129             \textcolor{keywordtype}{float} PI = 3.141592653589793238462643383279502884;}
+\DoxyCodeLine{130             \textcolor{keywordtype}{float} theta\_x\_A = poseA.xa*(PI / 180.0);}
+\DoxyCodeLine{131             \textcolor{keywordtype}{float} theta\_y\_A = poseA.ya*(PI / 180.0);}
+\DoxyCodeLine{132             \textcolor{keywordtype}{float} theta\_z\_A = poseA.za*(PI / 180.0);}
+\DoxyCodeLine{133             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_x(}
+\DoxyCodeLine{134                 1, 0, 0,}
+\DoxyCodeLine{135                 0, cos(theta\_x\_A), -\/1 * sin(theta\_x\_A),}
+\DoxyCodeLine{136                 0, sin(theta\_x\_A), cos(theta\_x\_A));}
+\DoxyCodeLine{137             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_y(}
+\DoxyCodeLine{138                 cos(theta\_y\_A), 0, sin(theta\_y\_A),}
+\DoxyCodeLine{139                 0, 1, 0,}
+\DoxyCodeLine{140                 -\/1 * sin(theta\_y\_A), 0, cos(theta\_y\_A));}
+\DoxyCodeLine{141             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_z(}
+\DoxyCodeLine{142                 cos(theta\_z\_A), -\/1 * sin(theta\_z\_A), 0,}
+\DoxyCodeLine{143                 sin(theta\_z\_A), cos(theta\_z\_A), 0,}
+\DoxyCodeLine{144                 0, 0, 1);}
+\DoxyCodeLine{145             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R = multiplication\_mat\_mat(R\_z, multiplication\_mat\_mat(R\_x, R\_y));}
+\DoxyCodeLine{146             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_B = multiplication\_mat\_mat(axes\_B\_.tranpose(), R);}
+\DoxyCodeLine{147 }
+\DoxyCodeLine{148             \textcolor{comment}{/*Algorithm To Recover Z -\/ X -\/ Y Euler Angles*/}}
+\DoxyCodeLine{149             \textcolor{keywordtype}{float} theta\_x\_B, theta\_y\_B, theta\_z\_B;}
+\DoxyCodeLine{150             \textcolor{keywordflow}{if} (R\_B.A\_32\_ < 1) \{}
+\DoxyCodeLine{151                 \textcolor{keywordflow}{if} (R\_B.A\_32\_ > -\/1) \{}
+\DoxyCodeLine{152                     theta\_x\_B = asin(R\_B.A\_32\_);}
+\DoxyCodeLine{153                     theta\_z\_B = atan2(-\/1 * R\_B.A\_12\_, R\_B.A\_22\_);}
+\DoxyCodeLine{154                     theta\_y\_B = atan2(-\/1 * R\_B.A\_31\_, R\_B.A\_33\_);}
+\DoxyCodeLine{155 }
+\DoxyCodeLine{156                 \}}
+\DoxyCodeLine{157                 \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{158                     theta\_x\_B = -\/PI / 2.0;}
+\DoxyCodeLine{159                     theta\_z\_B = -\/1 * atan2(R\_B.A\_13\_, R\_B.A\_11\_);}
+\DoxyCodeLine{160                     theta\_y\_B = 0;}
+\DoxyCodeLine{161                 \}}
+\DoxyCodeLine{162             \}}
+\DoxyCodeLine{163             \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{164                 theta\_x\_B = PI / 2.0;}
+\DoxyCodeLine{165                 theta\_z\_B = atan2(R\_B.A\_13\_, R\_B.A\_11\_);}
+\DoxyCodeLine{166                 theta\_y\_B = 0;}
+\DoxyCodeLine{167             \}}
+\DoxyCodeLine{168 }
+\DoxyCodeLine{169             \textcolor{comment}{/*Return New Pose*/}}
+\DoxyCodeLine{170             \textcolor{keywordflow}{return} \mbox{\hyperlink{struct_point6_d}{Point6D}}(location\_B.v\_1\_, location\_B.v\_2\_, location\_B.v\_3\_,}
+\DoxyCodeLine{171                 theta\_x\_B * (180.0 / PI), theta\_y\_B * (180.0 / PI), theta\_z\_B * (180.0 / PI));}
+\DoxyCodeLine{172         \}}
+\DoxyCodeLine{173         \textcolor{keywordflow}{else} \textcolor{keywordflow}{return} poseA; \textcolor{comment}{//Just return the same.}}
+\DoxyCodeLine{174     \};}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{176     \textcolor{comment}{/*Camera B Pose to Camera A Pose*/}}
+\DoxyCodeLine{177     \mbox{\hyperlink{struct_point6_d}{Point6D}} convert\_Pose\_B\_to\_Pose\_A(\mbox{\hyperlink{struct_point6_d}{Point6D}} poseA)\{}
+\DoxyCodeLine{178         \textcolor{keywordflow}{if} (biplane\_calibration) \{}
+\DoxyCodeLine{179             \textcolor{comment}{/*Deal with Location*/}}
+\DoxyCodeLine{180             \mbox{\hyperlink{struct_vect__3}{Vect\_3}} location\_B = multiplication\_mat\_vec(axes\_B\_,}
+\DoxyCodeLine{181                 \mbox{\hyperlink{struct_vect__3}{Vect\_3}}(poseA.x, poseA.y, poseA.z));}
+\DoxyCodeLine{182             location\_B = \mbox{\hyperlink{struct_vect__3}{Vect\_3}}(location\_B.v\_1\_ + origin\_B\_.v\_1\_,}
+\DoxyCodeLine{183                 location\_B.v\_2\_ + origin\_B\_.v\_2\_,}
+\DoxyCodeLine{184                 location\_B.v\_3\_ + origin\_B\_.v\_3\_);}
+\DoxyCodeLine{185 }
+\DoxyCodeLine{186             \textcolor{comment}{/*Deal with Orientation*/}}
+\DoxyCodeLine{187             \textcolor{comment}{/*Construct ROtation Matrices for B: Rz, Rx, Ry}}
+\DoxyCodeLine{188 \textcolor{comment}{            Then Find R = Rz*Rx*Ry}}
+\DoxyCodeLine{189 \textcolor{comment}{            Then Tranform as R\_B = Q'*R*Q where Q is the axes\_B\_ matrix}}
+\DoxyCodeLine{190 \textcolor{comment}{            Then recover theta\_x,y, and z for camera B (may not be unique)*/}}
+\DoxyCodeLine{191             \textcolor{comment}{/*Convert To Rads*/}}
+\DoxyCodeLine{192             \textcolor{keywordtype}{float} PI = 3.141592653589793238462643383279502884;}
+\DoxyCodeLine{193             \textcolor{keywordtype}{float} theta\_x\_A = poseA.xa*(PI / 180.0);}
+\DoxyCodeLine{194             \textcolor{keywordtype}{float} theta\_y\_A = poseA.ya*(PI / 180.0);}
+\DoxyCodeLine{195             \textcolor{keywordtype}{float} theta\_z\_A = poseA.za*(PI / 180.0);}
+\DoxyCodeLine{196             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_x(}
+\DoxyCodeLine{197                 1, 0, 0,}
+\DoxyCodeLine{198                 0, cos(theta\_x\_A), -\/1 * sin(theta\_x\_A),}
+\DoxyCodeLine{199                 0, sin(theta\_x\_A), cos(theta\_x\_A));}
+\DoxyCodeLine{200             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_y(}
+\DoxyCodeLine{201                 cos(theta\_y\_A), 0, sin(theta\_y\_A),}
+\DoxyCodeLine{202                 0, 1, 0,}
+\DoxyCodeLine{203                 -\/1 * sin(theta\_y\_A), 0, cos(theta\_y\_A));}
+\DoxyCodeLine{204             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_z(}
+\DoxyCodeLine{205                 cos(theta\_z\_A), -\/1 * sin(theta\_z\_A), 0,}
+\DoxyCodeLine{206                 sin(theta\_z\_A), cos(theta\_z\_A), 0,}
+\DoxyCodeLine{207                 0, 0, 1);}
+\DoxyCodeLine{208             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R = multiplication\_mat\_mat(R\_z, multiplication\_mat\_mat(R\_x, R\_y));}
+\DoxyCodeLine{209             \mbox{\hyperlink{struct_matrix__3__3}{Matrix\_3\_3}} R\_B = multiplication\_mat\_mat(axes\_B\_, R);}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{211             \textcolor{comment}{/*Algorithm To Recover Z -\/ X -\/ Y Euler Angles*/}}
+\DoxyCodeLine{212             \textcolor{keywordtype}{float} theta\_x\_B, theta\_y\_B, theta\_z\_B;}
+\DoxyCodeLine{213             \textcolor{keywordflow}{if} (R\_B.A\_32\_ < 1) \{}
+\DoxyCodeLine{214                 \textcolor{keywordflow}{if} (R\_B.A\_32\_ > -\/1) \{}
+\DoxyCodeLine{215                     theta\_x\_B = asin(R\_B.A\_32\_);}
+\DoxyCodeLine{216                     theta\_z\_B = atan2(-\/1 * R\_B.A\_12\_, R\_B.A\_22\_);}
+\DoxyCodeLine{217                     theta\_y\_B = atan2(-\/1 * R\_B.A\_31\_, R\_B.A\_33\_);}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{219                 \}}
+\DoxyCodeLine{220                 \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{221                     theta\_x\_B = -\/PI / 2.0;}
+\DoxyCodeLine{222                     theta\_z\_B = -\/1 * atan2(R\_B.A\_13\_, R\_B.A\_11\_);}
+\DoxyCodeLine{223                     theta\_y\_B = 0;}
+\DoxyCodeLine{224                 \}}
+\DoxyCodeLine{225             \}}
+\DoxyCodeLine{226             \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{227                 theta\_x\_B = PI / 2.0;}
+\DoxyCodeLine{228                 theta\_z\_B = atan2(R\_B.A\_13\_, R\_B.A\_11\_);}
+\DoxyCodeLine{229                 theta\_y\_B = 0;}
+\DoxyCodeLine{230             \}}
+\DoxyCodeLine{231 }
+\DoxyCodeLine{232             \textcolor{comment}{/*Return New Pose*/}}
+\DoxyCodeLine{233             \textcolor{keywordflow}{return} \mbox{\hyperlink{struct_point6_d}{Point6D}}(location\_B.v\_1\_, location\_B.v\_2\_, location\_B.v\_3\_,}
+\DoxyCodeLine{234                 theta\_x\_B * (180.0 / PI), theta\_y\_B * (180.0 / PI), theta\_z\_B * (180.0 / PI));}
+\DoxyCodeLine{235         \}}
+\DoxyCodeLine{236         \textcolor{keywordflow}{else} \textcolor{keywordflow}{return} poseA; \textcolor{comment}{//Just return the same.}}
+\DoxyCodeLine{237     \};}
+\DoxyCodeLine{238 }
+\DoxyCodeLine{239 \};}
+\DoxyCodeLine{240 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* CALIBRATION\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

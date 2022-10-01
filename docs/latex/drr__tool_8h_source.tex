@@ -1,0 +1,82 @@
+\hypertarget{drr__tool_8h_source}{}\doxysection{drr\+\_\+tool.\+h}
+\label{drr__tool_8h_source}\index{include/gui/drr\_tool.h@{include/gui/drr\_tool.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef DRR\_TOOL\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define DRR\_TOOL\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <qdialog.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}ui\_drr\_tool.h"{}}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{comment}{/*VTK*/}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballActor.h>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <vtkRenderer.h>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <vtkSTLReader.h>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vtkSmartPointer.h>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <vtkRenderWindow.h>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <vtkActor.h>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <vtkPolyDataMapper.h>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <vtkCamera.h>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <vtkProperty.h>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <vtkAlgorithm.h>}}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{comment}{/*Models*/}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}core/model.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 \textcolor{comment}{/*GPU Models*/}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include "{}gpu/gpu\_model.cuh"{}}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{comment}{//About JTA Popup Header}}
+\DoxyCodeLine{29 \textcolor{keyword}{class }\mbox{\hyperlink{class_d_r_r_tool}{DRRTool}} : \textcolor{keyword}{public} QDialog}
+\DoxyCodeLine{30 \{}
+\DoxyCodeLine{31     Q\_OBJECT}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33 \textcolor{keyword}{public}:}
+\DoxyCodeLine{34     \mbox{\hyperlink{class_d_r_r_tool}{DRRTool}}(\mbox{\hyperlink{class_model}{Model}} model, \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} calibration, \textcolor{keywordtype}{double} model\_z\_plane, QWidget *parent = 0, Qt::WindowFlags flags = 0);}
+\DoxyCodeLine{35     \mbox{\hyperlink{class_d_r_r_tool}{\string~DRRTool}}();}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{comment}{/*Draw DRR*/}}
+\DoxyCodeLine{38     \textcolor{keywordtype}{void} DrawDRR();}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{keyword}{public} slots:}
+\DoxyCodeLine{41     \textcolor{comment}{/*Threshold Changes*/}}
+\DoxyCodeLine{42     \textcolor{keywordtype}{void} on\_minLowerSpinBox\_valueChanged();}
+\DoxyCodeLine{43     \textcolor{keywordtype}{void} on\_maxLowerSpinBox\_valueChanged();}
+\DoxyCodeLine{44     \textcolor{keywordtype}{void} on\_minUpperSpinBox\_valueChanged();}
+\DoxyCodeLine{45     \textcolor{keywordtype}{void} on\_maxUpperSpinBox\_valueChanged();}
+\DoxyCodeLine{46     \textcolor{keywordtype}{void} on\_minSlider\_valueChanged();}
+\DoxyCodeLine{47     \textcolor{keywordtype}{void} on\_maxSlider\_valueChanged();}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49 \textcolor{keyword}{private}:}
+\DoxyCodeLine{50     Ui::drrTool ui;}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52     \textcolor{comment}{/*VTK*/}}
+\DoxyCodeLine{53     vtkSmartPointer<vtkRenderer> renderer\_;}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55     \textcolor{comment}{/*Actor and Mapper and Model (CPU and GPU*)*/}}
+\DoxyCodeLine{56     vtkSmartPointer<vtkActor> actor\_;}
+\DoxyCodeLine{57     vtkSmartPointer<vtkPolyDataMapper> mapper\_;}
+\DoxyCodeLine{58     \mbox{\hyperlink{class_model}{Model}} model\_;}
+\DoxyCodeLine{59     gpu\_cost\_function::GPUModel* gpu\_model\_;}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61     \textcolor{comment}{/*Camera Stuff*/}}
+\DoxyCodeLine{62     \textcolor{keywordtype}{float} principal\_distance\_;}
+\DoxyCodeLine{63     \textcolor{keywordtype}{float} pixel\_pitch\_;}
+\DoxyCodeLine{64     \textcolor{keywordtype}{float} principal\_y\_;}
+\DoxyCodeLine{65     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} calibration\_;}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67     \textcolor{comment}{/*Array for Storing Device Image on Host*/}}
+\DoxyCodeLine{68     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}* host\_image\_;}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70     \textcolor{comment}{/*QImage for Converting Host to Viewable Image*/}}
+\DoxyCodeLine{71     QImage qt\_host\_image\_;}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74 \};}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// DRR\_TOOL\_H}}
+
+\end{DoxyCode}

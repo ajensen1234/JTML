@@ -1,0 +1,863 @@
+\hypertarget{integration_8h_source}{}\doxysection{integration.\+h}
+\label{integration_8h_source}\index{lib/alglib/integration.h@{lib/alglib/integration.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_integration\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_integration\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include "{}alglibmisc.h"{}}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#include "{}linalg.h"{}}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include "{}specialfunctions.h"{}}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{29 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{33 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{34 \{}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GKQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AUTOGK) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{40 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{41 \{}
+\DoxyCodeLine{42     ae\_int\_t terminationtype;}
+\DoxyCodeLine{43     ae\_int\_t nfev;}
+\DoxyCodeLine{44     ae\_int\_t nintervals;}
+\DoxyCodeLine{45 \} \mbox{\hyperlink{structalglib__impl_1_1autogkreport}{autogkreport}};}
+\DoxyCodeLine{46 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{47 \{}
+\DoxyCodeLine{48     \textcolor{keywordtype}{double} a;}
+\DoxyCodeLine{49     \textcolor{keywordtype}{double} b;}
+\DoxyCodeLine{50     \textcolor{keywordtype}{double} eps;}
+\DoxyCodeLine{51     \textcolor{keywordtype}{double} xwidth;}
+\DoxyCodeLine{52     \textcolor{keywordtype}{double} x;}
+\DoxyCodeLine{53     \textcolor{keywordtype}{double} f;}
+\DoxyCodeLine{54     ae\_int\_t info;}
+\DoxyCodeLine{55     \textcolor{keywordtype}{double} r;}
+\DoxyCodeLine{56     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} heap;}
+\DoxyCodeLine{57     ae\_int\_t heapsize;}
+\DoxyCodeLine{58     ae\_int\_t heapwidth;}
+\DoxyCodeLine{59     ae\_int\_t heapused;}
+\DoxyCodeLine{60     \textcolor{keywordtype}{double} sumerr;}
+\DoxyCodeLine{61     \textcolor{keywordtype}{double} sumabs;}
+\DoxyCodeLine{62     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} qn;}
+\DoxyCodeLine{63     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} wg;}
+\DoxyCodeLine{64     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} wk;}
+\DoxyCodeLine{65     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} wr;}
+\DoxyCodeLine{66     ae\_int\_t n;}
+\DoxyCodeLine{67     \mbox{\hyperlink{structalglib__impl_1_1rcommstate}{rcommstate}} rstate;}
+\DoxyCodeLine{68 \} \mbox{\hyperlink{structalglib__impl_1_1autogkinternalstate}{autogkinternalstate}};}
+\DoxyCodeLine{69 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{70 \{}
+\DoxyCodeLine{71     \textcolor{keywordtype}{double} a;}
+\DoxyCodeLine{72     \textcolor{keywordtype}{double} b;}
+\DoxyCodeLine{73     \textcolor{keywordtype}{double} alpha;}
+\DoxyCodeLine{74     \textcolor{keywordtype}{double} beta;}
+\DoxyCodeLine{75     \textcolor{keywordtype}{double} xwidth;}
+\DoxyCodeLine{76     \textcolor{keywordtype}{double} x;}
+\DoxyCodeLine{77     \textcolor{keywordtype}{double} xminusa;}
+\DoxyCodeLine{78     \textcolor{keywordtype}{double} bminusx;}
+\DoxyCodeLine{79     ae\_bool needf;}
+\DoxyCodeLine{80     \textcolor{keywordtype}{double} f;}
+\DoxyCodeLine{81     ae\_int\_t wrappermode;}
+\DoxyCodeLine{82     \mbox{\hyperlink{structalglib__impl_1_1autogkinternalstate}{autogkinternalstate}} internalstate;}
+\DoxyCodeLine{83     \mbox{\hyperlink{structalglib__impl_1_1rcommstate}{rcommstate}} rstate;}
+\DoxyCodeLine{84     \textcolor{keywordtype}{double} v;}
+\DoxyCodeLine{85     ae\_int\_t terminationtype;}
+\DoxyCodeLine{86     ae\_int\_t nfev;}
+\DoxyCodeLine{87     ae\_int\_t nintervals;}
+\DoxyCodeLine{88 \} \mbox{\hyperlink{structalglib__impl_1_1autogkstate}{autogkstate}};}
+\DoxyCodeLine{89 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{90 }
+\DoxyCodeLine{91 \}}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{94 \textcolor{comment}{//}}
+\DoxyCodeLine{95 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{96 \textcolor{comment}{//}}
+\DoxyCodeLine{98 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{99 \{}
+\DoxyCodeLine{100 }
+\DoxyCodeLine{101 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{103 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GKQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{106 }
+\DoxyCodeLine{107 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{108 }
+\DoxyCodeLine{109 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AUTOGK) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{110 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{111 \textcolor{comment}{Integration report:}}
+\DoxyCodeLine{112 \textcolor{comment}{* TerminationType = completetion code:}}
+\DoxyCodeLine{113 \textcolor{comment}{    * -\/5    non-\/convergence of Gauss-\/Kronrod nodes}}
+\DoxyCodeLine{114 \textcolor{comment}{            calculation subroutine.}}
+\DoxyCodeLine{115 \textcolor{comment}{    * -\/1    incorrect parameters were specified}}
+\DoxyCodeLine{116 \textcolor{comment}{    *  1    OK}}
+\DoxyCodeLine{117 \textcolor{comment}{* Rep.NFEV countains number of function calculations}}
+\DoxyCodeLine{118 \textcolor{comment}{* Rep.NIntervals contains number of intervals [a,b]}}
+\DoxyCodeLine{119 \textcolor{comment}{  was partitioned into.}}
+\DoxyCodeLine{120 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{121 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}}}
+\DoxyCodeLine{122 \{}
+\DoxyCodeLine{123 \textcolor{keyword}{public}:}
+\DoxyCodeLine{124     \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}}();}
+\DoxyCodeLine{125     \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}} \&rhs);}
+\DoxyCodeLine{126     \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}} \&rhs);}
+\DoxyCodeLine{127     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\string~\_autogkreport\_owner}}();}
+\DoxyCodeLine{128     \mbox{\hyperlink{structalglib__impl_1_1autogkreport}{alglib\_impl::autogkreport}}* c\_ptr();}
+\DoxyCodeLine{129     \mbox{\hyperlink{structalglib__impl_1_1autogkreport}{alglib\_impl::autogkreport}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{130 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{131     \mbox{\hyperlink{structalglib__impl_1_1autogkreport}{alglib\_impl::autogkreport}} *p\_struct;}
+\DoxyCodeLine{132 \};}
+\DoxyCodeLine{133 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__autogkreport__owner}{\_autogkreport\_owner}}}
+\DoxyCodeLine{134 \{}
+\DoxyCodeLine{135 \textcolor{keyword}{public}:}
+\DoxyCodeLine{136     \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}}();}
+\DoxyCodeLine{137     \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}} \&rhs);}
+\DoxyCodeLine{138     \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}} \&rhs);}
+\DoxyCodeLine{139     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1autogkreport}{\string~autogkreport}}();}
+\DoxyCodeLine{140     ae\_int\_t \&terminationtype;}
+\DoxyCodeLine{141     ae\_int\_t \&nfev;}
+\DoxyCodeLine{142     ae\_int\_t \&nintervals;}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{144 \};}
+\DoxyCodeLine{145 }
+\DoxyCodeLine{146 }
+\DoxyCodeLine{147 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{148 \textcolor{comment}{This structure stores state of the integration algorithm.}}
+\DoxyCodeLine{149 \textcolor{comment}{}}
+\DoxyCodeLine{150 \textcolor{comment}{Although this class has public fields,  they are not intended for external}}
+\DoxyCodeLine{151 \textcolor{comment}{use. You should use ALGLIB functions to work with this class:}}
+\DoxyCodeLine{152 \textcolor{comment}{* autogksmooth()/AutoGKSmoothW()/... to create objects}}
+\DoxyCodeLine{153 \textcolor{comment}{* autogkintegrate() to begin integration}}
+\DoxyCodeLine{154 \textcolor{comment}{* autogkresults() to get results}}
+\DoxyCodeLine{155 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{156 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}}}
+\DoxyCodeLine{157 \{}
+\DoxyCodeLine{158 \textcolor{keyword}{public}:}
+\DoxyCodeLine{159     \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}}();}
+\DoxyCodeLine{160     \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}} \&rhs);}
+\DoxyCodeLine{161     \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}} \&rhs);}
+\DoxyCodeLine{162     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\string~\_autogkstate\_owner}}();}
+\DoxyCodeLine{163     \mbox{\hyperlink{structalglib__impl_1_1autogkstate}{alglib\_impl::autogkstate}}* c\_ptr();}
+\DoxyCodeLine{164     \mbox{\hyperlink{structalglib__impl_1_1autogkstate}{alglib\_impl::autogkstate}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{165 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{166     \mbox{\hyperlink{structalglib__impl_1_1autogkstate}{alglib\_impl::autogkstate}} *p\_struct;}
+\DoxyCodeLine{167 \};}
+\DoxyCodeLine{168 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__autogkstate__owner}{\_autogkstate\_owner}}}
+\DoxyCodeLine{169 \{}
+\DoxyCodeLine{170 \textcolor{keyword}{public}:}
+\DoxyCodeLine{171     \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}}();}
+\DoxyCodeLine{172     \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&rhs);}
+\DoxyCodeLine{173     \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&rhs);}
+\DoxyCodeLine{174     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1autogkstate}{\string~autogkstate}}();}
+\DoxyCodeLine{175     ae\_bool \&needf;}
+\DoxyCodeLine{176     \textcolor{keywordtype}{double} \&x;}
+\DoxyCodeLine{177     \textcolor{keywordtype}{double} \&xminusa;}
+\DoxyCodeLine{178     \textcolor{keywordtype}{double} \&bminusx;}
+\DoxyCodeLine{179     \textcolor{keywordtype}{double} \&f;}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181 \};}
+\DoxyCodeLine{182 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{183 }
+\DoxyCodeLine{184 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{185 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{186 \textcolor{comment}{Computation of nodes and weights for a Gauss quadrature formula}}
+\DoxyCodeLine{187 \textcolor{comment}{}}
+\DoxyCodeLine{188 \textcolor{comment}{The algorithm generates the N-\/point Gauss quadrature formula  with  weight}}
+\DoxyCodeLine{189 \textcolor{comment}{function given by coefficients alpha and beta  of  a  recurrence  relation}}
+\DoxyCodeLine{190 \textcolor{comment}{which generates a system of orthogonal polynomials:}}
+\DoxyCodeLine{191 \textcolor{comment}{}}
+\DoxyCodeLine{192 \textcolor{comment}{P-\/1(x)   =  0}}
+\DoxyCodeLine{193 \textcolor{comment}{P0(x)    =  1}}
+\DoxyCodeLine{194 \textcolor{comment}{Pn+1(x)  =  (x-\/alpha(n))*Pn(x)  -\/  beta(n)*Pn-\/1(x)}}
+\DoxyCodeLine{195 \textcolor{comment}{}}
+\DoxyCodeLine{196 \textcolor{comment}{and zeroth moment Mu0}}
+\DoxyCodeLine{197 \textcolor{comment}{}}
+\DoxyCodeLine{198 \textcolor{comment}{Mu0 = integral(W(x)dx,a,b)}}
+\DoxyCodeLine{199 \textcolor{comment}{}}
+\DoxyCodeLine{200 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{201 \textcolor{comment}{    Alpha   -\/   array[0..N-\/1], alpha coefficients}}
+\DoxyCodeLine{202 \textcolor{comment}{    Beta    -\/   array[0..N-\/1], beta coefficients}}
+\DoxyCodeLine{203 \textcolor{comment}{                Zero-\/indexed element is not used and may be arbitrary.}}
+\DoxyCodeLine{204 \textcolor{comment}{                Beta[I]>0.}}
+\DoxyCodeLine{205 \textcolor{comment}{    Mu0     -\/   zeroth moment of the weight function.}}
+\DoxyCodeLine{206 \textcolor{comment}{    N       -\/   number of nodes of the quadrature formula, N>=1}}
+\DoxyCodeLine{207 \textcolor{comment}{}}
+\DoxyCodeLine{208 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{209 \textcolor{comment}{    Info    -\/   error code:}}
+\DoxyCodeLine{210 \textcolor{comment}{                * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{211 \textcolor{comment}{                * -\/2    Beta[i]<=0}}
+\DoxyCodeLine{212 \textcolor{comment}{                * -\/1    incorrect N was passed}}
+\DoxyCodeLine{213 \textcolor{comment}{                *  1    OK}}
+\DoxyCodeLine{214 \textcolor{comment}{    X       -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{215 \textcolor{comment}{                in ascending order.}}
+\DoxyCodeLine{216 \textcolor{comment}{    W       -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{217 \textcolor{comment}{}}
+\DoxyCodeLine{218 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{219 \textcolor{comment}{     Copyright 2005-\/2009 by Bochkanov Sergey}}
+\DoxyCodeLine{220 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{221 \textcolor{keywordtype}{void} gqgeneraterec(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&alpha, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&beta, \textcolor{keyword}{const} \textcolor{keywordtype}{double} mu0, \textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{222 }
+\DoxyCodeLine{223 }
+\DoxyCodeLine{224 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{225 \textcolor{comment}{Computation of nodes and weights for a Gauss-\/Lobatto quadrature formula}}
+\DoxyCodeLine{226 \textcolor{comment}{}}
+\DoxyCodeLine{227 \textcolor{comment}{The algorithm generates the N-\/point Gauss-\/Lobatto quadrature formula  with}}
+\DoxyCodeLine{228 \textcolor{comment}{weight function given by coefficients alpha and beta of a recurrence which}}
+\DoxyCodeLine{229 \textcolor{comment}{generates a system of orthogonal polynomials.}}
+\DoxyCodeLine{230 \textcolor{comment}{}}
+\DoxyCodeLine{231 \textcolor{comment}{P-\/1(x)   =  0}}
+\DoxyCodeLine{232 \textcolor{comment}{P0(x)    =  1}}
+\DoxyCodeLine{233 \textcolor{comment}{Pn+1(x)  =  (x-\/alpha(n))*Pn(x)  -\/  beta(n)*Pn-\/1(x)}}
+\DoxyCodeLine{234 \textcolor{comment}{}}
+\DoxyCodeLine{235 \textcolor{comment}{and zeroth moment Mu0}}
+\DoxyCodeLine{236 \textcolor{comment}{}}
+\DoxyCodeLine{237 \textcolor{comment}{Mu0 = integral(W(x)dx,a,b)}}
+\DoxyCodeLine{238 \textcolor{comment}{}}
+\DoxyCodeLine{239 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{240 \textcolor{comment}{    Alpha   -\/   array[0..N-\/2], alpha coefficients}}
+\DoxyCodeLine{241 \textcolor{comment}{    Beta    -\/   array[0..N-\/2], beta coefficients.}}
+\DoxyCodeLine{242 \textcolor{comment}{                Zero-\/indexed element is not used, may be arbitrary.}}
+\DoxyCodeLine{243 \textcolor{comment}{                Beta[I]>0}}
+\DoxyCodeLine{244 \textcolor{comment}{    Mu0     -\/   zeroth moment of the weighting function.}}
+\DoxyCodeLine{245 \textcolor{comment}{    A       -\/   left boundary of the integration interval.}}
+\DoxyCodeLine{246 \textcolor{comment}{    B       -\/   right boundary of the integration interval.}}
+\DoxyCodeLine{247 \textcolor{comment}{    N       -\/   number of nodes of the quadrature formula, N>=3}}
+\DoxyCodeLine{248 \textcolor{comment}{                (including the left and right boundary nodes).}}
+\DoxyCodeLine{249 \textcolor{comment}{}}
+\DoxyCodeLine{250 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{251 \textcolor{comment}{    Info    -\/   error code:}}
+\DoxyCodeLine{252 \textcolor{comment}{                * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{253 \textcolor{comment}{                * -\/2    Beta[i]<=0}}
+\DoxyCodeLine{254 \textcolor{comment}{                * -\/1    incorrect N was passed}}
+\DoxyCodeLine{255 \textcolor{comment}{                *  1    OK}}
+\DoxyCodeLine{256 \textcolor{comment}{    X       -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{257 \textcolor{comment}{                in ascending order.}}
+\DoxyCodeLine{258 \textcolor{comment}{    W       -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{259 \textcolor{comment}{}}
+\DoxyCodeLine{260 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{261 \textcolor{comment}{     Copyright 2005-\/2009 by Bochkanov Sergey}}
+\DoxyCodeLine{262 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{263 \textcolor{keywordtype}{void} gqgenerategausslobattorec(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&alpha, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&beta, \textcolor{keyword}{const} \textcolor{keywordtype}{double} mu0, \textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{264 }
+\DoxyCodeLine{265 }
+\DoxyCodeLine{266 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{267 \textcolor{comment}{Computation of nodes and weights for a Gauss-\/Radau quadrature formula}}
+\DoxyCodeLine{268 \textcolor{comment}{}}
+\DoxyCodeLine{269 \textcolor{comment}{The algorithm generates the N-\/point Gauss-\/Radau  quadrature  formula  with}}
+\DoxyCodeLine{270 \textcolor{comment}{weight function given by the coefficients alpha and  beta  of a recurrence}}
+\DoxyCodeLine{271 \textcolor{comment}{which generates a system of orthogonal polynomials.}}
+\DoxyCodeLine{272 \textcolor{comment}{}}
+\DoxyCodeLine{273 \textcolor{comment}{P-\/1(x)   =  0}}
+\DoxyCodeLine{274 \textcolor{comment}{P0(x)    =  1}}
+\DoxyCodeLine{275 \textcolor{comment}{Pn+1(x)  =  (x-\/alpha(n))*Pn(x)  -\/  beta(n)*Pn-\/1(x)}}
+\DoxyCodeLine{276 \textcolor{comment}{}}
+\DoxyCodeLine{277 \textcolor{comment}{and zeroth moment Mu0}}
+\DoxyCodeLine{278 \textcolor{comment}{}}
+\DoxyCodeLine{279 \textcolor{comment}{Mu0 = integral(W(x)dx,a,b)}}
+\DoxyCodeLine{280 \textcolor{comment}{}}
+\DoxyCodeLine{281 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{282 \textcolor{comment}{    Alpha   -\/   array[0..N-\/2], alpha coefficients.}}
+\DoxyCodeLine{283 \textcolor{comment}{    Beta    -\/   array[0..N-\/1], beta coefficients}}
+\DoxyCodeLine{284 \textcolor{comment}{                Zero-\/indexed element is not used.}}
+\DoxyCodeLine{285 \textcolor{comment}{                Beta[I]>0}}
+\DoxyCodeLine{286 \textcolor{comment}{    Mu0     -\/   zeroth moment of the weighting function.}}
+\DoxyCodeLine{287 \textcolor{comment}{    A       -\/   left boundary of the integration interval.}}
+\DoxyCodeLine{288 \textcolor{comment}{    N       -\/   number of nodes of the quadrature formula, N>=2}}
+\DoxyCodeLine{289 \textcolor{comment}{                (including the left boundary node).}}
+\DoxyCodeLine{290 \textcolor{comment}{}}
+\DoxyCodeLine{291 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{292 \textcolor{comment}{    Info    -\/   error code:}}
+\DoxyCodeLine{293 \textcolor{comment}{                * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{294 \textcolor{comment}{                * -\/2    Beta[i]<=0}}
+\DoxyCodeLine{295 \textcolor{comment}{                * -\/1    incorrect N was passed}}
+\DoxyCodeLine{296 \textcolor{comment}{                *  1    OK}}
+\DoxyCodeLine{297 \textcolor{comment}{    X       -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{298 \textcolor{comment}{                in ascending order.}}
+\DoxyCodeLine{299 \textcolor{comment}{    W       -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{300 \textcolor{comment}{}}
+\DoxyCodeLine{301 \textcolor{comment}{}}
+\DoxyCodeLine{302 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{303 \textcolor{comment}{     Copyright 2005-\/2009 by Bochkanov Sergey}}
+\DoxyCodeLine{304 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{305 \textcolor{keywordtype}{void} gqgenerategaussradaurec(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&alpha, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&beta, \textcolor{keyword}{const} \textcolor{keywordtype}{double} mu0, \textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{306 }
+\DoxyCodeLine{307 }
+\DoxyCodeLine{308 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{309 \textcolor{comment}{Returns nodes/weights for Gauss-\/Legendre quadrature on [-\/1,1] with N}}
+\DoxyCodeLine{310 \textcolor{comment}{nodes.}}
+\DoxyCodeLine{311 \textcolor{comment}{}}
+\DoxyCodeLine{312 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{313 \textcolor{comment}{    N           -\/   number of nodes, >=1}}
+\DoxyCodeLine{314 \textcolor{comment}{}}
+\DoxyCodeLine{315 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{316 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{317 \textcolor{comment}{                    * -\/4    an  error   was   detected   when  calculating}}
+\DoxyCodeLine{318 \textcolor{comment}{                            weights/nodes.  N  is  too  large   to  obtain}}
+\DoxyCodeLine{319 \textcolor{comment}{                            weights/nodes  with  high   enough   accuracy.}}
+\DoxyCodeLine{320 \textcolor{comment}{                            Try  to   use   multiple   precision  version.}}
+\DoxyCodeLine{321 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't  converged}}
+\DoxyCodeLine{322 \textcolor{comment}{                    * -\/1    incorrect N was passed}}
+\DoxyCodeLine{323 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{324 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{325 \textcolor{comment}{                    in ascending order.}}
+\DoxyCodeLine{326 \textcolor{comment}{    W           -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{327 \textcolor{comment}{}}
+\DoxyCodeLine{328 \textcolor{comment}{}}
+\DoxyCodeLine{329 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{330 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{331 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{332 \textcolor{keywordtype}{void} gqgenerategausslegendre(\textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{333 }
+\DoxyCodeLine{334 }
+\DoxyCodeLine{335 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{336 \textcolor{comment}{Returns  nodes/weights  for  Gauss-\/Jacobi quadrature on [-\/1,1] with weight}}
+\DoxyCodeLine{337 \textcolor{comment}{function W(x)=Power(1-\/x,Alpha)*Power(1+x,Beta).}}
+\DoxyCodeLine{338 \textcolor{comment}{}}
+\DoxyCodeLine{339 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{340 \textcolor{comment}{    N           -\/   number of nodes, >=1}}
+\DoxyCodeLine{341 \textcolor{comment}{    Alpha       -\/   power-\/law coefficient, Alpha>-\/1}}
+\DoxyCodeLine{342 \textcolor{comment}{    Beta        -\/   power-\/law coefficient, Beta>-\/1}}
+\DoxyCodeLine{343 \textcolor{comment}{}}
+\DoxyCodeLine{344 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{345 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{346 \textcolor{comment}{                    * -\/4    an  error  was   detected   when   calculating}}
+\DoxyCodeLine{347 \textcolor{comment}{                            weights/nodes. Alpha or  Beta  are  too  close}}
+\DoxyCodeLine{348 \textcolor{comment}{                            to -\/1 to obtain weights/nodes with high enough}}
+\DoxyCodeLine{349 \textcolor{comment}{                            accuracy, or, may be, N is too large.  Try  to}}
+\DoxyCodeLine{350 \textcolor{comment}{                            use multiple precision version.}}
+\DoxyCodeLine{351 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{352 \textcolor{comment}{                    * -\/1    incorrect N/Alpha/Beta was passed}}
+\DoxyCodeLine{353 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{354 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{355 \textcolor{comment}{                    in ascending order.}}
+\DoxyCodeLine{356 \textcolor{comment}{    W           -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{357 \textcolor{comment}{}}
+\DoxyCodeLine{358 \textcolor{comment}{}}
+\DoxyCodeLine{359 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{360 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{361 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{362 \textcolor{keywordtype}{void} gqgenerategaussjacobi(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, \textcolor{keyword}{const} \textcolor{keywordtype}{double} beta, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{363 }
+\DoxyCodeLine{364 }
+\DoxyCodeLine{365 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{366 \textcolor{comment}{Returns  nodes/weights  for  Gauss-\/Laguerre  quadrature  on  [0,+inf) with}}
+\DoxyCodeLine{367 \textcolor{comment}{weight function W(x)=Power(x,Alpha)*Exp(-\/x)}}
+\DoxyCodeLine{368 \textcolor{comment}{}}
+\DoxyCodeLine{369 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{370 \textcolor{comment}{    N           -\/   number of nodes, >=1}}
+\DoxyCodeLine{371 \textcolor{comment}{    Alpha       -\/   power-\/law coefficient, Alpha>-\/1}}
+\DoxyCodeLine{372 \textcolor{comment}{}}
+\DoxyCodeLine{373 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{374 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{375 \textcolor{comment}{                    * -\/4    an  error  was   detected   when   calculating}}
+\DoxyCodeLine{376 \textcolor{comment}{                            weights/nodes. Alpha is too  close  to  -\/1  to}}
+\DoxyCodeLine{377 \textcolor{comment}{                            obtain weights/nodes with high enough accuracy}}
+\DoxyCodeLine{378 \textcolor{comment}{                            or, may  be,  N  is  too  large.  Try  to  use}}
+\DoxyCodeLine{379 \textcolor{comment}{                            multiple precision version.}}
+\DoxyCodeLine{380 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{381 \textcolor{comment}{                    * -\/1    incorrect N/Alpha was passed}}
+\DoxyCodeLine{382 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{383 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{384 \textcolor{comment}{                    in ascending order.}}
+\DoxyCodeLine{385 \textcolor{comment}{    W           -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{386 \textcolor{comment}{}}
+\DoxyCodeLine{387 \textcolor{comment}{}}
+\DoxyCodeLine{388 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{389 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{390 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{391 \textcolor{keywordtype}{void} gqgenerategausslaguerre(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{392 }
+\DoxyCodeLine{393 }
+\DoxyCodeLine{394 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{395 \textcolor{comment}{Returns  nodes/weights  for  Gauss-\/Hermite  quadrature on (-\/inf,+inf) with}}
+\DoxyCodeLine{396 \textcolor{comment}{weight function W(x)=Exp(-\/x*x)}}
+\DoxyCodeLine{397 \textcolor{comment}{}}
+\DoxyCodeLine{398 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{399 \textcolor{comment}{    N           -\/   number of nodes, >=1}}
+\DoxyCodeLine{400 \textcolor{comment}{}}
+\DoxyCodeLine{401 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{402 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{403 \textcolor{comment}{                    * -\/4    an  error  was   detected   when   calculating}}
+\DoxyCodeLine{404 \textcolor{comment}{                            weights/nodes.  May be, N is too large. Try to}}
+\DoxyCodeLine{405 \textcolor{comment}{                            use multiple precision version.}}
+\DoxyCodeLine{406 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{407 \textcolor{comment}{                    * -\/1    incorrect N/Alpha was passed}}
+\DoxyCodeLine{408 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{409 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{410 \textcolor{comment}{                    in ascending order.}}
+\DoxyCodeLine{411 \textcolor{comment}{    W           -\/   array[0..N-\/1] -\/ array of quadrature weights.}}
+\DoxyCodeLine{412 \textcolor{comment}{}}
+\DoxyCodeLine{413 \textcolor{comment}{}}
+\DoxyCodeLine{414 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{415 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{416 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{417 \textcolor{keywordtype}{void} gqgenerategausshermite(\textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&w, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{418 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{419 }
+\DoxyCodeLine{420 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GKQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{421 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{422 \textcolor{comment}{Computation of nodes and weights of a Gauss-\/Kronrod quadrature formula}}
+\DoxyCodeLine{423 \textcolor{comment}{}}
+\DoxyCodeLine{424 \textcolor{comment}{The algorithm generates the N-\/point Gauss-\/Kronrod quadrature formula  with}}
+\DoxyCodeLine{425 \textcolor{comment}{weight  function  given  by  coefficients  alpha  and beta of a recurrence}}
+\DoxyCodeLine{426 \textcolor{comment}{relation which generates a system of orthogonal polynomials:}}
+\DoxyCodeLine{427 \textcolor{comment}{}}
+\DoxyCodeLine{428 \textcolor{comment}{    P-\/1(x)   =  0}}
+\DoxyCodeLine{429 \textcolor{comment}{    P0(x)    =  1}}
+\DoxyCodeLine{430 \textcolor{comment}{    Pn+1(x)  =  (x-\/alpha(n))*Pn(x)  -\/  beta(n)*Pn-\/1(x)}}
+\DoxyCodeLine{431 \textcolor{comment}{}}
+\DoxyCodeLine{432 \textcolor{comment}{and zero moment Mu0}}
+\DoxyCodeLine{433 \textcolor{comment}{}}
+\DoxyCodeLine{434 \textcolor{comment}{    Mu0 = integral(W(x)dx,a,b)}}
+\DoxyCodeLine{435 \textcolor{comment}{}}
+\DoxyCodeLine{436 \textcolor{comment}{}}
+\DoxyCodeLine{437 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{438 \textcolor{comment}{    Alpha       -\/   alpha coefficients, array[0..floor(3*K/2)].}}
+\DoxyCodeLine{439 \textcolor{comment}{    Beta        -\/   beta coefficients,  array[0..ceil(3*K/2)].}}
+\DoxyCodeLine{440 \textcolor{comment}{                    Beta[0] is not used and may be arbitrary.}}
+\DoxyCodeLine{441 \textcolor{comment}{                    Beta[I]>0.}}
+\DoxyCodeLine{442 \textcolor{comment}{    Mu0         -\/   zeroth moment of the weight function.}}
+\DoxyCodeLine{443 \textcolor{comment}{    N           -\/   number of nodes of the Gauss-\/Kronrod quadrature formula,}}
+\DoxyCodeLine{444 \textcolor{comment}{                    N >= 3,}}
+\DoxyCodeLine{445 \textcolor{comment}{                    N =  2*K+1.}}
+\DoxyCodeLine{446 \textcolor{comment}{}}
+\DoxyCodeLine{447 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{448 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{449 \textcolor{comment}{                    * -\/5    no real and positive Gauss-\/Kronrod formula can}}
+\DoxyCodeLine{450 \textcolor{comment}{                            be created for such a weight function  with  a}}
+\DoxyCodeLine{451 \textcolor{comment}{                            given number of nodes.}}
+\DoxyCodeLine{452 \textcolor{comment}{                    * -\/4    N is too large, task may be ill  conditioned -\/}}
+\DoxyCodeLine{453 \textcolor{comment}{                            x[i]=x[i+1] found.}}
+\DoxyCodeLine{454 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{455 \textcolor{comment}{                    * -\/2    Beta[i]<=0}}
+\DoxyCodeLine{456 \textcolor{comment}{                    * -\/1    incorrect N was passed}}
+\DoxyCodeLine{457 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{458 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes,}}
+\DoxyCodeLine{459 \textcolor{comment}{                    in ascending order.}}
+\DoxyCodeLine{460 \textcolor{comment}{    WKronrod    -\/   array[0..N-\/1] -\/ Kronrod weights}}
+\DoxyCodeLine{461 \textcolor{comment}{    WGauss      -\/   array[0..N-\/1] -\/ Gauss weights (interleaved with zeros}}
+\DoxyCodeLine{462 \textcolor{comment}{                    corresponding to extended Kronrod nodes).}}
+\DoxyCodeLine{463 \textcolor{comment}{}}
+\DoxyCodeLine{464 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{465 \textcolor{comment}{     Copyright 08.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{466 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{467 \textcolor{keywordtype}{void} gkqgeneraterec(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&alpha, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&beta, \textcolor{keyword}{const} \textcolor{keywordtype}{double} mu0, \textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wkronrod, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wgauss, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{468 }
+\DoxyCodeLine{469 }
+\DoxyCodeLine{470 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{471 \textcolor{comment}{Returns   Gauss   and   Gauss-\/Kronrod   nodes/weights  for  Gauss-\/Legendre}}
+\DoxyCodeLine{472 \textcolor{comment}{quadrature with N points.}}
+\DoxyCodeLine{473 \textcolor{comment}{}}
+\DoxyCodeLine{474 \textcolor{comment}{GKQLegendreCalc (calculation) or  GKQLegendreTbl  (precomputed  table)  is}}
+\DoxyCodeLine{475 \textcolor{comment}{used depending on machine precision and number of nodes.}}
+\DoxyCodeLine{476 \textcolor{comment}{}}
+\DoxyCodeLine{477 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{478 \textcolor{comment}{    N           -\/   number of Kronrod nodes, must be odd number, >=3.}}
+\DoxyCodeLine{479 \textcolor{comment}{}}
+\DoxyCodeLine{480 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{481 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{482 \textcolor{comment}{                    * -\/4    an  error   was   detected   when  calculating}}
+\DoxyCodeLine{483 \textcolor{comment}{                            weights/nodes.  N  is  too  large   to  obtain}}
+\DoxyCodeLine{484 \textcolor{comment}{                            weights/nodes  with  high   enough   accuracy.}}
+\DoxyCodeLine{485 \textcolor{comment}{                            Try  to   use   multiple   precision  version.}}
+\DoxyCodeLine{486 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{487 \textcolor{comment}{                    * -\/1    incorrect N was passed}}
+\DoxyCodeLine{488 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{489 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes, ordered in}}
+\DoxyCodeLine{490 \textcolor{comment}{                    ascending order.}}
+\DoxyCodeLine{491 \textcolor{comment}{    WKronrod    -\/   array[0..N-\/1] -\/ Kronrod weights}}
+\DoxyCodeLine{492 \textcolor{comment}{    WGauss      -\/   array[0..N-\/1] -\/ Gauss weights (interleaved with zeros}}
+\DoxyCodeLine{493 \textcolor{comment}{                    corresponding to extended Kronrod nodes).}}
+\DoxyCodeLine{494 \textcolor{comment}{}}
+\DoxyCodeLine{495 \textcolor{comment}{}}
+\DoxyCodeLine{496 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{497 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{498 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{499 \textcolor{keywordtype}{void} gkqgenerategausslegendre(\textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wkronrod, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wgauss, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{500 }
+\DoxyCodeLine{501 }
+\DoxyCodeLine{502 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{503 \textcolor{comment}{Returns   Gauss   and   Gauss-\/Kronrod   nodes/weights   for   Gauss-\/Jacobi}}
+\DoxyCodeLine{504 \textcolor{comment}{quadrature on [-\/1,1] with weight function}}
+\DoxyCodeLine{505 \textcolor{comment}{}}
+\DoxyCodeLine{506 \textcolor{comment}{    W(x)=Power(1-\/x,Alpha)*Power(1+x,Beta).}}
+\DoxyCodeLine{507 \textcolor{comment}{}}
+\DoxyCodeLine{508 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{509 \textcolor{comment}{    N           -\/   number of Kronrod nodes, must be odd number, >=3.}}
+\DoxyCodeLine{510 \textcolor{comment}{    Alpha       -\/   power-\/law coefficient, Alpha>-\/1}}
+\DoxyCodeLine{511 \textcolor{comment}{    Beta        -\/   power-\/law coefficient, Beta>-\/1}}
+\DoxyCodeLine{512 \textcolor{comment}{}}
+\DoxyCodeLine{513 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{514 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{515 \textcolor{comment}{                    * -\/5    no real and positive Gauss-\/Kronrod formula can}}
+\DoxyCodeLine{516 \textcolor{comment}{                            be created for such a weight function  with  a}}
+\DoxyCodeLine{517 \textcolor{comment}{                            given number of nodes.}}
+\DoxyCodeLine{518 \textcolor{comment}{                    * -\/4    an  error  was   detected   when   calculating}}
+\DoxyCodeLine{519 \textcolor{comment}{                            weights/nodes. Alpha or  Beta  are  too  close}}
+\DoxyCodeLine{520 \textcolor{comment}{                            to -\/1 to obtain weights/nodes with high enough}}
+\DoxyCodeLine{521 \textcolor{comment}{                            accuracy, or, may be, N is too large.  Try  to}}
+\DoxyCodeLine{522 \textcolor{comment}{                            use multiple precision version.}}
+\DoxyCodeLine{523 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{524 \textcolor{comment}{                    * -\/1    incorrect N was passed}}
+\DoxyCodeLine{525 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{526 \textcolor{comment}{                    * +2    OK, but quadrature rule have exterior  nodes,}}
+\DoxyCodeLine{527 \textcolor{comment}{                            x[0]<-\/1 or x[n-\/1]>+1}}
+\DoxyCodeLine{528 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes, ordered in}}
+\DoxyCodeLine{529 \textcolor{comment}{                    ascending order.}}
+\DoxyCodeLine{530 \textcolor{comment}{    WKronrod    -\/   array[0..N-\/1] -\/ Kronrod weights}}
+\DoxyCodeLine{531 \textcolor{comment}{    WGauss      -\/   array[0..N-\/1] -\/ Gauss weights (interleaved with zeros}}
+\DoxyCodeLine{532 \textcolor{comment}{                    corresponding to extended Kronrod nodes).}}
+\DoxyCodeLine{533 \textcolor{comment}{}}
+\DoxyCodeLine{534 \textcolor{comment}{}}
+\DoxyCodeLine{535 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{536 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{537 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{538 \textcolor{keywordtype}{void} gkqgenerategaussjacobi(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, \textcolor{keyword}{const} \textcolor{keywordtype}{double} beta, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wkronrod, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wgauss, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{539 }
+\DoxyCodeLine{540 }
+\DoxyCodeLine{541 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{542 \textcolor{comment}{Returns Gauss and Gauss-\/Kronrod nodes for quadrature with N points.}}
+\DoxyCodeLine{543 \textcolor{comment}{}}
+\DoxyCodeLine{544 \textcolor{comment}{Reduction to tridiagonal eigenproblem is used.}}
+\DoxyCodeLine{545 \textcolor{comment}{}}
+\DoxyCodeLine{546 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{547 \textcolor{comment}{    N           -\/   number of Kronrod nodes, must be odd number, >=3.}}
+\DoxyCodeLine{548 \textcolor{comment}{}}
+\DoxyCodeLine{549 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{550 \textcolor{comment}{    Info        -\/   error code:}}
+\DoxyCodeLine{551 \textcolor{comment}{                    * -\/4    an  error   was   detected   when  calculating}}
+\DoxyCodeLine{552 \textcolor{comment}{                            weights/nodes.  N  is  too  large   to  obtain}}
+\DoxyCodeLine{553 \textcolor{comment}{                            weights/nodes  with  high   enough   accuracy.}}
+\DoxyCodeLine{554 \textcolor{comment}{                            Try  to   use   multiple   precision  version.}}
+\DoxyCodeLine{555 \textcolor{comment}{                    * -\/3    internal eigenproblem solver hasn't converged}}
+\DoxyCodeLine{556 \textcolor{comment}{                    * -\/1    incorrect N was passed}}
+\DoxyCodeLine{557 \textcolor{comment}{                    * +1    OK}}
+\DoxyCodeLine{558 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes, ordered in}}
+\DoxyCodeLine{559 \textcolor{comment}{                    ascending order.}}
+\DoxyCodeLine{560 \textcolor{comment}{    WKronrod    -\/   array[0..N-\/1] -\/ Kronrod weights}}
+\DoxyCodeLine{561 \textcolor{comment}{    WGauss      -\/   array[0..N-\/1] -\/ Gauss weights (interleaved with zeros}}
+\DoxyCodeLine{562 \textcolor{comment}{                    corresponding to extended Kronrod nodes).}}
+\DoxyCodeLine{563 \textcolor{comment}{}}
+\DoxyCodeLine{564 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{565 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{566 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{567 \textcolor{keywordtype}{void} gkqlegendrecalc(\textcolor{keyword}{const} ae\_int\_t n, ae\_int\_t \&info, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wkronrod, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wgauss, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{568 }
+\DoxyCodeLine{569 }
+\DoxyCodeLine{570 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{571 \textcolor{comment}{Returns Gauss and Gauss-\/Kronrod nodes for quadrature with N  points  using}}
+\DoxyCodeLine{572 \textcolor{comment}{pre-\/calculated table. Nodes/weights were  computed  with  accuracy  up  to}}
+\DoxyCodeLine{573 \textcolor{comment}{1.0E-\/32 (if MPFR version of ALGLIB is used). In standard double  precision}}
+\DoxyCodeLine{574 \textcolor{comment}{accuracy reduces to something about 2.0E-\/16 (depending  on your compiler's}}
+\DoxyCodeLine{575 \textcolor{comment}{handling of long floating point constants).}}
+\DoxyCodeLine{576 \textcolor{comment}{}}
+\DoxyCodeLine{577 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{578 \textcolor{comment}{    N           -\/   number of Kronrod nodes.}}
+\DoxyCodeLine{579 \textcolor{comment}{                    N can be 15, 21, 31, 41, 51, 61.}}
+\DoxyCodeLine{580 \textcolor{comment}{}}
+\DoxyCodeLine{581 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{582 \textcolor{comment}{    X           -\/   array[0..N-\/1] -\/ array of quadrature nodes, ordered in}}
+\DoxyCodeLine{583 \textcolor{comment}{                    ascending order.}}
+\DoxyCodeLine{584 \textcolor{comment}{    WKronrod    -\/   array[0..N-\/1] -\/ Kronrod weights}}
+\DoxyCodeLine{585 \textcolor{comment}{    WGauss      -\/   array[0..N-\/1] -\/ Gauss weights (interleaved with zeros}}
+\DoxyCodeLine{586 \textcolor{comment}{                    corresponding to extended Kronrod nodes).}}
+\DoxyCodeLine{587 \textcolor{comment}{}}
+\DoxyCodeLine{588 \textcolor{comment}{}}
+\DoxyCodeLine{589 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{590 \textcolor{comment}{     Copyright 12.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{591 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{592 \textcolor{keywordtype}{void} gkqlegendretbl(\textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wkronrod, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&wgauss, \textcolor{keywordtype}{double} \&eps, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{593 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{594 }
+\DoxyCodeLine{595 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AUTOGK) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{596 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{597 \textcolor{comment}{Integration of a smooth function F(x) on a finite interval [a,b].}}
+\DoxyCodeLine{598 \textcolor{comment}{}}
+\DoxyCodeLine{599 \textcolor{comment}{Fast-\/convergent algorithm based on a Gauss-\/Kronrod formula is used. Result}}
+\DoxyCodeLine{600 \textcolor{comment}{is calculated with accuracy close to the machine precision.}}
+\DoxyCodeLine{601 \textcolor{comment}{}}
+\DoxyCodeLine{602 \textcolor{comment}{Algorithm works well only with smooth integrands.  It  may  be  used  with}}
+\DoxyCodeLine{603 \textcolor{comment}{continuous non-\/smooth integrands, but with  less  performance.}}
+\DoxyCodeLine{604 \textcolor{comment}{}}
+\DoxyCodeLine{605 \textcolor{comment}{It should never be used with integrands which have integrable singularities}}
+\DoxyCodeLine{606 \textcolor{comment}{at lower or upper limits -\/ algorithm may crash. Use AutoGKSingular in such}}
+\DoxyCodeLine{607 \textcolor{comment}{cases.}}
+\DoxyCodeLine{608 \textcolor{comment}{}}
+\DoxyCodeLine{609 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{610 \textcolor{comment}{    A, B    -\/   interval boundaries (A<B, A=B or A>B)}}
+\DoxyCodeLine{611 \textcolor{comment}{}}
+\DoxyCodeLine{612 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{613 \textcolor{comment}{    State   -\/   structure which stores algorithm state}}
+\DoxyCodeLine{614 \textcolor{comment}{}}
+\DoxyCodeLine{615 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{616 \textcolor{comment}{    AutoGKSmoothW, AutoGKSingular, AutoGKResults.}}
+\DoxyCodeLine{617 \textcolor{comment}{}}
+\DoxyCodeLine{618 \textcolor{comment}{}}
+\DoxyCodeLine{619 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{620 \textcolor{comment}{     Copyright 06.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{621 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{622 \textcolor{keywordtype}{void} autogksmooth(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{623 }
+\DoxyCodeLine{624 }
+\DoxyCodeLine{625 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{626 \textcolor{comment}{Integration of a smooth function F(x) on a finite interval [a,b].}}
+\DoxyCodeLine{627 \textcolor{comment}{}}
+\DoxyCodeLine{628 \textcolor{comment}{This subroutine is same as AutoGKSmooth(), but it guarantees that interval}}
+\DoxyCodeLine{629 \textcolor{comment}{[a,b] is partitioned into subintervals which have width at most XWidth.}}
+\DoxyCodeLine{630 \textcolor{comment}{}}
+\DoxyCodeLine{631 \textcolor{comment}{Subroutine  can  be  used  when  integrating nearly-\/constant function with}}
+\DoxyCodeLine{632 \textcolor{comment}{narrow "{}bumps"{} (about XWidth wide). If "{}bumps"{} are too narrow, AutoGKSmooth}}
+\DoxyCodeLine{633 \textcolor{comment}{subroutine can overlook them.}}
+\DoxyCodeLine{634 \textcolor{comment}{}}
+\DoxyCodeLine{635 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{636 \textcolor{comment}{    A, B    -\/   interval boundaries (A<B, A=B or A>B)}}
+\DoxyCodeLine{637 \textcolor{comment}{}}
+\DoxyCodeLine{638 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{639 \textcolor{comment}{    State   -\/   structure which stores algorithm state}}
+\DoxyCodeLine{640 \textcolor{comment}{}}
+\DoxyCodeLine{641 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{642 \textcolor{comment}{    AutoGKSmooth, AutoGKSingular, AutoGKResults.}}
+\DoxyCodeLine{643 \textcolor{comment}{}}
+\DoxyCodeLine{644 \textcolor{comment}{}}
+\DoxyCodeLine{645 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{646 \textcolor{comment}{     Copyright 06.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{647 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{648 \textcolor{keywordtype}{void} autogksmoothw(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} xwidth, \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{649 }
+\DoxyCodeLine{650 }
+\DoxyCodeLine{651 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{652 \textcolor{comment}{Integration on a finite interval [A,B].}}
+\DoxyCodeLine{653 \textcolor{comment}{Integrand have integrable singularities at A/B.}}
+\DoxyCodeLine{654 \textcolor{comment}{}}
+\DoxyCodeLine{655 \textcolor{comment}{F(X) must diverge as "{}(x-\/A)\string^alpha"{} at A, as "{}(B-\/x)\string^beta"{} at B,  with known}}
+\DoxyCodeLine{656 \textcolor{comment}{alpha/beta (alpha>-\/1, beta>-\/1).  If alpha/beta  are  not known,  estimates}}
+\DoxyCodeLine{657 \textcolor{comment}{from below can be used (but these estimates should be greater than -\/1 too).}}
+\DoxyCodeLine{658 \textcolor{comment}{}}
+\DoxyCodeLine{659 \textcolor{comment}{One  of  alpha/beta variables (or even both alpha/beta) may be equal to 0,}}
+\DoxyCodeLine{660 \textcolor{comment}{which means than function F(x) is non-\/singular at A/B. Anyway (singular at}}
+\DoxyCodeLine{661 \textcolor{comment}{bounds or not), function F(x) is supposed to be continuous on (A,B).}}
+\DoxyCodeLine{662 \textcolor{comment}{}}
+\DoxyCodeLine{663 \textcolor{comment}{Fast-\/convergent algorithm based on a Gauss-\/Kronrod formula is used. Result}}
+\DoxyCodeLine{664 \textcolor{comment}{is calculated with accuracy close to the machine precision.}}
+\DoxyCodeLine{665 \textcolor{comment}{}}
+\DoxyCodeLine{666 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{667 \textcolor{comment}{    A, B    -\/   interval boundaries (A<B, A=B or A>B)}}
+\DoxyCodeLine{668 \textcolor{comment}{    Alpha   -\/   power-\/law coefficient of the F(x) at A,}}
+\DoxyCodeLine{669 \textcolor{comment}{                Alpha>-\/1}}
+\DoxyCodeLine{670 \textcolor{comment}{    Beta    -\/   power-\/law coefficient of the F(x) at B,}}
+\DoxyCodeLine{671 \textcolor{comment}{                Beta>-\/1}}
+\DoxyCodeLine{672 \textcolor{comment}{}}
+\DoxyCodeLine{673 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{674 \textcolor{comment}{    State   -\/   structure which stores algorithm state}}
+\DoxyCodeLine{675 \textcolor{comment}{}}
+\DoxyCodeLine{676 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{677 \textcolor{comment}{    AutoGKSmooth, AutoGKSmoothW, AutoGKResults.}}
+\DoxyCodeLine{678 \textcolor{comment}{}}
+\DoxyCodeLine{679 \textcolor{comment}{}}
+\DoxyCodeLine{680 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{681 \textcolor{comment}{     Copyright 06.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{682 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{683 \textcolor{keywordtype}{void} autogksingular(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, \textcolor{keyword}{const} \textcolor{keywordtype}{double} beta, \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{684 }
+\DoxyCodeLine{685 }
+\DoxyCodeLine{686 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{687 \textcolor{comment}{This function provides reverse communication interface}}
+\DoxyCodeLine{688 \textcolor{comment}{Reverse communication interface is not documented or recommended to use.}}
+\DoxyCodeLine{689 \textcolor{comment}{See below for functions which provide better documented API}}
+\DoxyCodeLine{690 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{691 \textcolor{keywordtype}{bool} autogkiteration(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{692 }
+\DoxyCodeLine{693 }
+\DoxyCodeLine{694 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{695 \textcolor{comment}{This function is used to launcn iterations of the 1-\/dimensional integrator}}
+\DoxyCodeLine{696 \textcolor{comment}{}}
+\DoxyCodeLine{697 \textcolor{comment}{It accepts following parameters:}}
+\DoxyCodeLine{698 \textcolor{comment}{    func    -\/   callback which calculates f(x) for given x}}
+\DoxyCodeLine{699 \textcolor{comment}{    ptr     -\/   optional pointer which is passed to func; can be NULL}}
+\DoxyCodeLine{700 \textcolor{comment}{}}
+\DoxyCodeLine{701 \textcolor{comment}{}}
+\DoxyCodeLine{702 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{703 \textcolor{comment}{     Copyright 07.05.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{704 \textcolor{comment}{}}
+\DoxyCodeLine{705 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{706 \textcolor{keywordtype}{void} autogkintegrate(\mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state,}
+\DoxyCodeLine{707     \textcolor{keywordtype}{void} (*func)(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} xminusa, \textcolor{keywordtype}{double} bminusx, \textcolor{keywordtype}{double} \&y, \textcolor{keywordtype}{void} *ptr),}
+\DoxyCodeLine{708     \textcolor{keywordtype}{void} *ptr = NULL, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{709 }
+\DoxyCodeLine{710 }
+\DoxyCodeLine{711 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{712 \textcolor{comment}{Adaptive integration results}}
+\DoxyCodeLine{713 \textcolor{comment}{}}
+\DoxyCodeLine{714 \textcolor{comment}{Called after AutoGKIteration returned False.}}
+\DoxyCodeLine{715 \textcolor{comment}{}}
+\DoxyCodeLine{716 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{717 \textcolor{comment}{    State   -\/   algorithm state (used by AutoGKIteration).}}
+\DoxyCodeLine{718 \textcolor{comment}{}}
+\DoxyCodeLine{719 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{720 \textcolor{comment}{    V       -\/   integral(f(x)dx,a,b)}}
+\DoxyCodeLine{721 \textcolor{comment}{    Rep     -\/   optimization report (see AutoGKReport description)}}
+\DoxyCodeLine{722 \textcolor{comment}{}}
+\DoxyCodeLine{723 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{724 \textcolor{comment}{     Copyright 14.11.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{725 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{726 \textcolor{keywordtype}{void} autogkresults(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1autogkstate}{autogkstate}} \&state, \textcolor{keywordtype}{double} \&v, \mbox{\hyperlink{classalglib_1_1autogkreport}{autogkreport}} \&rep, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{727 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{728 \}}
+\DoxyCodeLine{729 }
+\DoxyCodeLine{731 \textcolor{comment}{//}}
+\DoxyCodeLine{732 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{733 \textcolor{comment}{//}}
+\DoxyCodeLine{735 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{736 \{}
+\DoxyCodeLine{737 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{738 \textcolor{keywordtype}{void} gqgeneraterec(\textcolor{comment}{/* Real    */} ae\_vector* alpha,}
+\DoxyCodeLine{739      \textcolor{comment}{/* Real    */} ae\_vector* beta,}
+\DoxyCodeLine{740      \textcolor{keywordtype}{double} mu0,}
+\DoxyCodeLine{741      ae\_int\_t n,}
+\DoxyCodeLine{742      ae\_int\_t* info,}
+\DoxyCodeLine{743      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{744      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{745      ae\_state *\_state);}
+\DoxyCodeLine{746 \textcolor{keywordtype}{void} gqgenerategausslobattorec(\textcolor{comment}{/* Real    */} ae\_vector* alpha,}
+\DoxyCodeLine{747      \textcolor{comment}{/* Real    */} ae\_vector* beta,}
+\DoxyCodeLine{748      \textcolor{keywordtype}{double} mu0,}
+\DoxyCodeLine{749      \textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{750      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{751      ae\_int\_t n,}
+\DoxyCodeLine{752      ae\_int\_t* info,}
+\DoxyCodeLine{753      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{754      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{755      ae\_state *\_state);}
+\DoxyCodeLine{756 \textcolor{keywordtype}{void} gqgenerategaussradaurec(\textcolor{comment}{/* Real    */} ae\_vector* alpha,}
+\DoxyCodeLine{757      \textcolor{comment}{/* Real    */} ae\_vector* beta,}
+\DoxyCodeLine{758      \textcolor{keywordtype}{double} mu0,}
+\DoxyCodeLine{759      \textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{760      ae\_int\_t n,}
+\DoxyCodeLine{761      ae\_int\_t* info,}
+\DoxyCodeLine{762      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{763      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{764      ae\_state *\_state);}
+\DoxyCodeLine{765 \textcolor{keywordtype}{void} gqgenerategausslegendre(ae\_int\_t n,}
+\DoxyCodeLine{766      ae\_int\_t* info,}
+\DoxyCodeLine{767      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{768      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{769      ae\_state *\_state);}
+\DoxyCodeLine{770 \textcolor{keywordtype}{void} gqgenerategaussjacobi(ae\_int\_t n,}
+\DoxyCodeLine{771      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{772      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{773      ae\_int\_t* info,}
+\DoxyCodeLine{774      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{775      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{776      ae\_state *\_state);}
+\DoxyCodeLine{777 \textcolor{keywordtype}{void} gqgenerategausslaguerre(ae\_int\_t n,}
+\DoxyCodeLine{778      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{779      ae\_int\_t* info,}
+\DoxyCodeLine{780      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{781      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{782      ae\_state *\_state);}
+\DoxyCodeLine{783 \textcolor{keywordtype}{void} gqgenerategausshermite(ae\_int\_t n,}
+\DoxyCodeLine{784      ae\_int\_t* info,}
+\DoxyCodeLine{785      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{786      \textcolor{comment}{/* Real    */} ae\_vector* w,}
+\DoxyCodeLine{787      ae\_state *\_state);}
+\DoxyCodeLine{788 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{789 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GKQ) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{790 \textcolor{keywordtype}{void} gkqgeneraterec(\textcolor{comment}{/* Real    */} ae\_vector* alpha,}
+\DoxyCodeLine{791      \textcolor{comment}{/* Real    */} ae\_vector* beta,}
+\DoxyCodeLine{792      \textcolor{keywordtype}{double} mu0,}
+\DoxyCodeLine{793      ae\_int\_t n,}
+\DoxyCodeLine{794      ae\_int\_t* info,}
+\DoxyCodeLine{795      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{796      \textcolor{comment}{/* Real    */} ae\_vector* wkronrod,}
+\DoxyCodeLine{797      \textcolor{comment}{/* Real    */} ae\_vector* wgauss,}
+\DoxyCodeLine{798      ae\_state *\_state);}
+\DoxyCodeLine{799 \textcolor{keywordtype}{void} gkqgenerategausslegendre(ae\_int\_t n,}
+\DoxyCodeLine{800      ae\_int\_t* info,}
+\DoxyCodeLine{801      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{802      \textcolor{comment}{/* Real    */} ae\_vector* wkronrod,}
+\DoxyCodeLine{803      \textcolor{comment}{/* Real    */} ae\_vector* wgauss,}
+\DoxyCodeLine{804      ae\_state *\_state);}
+\DoxyCodeLine{805 \textcolor{keywordtype}{void} gkqgenerategaussjacobi(ae\_int\_t n,}
+\DoxyCodeLine{806      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{807      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{808      ae\_int\_t* info,}
+\DoxyCodeLine{809      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{810      \textcolor{comment}{/* Real    */} ae\_vector* wkronrod,}
+\DoxyCodeLine{811      \textcolor{comment}{/* Real    */} ae\_vector* wgauss,}
+\DoxyCodeLine{812      ae\_state *\_state);}
+\DoxyCodeLine{813 \textcolor{keywordtype}{void} gkqlegendrecalc(ae\_int\_t n,}
+\DoxyCodeLine{814      ae\_int\_t* info,}
+\DoxyCodeLine{815      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{816      \textcolor{comment}{/* Real    */} ae\_vector* wkronrod,}
+\DoxyCodeLine{817      \textcolor{comment}{/* Real    */} ae\_vector* wgauss,}
+\DoxyCodeLine{818      ae\_state *\_state);}
+\DoxyCodeLine{819 \textcolor{keywordtype}{void} gkqlegendretbl(ae\_int\_t n,}
+\DoxyCodeLine{820      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{821      \textcolor{comment}{/* Real    */} ae\_vector* wkronrod,}
+\DoxyCodeLine{822      \textcolor{comment}{/* Real    */} ae\_vector* wgauss,}
+\DoxyCodeLine{823      \textcolor{keywordtype}{double}* eps,}
+\DoxyCodeLine{824      ae\_state *\_state);}
+\DoxyCodeLine{825 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{826 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AUTOGK) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{827 \textcolor{keywordtype}{void} autogksmooth(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{828      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{829      autogkstate* state,}
+\DoxyCodeLine{830      ae\_state *\_state);}
+\DoxyCodeLine{831 \textcolor{keywordtype}{void} autogksmoothw(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{832      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{833      \textcolor{keywordtype}{double} xwidth,}
+\DoxyCodeLine{834      autogkstate* state,}
+\DoxyCodeLine{835      ae\_state *\_state);}
+\DoxyCodeLine{836 \textcolor{keywordtype}{void} autogksingular(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{837      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{838      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{839      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{840      autogkstate* state,}
+\DoxyCodeLine{841      ae\_state *\_state);}
+\DoxyCodeLine{842 ae\_bool autogkiteration(autogkstate* state, ae\_state *\_state);}
+\DoxyCodeLine{843 \textcolor{keywordtype}{void} autogkresults(autogkstate* state,}
+\DoxyCodeLine{844      \textcolor{keywordtype}{double}* v,}
+\DoxyCodeLine{845      autogkreport* rep,}
+\DoxyCodeLine{846      ae\_state *\_state);}
+\DoxyCodeLine{847 \textcolor{keywordtype}{void} \_autogkreport\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{848 \textcolor{keywordtype}{void} \_autogkreport\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{849 \textcolor{keywordtype}{void} \_autogkreport\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{850 \textcolor{keywordtype}{void} \_autogkreport\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{851 \textcolor{keywordtype}{void} \_autogkinternalstate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{852 \textcolor{keywordtype}{void} \_autogkinternalstate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{853 \textcolor{keywordtype}{void} \_autogkinternalstate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{854 \textcolor{keywordtype}{void} \_autogkinternalstate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{855 \textcolor{keywordtype}{void} \_autogkstate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{856 \textcolor{keywordtype}{void} \_autogkstate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{857 \textcolor{keywordtype}{void} \_autogkstate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{858 \textcolor{keywordtype}{void} \_autogkstate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{859 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{860 }
+\DoxyCodeLine{861 \}}
+\DoxyCodeLine{862 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{863 }
+
+\end{DoxyCode}

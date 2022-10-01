@@ -1,0 +1,30 @@
+\hypertarget{camera__calibration_8h_source}{}\doxysection{camera\+\_\+calibration.\+h}
+\label{camera__calibration_8h_source}\index{include/gpu/camera\_calibration.h@{include/gpu/camera\_calibration.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef CAMERA\_CALIBRATION\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define CAMERA\_CALIBRATION\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}} \{}
+\DoxyCodeLine{5     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}}(\textcolor{keywordtype}{float} principal\_distance, \textcolor{keywordtype}{float} principal\_x, \textcolor{keywordtype}{float} principal\_y, \textcolor{keywordtype}{float} pixel\_pitch) \{}
+\DoxyCodeLine{6         principal\_distance\_ = principal\_distance;}
+\DoxyCodeLine{7         principal\_x\_ = principal\_x;}
+\DoxyCodeLine{8         principal\_y\_ = principal\_y;}
+\DoxyCodeLine{9         pixel\_pitch\_ = pixel\_pitch;}
+\DoxyCodeLine{10     \};}
+\DoxyCodeLine{11     \mbox{\hyperlink{struct_camera_calibration}{CameraCalibration}}() \{}
+\DoxyCodeLine{12         principal\_distance\_ = 0;}
+\DoxyCodeLine{13         principal\_x\_ = 0;}
+\DoxyCodeLine{14         principal\_y\_ = 0;}
+\DoxyCodeLine{15         pixel\_pitch\_ = 0;}
+\DoxyCodeLine{16     \}}
+\DoxyCodeLine{17     \textcolor{comment}{/*Camera Location \& Calibration Locations \string~ Right Hand Axis System (Positive Z Towards Oneself)*/}}
+\DoxyCodeLine{18     \textcolor{keywordtype}{float} principal\_distance\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{19     \textcolor{keywordtype}{float} principal\_x\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{20     \textcolor{keywordtype}{float} principal\_y\_; \textcolor{comment}{/* (mm) */}}
+\DoxyCodeLine{21     \textcolor{keywordtype}{float} pixel\_pitch\_; \textcolor{comment}{/* pixel size in mm (mm/pixel) */}}
+\DoxyCodeLine{22 \};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* CAMERA\_CALIBRATION\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

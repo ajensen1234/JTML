@@ -1,0 +1,57 @@
+\hypertarget{nfd_8h_source}{}\doxysection{nfd.\+h}
+\label{nfd_8h_source}\index{include/nfd/nfd.h@{include/nfd/nfd.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <iostream>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <QString>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}core/model.h"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}core/frame.h"{}}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include "{}core/calibration.h"{}}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <gpu\_model.cuh>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <gpu\_intensity\_frame.cuh>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <gpu\_edge\_frame.cuh>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <gpu\_dilated\_frame.cuh>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <gpu\_metrics.cuh>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <QModelIndex>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}cufft.h"{}}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <opencv2/imgproc.hpp>}}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include "{}nfd\_instance.h"{}}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include "{}nfd\_library.h"{}}}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{using namespace }gpu\_cost\_function;}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 \textcolor{keyword}{class }\mbox{\hyperlink{class_j_t_m_l___n_f_d}{JTML\_NFD}} \{}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26 \textcolor{keyword}{public}:}
+\DoxyCodeLine{27     \mbox{\hyperlink{class_j_t_m_l___n_f_d}{JTML\_NFD}}();}
+\DoxyCodeLine{28     \mbox{\hyperlink{class_j_t_m_l___n_f_d}{\string~JTML\_NFD}}();}
+\DoxyCodeLine{29     \textcolor{keywordtype}{bool} Initialize(}
+\DoxyCodeLine{30         \mbox{\hyperlink{struct_calibration}{Calibration}} cal\_file,}
+\DoxyCodeLine{31         std::vector<Model> model\_list,}
+\DoxyCodeLine{32         std::vector<Frame> frames\_list,}
+\DoxyCodeLine{33         QModelIndexList selected\_models,}
+\DoxyCodeLine{34         \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} primary\_model\_index,}
+\DoxyCodeLine{35         QString error\_message}
+\DoxyCodeLine{36     );}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38     \textcolor{keywordtype}{void} Run();}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{keyword}{private}:}
+\DoxyCodeLine{41     \textcolor{keywordtype}{bool} successful\_initialization\_;}
+\DoxyCodeLine{42     \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\_;}
+\DoxyCodeLine{43     std::vector<Frame> frames\_;}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45     GPUModel* gpu\_principal\_model\_;}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47     \mbox{\hyperlink{class_model}{Model}} primary\_model\_;}
+\DoxyCodeLine{48     std::vector<Model> all\_models\_;}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50     }
+\DoxyCodeLine{51 \};}
+
+\end{DoxyCode}

@@ -1,0 +1,86 @@
+\hypertarget{sym__trap__function_custom_variables_8h_source}{}\doxysection{sym\+\_\+trap\+\_\+function\+Custom\+Variables.\+h}
+\label{sym__trap__function_custom_variables_8h_source}\index{include/cost\_functions/sym\_trap\_functionCustomVariables.h@{include/cost\_functions/sym\_trap\_functionCustomVariables.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{comment}{/****************Headers*************/}}
+\DoxyCodeLine{3 \textcolor{comment}{/*Cost Function Tools Library*/}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}gpu/gpu\_image.cuh"{}}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}gpu/gpu\_frame.cuh"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}gpu/gpu\_dilated\_frame.cuh"{}}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include "{}gpu/gpu\_edge\_frame.cuh"{}}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}gpu/gpu\_intensity\_frame.cuh"{}}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include "{}gpu/gpu\_model.cuh"{}}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include "{}gpu/gpu\_metrics.cuh"{}}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include "{}gpu/render\_engine.cuh"{}}}
+\DoxyCodeLine{12 \textcolor{comment}{/*Stage Enum*/}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include "{}Stage.h"{}}}
+\DoxyCodeLine{14 \textcolor{comment}{/*Parameter Class*/}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include "{}Parameter.h"{}}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{comment}{/****************Begin Custom Variables*************/}}
+\DoxyCodeLine{18 \textcolor{keywordtype}{void} invert\_transformation(\textcolor{keywordtype}{float} result[4][4], \textcolor{keywordtype}{float} tran[4][4])}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keywordtype}{int}     i, j;}
+\DoxyCodeLine{21     \textcolor{comment}{/* Upper left 3x3 of result is transpose of upper left 3x3 of tran. */}}
+\DoxyCodeLine{22     \textcolor{keywordflow}{for} (i = 0; i < 3; ++i)}
+\DoxyCodeLine{23         \textcolor{keywordflow}{for} (j = 0; j < 3; ++j)}
+\DoxyCodeLine{24             result[i][j] = tran[j][i];}
+\DoxyCodeLine{25     \textcolor{comment}{/* Set the values for the last column of the result */}}
+\DoxyCodeLine{26     result[3][0] = result[3][1] = result[3][2] = 0.0;}
+\DoxyCodeLine{27     result[3][3] = 1.0;}
+\DoxyCodeLine{28     \textcolor{comment}{/* Initialize the values of the last column of the result. */}}
+\DoxyCodeLine{29     result[0][3] = result[1][3] = result[2][3] = 0.0;}
+\DoxyCodeLine{30     \textcolor{keywordflow}{for} (i = 0; i < 3; i++) \{}
+\DoxyCodeLine{31         \textcolor{keywordflow}{for} (j = 0; j < 3; j++) \{}
+\DoxyCodeLine{32             result[i][3] -\/= result[i][j] * tran[j][3];}
+\DoxyCodeLine{33         \}}
+\DoxyCodeLine{34     \}}
+\DoxyCodeLine{35 \}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{keywordtype}{void} matmult(\textcolor{keywordtype}{float} ans[4][4], \textcolor{keywordtype}{float} matrix1[4][4], \textcolor{keywordtype}{float} matrix2[4][4])}
+\DoxyCodeLine{38 \{}
+\DoxyCodeLine{39     \textcolor{keywordtype}{int}   i, j, k;}
+\DoxyCodeLine{40     \textcolor{keywordflow}{for} (i = 0; i < 4; i++)}
+\DoxyCodeLine{41         \textcolor{keywordflow}{for} (j = 0; j < 4; j++)}
+\DoxyCodeLine{42             ans[i][j] = 0.0;}
+\DoxyCodeLine{43     \textcolor{keywordflow}{for} (i = 0; i < 4; i++)}
+\DoxyCodeLine{44         \textcolor{keywordflow}{for} (j = 0; j < 4; j++)}
+\DoxyCodeLine{45             \textcolor{keywordflow}{for} (k = 0; k < 4; k++)}
+\DoxyCodeLine{46                 ans[i][j] += matrix1[i][k] * matrix2[k][j];}
+\DoxyCodeLine{47 \}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49 \textcolor{keywordtype}{void} create\_312\_transform(\textcolor{keywordtype}{float} transform[4][4], \textcolor{keywordtype}{float} xt, \textcolor{keywordtype}{float} yt, \textcolor{keywordtype}{float} zt, \textcolor{keywordtype}{float} zr, \textcolor{keywordtype}{float} xr, \textcolor{keywordtype}{float} yr)}
+\DoxyCodeLine{50 \{}
+\DoxyCodeLine{51     \textcolor{keywordtype}{float} degtopi = 3.1415928/180.0;}
+\DoxyCodeLine{52     \textcolor{keywordtype}{float} zr\_rad = zr * degtopi;}
+\DoxyCodeLine{53     \textcolor{keywordtype}{float} xr\_rad = xr * degtopi;}
+\DoxyCodeLine{54     \textcolor{keywordtype}{float} yr\_rad = yr * degtopi;}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56     \textcolor{keywordtype}{float} cx = cos(xr\_rad);}
+\DoxyCodeLine{57     \textcolor{keywordtype}{float} cy = cos(yr\_rad);}
+\DoxyCodeLine{58     \textcolor{keywordtype}{float} cz = cos(zr\_rad);}
+\DoxyCodeLine{59     \textcolor{keywordtype}{float} sx = sin(xr\_rad);}
+\DoxyCodeLine{60     \textcolor{keywordtype}{float} sy = sin(yr\_rad);}
+\DoxyCodeLine{61     \textcolor{keywordtype}{float} sz = sin(zr\_rad);}
+\DoxyCodeLine{62     }
+\DoxyCodeLine{63     transform[0][0] = cy * sx * sz -\/ cz * sy;}
+\DoxyCodeLine{64     transform[0][1] = -\/cx * sz;}
+\DoxyCodeLine{65     transform[0][2] = cy * cz + sx * sy * sz;}
+\DoxyCodeLine{66     transform[0][3] = xt;}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68     transform[1][0] = -\/cy * cz * sx -\/ sy * sz;}
+\DoxyCodeLine{69     transform[1][1] = cx * cz;}
+\DoxyCodeLine{70     transform[1][2] = cy * sz -\/ cz * sx * sy;}
+\DoxyCodeLine{71     transform[1][3] = yt;}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73     transform[2][0] = cx * cy;}
+\DoxyCodeLine{74     transform[2][1] = sx;}
+\DoxyCodeLine{75     transform[2][2] = cx * sy;}
+\DoxyCodeLine{76     transform[2][3] = zt;}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{78     transform[3][0] = transform[3][1] = transform[3][2] = 0.0f;}
+\DoxyCodeLine{79     transform[3][3] = 1.0f;}
+\DoxyCodeLine{80 \}}
+
+\end{DoxyCode}

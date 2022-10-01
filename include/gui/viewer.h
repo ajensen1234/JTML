@@ -31,7 +31,6 @@ class viewer
 public:
     viewer();
     ~viewer();
-    int my_viewer_number;
 
     void initialize_vtk_pointers();
     void initialize_vtk_mappers();
@@ -39,6 +38,9 @@ public:
     void initialize_vtk_renderers();
     vtkSmartPointer<vtkRenderer> get_renderer();
     vtkSmartPointer<vtkActor> get_actor_image();
+    vtkSmartPointer<vtkImageData> get_current_background();
+    vtkSmartPointer<vtkSTLReader> get_stl_reader();
+    vtkSmartPointer<vtkDataSetMapper> get_image_mapper();
     
 
 private:
@@ -53,6 +55,8 @@ private:
 	vtkSmartPointer<vtkTextActor> actor_text_;
 	vtkSmartPointer<vtkImageImport> importer_;
     vtkSmartPointer<vtkRenderWindow> qvtk_render_window_;
+    vtkSmartPointer<vtkCamera> my_image_camera_;
+    vtkSmartPointer<vtkCamera> my_model_camera_;
     
     bool initialized_pointers_;
 

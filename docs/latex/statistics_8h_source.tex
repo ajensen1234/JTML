@@ -1,0 +1,1359 @@
+\hypertarget{statistics_8h_source}{}\doxysection{statistics.\+h}
+\label{statistics_8h_source}\index{lib/alglib/statistics.h@{lib/alglib/statistics.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_statistics\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_statistics\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include "{}linalg.h"{}}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#include "{}specialfunctions.h"{}}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include "{}alglibmisc.h"{}}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{29 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{33 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{34 \{}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASESTAT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORRELATIONTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JARQUEBERA) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_VARIANCETESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_WSR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{44 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{45 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_MANNWHITNEYU) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STEST) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{49 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{50 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 \}}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{55 \textcolor{comment}{//}}
+\DoxyCodeLine{56 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{57 \textcolor{comment}{//}}
+\DoxyCodeLine{59 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{60 \{}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASESTAT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORRELATIONTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JARQUEBERA) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{72 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_VARIANCETESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{78 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_WSR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_MANNWHITNEYU) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{83 }
+\DoxyCodeLine{84 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STEST) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{87 }
+\DoxyCodeLine{88 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{90 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{94 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASESTAT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{95 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{96 \textcolor{comment}{Calculation of the distribution moments: mean, variance, skewness, kurtosis.}}
+\DoxyCodeLine{97 \textcolor{comment}{}}
+\DoxyCodeLine{98 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{99 \textcolor{comment}{    X       -\/   sample}}
+\DoxyCodeLine{100 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{101 \textcolor{comment}{                * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{102 \textcolor{comment}{                * if not given, automatically determined from size of X}}
+\DoxyCodeLine{103 \textcolor{comment}{}}
+\DoxyCodeLine{104 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{105 \textcolor{comment}{    Mean    -\/   mean.}}
+\DoxyCodeLine{106 \textcolor{comment}{    Variance-\/   variance.}}
+\DoxyCodeLine{107 \textcolor{comment}{    Skewness-\/   skewness (if variance<>0; zero otherwise).}}
+\DoxyCodeLine{108 \textcolor{comment}{    Kurtosis-\/   kurtosis (if variance<>0; zero otherwise).}}
+\DoxyCodeLine{109 \textcolor{comment}{}}
+\DoxyCodeLine{110 \textcolor{comment}{NOTE: variance is calculated by dividing sum of squares by N-\/1, not N.}}
+\DoxyCodeLine{111 \textcolor{comment}{}}
+\DoxyCodeLine{112 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{113 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{114 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{115 \textcolor{keywordtype}{void} samplemoments(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&mean, \textcolor{keywordtype}{double} \&variance, \textcolor{keywordtype}{double} \&skewness, \textcolor{keywordtype}{double} \&kurtosis, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{116 \textcolor{keywordtype}{void} samplemoments(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keywordtype}{double} \&mean, \textcolor{keywordtype}{double} \&variance, \textcolor{keywordtype}{double} \&skewness, \textcolor{keywordtype}{double} \&kurtosis, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{117 }
+\DoxyCodeLine{118 }
+\DoxyCodeLine{119 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{120 \textcolor{comment}{Calculation of the mean.}}
+\DoxyCodeLine{121 \textcolor{comment}{}}
+\DoxyCodeLine{122 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{123 \textcolor{comment}{    X       -\/   sample}}
+\DoxyCodeLine{124 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{125 \textcolor{comment}{                * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{126 \textcolor{comment}{                * if not given, automatically determined from size of X}}
+\DoxyCodeLine{127 \textcolor{comment}{}}
+\DoxyCodeLine{128 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{129 \textcolor{comment}{}}
+\DoxyCodeLine{130 \textcolor{comment}{This function return result  which calculated by 'SampleMoments' function}}
+\DoxyCodeLine{131 \textcolor{comment}{and stored at 'Mean' variable.}}
+\DoxyCodeLine{132 \textcolor{comment}{}}
+\DoxyCodeLine{133 \textcolor{comment}{}}
+\DoxyCodeLine{134 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{135 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{136 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{137 \textcolor{keywordtype}{double} samplemean(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{138 \textcolor{keywordtype}{double} samplemean(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{139 }
+\DoxyCodeLine{140 }
+\DoxyCodeLine{141 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{142 \textcolor{comment}{Calculation of the variance.}}
+\DoxyCodeLine{143 \textcolor{comment}{}}
+\DoxyCodeLine{144 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{145 \textcolor{comment}{    X       -\/   sample}}
+\DoxyCodeLine{146 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{147 \textcolor{comment}{                * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{148 \textcolor{comment}{                * if not given, automatically determined from size of X}}
+\DoxyCodeLine{149 \textcolor{comment}{}}
+\DoxyCodeLine{150 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{151 \textcolor{comment}{}}
+\DoxyCodeLine{152 \textcolor{comment}{This function return result  which calculated by 'SampleMoments' function}}
+\DoxyCodeLine{153 \textcolor{comment}{and stored at 'Variance' variable.}}
+\DoxyCodeLine{154 \textcolor{comment}{}}
+\DoxyCodeLine{155 \textcolor{comment}{}}
+\DoxyCodeLine{156 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{157 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{158 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{159 \textcolor{keywordtype}{double} samplevariance(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{160 \textcolor{keywordtype}{double} samplevariance(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{161 }
+\DoxyCodeLine{162 }
+\DoxyCodeLine{163 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{164 \textcolor{comment}{Calculation of the skewness.}}
+\DoxyCodeLine{165 \textcolor{comment}{}}
+\DoxyCodeLine{166 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{167 \textcolor{comment}{    X       -\/   sample}}
+\DoxyCodeLine{168 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{169 \textcolor{comment}{                * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{170 \textcolor{comment}{                * if not given, automatically determined from size of X}}
+\DoxyCodeLine{171 \textcolor{comment}{}}
+\DoxyCodeLine{172 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{173 \textcolor{comment}{}}
+\DoxyCodeLine{174 \textcolor{comment}{This function return result  which calculated by 'SampleMoments' function}}
+\DoxyCodeLine{175 \textcolor{comment}{and stored at 'Skewness' variable.}}
+\DoxyCodeLine{176 \textcolor{comment}{}}
+\DoxyCodeLine{177 \textcolor{comment}{}}
+\DoxyCodeLine{178 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{179 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{180 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{181 \textcolor{keywordtype}{double} sampleskewness(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{182 \textcolor{keywordtype}{double} sampleskewness(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{183 }
+\DoxyCodeLine{184 }
+\DoxyCodeLine{185 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{186 \textcolor{comment}{Calculation of the kurtosis.}}
+\DoxyCodeLine{187 \textcolor{comment}{}}
+\DoxyCodeLine{188 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{189 \textcolor{comment}{    X       -\/   sample}}
+\DoxyCodeLine{190 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{191 \textcolor{comment}{                * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{192 \textcolor{comment}{                * if not given, automatically determined from size of X}}
+\DoxyCodeLine{193 \textcolor{comment}{}}
+\DoxyCodeLine{194 \textcolor{comment}{NOTE:}}
+\DoxyCodeLine{195 \textcolor{comment}{}}
+\DoxyCodeLine{196 \textcolor{comment}{This function return result  which calculated by 'SampleMoments' function}}
+\DoxyCodeLine{197 \textcolor{comment}{and stored at 'Kurtosis' variable.}}
+\DoxyCodeLine{198 \textcolor{comment}{}}
+\DoxyCodeLine{199 \textcolor{comment}{}}
+\DoxyCodeLine{200 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{201 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{202 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{203 \textcolor{keywordtype}{double} samplekurtosis(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{204 \textcolor{keywordtype}{double} samplekurtosis(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206 }
+\DoxyCodeLine{207 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{208 \textcolor{comment}{ADev}}
+\DoxyCodeLine{209 \textcolor{comment}{}}
+\DoxyCodeLine{210 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{211 \textcolor{comment}{    X   -\/   sample}}
+\DoxyCodeLine{212 \textcolor{comment}{    N   -\/   N>=0, sample size:}}
+\DoxyCodeLine{213 \textcolor{comment}{            * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{214 \textcolor{comment}{            * if not given, automatically determined from size of X}}
+\DoxyCodeLine{215 \textcolor{comment}{}}
+\DoxyCodeLine{216 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{217 \textcolor{comment}{    ADev-\/   ADev}}
+\DoxyCodeLine{218 \textcolor{comment}{}}
+\DoxyCodeLine{219 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{220 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{221 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{222 \textcolor{keywordtype}{void} sampleadev(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&adev, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{223 \textcolor{keywordtype}{void} sampleadev(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keywordtype}{double} \&adev, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{224 }
+\DoxyCodeLine{225 }
+\DoxyCodeLine{226 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{227 \textcolor{comment}{Median calculation.}}
+\DoxyCodeLine{228 \textcolor{comment}{}}
+\DoxyCodeLine{229 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{230 \textcolor{comment}{    X   -\/   sample (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{231 \textcolor{comment}{    N   -\/   N>=0, sample size:}}
+\DoxyCodeLine{232 \textcolor{comment}{            * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{233 \textcolor{comment}{            * if not given, automatically determined from size of X}}
+\DoxyCodeLine{234 \textcolor{comment}{}}
+\DoxyCodeLine{235 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{236 \textcolor{comment}{    Median}}
+\DoxyCodeLine{237 \textcolor{comment}{}}
+\DoxyCodeLine{238 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{239 \textcolor{comment}{     Copyright 06.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{240 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{241 \textcolor{keywordtype}{void} samplemedian(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&median, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{242 \textcolor{keywordtype}{void} samplemedian(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keywordtype}{double} \&median, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{243 }
+\DoxyCodeLine{244 }
+\DoxyCodeLine{245 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{246 \textcolor{comment}{Percentile calculation.}}
+\DoxyCodeLine{247 \textcolor{comment}{}}
+\DoxyCodeLine{248 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{249 \textcolor{comment}{    X   -\/   sample (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{250 \textcolor{comment}{    N   -\/   N>=0, sample size:}}
+\DoxyCodeLine{251 \textcolor{comment}{            * if given, only leading N elements of X are processed}}
+\DoxyCodeLine{252 \textcolor{comment}{            * if not given, automatically determined from size of X}}
+\DoxyCodeLine{253 \textcolor{comment}{    P   -\/   percentile (0<=P<=1)}}
+\DoxyCodeLine{254 \textcolor{comment}{}}
+\DoxyCodeLine{255 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{256 \textcolor{comment}{    V   -\/   percentile}}
+\DoxyCodeLine{257 \textcolor{comment}{}}
+\DoxyCodeLine{258 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{259 \textcolor{comment}{     Copyright 01.03.2008 by Bochkanov Sergey}}
+\DoxyCodeLine{260 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{261 \textcolor{keywordtype}{void} samplepercentile(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} p, \textcolor{keywordtype}{double} \&v, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{262 \textcolor{keywordtype}{void} samplepercentile(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} p, \textcolor{keywordtype}{double} \&v, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{263 }
+\DoxyCodeLine{264 }
+\DoxyCodeLine{265 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{266 \textcolor{comment}{2-\/sample covariance}}
+\DoxyCodeLine{267 \textcolor{comment}{}}
+\DoxyCodeLine{268 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{269 \textcolor{comment}{    X       -\/   sample 1 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{270 \textcolor{comment}{    Y       -\/   sample 2 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{271 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{272 \textcolor{comment}{                * if given, only N leading elements of X/Y are processed}}
+\DoxyCodeLine{273 \textcolor{comment}{                * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{274 \textcolor{comment}{}}
+\DoxyCodeLine{275 \textcolor{comment}{Result:}}
+\DoxyCodeLine{276 \textcolor{comment}{    covariance (zero for N=0 or N=1)}}
+\DoxyCodeLine{277 \textcolor{comment}{}}
+\DoxyCodeLine{278 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{279 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{280 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{281 \textcolor{keywordtype}{double} cov2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{282 \textcolor{keywordtype}{double} cov2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{283 }
+\DoxyCodeLine{284 }
+\DoxyCodeLine{285 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{286 \textcolor{comment}{Pearson product-\/moment correlation coefficient}}
+\DoxyCodeLine{287 \textcolor{comment}{}}
+\DoxyCodeLine{288 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{289 \textcolor{comment}{    X       -\/   sample 1 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{290 \textcolor{comment}{    Y       -\/   sample 2 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{291 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{292 \textcolor{comment}{                * if given, only N leading elements of X/Y are processed}}
+\DoxyCodeLine{293 \textcolor{comment}{                * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{294 \textcolor{comment}{}}
+\DoxyCodeLine{295 \textcolor{comment}{Result:}}
+\DoxyCodeLine{296 \textcolor{comment}{    Pearson product-\/moment correlation coefficient}}
+\DoxyCodeLine{297 \textcolor{comment}{    (zero for N=0 or N=1)}}
+\DoxyCodeLine{298 \textcolor{comment}{}}
+\DoxyCodeLine{299 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{300 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{301 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{302 \textcolor{keywordtype}{double} pearsoncorr2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{303 \textcolor{keywordtype}{double} pearsoncorr2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{304 }
+\DoxyCodeLine{305 }
+\DoxyCodeLine{306 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{307 \textcolor{comment}{Spearman's rank correlation coefficient}}
+\DoxyCodeLine{308 \textcolor{comment}{}}
+\DoxyCodeLine{309 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{310 \textcolor{comment}{    X       -\/   sample 1 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{311 \textcolor{comment}{    Y       -\/   sample 2 (array indexes: [0..N-\/1])}}
+\DoxyCodeLine{312 \textcolor{comment}{    N       -\/   N>=0, sample size:}}
+\DoxyCodeLine{313 \textcolor{comment}{                * if given, only N leading elements of X/Y are processed}}
+\DoxyCodeLine{314 \textcolor{comment}{                * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{315 \textcolor{comment}{}}
+\DoxyCodeLine{316 \textcolor{comment}{Result:}}
+\DoxyCodeLine{317 \textcolor{comment}{    Spearman's rank correlation coefficient}}
+\DoxyCodeLine{318 \textcolor{comment}{    (zero for N=0 or N=1)}}
+\DoxyCodeLine{319 \textcolor{comment}{}}
+\DoxyCodeLine{320 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{321 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{322 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{323 \textcolor{keywordtype}{double} spearmancorr2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{324 \textcolor{keywordtype}{double} spearmancorr2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{325 }
+\DoxyCodeLine{326 }
+\DoxyCodeLine{327 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{328 \textcolor{comment}{Covariance matrix}}
+\DoxyCodeLine{329 \textcolor{comment}{}}
+\DoxyCodeLine{330 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{331 \textcolor{comment}{  !}}
+\DoxyCodeLine{332 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{333 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{334 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{335 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{336 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{337 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{338 \textcolor{comment}{  !}}
+\DoxyCodeLine{339 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{340 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{341 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{342 \textcolor{comment}{}}
+\DoxyCodeLine{343 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{344 \textcolor{comment}{    X   -\/   array[N,M], sample matrix:}}
+\DoxyCodeLine{345 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{346 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{347 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{348 \textcolor{comment}{            * if given, only leading N rows of X are used}}
+\DoxyCodeLine{349 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{350 \textcolor{comment}{    M   -\/   M>0, number of variables:}}
+\DoxyCodeLine{351 \textcolor{comment}{            * if given, only leading M columns of X are used}}
+\DoxyCodeLine{352 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{353 \textcolor{comment}{}}
+\DoxyCodeLine{354 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{355 \textcolor{comment}{    C   -\/   array[M,M], covariance matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{356 \textcolor{comment}{}}
+\DoxyCodeLine{357 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{358 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{359 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{360 \textcolor{keywordtype}{void} covm(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{361 \textcolor{keywordtype}{void} covm(\textcolor{keyword}{const} real\_2d\_array \&x, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{362 }
+\DoxyCodeLine{363 }
+\DoxyCodeLine{364 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{365 \textcolor{comment}{Pearson product-\/moment correlation matrix}}
+\DoxyCodeLine{366 \textcolor{comment}{}}
+\DoxyCodeLine{367 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{368 \textcolor{comment}{  !}}
+\DoxyCodeLine{369 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{370 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{371 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{372 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{373 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{374 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{375 \textcolor{comment}{  !}}
+\DoxyCodeLine{376 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{377 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{378 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{379 \textcolor{comment}{}}
+\DoxyCodeLine{380 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{381 \textcolor{comment}{    X   -\/   array[N,M], sample matrix:}}
+\DoxyCodeLine{382 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{383 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{384 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{385 \textcolor{comment}{            * if given, only leading N rows of X are used}}
+\DoxyCodeLine{386 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{387 \textcolor{comment}{    M   -\/   M>0, number of variables:}}
+\DoxyCodeLine{388 \textcolor{comment}{            * if given, only leading M columns of X are used}}
+\DoxyCodeLine{389 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{390 \textcolor{comment}{}}
+\DoxyCodeLine{391 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{392 \textcolor{comment}{    C   -\/   array[M,M], correlation matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{393 \textcolor{comment}{}}
+\DoxyCodeLine{394 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{395 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{396 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{397 \textcolor{keywordtype}{void} pearsoncorrm(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{398 \textcolor{keywordtype}{void} pearsoncorrm(\textcolor{keyword}{const} real\_2d\_array \&x, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{399 }
+\DoxyCodeLine{400 }
+\DoxyCodeLine{401 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{402 \textcolor{comment}{Spearman's rank correlation matrix}}
+\DoxyCodeLine{403 \textcolor{comment}{}}
+\DoxyCodeLine{404 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{405 \textcolor{comment}{  !}}
+\DoxyCodeLine{406 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{407 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{408 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{409 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{410 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{411 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{412 \textcolor{comment}{  !}}
+\DoxyCodeLine{413 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{414 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{415 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{416 \textcolor{comment}{}}
+\DoxyCodeLine{417 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{418 \textcolor{comment}{    X   -\/   array[N,M], sample matrix:}}
+\DoxyCodeLine{419 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{420 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{421 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{422 \textcolor{comment}{            * if given, only leading N rows of X are used}}
+\DoxyCodeLine{423 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{424 \textcolor{comment}{    M   -\/   M>0, number of variables:}}
+\DoxyCodeLine{425 \textcolor{comment}{            * if given, only leading M columns of X are used}}
+\DoxyCodeLine{426 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{427 \textcolor{comment}{}}
+\DoxyCodeLine{428 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{429 \textcolor{comment}{    C   -\/   array[M,M], correlation matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{430 \textcolor{comment}{}}
+\DoxyCodeLine{431 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{432 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{433 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{434 \textcolor{keywordtype}{void} spearmancorrm(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{435 \textcolor{keywordtype}{void} spearmancorrm(\textcolor{keyword}{const} real\_2d\_array \&x, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{436 }
+\DoxyCodeLine{437 }
+\DoxyCodeLine{438 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{439 \textcolor{comment}{Cross-\/covariance matrix}}
+\DoxyCodeLine{440 \textcolor{comment}{}}
+\DoxyCodeLine{441 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{442 \textcolor{comment}{  !}}
+\DoxyCodeLine{443 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{444 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{445 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{446 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{447 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{448 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{449 \textcolor{comment}{  !}}
+\DoxyCodeLine{450 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{451 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{452 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{453 \textcolor{comment}{}}
+\DoxyCodeLine{454 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{455 \textcolor{comment}{    X   -\/   array[N,M1], sample matrix:}}
+\DoxyCodeLine{456 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{457 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{458 \textcolor{comment}{    Y   -\/   array[N,M2], sample matrix:}}
+\DoxyCodeLine{459 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{460 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{461 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{462 \textcolor{comment}{            * if given, only leading N rows of X/Y are used}}
+\DoxyCodeLine{463 \textcolor{comment}{            * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{464 \textcolor{comment}{    M1  -\/   M1>0, number of variables in X:}}
+\DoxyCodeLine{465 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{466 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{467 \textcolor{comment}{    M2  -\/   M2>0, number of variables in Y:}}
+\DoxyCodeLine{468 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{469 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{470 \textcolor{comment}{}}
+\DoxyCodeLine{471 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{472 \textcolor{comment}{    C   -\/   array[M1,M2], cross-\/covariance matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{473 \textcolor{comment}{}}
+\DoxyCodeLine{474 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{475 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{476 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{477 \textcolor{keywordtype}{void} covm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m1, \textcolor{keyword}{const} ae\_int\_t m2, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{478 \textcolor{keywordtype}{void} covm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{479 }
+\DoxyCodeLine{480 }
+\DoxyCodeLine{481 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{482 \textcolor{comment}{Pearson product-\/moment cross-\/correlation matrix}}
+\DoxyCodeLine{483 \textcolor{comment}{}}
+\DoxyCodeLine{484 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{485 \textcolor{comment}{  !}}
+\DoxyCodeLine{486 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{487 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{488 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{489 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{490 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{491 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{492 \textcolor{comment}{  !}}
+\DoxyCodeLine{493 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{494 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{495 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{496 \textcolor{comment}{}}
+\DoxyCodeLine{497 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{498 \textcolor{comment}{    X   -\/   array[N,M1], sample matrix:}}
+\DoxyCodeLine{499 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{500 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{501 \textcolor{comment}{    Y   -\/   array[N,M2], sample matrix:}}
+\DoxyCodeLine{502 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{503 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{504 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{505 \textcolor{comment}{            * if given, only leading N rows of X/Y are used}}
+\DoxyCodeLine{506 \textcolor{comment}{            * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{507 \textcolor{comment}{    M1  -\/   M1>0, number of variables in X:}}
+\DoxyCodeLine{508 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{509 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{510 \textcolor{comment}{    M2  -\/   M2>0, number of variables in Y:}}
+\DoxyCodeLine{511 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{512 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{513 \textcolor{comment}{}}
+\DoxyCodeLine{514 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{515 \textcolor{comment}{    C   -\/   array[M1,M2], cross-\/correlation matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{516 \textcolor{comment}{}}
+\DoxyCodeLine{517 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{518 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{519 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{520 \textcolor{keywordtype}{void} pearsoncorrm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m1, \textcolor{keyword}{const} ae\_int\_t m2, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{521 \textcolor{keywordtype}{void} pearsoncorrm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{522 }
+\DoxyCodeLine{523 }
+\DoxyCodeLine{524 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{525 \textcolor{comment}{Spearman's rank cross-\/correlation matrix}}
+\DoxyCodeLine{526 \textcolor{comment}{}}
+\DoxyCodeLine{527 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{528 \textcolor{comment}{  !}}
+\DoxyCodeLine{529 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{530 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{531 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{532 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{533 \textcolor{comment}{  ! * hardware vendor (Intel) implementations of linear algebra primitives}}
+\DoxyCodeLine{534 \textcolor{comment}{  !   (C++ and C\# versions, x86/x64 platform)}}
+\DoxyCodeLine{535 \textcolor{comment}{  !}}
+\DoxyCodeLine{536 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{537 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{538 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{539 \textcolor{comment}{}}
+\DoxyCodeLine{540 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{541 \textcolor{comment}{    X   -\/   array[N,M1], sample matrix:}}
+\DoxyCodeLine{542 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{543 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{544 \textcolor{comment}{    Y   -\/   array[N,M2], sample matrix:}}
+\DoxyCodeLine{545 \textcolor{comment}{            * J-\/th column corresponds to J-\/th variable}}
+\DoxyCodeLine{546 \textcolor{comment}{            * I-\/th row corresponds to I-\/th observation}}
+\DoxyCodeLine{547 \textcolor{comment}{    N   -\/   N>=0, number of observations:}}
+\DoxyCodeLine{548 \textcolor{comment}{            * if given, only leading N rows of X/Y are used}}
+\DoxyCodeLine{549 \textcolor{comment}{            * if not given, automatically determined from input sizes}}
+\DoxyCodeLine{550 \textcolor{comment}{    M1  -\/   M1>0, number of variables in X:}}
+\DoxyCodeLine{551 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{552 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{553 \textcolor{comment}{    M2  -\/   M2>0, number of variables in Y:}}
+\DoxyCodeLine{554 \textcolor{comment}{            * if given, only leading M1 columns of X are used}}
+\DoxyCodeLine{555 \textcolor{comment}{            * if not given, automatically determined from input size}}
+\DoxyCodeLine{556 \textcolor{comment}{}}
+\DoxyCodeLine{557 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{558 \textcolor{comment}{    C   -\/   array[M1,M2], cross-\/correlation matrix (zero if N=0 or N=1)}}
+\DoxyCodeLine{559 \textcolor{comment}{}}
+\DoxyCodeLine{560 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{561 \textcolor{comment}{     Copyright 28.10.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{562 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{563 \textcolor{keywordtype}{void} spearmancorrm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t m1, \textcolor{keyword}{const} ae\_int\_t m2, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{564 \textcolor{keywordtype}{void} spearmancorrm2(\textcolor{keyword}{const} real\_2d\_array \&x, \textcolor{keyword}{const} real\_2d\_array \&y, real\_2d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{565 }
+\DoxyCodeLine{566 }
+\DoxyCodeLine{567 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{568 \textcolor{comment}{This function replaces data in XY by their ranks:}}
+\DoxyCodeLine{569 \textcolor{comment}{* XY is processed row-\/by-\/row}}
+\DoxyCodeLine{570 \textcolor{comment}{* rows are processed separately}}
+\DoxyCodeLine{571 \textcolor{comment}{* tied data are correctly handled (tied ranks are calculated)}}
+\DoxyCodeLine{572 \textcolor{comment}{* ranking starts from 0, ends at NFeatures-\/1}}
+\DoxyCodeLine{573 \textcolor{comment}{* sum of within-\/row values is equal to (NFeatures-\/1)*NFeatures/2}}
+\DoxyCodeLine{574 \textcolor{comment}{}}
+\DoxyCodeLine{575 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{576 \textcolor{comment}{  !}}
+\DoxyCodeLine{577 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{578 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{579 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{580 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{581 \textcolor{comment}{  !}}
+\DoxyCodeLine{582 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{583 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{584 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{585 \textcolor{comment}{}}
+\DoxyCodeLine{586 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{587 \textcolor{comment}{    XY      -\/   array[NPoints,NFeatures], dataset}}
+\DoxyCodeLine{588 \textcolor{comment}{    NPoints -\/   number of points}}
+\DoxyCodeLine{589 \textcolor{comment}{    NFeatures-\/  number of features}}
+\DoxyCodeLine{590 \textcolor{comment}{}}
+\DoxyCodeLine{591 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{592 \textcolor{comment}{    XY      -\/   data are replaced by their within-\/row ranks;}}
+\DoxyCodeLine{593 \textcolor{comment}{                ranking starts from 0, ends at NFeatures-\/1}}
+\DoxyCodeLine{594 \textcolor{comment}{}}
+\DoxyCodeLine{595 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{596 \textcolor{comment}{     Copyright 18.04.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{597 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{598 \textcolor{keywordtype}{void} rankdata(\textcolor{keyword}{const} real\_2d\_array \&xy, \textcolor{keyword}{const} ae\_int\_t npoints, \textcolor{keyword}{const} ae\_int\_t nfeatures, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{599 \textcolor{keywordtype}{void} rankdata(real\_2d\_array \&xy, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{600 }
+\DoxyCodeLine{601 }
+\DoxyCodeLine{602 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{603 \textcolor{comment}{This function replaces data in XY by their CENTERED ranks:}}
+\DoxyCodeLine{604 \textcolor{comment}{* XY is processed row-\/by-\/row}}
+\DoxyCodeLine{605 \textcolor{comment}{* rows are processed separately}}
+\DoxyCodeLine{606 \textcolor{comment}{* tied data are correctly handled (tied ranks are calculated)}}
+\DoxyCodeLine{607 \textcolor{comment}{* centered ranks are just usual ranks, but centered in such way  that  sum}}
+\DoxyCodeLine{608 \textcolor{comment}{  of within-\/row values is equal to 0.0.}}
+\DoxyCodeLine{609 \textcolor{comment}{* centering is performed by subtracting mean from each row, i.e it changes}}
+\DoxyCodeLine{610 \textcolor{comment}{  mean value, but does NOT change higher moments}}
+\DoxyCodeLine{611 \textcolor{comment}{}}
+\DoxyCodeLine{612 \textcolor{comment}{  ! COMMERCIAL EDITION OF ALGLIB:}}
+\DoxyCodeLine{613 \textcolor{comment}{  !}}
+\DoxyCodeLine{614 \textcolor{comment}{  ! Commercial Edition of ALGLIB includes following important improvements}}
+\DoxyCodeLine{615 \textcolor{comment}{  ! of this function:}}
+\DoxyCodeLine{616 \textcolor{comment}{  ! * high-\/performance native backend with same C\# interface (C\# version)}}
+\DoxyCodeLine{617 \textcolor{comment}{  ! * multithreading support (C++ and C\# versions)}}
+\DoxyCodeLine{618 \textcolor{comment}{  !}}
+\DoxyCodeLine{619 \textcolor{comment}{  ! We recommend you to read 'Working with commercial version' section  of}}
+\DoxyCodeLine{620 \textcolor{comment}{  ! ALGLIB Reference Manual in order to find out how to  use  performance-\/}}
+\DoxyCodeLine{621 \textcolor{comment}{  ! related features provided by commercial edition of ALGLIB.}}
+\DoxyCodeLine{622 \textcolor{comment}{}}
+\DoxyCodeLine{623 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{624 \textcolor{comment}{    XY      -\/   array[NPoints,NFeatures], dataset}}
+\DoxyCodeLine{625 \textcolor{comment}{    NPoints -\/   number of points}}
+\DoxyCodeLine{626 \textcolor{comment}{    NFeatures-\/  number of features}}
+\DoxyCodeLine{627 \textcolor{comment}{}}
+\DoxyCodeLine{628 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{629 \textcolor{comment}{    XY      -\/   data are replaced by their within-\/row ranks;}}
+\DoxyCodeLine{630 \textcolor{comment}{                ranking starts from 0, ends at NFeatures-\/1}}
+\DoxyCodeLine{631 \textcolor{comment}{}}
+\DoxyCodeLine{632 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{633 \textcolor{comment}{     Copyright 18.04.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{634 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{635 \textcolor{keywordtype}{void} rankdatacentered(\textcolor{keyword}{const} real\_2d\_array \&xy, \textcolor{keyword}{const} ae\_int\_t npoints, \textcolor{keyword}{const} ae\_int\_t nfeatures, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{636 \textcolor{keywordtype}{void} rankdatacentered(real\_2d\_array \&xy, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{637 }
+\DoxyCodeLine{638 }
+\DoxyCodeLine{639 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{640 \textcolor{comment}{Obsolete function, we recommend to use PearsonCorr2().}}
+\DoxyCodeLine{641 \textcolor{comment}{}}
+\DoxyCodeLine{642 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{643 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{644 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{645 \textcolor{keywordtype}{double} pearsoncorrelation(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{646 }
+\DoxyCodeLine{647 }
+\DoxyCodeLine{648 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{649 \textcolor{comment}{Obsolete function, we recommend to use SpearmanCorr2().}}
+\DoxyCodeLine{650 \textcolor{comment}{}}
+\DoxyCodeLine{651 \textcolor{comment}{    -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{652 \textcolor{comment}{    Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{653 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{654 \textcolor{keywordtype}{double} spearmanrankcorrelation(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{655 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{656 }
+\DoxyCodeLine{657 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORRELATIONTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{658 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{659 \textcolor{comment}{Pearson's correlation coefficient significance test}}
+\DoxyCodeLine{660 \textcolor{comment}{}}
+\DoxyCodeLine{661 \textcolor{comment}{This test checks hypotheses about whether X  and  Y  are  samples  of  two}}
+\DoxyCodeLine{662 \textcolor{comment}{continuous  distributions  having  zero  correlation  or   whether   their}}
+\DoxyCodeLine{663 \textcolor{comment}{correlation is non-\/zero.}}
+\DoxyCodeLine{664 \textcolor{comment}{}}
+\DoxyCodeLine{665 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{666 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ X and Y have zero correlation)}}
+\DoxyCodeLine{667 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the correlation  coefficient  is}}
+\DoxyCodeLine{668 \textcolor{comment}{      greater than or equal to 0)}}
+\DoxyCodeLine{669 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the correlation coefficient  is}}
+\DoxyCodeLine{670 \textcolor{comment}{      less than or equal to 0).}}
+\DoxyCodeLine{671 \textcolor{comment}{}}
+\DoxyCodeLine{672 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{673 \textcolor{comment}{    * the number of elements in each sample is not less than 5}}
+\DoxyCodeLine{674 \textcolor{comment}{    * normality of distributions of X and Y.}}
+\DoxyCodeLine{675 \textcolor{comment}{}}
+\DoxyCodeLine{676 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{677 \textcolor{comment}{    R   -\/   Pearson's correlation coefficient for X and Y}}
+\DoxyCodeLine{678 \textcolor{comment}{    N   -\/   number of elements in samples, N>=5.}}
+\DoxyCodeLine{679 \textcolor{comment}{}}
+\DoxyCodeLine{680 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{681 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{682 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{683 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{684 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{685 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{686 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{687 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{688 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{689 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{690 \textcolor{comment}{}}
+\DoxyCodeLine{691 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{692 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{693 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{694 \textcolor{keywordtype}{void} pearsoncorrelationsignificance(\textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{695 }
+\DoxyCodeLine{696 }
+\DoxyCodeLine{697 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{698 \textcolor{comment}{Spearman's rank correlation coefficient significance test}}
+\DoxyCodeLine{699 \textcolor{comment}{}}
+\DoxyCodeLine{700 \textcolor{comment}{This test checks hypotheses about whether X  and  Y  are  samples  of  two}}
+\DoxyCodeLine{701 \textcolor{comment}{continuous  distributions  having  zero  correlation  or   whether   their}}
+\DoxyCodeLine{702 \textcolor{comment}{correlation is non-\/zero.}}
+\DoxyCodeLine{703 \textcolor{comment}{}}
+\DoxyCodeLine{704 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{705 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ X and Y have zero correlation)}}
+\DoxyCodeLine{706 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the correlation  coefficient  is}}
+\DoxyCodeLine{707 \textcolor{comment}{      greater than or equal to 0)}}
+\DoxyCodeLine{708 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the correlation coefficient  is}}
+\DoxyCodeLine{709 \textcolor{comment}{      less than or equal to 0).}}
+\DoxyCodeLine{710 \textcolor{comment}{}}
+\DoxyCodeLine{711 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{712 \textcolor{comment}{    * the number of elements in each sample is not less than 5.}}
+\DoxyCodeLine{713 \textcolor{comment}{}}
+\DoxyCodeLine{714 \textcolor{comment}{The test is non-\/parametric and doesn't require distributions X and Y to be}}
+\DoxyCodeLine{715 \textcolor{comment}{normal.}}
+\DoxyCodeLine{716 \textcolor{comment}{}}
+\DoxyCodeLine{717 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{718 \textcolor{comment}{    R   -\/   Spearman's rank correlation coefficient for X and Y}}
+\DoxyCodeLine{719 \textcolor{comment}{    N   -\/   number of elements in samples, N>=5.}}
+\DoxyCodeLine{720 \textcolor{comment}{}}
+\DoxyCodeLine{721 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{722 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{723 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{724 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{725 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{726 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{727 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{728 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{729 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{730 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{731 \textcolor{comment}{}}
+\DoxyCodeLine{732 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{733 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{734 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{735 \textcolor{keywordtype}{void} spearmanrankcorrelationsignificance(\textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{736 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{737 }
+\DoxyCodeLine{738 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JARQUEBERA) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{739 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{740 \textcolor{comment}{Jarque-\/Bera test}}
+\DoxyCodeLine{741 \textcolor{comment}{}}
+\DoxyCodeLine{742 \textcolor{comment}{This test checks hypotheses about the fact that a  given  sample  X  is  a}}
+\DoxyCodeLine{743 \textcolor{comment}{sample of normal random variable.}}
+\DoxyCodeLine{744 \textcolor{comment}{}}
+\DoxyCodeLine{745 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{746 \textcolor{comment}{    * the number of elements in the sample is not less than 5.}}
+\DoxyCodeLine{747 \textcolor{comment}{}}
+\DoxyCodeLine{748 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{749 \textcolor{comment}{    X   -\/   sample. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{750 \textcolor{comment}{    N   -\/   size of the sample. N>=5}}
+\DoxyCodeLine{751 \textcolor{comment}{}}
+\DoxyCodeLine{752 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{753 \textcolor{comment}{    P           -\/   p-\/value for the test}}
+\DoxyCodeLine{754 \textcolor{comment}{}}
+\DoxyCodeLine{755 \textcolor{comment}{Accuracy of the approximation used (5<=N<=1951):}}
+\DoxyCodeLine{756 \textcolor{comment}{}}
+\DoxyCodeLine{757 \textcolor{comment}{p-\/value         relative error (5<=N<=1951)}}
+\DoxyCodeLine{758 \textcolor{comment}{[1, 0.1]            < 1\%}}
+\DoxyCodeLine{759 \textcolor{comment}{[0.1, 0.01]         < 2\%}}
+\DoxyCodeLine{760 \textcolor{comment}{[0.01, 0.001]       < 6\%}}
+\DoxyCodeLine{761 \textcolor{comment}{[0.001, 0]          wasn't measured}}
+\DoxyCodeLine{762 \textcolor{comment}{}}
+\DoxyCodeLine{763 \textcolor{comment}{For N>1951 accuracy wasn't measured but it shouldn't be sharply  different}}
+\DoxyCodeLine{764 \textcolor{comment}{from table values.}}
+\DoxyCodeLine{765 \textcolor{comment}{}}
+\DoxyCodeLine{766 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{767 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{768 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{769 \textcolor{keywordtype}{void} jarqueberatest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keywordtype}{double} \&p, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{770 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{771 }
+\DoxyCodeLine{772 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_VARIANCETESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{773 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{774 \textcolor{comment}{Two-\/sample F-\/test}}
+\DoxyCodeLine{775 \textcolor{comment}{}}
+\DoxyCodeLine{776 \textcolor{comment}{This test checks three hypotheses about dispersions of the given  samples.}}
+\DoxyCodeLine{777 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{778 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the dispersions are equal)}}
+\DoxyCodeLine{779 \textcolor{comment}{    * left-\/tailed test (null hypothesis  -\/  the  dispersion  of  the first}}
+\DoxyCodeLine{780 \textcolor{comment}{      sample is greater than or equal to  the  dispersion  of  the  second}}
+\DoxyCodeLine{781 \textcolor{comment}{      sample).}}
+\DoxyCodeLine{782 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the  dispersion  of  the  first}}
+\DoxyCodeLine{783 \textcolor{comment}{      sample is less than or equal to the dispersion of the second sample)}}
+\DoxyCodeLine{784 \textcolor{comment}{}}
+\DoxyCodeLine{785 \textcolor{comment}{The test is based on the following assumptions:}}
+\DoxyCodeLine{786 \textcolor{comment}{    * the given samples have normal distributions}}
+\DoxyCodeLine{787 \textcolor{comment}{    * the samples are independent.}}
+\DoxyCodeLine{788 \textcolor{comment}{}}
+\DoxyCodeLine{789 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{790 \textcolor{comment}{    X   -\/   sample 1. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{791 \textcolor{comment}{    N   -\/   sample size.}}
+\DoxyCodeLine{792 \textcolor{comment}{    Y   -\/   sample 2. Array whose index goes from 0 to M-\/1.}}
+\DoxyCodeLine{793 \textcolor{comment}{    M   -\/   sample size.}}
+\DoxyCodeLine{794 \textcolor{comment}{}}
+\DoxyCodeLine{795 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{796 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{797 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{798 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{799 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{800 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{801 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{802 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{803 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{804 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{805 \textcolor{comment}{}}
+\DoxyCodeLine{806 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{807 \textcolor{comment}{     Copyright 19.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{808 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{809 \textcolor{keywordtype}{void} ftest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{810 }
+\DoxyCodeLine{811 }
+\DoxyCodeLine{812 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{813 \textcolor{comment}{One-\/sample chi-\/square test}}
+\DoxyCodeLine{814 \textcolor{comment}{}}
+\DoxyCodeLine{815 \textcolor{comment}{This test checks three hypotheses about the dispersion of the given sample}}
+\DoxyCodeLine{816 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{817 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the dispersion equals  the  given}}
+\DoxyCodeLine{818 \textcolor{comment}{      number)}}
+\DoxyCodeLine{819 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the dispersion is  greater  than}}
+\DoxyCodeLine{820 \textcolor{comment}{      or equal to the given number)}}
+\DoxyCodeLine{821 \textcolor{comment}{    * right-\/tailed test (null hypothesis  -\/  dispersion is  less  than  or}}
+\DoxyCodeLine{822 \textcolor{comment}{      equal to the given number).}}
+\DoxyCodeLine{823 \textcolor{comment}{}}
+\DoxyCodeLine{824 \textcolor{comment}{Test is based on the following assumptions:}}
+\DoxyCodeLine{825 \textcolor{comment}{    * the given sample has a normal distribution.}}
+\DoxyCodeLine{826 \textcolor{comment}{}}
+\DoxyCodeLine{827 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{828 \textcolor{comment}{    X           -\/   sample 1. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{829 \textcolor{comment}{    N           -\/   size of the sample.}}
+\DoxyCodeLine{830 \textcolor{comment}{    Variance    -\/   dispersion value to compare with.}}
+\DoxyCodeLine{831 \textcolor{comment}{}}
+\DoxyCodeLine{832 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{833 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{834 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{835 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{836 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{837 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{838 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{839 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{840 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{841 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{842 \textcolor{comment}{}}
+\DoxyCodeLine{843 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{844 \textcolor{comment}{     Copyright 19.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{845 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{846 \textcolor{keywordtype}{void} onesamplevariancetest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} variance, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{847 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{848 }
+\DoxyCodeLine{849 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_WSR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{850 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{851 \textcolor{comment}{Wilcoxon signed-\/rank test}}
+\DoxyCodeLine{852 \textcolor{comment}{}}
+\DoxyCodeLine{853 \textcolor{comment}{This test checks three hypotheses about the median  of  the  given sample.}}
+\DoxyCodeLine{854 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{855 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the median is equal to the  given}}
+\DoxyCodeLine{856 \textcolor{comment}{      value)}}
+\DoxyCodeLine{857 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the median is  greater  than  or}}
+\DoxyCodeLine{858 \textcolor{comment}{      equal to the given value)}}
+\DoxyCodeLine{859 \textcolor{comment}{    * right-\/tailed test (null hypothesis  -\/  the  median  is  less than or}}
+\DoxyCodeLine{860 \textcolor{comment}{      equal to the given value)}}
+\DoxyCodeLine{861 \textcolor{comment}{}}
+\DoxyCodeLine{862 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{863 \textcolor{comment}{    * the scale of measurement should be ordinal, interval or  ratio (i.e.}}
+\DoxyCodeLine{864 \textcolor{comment}{      the test could not be applied to nominal variables).}}
+\DoxyCodeLine{865 \textcolor{comment}{    * the distribution should be continuous and symmetric relative to  its}}
+\DoxyCodeLine{866 \textcolor{comment}{      median.}}
+\DoxyCodeLine{867 \textcolor{comment}{    * number of distinct values in the X array should be greater than 4}}
+\DoxyCodeLine{868 \textcolor{comment}{}}
+\DoxyCodeLine{869 \textcolor{comment}{The test is non-\/parametric and doesn't require distribution X to be normal}}
+\DoxyCodeLine{870 \textcolor{comment}{}}
+\DoxyCodeLine{871 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{872 \textcolor{comment}{    X       -\/   sample. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{873 \textcolor{comment}{    N       -\/   size of the sample.}}
+\DoxyCodeLine{874 \textcolor{comment}{    Median  -\/   assumed median value.}}
+\DoxyCodeLine{875 \textcolor{comment}{}}
+\DoxyCodeLine{876 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{877 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{878 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{879 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{880 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{881 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{882 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{883 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{884 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{885 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{886 \textcolor{comment}{}}
+\DoxyCodeLine{887 \textcolor{comment}{To calculate p-\/values, special approximation is used. This method lets  us}}
+\DoxyCodeLine{888 \textcolor{comment}{calculate p-\/values with two decimal places in interval [0.0001, 1].}}
+\DoxyCodeLine{889 \textcolor{comment}{}}
+\DoxyCodeLine{890 \textcolor{comment}{"{}Two decimal places"{} does not sound very impressive, but in  practice  the}}
+\DoxyCodeLine{891 \textcolor{comment}{relative error of less than 1\% is enough to make a decision.}}
+\DoxyCodeLine{892 \textcolor{comment}{}}
+\DoxyCodeLine{893 \textcolor{comment}{There is no approximation outside the [0.0001, 1] interval. Therefore,  if}}
+\DoxyCodeLine{894 \textcolor{comment}{the significance level outlies this interval, the test returns 0.0001.}}
+\DoxyCodeLine{895 \textcolor{comment}{}}
+\DoxyCodeLine{896 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{897 \textcolor{comment}{     Copyright 08.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{898 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{899 \textcolor{keywordtype}{void} wilcoxonsignedranktest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} e, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{900 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{901 }
+\DoxyCodeLine{902 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_MANNWHITNEYU) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{903 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{904 \textcolor{comment}{Mann-\/Whitney U-\/test}}
+\DoxyCodeLine{905 \textcolor{comment}{}}
+\DoxyCodeLine{906 \textcolor{comment}{This test checks hypotheses about whether X  and  Y  are  samples  of  two}}
+\DoxyCodeLine{907 \textcolor{comment}{continuous distributions of the same shape  and  same  median  or  whether}}
+\DoxyCodeLine{908 \textcolor{comment}{their medians are different.}}
+\DoxyCodeLine{909 \textcolor{comment}{}}
+\DoxyCodeLine{910 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{911 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the medians are equal)}}
+\DoxyCodeLine{912 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the median of the  first  sample}}
+\DoxyCodeLine{913 \textcolor{comment}{      is greater than or equal to the median of the second sample)}}
+\DoxyCodeLine{914 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the median of the first  sample}}
+\DoxyCodeLine{915 \textcolor{comment}{      is less than or equal to the median of the second sample).}}
+\DoxyCodeLine{916 \textcolor{comment}{}}
+\DoxyCodeLine{917 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{918 \textcolor{comment}{    * the samples are independent}}
+\DoxyCodeLine{919 \textcolor{comment}{    * X and Y are continuous distributions (or discrete distributions well-\/}}
+\DoxyCodeLine{920 \textcolor{comment}{      approximating continuous distributions)}}
+\DoxyCodeLine{921 \textcolor{comment}{    * distributions of X and Y have the  same  shape.  The  only  possible}}
+\DoxyCodeLine{922 \textcolor{comment}{      difference is their position (i.e. the value of the median)}}
+\DoxyCodeLine{923 \textcolor{comment}{    * the number of elements in each sample is not less than 5}}
+\DoxyCodeLine{924 \textcolor{comment}{    * the scale of measurement should be ordinal, interval or ratio  (i.e.}}
+\DoxyCodeLine{925 \textcolor{comment}{      the test could not be applied to nominal variables).}}
+\DoxyCodeLine{926 \textcolor{comment}{}}
+\DoxyCodeLine{927 \textcolor{comment}{The test is non-\/parametric and doesn't require distributions to be normal.}}
+\DoxyCodeLine{928 \textcolor{comment}{}}
+\DoxyCodeLine{929 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{930 \textcolor{comment}{    X   -\/   sample 1. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{931 \textcolor{comment}{    N   -\/   size of the sample. N>=5}}
+\DoxyCodeLine{932 \textcolor{comment}{    Y   -\/   sample 2. Array whose index goes from 0 to M-\/1.}}
+\DoxyCodeLine{933 \textcolor{comment}{    M   -\/   size of the sample. M>=5}}
+\DoxyCodeLine{934 \textcolor{comment}{}}
+\DoxyCodeLine{935 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{936 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{937 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{938 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{939 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{940 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{941 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{942 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{943 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{944 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{945 \textcolor{comment}{}}
+\DoxyCodeLine{946 \textcolor{comment}{To calculate p-\/values, special approximation is used. This method lets  us}}
+\DoxyCodeLine{947 \textcolor{comment}{calculate p-\/values with satisfactory  accuracy  in  interval  [0.0001, 1].}}
+\DoxyCodeLine{948 \textcolor{comment}{There is no approximation outside the [0.0001, 1] interval. Therefore,  if}}
+\DoxyCodeLine{949 \textcolor{comment}{the significance level outlies this interval, the test returns 0.0001.}}
+\DoxyCodeLine{950 \textcolor{comment}{}}
+\DoxyCodeLine{951 \textcolor{comment}{Relative precision of approximation of p-\/value:}}
+\DoxyCodeLine{952 \textcolor{comment}{}}
+\DoxyCodeLine{953 \textcolor{comment}{N          M          Max.err.   Rms.err.}}
+\DoxyCodeLine{954 \textcolor{comment}{5..10      N..10      1.4e-\/02    6.0e-\/04}}
+\DoxyCodeLine{955 \textcolor{comment}{5..10      N..100     2.2e-\/02    5.3e-\/06}}
+\DoxyCodeLine{956 \textcolor{comment}{10..15     N..15      1.0e-\/02    3.2e-\/04}}
+\DoxyCodeLine{957 \textcolor{comment}{10..15     N..100     1.0e-\/02    2.2e-\/05}}
+\DoxyCodeLine{958 \textcolor{comment}{15..100    N..100     6.1e-\/03    2.7e-\/06}}
+\DoxyCodeLine{959 \textcolor{comment}{}}
+\DoxyCodeLine{960 \textcolor{comment}{For N,M>100 accuracy checks weren't put into  practice,  but  taking  into}}
+\DoxyCodeLine{961 \textcolor{comment}{account characteristics of asymptotic approximation used, precision should}}
+\DoxyCodeLine{962 \textcolor{comment}{not be sharply different from the values for interval [5, 100].}}
+\DoxyCodeLine{963 \textcolor{comment}{}}
+\DoxyCodeLine{964 \textcolor{comment}{NOTE: P-\/value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,}}
+\DoxyCodeLine{965 \textcolor{comment}{      P's outside of this interval are enforced to these bounds. Say,  you}}
+\DoxyCodeLine{966 \textcolor{comment}{      may quite often get P equal to exactly 0.25 or 0.0001.}}
+\DoxyCodeLine{967 \textcolor{comment}{}}
+\DoxyCodeLine{968 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{969 \textcolor{comment}{     Copyright 09.04.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{970 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{971 \textcolor{keywordtype}{void} mannwhitneyutest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{972 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{973 }
+\DoxyCodeLine{974 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STEST) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{975 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{976 \textcolor{comment}{Sign test}}
+\DoxyCodeLine{977 \textcolor{comment}{}}
+\DoxyCodeLine{978 \textcolor{comment}{This test checks three hypotheses about the median of  the  given  sample.}}
+\DoxyCodeLine{979 \textcolor{comment}{The following tests are performed:}}
+\DoxyCodeLine{980 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the median is equal to the  given}}
+\DoxyCodeLine{981 \textcolor{comment}{      value)}}
+\DoxyCodeLine{982 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the median is  greater  than  or}}
+\DoxyCodeLine{983 \textcolor{comment}{      equal to the given value)}}
+\DoxyCodeLine{984 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the  median  is  less  than  or}}
+\DoxyCodeLine{985 \textcolor{comment}{      equal to the given value)}}
+\DoxyCodeLine{986 \textcolor{comment}{}}
+\DoxyCodeLine{987 \textcolor{comment}{Requirements:}}
+\DoxyCodeLine{988 \textcolor{comment}{    * the scale of measurement should be ordinal, interval or ratio  (i.e.}}
+\DoxyCodeLine{989 \textcolor{comment}{      the test could not be applied to nominal variables).}}
+\DoxyCodeLine{990 \textcolor{comment}{}}
+\DoxyCodeLine{991 \textcolor{comment}{The test is non-\/parametric and doesn't require distribution X to be normal}}
+\DoxyCodeLine{992 \textcolor{comment}{}}
+\DoxyCodeLine{993 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{994 \textcolor{comment}{    X       -\/   sample. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{995 \textcolor{comment}{    N       -\/   size of the sample.}}
+\DoxyCodeLine{996 \textcolor{comment}{    Median  -\/   assumed median value.}}
+\DoxyCodeLine{997 \textcolor{comment}{}}
+\DoxyCodeLine{998 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{999 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{1000 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{1001 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1002 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{1003 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{1004 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1005 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{1006 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{1007 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1008 \textcolor{comment}{}}
+\DoxyCodeLine{1009 \textcolor{comment}{While   calculating   p-\/values   high-\/precision   binomial    distribution}}
+\DoxyCodeLine{1010 \textcolor{comment}{approximation is used, so significance levels have about 15 exact digits.}}
+\DoxyCodeLine{1011 \textcolor{comment}{}}
+\DoxyCodeLine{1012 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1013 \textcolor{comment}{     Copyright 08.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{1014 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1015 \textcolor{keywordtype}{void} onesamplesigntest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} median, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1016 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1017 }
+\DoxyCodeLine{1018 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1019 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1020 \textcolor{comment}{One-\/sample t-\/test}}
+\DoxyCodeLine{1021 \textcolor{comment}{}}
+\DoxyCodeLine{1022 \textcolor{comment}{This test checks three hypotheses about the mean of the given sample.  The}}
+\DoxyCodeLine{1023 \textcolor{comment}{following tests are performed:}}
+\DoxyCodeLine{1024 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the mean is equal  to  the  given}}
+\DoxyCodeLine{1025 \textcolor{comment}{      value)}}
+\DoxyCodeLine{1026 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the  mean  is  greater  than  or}}
+\DoxyCodeLine{1027 \textcolor{comment}{      equal to the given value)}}
+\DoxyCodeLine{1028 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the mean is less than or  equal}}
+\DoxyCodeLine{1029 \textcolor{comment}{      to the given value).}}
+\DoxyCodeLine{1030 \textcolor{comment}{}}
+\DoxyCodeLine{1031 \textcolor{comment}{The test is based on the assumption that  a  given  sample  has  a  normal}}
+\DoxyCodeLine{1032 \textcolor{comment}{distribution and  an  unknown  dispersion.  If  the  distribution  sharply}}
+\DoxyCodeLine{1033 \textcolor{comment}{differs from normal, the test will work incorrectly.}}
+\DoxyCodeLine{1034 \textcolor{comment}{}}
+\DoxyCodeLine{1035 \textcolor{comment}{INPUT PARAMETERS:}}
+\DoxyCodeLine{1036 \textcolor{comment}{    X       -\/   sample. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{1037 \textcolor{comment}{    N       -\/   size of sample, N>=0}}
+\DoxyCodeLine{1038 \textcolor{comment}{    Mean    -\/   assumed value of the mean.}}
+\DoxyCodeLine{1039 \textcolor{comment}{}}
+\DoxyCodeLine{1040 \textcolor{comment}{OUTPUT PARAMETERS:}}
+\DoxyCodeLine{1041 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{1042 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{1043 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1044 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{1045 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{1046 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1047 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{1048 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{1049 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1050 \textcolor{comment}{}}
+\DoxyCodeLine{1051 \textcolor{comment}{NOTE: this function correctly handles degenerate cases:}}
+\DoxyCodeLine{1052 \textcolor{comment}{      * when N=0, all p-\/values are set to 1.0}}
+\DoxyCodeLine{1053 \textcolor{comment}{      * when variance of X[] is exactly zero, p-\/values are set}}
+\DoxyCodeLine{1054 \textcolor{comment}{        to 1.0 or 0.0, depending on difference between sample mean and}}
+\DoxyCodeLine{1055 \textcolor{comment}{        value of mean being tested.}}
+\DoxyCodeLine{1056 \textcolor{comment}{}}
+\DoxyCodeLine{1057 \textcolor{comment}{}}
+\DoxyCodeLine{1058 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1059 \textcolor{comment}{     Copyright 08.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{1060 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1061 \textcolor{keywordtype}{void} studentttest1(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} mean, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1062 }
+\DoxyCodeLine{1063 }
+\DoxyCodeLine{1064 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1065 \textcolor{comment}{Two-\/sample pooled test}}
+\DoxyCodeLine{1066 \textcolor{comment}{}}
+\DoxyCodeLine{1067 \textcolor{comment}{This test checks three hypotheses about the mean of the given samples. The}}
+\DoxyCodeLine{1068 \textcolor{comment}{following tests are performed:}}
+\DoxyCodeLine{1069 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the means are equal)}}
+\DoxyCodeLine{1070 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the mean of the first sample  is}}
+\DoxyCodeLine{1071 \textcolor{comment}{      greater than or equal to the mean of the second sample)}}
+\DoxyCodeLine{1072 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the mean of the first sample is}}
+\DoxyCodeLine{1073 \textcolor{comment}{      less than or equal to the mean of the second sample).}}
+\DoxyCodeLine{1074 \textcolor{comment}{}}
+\DoxyCodeLine{1075 \textcolor{comment}{Test is based on the following assumptions:}}
+\DoxyCodeLine{1076 \textcolor{comment}{    * given samples have normal distributions}}
+\DoxyCodeLine{1077 \textcolor{comment}{    * dispersions are equal}}
+\DoxyCodeLine{1078 \textcolor{comment}{    * samples are independent.}}
+\DoxyCodeLine{1079 \textcolor{comment}{}}
+\DoxyCodeLine{1080 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1081 \textcolor{comment}{    X       -\/   sample 1. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{1082 \textcolor{comment}{    N       -\/   size of sample.}}
+\DoxyCodeLine{1083 \textcolor{comment}{    Y       -\/   sample 2. Array whose index goes from 0 to M-\/1.}}
+\DoxyCodeLine{1084 \textcolor{comment}{    M       -\/   size of sample.}}
+\DoxyCodeLine{1085 \textcolor{comment}{}}
+\DoxyCodeLine{1086 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1087 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{1088 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{1089 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1090 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{1091 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{1092 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1093 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{1094 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{1095 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1096 \textcolor{comment}{}}
+\DoxyCodeLine{1097 \textcolor{comment}{NOTE: this function correctly handles degenerate cases:}}
+\DoxyCodeLine{1098 \textcolor{comment}{      * when N=0 or M=0, all p-\/values are set to 1.0}}
+\DoxyCodeLine{1099 \textcolor{comment}{      * when both samples has exactly zero variance, p-\/values are set}}
+\DoxyCodeLine{1100 \textcolor{comment}{        to 1.0 or 0.0, depending on difference between means.}}
+\DoxyCodeLine{1101 \textcolor{comment}{}}
+\DoxyCodeLine{1102 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1103 \textcolor{comment}{     Copyright 18.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{1104 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1105 \textcolor{keywordtype}{void} studentttest2(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1106 }
+\DoxyCodeLine{1107 }
+\DoxyCodeLine{1108 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1109 \textcolor{comment}{Two-\/sample unpooled test}}
+\DoxyCodeLine{1110 \textcolor{comment}{}}
+\DoxyCodeLine{1111 \textcolor{comment}{This test checks three hypotheses about the mean of the given samples. The}}
+\DoxyCodeLine{1112 \textcolor{comment}{following tests are performed:}}
+\DoxyCodeLine{1113 \textcolor{comment}{    * two-\/tailed test (null hypothesis -\/ the means are equal)}}
+\DoxyCodeLine{1114 \textcolor{comment}{    * left-\/tailed test (null hypothesis -\/ the mean of the first sample  is}}
+\DoxyCodeLine{1115 \textcolor{comment}{      greater than or equal to the mean of the second sample)}}
+\DoxyCodeLine{1116 \textcolor{comment}{    * right-\/tailed test (null hypothesis -\/ the mean of the first sample is}}
+\DoxyCodeLine{1117 \textcolor{comment}{      less than or equal to the mean of the second sample).}}
+\DoxyCodeLine{1118 \textcolor{comment}{}}
+\DoxyCodeLine{1119 \textcolor{comment}{Test is based on the following assumptions:}}
+\DoxyCodeLine{1120 \textcolor{comment}{    * given samples have normal distributions}}
+\DoxyCodeLine{1121 \textcolor{comment}{    * samples are independent.}}
+\DoxyCodeLine{1122 \textcolor{comment}{Equality of variances is NOT required.}}
+\DoxyCodeLine{1123 \textcolor{comment}{}}
+\DoxyCodeLine{1124 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1125 \textcolor{comment}{    X -\/ sample 1. Array whose index goes from 0 to N-\/1.}}
+\DoxyCodeLine{1126 \textcolor{comment}{    N -\/ size of the sample.}}
+\DoxyCodeLine{1127 \textcolor{comment}{    Y -\/ sample 2. Array whose index goes from 0 to M-\/1.}}
+\DoxyCodeLine{1128 \textcolor{comment}{    M -\/ size of the sample.}}
+\DoxyCodeLine{1129 \textcolor{comment}{}}
+\DoxyCodeLine{1130 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1131 \textcolor{comment}{    BothTails   -\/   p-\/value for two-\/tailed test.}}
+\DoxyCodeLine{1132 \textcolor{comment}{                    If BothTails is less than the given significance level}}
+\DoxyCodeLine{1133 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1134 \textcolor{comment}{    LeftTail    -\/   p-\/value for left-\/tailed test.}}
+\DoxyCodeLine{1135 \textcolor{comment}{                    If LeftTail is less than the given significance level,}}
+\DoxyCodeLine{1136 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1137 \textcolor{comment}{    RightTail   -\/   p-\/value for right-\/tailed test.}}
+\DoxyCodeLine{1138 \textcolor{comment}{                    If RightTail is less than the given significance level}}
+\DoxyCodeLine{1139 \textcolor{comment}{                    the null hypothesis is rejected.}}
+\DoxyCodeLine{1140 \textcolor{comment}{}}
+\DoxyCodeLine{1141 \textcolor{comment}{NOTE: this function correctly handles degenerate cases:}}
+\DoxyCodeLine{1142 \textcolor{comment}{      * when N=0 or M=0, all p-\/values are set to 1.0}}
+\DoxyCodeLine{1143 \textcolor{comment}{      * when both samples has zero variance, p-\/values are set}}
+\DoxyCodeLine{1144 \textcolor{comment}{        to 1.0 or 0.0, depending on difference between means.}}
+\DoxyCodeLine{1145 \textcolor{comment}{      * when only one sample has zero variance, test reduces to 1-\/sample}}
+\DoxyCodeLine{1146 \textcolor{comment}{        version.}}
+\DoxyCodeLine{1147 \textcolor{comment}{}}
+\DoxyCodeLine{1148 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1149 \textcolor{comment}{     Copyright 18.09.2006 by Bochkanov Sergey}}
+\DoxyCodeLine{1150 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1151 \textcolor{keywordtype}{void} unequalvariancettest(\textcolor{keyword}{const} real\_1d\_array \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} real\_1d\_array \&y, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keywordtype}{double} \&bothtails, \textcolor{keywordtype}{double} \&lefttail, \textcolor{keywordtype}{double} \&righttail, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1152 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1153 \}}
+\DoxyCodeLine{1154 }
+\DoxyCodeLine{1156 \textcolor{comment}{//}}
+\DoxyCodeLine{1157 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{1158 \textcolor{comment}{//}}
+\DoxyCodeLine{1160 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{1161 \{}
+\DoxyCodeLine{1162 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASESTAT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1163 \textcolor{keywordtype}{void} samplemoments(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1164      ae\_int\_t n,}
+\DoxyCodeLine{1165      \textcolor{keywordtype}{double}* mean,}
+\DoxyCodeLine{1166      \textcolor{keywordtype}{double}* variance,}
+\DoxyCodeLine{1167      \textcolor{keywordtype}{double}* skewness,}
+\DoxyCodeLine{1168      \textcolor{keywordtype}{double}* kurtosis,}
+\DoxyCodeLine{1169      ae\_state *\_state);}
+\DoxyCodeLine{1170 \textcolor{keywordtype}{double} samplemean(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1171      ae\_int\_t n,}
+\DoxyCodeLine{1172      ae\_state *\_state);}
+\DoxyCodeLine{1173 \textcolor{keywordtype}{double} samplevariance(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1174      ae\_int\_t n,}
+\DoxyCodeLine{1175      ae\_state *\_state);}
+\DoxyCodeLine{1176 \textcolor{keywordtype}{double} sampleskewness(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1177      ae\_int\_t n,}
+\DoxyCodeLine{1178      ae\_state *\_state);}
+\DoxyCodeLine{1179 \textcolor{keywordtype}{double} samplekurtosis(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1180      ae\_int\_t n,}
+\DoxyCodeLine{1181      ae\_state *\_state);}
+\DoxyCodeLine{1182 \textcolor{keywordtype}{void} sampleadev(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1183      ae\_int\_t n,}
+\DoxyCodeLine{1184      \textcolor{keywordtype}{double}* adev,}
+\DoxyCodeLine{1185      ae\_state *\_state);}
+\DoxyCodeLine{1186 \textcolor{keywordtype}{void} samplemedian(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1187      ae\_int\_t n,}
+\DoxyCodeLine{1188      \textcolor{keywordtype}{double}* median,}
+\DoxyCodeLine{1189      ae\_state *\_state);}
+\DoxyCodeLine{1190 \textcolor{keywordtype}{void} samplepercentile(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1191      ae\_int\_t n,}
+\DoxyCodeLine{1192      \textcolor{keywordtype}{double} p,}
+\DoxyCodeLine{1193      \textcolor{keywordtype}{double}* v,}
+\DoxyCodeLine{1194      ae\_state *\_state);}
+\DoxyCodeLine{1195 \textcolor{keywordtype}{double} cov2(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1196      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1197      ae\_int\_t n,}
+\DoxyCodeLine{1198      ae\_state *\_state);}
+\DoxyCodeLine{1199 \textcolor{keywordtype}{double} pearsoncorr2(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1200      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1201      ae\_int\_t n,}
+\DoxyCodeLine{1202      ae\_state *\_state);}
+\DoxyCodeLine{1203 \textcolor{keywordtype}{double} spearmancorr2(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1204      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1205      ae\_int\_t n,}
+\DoxyCodeLine{1206      ae\_state *\_state);}
+\DoxyCodeLine{1207 \textcolor{keywordtype}{void} covm(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1208      ae\_int\_t n,}
+\DoxyCodeLine{1209      ae\_int\_t m,}
+\DoxyCodeLine{1210      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1211      ae\_state *\_state);}
+\DoxyCodeLine{1212 \textcolor{keywordtype}{void} pearsoncorrm(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1213      ae\_int\_t n,}
+\DoxyCodeLine{1214      ae\_int\_t m,}
+\DoxyCodeLine{1215      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1216      ae\_state *\_state);}
+\DoxyCodeLine{1217 \textcolor{keywordtype}{void} spearmancorrm(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1218      ae\_int\_t n,}
+\DoxyCodeLine{1219      ae\_int\_t m,}
+\DoxyCodeLine{1220      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1221      ae\_state *\_state);}
+\DoxyCodeLine{1222 \textcolor{keywordtype}{void} covm2(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1223      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{1224      ae\_int\_t n,}
+\DoxyCodeLine{1225      ae\_int\_t m1,}
+\DoxyCodeLine{1226      ae\_int\_t m2,}
+\DoxyCodeLine{1227      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1228      ae\_state *\_state);}
+\DoxyCodeLine{1229 \textcolor{keywordtype}{void} pearsoncorrm2(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1230      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{1231      ae\_int\_t n,}
+\DoxyCodeLine{1232      ae\_int\_t m1,}
+\DoxyCodeLine{1233      ae\_int\_t m2,}
+\DoxyCodeLine{1234      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1235      ae\_state *\_state);}
+\DoxyCodeLine{1236 \textcolor{keywordtype}{void} spearmancorrm2(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1237      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{1238      ae\_int\_t n,}
+\DoxyCodeLine{1239      ae\_int\_t m1,}
+\DoxyCodeLine{1240      ae\_int\_t m2,}
+\DoxyCodeLine{1241      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1242      ae\_state *\_state);}
+\DoxyCodeLine{1243 \textcolor{keywordtype}{void} rankdata(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1244      ae\_int\_t npoints,}
+\DoxyCodeLine{1245      ae\_int\_t nfeatures,}
+\DoxyCodeLine{1246      ae\_state *\_state);}
+\DoxyCodeLine{1247 ae\_bool \_trypexec\_rankdata(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1248     ae\_int\_t npoints,}
+\DoxyCodeLine{1249     ae\_int\_t nfeatures, ae\_state *\_state);}
+\DoxyCodeLine{1250 \textcolor{keywordtype}{void} rankdatacentered(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1251      ae\_int\_t npoints,}
+\DoxyCodeLine{1252      ae\_int\_t nfeatures,}
+\DoxyCodeLine{1253      ae\_state *\_state);}
+\DoxyCodeLine{1254 ae\_bool \_trypexec\_rankdatacentered(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1255     ae\_int\_t npoints,}
+\DoxyCodeLine{1256     ae\_int\_t nfeatures, ae\_state *\_state);}
+\DoxyCodeLine{1257 \textcolor{keywordtype}{double} pearsoncorrelation(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1258      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1259      ae\_int\_t n,}
+\DoxyCodeLine{1260      ae\_state *\_state);}
+\DoxyCodeLine{1261 \textcolor{keywordtype}{double} spearmanrankcorrelation(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1262      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1263      ae\_int\_t n,}
+\DoxyCodeLine{1264      ae\_state *\_state);}
+\DoxyCodeLine{1265 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1266 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CORRELATIONTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1267 \textcolor{keywordtype}{void} pearsoncorrelationsignificance(\textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1268      ae\_int\_t n,}
+\DoxyCodeLine{1269      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1270      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1271      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1272      ae\_state *\_state);}
+\DoxyCodeLine{1273 \textcolor{keywordtype}{void} spearmanrankcorrelationsignificance(\textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1274      ae\_int\_t n,}
+\DoxyCodeLine{1275      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1276      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1277      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1278      ae\_state *\_state);}
+\DoxyCodeLine{1279 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1280 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JARQUEBERA) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1281 \textcolor{keywordtype}{void} jarqueberatest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1282      ae\_int\_t n,}
+\DoxyCodeLine{1283      \textcolor{keywordtype}{double}* p,}
+\DoxyCodeLine{1284      ae\_state *\_state);}
+\DoxyCodeLine{1285 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1286 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_VARIANCETESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1287 \textcolor{keywordtype}{void} ftest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1288      ae\_int\_t n,}
+\DoxyCodeLine{1289      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1290      ae\_int\_t m,}
+\DoxyCodeLine{1291      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1292      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1293      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1294      ae\_state *\_state);}
+\DoxyCodeLine{1295 \textcolor{keywordtype}{void} onesamplevariancetest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1296      ae\_int\_t n,}
+\DoxyCodeLine{1297      \textcolor{keywordtype}{double} variance,}
+\DoxyCodeLine{1298      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1299      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1300      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1301      ae\_state *\_state);}
+\DoxyCodeLine{1302 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1303 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_WSR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1304 \textcolor{keywordtype}{void} wilcoxonsignedranktest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1305      ae\_int\_t n,}
+\DoxyCodeLine{1306      \textcolor{keywordtype}{double} e,}
+\DoxyCodeLine{1307      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1308      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1309      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1310      ae\_state *\_state);}
+\DoxyCodeLine{1311 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1312 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_MANNWHITNEYU) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1313 \textcolor{keywordtype}{void} mannwhitneyutest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1314      ae\_int\_t n,}
+\DoxyCodeLine{1315      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1316      ae\_int\_t m,}
+\DoxyCodeLine{1317      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1318      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1319      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1320      ae\_state *\_state);}
+\DoxyCodeLine{1321 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1322 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STEST) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1323 \textcolor{keywordtype}{void} onesamplesigntest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1324      ae\_int\_t n,}
+\DoxyCodeLine{1325      \textcolor{keywordtype}{double} median,}
+\DoxyCodeLine{1326      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1327      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1328      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1329      ae\_state *\_state);}
+\DoxyCodeLine{1330 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1331 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTTESTS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1332 \textcolor{keywordtype}{void} studentttest1(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1333      ae\_int\_t n,}
+\DoxyCodeLine{1334      \textcolor{keywordtype}{double} mean,}
+\DoxyCodeLine{1335      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1336      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1337      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1338      ae\_state *\_state);}
+\DoxyCodeLine{1339 \textcolor{keywordtype}{void} studentttest2(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1340      ae\_int\_t n,}
+\DoxyCodeLine{1341      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1342      ae\_int\_t m,}
+\DoxyCodeLine{1343      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1344      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1345      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1346      ae\_state *\_state);}
+\DoxyCodeLine{1347 \textcolor{keywordtype}{void} unequalvariancettest(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1348      ae\_int\_t n,}
+\DoxyCodeLine{1349      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1350      ae\_int\_t m,}
+\DoxyCodeLine{1351      \textcolor{keywordtype}{double}* bothtails,}
+\DoxyCodeLine{1352      \textcolor{keywordtype}{double}* lefttail,}
+\DoxyCodeLine{1353      \textcolor{keywordtype}{double}* righttail,}
+\DoxyCodeLine{1354      ae\_state *\_state);}
+\DoxyCodeLine{1355 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1356 }
+\DoxyCodeLine{1357 \}}
+\DoxyCodeLine{1358 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1359 }
+
+\end{DoxyCode}

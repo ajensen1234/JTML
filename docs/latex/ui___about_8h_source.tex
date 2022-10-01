@@ -1,0 +1,818 @@
+\hypertarget{ui___about_8h_source}{}\doxysection{ui\+\_\+\+About.\+h}
+\label{ui___about_8h_source}\index{build/src/gui/Joint-\/Track-\/Machine-\/Learning\_autogen/include\_Release/ui\_About.h@{build/src/gui/Joint-\/Track-\/Machine-\/Learning\_autogen/include\_Release/ui\_About.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/********************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{** Form generated from reading UI file 'about.ui'}}
+\DoxyCodeLine{3 \textcolor{comment}{**}}
+\DoxyCodeLine{4 \textcolor{comment}{** Created by: Qt User Interface Compiler version 5.15.2}}
+\DoxyCodeLine{5 \textcolor{comment}{**}}
+\DoxyCodeLine{6 \textcolor{comment}{** WARNING! All changes made in this file will be lost when recompiling UI file!}}
+\DoxyCodeLine{7 \textcolor{comment}{********************************************************************************/}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef UI\_ABOUT\_H}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#define UI\_ABOUT\_H}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <QtCore/QVariant>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <QtGui/QIcon>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <QtWidgets/QApplication>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <QtWidgets/QDialog>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <QtWidgets/QGroupBox>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <QtWidgets/QLabel>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <QtWidgets/QPushButton>}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 QT\_BEGIN\_NAMESPACE}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{class }\mbox{\hyperlink{class_ui__about_j_t_a}{Ui\_aboutJTA}}}
+\DoxyCodeLine{23 \{}
+\DoxyCodeLine{24 \textcolor{keyword}{public}:}
+\DoxyCodeLine{25     QPushButton *close\_button;}
+\DoxyCodeLine{26     QLabel *title\_label;}
+\DoxyCodeLine{27     QLabel *picture;}
+\DoxyCodeLine{28     QLabel *version\_label;}
+\DoxyCodeLine{29     QLabel *copyright\_label;}
+\DoxyCodeLine{30     QGroupBox *detected\_group\_box;}
+\DoxyCodeLine{31     QLabel *gpu\_label;}
+\DoxyCodeLine{32     QLabel *cc\_label;}
+\DoxyCodeLine{33     QLabel *gpu\_description\_label;}
+\DoxyCodeLine{34     QLabel *cc\_description\_label;}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36     \textcolor{keywordtype}{void} setupUi(QDialog *aboutJTA)}
+\DoxyCodeLine{37     \{}
+\DoxyCodeLine{38         \textcolor{keywordflow}{if} (aboutJTA-\/>objectName().isEmpty())}
+\DoxyCodeLine{39             aboutJTA-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}aboutJTA"{}}));}
+\DoxyCodeLine{40         aboutJTA-\/>resize(932, 476);}
+\DoxyCodeLine{41         QIcon icon;}
+\DoxyCodeLine{42         icon.addFile(QString::fromUtf8(\textcolor{stringliteral}{"{}:/Desktop\_Icon/Resources/jta\_dime\_icon.png"{}}), QSize(), QIcon::Normal, QIcon::Off);}
+\DoxyCodeLine{43         aboutJTA-\/>setWindowIcon(icon);}
+\DoxyCodeLine{44         aboutJTA-\/>setStyleSheet(QString::fromUtf8(\textcolor{stringliteral}{"{}/*\(\backslash\)n"{}}}
+\DoxyCodeLine{45 \textcolor{stringliteral}{"{}   Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood\(\backslash\)n"{}}}
+\DoxyCodeLine{46 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{47 \textcolor{stringliteral}{"{}   Licensed under the Apache License, Version 2.0 (the \(\backslash\)"{}License\(\backslash\)"{});\(\backslash\)n"{}}}
+\DoxyCodeLine{48 \textcolor{stringliteral}{"{}   you may not use this file except in compliance with the License.\(\backslash\)n"{}}}
+\DoxyCodeLine{49 \textcolor{stringliteral}{"{}   You may obtain a copy of the License at\(\backslash\)n"{}}}
+\DoxyCodeLine{50 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{51 \textcolor{stringliteral}{"{}       http://www.apache.org/licenses/LICENSE-\/2.0\(\backslash\)n"{}}}
+\DoxyCodeLine{52 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{53 \textcolor{stringliteral}{"{}   Unless required by applicable law or agreed to in writing, software\(\backslash\)n"{}}}
+\DoxyCodeLine{54 \textcolor{stringliteral}{"{}   distributed under the License is distributed on an \(\backslash\)"{}AS IS\(\backslash\)"{} BASIS,\(\backslash\)n"{}}}
+\DoxyCodeLine{55 \textcolor{stringliteral}{"{}   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\(\backslash\)n"{}}}
+\DoxyCodeLine{56 \textcolor{stringliteral}{"{}   See the License for the specific language governing permissions and\(\backslash\)n"{}}}
+\DoxyCodeLine{57 \textcolor{stringliteral}{"{}   limitations under the License.\(\backslash\)n"{}}}
+\DoxyCodeLine{58 \textcolor{stringliteral}{"{}*/\(\backslash\)n"{}}}
+\DoxyCodeLine{59 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{60 \textcolor{stringliteral}{"{}/*\(\backslash\)n"{}}}
+\DoxyCodeLine{61 \textcolor{stringliteral}{"{}   COLOR\_DARK     = \#191919\(\backslash\)n"{}}}
+\DoxyCodeLine{62 \textcolor{stringliteral}{"{}   COLOR\_MEDIUM   = \#353535\(\backslash\)n"{}}}
+\DoxyCodeLine{63 \textcolor{stringliteral}{"{}   COLOR\_MEDLIGHT = \#5A5A5A\(\backslash\)n"{}}}
+\DoxyCodeLine{64 \textcolor{stringliteral}{"{}   COLOR\_LIGHT    = \#DDDDDD\(\backslash\)n"{}}}
+\DoxyCodeLine{65 \textcolor{stringliteral}{"{}   COLOR\_BLUE  = \#2158AA\(\backslash\)n"{}}}
+\DoxyCodeLine{66 \textcolor{stringliteral}{"{}   COLOR\_ORANGE = \#D66C23\(\backslash\)n"{}}}
+\DoxyCodeLine{67 \textcolor{stringliteral}{"{}*/\(\backslash\)n"{}}}
+\DoxyCodeLine{68 \textcolor{stringliteral}{"{}* \{\(\backslash\)n"{}}}
+\DoxyCodeLine{69 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{70 \textcolor{stringliteral}{"{}   color: \#DDDDDD;\(\backslash\)n"{}}}
+\DoxyCodeLine{71 \textcolor{stringliteral}{"{}border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{72 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{73 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{74 \textcolor{stringliteral}{"{} QMenuBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{75 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{76 \textcolor{stringliteral}{"{}   border"{}}}
+\DoxyCodeLine{77                         \textcolor{stringliteral}{"{}-\/style: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{78 \textcolor{stringliteral}{"{} \}\(\backslash\)n"{}}}
+\DoxyCodeLine{79 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{80 \textcolor{stringliteral}{"{} QMenuBar::item \{\(\backslash\)n"{}}}
+\DoxyCodeLine{81 \textcolor{stringliteral}{"{}    background: transparent;\(\backslash\)n"{}}}
+\DoxyCodeLine{82 \textcolor{stringliteral}{"{}     spacing: 3px; /* spacing between menu bar items */\(\backslash\)n"{}}}
+\DoxyCodeLine{83 \textcolor{stringliteral}{"{}     padding: 5px 25px;\(\backslash\)n"{}}}
+\DoxyCodeLine{84 \textcolor{stringliteral}{"{} \}\(\backslash\)n"{}}}
+\DoxyCodeLine{85 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{86 \textcolor{stringliteral}{"{} QMenuBar::item:selected\{\(\backslash\)n"{}}}
+\DoxyCodeLine{87 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{88 \textcolor{stringliteral}{"{}   border: 2px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{89 \textcolor{stringliteral}{"{}    border-\/style: none none solid none;\(\backslash\)n"{}}}
+\DoxyCodeLine{90 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{91 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{92 \textcolor{stringliteral}{"{} QMenuBar::item:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{93 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{94 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{95 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{96 \textcolor{stringliteral}{"{}QCheckBox, QRadioButton \{\(\backslash\)n"{}}}
+\DoxyCodeLine{97 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{98 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{99 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{100 \textcolor{stringliteral}{"{}QRadioButton::indicator, QCheckBox::indicator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{101 \textcolor{stringliteral}{"{}   width: 13px;\(\backslash\)n"{}}}
+\DoxyCodeLine{102 \textcolor{stringliteral}{"{}   height: 13px;\(\backslash\)n"{}}}
+\DoxyCodeLine{103 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{104 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{105 \textcolor{stringliteral}{"{}QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{106 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{107 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{108 \textcolor{stringliteral}{"{}   background: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{109 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{110 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{111 \textcolor{stringliteral}{"{}QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{112 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{113 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{114 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{115 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{116 \textcolor{stringliteral}{"{}QRadioButton::indicator::checked, QCheckBox::indicator::checked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{117 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{118 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{119 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{120 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{121 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{122 \textcolor{stringliteral}{"{}QRadioButton::in"{}}}
+\DoxyCodeLine{123                         \textcolor{stringliteral}{"{}dicator:checked:hover, QCheckBox::indicator:checked:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{124 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{125 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{126 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{127 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{128 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{129 \textcolor{stringliteral}{"{}QGroupBox::title \{\(\backslash\)n"{}}}
+\DoxyCodeLine{130 \textcolor{stringliteral}{"{}   subcontrol-\/origin: margin;\(\backslash\)n"{}}}
+\DoxyCodeLine{131 \textcolor{stringliteral}{"{}    subcontrol-\/position: top center;\(\backslash\)n"{}}}
+\DoxyCodeLine{132 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{133 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{134 \textcolor{stringliteral}{"{}QScrollBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{135 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{136 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{137 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{138 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{139 \textcolor{stringliteral}{"{}QScrollBar:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{140 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{141 \textcolor{stringliteral}{"{}   margin: 0px 16px 0px 16px;\(\backslash\)n"{}}}
+\DoxyCodeLine{142 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{143 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{144 \textcolor{stringliteral}{"{}QScrollBar:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{145 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{146 \textcolor{stringliteral}{"{}   margin: 16px 0px 16px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{147 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{148 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{149 \textcolor{stringliteral}{"{}QScrollBar::handle \{\(\backslash\)n"{}}}
+\DoxyCodeLine{150 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{151 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{152 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{153 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{154 \textcolor{stringliteral}{"{}QScrollBar::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{155 \textcolor{stringliteral}{"{}   border-\/width: 0px 1px 0px 1px;\(\backslash\)n"{}}}
+\DoxyCodeLine{156 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{157 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{158 \textcolor{stringliteral}{"{}QScrollBar::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{159 \textcolor{stringliteral}{"{}   border-\/width: 1px 0px 1px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{160 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{161 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{162 \textcolor{stringliteral}{"{}QScrollBar::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{163 \textcolor{stringliteral}{"{}   min-\/width: 20px;\(\backslash\)n"{}}}
+\DoxyCodeLine{164 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{165 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{166 \textcolor{stringliteral}{"{}QScrollBar::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{167 \textcolor{stringliteral}{"{}   min-\/height: 20px;\(\backslash\)n"{}}}
+\DoxyCodeLine{168 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{169 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{170 \textcolor{stringliteral}{"{}QScrollBar::add-\/line, QScrollBar::sub-\/line \{\(\backslash\)n"{}}}
+\DoxyCodeLine{171 \textcolor{stringliteral}{"{}   background:\#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{172 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{173 \textcolor{stringliteral}{"{}   subc"{}}}
+\DoxyCodeLine{174                         \textcolor{stringliteral}{"{}ontrol-\/origin: margin;\(\backslash\)n"{}}}
+\DoxyCodeLine{175 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{176 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{177 \textcolor{stringliteral}{"{}QScrollBar::add-\/line \{\(\backslash\)n"{}}}
+\DoxyCodeLine{178 \textcolor{stringliteral}{"{}   position: absolute;\(\backslash\)n"{}}}
+\DoxyCodeLine{179 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{180 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{181 \textcolor{stringliteral}{"{}QScrollBar::add-\/line:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{182 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{183 \textcolor{stringliteral}{"{}   subcontrol-\/position: right;\(\backslash\)n"{}}}
+\DoxyCodeLine{184 \textcolor{stringliteral}{"{}   left: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{185 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{186 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{187 \textcolor{stringliteral}{"{}QScrollBar::add-\/line:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{188 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{189 \textcolor{stringliteral}{"{}   subcontrol-\/position: bottom;\(\backslash\)n"{}}}
+\DoxyCodeLine{190 \textcolor{stringliteral}{"{}   top: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{191 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{192 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{193 \textcolor{stringliteral}{"{}QScrollBar::sub-\/line:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{194 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{195 \textcolor{stringliteral}{"{}   subcontrol-\/position: left;\(\backslash\)n"{}}}
+\DoxyCodeLine{196 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{197 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{198 \textcolor{stringliteral}{"{}QScrollBar::sub-\/line:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{199 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{200 \textcolor{stringliteral}{"{}   subcontrol-\/position: top;\(\backslash\)n"{}}}
+\DoxyCodeLine{201 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{202 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{203 \textcolor{stringliteral}{"{}QScrollBar:left-\/arrow, QScrollBar::right-\/arrow, QScrollBar::up-\/arrow, QScrollBar::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{204 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{205 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{206 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{207 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{208 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{209 \textcolor{stringliteral}{"{}QScrollBar::add-\/page, QScrollBar::sub-\/page \{\(\backslash\)n"{}}}
+\DoxyCodeLine{210 \textcolor{stringliteral}{"{}   background: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{211 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{212 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{213 \textcolor{stringliteral}{"{}QAbstractButton \{\(\backslash\)n"{}}}
+\DoxyCodeLine{214 \textcolor{stringliteral}{"{}   background: \#252525;\(\backslash\)n"{}}}
+\DoxyCodeLine{215 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{216 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{217 \textcolor{stringliteral}{"{}QAbstractButton:disabled \{\(\backslash\)n"{}}}
+\DoxyCodeLine{218 \textcolor{stringliteral}{"{}   background: \#3F3F3F;\(\backslash\)n"{}}}
+\DoxyCodeLine{219 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{220 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{221 \textcolor{stringliteral}{"{}QAbstractButton:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{222 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{223 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{224 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{225 \textcolor{stringliteral}{"{}QPushButton:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{226 \textcolor{stringliteral}{"{}   background: \#35353"{}}}
+\DoxyCodeLine{227                         \textcolor{stringliteral}{"{}5;\(\backslash\)n"{}}}
+\DoxyCodeLine{228 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{229 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{230 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{231 \textcolor{stringliteral}{"{}QAbstractButton:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{232 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{233 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{234 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{235 \textcolor{stringliteral}{"{}QAbstractItemView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{236 \textcolor{stringliteral}{"{}   show-\/decoration-\/selected: 1;\(\backslash\)n"{}}}
+\DoxyCodeLine{237 \textcolor{stringliteral}{"{}   outline: 0;\(\backslash\)n"{}}}
+\DoxyCodeLine{238 \textcolor{stringliteral}{"{}   selection-\/background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{239 \textcolor{stringliteral}{"{}   selection-\/color: \#DDDDDD;\(\backslash\)n"{}}}
+\DoxyCodeLine{240 \textcolor{stringliteral}{"{}   alternate-\/background-\/color: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{241 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{242 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{243 \textcolor{stringliteral}{"{}QHeaderView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{244 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{245 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{246 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{247 \textcolor{stringliteral}{"{}QHeaderView::section \{\(\backslash\)n"{}}}
+\DoxyCodeLine{248 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{249 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{250 \textcolor{stringliteral}{"{}   padding: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{251 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{252 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{253 \textcolor{stringliteral}{"{}QHeaderView::section:selected, QHeaderView::section::checked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{254 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{255 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{256 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{257 \textcolor{stringliteral}{"{}QTableView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{258 \textcolor{stringliteral}{"{}   gridline-\/color: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{259 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{260 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{261 \textcolor{stringliteral}{"{}QTabBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{262 \textcolor{stringliteral}{"{}   margin-\/left: 2px;\(\backslash\)n"{}}}
+\DoxyCodeLine{263 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{264 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{265 \textcolor{stringliteral}{"{}QTabBar::tab \{\(\backslash\)n"{}}}
+\DoxyCodeLine{266 \textcolor{stringliteral}{"{}   border-\/radius: 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{267 \textcolor{stringliteral}{"{}   padding: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{268 \textcolor{stringliteral}{"{}   margin: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{269 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{270 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{271 \textcolor{stringliteral}{"{}QTabBar::tab:selected \{\(\backslash\)n"{}}}
+\DoxyCodeLine{272 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{273 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{274 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{275 \textcolor{stringliteral}{"{}QComboBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{276 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{277 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{278 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{279 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{280 \textcolor{stringliteral}{"{}QComboBox::drop-\/down \{\(\backslash\)n"{}}}
+\DoxyCodeLine{281 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{282 \textcolor{stringliteral}{"{}   back"{}}}
+\DoxyCodeLine{283                         \textcolor{stringliteral}{"{}ground: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{284 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{285 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{286 \textcolor{stringliteral}{"{}QComboBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{287 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{288 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{289 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{290 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{291 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{292 \textcolor{stringliteral}{"{}QAbstractSpinBox \{\(\backslash\)n"{}}}
+\DoxyCodeLine{293 \textcolor{stringliteral}{"{}   padding-\/right: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{294 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{295 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{296 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button, QAbstractSpinBox::down-\/button \{\(\backslash\)n"{}}}
+\DoxyCodeLine{297 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{298 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{299 \textcolor{stringliteral}{"{}   subcontrol-\/origin: border;\(\backslash\)n"{}}}
+\DoxyCodeLine{300 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{301 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button:hover, QAbstractSpinBox::down-\/button:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{302 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{303 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{304 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button:pressed, QAbstractSpinBox::down-\/button:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{305 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{306 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{307 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{308 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/arrow, QAbstractSpinBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{309 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{310 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{311 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{312 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{313 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/arrow:hover, QAbstractSpinBox::down-\/arrow:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{314 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{315 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{316 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{317 \textcolor{stringliteral}{"{}QSlider \{\(\backslash\)n"{}}}
+\DoxyCodeLine{318 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{319 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{320 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{321 \textcolor{stringliteral}{"{}QSlider::groove:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{322 \textcolor{stringliteral}{"{}   height: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{323 \textcolor{stringliteral}{"{}   margin: 4px 0px 4px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{324 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{325 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{326 \textcolor{stringliteral}{"{}QSlider::groove:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{327 \textcolor{stringliteral}{"{}   width: 5px;"{}}}
+\DoxyCodeLine{328                         \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{329 \textcolor{stringliteral}{"{}   margin: 0px 4px 0px 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{330 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{331 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{332 \textcolor{stringliteral}{"{}QSlider::handle \{\(\backslash\)n"{}}}
+\DoxyCodeLine{333 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{334 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{335 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{336 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{337 \textcolor{stringliteral}{"{}QSlider::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{338 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{339 \textcolor{stringliteral}{"{}   margin: -\/4px 0px -\/4px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{340 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{341 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{342 \textcolor{stringliteral}{"{}QSlider::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{343 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{344 \textcolor{stringliteral}{"{}   margin: 0px -\/4px 0px -\/4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{345 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{346 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{347 \textcolor{stringliteral}{"{}QSlider::add-\/page:vertical, QSlider::sub-\/page:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{348 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{349 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{350 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{351 \textcolor{stringliteral}{"{}QSlider::sub-\/page:vertical, QSlider::add-\/page:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{352 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{353 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{354 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{355 \textcolor{stringliteral}{"{}QLabel \{\(\backslash\)n"{}}}
+\DoxyCodeLine{356 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{357 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{358 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{359 \textcolor{stringliteral}{"{}QProgressBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{360 \textcolor{stringliteral}{"{}   text-\/align: center;\(\backslash\)n"{}}}
+\DoxyCodeLine{361 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{362 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{363 \textcolor{stringliteral}{"{}QProgressBar::chunk \{\(\backslash\)n"{}}}
+\DoxyCodeLine{364 \textcolor{stringliteral}{"{}   width: 1px;\(\backslash\)n"{}}}
+\DoxyCodeLine{365 \textcolor{stringliteral}{"{}   background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{366 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{367 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{368 \textcolor{stringliteral}{"{}QMenu::separator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{369 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{370 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{371 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{372 \textcolor{stringliteral}{"{}QGroupBox \{\(\backslash\)n"{}}}
+\DoxyCodeLine{373 \textcolor{stringliteral}{"{}   font: bold\(\backslash\)n"{}}}
+\DoxyCodeLine{374 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{375 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{376 \textcolor{stringliteral}{"{}QListWidget::item:selected \{\(\backslash\)n"{}}}
+\DoxyCodeLine{377 \textcolor{stringliteral}{"{}    background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{378 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{379 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{380 \textcolor{stringliteral}{"{} QMenu::item:selected\{\(\backslash\)n"{}}}
+\DoxyCodeLine{381 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{382 \textcolor{stringliteral}{"{}   border: 2px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{383 \textcolor{stringliteral}{"{}    border-\/style: none solid none none;\(\backslash\)n"{}}}
+\DoxyCodeLine{384 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{385 \textcolor{stringliteral}{"{}"{}}}
+\DoxyCodeLine{386                         \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{387 \textcolor{stringliteral}{"{} QMenu::pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{388 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{389 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{390 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{391 \textcolor{stringliteral}{"{}QMenu::separator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{392 \textcolor{stringliteral}{"{}    height: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{393 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{394 \textcolor{stringliteral}{"{}\}"{}}));}
+\DoxyCodeLine{395         close\_button = \textcolor{keyword}{new} QPushButton(aboutJTA);}
+\DoxyCodeLine{396         close\_button-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}close\_button"{}}));}
+\DoxyCodeLine{397         close\_button-\/>setGeometry(QRect(420, 360, 112, 34));}
+\DoxyCodeLine{398         title\_label = \textcolor{keyword}{new} QLabel(aboutJTA);}
+\DoxyCodeLine{399         title\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}title\_label"{}}));}
+\DoxyCodeLine{400         title\_label-\/>setGeometry(QRect(350, 30, 171, 51));}
+\DoxyCodeLine{401         QFont font;}
+\DoxyCodeLine{402         font.setPointSize(12);}
+\DoxyCodeLine{403         font.setBold(\textcolor{keyword}{true});}
+\DoxyCodeLine{404         font.setWeight(75);}
+\DoxyCodeLine{405         title\_label-\/>setFont(font);}
+\DoxyCodeLine{406         picture = \textcolor{keyword}{new} QLabel(aboutJTA);}
+\DoxyCodeLine{407         picture-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}picture"{}}));}
+\DoxyCodeLine{408         picture-\/>setGeometry(QRect(25, 25, 256, 256));}
+\DoxyCodeLine{409         picture-\/>setPixmap(QPixmap(QString::fromUtf8(\textcolor{stringliteral}{"{}:/Desktop\_Icon/Resources/jta\_icon.png"{}})));}
+\DoxyCodeLine{410         version\_label = \textcolor{keyword}{new} QLabel(aboutJTA);}
+\DoxyCodeLine{411         version\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}version\_label"{}}));}
+\DoxyCodeLine{412         version\_label-\/>setGeometry(QRect(370, 130, 141, 21));}
+\DoxyCodeLine{413         copyright\_label = \textcolor{keyword}{new} QLabel(aboutJTA);}
+\DoxyCodeLine{414         copyright\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}copyright\_label"{}}));}
+\DoxyCodeLine{415         copyright\_label-\/>setGeometry(QRect(360, 90, 181, 21));}
+\DoxyCodeLine{416         detected\_group\_box = \textcolor{keyword}{new} QGroupBox(aboutJTA);}
+\DoxyCodeLine{417         detected\_group\_box-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}detected\_group\_box"{}}));}
+\DoxyCodeLine{418         detected\_group\_box-\/>setGeometry(QRect(320, 180, 461, 141));}
+\DoxyCodeLine{419         detected\_group\_box-\/>setStyleSheet(QString::fromUtf8(\textcolor{stringliteral}{"{}/*\(\backslash\)n"{}}}
+\DoxyCodeLine{420 \textcolor{stringliteral}{"{}   Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood\(\backslash\)n"{}}}
+\DoxyCodeLine{421 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{422 \textcolor{stringliteral}{"{}   Licensed under the Apache License, Version 2.0 (the \(\backslash\)"{}License\(\backslash\)"{});\(\backslash\)n"{}}}
+\DoxyCodeLine{423 \textcolor{stringliteral}{"{}   you may not use this file except in compliance with the License.\(\backslash\)n"{}}}
+\DoxyCodeLine{424 \textcolor{stringliteral}{"{}   You may obtain a copy of the License at\(\backslash\)n"{}}}
+\DoxyCodeLine{425 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{426 \textcolor{stringliteral}{"{}       http://www.apache.org/licenses/LICENSE-\/2.0\(\backslash\)n"{}}}
+\DoxyCodeLine{427 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{428 \textcolor{stringliteral}{"{}   Unless required by applicable law or agreed to in writing, software\(\backslash\)n"{}}}
+\DoxyCodeLine{429 \textcolor{stringliteral}{"{}   distributed under the License is distributed on an \(\backslash\)"{}AS IS\(\backslash\)"{} BASIS,\(\backslash\)n"{}}}
+\DoxyCodeLine{430 \textcolor{stringliteral}{"{}   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\(\backslash\)n"{}}}
+\DoxyCodeLine{431 \textcolor{stringliteral}{"{}   See the License for the specific language governing permissions and\(\backslash\)n"{}}}
+\DoxyCodeLine{432 \textcolor{stringliteral}{"{}   limitations under the License.\(\backslash\)n"{}}}
+\DoxyCodeLine{433 \textcolor{stringliteral}{"{}*/\(\backslash\)n"{}}}
+\DoxyCodeLine{434 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{435 \textcolor{stringliteral}{"{}/*\(\backslash\)n"{}}}
+\DoxyCodeLine{436 \textcolor{stringliteral}{"{}   COLOR\_DARK     = \#191919\(\backslash\)n"{}}}
+\DoxyCodeLine{437 \textcolor{stringliteral}{"{}   COLOR\_MEDIUM   = \#353535\(\backslash\)n"{}}}
+\DoxyCodeLine{438 \textcolor{stringliteral}{"{}   COLOR\_MEDLIGHT = \#5A5A5A\(\backslash\)n"{}}}
+\DoxyCodeLine{439 \textcolor{stringliteral}{"{}   COLOR\_LIGHT    = \#DDDDDD\(\backslash\)n"{}}}
+\DoxyCodeLine{440 \textcolor{stringliteral}{"{}   COLOR\_BLUE  = \#2158AA\(\backslash\)n"{}}}
+\DoxyCodeLine{441 \textcolor{stringliteral}{"{}   COLOR\_ORANGE = \#D66C23\(\backslash\)n"{}}}
+\DoxyCodeLine{442 \textcolor{stringliteral}{"{}*/\(\backslash\)n"{}}}
+\DoxyCodeLine{443 \textcolor{stringliteral}{"{}* \{\(\backslash\)n"{}}}
+\DoxyCodeLine{444 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{445 \textcolor{stringliteral}{"{}   color: \#DDDDDD;\(\backslash\)n"{}}}
+\DoxyCodeLine{446 \textcolor{stringliteral}{"{}border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{447 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{448 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{449 \textcolor{stringliteral}{"{} QMenuBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{450 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{451 \textcolor{stringliteral}{"{}   border"{}}}
+\DoxyCodeLine{452                         \textcolor{stringliteral}{"{}-\/style: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{453 \textcolor{stringliteral}{"{} \}\(\backslash\)n"{}}}
+\DoxyCodeLine{454 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{455 \textcolor{stringliteral}{"{} QMenuBar::item \{\(\backslash\)n"{}}}
+\DoxyCodeLine{456 \textcolor{stringliteral}{"{}    background: transparent;\(\backslash\)n"{}}}
+\DoxyCodeLine{457 \textcolor{stringliteral}{"{}     spacing: 3px; /* spacing between menu bar items */\(\backslash\)n"{}}}
+\DoxyCodeLine{458 \textcolor{stringliteral}{"{}     padding: 5px 25px;\(\backslash\)n"{}}}
+\DoxyCodeLine{459 \textcolor{stringliteral}{"{} \}\(\backslash\)n"{}}}
+\DoxyCodeLine{460 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{461 \textcolor{stringliteral}{"{} QMenuBar::item:selected\{\(\backslash\)n"{}}}
+\DoxyCodeLine{462 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{463 \textcolor{stringliteral}{"{}   border: 2px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{464 \textcolor{stringliteral}{"{}    border-\/style: none none solid none;\(\backslash\)n"{}}}
+\DoxyCodeLine{465 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{466 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{467 \textcolor{stringliteral}{"{} QMenuBar::item:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{468 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{469 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{470 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{471 \textcolor{stringliteral}{"{}QCheckBox, QRadioButton \{\(\backslash\)n"{}}}
+\DoxyCodeLine{472 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{473 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{474 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{475 \textcolor{stringliteral}{"{}QRadioButton::indicator, QCheckBox::indicator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{476 \textcolor{stringliteral}{"{}   width: 13px;\(\backslash\)n"{}}}
+\DoxyCodeLine{477 \textcolor{stringliteral}{"{}   height: 13px;\(\backslash\)n"{}}}
+\DoxyCodeLine{478 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{479 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{480 \textcolor{stringliteral}{"{}QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{481 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{482 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{483 \textcolor{stringliteral}{"{}   background: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{484 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{485 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{486 \textcolor{stringliteral}{"{}QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{487 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{488 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{489 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{490 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{491 \textcolor{stringliteral}{"{}QRadioButton::indicator::checked, QCheckBox::indicator::checked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{492 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{493 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{494 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{495 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{496 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{497 \textcolor{stringliteral}{"{}QRadioButton::in"{}}}
+\DoxyCodeLine{498                         \textcolor{stringliteral}{"{}dicator:checked:hover, QCheckBox::indicator:checked:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{499 \textcolor{stringliteral}{"{}   left: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{500 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{501 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{502 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{503 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{504 \textcolor{stringliteral}{"{}QGroupBox::title \{\(\backslash\)n"{}}}
+\DoxyCodeLine{505 \textcolor{stringliteral}{"{}   subcontrol-\/origin: margin;\(\backslash\)n"{}}}
+\DoxyCodeLine{506 \textcolor{stringliteral}{"{}    subcontrol-\/position: top center;\(\backslash\)n"{}}}
+\DoxyCodeLine{507 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{508 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{509 \textcolor{stringliteral}{"{}QScrollBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{510 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{511 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{512 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{513 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{514 \textcolor{stringliteral}{"{}QScrollBar:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{515 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{516 \textcolor{stringliteral}{"{}   margin: 0px 16px 0px 16px;\(\backslash\)n"{}}}
+\DoxyCodeLine{517 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{518 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{519 \textcolor{stringliteral}{"{}QScrollBar:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{520 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{521 \textcolor{stringliteral}{"{}   margin: 16px 0px 16px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{522 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{523 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{524 \textcolor{stringliteral}{"{}QScrollBar::handle \{\(\backslash\)n"{}}}
+\DoxyCodeLine{525 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{526 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{527 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{528 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{529 \textcolor{stringliteral}{"{}QScrollBar::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{530 \textcolor{stringliteral}{"{}   border-\/width: 0px 1px 0px 1px;\(\backslash\)n"{}}}
+\DoxyCodeLine{531 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{532 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{533 \textcolor{stringliteral}{"{}QScrollBar::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{534 \textcolor{stringliteral}{"{}   border-\/width: 1px 0px 1px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{535 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{536 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{537 \textcolor{stringliteral}{"{}QScrollBar::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{538 \textcolor{stringliteral}{"{}   min-\/width: 20px;\(\backslash\)n"{}}}
+\DoxyCodeLine{539 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{540 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{541 \textcolor{stringliteral}{"{}QScrollBar::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{542 \textcolor{stringliteral}{"{}   min-\/height: 20px;\(\backslash\)n"{}}}
+\DoxyCodeLine{543 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{544 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{545 \textcolor{stringliteral}{"{}QScrollBar::add-\/line, QScrollBar::sub-\/line \{\(\backslash\)n"{}}}
+\DoxyCodeLine{546 \textcolor{stringliteral}{"{}   background:\#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{547 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{548 \textcolor{stringliteral}{"{}   subc"{}}}
+\DoxyCodeLine{549                         \textcolor{stringliteral}{"{}ontrol-\/origin: margin;\(\backslash\)n"{}}}
+\DoxyCodeLine{550 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{551 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{552 \textcolor{stringliteral}{"{}QScrollBar::add-\/line \{\(\backslash\)n"{}}}
+\DoxyCodeLine{553 \textcolor{stringliteral}{"{}   position: absolute;\(\backslash\)n"{}}}
+\DoxyCodeLine{554 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{555 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{556 \textcolor{stringliteral}{"{}QScrollBar::add-\/line:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{557 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{558 \textcolor{stringliteral}{"{}   subcontrol-\/position: right;\(\backslash\)n"{}}}
+\DoxyCodeLine{559 \textcolor{stringliteral}{"{}   left: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{560 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{561 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{562 \textcolor{stringliteral}{"{}QScrollBar::add-\/line:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{563 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{564 \textcolor{stringliteral}{"{}   subcontrol-\/position: bottom;\(\backslash\)n"{}}}
+\DoxyCodeLine{565 \textcolor{stringliteral}{"{}   top: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{566 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{567 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{568 \textcolor{stringliteral}{"{}QScrollBar::sub-\/line:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{569 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{570 \textcolor{stringliteral}{"{}   subcontrol-\/position: left;\(\backslash\)n"{}}}
+\DoxyCodeLine{571 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{572 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{573 \textcolor{stringliteral}{"{}QScrollBar::sub-\/line:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{574 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{575 \textcolor{stringliteral}{"{}   subcontrol-\/position: top;\(\backslash\)n"{}}}
+\DoxyCodeLine{576 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{577 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{578 \textcolor{stringliteral}{"{}QScrollBar:left-\/arrow, QScrollBar::right-\/arrow, QScrollBar::up-\/arrow, QScrollBar::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{579 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{580 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{581 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{582 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{583 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{584 \textcolor{stringliteral}{"{}QScrollBar::add-\/page, QScrollBar::sub-\/page \{\(\backslash\)n"{}}}
+\DoxyCodeLine{585 \textcolor{stringliteral}{"{}   background: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{586 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{587 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{588 \textcolor{stringliteral}{"{}QAbstractButton \{\(\backslash\)n"{}}}
+\DoxyCodeLine{589 \textcolor{stringliteral}{"{}   background: \#252525;\(\backslash\)n"{}}}
+\DoxyCodeLine{590 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{591 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{592 \textcolor{stringliteral}{"{}QAbstractButton:disabled \{\(\backslash\)n"{}}}
+\DoxyCodeLine{593 \textcolor{stringliteral}{"{}   background: \#3F3F3F;\(\backslash\)n"{}}}
+\DoxyCodeLine{594 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{595 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{596 \textcolor{stringliteral}{"{}QAbstractButton:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{597 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{598 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{599 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{600 \textcolor{stringliteral}{"{}QPushButton:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{601 \textcolor{stringliteral}{"{}   background: \#35353"{}}}
+\DoxyCodeLine{602                         \textcolor{stringliteral}{"{}5;\(\backslash\)n"{}}}
+\DoxyCodeLine{603 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{604 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{605 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{606 \textcolor{stringliteral}{"{}QAbstractButton:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{607 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{608 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{609 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{610 \textcolor{stringliteral}{"{}QAbstractItemView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{611 \textcolor{stringliteral}{"{}   show-\/decoration-\/selected: 1;\(\backslash\)n"{}}}
+\DoxyCodeLine{612 \textcolor{stringliteral}{"{}   outline: 0;\(\backslash\)n"{}}}
+\DoxyCodeLine{613 \textcolor{stringliteral}{"{}   selection-\/background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{614 \textcolor{stringliteral}{"{}   selection-\/color: \#DDDDDD;\(\backslash\)n"{}}}
+\DoxyCodeLine{615 \textcolor{stringliteral}{"{}   alternate-\/background-\/color: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{616 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{617 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{618 \textcolor{stringliteral}{"{}QHeaderView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{619 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{620 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{621 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{622 \textcolor{stringliteral}{"{}QHeaderView::section \{\(\backslash\)n"{}}}
+\DoxyCodeLine{623 \textcolor{stringliteral}{"{}   background: \#191919;\(\backslash\)n"{}}}
+\DoxyCodeLine{624 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{625 \textcolor{stringliteral}{"{}   padding: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{626 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{627 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{628 \textcolor{stringliteral}{"{}QHeaderView::section:selected, QHeaderView::section::checked \{\(\backslash\)n"{}}}
+\DoxyCodeLine{629 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{630 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{631 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{632 \textcolor{stringliteral}{"{}QTableView \{\(\backslash\)n"{}}}
+\DoxyCodeLine{633 \textcolor{stringliteral}{"{}   gridline-\/color: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{634 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{635 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{636 \textcolor{stringliteral}{"{}QTabBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{637 \textcolor{stringliteral}{"{}   margin-\/left: 2px;\(\backslash\)n"{}}}
+\DoxyCodeLine{638 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{639 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{640 \textcolor{stringliteral}{"{}QTabBar::tab \{\(\backslash\)n"{}}}
+\DoxyCodeLine{641 \textcolor{stringliteral}{"{}   border-\/radius: 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{642 \textcolor{stringliteral}{"{}   padding: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{643 \textcolor{stringliteral}{"{}   margin: 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{644 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{645 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{646 \textcolor{stringliteral}{"{}QTabBar::tab:selected \{\(\backslash\)n"{}}}
+\DoxyCodeLine{647 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{648 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{649 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{650 \textcolor{stringliteral}{"{}QComboBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{651 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{652 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{653 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{654 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{655 \textcolor{stringliteral}{"{}QComboBox::drop-\/down \{\(\backslash\)n"{}}}
+\DoxyCodeLine{656 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{657 \textcolor{stringliteral}{"{}   back"{}}}
+\DoxyCodeLine{658                         \textcolor{stringliteral}{"{}ground: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{659 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{660 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{661 \textcolor{stringliteral}{"{}QComboBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{662 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{663 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{664 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{665 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{666 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{667 \textcolor{stringliteral}{"{}QAbstractSpinBox \{\(\backslash\)n"{}}}
+\DoxyCodeLine{668 \textcolor{stringliteral}{"{}   padding-\/right: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{669 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{670 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{671 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button, QAbstractSpinBox::down-\/button \{\(\backslash\)n"{}}}
+\DoxyCodeLine{672 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{673 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{674 \textcolor{stringliteral}{"{}   subcontrol-\/origin: border;\(\backslash\)n"{}}}
+\DoxyCodeLine{675 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{676 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button:hover, QAbstractSpinBox::down-\/button:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{677 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{678 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{679 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/button:pressed, QAbstractSpinBox::down-\/button:pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{680 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{681 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{682 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{683 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/arrow, QAbstractSpinBox::down-\/arrow \{\(\backslash\)n"{}}}
+\DoxyCodeLine{684 \textcolor{stringliteral}{"{}   width: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{685 \textcolor{stringliteral}{"{}   height: 3px;\(\backslash\)n"{}}}
+\DoxyCodeLine{686 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{687 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{688 \textcolor{stringliteral}{"{}QAbstractSpinBox::up-\/arrow:hover, QAbstractSpinBox::down-\/arrow:hover \{\(\backslash\)n"{}}}
+\DoxyCodeLine{689 \textcolor{stringliteral}{"{}   border: 1px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{690 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{691 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{692 \textcolor{stringliteral}{"{}QSlider \{\(\backslash\)n"{}}}
+\DoxyCodeLine{693 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{694 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{695 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{696 \textcolor{stringliteral}{"{}QSlider::groove:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{697 \textcolor{stringliteral}{"{}   height: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{698 \textcolor{stringliteral}{"{}   margin: 4px 0px 4px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{699 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{700 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{701 \textcolor{stringliteral}{"{}QSlider::groove:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{702 \textcolor{stringliteral}{"{}   width: 5px;"{}}}
+\DoxyCodeLine{703                         \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{704 \textcolor{stringliteral}{"{}   margin: 0px 4px 0px 4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{705 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{706 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{707 \textcolor{stringliteral}{"{}QSlider::handle \{\(\backslash\)n"{}}}
+\DoxyCodeLine{708 \textcolor{stringliteral}{"{}   border: 1px solid \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{709 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{710 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{711 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{712 \textcolor{stringliteral}{"{}QSlider::handle:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{713 \textcolor{stringliteral}{"{}   width: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{714 \textcolor{stringliteral}{"{}   margin: -\/4px 0px -\/4px 0px;\(\backslash\)n"{}}}
+\DoxyCodeLine{715 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{716 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{717 \textcolor{stringliteral}{"{}QSlider::handle:vertical \{\(\backslash\)n"{}}}
+\DoxyCodeLine{718 \textcolor{stringliteral}{"{}   height: 15px;\(\backslash\)n"{}}}
+\DoxyCodeLine{719 \textcolor{stringliteral}{"{}   margin: 0px -\/4px 0px -\/4px;\(\backslash\)n"{}}}
+\DoxyCodeLine{720 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{721 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{722 \textcolor{stringliteral}{"{}QSlider::add-\/page:vertical, QSlider::sub-\/page:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{723 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{724 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{725 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{726 \textcolor{stringliteral}{"{}QSlider::sub-\/page:vertical, QSlider::add-\/page:horizontal \{\(\backslash\)n"{}}}
+\DoxyCodeLine{727 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{728 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{729 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{730 \textcolor{stringliteral}{"{}QLabel \{\(\backslash\)n"{}}}
+\DoxyCodeLine{731 \textcolor{stringliteral}{"{}   border: none;\(\backslash\)n"{}}}
+\DoxyCodeLine{732 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{733 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{734 \textcolor{stringliteral}{"{}QProgressBar \{\(\backslash\)n"{}}}
+\DoxyCodeLine{735 \textcolor{stringliteral}{"{}   text-\/align: center;\(\backslash\)n"{}}}
+\DoxyCodeLine{736 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{737 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{738 \textcolor{stringliteral}{"{}QProgressBar::chunk \{\(\backslash\)n"{}}}
+\DoxyCodeLine{739 \textcolor{stringliteral}{"{}   width: 1px;\(\backslash\)n"{}}}
+\DoxyCodeLine{740 \textcolor{stringliteral}{"{}   background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{741 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{742 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{743 \textcolor{stringliteral}{"{}QMenu::separator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{744 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{745 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{746 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{747 \textcolor{stringliteral}{"{}QGroupBox \{\(\backslash\)n"{}}}
+\DoxyCodeLine{748 \textcolor{stringliteral}{"{}   font: bold\(\backslash\)n"{}}}
+\DoxyCodeLine{749 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{750 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{751 \textcolor{stringliteral}{"{}QListWidget::item:selected \{\(\backslash\)n"{}}}
+\DoxyCodeLine{752 \textcolor{stringliteral}{"{}    background-\/color: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{753 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{754 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{755 \textcolor{stringliteral}{"{} QMenu::item:selected\{\(\backslash\)n"{}}}
+\DoxyCodeLine{756 \textcolor{stringliteral}{"{}   background: \#353535;\(\backslash\)n"{}}}
+\DoxyCodeLine{757 \textcolor{stringliteral}{"{}   border: 2px solid \#D66C23;\(\backslash\)n"{}}}
+\DoxyCodeLine{758 \textcolor{stringliteral}{"{}    border-\/style: none solid none none;\(\backslash\)n"{}}}
+\DoxyCodeLine{759 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{760 \textcolor{stringliteral}{"{}"{}}}
+\DoxyCodeLine{761                         \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{762 \textcolor{stringliteral}{"{} QMenu::pressed \{\(\backslash\)n"{}}}
+\DoxyCodeLine{763 \textcolor{stringliteral}{"{}   background: \#5A5A5A;\(\backslash\)n"{}}}
+\DoxyCodeLine{764 \textcolor{stringliteral}{"{}\}\(\backslash\)n"{}}}
+\DoxyCodeLine{765 \textcolor{stringliteral}{"{}\(\backslash\)n"{}}}
+\DoxyCodeLine{766 \textcolor{stringliteral}{"{}QMenu::separator \{\(\backslash\)n"{}}}
+\DoxyCodeLine{767 \textcolor{stringliteral}{"{}    height: 5px;\(\backslash\)n"{}}}
+\DoxyCodeLine{768 \textcolor{stringliteral}{"{}   background: \#2158AA;\(\backslash\)n"{}}}
+\DoxyCodeLine{769 \textcolor{stringliteral}{"{}\}"{}}));}
+\DoxyCodeLine{770         gpu\_label = \textcolor{keyword}{new} QLabel(detected\_group\_box);}
+\DoxyCodeLine{771         gpu\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}gpu\_label"{}}));}
+\DoxyCodeLine{772         gpu\_label-\/>setGeometry(QRect(270, 40, 191, 21));}
+\DoxyCodeLine{773         cc\_label = \textcolor{keyword}{new} QLabel(detected\_group\_box);}
+\DoxyCodeLine{774         cc\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}cc\_label"{}}));}
+\DoxyCodeLine{775         cc\_label-\/>setGeometry(QRect(280, 70, 161, 21));}
+\DoxyCodeLine{776         gpu\_description\_label = \textcolor{keyword}{new} QLabel(detected\_group\_box);}
+\DoxyCodeLine{777         gpu\_description\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}gpu\_description\_label"{}}));}
+\DoxyCodeLine{778         gpu\_description\_label-\/>setGeometry(QRect(80, 40, 161, 21));}
+\DoxyCodeLine{779         cc\_description\_label = \textcolor{keyword}{new} QLabel(detected\_group\_box);}
+\DoxyCodeLine{780         cc\_description\_label-\/>setObjectName(QString::fromUtf8(\textcolor{stringliteral}{"{}cc\_description\_label"{}}));}
+\DoxyCodeLine{781         cc\_description\_label-\/>setGeometry(QRect(80, 70, 151, 21));}
+\DoxyCodeLine{782 }
+\DoxyCodeLine{783         retranslateUi(aboutJTA);}
+\DoxyCodeLine{784         QObject::connect(close\_button, SIGNAL(clicked(\textcolor{keywordtype}{bool})), aboutJTA, SLOT(close()));}
+\DoxyCodeLine{785 }
+\DoxyCodeLine{786         QMetaObject::connectSlotsByName(aboutJTA);}
+\DoxyCodeLine{787     \} \textcolor{comment}{// setupUi}}
+\DoxyCodeLine{788 }
+\DoxyCodeLine{789     \textcolor{keywordtype}{void} retranslateUi(QDialog *aboutJTA)}
+\DoxyCodeLine{790     \{}
+\DoxyCodeLine{791         aboutJTA-\/>setWindowTitle(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}About JointTrack Auto"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{792         close\_button-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}Close"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{793         title\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}JointTrack Auto"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{794         picture-\/>setText(QString());}
+\DoxyCodeLine{795         version\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}Version X.X.X"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{796         copyright\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}\(\backslash\)302\(\backslash\)251 2022 Andrew Jensen, Paris Flood"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{797         detected\_group\_box-\/>setTitle(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}DETECTED SYSTEM HARDWARE"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{798         gpu\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}xxx"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{799         cc\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}xxx"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{800         gpu\_description\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}CUDA Device (GPU):"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{801         cc\_description\_label-\/>setText(QCoreApplication::translate(\textcolor{stringliteral}{"{}aboutJTA"{}}, \textcolor{stringliteral}{"{}Compute Capability:"{}}, \textcolor{keyword}{nullptr}));}
+\DoxyCodeLine{802     \} \textcolor{comment}{// retranslateUi}}
+\DoxyCodeLine{803 }
+\DoxyCodeLine{804 \};}
+\DoxyCodeLine{805 }
+\DoxyCodeLine{806 \textcolor{keyword}{namespace }Ui \{}
+\DoxyCodeLine{807     \textcolor{keyword}{class }\mbox{\hyperlink{class_ui_1_1about_j_t_a}{aboutJTA}}: \textcolor{keyword}{public} \mbox{\hyperlink{class_ui__about_j_t_a}{Ui\_aboutJTA}} \{\};}
+\DoxyCodeLine{808 \} \textcolor{comment}{// namespace Ui}}
+\DoxyCodeLine{809 }
+\DoxyCodeLine{810 QT\_END\_NAMESPACE}
+\DoxyCodeLine{811 }
+\DoxyCodeLine{812 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// UI\_ABOUT\_H}}
+
+\end{DoxyCode}

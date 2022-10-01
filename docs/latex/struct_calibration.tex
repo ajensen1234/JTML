@@ -1,0 +1,65 @@
+\hypertarget{struct_calibration}{}\doxysection{Calibration Struct Reference}
+\label{struct_calibration}\index{Calibration@{Calibration}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{struct_calibration_aa9f4c930f88957df3b373c432c67b0d4}\label{struct_calibration_aa9f4c930f88957df3b373c432c67b0d4}} 
+{\bfseries Calibration} (\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}} monoplane\+\_\+principal)
+\item 
+\mbox{\hyperlink{struct_calibration_a78e8ba05a938728a2d70bf792914ff51}{Calibration}} (\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}} biplane\+\_\+\+A\+\_\+principal, \mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}} biplane\+\_\+\+B\+\_\+principal, \mbox{\hyperlink{struct_vect__3}{Vect\+\_\+3}} origin\+\_\+B, \mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} axes\+\_\+B)
+\item 
+\mbox{\Hypertarget{struct_calibration_a89ec52f9f0ccb49677c62ba98ca3c278}\label{struct_calibration_a89ec52f9f0ccb49677c62ba98ca3c278}} 
+\mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} {\bfseries multiplication\+\_\+mat\+\_\+mat} (\mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} X, \mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} Y)
+\item 
+\mbox{\Hypertarget{struct_calibration_ad23fb588b7bccb3ad09f428cf83883c8}\label{struct_calibration_ad23fb588b7bccb3ad09f428cf83883c8}} 
+\mbox{\hyperlink{struct_vect__3}{Vect\+\_\+3}} {\bfseries multiplication\+\_\+mat\+\_\+vec} (\mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} X, \mbox{\hyperlink{struct_vect__3}{Vect\+\_\+3}} u)
+\item 
+\mbox{\Hypertarget{struct_calibration_a77cabe9aea746c223e756da932633cda}\label{struct_calibration_a77cabe9aea746c223e756da932633cda}} 
+\mbox{\hyperlink{struct_point6_d}{Point6D}} {\bfseries convert\+\_\+\+Pose\+\_\+\+A\+\_\+to\+\_\+\+Pose\+\_\+B} (\mbox{\hyperlink{struct_point6_d}{Point6D}} poseA)
+\item 
+\mbox{\Hypertarget{struct_calibration_ae80b7e1d779e109d08129f0f1dc4a195}\label{struct_calibration_ae80b7e1d779e109d08129f0f1dc4a195}} 
+\mbox{\hyperlink{struct_point6_d}{Point6D}} {\bfseries convert\+\_\+\+Pose\+\_\+\+B\+\_\+to\+\_\+\+Pose\+\_\+A} (\mbox{\hyperlink{struct_point6_d}{Point6D}} poseA)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{struct_calibration_af39fa093b2b0b46d8b6b787955c5c2a3}\label{struct_calibration_af39fa093b2b0b46d8b6b787955c5c2a3}} 
+bool {\bfseries biplane\+\_\+calibration}
+\item 
+\mbox{\Hypertarget{struct_calibration_a55883ce84fecba22409644c8804ce442}\label{struct_calibration_a55883ce84fecba22409644c8804ce442}} 
+\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}} {\bfseries camera\+\_\+\+A\+\_\+principal\+\_\+}
+\item 
+\mbox{\Hypertarget{struct_calibration_a6795c59daa7f06a247dfff0ae201822e}\label{struct_calibration_a6795c59daa7f06a247dfff0ae201822e}} 
+\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}} {\bfseries camera\+\_\+\+B\+\_\+principal\+\_\+}
+\item 
+\mbox{\Hypertarget{struct_calibration_a82056f9c52deeeb3614385268b1860f6}\label{struct_calibration_a82056f9c52deeeb3614385268b1860f6}} 
+\mbox{\hyperlink{struct_vect__3}{Vect\+\_\+3}} {\bfseries origin\+\_\+\+B\+\_\+}
+\item 
+\mbox{\Hypertarget{struct_calibration_ac8ed1d8b4073dc54832b1f86bb3958f8}\label{struct_calibration_ac8ed1d8b4073dc54832b1f86bb3958f8}} 
+\mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}} {\bfseries axes\+\_\+\+B\+\_\+}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{struct_calibration_a78e8ba05a938728a2d70bf792914ff51}\label{struct_calibration_a78e8ba05a938728a2d70bf792914ff51}} 
+\index{Calibration@{Calibration}!Calibration@{Calibration}}
+\index{Calibration@{Calibration}!Calibration@{Calibration}}
+\doxysubsubsection{\texorpdfstring{Calibration()}{Calibration()}}
+{\footnotesize\ttfamily Calibration\+::\+Calibration (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}}}]{biplane\+\_\+\+A\+\_\+principal,  }\item[{\mbox{\hyperlink{struct_camera_calibration}{Camera\+Calibration}}}]{biplane\+\_\+\+B\+\_\+principal,  }\item[{\mbox{\hyperlink{struct_vect__3}{Vect\+\_\+3}}}]{origin\+\_\+B,  }\item[{\mbox{\hyperlink{struct_matrix__3__3}{Matrix\+\_\+3\+\_\+3}}}]{axes\+\_\+B }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em biplane\+\_\+\+A\+\_\+principal} & \\
+\hline
+{\em biplane\+\_\+\+B\+\_\+principal} & \\
+\hline
+{\em origin\+\_\+B} & \\
+\hline
+{\em axes\+\_\+B} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/core/calibration.\+h\end{DoxyCompactItemize}

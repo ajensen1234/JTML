@@ -1,0 +1,20 @@
+\hypertarget{machine__learning__tools_8h_source}{}\doxysection{machine\+\_\+learning\+\_\+tools.\+h}
+\label{machine__learning__tools_8h_source}\index{include/core/machine\_learning\_tools.h@{include/core/machine\_learning\_tools.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <torch/torch.h>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <torch/script.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <opencv2/highgui.hpp>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <opencv2/imgproc.hpp>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <cuda.h>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <cuda\_runtime.h>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <device\_launch\_parameters.h>}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 cv::Mat segment\_image(\textcolor{keyword}{const} cv::Mat\& orig\_image, \textcolor{keywordtype}{bool} black\_sil\_used, torch::jit::Module* model,}
+\DoxyCodeLine{12                       \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} input\_width, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} input\_height);}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 }
+
+\end{DoxyCode}

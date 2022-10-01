@@ -1,0 +1,60 @@
+\hypertarget{md_compile_instructions_autotoc_md1}{}\doxysection{External Libraries}\label{md_compile_instructions_autotoc_md1}
+\hypertarget{md_compile_instructions_autotoc_md2}{}\doxysubsection{Binary Downloads}\label{md_compile_instructions_autotoc_md2}
+
+\begin{DoxyItemize}
+\item CUDA Toolkit 11.\+6 (\href{https://developer.nvidia.com/cuda-11-6-0-download-archive}{\texttt{ https\+://developer.\+nvidia.\+com/cuda-\/11-\/6-\/0-\/download-\/archive}})
+\begin{DoxyItemize}
+\item I usually do the local installer so that I have everything that I need all at once. You will not need to compile this.
+\end{DoxyItemize}
+\item Qt 5.\+15.\+2 (\href{https://www.qt.io/download}{\texttt{ https\+://www.\+qt.\+io/download}})
+\begin{DoxyEnumerate}
+\item \char`\"{}\+Go Open Source\char`\"{}
+\item Scroll down to \char`\"{}\+Looking for Qt Binaries\char`\"{} and hit \char`\"{}\+Download the Qt Online Installer\char`\"{}
+\item You\textquotesingle{}ll want to downlaod the MSVC2019\+\_\+64 version of Qt. There are some binaries for GCC and other versions of MSVC, but those can get beefy and we don\textquotesingle{}t need them.
+\item Also make sure that you download the newest version of \char`\"{}designer\char`\"{}. This gives you an gui framework to edit the JTML gui
+\end{DoxyEnumerate}
+\item Py\+Torch \char`\"{}\+Libtorch\char`\"{} 1.\+12.\+1 (\href{https://pytorch.org/}{\texttt{ https\+://pytorch.\+org/}})
+\begin{DoxyItemize}
+\item Scroll down and select Stable-\/\texorpdfstring{$>$}{>}Windows-\/\texorpdfstring{$>$}{>}C++/\+Java-\/\texorpdfstring{$>$}{>}CUDA 11.\+6
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{md_compile_instructions_autotoc_md3}{}\doxysubsection{To be Built}\label{md_compile_instructions_autotoc_md3}
+{\bfseries{MAKE SURE YOU BUILD THE \char`\"{}\+RELEASE\char`\"{} NOT \char`\"{}\+DEBUG\char`\"{}}}
+\begin{DoxyItemize}
+\item VTK 7.\+1.\+1 (\href{https://vtk.org/download/}{\texttt{ https\+://vtk.\+org/download/}})
+\begin{DoxyItemize}
+\item You\textquotesingle{}ll download the zip of the source code.
+\item You will build this with CMake
+\item One thing that you\textquotesingle{}ll need to do in the Visual Studio Project configuration is change \char`\"{}vtk\+Rendering\+Label\char`\"{} to compile with MSVC2017.
+\item Once you finish building it, make sure to \char`\"{}build\char`\"{} the \char`\"{}\+INSTALL\char`\"{} target.
+\end{DoxyItemize}
+\item Open\+CV 4.\+5.\+5 (\href{https://github.com/opencv/opencv/releases/tag/4.5.5}{\texttt{ https\+://github.\+com/opencv/opencv/releases/tag/4.\+5.\+5}})
+\begin{DoxyItemize}
+\item Download the zip of the source code and build using CMake. It shouldn\textquotesingle{}t be too tough.
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{md_compile_instructions_autotoc_md4}{}\doxysection{In-\/\+House Libraries}\label{md_compile_instructions_autotoc_md4}
+{\bfseries{These need to be built in order using cmake}}.
+
+
+\begin{DoxyEnumerate}
+\item Cost\+Function\+Tools (\href{https://github.com/ajensen1234/CostFunctionTools-CMake}{\texttt{ https\+://github.\+com/ajensen1234/\+Cost\+Function\+Tools-\/\+CMake}})
+\begin{DoxyItemize}
+\item You won\textquotesingle{}t do any development on this, but you should clone it from github anyway.
+\item Build this using CMake, you will need to link some of the previous $^\wedge$$^\wedge$ external libraries
+\end{DoxyItemize}
+\item JTA\+\_\+\+Cost\+\_\+\+Functions (\href{https://github.com/ajensen1234/JTA_Cost_Functions-CMake}{\texttt{ https\+://github.\+com/ajensen1234/\+JTA\+\_\+\+Cost\+\_\+\+Functions-\/\+CMake}})
+\begin{DoxyItemize}
+\item You will need to link to Cost\+Function\+Tools as well as the external libraries
+\end{DoxyItemize}
+\end{DoxyEnumerate}\hypertarget{md_compile_instructions_autotoc_md5}{}\doxysection{External Library CMake Locations}\label{md_compile_instructions_autotoc_md5}
+
+\begin{DoxyItemize}
+\item Open\+Cv--- {\ttfamily path/to/build\+\_\+dir}
+\item Pytorch--- {\ttfamily /path\+\_\+to\+\_\+libtorch/share/cmake/\+Torch}
+\item Qt--- {\ttfamily C\+:/\+Qt/5.15.\+2/msvc2019\+\_\+64/lib/cmake/\+Qt5/}
+\item CUDA--- CMake should find this automatically
+\item VTK-- CMake should find this automatically.
+\end{DoxyItemize}\hypertarget{md_compile_instructions_autotoc_md6}{}\doxysection{Extras}\label{md_compile_instructions_autotoc_md6}
+You {\itshape might} need to download cu\+DNN separately (\href{https://developer.nvidia.com/cudnn}{\texttt{ https\+://developer.\+nvidia.\+com/cudnn}})
+\begin{DoxyItemize}
+\item Let me know if this doesn\textquotesingle{}t work and I can send you the binaries and include files directly. 
+\end{DoxyItemize}

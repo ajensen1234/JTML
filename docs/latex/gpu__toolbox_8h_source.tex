@@ -1,0 +1,43 @@
+\hypertarget{gpu__toolbox_8h_source}{}\doxysection{gpu\+\_\+toolbox.\+h}
+\label{gpu__toolbox_8h_source}\index{include/gpu/gpu\_toolbox.h@{include/gpu/gpu\_toolbox.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef GPU\_TOOLBOX\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define GPU\_TOOLBOX\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*CUDA Custom Registration Namespace (Compiling as DLL)*/}}
+\DoxyCodeLine{5 \textcolor{keyword}{namespace }gpu\_cost\_function \{}
+\DoxyCodeLine{6     \textcolor{comment}{/*This class is a toolbox for users looking to write their own }}
+\DoxyCodeLine{7 \textcolor{comment}{    cost functions, and uses GPU computing. Users will be provided}}
+\DoxyCodeLine{8 \textcolor{comment}{    with several resources (stored on the GPU) and functions }}
+\DoxyCodeLine{9 \textcolor{comment}{    (computed on the GPU):}}
+\DoxyCodeLine{10 \textcolor{comment}{        Resources (Stored on GPU Memory During Initialization of}}
+\DoxyCodeLine{11 \textcolor{comment}{        CostFunctionToolboxGPU Class):}}
+\DoxyCodeLine{12 \textcolor{comment}{            -\/ Every image uploaded to JTA}}
+\DoxyCodeLine{13 \textcolor{comment}{            -\/ Edge detected version of every image uploaded to JTA}}
+\DoxyCodeLine{14 \textcolor{comment}{            -\/ Dilated version of every image uploaded to JTA}}
+\DoxyCodeLine{15 \textcolor{comment}{            (dilation value is same as "{}Dilation"{} int parameter}}
+\DoxyCodeLine{16 \textcolor{comment}{            in Cost Function chosen for stage. If such a parameter}}
+\DoxyCodeLine{17 \textcolor{comment}{            does not exist dilation is 0 and this image is a copy}}
+\DoxyCodeLine{18 \textcolor{comment}{            of the edge detected version).}}
+\DoxyCodeLine{19 \textcolor{comment}{            -\/ GPU model classes (one for each model). The GPU model }}
+\DoxyCodeLine{20 \textcolor{comment}{            for the primary model will be stored seperately }}
+\DoxyCodeLine{21 \textcolor{comment}{            from the list of GPU models for the non-\/primary}}
+\DoxyCodeLine{22 \textcolor{comment}{            models. }}
+\DoxyCodeLine{23 \textcolor{comment}{                -\/ GPU model class also includes information}}
+\DoxyCodeLine{24 \textcolor{comment}{                about the model such as the name, file location, }}
+\DoxyCodeLine{25 \textcolor{comment}{                model type, and STL style triangle information.}}
+\DoxyCodeLine{26 \textcolor{comment}{                This last piece of information is stored on the GPU.}}
+\DoxyCodeLine{27 \textcolor{comment}{            -\/ Render Engine Class. As of 4/11/2018 this will have}}
+\DoxyCodeLine{28 \textcolor{comment}{            to be modified to accept device pointers for the triangle}}
+\DoxyCodeLine{29 \textcolor{comment}{            normals and vertices.}}
+\DoxyCodeLine{30 \textcolor{comment}{}}
+\DoxyCodeLine{31 \textcolor{comment}{            }}
+\DoxyCodeLine{32 \textcolor{comment}{        */}}
+\DoxyCodeLine{33     \textcolor{keyword}{class }\mbox{\hyperlink{classgpu__cost__function_1_1_cost_function_toolbox_g_p_u}{CostFunctionToolboxGPU}} \{}
+\DoxyCodeLine{34     \}}
+\DoxyCodeLine{35 \}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* GPU\_TOOLBOX\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

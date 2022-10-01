@@ -1,0 +1,62 @@
+\hypertarget{direct__data__storage_8h_source}{}\doxysection{direct\+\_\+data\+\_\+storage.\+h}
+\label{direct__data__storage_8h_source}\index{include/core/direct\_data\_storage.h@{include/core/direct\_data\_storage.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef DIRECT\_DATA\_STORAGE\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define DIRECT\_DATA\_STORAGE\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Header for Data Storage Class of DIRECT algorithm (different (faster) than one in JTA but doesnt support Lipschitz search)*/}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*6D Data Structures*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{comment}{//Standard}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{keyword}{class }\mbox{\hyperlink{class_direct_data_storage}{DirectDataStorage}} \{}
+\DoxyCodeLine{14 \textcolor{keyword}{public}:}
+\DoxyCodeLine{15     \textcolor{comment}{/*Initialize Direct Storage with a Unit Size HyperBox @ (.5, .5, .5, .5, .5, .5) with initial\_value*/}}
+\DoxyCodeLine{16     \mbox{\hyperlink{class_direct_data_storage}{DirectDataStorage}}(\textcolor{keywordtype}{double} initial\_value);}
+\DoxyCodeLine{17     \mbox{\hyperlink{class_direct_data_storage}{DirectDataStorage}}(); \textcolor{comment}{/*Use Default Value of -\/1 For initial value*/}}
+\DoxyCodeLine{18     \textcolor{comment}{//\string~DirectDataStorage();}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20     \textcolor{comment}{/*Remove and Add HyperBoxes*/}}
+\DoxyCodeLine{21     \textcolor{keywordtype}{void} AddHyperBox(\mbox{\hyperlink{struct_hyper_box6_d}{HyperBox6D}} *new\_box);}
+\DoxyCodeLine{22     \textcolor{keywordtype}{void} DeleteHyperBoxes(std::vector<int> col\_ids); \textcolor{comment}{/*Deletes the Best Hyperbox at the List of Column IDs and Deletes Empty Columns*/}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24     \textcolor{comment}{/*Get Number of Columns*/}}
+\DoxyCodeLine{25     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} GetNumberColumns();}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27     \textcolor{comment}{/*Get smallest Fvalue (last one) in column*/}}
+\DoxyCodeLine{28     \mbox{\hyperlink{struct_hyper_box6_d}{HyperBox6D}} GetMinimumHyperbox(\textcolor{keywordtype}{int} col\_id);}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30     \textcolor{comment}{/*Get Smallest Fvalue (Last one) in Column*/}}
+\DoxyCodeLine{31     \textcolor{keywordtype}{double} GetMinimumHyperboxValue(\textcolor{keywordtype}{int} col\_id);}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33     \textcolor{comment}{/*Get Hyperbox Size Stored Column*/}}
+\DoxyCodeLine{34     \textcolor{keywordtype}{double} GetSizeStoredInColumn(\textcolor{keywordtype}{int} col\_id);}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36     \textcolor{comment}{/*Delete Contents of storage\_matrix\_ safely (also called in destructor)*/}}
+\DoxyCodeLine{37     \textcolor{keywordtype}{void} DeleteAllStoredHyperboxes();}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39     \textcolor{comment}{/*Print Columns, Min/Max/Avg Column Length*/}}
+\DoxyCodeLine{40     \textcolor{keywordtype}{void} PrintSize();}
+\DoxyCodeLine{41     \textcolor{comment}{/*Print */}}
+\DoxyCodeLine{42     \textcolor{keywordtype}{void} PrintContents();}
+\DoxyCodeLine{43 \textcolor{keyword}{private}:}
+\DoxyCodeLine{44     \textcolor{comment}{/*Vector of Vector of HyperBoxes:}}
+\DoxyCodeLine{45 \textcolor{comment}{    Low Level Vector of HyperBoxes Represents All Hyperboxes of a Given Size, Kept in Sorted Decreasing (Max Value @ 0) Order}}
+\DoxyCodeLine{46 \textcolor{comment}{    High Level Vector of Vectors Represents All Sizes of Current Vectors, Kept in Sorted Increasing (Min Value @ 0) Order*/}}
+\DoxyCodeLine{47     std::vector<std::vector<HyperBox6D*>*> storage\_matrix\_;}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49     \textcolor{comment}{/*Vectors for Storing Minimum Hyperbox Size/Function Value Respectively for Each Column.}}
+\DoxyCodeLine{50 \textcolor{comment}{    This is done for speed as it is much faster to access. Might need to reserve space in constructor. */}}
+\DoxyCodeLine{51     std::vector<double> minimum\_value\_columns\_;}
+\DoxyCodeLine{52     std::vector<double> size\_columns\_;}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54 \};}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* DIRECT\_DATA\_STORAGE\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

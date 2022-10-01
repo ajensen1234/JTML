@@ -1,0 +1,52 @@
+\hypertarget{location__storage_8h_source}{}\doxysection{location\+\_\+storage.\+h}
+\label{location__storage_8h_source}\index{include/core/location\_storage.h@{include/core/location\_storage.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*Location Storage Class is a Matrix for Different Model Poses for Each of the Different Loaded Images (Or Image Pairs if Optimized*/}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#ifndef LOCATION\_STORAGE\_H}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#define LOCATION\_STORAGE\_H}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{comment}{/*Standard*/}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*Direct Library*/}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{keyword}{class }\mbox{\hyperlink{class_location_storage}{LocationStorage}} \{}
+\DoxyCodeLine{12 \textcolor{keyword}{public}:}
+\DoxyCodeLine{13     \mbox{\hyperlink{class_location_storage}{LocationStorage}}()\{\};}
+\DoxyCodeLine{14     \mbox{\hyperlink{class_location_storage}{\string~LocationStorage}}()\{\};}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16     \textcolor{comment}{/*Add New Model to JTA-\/GPU So Initialize ALl Loaded Frames with }}
+\DoxyCodeLine{17 \textcolor{comment}{    Default Pose (0,0,-\/.25*principal\_distance / pixel\_pitch,0,0,0)*/}}
+\DoxyCodeLine{18     \textcolor{keywordtype}{void} LoadNewModel(\textcolor{keywordtype}{double} principal\_distance, \textcolor{keywordtype}{double} pixel\_pitch);}
+\DoxyCodeLine{19     \textcolor{comment}{/*Add New Frame to JTA-\/GPU So Initialize ALl Loaded Models with}}
+\DoxyCodeLine{20 \textcolor{comment}{    Default Pose (0,0,-\/.25*principal\_distance / pixel\_pitch,0,0,0) for that Frame*/}}
+\DoxyCodeLine{21     \textcolor{keywordtype}{void} LoadNewFrame();}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{comment}{/*Acces A Pose from Matrix*/}}
+\DoxyCodeLine{24     \mbox{\hyperlink{struct_point6_d}{Point6D}} GetPose(\textcolor{keywordtype}{int} frame\_index, \textcolor{keywordtype}{int} model\_index);}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26     \textcolor{comment}{/*Store a Pose to Matrix*/}}
+\DoxyCodeLine{27     \textcolor{keywordtype}{void} SavePose(\textcolor{keywordtype}{int} frame\_index, \textcolor{keywordtype}{int} model\_index, \mbox{\hyperlink{struct_point6_d}{Point6D}} model\_pose);}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29     \textcolor{comment}{/*Get Frame Storage Size*/}}
+\DoxyCodeLine{30     \textcolor{keywordtype}{int} GetFrameCount();}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32     \textcolor{comment}{/*Get Model Storage Size (-\/1 if Inconsistent Sizes)*/}}
+\DoxyCodeLine{33     \textcolor{keywordtype}{int} GetModelCount();}
+\DoxyCodeLine{34 \textcolor{keyword}{private}:}
+\DoxyCodeLine{35     \textcolor{comment}{/*List of Model Location Points for Each Frame }}
+\DoxyCodeLine{36 \textcolor{comment}{    (So The Outside Vector is the length of the loaded frames}}
+\DoxyCodeLine{37 \textcolor{comment}{    and the inside vector is the length of the loaded models)*/}}
+\DoxyCodeLine{38     std::vector<std::vector<Point6D>> location\_storage\_matrix\_;}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \textcolor{comment}{/*No Image Model Location Points}}
+\DoxyCodeLine{41 \textcolor{comment}{    (This stores location points for models when there are no images}}
+\DoxyCodeLine{42 \textcolor{comment}{    loaded, this is the size of the models loaded)*/}}
+\DoxyCodeLine{43     std::vector<Point6D> no\_image\_location\_storage\_vector\_;}
+\DoxyCodeLine{44 \};}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* LOCATION\_STORAGE\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

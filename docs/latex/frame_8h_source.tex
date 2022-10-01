@@ -1,0 +1,80 @@
+\hypertarget{frame_8h_source}{}\doxysection{frame.\+h}
+\label{frame_8h_source}\index{include/core/frame.h@{include/core/frame.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*Header for Frame Class:}}
+\DoxyCodeLine{2 \textcolor{comment}{The Frame class stores:}}
+\DoxyCodeLine{3 \textcolor{comment}{1. Width and Height information for an x-\/ray image}}
+\DoxyCodeLine{4 \textcolor{comment}{2. Original x-\/ray image}}
+\DoxyCodeLine{5 \textcolor{comment}{3. Inverted grayscale of the x-\/ray image}}
+\DoxyCodeLine{6 \textcolor{comment}{3. Edge Detection constants (aperture, low/high threshold)}}
+\DoxyCodeLine{7 \textcolor{comment}{4. Edge Detected version of the image}}
+\DoxyCodeLine{8 \textcolor{comment}{5. maximum dilation constant}}
+\DoxyCodeLine{9 \textcolor{comment}{6. dilated version of the edge image*/}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef FRAME\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define FRAME\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{comment}{/*Standard*/}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{comment}{/*OpenCV 3.1 Library*/}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <opencv2/highgui/highgui.hpp>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <opencv2/imgproc/imgproc.hpp>}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{keyword}{class }\mbox{\hyperlink{class_frame}{Frame}} \{}
+\DoxyCodeLine{22 \textcolor{keyword}{public}:}
+\DoxyCodeLine{23     \mbox{\hyperlink{class_frame}{Frame}}(std::string file\_location, \textcolor{keywordtype}{int} aperture, \textcolor{keywordtype}{int} low\_threshold,}
+\DoxyCodeLine{24         \textcolor{keywordtype}{int} high\_threshold, \textcolor{keywordtype}{int} dilation);}
+\DoxyCodeLine{25     \mbox{\hyperlink{class_frame}{\string~Frame}}()\{\};}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27     \textcolor{comment}{/*Get Set Methods for Main Variables*/}}
+\DoxyCodeLine{28     \textcolor{comment}{/*Return Original Image*/}}
+\DoxyCodeLine{29     cv::Mat GetOriginalImage();}
+\DoxyCodeLine{30     \textcolor{comment}{/*Return Edge Detected Image*/}}
+\DoxyCodeLine{31     cv::Mat GetEdgeImage();}
+\DoxyCodeLine{32     \textcolor{comment}{/*Return Dilated Edge Detected Image*/}}
+\DoxyCodeLine{33     cv::Mat GetDilationImage();}
+\DoxyCodeLine{34     \textcolor{comment}{/*Return Inverted Intensity Image*/}}
+\DoxyCodeLine{35     cv::Mat GetInvertedImage();}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{comment}{/*Store Public String Location*/}}
+\DoxyCodeLine{38     std::string file\_location\_;}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \textcolor{comment}{/*Reset From Original (Resets Inverted/Segmented, Edge, Dilation from Original,}}
+\DoxyCodeLine{41 \textcolor{comment}{    Useful if Trying to Reset from Segmentation)*/}}
+\DoxyCodeLine{42     \textcolor{keywordtype}{void} ResetFromOriginal();}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{comment}{/*Recalculate Edge Detected Image*/}}
+\DoxyCodeLine{45     \textcolor{keywordtype}{void} SetEdgeImage(\textcolor{keywordtype}{int} aperture, \textcolor{keywordtype}{int} low\_threshold,}
+\DoxyCodeLine{46         \textcolor{keywordtype}{int} high\_threshold, \textcolor{keywordtype}{bool} use\_reverse = \textcolor{keyword}{false});}
+\DoxyCodeLine{47     \textcolor{comment}{/*Recalculate Dilated Image*/}}
+\DoxyCodeLine{48     \textcolor{keywordtype}{void} SetDilatedImage(\textcolor{keywordtype}{int} dilation);}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50     \textcolor{comment}{/*Get Canny Parameters*/}}
+\DoxyCodeLine{51     \textcolor{keywordtype}{int} GetAperture();}
+\DoxyCodeLine{52     \textcolor{keywordtype}{int} GetHighThreshold();}
+\DoxyCodeLine{53     \textcolor{keywordtype}{int} GetLowThreshold();}
+\DoxyCodeLine{54 \textcolor{keyword}{private}:}
+\DoxyCodeLine{55     \textcolor{comment}{/*Original Matrix*/}}
+\DoxyCodeLine{56     cv::Mat original\_image\_;}
+\DoxyCodeLine{57     \textcolor{comment}{/*Edge Detected Matrix*/}}
+\DoxyCodeLine{58     cv::Mat edge\_image\_;}
+\DoxyCodeLine{59     \textcolor{comment}{/*Dilation Matrix*/}}
+\DoxyCodeLine{60     cv::Mat dilation\_image\_;}
+\DoxyCodeLine{61     \textcolor{comment}{/*Inverted Matrix  (Store in Inverted)*/}}
+\DoxyCodeLine{62     cv::Mat inverted\_image\_;}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64     \textcolor{comment}{/*Constants*/}}
+\DoxyCodeLine{65     \textcolor{keywordtype}{int} aperture\_;}
+\DoxyCodeLine{66     \textcolor{keywordtype}{int} low\_threshold\_;}
+\DoxyCodeLine{67     \textcolor{keywordtype}{int} high\_threshold\_;}
+\DoxyCodeLine{68     \textcolor{keywordtype}{int} dilation\_;}
+\DoxyCodeLine{69     \textcolor{keywordtype}{int} width\_;}
+\DoxyCodeLine{70     \textcolor{keywordtype}{int} height\_;}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{72 \};}
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* FRAME\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

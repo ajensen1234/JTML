@@ -1,0 +1,106 @@
+\hypertarget{kernels__sse2_8h_source}{}\doxysection{kernels\+\_\+sse2.\+h}
+\label{kernels__sse2_8h_source}\index{lib/alglib/kernels\_sse2.h@{lib/alglib/kernels\_sse2.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_kernels\_sse2\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_kernels\_sse2\_h}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#define AE\_USE\_CPP}}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29 \textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{30 \{}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#if !defined(ALGLIB\_NO\_FAST\_KERNELS) \&\& defined(\_ALGLIB\_HAS\_SSE2\_INTRINSICS)}}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33 \textcolor{keywordtype}{double} rdotv\_sse2(ae\_int\_t n,}
+\DoxyCodeLine{34      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* x,}
+\DoxyCodeLine{35      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* y,}
+\DoxyCodeLine{36      ae\_state *\_state);}
+\DoxyCodeLine{37 \textcolor{keywordtype}{double} rdotv2\_sse2(ae\_int\_t n,}
+\DoxyCodeLine{38      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* x,}
+\DoxyCodeLine{39      ae\_state *\_state);}
+\DoxyCodeLine{40 \textcolor{keywordtype}{void} rcopyv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{41      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{42      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{43      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{44 \textcolor{keywordtype}{void} rcopymulv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{45      \textcolor{keyword}{const} \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{46      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{47      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{48      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{49 \textcolor{keywordtype}{void} icopyv\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t* \_\_restrict x,}
+\DoxyCodeLine{50                 ae\_int\_t* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{51 \textcolor{keywordtype}{void} bcopyv\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_bool* \_\_restrict x,}
+\DoxyCodeLine{52                 ae\_bool* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{53 \textcolor{keywordtype}{void} rsetv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{54      \textcolor{keyword}{const} \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{55      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{56      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{57 \textcolor{keywordtype}{void} rsetvx\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{58      \textcolor{keyword}{const} \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{59      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{60      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{61 \textcolor{keywordtype}{void} isetv\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t v,}
+\DoxyCodeLine{62     ae\_int\_t* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{63 \textcolor{keywordtype}{void} bsetv\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_bool v, ae\_bool* \_\_restrict x,}
+\DoxyCodeLine{64     ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{65 \textcolor{keywordtype}{void} rmulv\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{66      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{67 \textcolor{keywordtype}{void} rmulvx\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{68     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{69 \textcolor{keywordtype}{void} raddv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{70      \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{71      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{72      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{73      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{74 \textcolor{keywordtype}{void} raddvx\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{75     \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y, \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state *\_state);}
+\DoxyCodeLine{76 \textcolor{keywordtype}{void} rmergemulv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{77      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{78      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{79      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{80 \textcolor{keywordtype}{void} rmergemaxv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{81      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{82      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{83      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{84 \textcolor{keywordtype}{void} rmergeminv\_sse2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{85      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{86      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{87      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{88 \textcolor{keywordtype}{double} rmaxv\_sse2(ae\_int\_t n, \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{89 \textcolor{keywordtype}{double} rmaxabsv\_sse2(ae\_int\_t n, \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{90 \textcolor{keywordtype}{void} rcopyvx\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{91     \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state *\_state);}
+\DoxyCodeLine{92 \textcolor{keywordtype}{void} icopyvx\_sse2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t* \_\_restrict x,}
+\DoxyCodeLine{93                 ae\_int\_t* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{94 \textcolor{comment}{/* ALGLIB\_NO\_FAST\_KERNELS, \_ALGLIB\_HAS\_SSE2\_INTRINSICS */}}
+\DoxyCodeLine{95 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{96 }
+\DoxyCodeLine{97 \}}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{99 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{100 }
+
+\end{DoxyCode}

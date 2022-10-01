@@ -1,0 +1,101 @@
+\hypertarget{classsym__trap}{}\doxysection{sym\+\_\+trap Class Reference}
+\label{classsym__trap}\index{sym\_trap@{sym\_trap}}
+Inheritance diagram for sym\+\_\+trap\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsym__trap}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsym__trap_a927b02481b4c043578fa0cc716f2c8e7}\label{classsym__trap_a927b02481b4c043578fa0cc716f2c8e7}} 
+double {\bfseries on\+Cost\+Func\+At\+Point} (double result)
+\item 
+\mbox{\Hypertarget{classsym__trap_abf98032ff87eb16265fd75b317c4839d}\label{classsym__trap_abf98032ff87eb16265fd75b317c4839d}} 
+void {\bfseries graph\+Results} ()
+\item 
+\mbox{\Hypertarget{classsym__trap_a66b322058b2abd62621266007a08ffc2}\label{classsym__trap_a66b322058b2abd62621266007a08ffc2}} 
+void {\bfseries graph\+Results2D} ()
+\item 
+\mbox{\Hypertarget{classsym__trap_ae36a40470aac24f95a6dd141116274c8}\label{classsym__trap_ae36a40470aac24f95a6dd141116274c8}} 
+void {\bfseries set\+Iter\+Count} (int n)
+\item 
+\mbox{\Hypertarget{classsym__trap_a5b9e033156d386bc77297915ce37ff4d}\label{classsym__trap_a5b9e033156d386bc77297915ce37ff4d}} 
+void {\bfseries save\+Data} ()
+\item 
+\mbox{\Hypertarget{classsym__trap_ae8ffcd60d0feba72204ca296cc5fcba4}\label{classsym__trap_ae8ffcd60d0feba72204ca296cc5fcba4}} 
+void {\bfseries load\+Data} ()
+\item 
+\mbox{\Hypertarget{classsym__trap_aa3fe95f2edb68c888d5aa133bea2204c}\label{classsym__trap_aa3fe95f2edb68c888d5aa133bea2204c}} 
+void {\bfseries save\+Plot} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsym__trap_a2e55b9a06a12145bb9885d0d037046ab}\label{classsym__trap_a2e55b9a06a12145bb9885d0d037046ab}} 
+void {\bfseries Done} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsym__trap_a0c5c89452970835e59b0677cbc86ebe7}\label{classsym__trap_a0c5c89452970835e59b0677cbc86ebe7}} 
+{\bfseries sym\+\_\+trap} (QWidget $\ast$parent=0, Qt\+::\+Window\+Flags flags=0)
+\item 
+\mbox{\Hypertarget{classsym__trap_ac76626dd1ddd68a3ba0590f6216ede99}\label{classsym__trap_ac76626dd1ddd68a3ba0590f6216ede99}} 
+\mbox{\hyperlink{struct_point6_d}{Point6D}} {\bfseries compute\+\_\+mirror\+\_\+pose} (\mbox{\hyperlink{struct_point6_d}{Point6D}} point)
+\item 
+\mbox{\Hypertarget{classsym__trap_a322db66a4165aec2641483a14b33f037}\label{classsym__trap_a322db66a4165aec2641483a14b33f037}} 
+void {\bfseries create\+\_\+vector\+\_\+of\+\_\+poses} (std\+::vector$<$ \mbox{\hyperlink{struct_point6_d}{Point6D}} $>$ \&pose\+\_\+list, \mbox{\hyperlink{struct_point6_d}{Point6D}} pose)
+\item 
+\mbox{\Hypertarget{classsym__trap_a73855657091703c31a1036f6bf5e21cc}\label{classsym__trap_a73855657091703c31a1036f6bf5e21cc}} 
+int {\bfseries get\+Iter\+Count} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsym__trap_a2e3280a09322a3ffa62453fcc0d54e43}\label{classsym__trap_a2e3280a09322a3ffa62453fcc0d54e43}} 
+static void {\bfseries matmult4} (float ans\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}, float matrix1\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}, float matrix2\mbox{[}4\mbox{]}\mbox{[}4\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_a53ef6534154db6b4b14c8e57c7d5880b}\label{classsym__trap_a53ef6534154db6b4b14c8e57c7d5880b}} 
+static void {\bfseries matmult3} (float ans\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, const float matrix1\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, const float matrix2\mbox{[}3\mbox{]}\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_a4297b718808202936f07525e5182f7ec}\label{classsym__trap_a4297b718808202936f07525e5182f7ec}} 
+static void {\bfseries invert\+\_\+transform} (float result\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}, const float tran\mbox{[}4\mbox{]}\mbox{[}4\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_afb7a7bb5c578ae7912be3cb3d4a853f5}\label{classsym__trap_afb7a7bb5c578ae7912be3cb3d4a853f5}} 
+static void {\bfseries equivalent\+\_\+axis\+\_\+angle\+\_\+rotation} (float rot\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, const float m\mbox{[}3\mbox{]}, const float angle)
+\item 
+\mbox{\Hypertarget{classsym__trap_a17d33ef6b5c0787ef9c96f41c61e9785}\label{classsym__trap_a17d33ef6b5c0787ef9c96f41c61e9785}} 
+static void {\bfseries cross\+\_\+product} (float CP\mbox{[}3\mbox{]}, const float v1\mbox{[}3\mbox{]}, const float v2\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_a2ddd182222e1ddba7aa078282c0910d7}\label{classsym__trap_a2ddd182222e1ddba7aa078282c0910d7}} 
+static void {\bfseries dot\+\_\+product} (float \&result, const float vector1\mbox{[}3\mbox{]}, const float vector2\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_a689f5706aef46f7126b98b872e3b1104}\label{classsym__trap_a689f5706aef46f7126b98b872e3b1104}} 
+static void {\bfseries rotation\+\_\+matrix} (float R\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, \mbox{\hyperlink{struct_point6_d}{Point6D}} pose)
+\item 
+\mbox{\Hypertarget{classsym__trap_a4028638846122a27d6dc8421695bcae5}\label{classsym__trap_a4028638846122a27d6dc8421695bcae5}} 
+static void {\bfseries create\+\_\+312\+\_\+transform} (float transform\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}, \mbox{\hyperlink{struct_point6_d}{Point6D}} pose)
+\item 
+\mbox{\Hypertarget{classsym__trap_aa605d9459d0e0356050f8bcd2e39feac}\label{classsym__trap_aa605d9459d0e0356050f8bcd2e39feac}} 
+static void {\bfseries get\+Rotations312} (float \&xr, float \&yr, float \&zr, const float Rot\mbox{[}3\mbox{]}\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_af9e9c19e3a521e4c061f5d89c12b2590}\label{classsym__trap_af9e9c19e3a521e4c061f5d89c12b2590}} 
+static void {\bfseries copy\+\_\+matrix\+\_\+by\+\_\+value} (float(\&new\+\_\+matrix)\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, const float(\&old\+\_\+matrix)\mbox{[}3\mbox{]}\mbox{[}3\mbox{]})
+\item 
+\mbox{\Hypertarget{classsym__trap_a71128947cda6458f9b28fcb4b19b0ea8}\label{classsym__trap_a71128947cda6458f9b28fcb4b19b0ea8}} 
+{\footnotesize template$<$typename T $>$ }\\static std\+::vector$<$ double $>$ {\bfseries linspace} (T start\+\_\+in, T end\+\_\+in, int num\+\_\+in)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsym__trap_a31bd7aa3b8a7b1c2013501051d247329}\label{classsym__trap_a31bd7aa3b8a7b1c2013501051d247329}} 
+Ui\+::sym\+Trap {\bfseries ui}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/gui/sym\+\_\+trap.\+h\item 
+src/gui/sym\+\_\+trap.\+cpp\end{DoxyCompactItemize}

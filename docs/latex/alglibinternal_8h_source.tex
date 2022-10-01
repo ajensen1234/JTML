@@ -1,0 +1,1929 @@
+\hypertarget{alglibinternal_8h_source}{}\doxysection{alglibinternal.\+h}
+\label{alglibinternal_8h_source}\index{lib/alglib/alglibinternal.h@{lib/alglib/alglibinternal.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_alglibinternal\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_alglibinternal\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 }
+\DoxyCodeLine{26 \textcolor{comment}{//}}
+\DoxyCodeLine{27 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{28 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{31 \{}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_APSERV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{33 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{34 \{}
+\DoxyCodeLine{35     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ba0;}
+\DoxyCodeLine{36     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ia0;}
+\DoxyCodeLine{37     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ia1;}
+\DoxyCodeLine{38     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ia2;}
+\DoxyCodeLine{39     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ia3;}
+\DoxyCodeLine{40     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ra0;}
+\DoxyCodeLine{41     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ra1;}
+\DoxyCodeLine{42     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ra2;}
+\DoxyCodeLine{43     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} ra3;}
+\DoxyCodeLine{44     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} rm0;}
+\DoxyCodeLine{45     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} rm1;}
+\DoxyCodeLine{46 \} \mbox{\hyperlink{structalglib__impl_1_1apbuffers}{apbuffers}};}
+\DoxyCodeLine{47 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{48 \{}
+\DoxyCodeLine{49     ae\_bool val;}
+\DoxyCodeLine{50 \} \mbox{\hyperlink{structalglib__impl_1_1sboolean}{sboolean}};}
+\DoxyCodeLine{51 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{52 \{}
+\DoxyCodeLine{53     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} val;}
+\DoxyCodeLine{54 \} \mbox{\hyperlink{structalglib__impl_1_1sbooleanarray}{sbooleanarray}};}
+\DoxyCodeLine{55 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{56 \{}
+\DoxyCodeLine{57     ae\_int\_t val;}
+\DoxyCodeLine{58 \} \mbox{\hyperlink{structalglib__impl_1_1sinteger}{sinteger}};}
+\DoxyCodeLine{59 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{60 \{}
+\DoxyCodeLine{61     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} val;}
+\DoxyCodeLine{62 \} \mbox{\hyperlink{structalglib__impl_1_1sintegerarray}{sintegerarray}};}
+\DoxyCodeLine{63 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{64 \{}
+\DoxyCodeLine{65     \textcolor{keywordtype}{double} val;}
+\DoxyCodeLine{66 \} \mbox{\hyperlink{structalglib__impl_1_1sreal}{sreal}};}
+\DoxyCodeLine{67 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{68 \{}
+\DoxyCodeLine{69     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} val;}
+\DoxyCodeLine{70 \} \mbox{\hyperlink{structalglib__impl_1_1srealarray}{srealarray}};}
+\DoxyCodeLine{71 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{72 \{}
+\DoxyCodeLine{73     \mbox{\hyperlink{structalglib__impl_1_1ae__complex}{ae\_complex}} val;}
+\DoxyCodeLine{74 \} \mbox{\hyperlink{structalglib__impl_1_1scomplex}{scomplex}};}
+\DoxyCodeLine{75 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{76 \{}
+\DoxyCodeLine{77     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} val;}
+\DoxyCodeLine{78 \} \mbox{\hyperlink{structalglib__impl_1_1scomplexarray}{scomplexarray}};}
+\DoxyCodeLine{79 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{80 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ABLASF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{81 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{82 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{83 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{84 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CREFLECTIONS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{85 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{86 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{87 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{88 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ABLASMKL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{89 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{90 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SCODES) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{91 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{92 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TSORT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{93 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{94 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{95 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{96 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ROTATIONS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{97 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{98 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASICSTATOPS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{99 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{100 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRLINSOLVE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{101 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{102 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SAFESOLVE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{103 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{104 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{105 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{106 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LINMIN) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{107 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{108 \{}
+\DoxyCodeLine{109     ae\_bool brackt;}
+\DoxyCodeLine{110     ae\_bool stage1;}
+\DoxyCodeLine{111     ae\_int\_t infoc;}
+\DoxyCodeLine{112     \textcolor{keywordtype}{double} dg;}
+\DoxyCodeLine{113     \textcolor{keywordtype}{double} dgm;}
+\DoxyCodeLine{114     \textcolor{keywordtype}{double} dginit;}
+\DoxyCodeLine{115     \textcolor{keywordtype}{double} dgtest;}
+\DoxyCodeLine{116     \textcolor{keywordtype}{double} dgx;}
+\DoxyCodeLine{117     \textcolor{keywordtype}{double} dgxm;}
+\DoxyCodeLine{118     \textcolor{keywordtype}{double} dgy;}
+\DoxyCodeLine{119     \textcolor{keywordtype}{double} dgym;}
+\DoxyCodeLine{120     \textcolor{keywordtype}{double} finit;}
+\DoxyCodeLine{121     \textcolor{keywordtype}{double} ftest1;}
+\DoxyCodeLine{122     \textcolor{keywordtype}{double} fm;}
+\DoxyCodeLine{123     \textcolor{keywordtype}{double} fx;}
+\DoxyCodeLine{124     \textcolor{keywordtype}{double} fxm;}
+\DoxyCodeLine{125     \textcolor{keywordtype}{double} fy;}
+\DoxyCodeLine{126     \textcolor{keywordtype}{double} fym;}
+\DoxyCodeLine{127     \textcolor{keywordtype}{double} stx;}
+\DoxyCodeLine{128     \textcolor{keywordtype}{double} sty;}
+\DoxyCodeLine{129     \textcolor{keywordtype}{double} stmin;}
+\DoxyCodeLine{130     \textcolor{keywordtype}{double} stmax;}
+\DoxyCodeLine{131     \textcolor{keywordtype}{double} width;}
+\DoxyCodeLine{132     \textcolor{keywordtype}{double} width1;}
+\DoxyCodeLine{133     \textcolor{keywordtype}{double} xtrapf;}
+\DoxyCodeLine{134 \} \mbox{\hyperlink{structalglib__impl_1_1linminstate}{linminstate}};}
+\DoxyCodeLine{135 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{136 \{}
+\DoxyCodeLine{137     ae\_bool needf;}
+\DoxyCodeLine{138     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} x;}
+\DoxyCodeLine{139     \textcolor{keywordtype}{double} f;}
+\DoxyCodeLine{140     ae\_int\_t n;}
+\DoxyCodeLine{141     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} xbase;}
+\DoxyCodeLine{142     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} s;}
+\DoxyCodeLine{143     \textcolor{keywordtype}{double} stplen;}
+\DoxyCodeLine{144     \textcolor{keywordtype}{double} fcur;}
+\DoxyCodeLine{145     \textcolor{keywordtype}{double} stpmax;}
+\DoxyCodeLine{146     ae\_int\_t fmax;}
+\DoxyCodeLine{147     ae\_int\_t nfev;}
+\DoxyCodeLine{148     ae\_int\_t info;}
+\DoxyCodeLine{149     \mbox{\hyperlink{structalglib__impl_1_1rcommstate}{rcommstate}} rstate;}
+\DoxyCodeLine{150 \} \mbox{\hyperlink{structalglib__impl_1_1armijostate}{armijostate}};}
+\DoxyCodeLine{151 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{152 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARUNITYUNIT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{153 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{154 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NTHEORY) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{155 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{156 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FTBASE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{157 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{158 \{}
+\DoxyCodeLine{159     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} entries;}
+\DoxyCodeLine{160     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} buffer;}
+\DoxyCodeLine{161     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} precr;}
+\DoxyCodeLine{162     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} preci;}
+\DoxyCodeLine{163     \mbox{\hyperlink{structalglib__impl_1_1ae__shared__pool}{ae\_shared\_pool}} bluesteinpool;}
+\DoxyCodeLine{164 \} \mbox{\hyperlink{structalglib__impl_1_1fasttransformplan}{fasttransformplan}};}
+\DoxyCodeLine{165 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{166 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HPCCORES) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{167 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{168 \{}
+\DoxyCodeLine{169     ae\_int\_t chunksize;}
+\DoxyCodeLine{170     ae\_int\_t ntotal;}
+\DoxyCodeLine{171     ae\_int\_t nin;}
+\DoxyCodeLine{172     ae\_int\_t nout;}
+\DoxyCodeLine{173     ae\_int\_t wcount;}
+\DoxyCodeLine{174     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} batch4buf;}
+\DoxyCodeLine{175     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} hpcbuf;}
+\DoxyCodeLine{176     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} xy;}
+\DoxyCodeLine{177     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} xy2;}
+\DoxyCodeLine{178     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} xyrow;}
+\DoxyCodeLine{179     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} x;}
+\DoxyCodeLine{180     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} y;}
+\DoxyCodeLine{181     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} desiredy;}
+\DoxyCodeLine{182     \textcolor{keywordtype}{double} e;}
+\DoxyCodeLine{183     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} g;}
+\DoxyCodeLine{184     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} tmp0;}
+\DoxyCodeLine{185 \} \mbox{\hyperlink{structalglib__impl_1_1mlpbuffers}{mlpbuffers}};}
+\DoxyCodeLine{186 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{187 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ALGLIBBASICS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{188 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{189 }
+\DoxyCodeLine{190 \}}
+\DoxyCodeLine{191 }
+\DoxyCodeLine{193 \textcolor{comment}{//}}
+\DoxyCodeLine{194 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{195 \textcolor{comment}{//}}
+\DoxyCodeLine{197 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{198 \{}
+\DoxyCodeLine{199 }
+\DoxyCodeLine{200 }
+\DoxyCodeLine{201 \}}
+\DoxyCodeLine{202 }
+\DoxyCodeLine{204 \textcolor{comment}{//}}
+\DoxyCodeLine{205 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{206 \textcolor{comment}{//}}
+\DoxyCodeLine{208 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{209 \{}
+\DoxyCodeLine{210 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_APSERV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{211 \textcolor{keywordtype}{void} seterrorflagdiff(ae\_bool* flag,}
+\DoxyCodeLine{212      \textcolor{keywordtype}{double} val,}
+\DoxyCodeLine{213      \textcolor{keywordtype}{double} refval,}
+\DoxyCodeLine{214      \textcolor{keywordtype}{double} tol,}
+\DoxyCodeLine{215      \textcolor{keywordtype}{double} s,}
+\DoxyCodeLine{216      ae\_state *\_state);}
+\DoxyCodeLine{217 ae\_bool alwaysfalse(ae\_state *\_state);}
+\DoxyCodeLine{218 \textcolor{keywordtype}{void} touchint(ae\_int\_t* a, ae\_state *\_state);}
+\DoxyCodeLine{219 \textcolor{keywordtype}{void} touchreal(\textcolor{keywordtype}{double}* a, ae\_state *\_state);}
+\DoxyCodeLine{220 \textcolor{keywordtype}{double} coalesce(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, ae\_state *\_state);}
+\DoxyCodeLine{221 ae\_int\_t coalescei(ae\_int\_t a, ae\_int\_t b, ae\_state *\_state);}
+\DoxyCodeLine{222 \textcolor{keywordtype}{double} inttoreal(ae\_int\_t a, ae\_state *\_state);}
+\DoxyCodeLine{223 \textcolor{keywordtype}{double} logbase2(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{224 ae\_bool approxequal(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, \textcolor{keywordtype}{double} tol, ae\_state *\_state);}
+\DoxyCodeLine{225 ae\_bool approxequalrel(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, \textcolor{keywordtype}{double} tol, ae\_state *\_state);}
+\DoxyCodeLine{226 \textcolor{keywordtype}{void} taskgenint1d(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{227      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{228      ae\_int\_t n,}
+\DoxyCodeLine{229      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{230      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{231      ae\_state *\_state);}
+\DoxyCodeLine{232 \textcolor{keywordtype}{void} taskgenint1dequidist(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{233      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{234      ae\_int\_t n,}
+\DoxyCodeLine{235      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{236      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{237      ae\_state *\_state);}
+\DoxyCodeLine{238 \textcolor{keywordtype}{void} taskgenint1dcheb1(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{239      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{240      ae\_int\_t n,}
+\DoxyCodeLine{241      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{242      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{243      ae\_state *\_state);}
+\DoxyCodeLine{244 \textcolor{keywordtype}{void} taskgenint1dcheb2(\textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{245      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{246      ae\_int\_t n,}
+\DoxyCodeLine{247      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{248      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{249      ae\_state *\_state);}
+\DoxyCodeLine{250 ae\_bool aredistinct(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{251      ae\_int\_t n,}
+\DoxyCodeLine{252      ae\_state *\_state);}
+\DoxyCodeLine{253 ae\_bool aresameboolean(ae\_bool v1, ae\_bool v2, ae\_state *\_state);}
+\DoxyCodeLine{254 \textcolor{keywordtype}{void} setlengthzero(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{255      ae\_int\_t n,}
+\DoxyCodeLine{256      ae\_state *\_state);}
+\DoxyCodeLine{257 \textcolor{keywordtype}{void} bvectorsetlengthatleast(\textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{258      ae\_int\_t n,}
+\DoxyCodeLine{259      ae\_state *\_state);}
+\DoxyCodeLine{260 \textcolor{keywordtype}{void} ivectorsetlengthatleast(\textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{261      ae\_int\_t n,}
+\DoxyCodeLine{262      ae\_state *\_state);}
+\DoxyCodeLine{263 \textcolor{keywordtype}{void} rvectorsetlengthatleast(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{264      ae\_int\_t n,}
+\DoxyCodeLine{265      ae\_state *\_state);}
+\DoxyCodeLine{266 \textcolor{keywordtype}{void} rmatrixsetlengthatleast(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{267      ae\_int\_t m,}
+\DoxyCodeLine{268      ae\_int\_t n,}
+\DoxyCodeLine{269      ae\_state *\_state);}
+\DoxyCodeLine{270 \textcolor{keywordtype}{void} bmatrixsetlengthatleast(\textcolor{comment}{/* Boolean */} ae\_matrix* x,}
+\DoxyCodeLine{271      ae\_int\_t m,}
+\DoxyCodeLine{272      ae\_int\_t n,}
+\DoxyCodeLine{273      ae\_state *\_state);}
+\DoxyCodeLine{274 \textcolor{keywordtype}{void} bvectorgrowto(\textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{275      ae\_int\_t n,}
+\DoxyCodeLine{276      ae\_state *\_state);}
+\DoxyCodeLine{277 \textcolor{keywordtype}{void} ivectorgrowto(\textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{278      ae\_int\_t n,}
+\DoxyCodeLine{279      ae\_state *\_state);}
+\DoxyCodeLine{280 \textcolor{keywordtype}{void} rmatrixgrowrowsto(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{281      ae\_int\_t n,}
+\DoxyCodeLine{282      ae\_int\_t mincols,}
+\DoxyCodeLine{283      ae\_state *\_state);}
+\DoxyCodeLine{284 \textcolor{keywordtype}{void} rmatrixgrowcolsto(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{285      ae\_int\_t n,}
+\DoxyCodeLine{286      ae\_int\_t minrows,}
+\DoxyCodeLine{287      ae\_state *\_state);}
+\DoxyCodeLine{288 \textcolor{keywordtype}{void} rvectorgrowto(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{289      ae\_int\_t n,}
+\DoxyCodeLine{290      ae\_state *\_state);}
+\DoxyCodeLine{291 \textcolor{keywordtype}{void} ivectorresize(\textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{292      ae\_int\_t n,}
+\DoxyCodeLine{293      ae\_state *\_state);}
+\DoxyCodeLine{294 \textcolor{keywordtype}{void} rvectorresize(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{295      ae\_int\_t n,}
+\DoxyCodeLine{296      ae\_state *\_state);}
+\DoxyCodeLine{297 \textcolor{keywordtype}{void} rmatrixresize(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{298      ae\_int\_t m,}
+\DoxyCodeLine{299      ae\_int\_t n,}
+\DoxyCodeLine{300      ae\_state *\_state);}
+\DoxyCodeLine{301 \textcolor{keywordtype}{void} imatrixresize(\textcolor{comment}{/* Integer */} ae\_matrix* x,}
+\DoxyCodeLine{302      ae\_int\_t m,}
+\DoxyCodeLine{303      ae\_int\_t n,}
+\DoxyCodeLine{304      ae\_state *\_state);}
+\DoxyCodeLine{305 \textcolor{keywordtype}{void} ivectorappend(\textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{306      ae\_int\_t v,}
+\DoxyCodeLine{307      ae\_state *\_state);}
+\DoxyCodeLine{308 ae\_bool isfinitevector(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{309      ae\_int\_t n,}
+\DoxyCodeLine{310      ae\_state *\_state);}
+\DoxyCodeLine{311 ae\_bool isfinitecvector(\textcolor{comment}{/* Complex */} ae\_vector* z,}
+\DoxyCodeLine{312      ae\_int\_t n,}
+\DoxyCodeLine{313      ae\_state *\_state);}
+\DoxyCodeLine{314 ae\_bool apservisfinitematrix(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{315      ae\_int\_t m,}
+\DoxyCodeLine{316      ae\_int\_t n,}
+\DoxyCodeLine{317      ae\_state *\_state);}
+\DoxyCodeLine{318 ae\_bool apservisfinitecmatrix(\textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{319      ae\_int\_t m,}
+\DoxyCodeLine{320      ae\_int\_t n,}
+\DoxyCodeLine{321      ae\_state *\_state);}
+\DoxyCodeLine{322 ae\_bool isfinitertrmatrix(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{323      ae\_int\_t n,}
+\DoxyCodeLine{324      ae\_bool isupper,}
+\DoxyCodeLine{325      ae\_state *\_state);}
+\DoxyCodeLine{326 ae\_bool apservisfinitectrmatrix(\textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{327      ae\_int\_t n,}
+\DoxyCodeLine{328      ae\_bool isupper,}
+\DoxyCodeLine{329      ae\_state *\_state);}
+\DoxyCodeLine{330 ae\_bool apservisfiniteornanmatrix(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{331      ae\_int\_t m,}
+\DoxyCodeLine{332      ae\_int\_t n,}
+\DoxyCodeLine{333      ae\_state *\_state);}
+\DoxyCodeLine{334 \textcolor{keywordtype}{double} safepythag2(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} y, ae\_state *\_state);}
+\DoxyCodeLine{335 \textcolor{keywordtype}{double} safepythag3(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} y, \textcolor{keywordtype}{double} z, ae\_state *\_state);}
+\DoxyCodeLine{336 ae\_int\_t saferdiv(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} y, \textcolor{keywordtype}{double}* r, ae\_state *\_state);}
+\DoxyCodeLine{337 \textcolor{keywordtype}{double} safeminposrv(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} y, \textcolor{keywordtype}{double} v, ae\_state *\_state);}
+\DoxyCodeLine{338 \textcolor{keywordtype}{void} apperiodicmap(\textcolor{keywordtype}{double}* x,}
+\DoxyCodeLine{339      \textcolor{keywordtype}{double} a,}
+\DoxyCodeLine{340      \textcolor{keywordtype}{double} b,}
+\DoxyCodeLine{341      \textcolor{keywordtype}{double}* k,}
+\DoxyCodeLine{342      ae\_state *\_state);}
+\DoxyCodeLine{343 \textcolor{keywordtype}{double} randomnormal(ae\_state *\_state);}
+\DoxyCodeLine{344 \textcolor{keywordtype}{void} randomunit(ae\_int\_t n, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{345 \textcolor{keywordtype}{void} swapi(ae\_int\_t* v0, ae\_int\_t* v1, ae\_state *\_state);}
+\DoxyCodeLine{346 \textcolor{keywordtype}{void} swapr(\textcolor{keywordtype}{double}* v0, \textcolor{keywordtype}{double}* v1, ae\_state *\_state);}
+\DoxyCodeLine{347 \textcolor{keywordtype}{void} swaprows(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{348      ae\_int\_t i0,}
+\DoxyCodeLine{349      ae\_int\_t i1,}
+\DoxyCodeLine{350      ae\_int\_t ncols,}
+\DoxyCodeLine{351      ae\_state *\_state);}
+\DoxyCodeLine{352 \textcolor{keywordtype}{void} swapcols(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{353      ae\_int\_t j0,}
+\DoxyCodeLine{354      ae\_int\_t j1,}
+\DoxyCodeLine{355      ae\_int\_t nrows,}
+\DoxyCodeLine{356      ae\_state *\_state);}
+\DoxyCodeLine{357 \textcolor{keywordtype}{void} swapentries(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{358      ae\_int\_t i0,}
+\DoxyCodeLine{359      ae\_int\_t i1,}
+\DoxyCodeLine{360      ae\_int\_t entrywidth,}
+\DoxyCodeLine{361      ae\_state *\_state);}
+\DoxyCodeLine{362 \textcolor{keywordtype}{void} swapelements(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{363      ae\_int\_t i0,}
+\DoxyCodeLine{364      ae\_int\_t i1,}
+\DoxyCodeLine{365      ae\_state *\_state);}
+\DoxyCodeLine{366 \textcolor{keywordtype}{void} swapelementsi(\textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{367      ae\_int\_t i0,}
+\DoxyCodeLine{368      ae\_int\_t i1,}
+\DoxyCodeLine{369      ae\_state *\_state);}
+\DoxyCodeLine{370 \textcolor{keywordtype}{double} maxreal3(\textcolor{keywordtype}{double} v0, \textcolor{keywordtype}{double} v1, \textcolor{keywordtype}{double} v2, ae\_state *\_state);}
+\DoxyCodeLine{371 \textcolor{keywordtype}{void} inc(ae\_int\_t* v, ae\_state *\_state);}
+\DoxyCodeLine{372 \textcolor{keywordtype}{void} dec(ae\_int\_t* v, ae\_state *\_state);}
+\DoxyCodeLine{373 \textcolor{keywordtype}{void} threadunsafeinc(ae\_int\_t* v, ae\_state *\_state);}
+\DoxyCodeLine{374 \textcolor{keywordtype}{void} threadunsafeincby(ae\_int\_t* v, ae\_int\_t k, ae\_state *\_state);}
+\DoxyCodeLine{375 \textcolor{keywordtype}{void} countdown(ae\_int\_t* v, ae\_state *\_state);}
+\DoxyCodeLine{376 \textcolor{keywordtype}{double} possign(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{377 \textcolor{keywordtype}{double} rmul2(\textcolor{keywordtype}{double} v0, \textcolor{keywordtype}{double} v1, ae\_state *\_state);}
+\DoxyCodeLine{378 \textcolor{keywordtype}{double} rmul3(\textcolor{keywordtype}{double} v0, \textcolor{keywordtype}{double} v1, \textcolor{keywordtype}{double} v2, ae\_state *\_state);}
+\DoxyCodeLine{379 ae\_int\_t idivup(ae\_int\_t a, ae\_int\_t b, ae\_state *\_state);}
+\DoxyCodeLine{380 ae\_int\_t imin2(ae\_int\_t i0, ae\_int\_t i1, ae\_state *\_state);}
+\DoxyCodeLine{381 ae\_int\_t imin3(ae\_int\_t i0, ae\_int\_t i1, ae\_int\_t i2, ae\_state *\_state);}
+\DoxyCodeLine{382 ae\_int\_t imax2(ae\_int\_t i0, ae\_int\_t i1, ae\_state *\_state);}
+\DoxyCodeLine{383 ae\_int\_t imax3(ae\_int\_t i0, ae\_int\_t i1, ae\_int\_t i2, ae\_state *\_state);}
+\DoxyCodeLine{384 \textcolor{keywordtype}{double} rmax3(\textcolor{keywordtype}{double} r0, \textcolor{keywordtype}{double} r1, \textcolor{keywordtype}{double} r2, ae\_state *\_state);}
+\DoxyCodeLine{385 \textcolor{keywordtype}{double} rmaxabs3(\textcolor{keywordtype}{double} r0, \textcolor{keywordtype}{double} r1, \textcolor{keywordtype}{double} r2, ae\_state *\_state);}
+\DoxyCodeLine{386 \textcolor{keywordtype}{double} boundval(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} b1, \textcolor{keywordtype}{double} b2, ae\_state *\_state);}
+\DoxyCodeLine{387 ae\_int\_t iboundval(ae\_int\_t x, ae\_int\_t b1, ae\_int\_t b2, ae\_state *\_state);}
+\DoxyCodeLine{388 \textcolor{keywordtype}{double} rboundval(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} b1, \textcolor{keywordtype}{double} b2, ae\_state *\_state);}
+\DoxyCodeLine{389 ae\_int\_t countnz1(\textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{390      ae\_int\_t n,}
+\DoxyCodeLine{391      ae\_state *\_state);}
+\DoxyCodeLine{392 ae\_int\_t countnz2(\textcolor{comment}{/* Real    */} ae\_matrix* v,}
+\DoxyCodeLine{393      ae\_int\_t m,}
+\DoxyCodeLine{394      ae\_int\_t n,}
+\DoxyCodeLine{395      ae\_state *\_state);}
+\DoxyCodeLine{396 \textcolor{keywordtype}{void} alloccomplex(ae\_serializer* s, ae\_complex v, ae\_state *\_state);}
+\DoxyCodeLine{397 \textcolor{keywordtype}{void} serializecomplex(ae\_serializer* s, ae\_complex v, ae\_state *\_state);}
+\DoxyCodeLine{398 ae\_complex unserializecomplex(ae\_serializer* s, ae\_state *\_state);}
+\DoxyCodeLine{399 \textcolor{keywordtype}{void} allocrealarray(ae\_serializer* s,}
+\DoxyCodeLine{400      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{401      ae\_int\_t n,}
+\DoxyCodeLine{402      ae\_state *\_state);}
+\DoxyCodeLine{403 \textcolor{keywordtype}{void} serializerealarray(ae\_serializer* s,}
+\DoxyCodeLine{404      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{405      ae\_int\_t n,}
+\DoxyCodeLine{406      ae\_state *\_state);}
+\DoxyCodeLine{407 \textcolor{keywordtype}{void} unserializerealarray(ae\_serializer* s,}
+\DoxyCodeLine{408      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{409      ae\_state *\_state);}
+\DoxyCodeLine{410 \textcolor{keywordtype}{void} allocintegerarray(ae\_serializer* s,}
+\DoxyCodeLine{411      \textcolor{comment}{/* Integer */} ae\_vector* v,}
+\DoxyCodeLine{412      ae\_int\_t n,}
+\DoxyCodeLine{413      ae\_state *\_state);}
+\DoxyCodeLine{414 \textcolor{keywordtype}{void} serializeintegerarray(ae\_serializer* s,}
+\DoxyCodeLine{415      \textcolor{comment}{/* Integer */} ae\_vector* v,}
+\DoxyCodeLine{416      ae\_int\_t n,}
+\DoxyCodeLine{417      ae\_state *\_state);}
+\DoxyCodeLine{418 \textcolor{keywordtype}{void} unserializeintegerarray(ae\_serializer* s,}
+\DoxyCodeLine{419      \textcolor{comment}{/* Integer */} ae\_vector* v,}
+\DoxyCodeLine{420      ae\_state *\_state);}
+\DoxyCodeLine{421 \textcolor{keywordtype}{void} allocrealmatrix(ae\_serializer* s,}
+\DoxyCodeLine{422      \textcolor{comment}{/* Real    */} ae\_matrix* v,}
+\DoxyCodeLine{423      ae\_int\_t n0,}
+\DoxyCodeLine{424      ae\_int\_t n1,}
+\DoxyCodeLine{425      ae\_state *\_state);}
+\DoxyCodeLine{426 \textcolor{keywordtype}{void} serializerealmatrix(ae\_serializer* s,}
+\DoxyCodeLine{427      \textcolor{comment}{/* Real    */} ae\_matrix* v,}
+\DoxyCodeLine{428      ae\_int\_t n0,}
+\DoxyCodeLine{429      ae\_int\_t n1,}
+\DoxyCodeLine{430      ae\_state *\_state);}
+\DoxyCodeLine{431 \textcolor{keywordtype}{void} unserializerealmatrix(ae\_serializer* s,}
+\DoxyCodeLine{432      \textcolor{comment}{/* Real    */} ae\_matrix* v,}
+\DoxyCodeLine{433      ae\_state *\_state);}
+\DoxyCodeLine{434 \textcolor{keywordtype}{void} copybooleanarray(\textcolor{comment}{/* Boolean */} ae\_vector* src,}
+\DoxyCodeLine{435      \textcolor{comment}{/* Boolean */} ae\_vector* dst,}
+\DoxyCodeLine{436      ae\_state *\_state);}
+\DoxyCodeLine{437 \textcolor{keywordtype}{void} copyintegerarray(\textcolor{comment}{/* Integer */} ae\_vector* src,}
+\DoxyCodeLine{438      \textcolor{comment}{/* Integer */} ae\_vector* dst,}
+\DoxyCodeLine{439      ae\_state *\_state);}
+\DoxyCodeLine{440 \textcolor{keywordtype}{void} copyrealarray(\textcolor{comment}{/* Real    */} ae\_vector* src,}
+\DoxyCodeLine{441      \textcolor{comment}{/* Real    */} ae\_vector* dst,}
+\DoxyCodeLine{442      ae\_state *\_state);}
+\DoxyCodeLine{443 \textcolor{keywordtype}{void} copyrealmatrix(\textcolor{comment}{/* Real    */} ae\_matrix* src,}
+\DoxyCodeLine{444      \textcolor{comment}{/* Real    */} ae\_matrix* dst,}
+\DoxyCodeLine{445      ae\_state *\_state);}
+\DoxyCodeLine{446 \textcolor{keywordtype}{void} unsetintegerarray(\textcolor{comment}{/* Integer */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{447 \textcolor{keywordtype}{void} unsetrealarray(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{448 \textcolor{keywordtype}{void} unsetrealmatrix(\textcolor{comment}{/* Real    */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{449 \textcolor{keywordtype}{void} tiledsplit(ae\_int\_t tasksize,}
+\DoxyCodeLine{450      ae\_int\_t tilesize,}
+\DoxyCodeLine{451      ae\_int\_t* task0,}
+\DoxyCodeLine{452      ae\_int\_t* task1,}
+\DoxyCodeLine{453      ae\_state *\_state);}
+\DoxyCodeLine{454 ae\_int\_t recsearch(\textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{455      ae\_int\_t nrec,}
+\DoxyCodeLine{456      ae\_int\_t nheader,}
+\DoxyCodeLine{457      ae\_int\_t i0,}
+\DoxyCodeLine{458      ae\_int\_t i1,}
+\DoxyCodeLine{459      \textcolor{comment}{/* Integer */} ae\_vector* b,}
+\DoxyCodeLine{460      ae\_state *\_state);}
+\DoxyCodeLine{461 \textcolor{keywordtype}{void} splitlengtheven(ae\_int\_t tasksize,}
+\DoxyCodeLine{462      ae\_int\_t* task0,}
+\DoxyCodeLine{463      ae\_int\_t* task1,}
+\DoxyCodeLine{464      ae\_state *\_state);}
+\DoxyCodeLine{465 ae\_int\_t chunkscount(ae\_int\_t tasksize,}
+\DoxyCodeLine{466      ae\_int\_t chunksize,}
+\DoxyCodeLine{467      ae\_state *\_state);}
+\DoxyCodeLine{468 \textcolor{keywordtype}{double} sparselevel2density(ae\_state *\_state);}
+\DoxyCodeLine{469 ae\_int\_t matrixtilesizea(ae\_state *\_state);}
+\DoxyCodeLine{470 ae\_int\_t matrixtilesizeb(ae\_state *\_state);}
+\DoxyCodeLine{471 \textcolor{keywordtype}{double} smpactivationlevel(ae\_state *\_state);}
+\DoxyCodeLine{472 \textcolor{keywordtype}{double} spawnlevel(ae\_state *\_state);}
+\DoxyCodeLine{473 \textcolor{keywordtype}{void} splitlength(ae\_int\_t tasksize,}
+\DoxyCodeLine{474      ae\_int\_t chunksize,}
+\DoxyCodeLine{475      ae\_int\_t* task0,}
+\DoxyCodeLine{476      ae\_int\_t* task1,}
+\DoxyCodeLine{477      ae\_state *\_state);}
+\DoxyCodeLine{478 \textcolor{keywordtype}{void} tracevectorautoprec(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{479      ae\_int\_t i0,}
+\DoxyCodeLine{480      ae\_int\_t i1,}
+\DoxyCodeLine{481      ae\_state *\_state);}
+\DoxyCodeLine{482 \textcolor{keywordtype}{void} tracerowautoprec(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{483      ae\_int\_t i,}
+\DoxyCodeLine{484      ae\_int\_t j0,}
+\DoxyCodeLine{485      ae\_int\_t j1,}
+\DoxyCodeLine{486      ae\_state *\_state);}
+\DoxyCodeLine{487 \textcolor{keywordtype}{void} tracevectorunscaledunshiftedautoprec(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{488      ae\_int\_t n,}
+\DoxyCodeLine{489      \textcolor{comment}{/* Real    */} ae\_vector* scl,}
+\DoxyCodeLine{490      ae\_bool applyscl,}
+\DoxyCodeLine{491      \textcolor{comment}{/* Real    */} ae\_vector* sft,}
+\DoxyCodeLine{492      ae\_bool applysft,}
+\DoxyCodeLine{493      ae\_state *\_state);}
+\DoxyCodeLine{494 \textcolor{keywordtype}{void} tracerownrm1autoprec(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{495      ae\_int\_t i0,}
+\DoxyCodeLine{496      ae\_int\_t i1,}
+\DoxyCodeLine{497      ae\_int\_t j0,}
+\DoxyCodeLine{498      ae\_int\_t j1,}
+\DoxyCodeLine{499      ae\_state *\_state);}
+\DoxyCodeLine{500 \textcolor{keywordtype}{void} tracevectore6(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{501      ae\_int\_t i0,}
+\DoxyCodeLine{502      ae\_int\_t i1,}
+\DoxyCodeLine{503      ae\_state *\_state);}
+\DoxyCodeLine{504 \textcolor{keywordtype}{void} tracevectore615(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{505      ae\_int\_t i0,}
+\DoxyCodeLine{506      ae\_int\_t i1,}
+\DoxyCodeLine{507      ae\_bool usee15,}
+\DoxyCodeLine{508      ae\_state *\_state);}
+\DoxyCodeLine{509 \textcolor{keywordtype}{void} tracerownrm1e6(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{510      ae\_int\_t i0,}
+\DoxyCodeLine{511      ae\_int\_t i1,}
+\DoxyCodeLine{512      ae\_int\_t j0,}
+\DoxyCodeLine{513      ae\_int\_t j1,}
+\DoxyCodeLine{514      ae\_state *\_state);}
+\DoxyCodeLine{515 \textcolor{keywordtype}{void} \_apbuffers\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{516 \textcolor{keywordtype}{void} \_apbuffers\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{517 \textcolor{keywordtype}{void} \_apbuffers\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{518 \textcolor{keywordtype}{void} \_apbuffers\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{519 \textcolor{keywordtype}{void} \_sboolean\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{520 \textcolor{keywordtype}{void} \_sboolean\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{521 \textcolor{keywordtype}{void} \_sboolean\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{522 \textcolor{keywordtype}{void} \_sboolean\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{523 \textcolor{keywordtype}{void} \_sbooleanarray\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{524 \textcolor{keywordtype}{void} \_sbooleanarray\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{525 \textcolor{keywordtype}{void} \_sbooleanarray\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{526 \textcolor{keywordtype}{void} \_sbooleanarray\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{527 \textcolor{keywordtype}{void} \_sinteger\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{528 \textcolor{keywordtype}{void} \_sinteger\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{529 \textcolor{keywordtype}{void} \_sinteger\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{530 \textcolor{keywordtype}{void} \_sinteger\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{531 \textcolor{keywordtype}{void} \_sintegerarray\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{532 \textcolor{keywordtype}{void} \_sintegerarray\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{533 \textcolor{keywordtype}{void} \_sintegerarray\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{534 \textcolor{keywordtype}{void} \_sintegerarray\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{535 \textcolor{keywordtype}{void} \_sreal\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{536 \textcolor{keywordtype}{void} \_sreal\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{537 \textcolor{keywordtype}{void} \_sreal\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{538 \textcolor{keywordtype}{void} \_sreal\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{539 \textcolor{keywordtype}{void} \_srealarray\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{540 \textcolor{keywordtype}{void} \_srealarray\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{541 \textcolor{keywordtype}{void} \_srealarray\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{542 \textcolor{keywordtype}{void} \_srealarray\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{543 \textcolor{keywordtype}{void} \_scomplex\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{544 \textcolor{keywordtype}{void} \_scomplex\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{545 \textcolor{keywordtype}{void} \_scomplex\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{546 \textcolor{keywordtype}{void} \_scomplex\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{547 \textcolor{keywordtype}{void} \_scomplexarray\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{548 \textcolor{keywordtype}{void} \_scomplexarray\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{549 \textcolor{keywordtype}{void} \_scomplexarray\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{550 \textcolor{keywordtype}{void} \_scomplexarray\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{551 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{552 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ABLASF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{553 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{554 \textcolor{keywordtype}{double} rdotv(ae\_int\_t n,}
+\DoxyCodeLine{555      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{556      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{557      ae\_state *\_state);}
+\DoxyCodeLine{558 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{559 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{560 \textcolor{keywordtype}{double} rdotvr(ae\_int\_t n,}
+\DoxyCodeLine{561      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{562      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{563      ae\_int\_t i,}
+\DoxyCodeLine{564      ae\_state *\_state);}
+\DoxyCodeLine{565 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{566 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{567 \textcolor{keywordtype}{double} rdotrr(ae\_int\_t n,}
+\DoxyCodeLine{568      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{569      ae\_int\_t ia,}
+\DoxyCodeLine{570      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{571      ae\_int\_t ib,}
+\DoxyCodeLine{572      ae\_state *\_state);}
+\DoxyCodeLine{573 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{574 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{575 \textcolor{keywordtype}{double} rdotv2(ae\_int\_t n, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{576 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{577 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{578 \textcolor{keywordtype}{void} raddv(ae\_int\_t n,}
+\DoxyCodeLine{579      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{580      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{581      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{582      ae\_state *\_state);}
+\DoxyCodeLine{583 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{584 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{585 \textcolor{keywordtype}{void} raddvx(ae\_int\_t n,}
+\DoxyCodeLine{586      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{587      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{588      ae\_int\_t offsy,}
+\DoxyCodeLine{589      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{590      ae\_int\_t offsx,}
+\DoxyCodeLine{591      ae\_state *\_state);}
+\DoxyCodeLine{592 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{593 \textcolor{keywordtype}{void} raddvc(ae\_int\_t n,}
+\DoxyCodeLine{594      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{595      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{596      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{597      ae\_int\_t colidx,}
+\DoxyCodeLine{598      ae\_state *\_state);}
+\DoxyCodeLine{599 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{600 \textcolor{keywordtype}{void} raddvr(ae\_int\_t n,}
+\DoxyCodeLine{601      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{602      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{603      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{604      ae\_int\_t rowidx,}
+\DoxyCodeLine{605      ae\_state *\_state);}
+\DoxyCodeLine{606 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{607 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{608 \textcolor{keywordtype}{void} rmergemulv(ae\_int\_t n,}
+\DoxyCodeLine{609      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{610      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{611      ae\_state *\_state);}
+\DoxyCodeLine{612 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{613 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{614 \textcolor{keywordtype}{void} rmergemulvr(ae\_int\_t n,}
+\DoxyCodeLine{615      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{616      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{617      ae\_int\_t rowidx,}
+\DoxyCodeLine{618      ae\_state *\_state);}
+\DoxyCodeLine{619 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{620 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{621 \textcolor{keywordtype}{void} rmergemulrv(ae\_int\_t n,}
+\DoxyCodeLine{622      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{623      ae\_int\_t rowidx,}
+\DoxyCodeLine{624      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{625      ae\_state *\_state);}
+\DoxyCodeLine{626 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{627 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{628 \textcolor{keywordtype}{void} rmergemaxv(ae\_int\_t n,}
+\DoxyCodeLine{629      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{630      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{631      ae\_state *\_state);}
+\DoxyCodeLine{632 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{633 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{634 \textcolor{keywordtype}{void} rmergemaxvr(ae\_int\_t n,}
+\DoxyCodeLine{635      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{636      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{637      ae\_int\_t rowidx,}
+\DoxyCodeLine{638      ae\_state *\_state);}
+\DoxyCodeLine{639 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{640 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{641 \textcolor{keywordtype}{void} rmergemaxrv(ae\_int\_t n,}
+\DoxyCodeLine{642      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{643      ae\_int\_t rowidx,}
+\DoxyCodeLine{644      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{645      ae\_state *\_state);}
+\DoxyCodeLine{646 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{647 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{648 \textcolor{keywordtype}{void} rmergeminv(ae\_int\_t n,}
+\DoxyCodeLine{649      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{650      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{651      ae\_state *\_state);}
+\DoxyCodeLine{652 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{653 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{654 \textcolor{keywordtype}{void} rmergeminvr(ae\_int\_t n,}
+\DoxyCodeLine{655      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{656      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{657      ae\_int\_t rowidx,}
+\DoxyCodeLine{658      ae\_state *\_state);}
+\DoxyCodeLine{659 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{660 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{661 \textcolor{keywordtype}{void} rmergeminrv(ae\_int\_t n,}
+\DoxyCodeLine{662      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{663      ae\_int\_t rowidx,}
+\DoxyCodeLine{664      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{665      ae\_state *\_state);}
+\DoxyCodeLine{666 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{667 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{668 \textcolor{keywordtype}{void} raddrv(ae\_int\_t n,}
+\DoxyCodeLine{669      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{670      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{671      ae\_int\_t ridx,}
+\DoxyCodeLine{672      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{673      ae\_state *\_state);}
+\DoxyCodeLine{674 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{675 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{676 \textcolor{keywordtype}{void} raddrr(ae\_int\_t n,}
+\DoxyCodeLine{677      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{678      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{679      ae\_int\_t ridxsrc,}
+\DoxyCodeLine{680      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{681      ae\_int\_t ridxdst,}
+\DoxyCodeLine{682      ae\_state *\_state);}
+\DoxyCodeLine{683 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{684 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{685 \textcolor{keywordtype}{void} rmulv(ae\_int\_t n,}
+\DoxyCodeLine{686      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{687      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{688      ae\_state *\_state);}
+\DoxyCodeLine{689 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{690 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{691 \textcolor{keywordtype}{void} rmulr(ae\_int\_t n,}
+\DoxyCodeLine{692      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{693      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{694      ae\_int\_t rowidx,}
+\DoxyCodeLine{695      ae\_state *\_state);}
+\DoxyCodeLine{696 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{697 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{698 \textcolor{keywordtype}{void} rmulvx(ae\_int\_t n,}
+\DoxyCodeLine{699      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{700      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{701      ae\_int\_t offsx,}
+\DoxyCodeLine{702      ae\_state *\_state);}
+\DoxyCodeLine{703 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{704 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{705 \textcolor{keywordtype}{double} rmaxv(ae\_int\_t n, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{706 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{707 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{708 \textcolor{keywordtype}{double} rmaxabsv(ae\_int\_t n, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{709 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{710 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{711 \textcolor{keywordtype}{double} rmaxr(ae\_int\_t n,}
+\DoxyCodeLine{712      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{713      ae\_int\_t rowidx,}
+\DoxyCodeLine{714      ae\_state *\_state);}
+\DoxyCodeLine{715 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{716 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{717 \textcolor{keywordtype}{double} rmaxabsr(ae\_int\_t n,}
+\DoxyCodeLine{718      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{719      ae\_int\_t rowidx,}
+\DoxyCodeLine{720      ae\_state *\_state);}
+\DoxyCodeLine{721 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{722 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{723 \textcolor{keywordtype}{void} rsetv(ae\_int\_t n,}
+\DoxyCodeLine{724      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{725      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{726      ae\_state *\_state);}
+\DoxyCodeLine{727 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{728 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{729 \textcolor{keywordtype}{void} rsetvx(ae\_int\_t n,}
+\DoxyCodeLine{730      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{731      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{732      ae\_int\_t offsx,}
+\DoxyCodeLine{733      ae\_state *\_state);}
+\DoxyCodeLine{734 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{735 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{736 \textcolor{keywordtype}{void} isetv(ae\_int\_t n,}
+\DoxyCodeLine{737      ae\_int\_t v,}
+\DoxyCodeLine{738      \textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{739      ae\_state *\_state);}
+\DoxyCodeLine{740 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{741 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{742 \textcolor{keywordtype}{void} bsetv(ae\_int\_t n,}
+\DoxyCodeLine{743      ae\_bool v,}
+\DoxyCodeLine{744      \textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{745      ae\_state *\_state);}
+\DoxyCodeLine{746 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{747 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{748 \textcolor{keywordtype}{void} rsetm(ae\_int\_t m,}
+\DoxyCodeLine{749      ae\_int\_t n,}
+\DoxyCodeLine{750      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{751      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{752      ae\_state *\_state);}
+\DoxyCodeLine{753 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{754 \textcolor{keywordtype}{void} rsetallocv(ae\_int\_t n,}
+\DoxyCodeLine{755      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{756      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{757      ae\_state *\_state);}
+\DoxyCodeLine{758 \textcolor{keywordtype}{void} rsetallocm(ae\_int\_t m,}
+\DoxyCodeLine{759      ae\_int\_t n,}
+\DoxyCodeLine{760      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{761      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{762      ae\_state *\_state);}
+\DoxyCodeLine{763 \textcolor{keywordtype}{void} rallocv(ae\_int\_t n, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{764 \textcolor{keywordtype}{void} iallocv(ae\_int\_t n, \textcolor{comment}{/* Integer */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{765 \textcolor{keywordtype}{void} ballocv(ae\_int\_t n, \textcolor{comment}{/* Boolean */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{766 \textcolor{keywordtype}{void} rallocm(ae\_int\_t m,}
+\DoxyCodeLine{767      ae\_int\_t n,}
+\DoxyCodeLine{768      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{769      ae\_state *\_state);}
+\DoxyCodeLine{770 \textcolor{keywordtype}{void} isetallocv(ae\_int\_t n,}
+\DoxyCodeLine{771      ae\_int\_t v,}
+\DoxyCodeLine{772      \textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{773      ae\_state *\_state);}
+\DoxyCodeLine{774 \textcolor{keywordtype}{void} bsetallocv(ae\_int\_t n,}
+\DoxyCodeLine{775      ae\_bool v,}
+\DoxyCodeLine{776      \textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{777      ae\_state *\_state);}
+\DoxyCodeLine{778 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{779 \textcolor{keywordtype}{void} rsetr(ae\_int\_t n,}
+\DoxyCodeLine{780      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{781      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{782      ae\_int\_t i,}
+\DoxyCodeLine{783      ae\_state *\_state);}
+\DoxyCodeLine{784 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{785 \textcolor{keywordtype}{void} rsetc(ae\_int\_t n,}
+\DoxyCodeLine{786      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{787      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{788      ae\_int\_t j,}
+\DoxyCodeLine{789      ae\_state *\_state);}
+\DoxyCodeLine{790 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{791 \textcolor{keywordtype}{void} rcopyv(ae\_int\_t n,}
+\DoxyCodeLine{792      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{793      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{794      ae\_state *\_state);}
+\DoxyCodeLine{795 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{796 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{797 \textcolor{keywordtype}{void} bcopyv(ae\_int\_t n,}
+\DoxyCodeLine{798      \textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{799      \textcolor{comment}{/* Boolean */} ae\_vector* y,}
+\DoxyCodeLine{800      ae\_state *\_state);}
+\DoxyCodeLine{801 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{802 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{803 \textcolor{keywordtype}{void} rcopyvx(ae\_int\_t n,}
+\DoxyCodeLine{804      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{805      ae\_int\_t offsx,}
+\DoxyCodeLine{806      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{807      ae\_int\_t offsy,}
+\DoxyCodeLine{808      ae\_state *\_state);}
+\DoxyCodeLine{809 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{810 \textcolor{keywordtype}{void} rcopyallocv(ae\_int\_t n,}
+\DoxyCodeLine{811      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{812      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{813      ae\_state *\_state);}
+\DoxyCodeLine{814 \textcolor{keywordtype}{void} rcopym(ae\_int\_t m,}
+\DoxyCodeLine{815      ae\_int\_t n,}
+\DoxyCodeLine{816      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{817      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{818      ae\_state *\_state);}
+\DoxyCodeLine{819 \textcolor{keywordtype}{void} rcopyallocm(ae\_int\_t m,}
+\DoxyCodeLine{820      ae\_int\_t n,}
+\DoxyCodeLine{821      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{822      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{823      ae\_state *\_state);}
+\DoxyCodeLine{824 \textcolor{keywordtype}{void} icopyallocv(ae\_int\_t n,}
+\DoxyCodeLine{825      \textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{826      \textcolor{comment}{/* Integer */} ae\_vector* y,}
+\DoxyCodeLine{827      ae\_state *\_state);}
+\DoxyCodeLine{828 \textcolor{keywordtype}{void} bcopyallocv(ae\_int\_t n,}
+\DoxyCodeLine{829      \textcolor{comment}{/* Boolean */} ae\_vector* x,}
+\DoxyCodeLine{830      \textcolor{comment}{/* Boolean */} ae\_vector* y,}
+\DoxyCodeLine{831      ae\_state *\_state);}
+\DoxyCodeLine{832 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{833 \textcolor{keywordtype}{void} icopyv(ae\_int\_t n,}
+\DoxyCodeLine{834      \textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{835      \textcolor{comment}{/* Integer */} ae\_vector* y,}
+\DoxyCodeLine{836      ae\_state *\_state);}
+\DoxyCodeLine{837 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{838 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{839 \textcolor{keywordtype}{void} icopyvx(ae\_int\_t n,}
+\DoxyCodeLine{840      \textcolor{comment}{/* Integer */} ae\_vector* x,}
+\DoxyCodeLine{841      ae\_int\_t offsx,}
+\DoxyCodeLine{842      \textcolor{comment}{/* Integer */} ae\_vector* y,}
+\DoxyCodeLine{843      ae\_int\_t offsy,}
+\DoxyCodeLine{844      ae\_state *\_state);}
+\DoxyCodeLine{845 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{846 \textcolor{keywordtype}{void} igrowv(ae\_int\_t newn, \textcolor{comment}{/* Integer */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{847 \textcolor{keywordtype}{void} rgrowv(ae\_int\_t newn, \textcolor{comment}{/* Real    */} ae\_vector* x, ae\_state *\_state);}
+\DoxyCodeLine{848 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{849 \textcolor{keywordtype}{void} rcopymulv(ae\_int\_t n,}
+\DoxyCodeLine{850      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{851      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{852      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{853      ae\_state *\_state);}
+\DoxyCodeLine{854 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{855 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{856 \textcolor{keywordtype}{void} rcopymulvr(ae\_int\_t n,}
+\DoxyCodeLine{857      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{858      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{859      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{860      ae\_int\_t ridx,}
+\DoxyCodeLine{861      ae\_state *\_state);}
+\DoxyCodeLine{862 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{863 \textcolor{keywordtype}{void} rcopymulvc(ae\_int\_t n,}
+\DoxyCodeLine{864      \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{865      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{866      \textcolor{comment}{/* Real    */} ae\_matrix* y,}
+\DoxyCodeLine{867      ae\_int\_t cidx,}
+\DoxyCodeLine{868      ae\_state *\_state);}
+\DoxyCodeLine{869 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{870 \textcolor{keywordtype}{void} rcopyvr(ae\_int\_t n,}
+\DoxyCodeLine{871      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{872      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{873      ae\_int\_t i,}
+\DoxyCodeLine{874      ae\_state *\_state);}
+\DoxyCodeLine{875 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{876 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{877 \textcolor{keywordtype}{void} rcopyrv(ae\_int\_t n,}
+\DoxyCodeLine{878      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{879      ae\_int\_t i,}
+\DoxyCodeLine{880      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{881      ae\_state *\_state);}
+\DoxyCodeLine{882 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{883 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{884 \textcolor{keywordtype}{void} rcopyrr(ae\_int\_t n,}
+\DoxyCodeLine{885      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{886      ae\_int\_t i,}
+\DoxyCodeLine{887      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{888      ae\_int\_t k,}
+\DoxyCodeLine{889      ae\_state *\_state);}
+\DoxyCodeLine{890 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{891 \textcolor{keywordtype}{void} rcopyvc(ae\_int\_t n,}
+\DoxyCodeLine{892      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{893      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{894      ae\_int\_t j,}
+\DoxyCodeLine{895      ae\_state *\_state);}
+\DoxyCodeLine{896 \textcolor{keywordtype}{void} rcopycv(ae\_int\_t n,}
+\DoxyCodeLine{897      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{898      ae\_int\_t j,}
+\DoxyCodeLine{899      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{900      ae\_state *\_state);}
+\DoxyCodeLine{901 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{902 \textcolor{keywordtype}{void} rgemv(ae\_int\_t m,}
+\DoxyCodeLine{903      ae\_int\_t n,}
+\DoxyCodeLine{904      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{905      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{906      ae\_int\_t opa,}
+\DoxyCodeLine{907      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{908      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{909      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{910      ae\_state *\_state);}
+\DoxyCodeLine{911 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{912 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{913 \textcolor{keywordtype}{void} rgemvx(ae\_int\_t m,}
+\DoxyCodeLine{914      ae\_int\_t n,}
+\DoxyCodeLine{915      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{916      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{917      ae\_int\_t ia,}
+\DoxyCodeLine{918      ae\_int\_t ja,}
+\DoxyCodeLine{919      ae\_int\_t opa,}
+\DoxyCodeLine{920      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{921      ae\_int\_t ix,}
+\DoxyCodeLine{922      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{923      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{924      ae\_int\_t iy,}
+\DoxyCodeLine{925      ae\_state *\_state);}
+\DoxyCodeLine{926 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{927 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{928 \textcolor{keywordtype}{void} rger(ae\_int\_t m,}
+\DoxyCodeLine{929      ae\_int\_t n,}
+\DoxyCodeLine{930      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{931      \textcolor{comment}{/* Real    */} ae\_vector* u,}
+\DoxyCodeLine{932      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{933      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{934      ae\_state *\_state);}
+\DoxyCodeLine{935 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{936 \textcolor{preprocessor}{\#ifdef ALGLIB\_NO\_FAST\_KERNELS}}
+\DoxyCodeLine{937 \textcolor{keywordtype}{void} rtrsvx(ae\_int\_t n,}
+\DoxyCodeLine{938      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{939      ae\_int\_t ia,}
+\DoxyCodeLine{940      ae\_int\_t ja,}
+\DoxyCodeLine{941      ae\_bool isupper,}
+\DoxyCodeLine{942      ae\_bool isunit,}
+\DoxyCodeLine{943      ae\_int\_t optype,}
+\DoxyCodeLine{944      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{945      ae\_int\_t ix,}
+\DoxyCodeLine{946      ae\_state *\_state);}
+\DoxyCodeLine{947 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{948 ae\_bool rmatrixgerf(ae\_int\_t m,}
+\DoxyCodeLine{949      ae\_int\_t n,}
+\DoxyCodeLine{950      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{951      ae\_int\_t ia,}
+\DoxyCodeLine{952      ae\_int\_t ja,}
+\DoxyCodeLine{953      \textcolor{keywordtype}{double} ralpha,}
+\DoxyCodeLine{954      \textcolor{comment}{/* Real    */} ae\_vector* u,}
+\DoxyCodeLine{955      ae\_int\_t iu,}
+\DoxyCodeLine{956      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{957      ae\_int\_t iv,}
+\DoxyCodeLine{958      ae\_state *\_state);}
+\DoxyCodeLine{959 ae\_bool cmatrixrank1f(ae\_int\_t m,}
+\DoxyCodeLine{960      ae\_int\_t n,}
+\DoxyCodeLine{961      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{962      ae\_int\_t ia,}
+\DoxyCodeLine{963      ae\_int\_t ja,}
+\DoxyCodeLine{964      \textcolor{comment}{/* Complex */} ae\_vector* u,}
+\DoxyCodeLine{965      ae\_int\_t iu,}
+\DoxyCodeLine{966      \textcolor{comment}{/* Complex */} ae\_vector* v,}
+\DoxyCodeLine{967      ae\_int\_t iv,}
+\DoxyCodeLine{968      ae\_state *\_state);}
+\DoxyCodeLine{969 ae\_bool rmatrixrank1f(ae\_int\_t m,}
+\DoxyCodeLine{970      ae\_int\_t n,}
+\DoxyCodeLine{971      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{972      ae\_int\_t ia,}
+\DoxyCodeLine{973      ae\_int\_t ja,}
+\DoxyCodeLine{974      \textcolor{comment}{/* Real    */} ae\_vector* u,}
+\DoxyCodeLine{975      ae\_int\_t iu,}
+\DoxyCodeLine{976      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{977      ae\_int\_t iv,}
+\DoxyCodeLine{978      ae\_state *\_state);}
+\DoxyCodeLine{979 ae\_bool cmatrixrighttrsmf(ae\_int\_t m,}
+\DoxyCodeLine{980      ae\_int\_t n,}
+\DoxyCodeLine{981      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{982      ae\_int\_t i1,}
+\DoxyCodeLine{983      ae\_int\_t j1,}
+\DoxyCodeLine{984      ae\_bool isupper,}
+\DoxyCodeLine{985      ae\_bool isunit,}
+\DoxyCodeLine{986      ae\_int\_t optype,}
+\DoxyCodeLine{987      \textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{988      ae\_int\_t i2,}
+\DoxyCodeLine{989      ae\_int\_t j2,}
+\DoxyCodeLine{990      ae\_state *\_state);}
+\DoxyCodeLine{991 ae\_bool cmatrixlefttrsmf(ae\_int\_t m,}
+\DoxyCodeLine{992      ae\_int\_t n,}
+\DoxyCodeLine{993      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{994      ae\_int\_t i1,}
+\DoxyCodeLine{995      ae\_int\_t j1,}
+\DoxyCodeLine{996      ae\_bool isupper,}
+\DoxyCodeLine{997      ae\_bool isunit,}
+\DoxyCodeLine{998      ae\_int\_t optype,}
+\DoxyCodeLine{999      \textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{1000      ae\_int\_t i2,}
+\DoxyCodeLine{1001      ae\_int\_t j2,}
+\DoxyCodeLine{1002      ae\_state *\_state);}
+\DoxyCodeLine{1003 ae\_bool rmatrixrighttrsmf(ae\_int\_t m,}
+\DoxyCodeLine{1004      ae\_int\_t n,}
+\DoxyCodeLine{1005      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1006      ae\_int\_t i1,}
+\DoxyCodeLine{1007      ae\_int\_t j1,}
+\DoxyCodeLine{1008      ae\_bool isupper,}
+\DoxyCodeLine{1009      ae\_bool isunit,}
+\DoxyCodeLine{1010      ae\_int\_t optype,}
+\DoxyCodeLine{1011      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1012      ae\_int\_t i2,}
+\DoxyCodeLine{1013      ae\_int\_t j2,}
+\DoxyCodeLine{1014      ae\_state *\_state);}
+\DoxyCodeLine{1015 ae\_bool rmatrixlefttrsmf(ae\_int\_t m,}
+\DoxyCodeLine{1016      ae\_int\_t n,}
+\DoxyCodeLine{1017      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1018      ae\_int\_t i1,}
+\DoxyCodeLine{1019      ae\_int\_t j1,}
+\DoxyCodeLine{1020      ae\_bool isupper,}
+\DoxyCodeLine{1021      ae\_bool isunit,}
+\DoxyCodeLine{1022      ae\_int\_t optype,}
+\DoxyCodeLine{1023      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1024      ae\_int\_t i2,}
+\DoxyCodeLine{1025      ae\_int\_t j2,}
+\DoxyCodeLine{1026      ae\_state *\_state);}
+\DoxyCodeLine{1027 ae\_bool cmatrixherkf(ae\_int\_t n,}
+\DoxyCodeLine{1028      ae\_int\_t k,}
+\DoxyCodeLine{1029      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1030      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1031      ae\_int\_t ia,}
+\DoxyCodeLine{1032      ae\_int\_t ja,}
+\DoxyCodeLine{1033      ae\_int\_t optypea,}
+\DoxyCodeLine{1034      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1035      \textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1036      ae\_int\_t ic,}
+\DoxyCodeLine{1037      ae\_int\_t jc,}
+\DoxyCodeLine{1038      ae\_bool isupper,}
+\DoxyCodeLine{1039      ae\_state *\_state);}
+\DoxyCodeLine{1040 ae\_bool rmatrixsyrkf(ae\_int\_t n,}
+\DoxyCodeLine{1041      ae\_int\_t k,}
+\DoxyCodeLine{1042      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1043      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1044      ae\_int\_t ia,}
+\DoxyCodeLine{1045      ae\_int\_t ja,}
+\DoxyCodeLine{1046      ae\_int\_t optypea,}
+\DoxyCodeLine{1047      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1048      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1049      ae\_int\_t ic,}
+\DoxyCodeLine{1050      ae\_int\_t jc,}
+\DoxyCodeLine{1051      ae\_bool isupper,}
+\DoxyCodeLine{1052      ae\_state *\_state);}
+\DoxyCodeLine{1053 ae\_bool cmatrixgemmf(ae\_int\_t m,}
+\DoxyCodeLine{1054      ae\_int\_t n,}
+\DoxyCodeLine{1055      ae\_int\_t k,}
+\DoxyCodeLine{1056      ae\_complex alpha,}
+\DoxyCodeLine{1057      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1058      ae\_int\_t ia,}
+\DoxyCodeLine{1059      ae\_int\_t ja,}
+\DoxyCodeLine{1060      ae\_int\_t optypea,}
+\DoxyCodeLine{1061      \textcolor{comment}{/* Complex */} ae\_matrix* b,}
+\DoxyCodeLine{1062      ae\_int\_t ib,}
+\DoxyCodeLine{1063      ae\_int\_t jb,}
+\DoxyCodeLine{1064      ae\_int\_t optypeb,}
+\DoxyCodeLine{1065      ae\_complex beta,}
+\DoxyCodeLine{1066      \textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1067      ae\_int\_t ic,}
+\DoxyCodeLine{1068      ae\_int\_t jc,}
+\DoxyCodeLine{1069      ae\_state *\_state);}
+\DoxyCodeLine{1070 \textcolor{keywordtype}{void} cmatrixgemmk(ae\_int\_t m,}
+\DoxyCodeLine{1071      ae\_int\_t n,}
+\DoxyCodeLine{1072      ae\_int\_t k,}
+\DoxyCodeLine{1073      ae\_complex alpha,}
+\DoxyCodeLine{1074      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1075      ae\_int\_t ia,}
+\DoxyCodeLine{1076      ae\_int\_t ja,}
+\DoxyCodeLine{1077      ae\_int\_t optypea,}
+\DoxyCodeLine{1078      \textcolor{comment}{/* Complex */} ae\_matrix* b,}
+\DoxyCodeLine{1079      ae\_int\_t ib,}
+\DoxyCodeLine{1080      ae\_int\_t jb,}
+\DoxyCodeLine{1081      ae\_int\_t optypeb,}
+\DoxyCodeLine{1082      ae\_complex beta,}
+\DoxyCodeLine{1083      \textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1084      ae\_int\_t ic,}
+\DoxyCodeLine{1085      ae\_int\_t jc,}
+\DoxyCodeLine{1086      ae\_state *\_state);}
+\DoxyCodeLine{1087 \textcolor{keywordtype}{void} rmatrixgemmk(ae\_int\_t m,}
+\DoxyCodeLine{1088      ae\_int\_t n,}
+\DoxyCodeLine{1089      ae\_int\_t k,}
+\DoxyCodeLine{1090      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1091      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1092      ae\_int\_t ia,}
+\DoxyCodeLine{1093      ae\_int\_t ja,}
+\DoxyCodeLine{1094      ae\_int\_t optypea,}
+\DoxyCodeLine{1095      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1096      ae\_int\_t ib,}
+\DoxyCodeLine{1097      ae\_int\_t jb,}
+\DoxyCodeLine{1098      ae\_int\_t optypeb,}
+\DoxyCodeLine{1099      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1100      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1101      ae\_int\_t ic,}
+\DoxyCodeLine{1102      ae\_int\_t jc,}
+\DoxyCodeLine{1103      ae\_state *\_state);}
+\DoxyCodeLine{1104 \textcolor{keywordtype}{void} rmatrixgemmk44v00(ae\_int\_t m,}
+\DoxyCodeLine{1105      ae\_int\_t n,}
+\DoxyCodeLine{1106      ae\_int\_t k,}
+\DoxyCodeLine{1107      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1108      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1109      ae\_int\_t ia,}
+\DoxyCodeLine{1110      ae\_int\_t ja,}
+\DoxyCodeLine{1111      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1112      ae\_int\_t ib,}
+\DoxyCodeLine{1113      ae\_int\_t jb,}
+\DoxyCodeLine{1114      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1115      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1116      ae\_int\_t ic,}
+\DoxyCodeLine{1117      ae\_int\_t jc,}
+\DoxyCodeLine{1118      ae\_state *\_state);}
+\DoxyCodeLine{1119 \textcolor{keywordtype}{void} rmatrixgemmk44v01(ae\_int\_t m,}
+\DoxyCodeLine{1120      ae\_int\_t n,}
+\DoxyCodeLine{1121      ae\_int\_t k,}
+\DoxyCodeLine{1122      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1123      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1124      ae\_int\_t ia,}
+\DoxyCodeLine{1125      ae\_int\_t ja,}
+\DoxyCodeLine{1126      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1127      ae\_int\_t ib,}
+\DoxyCodeLine{1128      ae\_int\_t jb,}
+\DoxyCodeLine{1129      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1130      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1131      ae\_int\_t ic,}
+\DoxyCodeLine{1132      ae\_int\_t jc,}
+\DoxyCodeLine{1133      ae\_state *\_state);}
+\DoxyCodeLine{1134 \textcolor{keywordtype}{void} rmatrixgemmk44v10(ae\_int\_t m,}
+\DoxyCodeLine{1135      ae\_int\_t n,}
+\DoxyCodeLine{1136      ae\_int\_t k,}
+\DoxyCodeLine{1137      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1138      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1139      ae\_int\_t ia,}
+\DoxyCodeLine{1140      ae\_int\_t ja,}
+\DoxyCodeLine{1141      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1142      ae\_int\_t ib,}
+\DoxyCodeLine{1143      ae\_int\_t jb,}
+\DoxyCodeLine{1144      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1145      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1146      ae\_int\_t ic,}
+\DoxyCodeLine{1147      ae\_int\_t jc,}
+\DoxyCodeLine{1148      ae\_state *\_state);}
+\DoxyCodeLine{1149 \textcolor{keywordtype}{void} rmatrixgemmk44v11(ae\_int\_t m,}
+\DoxyCodeLine{1150      ae\_int\_t n,}
+\DoxyCodeLine{1151      ae\_int\_t k,}
+\DoxyCodeLine{1152      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1153      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1154      ae\_int\_t ia,}
+\DoxyCodeLine{1155      ae\_int\_t ja,}
+\DoxyCodeLine{1156      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1157      ae\_int\_t ib,}
+\DoxyCodeLine{1158      ae\_int\_t jb,}
+\DoxyCodeLine{1159      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1160      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1161      ae\_int\_t ic,}
+\DoxyCodeLine{1162      ae\_int\_t jc,}
+\DoxyCodeLine{1163      ae\_state *\_state);}
+\DoxyCodeLine{1164 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1165 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1166 \textcolor{keywordtype}{void} hermitianmatrixvectormultiply(\textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1167      ae\_bool isupper,}
+\DoxyCodeLine{1168      ae\_int\_t i1,}
+\DoxyCodeLine{1169      ae\_int\_t i2,}
+\DoxyCodeLine{1170      \textcolor{comment}{/* Complex */} ae\_vector* x,}
+\DoxyCodeLine{1171      ae\_complex alpha,}
+\DoxyCodeLine{1172      \textcolor{comment}{/* Complex */} ae\_vector* y,}
+\DoxyCodeLine{1173      ae\_state *\_state);}
+\DoxyCodeLine{1174 \textcolor{keywordtype}{void} hermitianrank2update(\textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1175      ae\_bool isupper,}
+\DoxyCodeLine{1176      ae\_int\_t i1,}
+\DoxyCodeLine{1177      ae\_int\_t i2,}
+\DoxyCodeLine{1178      \textcolor{comment}{/* Complex */} ae\_vector* x,}
+\DoxyCodeLine{1179      \textcolor{comment}{/* Complex */} ae\_vector* y,}
+\DoxyCodeLine{1180      \textcolor{comment}{/* Complex */} ae\_vector* t,}
+\DoxyCodeLine{1181      ae\_complex alpha,}
+\DoxyCodeLine{1182      ae\_state *\_state);}
+\DoxyCodeLine{1183 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1184 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CREFLECTIONS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1185 \textcolor{keywordtype}{void} complexgeneratereflection(\textcolor{comment}{/* Complex */} ae\_vector* x,}
+\DoxyCodeLine{1186      ae\_int\_t n,}
+\DoxyCodeLine{1187      ae\_complex* tau,}
+\DoxyCodeLine{1188      ae\_state *\_state);}
+\DoxyCodeLine{1189 \textcolor{keywordtype}{void} complexapplyreflectionfromtheleft(\textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1190      ae\_complex tau,}
+\DoxyCodeLine{1191      \textcolor{comment}{/* Complex */} ae\_vector* v,}
+\DoxyCodeLine{1192      ae\_int\_t m1,}
+\DoxyCodeLine{1193      ae\_int\_t m2,}
+\DoxyCodeLine{1194      ae\_int\_t n1,}
+\DoxyCodeLine{1195      ae\_int\_t n2,}
+\DoxyCodeLine{1196      \textcolor{comment}{/* Complex */} ae\_vector* work,}
+\DoxyCodeLine{1197      ae\_state *\_state);}
+\DoxyCodeLine{1198 \textcolor{keywordtype}{void} complexapplyreflectionfromtheright(\textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1199      ae\_complex tau,}
+\DoxyCodeLine{1200      \textcolor{comment}{/* Complex */} ae\_vector* v,}
+\DoxyCodeLine{1201      ae\_int\_t m1,}
+\DoxyCodeLine{1202      ae\_int\_t m2,}
+\DoxyCodeLine{1203      ae\_int\_t n1,}
+\DoxyCodeLine{1204      ae\_int\_t n2,}
+\DoxyCodeLine{1205      \textcolor{comment}{/* Complex */} ae\_vector* work,}
+\DoxyCodeLine{1206      ae\_state *\_state);}
+\DoxyCodeLine{1207 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1208 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1209 \textcolor{keywordtype}{void} symmetricmatrixvectormultiply(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1210      ae\_bool isupper,}
+\DoxyCodeLine{1211      ae\_int\_t i1,}
+\DoxyCodeLine{1212      ae\_int\_t i2,}
+\DoxyCodeLine{1213      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1214      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1215      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1216      ae\_state *\_state);}
+\DoxyCodeLine{1217 \textcolor{keywordtype}{void} symmetricrank2update(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1218      ae\_bool isupper,}
+\DoxyCodeLine{1219      ae\_int\_t i1,}
+\DoxyCodeLine{1220      ae\_int\_t i2,}
+\DoxyCodeLine{1221      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1222      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1223      \textcolor{comment}{/* Real    */} ae\_vector* t,}
+\DoxyCodeLine{1224      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1225      ae\_state *\_state);}
+\DoxyCodeLine{1226 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1227 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ABLASMKL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1228 ae\_bool rmatrixgermkl(ae\_int\_t m,}
+\DoxyCodeLine{1229      ae\_int\_t n,}
+\DoxyCodeLine{1230      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1231      ae\_int\_t ia,}
+\DoxyCodeLine{1232      ae\_int\_t ja,}
+\DoxyCodeLine{1233      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1234      \textcolor{comment}{/* Real    */} ae\_vector* u,}
+\DoxyCodeLine{1235      ae\_int\_t iu,}
+\DoxyCodeLine{1236      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{1237      ae\_int\_t iv,}
+\DoxyCodeLine{1238      ae\_state *\_state);}
+\DoxyCodeLine{1239 ae\_bool cmatrixrank1mkl(ae\_int\_t m,}
+\DoxyCodeLine{1240      ae\_int\_t n,}
+\DoxyCodeLine{1241      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1242      ae\_int\_t ia,}
+\DoxyCodeLine{1243      ae\_int\_t ja,}
+\DoxyCodeLine{1244      \textcolor{comment}{/* Complex */} ae\_vector* u,}
+\DoxyCodeLine{1245      ae\_int\_t iu,}
+\DoxyCodeLine{1246      \textcolor{comment}{/* Complex */} ae\_vector* v,}
+\DoxyCodeLine{1247      ae\_int\_t iv,}
+\DoxyCodeLine{1248      ae\_state *\_state);}
+\DoxyCodeLine{1249 ae\_bool rmatrixrank1mkl(ae\_int\_t m,}
+\DoxyCodeLine{1250      ae\_int\_t n,}
+\DoxyCodeLine{1251      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1252      ae\_int\_t ia,}
+\DoxyCodeLine{1253      ae\_int\_t ja,}
+\DoxyCodeLine{1254      \textcolor{comment}{/* Real    */} ae\_vector* u,}
+\DoxyCodeLine{1255      ae\_int\_t iu,}
+\DoxyCodeLine{1256      \textcolor{comment}{/* Real    */} ae\_vector* v,}
+\DoxyCodeLine{1257      ae\_int\_t iv,}
+\DoxyCodeLine{1258      ae\_state *\_state);}
+\DoxyCodeLine{1259 ae\_bool cmatrixmvmkl(ae\_int\_t m,}
+\DoxyCodeLine{1260      ae\_int\_t n,}
+\DoxyCodeLine{1261      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1262      ae\_int\_t ia,}
+\DoxyCodeLine{1263      ae\_int\_t ja,}
+\DoxyCodeLine{1264      ae\_int\_t opa,}
+\DoxyCodeLine{1265      \textcolor{comment}{/* Complex */} ae\_vector* x,}
+\DoxyCodeLine{1266      ae\_int\_t ix,}
+\DoxyCodeLine{1267      \textcolor{comment}{/* Complex */} ae\_vector* y,}
+\DoxyCodeLine{1268      ae\_int\_t iy,}
+\DoxyCodeLine{1269      ae\_state *\_state);}
+\DoxyCodeLine{1270 ae\_bool rmatrixmvmkl(ae\_int\_t m,}
+\DoxyCodeLine{1271      ae\_int\_t n,}
+\DoxyCodeLine{1272      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1273      ae\_int\_t ia,}
+\DoxyCodeLine{1274      ae\_int\_t ja,}
+\DoxyCodeLine{1275      ae\_int\_t opa,}
+\DoxyCodeLine{1276      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1277      ae\_int\_t ix,}
+\DoxyCodeLine{1278      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1279      ae\_int\_t iy,}
+\DoxyCodeLine{1280      ae\_state *\_state);}
+\DoxyCodeLine{1281 ae\_bool rmatrixgemvmkl(ae\_int\_t m,}
+\DoxyCodeLine{1282      ae\_int\_t n,}
+\DoxyCodeLine{1283      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1284      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1285      ae\_int\_t ia,}
+\DoxyCodeLine{1286      ae\_int\_t ja,}
+\DoxyCodeLine{1287      ae\_int\_t opa,}
+\DoxyCodeLine{1288      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1289      ae\_int\_t ix,}
+\DoxyCodeLine{1290      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1291      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1292      ae\_int\_t iy,}
+\DoxyCodeLine{1293      ae\_state *\_state);}
+\DoxyCodeLine{1294 ae\_bool rmatrixtrsvmkl(ae\_int\_t n,}
+\DoxyCodeLine{1295      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1296      ae\_int\_t ia,}
+\DoxyCodeLine{1297      ae\_int\_t ja,}
+\DoxyCodeLine{1298      ae\_bool isupper,}
+\DoxyCodeLine{1299      ae\_bool isunit,}
+\DoxyCodeLine{1300      ae\_int\_t optype,}
+\DoxyCodeLine{1301      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1302      ae\_int\_t ix,}
+\DoxyCodeLine{1303      ae\_state *\_state);}
+\DoxyCodeLine{1304 ae\_bool rmatrixsyrkmkl(ae\_int\_t n,}
+\DoxyCodeLine{1305      ae\_int\_t k,}
+\DoxyCodeLine{1306      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1307      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1308      ae\_int\_t ia,}
+\DoxyCodeLine{1309      ae\_int\_t ja,}
+\DoxyCodeLine{1310      ae\_int\_t optypea,}
+\DoxyCodeLine{1311      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1312      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1313      ae\_int\_t ic,}
+\DoxyCodeLine{1314      ae\_int\_t jc,}
+\DoxyCodeLine{1315      ae\_bool isupper,}
+\DoxyCodeLine{1316      ae\_state *\_state);}
+\DoxyCodeLine{1317 ae\_bool cmatrixherkmkl(ae\_int\_t n,}
+\DoxyCodeLine{1318      ae\_int\_t k,}
+\DoxyCodeLine{1319      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1320      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1321      ae\_int\_t ia,}
+\DoxyCodeLine{1322      ae\_int\_t ja,}
+\DoxyCodeLine{1323      ae\_int\_t optypea,}
+\DoxyCodeLine{1324      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1325      \textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1326      ae\_int\_t ic,}
+\DoxyCodeLine{1327      ae\_int\_t jc,}
+\DoxyCodeLine{1328      ae\_bool isupper,}
+\DoxyCodeLine{1329      ae\_state *\_state);}
+\DoxyCodeLine{1330 ae\_bool rmatrixgemmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1331      ae\_int\_t n,}
+\DoxyCodeLine{1332      ae\_int\_t k,}
+\DoxyCodeLine{1333      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1334      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1335      ae\_int\_t ia,}
+\DoxyCodeLine{1336      ae\_int\_t ja,}
+\DoxyCodeLine{1337      ae\_int\_t optypea,}
+\DoxyCodeLine{1338      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1339      ae\_int\_t ib,}
+\DoxyCodeLine{1340      ae\_int\_t jb,}
+\DoxyCodeLine{1341      ae\_int\_t optypeb,}
+\DoxyCodeLine{1342      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1343      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1344      ae\_int\_t ic,}
+\DoxyCodeLine{1345      ae\_int\_t jc,}
+\DoxyCodeLine{1346      ae\_state *\_state);}
+\DoxyCodeLine{1347 ae\_bool rmatrixsymvmkl(ae\_int\_t n,}
+\DoxyCodeLine{1348      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1349      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1350      ae\_int\_t ia,}
+\DoxyCodeLine{1351      ae\_int\_t ja,}
+\DoxyCodeLine{1352      ae\_bool isupper,}
+\DoxyCodeLine{1353      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1354      ae\_int\_t ix,}
+\DoxyCodeLine{1355      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1356      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1357      ae\_int\_t iy,}
+\DoxyCodeLine{1358      ae\_state *\_state);}
+\DoxyCodeLine{1359 ae\_bool cmatrixgemmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1360      ae\_int\_t n,}
+\DoxyCodeLine{1361      ae\_int\_t k,}
+\DoxyCodeLine{1362      ae\_complex alpha,}
+\DoxyCodeLine{1363      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1364      ae\_int\_t ia,}
+\DoxyCodeLine{1365      ae\_int\_t ja,}
+\DoxyCodeLine{1366      ae\_int\_t optypea,}
+\DoxyCodeLine{1367      \textcolor{comment}{/* Complex */} ae\_matrix* b,}
+\DoxyCodeLine{1368      ae\_int\_t ib,}
+\DoxyCodeLine{1369      ae\_int\_t jb,}
+\DoxyCodeLine{1370      ae\_int\_t optypeb,}
+\DoxyCodeLine{1371      ae\_complex beta,}
+\DoxyCodeLine{1372      \textcolor{comment}{/* Complex */} ae\_matrix* c,}
+\DoxyCodeLine{1373      ae\_int\_t ic,}
+\DoxyCodeLine{1374      ae\_int\_t jc,}
+\DoxyCodeLine{1375      ae\_state *\_state);}
+\DoxyCodeLine{1376 ae\_bool cmatrixlefttrsmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1377      ae\_int\_t n,}
+\DoxyCodeLine{1378      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1379      ae\_int\_t i1,}
+\DoxyCodeLine{1380      ae\_int\_t j1,}
+\DoxyCodeLine{1381      ae\_bool isupper,}
+\DoxyCodeLine{1382      ae\_bool isunit,}
+\DoxyCodeLine{1383      ae\_int\_t optype,}
+\DoxyCodeLine{1384      \textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{1385      ae\_int\_t i2,}
+\DoxyCodeLine{1386      ae\_int\_t j2,}
+\DoxyCodeLine{1387      ae\_state *\_state);}
+\DoxyCodeLine{1388 ae\_bool cmatrixrighttrsmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1389      ae\_int\_t n,}
+\DoxyCodeLine{1390      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1391      ae\_int\_t i1,}
+\DoxyCodeLine{1392      ae\_int\_t j1,}
+\DoxyCodeLine{1393      ae\_bool isupper,}
+\DoxyCodeLine{1394      ae\_bool isunit,}
+\DoxyCodeLine{1395      ae\_int\_t optype,}
+\DoxyCodeLine{1396      \textcolor{comment}{/* Complex */} ae\_matrix* x,}
+\DoxyCodeLine{1397      ae\_int\_t i2,}
+\DoxyCodeLine{1398      ae\_int\_t j2,}
+\DoxyCodeLine{1399      ae\_state *\_state);}
+\DoxyCodeLine{1400 ae\_bool rmatrixlefttrsmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1401      ae\_int\_t n,}
+\DoxyCodeLine{1402      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1403      ae\_int\_t i1,}
+\DoxyCodeLine{1404      ae\_int\_t j1,}
+\DoxyCodeLine{1405      ae\_bool isupper,}
+\DoxyCodeLine{1406      ae\_bool isunit,}
+\DoxyCodeLine{1407      ae\_int\_t optype,}
+\DoxyCodeLine{1408      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1409      ae\_int\_t i2,}
+\DoxyCodeLine{1410      ae\_int\_t j2,}
+\DoxyCodeLine{1411      ae\_state *\_state);}
+\DoxyCodeLine{1412 ae\_bool rmatrixrighttrsmmkl(ae\_int\_t m,}
+\DoxyCodeLine{1413      ae\_int\_t n,}
+\DoxyCodeLine{1414      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1415      ae\_int\_t i1,}
+\DoxyCodeLine{1416      ae\_int\_t j1,}
+\DoxyCodeLine{1417      ae\_bool isupper,}
+\DoxyCodeLine{1418      ae\_bool isunit,}
+\DoxyCodeLine{1419      ae\_int\_t optype,}
+\DoxyCodeLine{1420      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1421      ae\_int\_t i2,}
+\DoxyCodeLine{1422      ae\_int\_t j2,}
+\DoxyCodeLine{1423      ae\_state *\_state);}
+\DoxyCodeLine{1424 ae\_bool spdmatrixcholeskymkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1425      ae\_int\_t offs,}
+\DoxyCodeLine{1426      ae\_int\_t n,}
+\DoxyCodeLine{1427      ae\_bool isupper,}
+\DoxyCodeLine{1428      ae\_bool* cholresult,}
+\DoxyCodeLine{1429      ae\_state *\_state);}
+\DoxyCodeLine{1430 ae\_bool rmatrixplumkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1431      ae\_int\_t offs,}
+\DoxyCodeLine{1432      ae\_int\_t m,}
+\DoxyCodeLine{1433      ae\_int\_t n,}
+\DoxyCodeLine{1434      \textcolor{comment}{/* Integer */} ae\_vector* pivots,}
+\DoxyCodeLine{1435      ae\_state *\_state);}
+\DoxyCodeLine{1436 ae\_bool rmatrixbdmkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1437      ae\_int\_t m,}
+\DoxyCodeLine{1438      ae\_int\_t n,}
+\DoxyCodeLine{1439      \textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1440      \textcolor{comment}{/* Real    */} ae\_vector* e,}
+\DoxyCodeLine{1441      \textcolor{comment}{/* Real    */} ae\_vector* tauq,}
+\DoxyCodeLine{1442      \textcolor{comment}{/* Real    */} ae\_vector* taup,}
+\DoxyCodeLine{1443      ae\_state *\_state);}
+\DoxyCodeLine{1444 ae\_bool rmatrixbdmultiplybymkl(\textcolor{comment}{/* Real    */} ae\_matrix* qp,}
+\DoxyCodeLine{1445      ae\_int\_t m,}
+\DoxyCodeLine{1446      ae\_int\_t n,}
+\DoxyCodeLine{1447      \textcolor{comment}{/* Real    */} ae\_vector* tauq,}
+\DoxyCodeLine{1448      \textcolor{comment}{/* Real    */} ae\_vector* taup,}
+\DoxyCodeLine{1449      \textcolor{comment}{/* Real    */} ae\_matrix* z,}
+\DoxyCodeLine{1450      ae\_int\_t zrows,}
+\DoxyCodeLine{1451      ae\_int\_t zcolumns,}
+\DoxyCodeLine{1452      ae\_bool byq,}
+\DoxyCodeLine{1453      ae\_bool fromtheright,}
+\DoxyCodeLine{1454      ae\_bool dotranspose,}
+\DoxyCodeLine{1455      ae\_state *\_state);}
+\DoxyCodeLine{1456 ae\_bool rmatrixhessenbergmkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1457      ae\_int\_t n,}
+\DoxyCodeLine{1458      \textcolor{comment}{/* Real    */} ae\_vector* tau,}
+\DoxyCodeLine{1459      ae\_state *\_state);}
+\DoxyCodeLine{1460 ae\_bool rmatrixhessenbergunpackqmkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1461      ae\_int\_t n,}
+\DoxyCodeLine{1462      \textcolor{comment}{/* Real    */} ae\_vector* tau,}
+\DoxyCodeLine{1463      \textcolor{comment}{/* Real    */} ae\_matrix* q,}
+\DoxyCodeLine{1464      ae\_state *\_state);}
+\DoxyCodeLine{1465 ae\_bool smatrixtdmkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1466      ae\_int\_t n,}
+\DoxyCodeLine{1467      ae\_bool isupper,}
+\DoxyCodeLine{1468      \textcolor{comment}{/* Real    */} ae\_vector* tau,}
+\DoxyCodeLine{1469      \textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1470      \textcolor{comment}{/* Real    */} ae\_vector* e,}
+\DoxyCodeLine{1471      ae\_state *\_state);}
+\DoxyCodeLine{1472 ae\_bool smatrixtdunpackqmkl(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1473      ae\_int\_t n,}
+\DoxyCodeLine{1474      ae\_bool isupper,}
+\DoxyCodeLine{1475      \textcolor{comment}{/* Real    */} ae\_vector* tau,}
+\DoxyCodeLine{1476      \textcolor{comment}{/* Real    */} ae\_matrix* q,}
+\DoxyCodeLine{1477      ae\_state *\_state);}
+\DoxyCodeLine{1478 ae\_bool hmatrixtdmkl(\textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1479      ae\_int\_t n,}
+\DoxyCodeLine{1480      ae\_bool isupper,}
+\DoxyCodeLine{1481      \textcolor{comment}{/* Complex */} ae\_vector* tau,}
+\DoxyCodeLine{1482      \textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1483      \textcolor{comment}{/* Real    */} ae\_vector* e,}
+\DoxyCodeLine{1484      ae\_state *\_state);}
+\DoxyCodeLine{1485 ae\_bool hmatrixtdunpackqmkl(\textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1486      ae\_int\_t n,}
+\DoxyCodeLine{1487      ae\_bool isupper,}
+\DoxyCodeLine{1488      \textcolor{comment}{/* Complex */} ae\_vector* tau,}
+\DoxyCodeLine{1489      \textcolor{comment}{/* Complex */} ae\_matrix* q,}
+\DoxyCodeLine{1490      ae\_state *\_state);}
+\DoxyCodeLine{1491 ae\_bool rmatrixbdsvdmkl(\textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1492      \textcolor{comment}{/* Real    */} ae\_vector* e,}
+\DoxyCodeLine{1493      ae\_int\_t n,}
+\DoxyCodeLine{1494      ae\_bool isupper,}
+\DoxyCodeLine{1495      \textcolor{comment}{/* Real    */} ae\_matrix* u,}
+\DoxyCodeLine{1496      ae\_int\_t nru,}
+\DoxyCodeLine{1497      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1498      ae\_int\_t ncc,}
+\DoxyCodeLine{1499      \textcolor{comment}{/* Real    */} ae\_matrix* vt,}
+\DoxyCodeLine{1500      ae\_int\_t ncvt,}
+\DoxyCodeLine{1501      ae\_bool* svdresult,}
+\DoxyCodeLine{1502      ae\_state *\_state);}
+\DoxyCodeLine{1503 ae\_bool rmatrixinternalschurdecompositionmkl(\textcolor{comment}{/* Real    */} ae\_matrix* h,}
+\DoxyCodeLine{1504      ae\_int\_t n,}
+\DoxyCodeLine{1505      ae\_int\_t tneeded,}
+\DoxyCodeLine{1506      ae\_int\_t zneeded,}
+\DoxyCodeLine{1507      \textcolor{comment}{/* Real    */} ae\_vector* wr,}
+\DoxyCodeLine{1508      \textcolor{comment}{/* Real    */} ae\_vector* wi,}
+\DoxyCodeLine{1509      \textcolor{comment}{/* Real    */} ae\_matrix* z,}
+\DoxyCodeLine{1510      ae\_int\_t* info,}
+\DoxyCodeLine{1511      ae\_state *\_state);}
+\DoxyCodeLine{1512 ae\_bool rmatrixinternaltrevcmkl(\textcolor{comment}{/* Real    */} ae\_matrix* t,}
+\DoxyCodeLine{1513      ae\_int\_t n,}
+\DoxyCodeLine{1514      ae\_int\_t side,}
+\DoxyCodeLine{1515      ae\_int\_t howmny,}
+\DoxyCodeLine{1516      \textcolor{comment}{/* Real    */} ae\_matrix* vl,}
+\DoxyCodeLine{1517      \textcolor{comment}{/* Real    */} ae\_matrix* vr,}
+\DoxyCodeLine{1518      ae\_int\_t* m,}
+\DoxyCodeLine{1519      ae\_int\_t* info,}
+\DoxyCodeLine{1520      ae\_state *\_state);}
+\DoxyCodeLine{1521 ae\_bool smatrixtdevdmkl(\textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1522      \textcolor{comment}{/* Real    */} ae\_vector* e,}
+\DoxyCodeLine{1523      ae\_int\_t n,}
+\DoxyCodeLine{1524      ae\_int\_t zneeded,}
+\DoxyCodeLine{1525      \textcolor{comment}{/* Real    */} ae\_matrix* z,}
+\DoxyCodeLine{1526      ae\_bool* evdresult,}
+\DoxyCodeLine{1527      ae\_state *\_state);}
+\DoxyCodeLine{1528 ae\_bool sparsegemvcrsmkl(ae\_int\_t opa,}
+\DoxyCodeLine{1529      ae\_int\_t arows,}
+\DoxyCodeLine{1530      ae\_int\_t acols,}
+\DoxyCodeLine{1531      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1532      \textcolor{comment}{/* Real    */} ae\_vector* vals,}
+\DoxyCodeLine{1533      \textcolor{comment}{/* Integer */} ae\_vector* cidx,}
+\DoxyCodeLine{1534      \textcolor{comment}{/* Integer */} ae\_vector* ridx,}
+\DoxyCodeLine{1535      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1536      ae\_int\_t ix,}
+\DoxyCodeLine{1537      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1538      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1539      ae\_int\_t iy,}
+\DoxyCodeLine{1540      ae\_state *\_state);}
+\DoxyCodeLine{1541 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1542 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SCODES) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1543 ae\_int\_t getrdfserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1544 ae\_int\_t getkdtreeserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1545 ae\_int\_t getmlpserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1546 ae\_int\_t getmlpeserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1547 ae\_int\_t getrbfserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1548 ae\_int\_t getspline2dserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1549 ae\_int\_t getidwserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1550 ae\_int\_t getsparsematrixserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1551 ae\_int\_t getknnserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1552 ae\_int\_t getlptestserializationcode(ae\_state *\_state);}
+\DoxyCodeLine{1553 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1554 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TSORT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1555 \textcolor{keywordtype}{void} tagsort(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1556      ae\_int\_t n,}
+\DoxyCodeLine{1557      \textcolor{comment}{/* Integer */} ae\_vector* p1,}
+\DoxyCodeLine{1558      \textcolor{comment}{/* Integer */} ae\_vector* p2,}
+\DoxyCodeLine{1559      ae\_state *\_state);}
+\DoxyCodeLine{1560 \textcolor{keywordtype}{void} tagsortbuf(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1561      ae\_int\_t n,}
+\DoxyCodeLine{1562      \textcolor{comment}{/* Integer */} ae\_vector* p1,}
+\DoxyCodeLine{1563      \textcolor{comment}{/* Integer */} ae\_vector* p2,}
+\DoxyCodeLine{1564      apbuffers* buf,}
+\DoxyCodeLine{1565      ae\_state *\_state);}
+\DoxyCodeLine{1566 \textcolor{keywordtype}{void} tagsortfasti(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1567      \textcolor{comment}{/* Integer */} ae\_vector* b,}
+\DoxyCodeLine{1568      \textcolor{comment}{/* Real    */} ae\_vector* bufa,}
+\DoxyCodeLine{1569      \textcolor{comment}{/* Integer */} ae\_vector* bufb,}
+\DoxyCodeLine{1570      ae\_int\_t n,}
+\DoxyCodeLine{1571      ae\_state *\_state);}
+\DoxyCodeLine{1572 \textcolor{keywordtype}{void} tagsortfastr(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1573      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{1574      \textcolor{comment}{/* Real    */} ae\_vector* bufa,}
+\DoxyCodeLine{1575      \textcolor{comment}{/* Real    */} ae\_vector* bufb,}
+\DoxyCodeLine{1576      ae\_int\_t n,}
+\DoxyCodeLine{1577      ae\_state *\_state);}
+\DoxyCodeLine{1578 \textcolor{keywordtype}{void} tagsortfast(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1579      \textcolor{comment}{/* Real    */} ae\_vector* bufa,}
+\DoxyCodeLine{1580      ae\_int\_t n,}
+\DoxyCodeLine{1581      ae\_state *\_state);}
+\DoxyCodeLine{1582 \textcolor{keywordtype}{void} tagsortmiddleir(\textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{1583      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{1584      ae\_int\_t offset,}
+\DoxyCodeLine{1585      ae\_int\_t n,}
+\DoxyCodeLine{1586      ae\_state *\_state);}
+\DoxyCodeLine{1587 \textcolor{keywordtype}{void} tagsortmiddlei(\textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{1588      ae\_int\_t offset,}
+\DoxyCodeLine{1589      ae\_int\_t n,}
+\DoxyCodeLine{1590      ae\_state *\_state);}
+\DoxyCodeLine{1591 \textcolor{keywordtype}{void} sortmiddlei(\textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{1592      ae\_int\_t offset,}
+\DoxyCodeLine{1593      ae\_int\_t n,}
+\DoxyCodeLine{1594      ae\_state *\_state);}
+\DoxyCodeLine{1595 \textcolor{keywordtype}{void} tagheappushi(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1596      \textcolor{comment}{/* Integer */} ae\_vector* b,}
+\DoxyCodeLine{1597      ae\_int\_t* n,}
+\DoxyCodeLine{1598      \textcolor{keywordtype}{double} va,}
+\DoxyCodeLine{1599      ae\_int\_t vb,}
+\DoxyCodeLine{1600      ae\_state *\_state);}
+\DoxyCodeLine{1601 \textcolor{keywordtype}{void} tagheapreplacetopi(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1602      \textcolor{comment}{/* Integer */} ae\_vector* b,}
+\DoxyCodeLine{1603      ae\_int\_t n,}
+\DoxyCodeLine{1604      \textcolor{keywordtype}{double} va,}
+\DoxyCodeLine{1605      ae\_int\_t vb,}
+\DoxyCodeLine{1606      ae\_state *\_state);}
+\DoxyCodeLine{1607 \textcolor{keywordtype}{void} tagheappopi(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1608      \textcolor{comment}{/* Integer */} ae\_vector* b,}
+\DoxyCodeLine{1609      ae\_int\_t* n,}
+\DoxyCodeLine{1610      ae\_state *\_state);}
+\DoxyCodeLine{1611 ae\_int\_t lowerbound(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1612      ae\_int\_t n,}
+\DoxyCodeLine{1613      \textcolor{keywordtype}{double} t,}
+\DoxyCodeLine{1614      ae\_state *\_state);}
+\DoxyCodeLine{1615 ae\_int\_t upperbound(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1616      ae\_int\_t n,}
+\DoxyCodeLine{1617      \textcolor{keywordtype}{double} t,}
+\DoxyCodeLine{1618      ae\_state *\_state);}
+\DoxyCodeLine{1619 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1620 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1621 \textcolor{keywordtype}{double} vectornorm2(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1622      ae\_int\_t i1,}
+\DoxyCodeLine{1623      ae\_int\_t i2,}
+\DoxyCodeLine{1624      ae\_state *\_state);}
+\DoxyCodeLine{1625 ae\_int\_t vectoridxabsmax(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1626      ae\_int\_t i1,}
+\DoxyCodeLine{1627      ae\_int\_t i2,}
+\DoxyCodeLine{1628      ae\_state *\_state);}
+\DoxyCodeLine{1629 ae\_int\_t columnidxabsmax(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1630      ae\_int\_t i1,}
+\DoxyCodeLine{1631      ae\_int\_t i2,}
+\DoxyCodeLine{1632      ae\_int\_t j,}
+\DoxyCodeLine{1633      ae\_state *\_state);}
+\DoxyCodeLine{1634 ae\_int\_t rowidxabsmax(\textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1635      ae\_int\_t j1,}
+\DoxyCodeLine{1636      ae\_int\_t j2,}
+\DoxyCodeLine{1637      ae\_int\_t i,}
+\DoxyCodeLine{1638      ae\_state *\_state);}
+\DoxyCodeLine{1639 \textcolor{keywordtype}{double} upperhessenberg1norm(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1640      ae\_int\_t i1,}
+\DoxyCodeLine{1641      ae\_int\_t i2,}
+\DoxyCodeLine{1642      ae\_int\_t j1,}
+\DoxyCodeLine{1643      ae\_int\_t j2,}
+\DoxyCodeLine{1644      \textcolor{comment}{/* Real    */} ae\_vector* work,}
+\DoxyCodeLine{1645      ae\_state *\_state);}
+\DoxyCodeLine{1646 \textcolor{keywordtype}{void} copymatrix(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1647      ae\_int\_t is1,}
+\DoxyCodeLine{1648      ae\_int\_t is2,}
+\DoxyCodeLine{1649      ae\_int\_t js1,}
+\DoxyCodeLine{1650      ae\_int\_t js2,}
+\DoxyCodeLine{1651      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1652      ae\_int\_t id1,}
+\DoxyCodeLine{1653      ae\_int\_t id2,}
+\DoxyCodeLine{1654      ae\_int\_t jd1,}
+\DoxyCodeLine{1655      ae\_int\_t jd2,}
+\DoxyCodeLine{1656      ae\_state *\_state);}
+\DoxyCodeLine{1657 \textcolor{keywordtype}{void} inplacetranspose(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1658      ae\_int\_t i1,}
+\DoxyCodeLine{1659      ae\_int\_t i2,}
+\DoxyCodeLine{1660      ae\_int\_t j1,}
+\DoxyCodeLine{1661      ae\_int\_t j2,}
+\DoxyCodeLine{1662      \textcolor{comment}{/* Real    */} ae\_vector* work,}
+\DoxyCodeLine{1663      ae\_state *\_state);}
+\DoxyCodeLine{1664 \textcolor{keywordtype}{void} copyandtranspose(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1665      ae\_int\_t is1,}
+\DoxyCodeLine{1666      ae\_int\_t is2,}
+\DoxyCodeLine{1667      ae\_int\_t js1,}
+\DoxyCodeLine{1668      ae\_int\_t js2,}
+\DoxyCodeLine{1669      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1670      ae\_int\_t id1,}
+\DoxyCodeLine{1671      ae\_int\_t id2,}
+\DoxyCodeLine{1672      ae\_int\_t jd1,}
+\DoxyCodeLine{1673      ae\_int\_t jd2,}
+\DoxyCodeLine{1674      ae\_state *\_state);}
+\DoxyCodeLine{1675 \textcolor{keywordtype}{void} matrixvectormultiply(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1676      ae\_int\_t i1,}
+\DoxyCodeLine{1677      ae\_int\_t i2,}
+\DoxyCodeLine{1678      ae\_int\_t j1,}
+\DoxyCodeLine{1679      ae\_int\_t j2,}
+\DoxyCodeLine{1680      ae\_bool trans,}
+\DoxyCodeLine{1681      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1682      ae\_int\_t ix1,}
+\DoxyCodeLine{1683      ae\_int\_t ix2,}
+\DoxyCodeLine{1684      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1685      \textcolor{comment}{/* Real    */} ae\_vector* y,}
+\DoxyCodeLine{1686      ae\_int\_t iy1,}
+\DoxyCodeLine{1687      ae\_int\_t iy2,}
+\DoxyCodeLine{1688      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1689      ae\_state *\_state);}
+\DoxyCodeLine{1690 \textcolor{keywordtype}{double} pythag2(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} y, ae\_state *\_state);}
+\DoxyCodeLine{1691 \textcolor{keywordtype}{void} matrixmatrixmultiply(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1692      ae\_int\_t ai1,}
+\DoxyCodeLine{1693      ae\_int\_t ai2,}
+\DoxyCodeLine{1694      ae\_int\_t aj1,}
+\DoxyCodeLine{1695      ae\_int\_t aj2,}
+\DoxyCodeLine{1696      ae\_bool transa,}
+\DoxyCodeLine{1697      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1698      ae\_int\_t bi1,}
+\DoxyCodeLine{1699      ae\_int\_t bi2,}
+\DoxyCodeLine{1700      ae\_int\_t bj1,}
+\DoxyCodeLine{1701      ae\_int\_t bj2,}
+\DoxyCodeLine{1702      ae\_bool transb,}
+\DoxyCodeLine{1703      \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{1704      \textcolor{comment}{/* Real    */} ae\_matrix* c,}
+\DoxyCodeLine{1705      ae\_int\_t ci1,}
+\DoxyCodeLine{1706      ae\_int\_t ci2,}
+\DoxyCodeLine{1707      ae\_int\_t cj1,}
+\DoxyCodeLine{1708      ae\_int\_t cj2,}
+\DoxyCodeLine{1709      \textcolor{keywordtype}{double} beta,}
+\DoxyCodeLine{1710      \textcolor{comment}{/* Real    */} ae\_vector* work,}
+\DoxyCodeLine{1711      ae\_state *\_state);}
+\DoxyCodeLine{1712 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1713 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ROTATIONS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1714 \textcolor{keywordtype}{void} applyrotationsfromtheleft(ae\_bool isforward,}
+\DoxyCodeLine{1715      ae\_int\_t m1,}
+\DoxyCodeLine{1716      ae\_int\_t m2,}
+\DoxyCodeLine{1717      ae\_int\_t n1,}
+\DoxyCodeLine{1718      ae\_int\_t n2,}
+\DoxyCodeLine{1719      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{1720      \textcolor{comment}{/* Real    */} ae\_vector* s,}
+\DoxyCodeLine{1721      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1722      \textcolor{comment}{/* Real    */} ae\_vector* work,}
+\DoxyCodeLine{1723      ae\_state *\_state);}
+\DoxyCodeLine{1724 \textcolor{keywordtype}{void} applyrotationsfromtheright(ae\_bool isforward,}
+\DoxyCodeLine{1725      ae\_int\_t m1,}
+\DoxyCodeLine{1726      ae\_int\_t m2,}
+\DoxyCodeLine{1727      ae\_int\_t n1,}
+\DoxyCodeLine{1728      ae\_int\_t n2,}
+\DoxyCodeLine{1729      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{1730      \textcolor{comment}{/* Real    */} ae\_vector* s,}
+\DoxyCodeLine{1731      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1732      \textcolor{comment}{/* Real    */} ae\_vector* work,}
+\DoxyCodeLine{1733      ae\_state *\_state);}
+\DoxyCodeLine{1734 \textcolor{keywordtype}{void} generaterotation(\textcolor{keywordtype}{double} f,}
+\DoxyCodeLine{1735      \textcolor{keywordtype}{double} g,}
+\DoxyCodeLine{1736      \textcolor{keywordtype}{double}* cs,}
+\DoxyCodeLine{1737      \textcolor{keywordtype}{double}* sn,}
+\DoxyCodeLine{1738      \textcolor{keywordtype}{double}* r,}
+\DoxyCodeLine{1739      ae\_state *\_state);}
+\DoxyCodeLine{1740 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1741 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BASICSTATOPS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1742 \textcolor{keywordtype}{void} rankx(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1743      ae\_int\_t n,}
+\DoxyCodeLine{1744      ae\_bool iscentered,}
+\DoxyCodeLine{1745      apbuffers* buf,}
+\DoxyCodeLine{1746      ae\_state *\_state);}
+\DoxyCodeLine{1747 \textcolor{keywordtype}{void} rankxuntied(\textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1748      ae\_int\_t n,}
+\DoxyCodeLine{1749      apbuffers* buf,}
+\DoxyCodeLine{1750      ae\_state *\_state);}
+\DoxyCodeLine{1751 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1752 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRLINSOLVE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1753 \textcolor{keywordtype}{void} rmatrixtrsafesolve(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1754      ae\_int\_t n,}
+\DoxyCodeLine{1755      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1756      \textcolor{keywordtype}{double}* s,}
+\DoxyCodeLine{1757      ae\_bool isupper,}
+\DoxyCodeLine{1758      ae\_bool istrans,}
+\DoxyCodeLine{1759      ae\_bool isunit,}
+\DoxyCodeLine{1760      ae\_state *\_state);}
+\DoxyCodeLine{1761 \textcolor{keywordtype}{void} safesolvetriangular(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1762      ae\_int\_t n,}
+\DoxyCodeLine{1763      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1764      \textcolor{keywordtype}{double}* s,}
+\DoxyCodeLine{1765      ae\_bool isupper,}
+\DoxyCodeLine{1766      ae\_bool istrans,}
+\DoxyCodeLine{1767      ae\_bool isunit,}
+\DoxyCodeLine{1768      ae\_bool normin,}
+\DoxyCodeLine{1769      \textcolor{comment}{/* Real    */} ae\_vector* cnorm,}
+\DoxyCodeLine{1770      ae\_state *\_state);}
+\DoxyCodeLine{1771 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1772 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_SAFESOLVE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1773 ae\_bool rmatrixscaledtrsafesolve(\textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1774      \textcolor{keywordtype}{double} sa,}
+\DoxyCodeLine{1775      ae\_int\_t n,}
+\DoxyCodeLine{1776      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1777      ae\_bool isupper,}
+\DoxyCodeLine{1778      ae\_int\_t trans,}
+\DoxyCodeLine{1779      ae\_bool isunit,}
+\DoxyCodeLine{1780      \textcolor{keywordtype}{double} maxgrowth,}
+\DoxyCodeLine{1781      ae\_state *\_state);}
+\DoxyCodeLine{1782 ae\_bool cmatrixscaledtrsafesolve(\textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1783      \textcolor{keywordtype}{double} sa,}
+\DoxyCodeLine{1784      ae\_int\_t n,}
+\DoxyCodeLine{1785      \textcolor{comment}{/* Complex */} ae\_vector* x,}
+\DoxyCodeLine{1786      ae\_bool isupper,}
+\DoxyCodeLine{1787      ae\_int\_t trans,}
+\DoxyCodeLine{1788      ae\_bool isunit,}
+\DoxyCodeLine{1789      \textcolor{keywordtype}{double} maxgrowth,}
+\DoxyCodeLine{1790      ae\_state *\_state);}
+\DoxyCodeLine{1791 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1792 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XBLAS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1793 \textcolor{keywordtype}{void} xdot(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1794      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{1795      ae\_int\_t n,}
+\DoxyCodeLine{1796      \textcolor{comment}{/* Real    */} ae\_vector* temp,}
+\DoxyCodeLine{1797      \textcolor{keywordtype}{double}* r,}
+\DoxyCodeLine{1798      \textcolor{keywordtype}{double}* rerr,}
+\DoxyCodeLine{1799      ae\_state *\_state);}
+\DoxyCodeLine{1800 \textcolor{keywordtype}{void} xcdot(\textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{1801      \textcolor{comment}{/* Complex */} ae\_vector* b,}
+\DoxyCodeLine{1802      ae\_int\_t n,}
+\DoxyCodeLine{1803      \textcolor{comment}{/* Real    */} ae\_vector* temp,}
+\DoxyCodeLine{1804      ae\_complex* r,}
+\DoxyCodeLine{1805      \textcolor{keywordtype}{double}* rerr,}
+\DoxyCodeLine{1806      ae\_state *\_state);}
+\DoxyCodeLine{1807 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1808 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LINMIN) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1809 \textcolor{keywordtype}{void} linminnormalized(\textcolor{comment}{/* Real    */} ae\_vector* d,}
+\DoxyCodeLine{1810      \textcolor{keywordtype}{double}* stp,}
+\DoxyCodeLine{1811      ae\_int\_t n,}
+\DoxyCodeLine{1812      ae\_state *\_state);}
+\DoxyCodeLine{1813 \textcolor{keywordtype}{void} mcsrch(ae\_int\_t n,}
+\DoxyCodeLine{1814      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1815      \textcolor{keywordtype}{double}* f,}
+\DoxyCodeLine{1816      \textcolor{comment}{/* Real    */} ae\_vector* g,}
+\DoxyCodeLine{1817      \textcolor{comment}{/* Real    */} ae\_vector* s,}
+\DoxyCodeLine{1818      \textcolor{keywordtype}{double}* stp,}
+\DoxyCodeLine{1819      \textcolor{keywordtype}{double} stpmax,}
+\DoxyCodeLine{1820      \textcolor{keywordtype}{double} gtol,}
+\DoxyCodeLine{1821      ae\_int\_t* info,}
+\DoxyCodeLine{1822      ae\_int\_t* nfev,}
+\DoxyCodeLine{1823      \textcolor{comment}{/* Real    */} ae\_vector* wa,}
+\DoxyCodeLine{1824      linminstate* state,}
+\DoxyCodeLine{1825      ae\_int\_t* stage,}
+\DoxyCodeLine{1826      ae\_state *\_state);}
+\DoxyCodeLine{1827 \textcolor{keywordtype}{void} armijocreate(ae\_int\_t n,}
+\DoxyCodeLine{1828      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1829      \textcolor{keywordtype}{double} f,}
+\DoxyCodeLine{1830      \textcolor{comment}{/* Real    */} ae\_vector* s,}
+\DoxyCodeLine{1831      \textcolor{keywordtype}{double} stp,}
+\DoxyCodeLine{1832      \textcolor{keywordtype}{double} stpmax,}
+\DoxyCodeLine{1833      ae\_int\_t fmax,}
+\DoxyCodeLine{1834      armijostate* state,}
+\DoxyCodeLine{1835      ae\_state *\_state);}
+\DoxyCodeLine{1836 ae\_bool armijoiteration(armijostate* state, ae\_state *\_state);}
+\DoxyCodeLine{1837 \textcolor{keywordtype}{void} armijoresults(armijostate* state,}
+\DoxyCodeLine{1838      ae\_int\_t* info,}
+\DoxyCodeLine{1839      \textcolor{keywordtype}{double}* stp,}
+\DoxyCodeLine{1840      \textcolor{keywordtype}{double}* f,}
+\DoxyCodeLine{1841      ae\_state *\_state);}
+\DoxyCodeLine{1842 \textcolor{keywordtype}{void} \_linminstate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1843 \textcolor{keywordtype}{void} \_linminstate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1844 \textcolor{keywordtype}{void} \_linminstate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1845 \textcolor{keywordtype}{void} \_linminstate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1846 \textcolor{keywordtype}{void} \_armijostate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1847 \textcolor{keywordtype}{void} \_armijostate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1848 \textcolor{keywordtype}{void} \_armijostate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1849 \textcolor{keywordtype}{void} \_armijostate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1850 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1851 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARUNITYUNIT) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1852 \textcolor{keywordtype}{double} nulog1p(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{1853 \textcolor{keywordtype}{double} nuexpm1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{1854 \textcolor{keywordtype}{double} nucosm1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{1855 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1856 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NTHEORY) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1857 \textcolor{keywordtype}{void} findprimitiverootandinverse(ae\_int\_t n,}
+\DoxyCodeLine{1858      ae\_int\_t* proot,}
+\DoxyCodeLine{1859      ae\_int\_t* invproot,}
+\DoxyCodeLine{1860      ae\_state *\_state);}
+\DoxyCodeLine{1861 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1862 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FTBASE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1863 \textcolor{keywordtype}{void} ftcomplexfftplan(ae\_int\_t n,}
+\DoxyCodeLine{1864      ae\_int\_t k,}
+\DoxyCodeLine{1865      fasttransformplan* plan,}
+\DoxyCodeLine{1866      ae\_state *\_state);}
+\DoxyCodeLine{1867 \textcolor{keywordtype}{void} ftapplyplan(fasttransformplan* plan,}
+\DoxyCodeLine{1868      \textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1869      ae\_int\_t offsa,}
+\DoxyCodeLine{1870      ae\_int\_t repcnt,}
+\DoxyCodeLine{1871      ae\_state *\_state);}
+\DoxyCodeLine{1872 \textcolor{keywordtype}{void} ftbasefactorize(ae\_int\_t n,}
+\DoxyCodeLine{1873      ae\_int\_t tasktype,}
+\DoxyCodeLine{1874      ae\_int\_t* n1,}
+\DoxyCodeLine{1875      ae\_int\_t* n2,}
+\DoxyCodeLine{1876      ae\_state *\_state);}
+\DoxyCodeLine{1877 ae\_bool ftbaseissmooth(ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{1878 ae\_int\_t ftbasefindsmooth(ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{1879 ae\_int\_t ftbasefindsmootheven(ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{1880 \textcolor{keywordtype}{double} ftbasegetflopestimate(ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{1881 \textcolor{keywordtype}{void} \_fasttransformplan\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1882 \textcolor{keywordtype}{void} \_fasttransformplan\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1883 \textcolor{keywordtype}{void} \_fasttransformplan\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1884 \textcolor{keywordtype}{void} \_fasttransformplan\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1885 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1886 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HPCCORES) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1887 \textcolor{keywordtype}{void} hpcpreparechunkedgradient(\textcolor{comment}{/* Real    */} ae\_vector* weights,}
+\DoxyCodeLine{1888      ae\_int\_t wcount,}
+\DoxyCodeLine{1889      ae\_int\_t ntotal,}
+\DoxyCodeLine{1890      ae\_int\_t nin,}
+\DoxyCodeLine{1891      ae\_int\_t nout,}
+\DoxyCodeLine{1892      mlpbuffers* buf,}
+\DoxyCodeLine{1893      ae\_state *\_state);}
+\DoxyCodeLine{1894 \textcolor{keywordtype}{void} hpcfinalizechunkedgradient(mlpbuffers* buf,}
+\DoxyCodeLine{1895      \textcolor{comment}{/* Real    */} ae\_vector* grad,}
+\DoxyCodeLine{1896      ae\_state *\_state);}
+\DoxyCodeLine{1897 ae\_bool hpcchunkedgradient(\textcolor{comment}{/* Real    */} ae\_vector* weights,}
+\DoxyCodeLine{1898      \textcolor{comment}{/* Integer */} ae\_vector* structinfo,}
+\DoxyCodeLine{1899      \textcolor{comment}{/* Real    */} ae\_vector* columnmeans,}
+\DoxyCodeLine{1900      \textcolor{comment}{/* Real    */} ae\_vector* columnsigmas,}
+\DoxyCodeLine{1901      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1902      ae\_int\_t cstart,}
+\DoxyCodeLine{1903      ae\_int\_t csize,}
+\DoxyCodeLine{1904      \textcolor{comment}{/* Real    */} ae\_vector* batch4buf,}
+\DoxyCodeLine{1905      \textcolor{comment}{/* Real    */} ae\_vector* hpcbuf,}
+\DoxyCodeLine{1906      \textcolor{keywordtype}{double}* e,}
+\DoxyCodeLine{1907      ae\_bool naturalerrorfunc,}
+\DoxyCodeLine{1908      ae\_state *\_state);}
+\DoxyCodeLine{1909 ae\_bool hpcchunkedprocess(\textcolor{comment}{/* Real    */} ae\_vector* weights,}
+\DoxyCodeLine{1910      \textcolor{comment}{/* Integer */} ae\_vector* structinfo,}
+\DoxyCodeLine{1911      \textcolor{comment}{/* Real    */} ae\_vector* columnmeans,}
+\DoxyCodeLine{1912      \textcolor{comment}{/* Real    */} ae\_vector* columnsigmas,}
+\DoxyCodeLine{1913      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1914      ae\_int\_t cstart,}
+\DoxyCodeLine{1915      ae\_int\_t csize,}
+\DoxyCodeLine{1916      \textcolor{comment}{/* Real    */} ae\_vector* batch4buf,}
+\DoxyCodeLine{1917      \textcolor{comment}{/* Real    */} ae\_vector* hpcbuf,}
+\DoxyCodeLine{1918      ae\_state *\_state);}
+\DoxyCodeLine{1919 \textcolor{keywordtype}{void} \_mlpbuffers\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1920 \textcolor{keywordtype}{void} \_mlpbuffers\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1921 \textcolor{keywordtype}{void} \_mlpbuffers\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1922 \textcolor{keywordtype}{void} \_mlpbuffers\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1923 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1924 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ALGLIBBASICS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1925 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1926 }
+\DoxyCodeLine{1927 \}}
+\DoxyCodeLine{1928 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1929 }
+
+\end{DoxyCode}

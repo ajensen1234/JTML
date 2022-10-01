@@ -1,0 +1,323 @@
+\hypertarget{mainscreen_8h_source}{}\doxysection{mainscreen.\+h}
+\label{mainscreen_8h_source}\index{include/gui/mainscreen.h@{include/gui/mainscreen.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef MAINSCREEN\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define MAINSCREEN\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Relevant QT Includes*/}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <QtWidgets/QMainWindow>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <qactiongroup.h>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include "{}ui\_mainscreen.h"{}}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <memory.h>}}
+\DoxyCodeLine{9 \textcolor{comment}{/*Font*/}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <qfont.h>}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{comment}{/*Key Event*/}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <QKeyEvent>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include "{}nfd/nfd.h"{}}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{comment}{/*Direct Data Structures*/}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include "{}core/data\_structures\_6D.h"{}}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 \textcolor{comment}{/*Custom Calibration Struct (Used in CUDA GPU METRICS)*/}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include "{}core/calibration.h"{}}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{comment}{/*VTK*/}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <vtkRenderWindow.h>}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#include <vtkProperty.h>}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include <vtkCamera.h>}}
+\DoxyCodeLine{27 \textcolor{preprocessor}{\#include <vtkSmartPointer.h>}}
+\DoxyCodeLine{28 \textcolor{preprocessor}{\#include <vtkImageData.h>}}
+\DoxyCodeLine{29 \textcolor{preprocessor}{\#include <vtkDataSetMapper.h>}}
+\DoxyCodeLine{30 \textcolor{preprocessor}{\#include <vtkActor.h>}}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#include <vtkRenderWindow.h>}}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#include <vtkRenderer.h>}}
+\DoxyCodeLine{33 \textcolor{preprocessor}{\#include <vtkRenderWindowInteractor.h>}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#include <vtkVersion.h>}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#include <vtkSTLReader.h>}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#include <vtkImageImport.h>}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#include <vtkPolyDataMapper.h>}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#include <vtkRenderWindowInteractor.h>}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballActor.h>}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#include <vtkTextActor.h>}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#include <vtkTextProperty.h>}}
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#include <vtkAutoInit.h>} \textcolor{comment}{// Added post migration to Banks' lab computer}}
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballCamera.h>} \textcolor{comment}{/*Alternate Camera*/}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45 \textcolor{comment}{/*Frame and Model and Location Storage*/}}
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#include "{}core/frame.h"{}}}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#include "{}core/model.h"{}}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#include "{}core/location\_storage.h"{}}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 \textcolor{comment}{/*Optimizer Settings*/}}
+\DoxyCodeLine{51 \textcolor{preprocessor}{\#include "{}core/optimizer\_settings.h"{}}}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53 \textcolor{comment}{/*Optimizer Manager*/}}
+\DoxyCodeLine{54 \textcolor{preprocessor}{\#include "{}core/optimizer\_manager.h"{}}}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56 \textcolor{comment}{/*Optimizer Settings Control Window*/}}
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#include "{}gui/settings\_control.h"{}}}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59 \textcolor{comment}{/*DRR Settings Control Window*/}}
+\DoxyCodeLine{60 \textcolor{preprocessor}{\#include "{}drr\_tool.h"{}}}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62 \textcolor{comment}{/* Symmetry Trap Analysis Window*/}}
+\DoxyCodeLine{63 \textcolor{preprocessor}{\#include "{}gui/sym\_trap.h"{}}}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65 \textcolor{comment}{/*Cost Function Library*/}}
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#include "{}cost\_functions/CostFunctionManager.h"{}}}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68 \textcolor{comment}{/*CostFunctionTools*/}}
+\DoxyCodeLine{69 \textcolor{preprocessor}{\#include "{}camera\_calibration.h"{}}}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{71 \textcolor{comment}{/*machine\_learning\_tools*/}}
+\DoxyCodeLine{72 \textcolor{preprocessor}{\#include "{}core/machine\_learning\_tools.h"{}}}
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74 \textcolor{preprocessor}{\#include "{}nfd/nfd.h"{}}}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{76 \textcolor{preprocessor}{\#include "{}gui/viewer.h"{}}}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{78 \textcolor{keyword}{class }\mbox{\hyperlink{class_main_screen}{MainScreen}} : \textcolor{keyword}{public} QMainWindow}
+\DoxyCodeLine{79 \{}
+\DoxyCodeLine{80     Q\_OBJECT}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82 \textcolor{keyword}{public}:}
+\DoxyCodeLine{83     \mbox{\hyperlink{class_main_screen}{MainScreen}}(QWidget* parent = 0);}
+\DoxyCodeLine{84     \mbox{\hyperlink{class_main_screen}{\string~MainScreen}}();}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86     \textcolor{comment}{/*Escape Signal from VTK to stop optimizer*/}}
+\DoxyCodeLine{87     \textcolor{keywordtype}{void} VTKEscapeSignal();}
+\DoxyCodeLine{88 }
+\DoxyCodeLine{89     \textcolor{comment}{/*Make Selected Actor Principal from VTK*/}}
+\DoxyCodeLine{90     \textcolor{keywordtype}{void} VTKMakePrincipalSignal(vtkActor* new\_principal\_actor);}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92     \textcolor{comment}{/*Bool to see if currently optimizing*/}}
+\DoxyCodeLine{93     \textcolor{keywordtype}{bool} currently\_optimizing\_;}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95     }
+\DoxyCodeLine{96 }
+\DoxyCodeLine{97 }
+\DoxyCodeLine{98 Q\_SIGNALS:}
+\DoxyCodeLine{99     \textcolor{comment}{/*Update Whether To Write TO Text Display*/}}
+\DoxyCodeLine{100     \textcolor{keywordtype}{void} UpdateDisplayText(\textcolor{keywordtype}{bool});}
+\DoxyCodeLine{101     \textcolor{comment}{/*Stop Optimizer*/}}
+\DoxyCodeLine{102     \textcolor{keywordtype}{void} StopOptimizer();}
+\DoxyCodeLine{103     }
+\DoxyCodeLine{104     \textcolor{comment}{// [SYM TRAP] Send out optimizer time remaining }}
+\DoxyCodeLine{105     \textcolor{keywordtype}{void} UpdateTimeRemaining(\textcolor{keywordtype}{int});}
+\DoxyCodeLine{106 }
+\DoxyCodeLine{107 \textcolor{keyword}{private}:}
+\DoxyCodeLine{108     Ui::MainScreenClass ui;}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110     \textcolor{keywordtype}{float} start\_time;}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{112     \textcolor{comment}{/*GUI FUNCTIONS*/}}
+\DoxyCodeLine{113     \textcolor{comment}{/*Arrange Layout (Do this in code so scales across different DPI monitors and handles weird fonts)*/}}
+\DoxyCodeLine{114     \textcolor{keywordtype}{void} ArrangeMainScreenLayout(QFont application\_font);}
+\DoxyCodeLine{115 }
+\DoxyCodeLine{116     \textcolor{comment}{/*Private Variables*/}}
+\DoxyCodeLine{117     \textcolor{comment}{/*Original Sizes After Construction for Main Screen List Widgets, their Group Boxes and QVTK Widget*/}}
+\DoxyCodeLine{118     \textcolor{keywordtype}{int} image\_list\_widget\_starting\_height\_;}
+\DoxyCodeLine{119     \textcolor{keywordtype}{int} image\_selection\_box\_starting\_height\_;}
+\DoxyCodeLine{120     \textcolor{keywordtype}{int} model\_list\_widget\_starting\_height\_;}
+\DoxyCodeLine{121     \textcolor{keywordtype}{int} model\_selection\_box\_starting\_height\_;}
+\DoxyCodeLine{122     \textcolor{keywordtype}{int} qvtk\_widget\_starting\_height\_;}
+\DoxyCodeLine{123     \textcolor{keywordtype}{int} qvtk\_widget\_starting\_width\_;}
+\DoxyCodeLine{124 }
+\DoxyCodeLine{125     \textcolor{comment}{/*Monoplane and Biplane Calibration Viewport Files*/}}
+\DoxyCodeLine{126     \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\_file\_; \textcolor{comment}{/*Used in monoplane and biplane*/}}
+\DoxyCodeLine{127 }
+\DoxyCodeLine{128     \textcolor{comment}{/*Variables Indicating Calibration Status for Mono and Biplane*/}}
+\DoxyCodeLine{129     \textcolor{keywordtype}{bool} calibrated\_for\_monoplane\_viewport\_;}
+\DoxyCodeLine{130     \textcolor{keywordtype}{bool} calibrated\_for\_biplane\_viewport\_;}
+\DoxyCodeLine{131 }
+\DoxyCodeLine{132     \textcolor{comment}{/*VTK Variables*/}}
+\DoxyCodeLine{133     std::vector<vtkSmartPointer<vtkActor>> model\_actor\_list;}
+\DoxyCodeLine{134     std::vector<vtkSmartPointer<vtkPolyDataMapper>> model\_mapper\_list;}
+\DoxyCodeLine{135     vtkSmartPointer<vtkRenderer> renderer;}
+\DoxyCodeLine{136     vtkSmartPointer<vtkImageData> current\_background;}
+\DoxyCodeLine{137     vtkSmartPointer<vtkSTLReader> stl\_reader;}
+\DoxyCodeLine{138     vtkSmartPointer<vtkDataSetMapper> image\_mapper;}
+\DoxyCodeLine{139     vtkSmartPointer<vtkActor> actor\_image;}
+\DoxyCodeLine{140     vtkSmartPointer<vtkTextActor> actor\_text;}
+\DoxyCodeLine{141     vtkSmartPointer<vtkImageImport> importer;}
+\DoxyCodeLine{142     vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera\_style\_interactor;}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{144     }
+\DoxyCodeLine{145     std::shared\_ptr<viewer> vw = std::make\_shared<viewer>();}
+\DoxyCodeLine{146     }
+\DoxyCodeLine{147 }
+\DoxyCodeLine{148     \textcolor{comment}{/*View Menu Radio Button Container*/}}
+\DoxyCodeLine{149     QActionGroup* alignmentGroup, * alignmentGroupSegment;}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{151     \textcolor{comment}{/*Frame/Model Containers*/}}
+\DoxyCodeLine{152     std::vector<Frame> loaded\_frames;}
+\DoxyCodeLine{153     std::vector<Frame> loaded\_frames\_B; \textcolor{comment}{/*If Biplane mode, need second group of loaded frames for camera B*/}}
+\DoxyCodeLine{154     std::vector<Model> loaded\_models;}
+\DoxyCodeLine{155 }
+\DoxyCodeLine{156     \textcolor{comment}{/*Location Storage Class*/}}
+\DoxyCodeLine{157     \mbox{\hyperlink{class_location_storage}{LocationStorage}} model\_locations\_;}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159     \textcolor{comment}{/*Index of Previously Selected Frame/Models*/}}
+\DoxyCodeLine{160     \textcolor{keywordtype}{int} previous\_frame\_index\_;}
+\DoxyCodeLine{161     QModelIndexList previous\_model\_indices\_;}
+\DoxyCodeLine{162 }
+\DoxyCodeLine{163     \textcolor{comment}{/*Save the Pose From The Last Selected Frame*/}}
+\DoxyCodeLine{164     \textcolor{keywordtype}{void} SaveLastPose();}
+\DoxyCodeLine{165 }
+\DoxyCodeLine{166     \textcolor{comment}{/*Optimizer Settings That Must Be Set in Constructor and Changed on OSettings Update */}}
+\DoxyCodeLine{167     \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} optimizer\_settings\_;}
+\DoxyCodeLine{168 }
+\DoxyCodeLine{169     \textcolor{comment}{/*Copy of the Above Only Used While Optimizing to Display Output*/}}
+\DoxyCodeLine{170     \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} display\_optimizer\_settings\_;}
+\DoxyCodeLine{171 }
+\DoxyCodeLine{172     \textcolor{comment}{/*Cost Function Managers (from JTA Cost Function Library) for each stage of DIRECT-\/JTA Optimizer*/}}
+\DoxyCodeLine{173     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} trunk\_manager\_;}
+\DoxyCodeLine{174     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} branch\_manager\_;}
+\DoxyCodeLine{175     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} leaf\_manager\_; \textcolor{comment}{// For extra Z-\/translation usually (esp. when monoplane)}}
+\DoxyCodeLine{176 }
+\DoxyCodeLine{177     \textcolor{comment}{/*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int Parameter,}}
+\DoxyCodeLine{178 \textcolor{comment}{    else saves all the Dilation Images for Each Frame as the Dilation Constant*/}}
+\DoxyCodeLine{179     \textcolor{keywordtype}{void} UpdateDilationFrames();}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181 }
+\DoxyCodeLine{182     \textcolor{comment}{/*Optimization Function: Packages Off The Optimization process in}}
+\DoxyCodeLine{183 \textcolor{comment}{    a new thread*/}}
+\DoxyCodeLine{184     }
+\DoxyCodeLine{185     \textcolor{comment}{/*Launch Optimizer*/}}
+\DoxyCodeLine{186     \textcolor{keywordtype}{void} LaunchOptimizer(QString directive); \textcolor{comment}{//Directive Says whether it is Optimize Single, From, All, or Each (or Sym\_Trap)}}
+\DoxyCodeLine{187 }
+\DoxyCodeLine{188     \textcolor{comment}{/*Optimizer Thread and Manager*/}}
+\DoxyCodeLine{189     QThread* optimizer\_thread;}
+\DoxyCodeLine{190     \mbox{\hyperlink{class_optimizer_manager}{OptimizerManager}} *optimizer\_manager;}
+\DoxyCodeLine{191 }
+\DoxyCodeLine{192     \textcolor{comment}{/*Disable and Enable MainScreen During and After Optimization*/}}
+\DoxyCodeLine{193     \textcolor{keywordtype}{void} DisableAll();}
+\DoxyCodeLine{194     \textcolor{keywordtype}{void} EnableAll();}
+\DoxyCodeLine{195 }
+\DoxyCodeLine{196     \textcolor{comment}{/*Function That Loads Settings from Registry or (If First Time Loading}}
+\DoxyCodeLine{197 \textcolor{comment}{    Saves Default Settings*/}}
+\DoxyCodeLine{198     \textcolor{keywordtype}{void} LoadSettingsBetweenSessions();}
+\DoxyCodeLine{199 }
+\DoxyCodeLine{200     \textcolor{comment}{/*Mat to Vtk*/}}
+\DoxyCodeLine{201     \textcolor{keywordtype}{void} matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output);}
+\DoxyCodeLine{202 }
+\DoxyCodeLine{203     \textcolor{comment}{/*Optimizer Window Control*/}}
+\DoxyCodeLine{204     \mbox{\hyperlink{class_settings_control}{SettingsControl}}* settings\_control;}
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206     \textcolor{comment}{/*Sym Trap Window*/}}
+\DoxyCodeLine{207     \mbox{\hyperlink{classsym__trap}{sym\_trap}}* sym\_trap\_control;}
+\DoxyCodeLine{208 }
+\DoxyCodeLine{209     \textcolor{comment}{/*Calculate Viewing Angle (Accounts for Offsets)*/}}
+\DoxyCodeLine{210     \textcolor{keywordtype}{double} CalculateViewingAngle(\textcolor{keywordtype}{int} width, \textcolor{keywordtype}{int} height, \textcolor{keywordtype}{bool} CameraA);}
+\DoxyCodeLine{211 }
+\DoxyCodeLine{212     \textcolor{comment}{/*Helper Function To Segment And Update Frames According to Model File*/}}
+\DoxyCodeLine{213     \textcolor{keywordtype}{void} segmentHelperFunction(std::string pt\_model\_location, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} input\_width, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} input\_height);}
+\DoxyCodeLine{214 }
+\DoxyCodeLine{215     \textcolor{comment}{// Helper function for sym\_trap to get information about the current pose}}
+\DoxyCodeLine{216     \mbox{\hyperlink{struct_point6_d}{Point6D}} copy\_current\_pose();}
+\DoxyCodeLine{217     \textcolor{keywordtype}{bool} sym\_trap\_running;}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{219 \textcolor{keyword}{public} Q\_SLOTS:}
+\DoxyCodeLine{220 }
+\DoxyCodeLine{221     \textcolor{comment}{// Call Optimizer Launch}}
+\DoxyCodeLine{222     \textcolor{keywordtype}{void} optimizer\_launch\_slot();}
+\DoxyCodeLine{223 }
+\DoxyCodeLine{224     \textcolor{comment}{/*Load Buttons*/}}
+\DoxyCodeLine{225     \textcolor{keywordtype}{void} on\_load\_calibration\_button\_clicked(); \textcolor{comment}{/*Load Calibration Clicked*/}}
+\DoxyCodeLine{226     \textcolor{keywordtype}{void} on\_load\_image\_button\_clicked(); \textcolor{comment}{/*Load Images*/}}
+\DoxyCodeLine{227     \textcolor{keywordtype}{void} on\_load\_model\_button\_clicked(); \textcolor{comment}{/*Load Models*/}}
+\DoxyCodeLine{228 }
+\DoxyCodeLine{229 }
+\DoxyCodeLine{230     \textcolor{comment}{/*Biplane View Button (Monoplane is Biplane A, Biplans is Biplane B*/}}
+\DoxyCodeLine{231     \textcolor{keywordtype}{void} on\_camera\_A\_radio\_button\_clicked();}
+\DoxyCodeLine{232     \textcolor{keywordtype}{void} on\_camera\_B\_radio\_button\_clicked();}
+\DoxyCodeLine{233 }
+\DoxyCodeLine{234     \textcolor{comment}{/*List Widgets*/}}
+\DoxyCodeLine{235     \textcolor{keywordtype}{void} on\_image\_list\_widget\_itemSelectionChanged(); \textcolor{comment}{/*Image List Widget Changed*/}}
+\DoxyCodeLine{236     \textcolor{keywordtype}{void} on\_model\_list\_widget\_itemSelectionChanged(); \textcolor{comment}{/*Model List Widget Changed*/}}
+\DoxyCodeLine{237 }
+\DoxyCodeLine{238     \textcolor{comment}{/*Multiple Selection For Models Radio buttons*/}}
+\DoxyCodeLine{239     \textcolor{keywordtype}{void} on\_single\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{240     \textcolor{keywordtype}{void} on\_multiple\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{241 }
+\DoxyCodeLine{242     \textcolor{comment}{/*Radio Buttons*/}}
+\DoxyCodeLine{243     \textcolor{comment}{/*Image Radio Buttons*/}}
+\DoxyCodeLine{244     \textcolor{keywordtype}{void} on\_original\_image\_radio\_button\_clicked();}
+\DoxyCodeLine{245     \textcolor{keywordtype}{void} on\_inverted\_image\_radio\_button\_clicked();}
+\DoxyCodeLine{246     \textcolor{keywordtype}{void} on\_edges\_image\_radio\_button\_clicked();}
+\DoxyCodeLine{247     \textcolor{keywordtype}{void} on\_dilation\_image\_radio\_button\_clicked();}
+\DoxyCodeLine{248     \textcolor{comment}{/*Model Radio Buttons*/}}
+\DoxyCodeLine{249     \textcolor{keywordtype}{void} on\_original\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{250     \textcolor{keywordtype}{void} on\_solid\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{251     \textcolor{keywordtype}{void} on\_transparent\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{252     \textcolor{keywordtype}{void} on\_wireframe\_model\_radio\_button\_clicked();}
+\DoxyCodeLine{253 }
+\DoxyCodeLine{254     \textcolor{comment}{/*Edge Buttons*/}}
+\DoxyCodeLine{255     \textcolor{keywordtype}{void} on\_aperture\_spin\_box\_valueChanged();}
+\DoxyCodeLine{256     \textcolor{keywordtype}{void} on\_low\_threshold\_slider\_valueChanged();}
+\DoxyCodeLine{257     \textcolor{keywordtype}{void} on\_high\_threshold\_slider\_valueChanged();}
+\DoxyCodeLine{258     \textcolor{keywordtype}{void} on\_apply\_all\_edge\_button\_clicked();}
+\DoxyCodeLine{259     \textcolor{keywordtype}{void} on\_reset\_edge\_button\_clicked();}
+\DoxyCodeLine{260 }
+\DoxyCodeLine{261     \textcolor{comment}{/*MenuBar*/}}
+\DoxyCodeLine{262     \textcolor{keywordtype}{void} on\_actionSave\_Pose\_triggered();}
+\DoxyCodeLine{263     \textcolor{keywordtype}{void} on\_actionSave\_Kinematics\_triggered();}
+\DoxyCodeLine{264     \textcolor{keywordtype}{void} on\_actionLoad\_Pose\_triggered();}
+\DoxyCodeLine{265     \textcolor{keywordtype}{void} on\_actionLoad\_Kinematics\_triggered();}
+\DoxyCodeLine{266     \textcolor{keywordtype}{void} on\_actionAbout\_JointTrack\_Auto\_triggered();}
+\DoxyCodeLine{267     \textcolor{keywordtype}{void} on\_actionControls\_triggered();}
+\DoxyCodeLine{268     \textcolor{keywordtype}{void} on\_actionStop\_Optimizer\_triggered();}
+\DoxyCodeLine{269     \textcolor{keywordtype}{void} on\_actionOptimizer\_Settings\_triggered();}
+\DoxyCodeLine{270     \textcolor{keywordtype}{void} on\_actionDRR\_Settings\_triggered();}
+\DoxyCodeLine{271     \textcolor{keywordtype}{void} on\_actionReset\_View\_triggered();}
+\DoxyCodeLine{272     \textcolor{keywordtype}{void} on\_actionReset\_Normal\_Up\_triggered();}
+\DoxyCodeLine{273     \textcolor{keywordtype}{void} on\_actionModel\_Interaction\_Mode\_triggered();}
+\DoxyCodeLine{274     \textcolor{keywordtype}{void} on\_actionCamera\_Interaction\_Mode\_triggered();}
+\DoxyCodeLine{275     \textcolor{keywordtype}{void} on\_actionSegment\_FemHR\_triggered();}
+\DoxyCodeLine{276     \textcolor{keywordtype}{void} on\_actionSegment\_TibHR\_triggered();}
+\DoxyCodeLine{277     \textcolor{keywordtype}{void} on\_actionReset\_Remove\_All\_Segmentation\_triggered();}
+\DoxyCodeLine{278     \textcolor{keywordtype}{void} on\_actionEstimate\_Femoral\_Implant\_s\_triggered();}
+\DoxyCodeLine{279     \textcolor{keywordtype}{void} \mbox{\hyperlink{class_main_screen_a0bfc0663046bcdc1e51a50e4c1a49e02}{on\_actionEstimate\_Tibial\_Implant\_s\_triggered}}();}
+\DoxyCodeLine{280 }
+\DoxyCodeLine{281     \textcolor{keywordtype}{void} \mbox{\hyperlink{class_main_screen_a8f57346258fda3ef7f259efaaaa091b7}{on\_actionNFD\_Pose\_Estimate\_triggered}}();}
+\DoxyCodeLine{282 }
+\DoxyCodeLine{283     \textcolor{keywordtype}{void} on\_actionCopy\_Next\_Pose\_triggered();}
+\DoxyCodeLine{284     \textcolor{keywordtype}{void} on\_actionCopy\_Previous\_Pose\_triggered();}
+\DoxyCodeLine{285 }
+\DoxyCodeLine{286     \textcolor{keywordtype}{void} on\_actionLaunch\_Tool\_triggered();}
+\DoxyCodeLine{287     \textcolor{keywordtype}{void} on\_actionAmbiguous\_Pose\_Processing\_triggered();}
+\DoxyCodeLine{288     \textcolor{comment}{/*Optimization Buttons*/}}
+\DoxyCodeLine{289     \textcolor{keywordtype}{void} on\_optimize\_button\_clicked();}
+\DoxyCodeLine{290     \textcolor{keywordtype}{void} on\_optimize\_all\_button\_clicked();}
+\DoxyCodeLine{291     \textcolor{keywordtype}{void} on\_optimize\_each\_button\_clicked();}
+\DoxyCodeLine{292     \textcolor{keywordtype}{void} on\_optimize\_from\_button\_clicked();}
+\DoxyCodeLine{293     \textcolor{keywordtype}{void} on\_actionOptimize\_Backward\_triggered();}
+\DoxyCodeLine{294 }
+\DoxyCodeLine{295     \textcolor{comment}{/*OPTIMIZATION SLOTS*/}}
+\DoxyCodeLine{296     \textcolor{comment}{/*Update Blue Current Optimum*/}}
+\DoxyCodeLine{297     \textcolor{keywordtype}{void} onUpdateOptimum(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int});}
+\DoxyCodeLine{298     \textcolor{comment}{/*Finished Optimizing Frame, Send Optimum to MainScreen*/}}
+\DoxyCodeLine{299     \textcolor{keywordtype}{void} onOptimizedFrame(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{bool}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int}, \textcolor{keywordtype}{bool}, QString);}
+\DoxyCodeLine{300     \textcolor{comment}{/*Uh oh There was an Error. String contains the message}}
+\DoxyCodeLine{301 \textcolor{comment}{    */}}
+\DoxyCodeLine{302     \textcolor{keywordtype}{void} onOptimizerError(QString error\_message);}
+\DoxyCodeLine{303     \textcolor{comment}{/*Update Display with Speed, Cost Function Calls, Current Minimum*/}}
+\DoxyCodeLine{304     \textcolor{keywordtype}{void} onUpdateDisplay(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{int}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int});}
+\DoxyCodeLine{305     \textcolor{comment}{/*Update Dilation Background if Radio Button is on Dilation and Moving Betweeen Trunks and Branches*/}}
+\DoxyCodeLine{306     \textcolor{keywordtype}{void} onUpdateDilationBackground();}
+\DoxyCodeLine{307     \textcolor{keywordtype}{void} updateOrientationSymTrap\_MS(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double});}
+\DoxyCodeLine{308 }
+\DoxyCodeLine{309     \textcolor{comment}{/*On Optimizer Control Windows Save Setting*/}}
+\DoxyCodeLine{310     \textcolor{keywordtype}{void} onSaveSettings(\mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}}, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}}, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}}, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}});}
+\DoxyCodeLine{311 }
+\DoxyCodeLine{312 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{313     \textcolor{keywordtype}{void} resizeEvent(QResizeEvent* event);}
+\DoxyCodeLine{314     \textcolor{keywordtype}{void} keyPressEvent(QKeyEvent* event);}
+\DoxyCodeLine{315 \};}
+\DoxyCodeLine{316 }
+\DoxyCodeLine{317 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* MAINSCREEN\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

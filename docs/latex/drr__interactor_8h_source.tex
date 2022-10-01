@@ -1,0 +1,260 @@
+\hypertarget{drr__interactor_8h_source}{}\doxysection{drr\+\_\+interactor.\+h}
+\label{drr__interactor_8h_source}\index{include/core/drr\_interactor.h@{include/core/drr\_interactor.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{comment}{/*VTK*/}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <vtkObjectFactory.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballActor.h>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <vtkRendererCollection.h>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <vtkTextActor.h>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <vtkTextProperty.h>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <vtkActor2DCollection.h>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <vtkPicker.h>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <vtkPropPicker.h>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <vtkProp.h>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <qcursor.h>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{comment}{//Calibration To Convert Pose}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}core/calibration.h"{}}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{comment}{/*Drr Tool Header*/}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include "{}gui/drr\_tool.h"{}}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{comment}{/*DRR Globals*/}}
+\DoxyCodeLine{22 \textcolor{keywordtype}{bool} middleDownDRR = \textcolor{keyword}{false}; \textcolor{comment}{// Is CM button down?}}
+\DoxyCodeLine{23 \textcolor{keywordtype}{bool} leftDownDRR = \textcolor{keyword}{false}; \textcolor{comment}{//Is LM button down?}}
+\DoxyCodeLine{24 \textcolor{keywordtype}{bool} rightDownDRR = \textcolor{keyword}{false}; \textcolor{comment}{//Is RM button down}}
+\DoxyCodeLine{25 \textcolor{keywordtype}{int} rightDownDRRY = 0; \textcolor{comment}{//Y Pixel when RM Clicked}}
+\DoxyCodeLine{26 \textcolor{keywordtype}{double} rightDownDRRModelZ = 0; \textcolor{comment}{//Model's Z Translation when RM Clicked}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{keyword}{class }\mbox{\hyperlink{class_d_r_r_interactor_style}{DRRInteractorStyle}} : \textcolor{keyword}{public} vtkInteractorStyleTrackballActor}
+\DoxyCodeLine{29 \{}
+\DoxyCodeLine{30 \textcolor{keyword}{public}:}
+\DoxyCodeLine{31     \textcolor{keyword}{static} \mbox{\hyperlink{class_d_r_r_interactor_style}{DRRInteractorStyle}}* New();}
+\DoxyCodeLine{32     vtkTypeMacro(\mbox{\hyperlink{class_d_r_r_interactor_style}{DRRInteractorStyle}}, vtkInteractorStyleTrackballActor);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34     \textcolor{comment}{/*Pointer to Main Window*/}}
+\DoxyCodeLine{35     \mbox{\hyperlink{class_d_r_r_tool}{DRRTool}}* drrtool\_;}
+\DoxyCodeLine{36     \textcolor{keywordtype}{void} initialize\_DRRTool(\mbox{\hyperlink{class_d_r_r_tool}{DRRTool}}* drrtool) \{}
+\DoxyCodeLine{37         drrtool\_ = drrtool;}
+\DoxyCodeLine{38     \}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \textcolor{comment}{//Picked Function}}
+\DoxyCodeLine{41     \textcolor{keywordtype}{bool} ActivePick()}
+\DoxyCodeLine{42     \{}
+\DoxyCodeLine{43         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{44         \textcolor{keywordflow}{else} \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{45     \}}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47     \textcolor{comment}{//KeyPress Turns Off Other Char Hotkeys}}
+\DoxyCodeLine{48     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnChar() \{}
+\DoxyCodeLine{49     \}}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51     \textcolor{comment}{//Keypress Function}}
+\DoxyCodeLine{52     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnKeyPress()}
+\DoxyCodeLine{53     \{}
+\DoxyCodeLine{54         \textcolor{comment}{// Get the keypress}}
+\DoxyCodeLine{55         vtkRenderWindowInteractor *rwi = this-\/>Interactor;}
+\DoxyCodeLine{56         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{57         \{}
+\DoxyCodeLine{58             std::string key = rwi-\/>GetKeySym();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60             this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{61             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{62         \}}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{65         std::string key = rwi-\/>GetKeySym();}
+\DoxyCodeLine{66         \textcolor{keywordtype}{double}* Position = actor-\/>GetPosition();}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68         \textcolor{comment}{//Shift Class}}
+\DoxyCodeLine{69         \textcolor{keywordflow}{if} (rwi-\/>GetShiftKey())}
+\DoxyCodeLine{70         \{}
+\DoxyCodeLine{71             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{72             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{73             \{}
+\DoxyCodeLine{74                 actor-\/>RotateX(1);}
+\DoxyCodeLine{75                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{76             \}}
+\DoxyCodeLine{77             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{78             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{79             \{}
+\DoxyCodeLine{80                 actor-\/>RotateX(-\/1 * 1);}
+\DoxyCodeLine{81                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{82             \}}
+\DoxyCodeLine{83 }
+\DoxyCodeLine{84             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{85             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{86             \{}
+\DoxyCodeLine{87                 actor-\/>RotateY(-\/1 * 1);}
+\DoxyCodeLine{88                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{89             \}}
+\DoxyCodeLine{90 }
+\DoxyCodeLine{91             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{92             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{93             \{}
+\DoxyCodeLine{94                 actor-\/>RotateY(1);}
+\DoxyCodeLine{95                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{96             \}}
+\DoxyCodeLine{97         \}}
+\DoxyCodeLine{98         \textcolor{comment}{//Control Class}}
+\DoxyCodeLine{99         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (rwi-\/>GetControlKey())}
+\DoxyCodeLine{100         \{}
+\DoxyCodeLine{101             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{102             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{103             \{}
+\DoxyCodeLine{104                 actor-\/>SetPosition(Position[0], Position[1], Position[2] + 1);}
+\DoxyCodeLine{105                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{106             \}}
+\DoxyCodeLine{107             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{108             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{109             \{}
+\DoxyCodeLine{110                 actor-\/>SetPosition(Position[0], Position[1], Position[2] -\/ 1);}
+\DoxyCodeLine{111                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{112             \}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{115             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{116             \{}
+\DoxyCodeLine{117                 actor-\/>RotateZ(-\/1 * 1);}
+\DoxyCodeLine{118                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{119             \}}
+\DoxyCodeLine{120 }
+\DoxyCodeLine{121             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{122             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{123             \{}
+\DoxyCodeLine{124                 actor-\/>RotateZ(1);}
+\DoxyCodeLine{125                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{126             \}}
+\DoxyCodeLine{127         \}}
+\DoxyCodeLine{128         \textcolor{comment}{//Naked Class}}
+\DoxyCodeLine{129         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{130         \{}
+\DoxyCodeLine{131 }
+\DoxyCodeLine{132             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{133             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{134             \{}
+\DoxyCodeLine{135                 actor-\/>SetPosition(Position[0], Position[1] + 1, Position[2]);}
+\DoxyCodeLine{136                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{137             \}}
+\DoxyCodeLine{138             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{139             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{140             \{}
+\DoxyCodeLine{141                 actor-\/>SetPosition(Position[0], Position[1] -\/ 1, Position[2]);}
+\DoxyCodeLine{142                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{143             \}}
+\DoxyCodeLine{144 }
+\DoxyCodeLine{145             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{146             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{147             \{}
+\DoxyCodeLine{148                 actor-\/>SetPosition(Position[0] -\/ 1, Position[1], Position[2]);}
+\DoxyCodeLine{149                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{150             \}}
+\DoxyCodeLine{151 }
+\DoxyCodeLine{152             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{153             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{154             \{}
+\DoxyCodeLine{155                 actor-\/>SetPosition(Position[0] + 1, Position[1], Position[2]);}
+\DoxyCodeLine{156                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{157             \}}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159         \}}
+\DoxyCodeLine{160 }
+\DoxyCodeLine{161         this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{162 }
+\DoxyCodeLine{163         \textcolor{comment}{//Forward events}}
+\DoxyCodeLine{164         vtkInteractorStyleTrackballActor::OnKeyPress();}
+\DoxyCodeLine{165     \}}
+\DoxyCodeLine{166 }
+\DoxyCodeLine{167     \textcolor{comment}{//Left Mouse Down Function}}
+\DoxyCodeLine{168     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnLeftButtonDown()}
+\DoxyCodeLine{169     \{}
+\DoxyCodeLine{170         leftDownDRR = \textcolor{keyword}{true};}
+\DoxyCodeLine{171 }
+\DoxyCodeLine{172         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{173         vtkInteractorStyleTrackballActor::OnLeftButtonDown();}
+\DoxyCodeLine{174     \}}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{176     \textcolor{comment}{//Right Mouse Down Function}}
+\DoxyCodeLine{177     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnRightButtonDown()}
+\DoxyCodeLine{178     \{}
+\DoxyCodeLine{179         rightDownDRR = \textcolor{keyword}{true};}
+\DoxyCodeLine{180         rightDownDRRY = QCursor::pos().y();}
+\DoxyCodeLine{181 }
+\DoxyCodeLine{182         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{183         vtkInteractorStyleTrackballActor::OnRightButtonDown();}
+\DoxyCodeLine{184 }
+\DoxyCodeLine{185         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{186             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{187         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{188         rightDownDRRModelZ = actor-\/>GetPosition()[2];}
+\DoxyCodeLine{189     \}}
+\DoxyCodeLine{190 }
+\DoxyCodeLine{191     \textcolor{comment}{//Middle Mouse Down Funtion}}
+\DoxyCodeLine{192     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMiddleButtonDown() \{}
+\DoxyCodeLine{193         middleDownDRR = \textcolor{keyword}{true};}
+\DoxyCodeLine{194 }
+\DoxyCodeLine{195         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{196         vtkInteractorStyleTrackballActor::OnMiddleButtonDown();}
+\DoxyCodeLine{197     \}}
+\DoxyCodeLine{198 }
+\DoxyCodeLine{199     \textcolor{comment}{//Left Mouse Up Function}}
+\DoxyCodeLine{200     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnLeftButtonUp()}
+\DoxyCodeLine{201     \{}
+\DoxyCodeLine{202         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{203             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{204         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206         leftDownDRR = \textcolor{keyword}{false};}
+\DoxyCodeLine{207         this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{208         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{209         vtkInteractorStyleTrackballActor::OnLeftButtonUp();}
+\DoxyCodeLine{210     \}}
+\DoxyCodeLine{211 }
+\DoxyCodeLine{212     \textcolor{comment}{//Right Mouse Up Function}}
+\DoxyCodeLine{213     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnRightButtonUp()}
+\DoxyCodeLine{214     \{}
+\DoxyCodeLine{215         rightDownDRR = \textcolor{keyword}{false};}
+\DoxyCodeLine{216 }
+\DoxyCodeLine{217         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{218         vtkInteractorStyleTrackballActor::OnRightButtonUp();}
+\DoxyCodeLine{219     \}}
+\DoxyCodeLine{220 }
+\DoxyCodeLine{221     \textcolor{comment}{//Middle Mouse Up Function}}
+\DoxyCodeLine{222     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMiddleButtonUp() \{}
+\DoxyCodeLine{223         middleDownDRR = \textcolor{keyword}{false};}
+\DoxyCodeLine{224 }
+\DoxyCodeLine{225         \textcolor{comment}{//Forward Events}}
+\DoxyCodeLine{226         vtkInteractorStyleTrackballActor::OnMiddleButtonUp();}
+\DoxyCodeLine{227     \}}
+\DoxyCodeLine{228 }
+\DoxyCodeLine{229     \textcolor{comment}{//Mouse Movement}}
+\DoxyCodeLine{230     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMouseMove()}
+\DoxyCodeLine{231     \{}
+\DoxyCodeLine{232         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL) \textcolor{keywordflow}{return};}
+\DoxyCodeLine{233         \textcolor{keywordflow}{if} (leftDownDRR == \textcolor{keyword}{true} || rightDownDRR == \textcolor{keyword}{true} || middleDownDRR == \textcolor{keyword}{true})}
+\DoxyCodeLine{234         \{}
+\DoxyCodeLine{235             vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{236 }
+\DoxyCodeLine{237             \textcolor{comment}{//If Right Down and Not Left or MiddleScale The Z}}
+\DoxyCodeLine{238             \textcolor{keywordflow}{if} (!leftDownDRR \&\& !middleDownDRR)}
+\DoxyCodeLine{239             \{}
+\DoxyCodeLine{240                 \textcolor{keywordtype}{double}* Position = actor-\/>GetPosition();}
+\DoxyCodeLine{241                 actor-\/>SetPosition(Position[0], Position[1], QCursor::pos().y() -\/ rightDownDRRY + rightDownDRRModelZ);}
+\DoxyCodeLine{242             \}}
+\DoxyCodeLine{243             this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{244         \}}
+\DoxyCodeLine{245 }
+\DoxyCodeLine{246         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{247         \textcolor{keywordflow}{if} (!rightDownDRR)}
+\DoxyCodeLine{248             vtkInteractorStyleTrackballActor::OnMouseMove();}
+\DoxyCodeLine{249 }
+\DoxyCodeLine{250         \textcolor{comment}{/*Draw DRR*/}}
+\DoxyCodeLine{251         drrtool\_-\/>DrawDRR();}
+\DoxyCodeLine{252     \}}
+\DoxyCodeLine{253 \};}
+\DoxyCodeLine{254 vtkStandardNewMacro(\mbox{\hyperlink{class_d_r_r_interactor_style}{DRRInteractorStyle}});}
+
+\end{DoxyCode}

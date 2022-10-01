@@ -1,0 +1,49 @@
+\hypertarget{nfd__library_8h_source}{}\doxysection{nfd\+\_\+library.\+h}
+\label{nfd__library_8h_source}\index{include/nfd/nfd\_library.h@{include/nfd/nfd\_library.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include "{}nfd\_instance.h"{}}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}nfd.h"{}}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <array>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}gpu/gpu\_model.cuh"{}}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*}}
+\DoxyCodeLine{9 \textcolor{comment}{This NFD library is going to store a vector of each of the NFD instances at a given pose, as well as some metadata}}
+\DoxyCodeLine{10 \textcolor{comment}{about the overall scope of the library (rotation parameters and ranges, etc).}}
+\DoxyCodeLine{11 \textcolor{comment}{*/}}
+\DoxyCodeLine{12 \textcolor{keyword}{class }\mbox{\hyperlink{classnfd__library}{nfd\_library}}}
+\DoxyCodeLine{13 \{}
+\DoxyCodeLine{14 \textcolor{keyword}{public}:}
+\DoxyCodeLine{15     \mbox{\hyperlink{classnfd__library}{nfd\_library}}(}
+\DoxyCodeLine{16         \mbox{\hyperlink{struct_calibration}{Calibration}} cal\_file,}
+\DoxyCodeLine{17         GPUModel \&gpu\_model,}
+\DoxyCodeLine{18         \textcolor{keywordtype}{int} x\_range,}
+\DoxyCodeLine{19         \textcolor{keywordtype}{int} y\_range,}
+\DoxyCodeLine{20         \textcolor{keywordtype}{float} x\_inc,}
+\DoxyCodeLine{21         \textcolor{keywordtype}{float} y\_inc}
+\DoxyCodeLine{22     );}
+\DoxyCodeLine{23     \mbox{\hyperlink{classnfd__library}{\string~nfd\_library}}();}
+\DoxyCodeLine{24     std::vector<nfd\_instance> get\_library();}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26     \textcolor{keywordtype}{void} create\_nfd\_library();}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{keyword}{private}:}
+\DoxyCodeLine{29     \textcolor{keywordtype}{int} x\_range\_;}
+\DoxyCodeLine{30     \textcolor{keywordtype}{int} y\_range\_;}
+\DoxyCodeLine{31     \textcolor{keywordtype}{float} x\_inc\_;}
+\DoxyCodeLine{32     \textcolor{keywordtype}{float} y\_inc\_;}
+\DoxyCodeLine{33     GPUModel* gpu\_mod;}
+\DoxyCodeLine{34     std::vector<std::array<float, 2>> rot\_indices\_;}
+\DoxyCodeLine{35     \textcolor{keywordtype}{void} create\_rot\_indices(\textcolor{keywordtype}{int} x\_range, \textcolor{keywordtype}{int} y\_range, \textcolor{keywordtype}{float} x\_inc, \textcolor{keywordtype}{float} y\_inc);}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     std::vector<nfd\_instance> library\_;}
+\DoxyCodeLine{38     \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\_;}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \mbox{\hyperlink{classnfd__instance}{nfd\_instance}} testing\_projection();}
+\DoxyCodeLine{41     }
+\DoxyCodeLine{42 \};}
+\DoxyCodeLine{43 }
+
+\end{DoxyCode}

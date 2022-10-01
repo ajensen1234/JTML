@@ -1,0 +1,2047 @@
+\hypertarget{alglibmisc_8h_source}{}\doxysection{alglibmisc.\+h}
+\label{alglibmisc_8h_source}\index{lib/alglib/alglibmisc.h@{lib/alglib/alglibmisc.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_alglibmisc\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_alglibmisc\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{26 \textcolor{comment}{//}}
+\DoxyCodeLine{27 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{28 \textcolor{comment}{//}}
+\DoxyCodeLine{30 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{31 \{}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HQRND) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{33 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{34 \{}
+\DoxyCodeLine{35     ae\_int\_t s1;}
+\DoxyCodeLine{36     ae\_int\_t s2;}
+\DoxyCodeLine{37     ae\_int\_t magicv;}
+\DoxyCodeLine{38 \} \mbox{\hyperlink{structalglib__impl_1_1hqrndstate}{hqrndstate}};}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XDEBUG) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{41 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{42 \{}
+\DoxyCodeLine{43     ae\_int\_t i;}
+\DoxyCodeLine{44     \mbox{\hyperlink{structalglib__impl_1_1ae__complex}{ae\_complex}} c;}
+\DoxyCodeLine{45     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} a;}
+\DoxyCodeLine{46 \} \mbox{\hyperlink{structalglib__impl_1_1xdebugrecord1}{xdebugrecord1}};}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARESTNEIGHBOR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{49 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{50 \{}
+\DoxyCodeLine{51     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} x;}
+\DoxyCodeLine{52     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} boxmin;}
+\DoxyCodeLine{53     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} boxmax;}
+\DoxyCodeLine{54     ae\_int\_t kneeded;}
+\DoxyCodeLine{55     \textcolor{keywordtype}{double} rneeded;}
+\DoxyCodeLine{56     ae\_bool selfmatch;}
+\DoxyCodeLine{57     \textcolor{keywordtype}{double} approxf;}
+\DoxyCodeLine{58     ae\_int\_t kcur;}
+\DoxyCodeLine{59     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} idx;}
+\DoxyCodeLine{60     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} r;}
+\DoxyCodeLine{61     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} buf;}
+\DoxyCodeLine{62     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} curboxmin;}
+\DoxyCodeLine{63     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} curboxmax;}
+\DoxyCodeLine{64     \textcolor{keywordtype}{double} curdist;}
+\DoxyCodeLine{65 \} \mbox{\hyperlink{structalglib__impl_1_1kdtreerequestbuffer}{kdtreerequestbuffer}};}
+\DoxyCodeLine{66 \textcolor{keyword}{typedef} \textcolor{keyword}{struct}}
+\DoxyCodeLine{67 \{}
+\DoxyCodeLine{68     ae\_int\_t n;}
+\DoxyCodeLine{69     ae\_int\_t nx;}
+\DoxyCodeLine{70     ae\_int\_t ny;}
+\DoxyCodeLine{71     ae\_int\_t normtype;}
+\DoxyCodeLine{72     \mbox{\hyperlink{structalglib__impl_1_1ae__matrix}{ae\_matrix}} xy;}
+\DoxyCodeLine{73     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} tags;}
+\DoxyCodeLine{74     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} boxmin;}
+\DoxyCodeLine{75     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} boxmax;}
+\DoxyCodeLine{76     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} nodes;}
+\DoxyCodeLine{77     \mbox{\hyperlink{structalglib__impl_1_1ae__vector}{ae\_vector}} splits;}
+\DoxyCodeLine{78     \mbox{\hyperlink{structalglib__impl_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} innerbuf;}
+\DoxyCodeLine{79     ae\_int\_t debugcounter;}
+\DoxyCodeLine{80 \} \mbox{\hyperlink{structalglib__impl_1_1kdtree}{kdtree}};}
+\DoxyCodeLine{81 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{82 }
+\DoxyCodeLine{83 \}}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{86 \textcolor{comment}{//}}
+\DoxyCodeLine{87 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{88 \textcolor{comment}{//}}
+\DoxyCodeLine{90 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{91 \{}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{93 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HQRND) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{94 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{95 \textcolor{comment}{Portable high quality random number generator state.}}
+\DoxyCodeLine{96 \textcolor{comment}{Initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{97 \textcolor{comment}{}}
+\DoxyCodeLine{98 \textcolor{comment}{Fields:}}
+\DoxyCodeLine{99 \textcolor{comment}{    S1, S2      -\/   seed values}}
+\DoxyCodeLine{100 \textcolor{comment}{    V           -\/   precomputed value}}
+\DoxyCodeLine{101 \textcolor{comment}{    MagicV      -\/   'magic' value used to determine whether State structure}}
+\DoxyCodeLine{102 \textcolor{comment}{                    was correctly initialized.}}
+\DoxyCodeLine{103 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{104 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}}}
+\DoxyCodeLine{105 \{}
+\DoxyCodeLine{106 \textcolor{keyword}{public}:}
+\DoxyCodeLine{107     \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}}();}
+\DoxyCodeLine{108     \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}} \&rhs);}
+\DoxyCodeLine{109     \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}} \&rhs);}
+\DoxyCodeLine{110     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\string~\_hqrndstate\_owner}}();}
+\DoxyCodeLine{111     \mbox{\hyperlink{structalglib__impl_1_1hqrndstate}{alglib\_impl::hqrndstate}}* c\_ptr();}
+\DoxyCodeLine{112     \mbox{\hyperlink{structalglib__impl_1_1hqrndstate}{alglib\_impl::hqrndstate}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{113 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{114     \mbox{\hyperlink{structalglib__impl_1_1hqrndstate}{alglib\_impl::hqrndstate}} *p\_struct;}
+\DoxyCodeLine{115 \};}
+\DoxyCodeLine{116 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__hqrndstate__owner}{\_hqrndstate\_owner}}}
+\DoxyCodeLine{117 \{}
+\DoxyCodeLine{118 \textcolor{keyword}{public}:}
+\DoxyCodeLine{119     \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}}();}
+\DoxyCodeLine{120     \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&rhs);}
+\DoxyCodeLine{121     \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&rhs);}
+\DoxyCodeLine{122     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1hqrndstate}{\string~hqrndstate}}();}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{124 \};}
+\DoxyCodeLine{125 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{126 }
+\DoxyCodeLine{127 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XDEBUG) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{128 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{129 \textcolor{comment}{This is a debug class intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{130 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{131 \textcolor{comment}{}}
+\DoxyCodeLine{132 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{133 \textcolor{comment}{     Copyright 20.07.2021 by Bochkanov Sergey}}
+\DoxyCodeLine{134 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{135 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}}}
+\DoxyCodeLine{136 \{}
+\DoxyCodeLine{137 \textcolor{keyword}{public}:}
+\DoxyCodeLine{138     \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}}();}
+\DoxyCodeLine{139     \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}} \&rhs);}
+\DoxyCodeLine{140     \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}} \&rhs);}
+\DoxyCodeLine{141     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\string~\_xdebugrecord1\_owner}}();}
+\DoxyCodeLine{142     \mbox{\hyperlink{structalglib__impl_1_1xdebugrecord1}{alglib\_impl::xdebugrecord1}}* c\_ptr();}
+\DoxyCodeLine{143     \mbox{\hyperlink{structalglib__impl_1_1xdebugrecord1}{alglib\_impl::xdebugrecord1}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{144 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{145     \mbox{\hyperlink{structalglib__impl_1_1xdebugrecord1}{alglib\_impl::xdebugrecord1}} *p\_struct;}
+\DoxyCodeLine{146 \};}
+\DoxyCodeLine{147 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__xdebugrecord1__owner}{\_xdebugrecord1\_owner}}}
+\DoxyCodeLine{148 \{}
+\DoxyCodeLine{149 \textcolor{keyword}{public}:}
+\DoxyCodeLine{150     \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}}();}
+\DoxyCodeLine{151     \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}} \&rhs);}
+\DoxyCodeLine{152     \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}} \&rhs);}
+\DoxyCodeLine{153     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1xdebugrecord1}{\string~xdebugrecord1}}();}
+\DoxyCodeLine{154     ae\_int\_t \&i;}
+\DoxyCodeLine{155     \mbox{\hyperlink{classalglib_1_1complex}{alglib::complex}} \&c;}
+\DoxyCodeLine{156     \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} a;}
+\DoxyCodeLine{157 }
+\DoxyCodeLine{158 \};}
+\DoxyCodeLine{159 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{160 }
+\DoxyCodeLine{161 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARESTNEIGHBOR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{162 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{163 \textcolor{comment}{Buffer object which is used to perform nearest neighbor  requests  in  the}}
+\DoxyCodeLine{164 \textcolor{comment}{multithreaded mode (multiple threads working with same KD-\/tree object).}}
+\DoxyCodeLine{165 \textcolor{comment}{}}
+\DoxyCodeLine{166 \textcolor{comment}{This object should be created with KDTreeCreateRequestBuffer().}}
+\DoxyCodeLine{167 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{168 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}}}
+\DoxyCodeLine{169 \{}
+\DoxyCodeLine{170 \textcolor{keyword}{public}:}
+\DoxyCodeLine{171     \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}}();}
+\DoxyCodeLine{172     \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}} \&rhs);}
+\DoxyCodeLine{173     \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}} \&rhs);}
+\DoxyCodeLine{174     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\string~\_kdtreerequestbuffer\_owner}}();}
+\DoxyCodeLine{175     \mbox{\hyperlink{structalglib__impl_1_1kdtreerequestbuffer}{alglib\_impl::kdtreerequestbuffer}}* c\_ptr();}
+\DoxyCodeLine{176     \mbox{\hyperlink{structalglib__impl_1_1kdtreerequestbuffer}{alglib\_impl::kdtreerequestbuffer}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{177 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{178     \mbox{\hyperlink{structalglib__impl_1_1kdtreerequestbuffer}{alglib\_impl::kdtreerequestbuffer}} *p\_struct;}
+\DoxyCodeLine{179 \};}
+\DoxyCodeLine{180 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__kdtreerequestbuffer__owner}{\_kdtreerequestbuffer\_owner}}}
+\DoxyCodeLine{181 \{}
+\DoxyCodeLine{182 \textcolor{keyword}{public}:}
+\DoxyCodeLine{183     \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}}();}
+\DoxyCodeLine{184     \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&rhs);}
+\DoxyCodeLine{185     \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&rhs);}
+\DoxyCodeLine{186     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{\string~kdtreerequestbuffer}}();}
+\DoxyCodeLine{187 }
+\DoxyCodeLine{188 \};}
+\DoxyCodeLine{189 }
+\DoxyCodeLine{190 }
+\DoxyCodeLine{191 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{192 \textcolor{comment}{KD-\/tree object.}}
+\DoxyCodeLine{193 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{194 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}}}
+\DoxyCodeLine{195 \{}
+\DoxyCodeLine{196 \textcolor{keyword}{public}:}
+\DoxyCodeLine{197     \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}}();}
+\DoxyCodeLine{198     \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}} \&rhs);}
+\DoxyCodeLine{199     \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}} \&rhs);}
+\DoxyCodeLine{200     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\string~\_kdtree\_owner}}();}
+\DoxyCodeLine{201     \mbox{\hyperlink{structalglib__impl_1_1kdtree}{alglib\_impl::kdtree}}* c\_ptr();}
+\DoxyCodeLine{202     \mbox{\hyperlink{structalglib__impl_1_1kdtree}{alglib\_impl::kdtree}}* c\_ptr() \textcolor{keyword}{const};}
+\DoxyCodeLine{203 \textcolor{keyword}{protected}:}
+\DoxyCodeLine{204     \mbox{\hyperlink{structalglib__impl_1_1kdtree}{alglib\_impl::kdtree}} *p\_struct;}
+\DoxyCodeLine{205 \};}
+\DoxyCodeLine{206 \textcolor{keyword}{class }\mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} : \textcolor{keyword}{public} \mbox{\hyperlink{classalglib_1_1__kdtree__owner}{\_kdtree\_owner}}}
+\DoxyCodeLine{207 \{}
+\DoxyCodeLine{208 \textcolor{keyword}{public}:}
+\DoxyCodeLine{209     \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}}();}
+\DoxyCodeLine{210     \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}}(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&rhs);}
+\DoxyCodeLine{211     \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}}\& operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&rhs);}
+\DoxyCodeLine{212     \textcolor{keyword}{virtual} \mbox{\hyperlink{classalglib_1_1kdtree}{\string~kdtree}}();}
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214 \};}
+\DoxyCodeLine{215 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{216 }
+\DoxyCodeLine{217 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HQRND) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{218 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{219 \textcolor{comment}{HQRNDState  initialization  with  random  values  which come from standard}}
+\DoxyCodeLine{220 \textcolor{comment}{RNG.}}
+\DoxyCodeLine{221 \textcolor{comment}{}}
+\DoxyCodeLine{222 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{223 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{224 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{225 \textcolor{keywordtype}{void} hqrndrandomize(\mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{226 }
+\DoxyCodeLine{227 }
+\DoxyCodeLine{228 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{229 \textcolor{comment}{HQRNDState initialization with seed values}}
+\DoxyCodeLine{230 \textcolor{comment}{}}
+\DoxyCodeLine{231 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{232 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{233 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{234 \textcolor{keywordtype}{void} hqrndseed(\textcolor{keyword}{const} ae\_int\_t s1, \textcolor{keyword}{const} ae\_int\_t s2, \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{235 }
+\DoxyCodeLine{236 }
+\DoxyCodeLine{237 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{238 \textcolor{comment}{This function generates random real number in (0,1),}}
+\DoxyCodeLine{239 \textcolor{comment}{not including interval boundaries}}
+\DoxyCodeLine{240 \textcolor{comment}{}}
+\DoxyCodeLine{241 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{242 \textcolor{comment}{}}
+\DoxyCodeLine{243 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{244 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{245 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{246 \textcolor{keywordtype}{double} hqrnduniformr(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{247 }
+\DoxyCodeLine{248 }
+\DoxyCodeLine{249 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{250 \textcolor{comment}{This function generates random integer number in [0, N)}}
+\DoxyCodeLine{251 \textcolor{comment}{}}
+\DoxyCodeLine{252 \textcolor{comment}{1. State structure must be initialized with HQRNDRandomize() or HQRNDSeed()}}
+\DoxyCodeLine{253 \textcolor{comment}{2. N can be any positive number except for very large numbers:}}
+\DoxyCodeLine{254 \textcolor{comment}{   * close to 2\string^31 on 32-\/bit systems}}
+\DoxyCodeLine{255 \textcolor{comment}{   * close to 2\string^62 on 64-\/bit systems}}
+\DoxyCodeLine{256 \textcolor{comment}{   An exception will be generated if N is too large.}}
+\DoxyCodeLine{257 \textcolor{comment}{}}
+\DoxyCodeLine{258 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{259 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{260 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{261 ae\_int\_t hqrnduniformi(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{262 }
+\DoxyCodeLine{263 }
+\DoxyCodeLine{264 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{265 \textcolor{comment}{Random number generator: normal numbers}}
+\DoxyCodeLine{266 \textcolor{comment}{}}
+\DoxyCodeLine{267 \textcolor{comment}{This function generates one random number from normal distribution.}}
+\DoxyCodeLine{268 \textcolor{comment}{Its performance is equal to that of HQRNDNormal2()}}
+\DoxyCodeLine{269 \textcolor{comment}{}}
+\DoxyCodeLine{270 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{271 \textcolor{comment}{}}
+\DoxyCodeLine{272 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{273 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{274 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{275 \textcolor{keywordtype}{double} hqrndnormal(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{276 }
+\DoxyCodeLine{277 }
+\DoxyCodeLine{278 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{279 \textcolor{comment}{Random number generator: vector with random entries (normal distribution)}}
+\DoxyCodeLine{280 \textcolor{comment}{}}
+\DoxyCodeLine{281 \textcolor{comment}{This function generates N random numbers from normal distribution.}}
+\DoxyCodeLine{282 \textcolor{comment}{}}
+\DoxyCodeLine{283 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{284 \textcolor{comment}{}}
+\DoxyCodeLine{285 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{286 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{287 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{288 \textcolor{keywordtype}{void} hqrndnormalv(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{289 }
+\DoxyCodeLine{290 }
+\DoxyCodeLine{291 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{292 \textcolor{comment}{Random number generator: matrix with random entries (normal distribution)}}
+\DoxyCodeLine{293 \textcolor{comment}{}}
+\DoxyCodeLine{294 \textcolor{comment}{This function generates MxN random matrix.}}
+\DoxyCodeLine{295 \textcolor{comment}{}}
+\DoxyCodeLine{296 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{297 \textcolor{comment}{}}
+\DoxyCodeLine{298 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{299 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{300 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{301 \textcolor{keywordtype}{void} hqrndnormalm(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&x, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{302 }
+\DoxyCodeLine{303 }
+\DoxyCodeLine{304 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{305 \textcolor{comment}{Random number generator: random X and Y such that X\string^2+Y\string^2=1}}
+\DoxyCodeLine{306 \textcolor{comment}{}}
+\DoxyCodeLine{307 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{308 \textcolor{comment}{}}
+\DoxyCodeLine{309 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{310 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{311 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{312 \textcolor{keywordtype}{void} hqrndunit2(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keywordtype}{double} \&x, \textcolor{keywordtype}{double} \&y, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{313 }
+\DoxyCodeLine{314 }
+\DoxyCodeLine{315 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{316 \textcolor{comment}{Random number generator: normal numbers}}
+\DoxyCodeLine{317 \textcolor{comment}{}}
+\DoxyCodeLine{318 \textcolor{comment}{This function generates two independent random numbers from normal}}
+\DoxyCodeLine{319 \textcolor{comment}{distribution. Its performance is equal to that of HQRNDNormal()}}
+\DoxyCodeLine{320 \textcolor{comment}{}}
+\DoxyCodeLine{321 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{322 \textcolor{comment}{}}
+\DoxyCodeLine{323 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{324 \textcolor{comment}{     Copyright 02.12.2009 by Bochkanov Sergey}}
+\DoxyCodeLine{325 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{326 \textcolor{keywordtype}{void} hqrndnormal2(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keywordtype}{double} \&x1, \textcolor{keywordtype}{double} \&x2, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{327 }
+\DoxyCodeLine{328 }
+\DoxyCodeLine{329 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{330 \textcolor{comment}{Random number generator: exponential distribution}}
+\DoxyCodeLine{331 \textcolor{comment}{}}
+\DoxyCodeLine{332 \textcolor{comment}{State structure must be initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{333 \textcolor{comment}{}}
+\DoxyCodeLine{334 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{335 \textcolor{comment}{     Copyright 11.08.2007 by Bochkanov Sergey}}
+\DoxyCodeLine{336 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{337 \textcolor{keywordtype}{double} hqrndexponential(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \textcolor{keywordtype}{double} lambdav, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{338 }
+\DoxyCodeLine{339 }
+\DoxyCodeLine{340 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{341 \textcolor{comment}{This function generates  random number from discrete distribution given by}}
+\DoxyCodeLine{342 \textcolor{comment}{finite sample X.}}
+\DoxyCodeLine{343 \textcolor{comment}{}}
+\DoxyCodeLine{344 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{345 \textcolor{comment}{    State   -\/   high quality random number generator, must be}}
+\DoxyCodeLine{346 \textcolor{comment}{                initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{347 \textcolor{comment}{        X   -\/   finite sample}}
+\DoxyCodeLine{348 \textcolor{comment}{        N   -\/   number of elements to use, N>=1}}
+\DoxyCodeLine{349 \textcolor{comment}{}}
+\DoxyCodeLine{350 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{351 \textcolor{comment}{    this function returns one of the X[i] for random i=0..N-\/1}}
+\DoxyCodeLine{352 \textcolor{comment}{}}
+\DoxyCodeLine{353 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{354 \textcolor{comment}{     Copyright 08.11.2011 by Bochkanov Sergey}}
+\DoxyCodeLine{355 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{356 \textcolor{keywordtype}{double} hqrnddiscrete(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{357 }
+\DoxyCodeLine{358 }
+\DoxyCodeLine{359 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{360 \textcolor{comment}{This function generates random number from continuous  distribution  given}}
+\DoxyCodeLine{361 \textcolor{comment}{by finite sample X.}}
+\DoxyCodeLine{362 \textcolor{comment}{}}
+\DoxyCodeLine{363 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{364 \textcolor{comment}{    State   -\/   high quality random number generator, must be}}
+\DoxyCodeLine{365 \textcolor{comment}{                initialized with HQRNDRandomize() or HQRNDSeed().}}
+\DoxyCodeLine{366 \textcolor{comment}{        X   -\/   finite sample, array[N] (can be larger, in this  case only}}
+\DoxyCodeLine{367 \textcolor{comment}{                leading N elements are used). THIS ARRAY MUST BE SORTED BY}}
+\DoxyCodeLine{368 \textcolor{comment}{                ASCENDING.}}
+\DoxyCodeLine{369 \textcolor{comment}{        N   -\/   number of elements to use, N>=1}}
+\DoxyCodeLine{370 \textcolor{comment}{}}
+\DoxyCodeLine{371 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{372 \textcolor{comment}{    this function returns random number from continuous distribution which}}
+\DoxyCodeLine{373 \textcolor{comment}{    tries to approximate X as mush as possible. min(X)<=Result<=max(X).}}
+\DoxyCodeLine{374 \textcolor{comment}{}}
+\DoxyCodeLine{375 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{376 \textcolor{comment}{     Copyright 08.11.2011 by Bochkanov Sergey}}
+\DoxyCodeLine{377 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{378 \textcolor{keywordtype}{double} hqrndcontinuous(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1hqrndstate}{hqrndstate}} \&state, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{379 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{380 }
+\DoxyCodeLine{381 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XDEBUG) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{382 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{383 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{384 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{385 \textcolor{comment}{}}
+\DoxyCodeLine{386 \textcolor{comment}{Creates and returns XDebugRecord1 structure:}}
+\DoxyCodeLine{387 \textcolor{comment}{* integer and complex fields of Rec1 are set to 1 and 1+i correspondingly}}
+\DoxyCodeLine{388 \textcolor{comment}{* array field of Rec1 is set to [2,3]}}
+\DoxyCodeLine{389 \textcolor{comment}{}}
+\DoxyCodeLine{390 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{391 \textcolor{comment}{     Copyright 27.05.2014 by Bochkanov Sergey}}
+\DoxyCodeLine{392 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{393 \textcolor{keywordtype}{void} xdebuginitrecord1(\mbox{\hyperlink{classalglib_1_1xdebugrecord1}{xdebugrecord1}} \&rec1, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{394 }
+\DoxyCodeLine{395 }
+\DoxyCodeLine{396 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{397 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{398 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{399 \textcolor{comment}{}}
+\DoxyCodeLine{400 \textcolor{comment}{Counts number of True values in the boolean 1D array.}}
+\DoxyCodeLine{401 \textcolor{comment}{}}
+\DoxyCodeLine{402 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{403 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{404 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{405 ae\_int\_t xdebugb1count(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1boolean__1d__array}{boolean\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{406 }
+\DoxyCodeLine{407 }
+\DoxyCodeLine{408 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{409 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{410 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{411 \textcolor{comment}{}}
+\DoxyCodeLine{412 \textcolor{comment}{Replace all values in array by NOT(a[i]).}}
+\DoxyCodeLine{413 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{414 \textcolor{comment}{}}
+\DoxyCodeLine{415 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{416 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{417 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{418 \textcolor{keywordtype}{void} xdebugb1not(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1boolean__1d__array}{boolean\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{419 }
+\DoxyCodeLine{420 }
+\DoxyCodeLine{421 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{422 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{423 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{424 \textcolor{comment}{}}
+\DoxyCodeLine{425 \textcolor{comment}{Appends copy of array to itself.}}
+\DoxyCodeLine{426 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{427 \textcolor{comment}{}}
+\DoxyCodeLine{428 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{429 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{430 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{431 \textcolor{keywordtype}{void} xdebugb1appendcopy(\mbox{\hyperlink{classalglib_1_1boolean__1d__array}{boolean\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{432 }
+\DoxyCodeLine{433 }
+\DoxyCodeLine{434 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{435 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{436 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{437 \textcolor{comment}{}}
+\DoxyCodeLine{438 \textcolor{comment}{Generate N-\/element array with even-\/numbered elements set to True.}}
+\DoxyCodeLine{439 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{440 \textcolor{comment}{}}
+\DoxyCodeLine{441 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{442 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{443 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{444 \textcolor{keywordtype}{void} xdebugb1outeven(\textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1boolean__1d__array}{boolean\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{445 }
+\DoxyCodeLine{446 }
+\DoxyCodeLine{447 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{448 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{449 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{450 \textcolor{comment}{}}
+\DoxyCodeLine{451 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{452 \textcolor{comment}{}}
+\DoxyCodeLine{453 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{454 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{455 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{456 ae\_int\_t xdebugi1sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{457 }
+\DoxyCodeLine{458 }
+\DoxyCodeLine{459 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{460 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{461 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{462 \textcolor{comment}{}}
+\DoxyCodeLine{463 \textcolor{comment}{Replace all values in array by -\/A[I]}}
+\DoxyCodeLine{464 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{465 \textcolor{comment}{}}
+\DoxyCodeLine{466 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{467 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{468 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{469 \textcolor{keywordtype}{void} xdebugi1neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{470 }
+\DoxyCodeLine{471 }
+\DoxyCodeLine{472 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{473 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{474 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{475 \textcolor{comment}{}}
+\DoxyCodeLine{476 \textcolor{comment}{Appends copy of array to itself.}}
+\DoxyCodeLine{477 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{478 \textcolor{comment}{}}
+\DoxyCodeLine{479 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{480 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{481 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{482 \textcolor{keywordtype}{void} xdebugi1appendcopy(\mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{483 }
+\DoxyCodeLine{484 }
+\DoxyCodeLine{485 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{486 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{487 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{488 \textcolor{comment}{}}
+\DoxyCodeLine{489 \textcolor{comment}{Generate N-\/element array with even-\/numbered A[I] set to I, and odd-\/numbered}}
+\DoxyCodeLine{490 \textcolor{comment}{ones set to 0.}}
+\DoxyCodeLine{491 \textcolor{comment}{}}
+\DoxyCodeLine{492 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{493 \textcolor{comment}{}}
+\DoxyCodeLine{494 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{495 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{496 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{497 \textcolor{keywordtype}{void} xdebugi1outeven(\textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{498 }
+\DoxyCodeLine{499 }
+\DoxyCodeLine{500 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{501 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{502 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{503 \textcolor{comment}{}}
+\DoxyCodeLine{504 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{505 \textcolor{comment}{}}
+\DoxyCodeLine{506 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{507 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{508 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{509 \textcolor{keywordtype}{double} xdebugr1sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{510 }
+\DoxyCodeLine{511 }
+\DoxyCodeLine{512 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{513 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{514 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{515 \textcolor{comment}{}}
+\DoxyCodeLine{516 \textcolor{comment}{Replace all values in array by -\/A[I]}}
+\DoxyCodeLine{517 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{518 \textcolor{comment}{}}
+\DoxyCodeLine{519 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{520 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{521 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{522 \textcolor{keywordtype}{void} xdebugr1neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{523 }
+\DoxyCodeLine{524 }
+\DoxyCodeLine{525 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{526 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{527 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{528 \textcolor{comment}{}}
+\DoxyCodeLine{529 \textcolor{comment}{Appends copy of array to itself.}}
+\DoxyCodeLine{530 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{531 \textcolor{comment}{}}
+\DoxyCodeLine{532 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{533 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{534 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{535 \textcolor{keywordtype}{void} xdebugr1appendcopy(\mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{536 }
+\DoxyCodeLine{537 }
+\DoxyCodeLine{538 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{539 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{540 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{541 \textcolor{comment}{}}
+\DoxyCodeLine{542 \textcolor{comment}{Generate N-\/element array with even-\/numbered A[I] set to I*0.25,}}
+\DoxyCodeLine{543 \textcolor{comment}{and odd-\/numbered ones are set to 0.}}
+\DoxyCodeLine{544 \textcolor{comment}{}}
+\DoxyCodeLine{545 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{546 \textcolor{comment}{}}
+\DoxyCodeLine{547 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{548 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{549 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{550 \textcolor{keywordtype}{void} xdebugr1outeven(\textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{551 }
+\DoxyCodeLine{552 }
+\DoxyCodeLine{553 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{554 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{555 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{556 \textcolor{comment}{}}
+\DoxyCodeLine{557 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{558 \textcolor{comment}{}}
+\DoxyCodeLine{559 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{560 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{561 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{562 \mbox{\hyperlink{classalglib_1_1complex}{alglib::complex}} xdebugc1sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1complex__1d__array}{complex\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{563 }
+\DoxyCodeLine{564 }
+\DoxyCodeLine{565 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{566 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{567 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{568 \textcolor{comment}{}}
+\DoxyCodeLine{569 \textcolor{comment}{Replace all values in array by -\/A[I]}}
+\DoxyCodeLine{570 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{571 \textcolor{comment}{}}
+\DoxyCodeLine{572 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{573 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{574 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{575 \textcolor{keywordtype}{void} xdebugc1neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1complex__1d__array}{complex\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{576 }
+\DoxyCodeLine{577 }
+\DoxyCodeLine{578 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{579 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{580 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{581 \textcolor{comment}{}}
+\DoxyCodeLine{582 \textcolor{comment}{Appends copy of array to itself.}}
+\DoxyCodeLine{583 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{584 \textcolor{comment}{}}
+\DoxyCodeLine{585 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{586 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{587 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{588 \textcolor{keywordtype}{void} xdebugc1appendcopy(\mbox{\hyperlink{classalglib_1_1complex__1d__array}{complex\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{589 }
+\DoxyCodeLine{590 }
+\DoxyCodeLine{591 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{592 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{593 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{594 \textcolor{comment}{}}
+\DoxyCodeLine{595 \textcolor{comment}{Generate N-\/element array with even-\/numbered A[K] set to (x,y) = (K*0.25, K*0.125)}}
+\DoxyCodeLine{596 \textcolor{comment}{and odd-\/numbered ones are set to 0.}}
+\DoxyCodeLine{597 \textcolor{comment}{}}
+\DoxyCodeLine{598 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{599 \textcolor{comment}{}}
+\DoxyCodeLine{600 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{601 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{602 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{603 \textcolor{keywordtype}{void} xdebugc1outeven(\textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1complex__1d__array}{complex\_1d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{604 }
+\DoxyCodeLine{605 }
+\DoxyCodeLine{606 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{607 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{608 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{609 \textcolor{comment}{}}
+\DoxyCodeLine{610 \textcolor{comment}{Counts number of True values in the boolean 2D array.}}
+\DoxyCodeLine{611 \textcolor{comment}{}}
+\DoxyCodeLine{612 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{613 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{614 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{615 ae\_int\_t xdebugb2count(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1boolean__2d__array}{boolean\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{616 }
+\DoxyCodeLine{617 }
+\DoxyCodeLine{618 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{619 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{620 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{621 \textcolor{comment}{}}
+\DoxyCodeLine{622 \textcolor{comment}{Replace all values in array by NOT(a[i]).}}
+\DoxyCodeLine{623 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{624 \textcolor{comment}{}}
+\DoxyCodeLine{625 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{626 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{627 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{628 \textcolor{keywordtype}{void} xdebugb2not(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1boolean__2d__array}{boolean\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{629 }
+\DoxyCodeLine{630 }
+\DoxyCodeLine{631 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{632 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{633 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{634 \textcolor{comment}{}}
+\DoxyCodeLine{635 \textcolor{comment}{Transposes array.}}
+\DoxyCodeLine{636 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{637 \textcolor{comment}{}}
+\DoxyCodeLine{638 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{639 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{640 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{641 \textcolor{keywordtype}{void} xdebugb2transpose(\mbox{\hyperlink{classalglib_1_1boolean__2d__array}{boolean\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{642 }
+\DoxyCodeLine{643 }
+\DoxyCodeLine{644 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{645 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{646 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{647 \textcolor{comment}{}}
+\DoxyCodeLine{648 \textcolor{comment}{Generate MxN matrix with elements set to "{}Sin(3*I+5*J)>0"{}}}
+\DoxyCodeLine{649 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{650 \textcolor{comment}{}}
+\DoxyCodeLine{651 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{652 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{653 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{654 \textcolor{keywordtype}{void} xdebugb2outsin(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1boolean__2d__array}{boolean\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{655 }
+\DoxyCodeLine{656 }
+\DoxyCodeLine{657 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{658 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{659 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{660 \textcolor{comment}{}}
+\DoxyCodeLine{661 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{662 \textcolor{comment}{}}
+\DoxyCodeLine{663 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{664 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{665 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{666 ae\_int\_t xdebugi2sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__2d__array}{integer\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{667 }
+\DoxyCodeLine{668 }
+\DoxyCodeLine{669 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{670 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{671 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{672 \textcolor{comment}{}}
+\DoxyCodeLine{673 \textcolor{comment}{Replace all values in array by -\/a[i,j]}}
+\DoxyCodeLine{674 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{675 \textcolor{comment}{}}
+\DoxyCodeLine{676 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{677 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{678 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{679 \textcolor{keywordtype}{void} xdebugi2neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__2d__array}{integer\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{680 }
+\DoxyCodeLine{681 }
+\DoxyCodeLine{682 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{683 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{684 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{685 \textcolor{comment}{}}
+\DoxyCodeLine{686 \textcolor{comment}{Transposes array.}}
+\DoxyCodeLine{687 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{688 \textcolor{comment}{}}
+\DoxyCodeLine{689 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{690 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{691 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{692 \textcolor{keywordtype}{void} xdebugi2transpose(\mbox{\hyperlink{classalglib_1_1integer__2d__array}{integer\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{693 }
+\DoxyCodeLine{694 }
+\DoxyCodeLine{695 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{696 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{697 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{698 \textcolor{comment}{}}
+\DoxyCodeLine{699 \textcolor{comment}{Generate MxN matrix with elements set to "{}Sign(Sin(3*I+5*J))"{}}}
+\DoxyCodeLine{700 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{701 \textcolor{comment}{}}
+\DoxyCodeLine{702 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{703 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{704 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{705 \textcolor{keywordtype}{void} xdebugi2outsin(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1integer__2d__array}{integer\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{706 }
+\DoxyCodeLine{707 }
+\DoxyCodeLine{708 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{709 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{710 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{711 \textcolor{comment}{}}
+\DoxyCodeLine{712 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{713 \textcolor{comment}{}}
+\DoxyCodeLine{714 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{715 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{716 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{717 \textcolor{keywordtype}{double} xdebugr2sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{718 }
+\DoxyCodeLine{719 }
+\DoxyCodeLine{720 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{721 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{722 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{723 \textcolor{comment}{}}
+\DoxyCodeLine{724 \textcolor{comment}{Replace all values in array by -\/a[i,j]}}
+\DoxyCodeLine{725 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{726 \textcolor{comment}{}}
+\DoxyCodeLine{727 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{728 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{729 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{730 \textcolor{keywordtype}{void} xdebugr2neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{731 }
+\DoxyCodeLine{732 }
+\DoxyCodeLine{733 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{734 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{735 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{736 \textcolor{comment}{}}
+\DoxyCodeLine{737 \textcolor{comment}{Transposes array.}}
+\DoxyCodeLine{738 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{739 \textcolor{comment}{}}
+\DoxyCodeLine{740 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{741 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{742 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{743 \textcolor{keywordtype}{void} xdebugr2transpose(\mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{744 }
+\DoxyCodeLine{745 }
+\DoxyCodeLine{746 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{747 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{748 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{749 \textcolor{comment}{}}
+\DoxyCodeLine{750 \textcolor{comment}{Generate MxN matrix with elements set to "{}Sin(3*I+5*J)"{}}}
+\DoxyCodeLine{751 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{752 \textcolor{comment}{}}
+\DoxyCodeLine{753 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{754 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{755 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{756 \textcolor{keywordtype}{void} xdebugr2outsin(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{757 }
+\DoxyCodeLine{758 }
+\DoxyCodeLine{759 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{760 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{761 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{762 \textcolor{comment}{}}
+\DoxyCodeLine{763 \textcolor{comment}{Returns sum of elements in the array.}}
+\DoxyCodeLine{764 \textcolor{comment}{}}
+\DoxyCodeLine{765 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{766 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{767 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{768 \mbox{\hyperlink{classalglib_1_1complex}{alglib::complex}} xdebugc2sum(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1complex__2d__array}{complex\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{769 }
+\DoxyCodeLine{770 }
+\DoxyCodeLine{771 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{772 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{773 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{774 \textcolor{comment}{}}
+\DoxyCodeLine{775 \textcolor{comment}{Replace all values in array by -\/a[i,j]}}
+\DoxyCodeLine{776 \textcolor{comment}{Array is passed using "{}shared"{} convention.}}
+\DoxyCodeLine{777 \textcolor{comment}{}}
+\DoxyCodeLine{778 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{779 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{780 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{781 \textcolor{keywordtype}{void} xdebugc2neg(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1complex__2d__array}{complex\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{782 }
+\DoxyCodeLine{783 }
+\DoxyCodeLine{784 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{785 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{786 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{787 \textcolor{comment}{}}
+\DoxyCodeLine{788 \textcolor{comment}{Transposes array.}}
+\DoxyCodeLine{789 \textcolor{comment}{Array is passed using "{}var"{} convention.}}
+\DoxyCodeLine{790 \textcolor{comment}{}}
+\DoxyCodeLine{791 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{792 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{793 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{794 \textcolor{keywordtype}{void} xdebugc2transpose(\mbox{\hyperlink{classalglib_1_1complex__2d__array}{complex\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{795 }
+\DoxyCodeLine{796 }
+\DoxyCodeLine{797 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{798 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{799 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{800 \textcolor{comment}{}}
+\DoxyCodeLine{801 \textcolor{comment}{Generate MxN matrix with elements set to "{}Sin(3*I+5*J),Cos(3*I+5*J)"{}}}
+\DoxyCodeLine{802 \textcolor{comment}{Array is passed using "{}out"{} convention.}}
+\DoxyCodeLine{803 \textcolor{comment}{}}
+\DoxyCodeLine{804 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{805 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{806 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{807 \textcolor{keywordtype}{void} xdebugc2outsincos(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \mbox{\hyperlink{classalglib_1_1complex__2d__array}{complex\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{808 }
+\DoxyCodeLine{809 }
+\DoxyCodeLine{810 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{811 \textcolor{comment}{This is debug function intended for testing ALGLIB interface generator.}}
+\DoxyCodeLine{812 \textcolor{comment}{Never use it in any real life project.}}
+\DoxyCodeLine{813 \textcolor{comment}{}}
+\DoxyCodeLine{814 \textcolor{comment}{Returns sum of a[i,j]*(1+b[i,j]) such that c[i,j] is True}}
+\DoxyCodeLine{815 \textcolor{comment}{}}
+\DoxyCodeLine{816 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{817 \textcolor{comment}{     Copyright 11.10.2013 by Bochkanov Sergey}}
+\DoxyCodeLine{818 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{819 \textcolor{keywordtype}{double} xdebugmaskedbiasedproductsum(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&a, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&b, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1boolean__2d__array}{boolean\_2d\_array}} \&c, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{820 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{821 }
+\DoxyCodeLine{822 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARESTNEIGHBOR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{823 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{824 \textcolor{comment}{This function serializes data structure to string.}}
+\DoxyCodeLine{825 \textcolor{comment}{}}
+\DoxyCodeLine{826 \textcolor{comment}{Important properties of s\_out:}}
+\DoxyCodeLine{827 \textcolor{comment}{* it contains alphanumeric characters, dots, underscores, minus signs}}
+\DoxyCodeLine{828 \textcolor{comment}{* these symbols are grouped into words, which are separated by spaces}}
+\DoxyCodeLine{829 \textcolor{comment}{  and Windows-\/style (CR+LF) newlines}}
+\DoxyCodeLine{830 \textcolor{comment}{* although  serializer  uses  spaces and CR+LF as separators, you can }}
+\DoxyCodeLine{831 \textcolor{comment}{  replace any separator character by arbitrary combination of spaces,}}
+\DoxyCodeLine{832 \textcolor{comment}{  tabs, Windows or Unix newlines. It allows flexible reformatting  of}}
+\DoxyCodeLine{833 \textcolor{comment}{  the  string  in  case you want to include it into text or XML file. }}
+\DoxyCodeLine{834 \textcolor{comment}{  But you should not insert separators into the middle of the "{}words"{}}}
+\DoxyCodeLine{835 \textcolor{comment}{  nor you should change case of letters.}}
+\DoxyCodeLine{836 \textcolor{comment}{* s\_out can be freely moved between 32-\/bit and 64-\/bit systems, little}}
+\DoxyCodeLine{837 \textcolor{comment}{  and big endian machines, and so on. You can serialize structure  on}}
+\DoxyCodeLine{838 \textcolor{comment}{  32-\/bit machine and unserialize it on 64-\/bit one (or vice versa), or}}
+\DoxyCodeLine{839 \textcolor{comment}{  serialize  it  on  SPARC  and  unserialize  on  x86.  You  can also }}
+\DoxyCodeLine{840 \textcolor{comment}{  serialize  it  in  C++ version of ALGLIB and unserialize in C\# one, }}
+\DoxyCodeLine{841 \textcolor{comment}{  and vice versa.}}
+\DoxyCodeLine{842 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{843 \textcolor{keywordtype}{void} kdtreeserialize(\mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&obj, std::string \&s\_out);}
+\DoxyCodeLine{844 }
+\DoxyCodeLine{845 }
+\DoxyCodeLine{846 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{847 \textcolor{comment}{This function unserializes data structure from string.}}
+\DoxyCodeLine{848 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{849 \textcolor{keywordtype}{void} kdtreeunserialize(\textcolor{keyword}{const} std::string \&s\_in, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&obj);}
+\DoxyCodeLine{850 }
+\DoxyCodeLine{851 }
+\DoxyCodeLine{852 }
+\DoxyCodeLine{853 }
+\DoxyCodeLine{854 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{855 \textcolor{comment}{This function serializes data structure to C++ stream.}}
+\DoxyCodeLine{856 \textcolor{comment}{}}
+\DoxyCodeLine{857 \textcolor{comment}{Data stream generated by this function is same as  string  representation}}
+\DoxyCodeLine{858 \textcolor{comment}{generated  by  string  version  of  serializer -\/ alphanumeric characters,}}
+\DoxyCodeLine{859 \textcolor{comment}{dots, underscores, minus signs, which are grouped into words separated by}}
+\DoxyCodeLine{860 \textcolor{comment}{spaces and CR+LF.}}
+\DoxyCodeLine{861 \textcolor{comment}{}}
+\DoxyCodeLine{862 \textcolor{comment}{We recommend you to read comments on string version of serializer to find}}
+\DoxyCodeLine{863 \textcolor{comment}{out more about serialization of AlGLIB objects.}}
+\DoxyCodeLine{864 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{865 \textcolor{keywordtype}{void} kdtreeserialize(\mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&obj, std::ostream \&s\_out);}
+\DoxyCodeLine{866 }
+\DoxyCodeLine{867 }
+\DoxyCodeLine{868 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{869 \textcolor{comment}{This function unserializes data structure from stream.}}
+\DoxyCodeLine{870 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{871 \textcolor{keywordtype}{void} kdtreeunserialize(\textcolor{keyword}{const} std::istream \&s\_in, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&obj);}
+\DoxyCodeLine{872 }
+\DoxyCodeLine{873 }
+\DoxyCodeLine{874 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{875 \textcolor{comment}{KD-\/tree creation}}
+\DoxyCodeLine{876 \textcolor{comment}{}}
+\DoxyCodeLine{877 \textcolor{comment}{This subroutine creates KD-\/tree from set of X-\/values and optional Y-\/values}}
+\DoxyCodeLine{878 \textcolor{comment}{}}
+\DoxyCodeLine{879 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{880 \textcolor{comment}{    XY      -\/   dataset, array[0..N-\/1,0..NX+NY-\/1].}}
+\DoxyCodeLine{881 \textcolor{comment}{                one row corresponds to one point.}}
+\DoxyCodeLine{882 \textcolor{comment}{                first NX columns contain X-\/values, next NY (NY may be zero)}}
+\DoxyCodeLine{883 \textcolor{comment}{                columns may contain associated Y-\/values}}
+\DoxyCodeLine{884 \textcolor{comment}{    N       -\/   number of points, N>=0.}}
+\DoxyCodeLine{885 \textcolor{comment}{    NX      -\/   space dimension, NX>=1.}}
+\DoxyCodeLine{886 \textcolor{comment}{    NY      -\/   number of optional Y-\/values, NY>=0.}}
+\DoxyCodeLine{887 \textcolor{comment}{    NormType-\/   norm type:}}
+\DoxyCodeLine{888 \textcolor{comment}{                * 0 denotes infinity-\/norm}}
+\DoxyCodeLine{889 \textcolor{comment}{                * 1 denotes 1-\/norm}}
+\DoxyCodeLine{890 \textcolor{comment}{                * 2 denotes 2-\/norm (Euclidean norm)}}
+\DoxyCodeLine{891 \textcolor{comment}{}}
+\DoxyCodeLine{892 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{893 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{894 \textcolor{comment}{}}
+\DoxyCodeLine{895 \textcolor{comment}{}}
+\DoxyCodeLine{896 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{897 \textcolor{comment}{}}
+\DoxyCodeLine{898 \textcolor{comment}{1. KD-\/tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory}}
+\DoxyCodeLine{899 \textcolor{comment}{   requirements.}}
+\DoxyCodeLine{900 \textcolor{comment}{2. Although KD-\/trees may be used with any combination of N  and  NX,  they}}
+\DoxyCodeLine{901 \textcolor{comment}{   are more efficient than brute-\/force search only when N >> 4\string^NX. So they}}
+\DoxyCodeLine{902 \textcolor{comment}{   are most useful in low-\/dimensional tasks (NX=2, NX=3). NX=1  is another}}
+\DoxyCodeLine{903 \textcolor{comment}{   inefficient case, because  simple  binary  search  (without  additional}}
+\DoxyCodeLine{904 \textcolor{comment}{   structures) is much more efficient in such tasks than KD-\/trees.}}
+\DoxyCodeLine{905 \textcolor{comment}{}}
+\DoxyCodeLine{906 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{907 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{908 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{909 \textcolor{keywordtype}{void} kdtreebuild(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t nx, \textcolor{keyword}{const} ae\_int\_t ny, \textcolor{keyword}{const} ae\_int\_t normtype, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{910 \textcolor{keywordtype}{void} kdtreebuild(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} ae\_int\_t nx, \textcolor{keyword}{const} ae\_int\_t ny, \textcolor{keyword}{const} ae\_int\_t normtype, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{911 }
+\DoxyCodeLine{912 }
+\DoxyCodeLine{913 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{914 \textcolor{comment}{KD-\/tree creation}}
+\DoxyCodeLine{915 \textcolor{comment}{}}
+\DoxyCodeLine{916 \textcolor{comment}{This  subroutine  creates  KD-\/tree  from set of X-\/values, integer tags and}}
+\DoxyCodeLine{917 \textcolor{comment}{optional Y-\/values}}
+\DoxyCodeLine{918 \textcolor{comment}{}}
+\DoxyCodeLine{919 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{920 \textcolor{comment}{    XY      -\/   dataset, array[0..N-\/1,0..NX+NY-\/1].}}
+\DoxyCodeLine{921 \textcolor{comment}{                one row corresponds to one point.}}
+\DoxyCodeLine{922 \textcolor{comment}{                first NX columns contain X-\/values, next NY (NY may be zero)}}
+\DoxyCodeLine{923 \textcolor{comment}{                columns may contain associated Y-\/values}}
+\DoxyCodeLine{924 \textcolor{comment}{    Tags    -\/   tags, array[0..N-\/1], contains integer tags associated}}
+\DoxyCodeLine{925 \textcolor{comment}{                with points.}}
+\DoxyCodeLine{926 \textcolor{comment}{    N       -\/   number of points, N>=0}}
+\DoxyCodeLine{927 \textcolor{comment}{    NX      -\/   space dimension, NX>=1.}}
+\DoxyCodeLine{928 \textcolor{comment}{    NY      -\/   number of optional Y-\/values, NY>=0.}}
+\DoxyCodeLine{929 \textcolor{comment}{    NormType-\/   norm type:}}
+\DoxyCodeLine{930 \textcolor{comment}{                * 0 denotes infinity-\/norm}}
+\DoxyCodeLine{931 \textcolor{comment}{                * 1 denotes 1-\/norm}}
+\DoxyCodeLine{932 \textcolor{comment}{                * 2 denotes 2-\/norm (Euclidean norm)}}
+\DoxyCodeLine{933 \textcolor{comment}{}}
+\DoxyCodeLine{934 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{935 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{936 \textcolor{comment}{}}
+\DoxyCodeLine{937 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{938 \textcolor{comment}{}}
+\DoxyCodeLine{939 \textcolor{comment}{1. KD-\/tree  creation  have O(N*logN) complexity and O(N*(2*NX+NY))  memory}}
+\DoxyCodeLine{940 \textcolor{comment}{   requirements.}}
+\DoxyCodeLine{941 \textcolor{comment}{2. Although KD-\/trees may be used with any combination of N  and  NX,  they}}
+\DoxyCodeLine{942 \textcolor{comment}{   are more efficient than brute-\/force search only when N >> 4\string^NX. So they}}
+\DoxyCodeLine{943 \textcolor{comment}{   are most useful in low-\/dimensional tasks (NX=2, NX=3). NX=1  is another}}
+\DoxyCodeLine{944 \textcolor{comment}{   inefficient case, because  simple  binary  search  (without  additional}}
+\DoxyCodeLine{945 \textcolor{comment}{   structures) is much more efficient in such tasks than KD-\/trees.}}
+\DoxyCodeLine{946 \textcolor{comment}{}}
+\DoxyCodeLine{947 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{948 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{949 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{950 \textcolor{keywordtype}{void} kdtreebuildtagged(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&tags, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t nx, \textcolor{keyword}{const} ae\_int\_t ny, \textcolor{keyword}{const} ae\_int\_t normtype, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{951 \textcolor{keywordtype}{void} kdtreebuildtagged(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&tags, \textcolor{keyword}{const} ae\_int\_t nx, \textcolor{keyword}{const} ae\_int\_t ny, \textcolor{keyword}{const} ae\_int\_t normtype, \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{952 }
+\DoxyCodeLine{953 }
+\DoxyCodeLine{954 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{955 \textcolor{comment}{This function creates buffer  structure  which  can  be  used  to  perform}}
+\DoxyCodeLine{956 \textcolor{comment}{parallel KD-\/tree requests.}}
+\DoxyCodeLine{957 \textcolor{comment}{}}
+\DoxyCodeLine{958 \textcolor{comment}{KD-\/tree subpackage provides two sets of request functions -\/ ones which use}}
+\DoxyCodeLine{959 \textcolor{comment}{internal buffer of KD-\/tree object  (these  functions  are  single-\/threaded}}
+\DoxyCodeLine{960 \textcolor{comment}{because they use same buffer, which can not shared between  threads),  and}}
+\DoxyCodeLine{961 \textcolor{comment}{ones which use external buffer.}}
+\DoxyCodeLine{962 \textcolor{comment}{}}
+\DoxyCodeLine{963 \textcolor{comment}{This function is used to initialize external buffer.}}
+\DoxyCodeLine{964 \textcolor{comment}{}}
+\DoxyCodeLine{965 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{966 \textcolor{comment}{    KDT         -\/   KD-\/tree which is associated with newly created buffer}}
+\DoxyCodeLine{967 \textcolor{comment}{}}
+\DoxyCodeLine{968 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{969 \textcolor{comment}{    Buf         -\/   external buffer.}}
+\DoxyCodeLine{970 \textcolor{comment}{}}
+\DoxyCodeLine{971 \textcolor{comment}{}}
+\DoxyCodeLine{972 \textcolor{comment}{IMPORTANT: KD-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{973 \textcolor{comment}{           was used to initialize buffer. Any attempt to use buffer   with}}
+\DoxyCodeLine{974 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{975 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{976 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{977 \textcolor{comment}{}}
+\DoxyCodeLine{978 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{979 \textcolor{comment}{     Copyright 18.03.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{980 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{981 \textcolor{keywordtype}{void} kdtreecreaterequestbuffer(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{982 }
+\DoxyCodeLine{983 }
+\DoxyCodeLine{984 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{985 \textcolor{comment}{K-\/NN query: K nearest neighbors}}
+\DoxyCodeLine{986 \textcolor{comment}{}}
+\DoxyCodeLine{987 \textcolor{comment}{IMPORTANT: this function can not be used in multithreaded code because  it}}
+\DoxyCodeLine{988 \textcolor{comment}{           uses internal temporary buffer of kd-\/tree object, which can not}}
+\DoxyCodeLine{989 \textcolor{comment}{           be shared between multiple threads.  If  you  want  to  perform}}
+\DoxyCodeLine{990 \textcolor{comment}{           parallel requests, use function  which  uses  external  request}}
+\DoxyCodeLine{991 \textcolor{comment}{           buffer: KDTreeTsQueryKNN() ("{}Ts"{} stands for "{}thread-\/safe"{}).}}
+\DoxyCodeLine{992 \textcolor{comment}{}}
+\DoxyCodeLine{993 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{994 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{995 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{996 \textcolor{comment}{    K           -\/   number of neighbors to return, K>=1}}
+\DoxyCodeLine{997 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{998 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{999 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1000 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1001 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1002 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1003 \textcolor{comment}{}}
+\DoxyCodeLine{1004 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1005 \textcolor{comment}{    number of actual neighbors found (either K or N, if K>N).}}
+\DoxyCodeLine{1006 \textcolor{comment}{}}
+\DoxyCodeLine{1007 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1008 \textcolor{comment}{structures of the KD-\/tree. You can use  following  subroutines  to  obtain}}
+\DoxyCodeLine{1009 \textcolor{comment}{these results:}}
+\DoxyCodeLine{1010 \textcolor{comment}{* KDTreeQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1011 \textcolor{comment}{* KDTreeQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1012 \textcolor{comment}{* KDTreeQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1013 \textcolor{comment}{* KDTreeQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1014 \textcolor{comment}{}}
+\DoxyCodeLine{1015 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1016 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1017 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1018 ae\_int\_t kdtreequeryknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1019 ae\_int\_t kdtreequeryknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1020 }
+\DoxyCodeLine{1021 }
+\DoxyCodeLine{1022 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1023 \textcolor{comment}{K-\/NN query: K nearest neighbors, using external thread-\/local buffer.}}
+\DoxyCodeLine{1024 \textcolor{comment}{}}
+\DoxyCodeLine{1025 \textcolor{comment}{You can call this function from multiple threads for same kd-\/tree instance,}}
+\DoxyCodeLine{1026 \textcolor{comment}{assuming that different instances of buffer object are passed to different}}
+\DoxyCodeLine{1027 \textcolor{comment}{threads.}}
+\DoxyCodeLine{1028 \textcolor{comment}{}}
+\DoxyCodeLine{1029 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1030 \textcolor{comment}{    KDT         -\/   kd-\/tree}}
+\DoxyCodeLine{1031 \textcolor{comment}{    Buf         -\/   request buffer  object  created  for  this  particular}}
+\DoxyCodeLine{1032 \textcolor{comment}{                    instance of kd-\/tree structure with kdtreecreaterequestbuffer()}}
+\DoxyCodeLine{1033 \textcolor{comment}{                    function.}}
+\DoxyCodeLine{1034 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1035 \textcolor{comment}{    K           -\/   number of neighbors to return, K>=1}}
+\DoxyCodeLine{1036 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1037 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1038 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1039 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1040 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1041 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1042 \textcolor{comment}{}}
+\DoxyCodeLine{1043 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1044 \textcolor{comment}{    number of actual neighbors found (either K or N, if K>N).}}
+\DoxyCodeLine{1045 \textcolor{comment}{}}
+\DoxyCodeLine{1046 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1047 \textcolor{comment}{structures  of  the  buffer object. You can use following  subroutines  to}}
+\DoxyCodeLine{1048 \textcolor{comment}{obtain these results (pay attention to "{}buf"{} in their names):}}
+\DoxyCodeLine{1049 \textcolor{comment}{* KDTreeTsQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1050 \textcolor{comment}{* KDTreeTsQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1051 \textcolor{comment}{* KDTreeTsQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1052 \textcolor{comment}{* KDTreeTsQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1053 \textcolor{comment}{}}
+\DoxyCodeLine{1054 \textcolor{comment}{IMPORTANT: kd-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{1055 \textcolor{comment}{           was used to initialize buffer. Any attempt to use biffer   with}}
+\DoxyCodeLine{1056 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{1057 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{1058 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{1059 \textcolor{comment}{}}
+\DoxyCodeLine{1060 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1061 \textcolor{comment}{     Copyright 18.03.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1062 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1063 ae\_int\_t kdtreetsqueryknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1064 ae\_int\_t kdtreetsqueryknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1065 }
+\DoxyCodeLine{1066 }
+\DoxyCodeLine{1067 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1068 \textcolor{comment}{R-\/NN query: all points within R-\/sphere centered at X, ordered by  distance}}
+\DoxyCodeLine{1069 \textcolor{comment}{between point and X (by ascending).}}
+\DoxyCodeLine{1070 \textcolor{comment}{}}
+\DoxyCodeLine{1071 \textcolor{comment}{NOTE: it is also possible to perform undordered queries performed by means}}
+\DoxyCodeLine{1072 \textcolor{comment}{      of kdtreequeryrnnu() and kdtreetsqueryrnnu() functions. Such queries}}
+\DoxyCodeLine{1073 \textcolor{comment}{      are faster because we do not have to use heap structure for sorting.}}
+\DoxyCodeLine{1074 \textcolor{comment}{}}
+\DoxyCodeLine{1075 \textcolor{comment}{IMPORTANT: this function can not be used in multithreaded code because  it}}
+\DoxyCodeLine{1076 \textcolor{comment}{           uses internal temporary buffer of kd-\/tree object, which can not}}
+\DoxyCodeLine{1077 \textcolor{comment}{           be shared between multiple threads.  If  you  want  to  perform}}
+\DoxyCodeLine{1078 \textcolor{comment}{           parallel requests, use function  which  uses  external  request}}
+\DoxyCodeLine{1079 \textcolor{comment}{           buffer: kdtreetsqueryrnn() ("{}Ts"{} stands for "{}thread-\/safe"{}).}}
+\DoxyCodeLine{1080 \textcolor{comment}{}}
+\DoxyCodeLine{1081 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1082 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1083 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1084 \textcolor{comment}{    R           -\/   radius of sphere (in corresponding norm), R>0}}
+\DoxyCodeLine{1085 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1086 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1087 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1088 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1089 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1090 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1091 \textcolor{comment}{}}
+\DoxyCodeLine{1092 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1093 \textcolor{comment}{    number of neighbors found, >=0}}
+\DoxyCodeLine{1094 \textcolor{comment}{}}
+\DoxyCodeLine{1095 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1096 \textcolor{comment}{structures of the KD-\/tree. You can use  following  subroutines  to  obtain}}
+\DoxyCodeLine{1097 \textcolor{comment}{actual results:}}
+\DoxyCodeLine{1098 \textcolor{comment}{* KDTreeQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1099 \textcolor{comment}{* KDTreeQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1100 \textcolor{comment}{* KDTreeQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1101 \textcolor{comment}{* KDTreeQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1102 \textcolor{comment}{}}
+\DoxyCodeLine{1103 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1104 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1105 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1106 ae\_int\_t kdtreequeryrnn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1107 ae\_int\_t kdtreequeryrnn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1108 }
+\DoxyCodeLine{1109 }
+\DoxyCodeLine{1110 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1111 \textcolor{comment}{R-\/NN query: all points within R-\/sphere  centered  at  X,  no  ordering  by}}
+\DoxyCodeLine{1112 \textcolor{comment}{distance as undicated by "{}U"{} suffix (faster that ordered query, for  large}}
+\DoxyCodeLine{1113 \textcolor{comment}{queries -\/ significantly faster).}}
+\DoxyCodeLine{1114 \textcolor{comment}{}}
+\DoxyCodeLine{1115 \textcolor{comment}{IMPORTANT: this function can not be used in multithreaded code because  it}}
+\DoxyCodeLine{1116 \textcolor{comment}{           uses internal temporary buffer of kd-\/tree object, which can not}}
+\DoxyCodeLine{1117 \textcolor{comment}{           be shared between multiple threads.  If  you  want  to  perform}}
+\DoxyCodeLine{1118 \textcolor{comment}{           parallel requests, use function  which  uses  external  request}}
+\DoxyCodeLine{1119 \textcolor{comment}{           buffer: kdtreetsqueryrnn() ("{}Ts"{} stands for "{}thread-\/safe"{}).}}
+\DoxyCodeLine{1120 \textcolor{comment}{}}
+\DoxyCodeLine{1121 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1122 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1123 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1124 \textcolor{comment}{    R           -\/   radius of sphere (in corresponding norm), R>0}}
+\DoxyCodeLine{1125 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1126 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1127 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1128 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1129 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1130 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1131 \textcolor{comment}{}}
+\DoxyCodeLine{1132 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1133 \textcolor{comment}{    number of neighbors found, >=0}}
+\DoxyCodeLine{1134 \textcolor{comment}{}}
+\DoxyCodeLine{1135 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1136 \textcolor{comment}{structures of the KD-\/tree. You can use  following  subroutines  to  obtain}}
+\DoxyCodeLine{1137 \textcolor{comment}{actual results:}}
+\DoxyCodeLine{1138 \textcolor{comment}{* KDTreeQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1139 \textcolor{comment}{* KDTreeQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1140 \textcolor{comment}{* KDTreeQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1141 \textcolor{comment}{* KDTreeQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1142 \textcolor{comment}{}}
+\DoxyCodeLine{1143 \textcolor{comment}{As indicated by "{}U"{} suffix, this function returns unordered results.}}
+\DoxyCodeLine{1144 \textcolor{comment}{}}
+\DoxyCodeLine{1145 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1146 \textcolor{comment}{     Copyright 01.11.2018 by Bochkanov Sergey}}
+\DoxyCodeLine{1147 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1148 ae\_int\_t kdtreequeryrnnu(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1149 ae\_int\_t kdtreequeryrnnu(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1150 }
+\DoxyCodeLine{1151 }
+\DoxyCodeLine{1152 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1153 \textcolor{comment}{R-\/NN query: all points within  R-\/sphere  centered  at  X,  using  external}}
+\DoxyCodeLine{1154 \textcolor{comment}{thread-\/local buffer, sorted by distance between point and X (by ascending)}}
+\DoxyCodeLine{1155 \textcolor{comment}{}}
+\DoxyCodeLine{1156 \textcolor{comment}{You can call this function from multiple threads for same kd-\/tree instance,}}
+\DoxyCodeLine{1157 \textcolor{comment}{assuming that different instances of buffer object are passed to different}}
+\DoxyCodeLine{1158 \textcolor{comment}{threads.}}
+\DoxyCodeLine{1159 \textcolor{comment}{}}
+\DoxyCodeLine{1160 \textcolor{comment}{NOTE: it is also possible to perform undordered queries performed by means}}
+\DoxyCodeLine{1161 \textcolor{comment}{      of kdtreequeryrnnu() and kdtreetsqueryrnnu() functions. Such queries}}
+\DoxyCodeLine{1162 \textcolor{comment}{      are faster because we do not have to use heap structure for sorting.}}
+\DoxyCodeLine{1163 \textcolor{comment}{}}
+\DoxyCodeLine{1164 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1165 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1166 \textcolor{comment}{    Buf         -\/   request buffer  object  created  for  this  particular}}
+\DoxyCodeLine{1167 \textcolor{comment}{                    instance of kd-\/tree structure with kdtreecreaterequestbuffer()}}
+\DoxyCodeLine{1168 \textcolor{comment}{                    function.}}
+\DoxyCodeLine{1169 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1170 \textcolor{comment}{    R           -\/   radius of sphere (in corresponding norm), R>0}}
+\DoxyCodeLine{1171 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1172 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1173 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1174 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1175 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1176 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1177 \textcolor{comment}{}}
+\DoxyCodeLine{1178 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1179 \textcolor{comment}{    number of neighbors found, >=0}}
+\DoxyCodeLine{1180 \textcolor{comment}{}}
+\DoxyCodeLine{1181 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1182 \textcolor{comment}{structures  of  the  buffer object. You can use following  subroutines  to}}
+\DoxyCodeLine{1183 \textcolor{comment}{obtain these results (pay attention to "{}buf"{} in their names):}}
+\DoxyCodeLine{1184 \textcolor{comment}{* KDTreeTsQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1185 \textcolor{comment}{* KDTreeTsQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1186 \textcolor{comment}{* KDTreeTsQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1187 \textcolor{comment}{* KDTreeTsQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1188 \textcolor{comment}{}}
+\DoxyCodeLine{1189 \textcolor{comment}{IMPORTANT: kd-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{1190 \textcolor{comment}{           was used to initialize buffer. Any attempt to use biffer   with}}
+\DoxyCodeLine{1191 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{1192 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{1193 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{1194 \textcolor{comment}{}}
+\DoxyCodeLine{1195 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1196 \textcolor{comment}{     Copyright 18.03.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1197 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1198 ae\_int\_t kdtreetsqueryrnn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1199 ae\_int\_t kdtreetsqueryrnn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1200 }
+\DoxyCodeLine{1201 }
+\DoxyCodeLine{1202 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1203 \textcolor{comment}{R-\/NN query: all points within  R-\/sphere  centered  at  X,  using  external}}
+\DoxyCodeLine{1204 \textcolor{comment}{thread-\/local buffer, no ordering by distance as undicated  by  "{}U"{}  suffix}}
+\DoxyCodeLine{1205 \textcolor{comment}{(faster that ordered query, for large queries -\/ significantly faster).}}
+\DoxyCodeLine{1206 \textcolor{comment}{}}
+\DoxyCodeLine{1207 \textcolor{comment}{You can call this function from multiple threads for same kd-\/tree instance,}}
+\DoxyCodeLine{1208 \textcolor{comment}{assuming that different instances of buffer object are passed to different}}
+\DoxyCodeLine{1209 \textcolor{comment}{threads.}}
+\DoxyCodeLine{1210 \textcolor{comment}{}}
+\DoxyCodeLine{1211 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1212 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1213 \textcolor{comment}{    Buf         -\/   request buffer  object  created  for  this  particular}}
+\DoxyCodeLine{1214 \textcolor{comment}{                    instance of kd-\/tree structure with kdtreecreaterequestbuffer()}}
+\DoxyCodeLine{1215 \textcolor{comment}{                    function.}}
+\DoxyCodeLine{1216 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1217 \textcolor{comment}{    R           -\/   radius of sphere (in corresponding norm), R>0}}
+\DoxyCodeLine{1218 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1219 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1220 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1221 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1222 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1223 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1224 \textcolor{comment}{}}
+\DoxyCodeLine{1225 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1226 \textcolor{comment}{    number of neighbors found, >=0}}
+\DoxyCodeLine{1227 \textcolor{comment}{}}
+\DoxyCodeLine{1228 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1229 \textcolor{comment}{structures  of  the  buffer object. You can use following  subroutines  to}}
+\DoxyCodeLine{1230 \textcolor{comment}{obtain these results (pay attention to "{}buf"{} in their names):}}
+\DoxyCodeLine{1231 \textcolor{comment}{* KDTreeTsQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1232 \textcolor{comment}{* KDTreeTsQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1233 \textcolor{comment}{* KDTreeTsQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1234 \textcolor{comment}{* KDTreeTsQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1235 \textcolor{comment}{}}
+\DoxyCodeLine{1236 \textcolor{comment}{As indicated by "{}U"{} suffix, this function returns unordered results.}}
+\DoxyCodeLine{1237 \textcolor{comment}{}}
+\DoxyCodeLine{1238 \textcolor{comment}{IMPORTANT: kd-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{1239 \textcolor{comment}{           was used to initialize buffer. Any attempt to use biffer   with}}
+\DoxyCodeLine{1240 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{1241 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{1242 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{1243 \textcolor{comment}{}}
+\DoxyCodeLine{1244 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1245 \textcolor{comment}{     Copyright 18.03.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1246 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1247 ae\_int\_t kdtreetsqueryrnnu(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1248 ae\_int\_t kdtreetsqueryrnnu(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1249 }
+\DoxyCodeLine{1250 }
+\DoxyCodeLine{1251 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1252 \textcolor{comment}{K-\/NN query: approximate K nearest neighbors}}
+\DoxyCodeLine{1253 \textcolor{comment}{}}
+\DoxyCodeLine{1254 \textcolor{comment}{IMPORTANT: this function can not be used in multithreaded code because  it}}
+\DoxyCodeLine{1255 \textcolor{comment}{           uses internal temporary buffer of kd-\/tree object, which can not}}
+\DoxyCodeLine{1256 \textcolor{comment}{           be shared between multiple threads.  If  you  want  to  perform}}
+\DoxyCodeLine{1257 \textcolor{comment}{           parallel requests, use function  which  uses  external  request}}
+\DoxyCodeLine{1258 \textcolor{comment}{           buffer: KDTreeTsQueryAKNN() ("{}Ts"{} stands for "{}thread-\/safe"{}).}}
+\DoxyCodeLine{1259 \textcolor{comment}{}}
+\DoxyCodeLine{1260 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1261 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1262 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1263 \textcolor{comment}{    K           -\/   number of neighbors to return, K>=1}}
+\DoxyCodeLine{1264 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1265 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1266 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1267 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1268 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1269 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1270 \textcolor{comment}{    Eps         -\/   approximation factor, Eps>=0. eps-\/approximate  nearest}}
+\DoxyCodeLine{1271 \textcolor{comment}{                    neighbor  is  a  neighbor  whose distance from X is at}}
+\DoxyCodeLine{1272 \textcolor{comment}{                    most (1+eps) times distance of true nearest neighbor.}}
+\DoxyCodeLine{1273 \textcolor{comment}{}}
+\DoxyCodeLine{1274 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1275 \textcolor{comment}{    number of actual neighbors found (either K or N, if K>N).}}
+\DoxyCodeLine{1276 \textcolor{comment}{}}
+\DoxyCodeLine{1277 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1278 \textcolor{comment}{    significant performance gain may be achieved only when Eps  is  is  on}}
+\DoxyCodeLine{1279 \textcolor{comment}{    the order of magnitude of 1 or larger.}}
+\DoxyCodeLine{1280 \textcolor{comment}{}}
+\DoxyCodeLine{1281 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1282 \textcolor{comment}{structures of the KD-\/tree. You can use  following  subroutines  to  obtain}}
+\DoxyCodeLine{1283 \textcolor{comment}{these results:}}
+\DoxyCodeLine{1284 \textcolor{comment}{* KDTreeQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1285 \textcolor{comment}{* KDTreeQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1286 \textcolor{comment}{* KDTreeQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1287 \textcolor{comment}{* KDTreeQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1288 \textcolor{comment}{}}
+\DoxyCodeLine{1289 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1290 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1291 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1292 ae\_int\_t kdtreequeryaknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1293 ae\_int\_t kdtreequeryaknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1294 }
+\DoxyCodeLine{1295 }
+\DoxyCodeLine{1296 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1297 \textcolor{comment}{K-\/NN query: approximate K nearest neighbors, using thread-\/local buffer.}}
+\DoxyCodeLine{1298 \textcolor{comment}{}}
+\DoxyCodeLine{1299 \textcolor{comment}{You can call this function from multiple threads for same kd-\/tree instance,}}
+\DoxyCodeLine{1300 \textcolor{comment}{assuming that different instances of buffer object are passed to different}}
+\DoxyCodeLine{1301 \textcolor{comment}{threads.}}
+\DoxyCodeLine{1302 \textcolor{comment}{}}
+\DoxyCodeLine{1303 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1304 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1305 \textcolor{comment}{    Buf         -\/   request buffer  object  created  for  this  particular}}
+\DoxyCodeLine{1306 \textcolor{comment}{                    instance of kd-\/tree structure with kdtreecreaterequestbuffer()}}
+\DoxyCodeLine{1307 \textcolor{comment}{                    function.}}
+\DoxyCodeLine{1308 \textcolor{comment}{    X           -\/   point, array[0..NX-\/1].}}
+\DoxyCodeLine{1309 \textcolor{comment}{    K           -\/   number of neighbors to return, K>=1}}
+\DoxyCodeLine{1310 \textcolor{comment}{    SelfMatch   -\/   whether self-\/matches are allowed:}}
+\DoxyCodeLine{1311 \textcolor{comment}{                    * if True, nearest neighbor may be the point itself}}
+\DoxyCodeLine{1312 \textcolor{comment}{                      (if it exists in original dataset)}}
+\DoxyCodeLine{1313 \textcolor{comment}{                    * if False, then only points with non-\/zero distance}}
+\DoxyCodeLine{1314 \textcolor{comment}{                      are returned}}
+\DoxyCodeLine{1315 \textcolor{comment}{                    * if not given, considered True}}
+\DoxyCodeLine{1316 \textcolor{comment}{    Eps         -\/   approximation factor, Eps>=0. eps-\/approximate  nearest}}
+\DoxyCodeLine{1317 \textcolor{comment}{                    neighbor  is  a  neighbor  whose distance from X is at}}
+\DoxyCodeLine{1318 \textcolor{comment}{                    most (1+eps) times distance of true nearest neighbor.}}
+\DoxyCodeLine{1319 \textcolor{comment}{}}
+\DoxyCodeLine{1320 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1321 \textcolor{comment}{    number of actual neighbors found (either K or N, if K>N).}}
+\DoxyCodeLine{1322 \textcolor{comment}{}}
+\DoxyCodeLine{1323 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1324 \textcolor{comment}{    significant performance gain may be achieved only when Eps  is  is  on}}
+\DoxyCodeLine{1325 \textcolor{comment}{    the order of magnitude of 1 or larger.}}
+\DoxyCodeLine{1326 \textcolor{comment}{}}
+\DoxyCodeLine{1327 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1328 \textcolor{comment}{structures  of  the  buffer object. You can use following  subroutines  to}}
+\DoxyCodeLine{1329 \textcolor{comment}{obtain these results (pay attention to "{}buf"{} in their names):}}
+\DoxyCodeLine{1330 \textcolor{comment}{* KDTreeTsQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1331 \textcolor{comment}{* KDTreeTsQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1332 \textcolor{comment}{* KDTreeTsQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1333 \textcolor{comment}{* KDTreeTsQueryResultsDistances() to get distances}}
+\DoxyCodeLine{1334 \textcolor{comment}{}}
+\DoxyCodeLine{1335 \textcolor{comment}{IMPORTANT: kd-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{1336 \textcolor{comment}{           was used to initialize buffer. Any attempt to use biffer   with}}
+\DoxyCodeLine{1337 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{1338 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{1339 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{1340 \textcolor{comment}{}}
+\DoxyCodeLine{1341 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1342 \textcolor{comment}{     Copyright 18.03.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1343 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1344 ae\_int\_t kdtreetsqueryaknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{bool} selfmatch, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1345 ae\_int\_t kdtreetsqueryaknn(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&x, \textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} eps, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1346 }
+\DoxyCodeLine{1347 }
+\DoxyCodeLine{1348 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1349 \textcolor{comment}{Box query: all points within user-\/specified box.}}
+\DoxyCodeLine{1350 \textcolor{comment}{}}
+\DoxyCodeLine{1351 \textcolor{comment}{IMPORTANT: this function can not be used in multithreaded code because  it}}
+\DoxyCodeLine{1352 \textcolor{comment}{           uses internal temporary buffer of kd-\/tree object, which can not}}
+\DoxyCodeLine{1353 \textcolor{comment}{           be shared between multiple threads.  If  you  want  to  perform}}
+\DoxyCodeLine{1354 \textcolor{comment}{           parallel requests, use function  which  uses  external  request}}
+\DoxyCodeLine{1355 \textcolor{comment}{           buffer: KDTreeTsQueryBox() ("{}Ts"{} stands for "{}thread-\/safe"{}).}}
+\DoxyCodeLine{1356 \textcolor{comment}{}}
+\DoxyCodeLine{1357 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1358 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1359 \textcolor{comment}{    BoxMin      -\/   lower bounds, array[0..NX-\/1].}}
+\DoxyCodeLine{1360 \textcolor{comment}{    BoxMax      -\/   upper bounds, array[0..NX-\/1].}}
+\DoxyCodeLine{1361 \textcolor{comment}{}}
+\DoxyCodeLine{1362 \textcolor{comment}{}}
+\DoxyCodeLine{1363 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1364 \textcolor{comment}{    number of actual neighbors found (in [0,N]).}}
+\DoxyCodeLine{1365 \textcolor{comment}{}}
+\DoxyCodeLine{1366 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1367 \textcolor{comment}{structures of the KD-\/tree. You can use  following  subroutines  to  obtain}}
+\DoxyCodeLine{1368 \textcolor{comment}{these results:}}
+\DoxyCodeLine{1369 \textcolor{comment}{* KDTreeQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1370 \textcolor{comment}{* KDTreeQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1371 \textcolor{comment}{* KDTreeQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1372 \textcolor{comment}{* KDTreeQueryResultsDistances() returns zeros for this request}}
+\DoxyCodeLine{1373 \textcolor{comment}{}}
+\DoxyCodeLine{1374 \textcolor{comment}{NOTE: this particular query returns unordered results, because there is no}}
+\DoxyCodeLine{1375 \textcolor{comment}{      meaningful way of  ordering  points.  Furthermore,  no 'distance' is}}
+\DoxyCodeLine{1376 \textcolor{comment}{      associated with points -\/ it is either INSIDE  or OUTSIDE (so request}}
+\DoxyCodeLine{1377 \textcolor{comment}{      for distances will return zeros).}}
+\DoxyCodeLine{1378 \textcolor{comment}{}}
+\DoxyCodeLine{1379 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1380 \textcolor{comment}{     Copyright 14.05.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1381 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1382 ae\_int\_t kdtreequerybox(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&boxmin, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&boxmax, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1383 }
+\DoxyCodeLine{1384 }
+\DoxyCodeLine{1385 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1386 \textcolor{comment}{Box query: all points within user-\/specified box, using thread-\/local buffer.}}
+\DoxyCodeLine{1387 \textcolor{comment}{}}
+\DoxyCodeLine{1388 \textcolor{comment}{You can call this function from multiple threads for same kd-\/tree instance,}}
+\DoxyCodeLine{1389 \textcolor{comment}{assuming that different instances of buffer object are passed to different}}
+\DoxyCodeLine{1390 \textcolor{comment}{threads.}}
+\DoxyCodeLine{1391 \textcolor{comment}{}}
+\DoxyCodeLine{1392 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1393 \textcolor{comment}{    KDT         -\/   KD-\/tree}}
+\DoxyCodeLine{1394 \textcolor{comment}{    Buf         -\/   request buffer  object  created  for  this  particular}}
+\DoxyCodeLine{1395 \textcolor{comment}{                    instance of kd-\/tree structure with kdtreecreaterequestbuffer()}}
+\DoxyCodeLine{1396 \textcolor{comment}{                    function.}}
+\DoxyCodeLine{1397 \textcolor{comment}{    BoxMin      -\/   lower bounds, array[0..NX-\/1].}}
+\DoxyCodeLine{1398 \textcolor{comment}{    BoxMax      -\/   upper bounds, array[0..NX-\/1].}}
+\DoxyCodeLine{1399 \textcolor{comment}{}}
+\DoxyCodeLine{1400 \textcolor{comment}{RESULT}}
+\DoxyCodeLine{1401 \textcolor{comment}{    number of actual neighbors found (in [0,N]).}}
+\DoxyCodeLine{1402 \textcolor{comment}{}}
+\DoxyCodeLine{1403 \textcolor{comment}{This  subroutine  performs  query  and  stores  its result in the internal}}
+\DoxyCodeLine{1404 \textcolor{comment}{structures  of  the  buffer object. You can use following  subroutines  to}}
+\DoxyCodeLine{1405 \textcolor{comment}{obtain these results (pay attention to "{}ts"{} in their names):}}
+\DoxyCodeLine{1406 \textcolor{comment}{* KDTreeTsQueryResultsX() to get X-\/values}}
+\DoxyCodeLine{1407 \textcolor{comment}{* KDTreeTsQueryResultsXY() to get X-\/ and Y-\/values}}
+\DoxyCodeLine{1408 \textcolor{comment}{* KDTreeTsQueryResultsTags() to get tag values}}
+\DoxyCodeLine{1409 \textcolor{comment}{* KDTreeTsQueryResultsDistances() returns zeros for this query}}
+\DoxyCodeLine{1410 \textcolor{comment}{}}
+\DoxyCodeLine{1411 \textcolor{comment}{NOTE: this particular query returns unordered results, because there is no}}
+\DoxyCodeLine{1412 \textcolor{comment}{      meaningful way of  ordering  points.  Furthermore,  no 'distance' is}}
+\DoxyCodeLine{1413 \textcolor{comment}{      associated with points -\/ it is either INSIDE  or OUTSIDE (so request}}
+\DoxyCodeLine{1414 \textcolor{comment}{      for distances will return zeros).}}
+\DoxyCodeLine{1415 \textcolor{comment}{}}
+\DoxyCodeLine{1416 \textcolor{comment}{IMPORTANT: kd-\/tree buffer should be used only with  KD-\/tree  object  which}}
+\DoxyCodeLine{1417 \textcolor{comment}{           was used to initialize buffer. Any attempt to use biffer   with}}
+\DoxyCodeLine{1418 \textcolor{comment}{           different object is dangerous -\/ you  may  get  integrity  check}}
+\DoxyCodeLine{1419 \textcolor{comment}{           failure (exception) because sizes of internal arrays do not fit}}
+\DoxyCodeLine{1420 \textcolor{comment}{           to dimensions of KD-\/tree structure.}}
+\DoxyCodeLine{1421 \textcolor{comment}{}}
+\DoxyCodeLine{1422 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1423 \textcolor{comment}{     Copyright 14.05.2016 by Bochkanov Sergey}}
+\DoxyCodeLine{1424 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1425 ae\_int\_t kdtreetsquerybox(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&boxmin, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&boxmax, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1426 }
+\DoxyCodeLine{1427 }
+\DoxyCodeLine{1428 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1429 \textcolor{comment}{X-\/values from last query.}}
+\DoxyCodeLine{1430 \textcolor{comment}{}}
+\DoxyCodeLine{1431 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1432 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1433 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1434 \textcolor{comment}{function -\/ kdtreetsqueryresultsx().}}
+\DoxyCodeLine{1435 \textcolor{comment}{}}
+\DoxyCodeLine{1436 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1437 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1438 \textcolor{comment}{    X       -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1439 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1440 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1441 \textcolor{comment}{}}
+\DoxyCodeLine{1442 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1443 \textcolor{comment}{    X       -\/   rows are filled with X-\/values}}
+\DoxyCodeLine{1444 \textcolor{comment}{}}
+\DoxyCodeLine{1445 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1446 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1447 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1448 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1449 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1450 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1451 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1452 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1453 \textcolor{comment}{}}
+\DoxyCodeLine{1454 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1455 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1456 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1457 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1458 \textcolor{comment}{}}
+\DoxyCodeLine{1459 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1460 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1461 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1462 \textcolor{keywordtype}{void} kdtreequeryresultsx(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&x, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1463 }
+\DoxyCodeLine{1464 }
+\DoxyCodeLine{1465 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1466 \textcolor{comment}{X-\/ and Y-\/values from last query}}
+\DoxyCodeLine{1467 \textcolor{comment}{}}
+\DoxyCodeLine{1468 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1469 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1470 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1471 \textcolor{comment}{function -\/ kdtreetsqueryresultsxy().}}
+\DoxyCodeLine{1472 \textcolor{comment}{}}
+\DoxyCodeLine{1473 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1474 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1475 \textcolor{comment}{    XY      -\/   possibly pre-\/allocated buffer. If XY is too small to store}}
+\DoxyCodeLine{1476 \textcolor{comment}{                result, it is resized. If size(XY) is enough to store}}
+\DoxyCodeLine{1477 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1478 \textcolor{comment}{}}
+\DoxyCodeLine{1479 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1480 \textcolor{comment}{    XY      -\/   rows are filled with points: first NX columns with}}
+\DoxyCodeLine{1481 \textcolor{comment}{                X-\/values, next NY columns -\/ with Y-\/values.}}
+\DoxyCodeLine{1482 \textcolor{comment}{}}
+\DoxyCodeLine{1483 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1484 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1485 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1486 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1487 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1488 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1489 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1490 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1491 \textcolor{comment}{}}
+\DoxyCodeLine{1492 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1493 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1494 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1495 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1496 \textcolor{comment}{}}
+\DoxyCodeLine{1497 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1498 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1499 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1500 \textcolor{keywordtype}{void} kdtreequeryresultsxy(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1501 }
+\DoxyCodeLine{1502 }
+\DoxyCodeLine{1503 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1504 \textcolor{comment}{Tags from last query}}
+\DoxyCodeLine{1505 \textcolor{comment}{}}
+\DoxyCodeLine{1506 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1507 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1508 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1509 \textcolor{comment}{function -\/ kdtreetsqueryresultstags().}}
+\DoxyCodeLine{1510 \textcolor{comment}{}}
+\DoxyCodeLine{1511 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1512 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1513 \textcolor{comment}{    Tags    -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1514 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1515 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1516 \textcolor{comment}{}}
+\DoxyCodeLine{1517 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1518 \textcolor{comment}{    Tags    -\/   filled with tags associated with points,}}
+\DoxyCodeLine{1519 \textcolor{comment}{                or, when no tags were supplied, with zeros}}
+\DoxyCodeLine{1520 \textcolor{comment}{}}
+\DoxyCodeLine{1521 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1522 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1523 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1524 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1525 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1526 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1527 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1528 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1529 \textcolor{comment}{}}
+\DoxyCodeLine{1530 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1531 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1532 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1533 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1534 \textcolor{comment}{}}
+\DoxyCodeLine{1535 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1536 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1537 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1538 \textcolor{keywordtype}{void} kdtreequeryresultstags(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&tags, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1539 }
+\DoxyCodeLine{1540 }
+\DoxyCodeLine{1541 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1542 \textcolor{comment}{Distances from last query}}
+\DoxyCodeLine{1543 \textcolor{comment}{}}
+\DoxyCodeLine{1544 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1545 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1546 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1547 \textcolor{comment}{function -\/ kdtreetsqueryresultsdistances().}}
+\DoxyCodeLine{1548 \textcolor{comment}{}}
+\DoxyCodeLine{1549 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1550 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1551 \textcolor{comment}{    R       -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1552 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1553 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1554 \textcolor{comment}{}}
+\DoxyCodeLine{1555 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1556 \textcolor{comment}{    R       -\/   filled with distances (in corresponding norm)}}
+\DoxyCodeLine{1557 \textcolor{comment}{}}
+\DoxyCodeLine{1558 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1559 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1560 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1561 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1562 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1563 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1564 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1565 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1566 \textcolor{comment}{}}
+\DoxyCodeLine{1567 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1568 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1569 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1570 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1571 \textcolor{comment}{}}
+\DoxyCodeLine{1572 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1573 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1574 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1575 \textcolor{keywordtype}{void} kdtreequeryresultsdistances(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1576 }
+\DoxyCodeLine{1577 }
+\DoxyCodeLine{1578 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1579 \textcolor{comment}{X-\/values from last query associated with kdtreerequestbuffer object.}}
+\DoxyCodeLine{1580 \textcolor{comment}{}}
+\DoxyCodeLine{1581 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1582 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1583 \textcolor{comment}{    Buf     -\/   request  buffer  object  created   for   this   particular}}
+\DoxyCodeLine{1584 \textcolor{comment}{                instance of kd-\/tree structure.}}
+\DoxyCodeLine{1585 \textcolor{comment}{    X       -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1586 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1587 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1588 \textcolor{comment}{}}
+\DoxyCodeLine{1589 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1590 \textcolor{comment}{    X       -\/   rows are filled with X-\/values}}
+\DoxyCodeLine{1591 \textcolor{comment}{}}
+\DoxyCodeLine{1592 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1593 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1594 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1595 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1596 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1597 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1598 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1599 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1600 \textcolor{comment}{}}
+\DoxyCodeLine{1601 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1602 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1603 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1604 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1605 \textcolor{comment}{}}
+\DoxyCodeLine{1606 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1607 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1608 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1609 \textcolor{keywordtype}{void} kdtreetsqueryresultsx(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&x, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1610 }
+\DoxyCodeLine{1611 }
+\DoxyCodeLine{1612 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1613 \textcolor{comment}{X-\/ and Y-\/values from last query associated with kdtreerequestbuffer object.}}
+\DoxyCodeLine{1614 \textcolor{comment}{}}
+\DoxyCodeLine{1615 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1616 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1617 \textcolor{comment}{    Buf     -\/   request  buffer  object  created   for   this   particular}}
+\DoxyCodeLine{1618 \textcolor{comment}{                instance of kd-\/tree structure.}}
+\DoxyCodeLine{1619 \textcolor{comment}{    XY      -\/   possibly pre-\/allocated buffer. If XY is too small to store}}
+\DoxyCodeLine{1620 \textcolor{comment}{                result, it is resized. If size(XY) is enough to store}}
+\DoxyCodeLine{1621 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1622 \textcolor{comment}{}}
+\DoxyCodeLine{1623 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1624 \textcolor{comment}{    XY      -\/   rows are filled with points: first NX columns with}}
+\DoxyCodeLine{1625 \textcolor{comment}{                X-\/values, next NY columns -\/ with Y-\/values.}}
+\DoxyCodeLine{1626 \textcolor{comment}{}}
+\DoxyCodeLine{1627 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1628 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1629 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1630 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1631 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1632 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1633 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1634 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1635 \textcolor{comment}{}}
+\DoxyCodeLine{1636 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1637 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1638 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1639 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1640 \textcolor{comment}{}}
+\DoxyCodeLine{1641 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1642 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1643 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1644 \textcolor{keywordtype}{void} kdtreetsqueryresultsxy(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1645 }
+\DoxyCodeLine{1646 }
+\DoxyCodeLine{1647 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1648 \textcolor{comment}{Tags from last query associated with kdtreerequestbuffer object.}}
+\DoxyCodeLine{1649 \textcolor{comment}{}}
+\DoxyCodeLine{1650 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1651 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1652 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1653 \textcolor{comment}{function -\/ KDTreeTsqueryresultstags().}}
+\DoxyCodeLine{1654 \textcolor{comment}{}}
+\DoxyCodeLine{1655 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1656 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1657 \textcolor{comment}{    Buf     -\/   request  buffer  object  created   for   this   particular}}
+\DoxyCodeLine{1658 \textcolor{comment}{                instance of kd-\/tree structure.}}
+\DoxyCodeLine{1659 \textcolor{comment}{    Tags    -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1660 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1661 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1662 \textcolor{comment}{}}
+\DoxyCodeLine{1663 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1664 \textcolor{comment}{    Tags    -\/   filled with tags associated with points,}}
+\DoxyCodeLine{1665 \textcolor{comment}{                or, when no tags were supplied, with zeros}}
+\DoxyCodeLine{1666 \textcolor{comment}{}}
+\DoxyCodeLine{1667 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1668 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1669 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1670 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1671 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1672 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1673 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1674 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1675 \textcolor{comment}{}}
+\DoxyCodeLine{1676 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1677 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1678 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1679 \textcolor{comment}{* KDTreeQueryResultsDistances()     distances}}
+\DoxyCodeLine{1680 \textcolor{comment}{}}
+\DoxyCodeLine{1681 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1682 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1683 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1684 \textcolor{keywordtype}{void} kdtreetsqueryresultstags(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&tags, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1685 }
+\DoxyCodeLine{1686 }
+\DoxyCodeLine{1687 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1688 \textcolor{comment}{Distances from last query associated with kdtreerequestbuffer object.}}
+\DoxyCodeLine{1689 \textcolor{comment}{}}
+\DoxyCodeLine{1690 \textcolor{comment}{This function retuns results stored in  the  internal  buffer  of  kd-\/tree}}
+\DoxyCodeLine{1691 \textcolor{comment}{object. If you performed buffered requests (ones which  use  instances  of}}
+\DoxyCodeLine{1692 \textcolor{comment}{kdtreerequestbuffer class), you  should  call  buffered  version  of  this}}
+\DoxyCodeLine{1693 \textcolor{comment}{function -\/ KDTreeTsqueryresultsdistances().}}
+\DoxyCodeLine{1694 \textcolor{comment}{}}
+\DoxyCodeLine{1695 \textcolor{comment}{INPUT PARAMETERS}}
+\DoxyCodeLine{1696 \textcolor{comment}{    KDT     -\/   KD-\/tree}}
+\DoxyCodeLine{1697 \textcolor{comment}{    Buf     -\/   request  buffer  object  created   for   this   particular}}
+\DoxyCodeLine{1698 \textcolor{comment}{                instance of kd-\/tree structure.}}
+\DoxyCodeLine{1699 \textcolor{comment}{    R       -\/   possibly pre-\/allocated buffer. If X is too small to store}}
+\DoxyCodeLine{1700 \textcolor{comment}{                result, it is resized. If size(X) is enough to store}}
+\DoxyCodeLine{1701 \textcolor{comment}{                result, it is left unchanged.}}
+\DoxyCodeLine{1702 \textcolor{comment}{}}
+\DoxyCodeLine{1703 \textcolor{comment}{OUTPUT PARAMETERS}}
+\DoxyCodeLine{1704 \textcolor{comment}{    R       -\/   filled with distances (in corresponding norm)}}
+\DoxyCodeLine{1705 \textcolor{comment}{}}
+\DoxyCodeLine{1706 \textcolor{comment}{NOTES}}
+\DoxyCodeLine{1707 \textcolor{comment}{1. points are ordered by distance from the query point (first = closest)}}
+\DoxyCodeLine{1708 \textcolor{comment}{2. if  XY is larger than required to store result, only leading part  will}}
+\DoxyCodeLine{1709 \textcolor{comment}{   be overwritten; trailing part will be left unchanged. So  if  on  input}}
+\DoxyCodeLine{1710 \textcolor{comment}{   XY = [[A,B],[C,D]], and result is [1,2],  then  on  exit  we  will  get}}
+\DoxyCodeLine{1711 \textcolor{comment}{   XY = [[1,2],[C,D]]. This is done purposely to increase performance;  if}}
+\DoxyCodeLine{1712 \textcolor{comment}{   you want function  to  resize  array  according  to  result  size,  use}}
+\DoxyCodeLine{1713 \textcolor{comment}{   function with same name and suffix 'I'.}}
+\DoxyCodeLine{1714 \textcolor{comment}{}}
+\DoxyCodeLine{1715 \textcolor{comment}{SEE ALSO}}
+\DoxyCodeLine{1716 \textcolor{comment}{* KDTreeQueryResultsX()             X-\/values}}
+\DoxyCodeLine{1717 \textcolor{comment}{* KDTreeQueryResultsXY()            X-\/ and Y-\/values}}
+\DoxyCodeLine{1718 \textcolor{comment}{* KDTreeQueryResultsTags()          tag values}}
+\DoxyCodeLine{1719 \textcolor{comment}{}}
+\DoxyCodeLine{1720 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1721 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1722 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1723 \textcolor{keywordtype}{void} kdtreetsqueryresultsdistances(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtreerequestbuffer}{kdtreerequestbuffer}} \&buf, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1724 }
+\DoxyCodeLine{1725 }
+\DoxyCodeLine{1726 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1727 \textcolor{comment}{X-\/values from last query; 'interactive' variant for languages like  Python}}
+\DoxyCodeLine{1728 \textcolor{comment}{which   support    constructs   like  "{}X = KDTreeQueryResultsXI(KDT)"{}  and}}
+\DoxyCodeLine{1729 \textcolor{comment}{interactive mode of interpreter.}}
+\DoxyCodeLine{1730 \textcolor{comment}{}}
+\DoxyCodeLine{1731 \textcolor{comment}{This function allocates new array on each call,  so  it  is  significantly}}
+\DoxyCodeLine{1732 \textcolor{comment}{slower than its 'non-\/interactive' counterpart, but it is  more  convenient}}
+\DoxyCodeLine{1733 \textcolor{comment}{when you call it from command line.}}
+\DoxyCodeLine{1734 \textcolor{comment}{}}
+\DoxyCodeLine{1735 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1736 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1737 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1738 \textcolor{keywordtype}{void} kdtreequeryresultsxi(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&x, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1739 }
+\DoxyCodeLine{1740 }
+\DoxyCodeLine{1741 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1742 \textcolor{comment}{XY-\/values from last query; 'interactive' variant for languages like Python}}
+\DoxyCodeLine{1743 \textcolor{comment}{which   support    constructs   like "{}XY = KDTreeQueryResultsXYI(KDT)"{} and}}
+\DoxyCodeLine{1744 \textcolor{comment}{interactive mode of interpreter.}}
+\DoxyCodeLine{1745 \textcolor{comment}{}}
+\DoxyCodeLine{1746 \textcolor{comment}{This function allocates new array on each call,  so  it  is  significantly}}
+\DoxyCodeLine{1747 \textcolor{comment}{slower than its 'non-\/interactive' counterpart, but it is  more  convenient}}
+\DoxyCodeLine{1748 \textcolor{comment}{when you call it from command line.}}
+\DoxyCodeLine{1749 \textcolor{comment}{}}
+\DoxyCodeLine{1750 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1751 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1752 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1753 \textcolor{keywordtype}{void} kdtreequeryresultsxyi(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__2d__array}{real\_2d\_array}} \&xy, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1754 }
+\DoxyCodeLine{1755 }
+\DoxyCodeLine{1756 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1757 \textcolor{comment}{Tags  from  last  query;  'interactive' variant for languages like  Python}}
+\DoxyCodeLine{1758 \textcolor{comment}{which  support  constructs  like "{}Tags = KDTreeQueryResultsTagsI(KDT)"{} and}}
+\DoxyCodeLine{1759 \textcolor{comment}{interactive mode of interpreter.}}
+\DoxyCodeLine{1760 \textcolor{comment}{}}
+\DoxyCodeLine{1761 \textcolor{comment}{This function allocates new array on each call,  so  it  is  significantly}}
+\DoxyCodeLine{1762 \textcolor{comment}{slower than its 'non-\/interactive' counterpart, but it is  more  convenient}}
+\DoxyCodeLine{1763 \textcolor{comment}{when you call it from command line.}}
+\DoxyCodeLine{1764 \textcolor{comment}{}}
+\DoxyCodeLine{1765 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1766 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1767 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1768 \textcolor{keywordtype}{void} kdtreequeryresultstagsi(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1integer__1d__array}{integer\_1d\_array}} \&tags, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1769 }
+\DoxyCodeLine{1770 }
+\DoxyCodeLine{1771 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1772 \textcolor{comment}{Distances from last query; 'interactive' variant for languages like Python}}
+\DoxyCodeLine{1773 \textcolor{comment}{which  support  constructs   like  "{}R = KDTreeQueryResultsDistancesI(KDT)"{}}}
+\DoxyCodeLine{1774 \textcolor{comment}{and interactive mode of interpreter.}}
+\DoxyCodeLine{1775 \textcolor{comment}{}}
+\DoxyCodeLine{1776 \textcolor{comment}{This function allocates new array on each call,  so  it  is  significantly}}
+\DoxyCodeLine{1777 \textcolor{comment}{slower than its 'non-\/interactive' counterpart, but it is  more  convenient}}
+\DoxyCodeLine{1778 \textcolor{comment}{when you call it from command line.}}
+\DoxyCodeLine{1779 \textcolor{comment}{}}
+\DoxyCodeLine{1780 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{1781 \textcolor{comment}{     Copyright 28.02.2010 by Bochkanov Sergey}}
+\DoxyCodeLine{1782 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1783 \textcolor{keywordtype}{void} kdtreequeryresultsdistancesi(\textcolor{keyword}{const} \mbox{\hyperlink{classalglib_1_1kdtree}{kdtree}} \&kdt, \mbox{\hyperlink{classalglib_1_1real__1d__array}{real\_1d\_array}} \&r, \textcolor{keyword}{const} \mbox{\hyperlink{structalglib_1_1xparams}{xparams}} \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1784 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1785 \}}
+\DoxyCodeLine{1786 }
+\DoxyCodeLine{1788 \textcolor{comment}{//}}
+\DoxyCodeLine{1789 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{1790 \textcolor{comment}{//}}
+\DoxyCodeLine{1792 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{1793 \{}
+\DoxyCodeLine{1794 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HQRND) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1795 \textcolor{keywordtype}{void} hqrndrandomize(hqrndstate* state, ae\_state *\_state);}
+\DoxyCodeLine{1796 \textcolor{keywordtype}{void} hqrndseed(ae\_int\_t s1,}
+\DoxyCodeLine{1797      ae\_int\_t s2,}
+\DoxyCodeLine{1798      hqrndstate* state,}
+\DoxyCodeLine{1799      ae\_state *\_state);}
+\DoxyCodeLine{1800 \textcolor{keywordtype}{double} hqrnduniformr(hqrndstate* state, ae\_state *\_state);}
+\DoxyCodeLine{1801 ae\_int\_t hqrnduniformi(hqrndstate* state, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{1802 \textcolor{keywordtype}{double} hqrndnormal(hqrndstate* state, ae\_state *\_state);}
+\DoxyCodeLine{1803 \textcolor{keywordtype}{void} hqrndnormalv(hqrndstate* state,}
+\DoxyCodeLine{1804      ae\_int\_t n,}
+\DoxyCodeLine{1805      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1806      ae\_state *\_state);}
+\DoxyCodeLine{1807 \textcolor{keywordtype}{void} hqrndnormalm(hqrndstate* state,}
+\DoxyCodeLine{1808      ae\_int\_t m,}
+\DoxyCodeLine{1809      ae\_int\_t n,}
+\DoxyCodeLine{1810      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1811      ae\_state *\_state);}
+\DoxyCodeLine{1812 \textcolor{keywordtype}{void} hqrndunit2(hqrndstate* state, \textcolor{keywordtype}{double}* x, \textcolor{keywordtype}{double}* y, ae\_state *\_state);}
+\DoxyCodeLine{1813 \textcolor{keywordtype}{void} hqrndnormal2(hqrndstate* state,}
+\DoxyCodeLine{1814      \textcolor{keywordtype}{double}* x1,}
+\DoxyCodeLine{1815      \textcolor{keywordtype}{double}* x2,}
+\DoxyCodeLine{1816      ae\_state *\_state);}
+\DoxyCodeLine{1817 \textcolor{keywordtype}{double} hqrndexponential(hqrndstate* state,}
+\DoxyCodeLine{1818      \textcolor{keywordtype}{double} lambdav,}
+\DoxyCodeLine{1819      ae\_state *\_state);}
+\DoxyCodeLine{1820 \textcolor{keywordtype}{double} hqrnddiscrete(hqrndstate* state,}
+\DoxyCodeLine{1821      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1822      ae\_int\_t n,}
+\DoxyCodeLine{1823      ae\_state *\_state);}
+\DoxyCodeLine{1824 \textcolor{keywordtype}{double} hqrndcontinuous(hqrndstate* state,}
+\DoxyCodeLine{1825      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1826      ae\_int\_t n,}
+\DoxyCodeLine{1827      ae\_state *\_state);}
+\DoxyCodeLine{1828 \textcolor{keywordtype}{void} \_hqrndstate\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1829 \textcolor{keywordtype}{void} \_hqrndstate\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1830 \textcolor{keywordtype}{void} \_hqrndstate\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1831 \textcolor{keywordtype}{void} \_hqrndstate\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1832 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1833 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_XDEBUG) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1834 \textcolor{keywordtype}{void} xdebuginitrecord1(xdebugrecord1* rec1, ae\_state *\_state);}
+\DoxyCodeLine{1835 ae\_int\_t xdebugb1count(\textcolor{comment}{/* Boolean */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1836 \textcolor{keywordtype}{void} xdebugb1not(\textcolor{comment}{/* Boolean */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1837 \textcolor{keywordtype}{void} xdebugb1appendcopy(\textcolor{comment}{/* Boolean */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1838 \textcolor{keywordtype}{void} xdebugb1outeven(ae\_int\_t n,}
+\DoxyCodeLine{1839      \textcolor{comment}{/* Boolean */} ae\_vector* a,}
+\DoxyCodeLine{1840      ae\_state *\_state);}
+\DoxyCodeLine{1841 ae\_int\_t xdebugi1sum(\textcolor{comment}{/* Integer */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1842 \textcolor{keywordtype}{void} xdebugi1neg(\textcolor{comment}{/* Integer */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1843 \textcolor{keywordtype}{void} xdebugi1appendcopy(\textcolor{comment}{/* Integer */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1844 \textcolor{keywordtype}{void} xdebugi1outeven(ae\_int\_t n,}
+\DoxyCodeLine{1845      \textcolor{comment}{/* Integer */} ae\_vector* a,}
+\DoxyCodeLine{1846      ae\_state *\_state);}
+\DoxyCodeLine{1847 \textcolor{keywordtype}{double} xdebugr1sum(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1848 \textcolor{keywordtype}{void} xdebugr1neg(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1849 \textcolor{keywordtype}{void} xdebugr1appendcopy(\textcolor{comment}{/* Real    */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1850 \textcolor{keywordtype}{void} xdebugr1outeven(ae\_int\_t n,}
+\DoxyCodeLine{1851      \textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{1852      ae\_state *\_state);}
+\DoxyCodeLine{1853 ae\_complex xdebugc1sum(\textcolor{comment}{/* Complex */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1854 \textcolor{keywordtype}{void} xdebugc1neg(\textcolor{comment}{/* Complex */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1855 \textcolor{keywordtype}{void} xdebugc1appendcopy(\textcolor{comment}{/* Complex */} ae\_vector* a, ae\_state *\_state);}
+\DoxyCodeLine{1856 \textcolor{keywordtype}{void} xdebugc1outeven(ae\_int\_t n,}
+\DoxyCodeLine{1857      \textcolor{comment}{/* Complex */} ae\_vector* a,}
+\DoxyCodeLine{1858      ae\_state *\_state);}
+\DoxyCodeLine{1859 ae\_int\_t xdebugb2count(\textcolor{comment}{/* Boolean */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1860 \textcolor{keywordtype}{void} xdebugb2not(\textcolor{comment}{/* Boolean */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1861 \textcolor{keywordtype}{void} xdebugb2transpose(\textcolor{comment}{/* Boolean */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1862 \textcolor{keywordtype}{void} xdebugb2outsin(ae\_int\_t m,}
+\DoxyCodeLine{1863      ae\_int\_t n,}
+\DoxyCodeLine{1864      \textcolor{comment}{/* Boolean */} ae\_matrix* a,}
+\DoxyCodeLine{1865      ae\_state *\_state);}
+\DoxyCodeLine{1866 ae\_int\_t xdebugi2sum(\textcolor{comment}{/* Integer */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1867 \textcolor{keywordtype}{void} xdebugi2neg(\textcolor{comment}{/* Integer */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1868 \textcolor{keywordtype}{void} xdebugi2transpose(\textcolor{comment}{/* Integer */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1869 \textcolor{keywordtype}{void} xdebugi2outsin(ae\_int\_t m,}
+\DoxyCodeLine{1870      ae\_int\_t n,}
+\DoxyCodeLine{1871      \textcolor{comment}{/* Integer */} ae\_matrix* a,}
+\DoxyCodeLine{1872      ae\_state *\_state);}
+\DoxyCodeLine{1873 \textcolor{keywordtype}{double} xdebugr2sum(\textcolor{comment}{/* Real    */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1874 \textcolor{keywordtype}{void} xdebugr2neg(\textcolor{comment}{/* Real    */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1875 \textcolor{keywordtype}{void} xdebugr2transpose(\textcolor{comment}{/* Real    */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1876 \textcolor{keywordtype}{void} xdebugr2outsin(ae\_int\_t m,}
+\DoxyCodeLine{1877      ae\_int\_t n,}
+\DoxyCodeLine{1878      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1879      ae\_state *\_state);}
+\DoxyCodeLine{1880 ae\_complex xdebugc2sum(\textcolor{comment}{/* Complex */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1881 \textcolor{keywordtype}{void} xdebugc2neg(\textcolor{comment}{/* Complex */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1882 \textcolor{keywordtype}{void} xdebugc2transpose(\textcolor{comment}{/* Complex */} ae\_matrix* a, ae\_state *\_state);}
+\DoxyCodeLine{1883 \textcolor{keywordtype}{void} xdebugc2outsincos(ae\_int\_t m,}
+\DoxyCodeLine{1884      ae\_int\_t n,}
+\DoxyCodeLine{1885      \textcolor{comment}{/* Complex */} ae\_matrix* a,}
+\DoxyCodeLine{1886      ae\_state *\_state);}
+\DoxyCodeLine{1887 \textcolor{keywordtype}{double} xdebugmaskedbiasedproductsum(ae\_int\_t m,}
+\DoxyCodeLine{1888      ae\_int\_t n,}
+\DoxyCodeLine{1889      \textcolor{comment}{/* Real    */} ae\_matrix* a,}
+\DoxyCodeLine{1890      \textcolor{comment}{/* Real    */} ae\_matrix* b,}
+\DoxyCodeLine{1891      \textcolor{comment}{/* Boolean */} ae\_matrix* c,}
+\DoxyCodeLine{1892      ae\_state *\_state);}
+\DoxyCodeLine{1893 \textcolor{keywordtype}{void} \_xdebugrecord1\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1894 \textcolor{keywordtype}{void} \_xdebugrecord1\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{1895 \textcolor{keywordtype}{void} \_xdebugrecord1\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1896 \textcolor{keywordtype}{void} \_xdebugrecord1\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{1897 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1898 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NEARESTNEIGHBOR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1899 \textcolor{keywordtype}{void} kdtreebuild(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1900      ae\_int\_t n,}
+\DoxyCodeLine{1901      ae\_int\_t nx,}
+\DoxyCodeLine{1902      ae\_int\_t ny,}
+\DoxyCodeLine{1903      ae\_int\_t normtype,}
+\DoxyCodeLine{1904      kdtree* kdt,}
+\DoxyCodeLine{1905      ae\_state *\_state);}
+\DoxyCodeLine{1906 \textcolor{keywordtype}{void} kdtreebuildtagged(\textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1907      \textcolor{comment}{/* Integer */} ae\_vector* tags,}
+\DoxyCodeLine{1908      ae\_int\_t n,}
+\DoxyCodeLine{1909      ae\_int\_t nx,}
+\DoxyCodeLine{1910      ae\_int\_t ny,}
+\DoxyCodeLine{1911      ae\_int\_t normtype,}
+\DoxyCodeLine{1912      kdtree* kdt,}
+\DoxyCodeLine{1913      ae\_state *\_state);}
+\DoxyCodeLine{1914 \textcolor{keywordtype}{void} kdtreecreaterequestbuffer(kdtree* kdt,}
+\DoxyCodeLine{1915      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1916      ae\_state *\_state);}
+\DoxyCodeLine{1917 ae\_int\_t kdtreequeryknn(kdtree* kdt,}
+\DoxyCodeLine{1918      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1919      ae\_int\_t k,}
+\DoxyCodeLine{1920      ae\_bool selfmatch,}
+\DoxyCodeLine{1921      ae\_state *\_state);}
+\DoxyCodeLine{1922 ae\_int\_t kdtreetsqueryknn(kdtree* kdt,}
+\DoxyCodeLine{1923      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1924      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1925      ae\_int\_t k,}
+\DoxyCodeLine{1926      ae\_bool selfmatch,}
+\DoxyCodeLine{1927      ae\_state *\_state);}
+\DoxyCodeLine{1928 ae\_int\_t kdtreequeryrnn(kdtree* kdt,}
+\DoxyCodeLine{1929      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1930      \textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1931      ae\_bool selfmatch,}
+\DoxyCodeLine{1932      ae\_state *\_state);}
+\DoxyCodeLine{1933 ae\_int\_t kdtreequeryrnnu(kdtree* kdt,}
+\DoxyCodeLine{1934      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1935      \textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1936      ae\_bool selfmatch,}
+\DoxyCodeLine{1937      ae\_state *\_state);}
+\DoxyCodeLine{1938 ae\_int\_t kdtreetsqueryrnn(kdtree* kdt,}
+\DoxyCodeLine{1939      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1940      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1941      \textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1942      ae\_bool selfmatch,}
+\DoxyCodeLine{1943      ae\_state *\_state);}
+\DoxyCodeLine{1944 ae\_int\_t kdtreetsqueryrnnu(kdtree* kdt,}
+\DoxyCodeLine{1945      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1946      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1947      \textcolor{keywordtype}{double} r,}
+\DoxyCodeLine{1948      ae\_bool selfmatch,}
+\DoxyCodeLine{1949      ae\_state *\_state);}
+\DoxyCodeLine{1950 ae\_int\_t kdtreequeryaknn(kdtree* kdt,}
+\DoxyCodeLine{1951      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1952      ae\_int\_t k,}
+\DoxyCodeLine{1953      ae\_bool selfmatch,}
+\DoxyCodeLine{1954      \textcolor{keywordtype}{double} eps,}
+\DoxyCodeLine{1955      ae\_state *\_state);}
+\DoxyCodeLine{1956 ae\_int\_t kdtreetsqueryaknn(kdtree* kdt,}
+\DoxyCodeLine{1957      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1958      \textcolor{comment}{/* Real    */} ae\_vector* x,}
+\DoxyCodeLine{1959      ae\_int\_t k,}
+\DoxyCodeLine{1960      ae\_bool selfmatch,}
+\DoxyCodeLine{1961      \textcolor{keywordtype}{double} eps,}
+\DoxyCodeLine{1962      ae\_state *\_state);}
+\DoxyCodeLine{1963 ae\_int\_t kdtreequerybox(kdtree* kdt,}
+\DoxyCodeLine{1964      \textcolor{comment}{/* Real    */} ae\_vector* boxmin,}
+\DoxyCodeLine{1965      \textcolor{comment}{/* Real    */} ae\_vector* boxmax,}
+\DoxyCodeLine{1966      ae\_state *\_state);}
+\DoxyCodeLine{1967 ae\_int\_t kdtreetsquerybox(kdtree* kdt,}
+\DoxyCodeLine{1968      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1969      \textcolor{comment}{/* Real    */} ae\_vector* boxmin,}
+\DoxyCodeLine{1970      \textcolor{comment}{/* Real    */} ae\_vector* boxmax,}
+\DoxyCodeLine{1971      ae\_state *\_state);}
+\DoxyCodeLine{1972 \textcolor{keywordtype}{void} kdtreequeryresultsx(kdtree* kdt,}
+\DoxyCodeLine{1973      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1974      ae\_state *\_state);}
+\DoxyCodeLine{1975 \textcolor{keywordtype}{void} kdtreequeryresultsxy(kdtree* kdt,}
+\DoxyCodeLine{1976      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1977      ae\_state *\_state);}
+\DoxyCodeLine{1978 \textcolor{keywordtype}{void} kdtreequeryresultstags(kdtree* kdt,}
+\DoxyCodeLine{1979      \textcolor{comment}{/* Integer */} ae\_vector* tags,}
+\DoxyCodeLine{1980      ae\_state *\_state);}
+\DoxyCodeLine{1981 \textcolor{keywordtype}{void} kdtreequeryresultsdistances(kdtree* kdt,}
+\DoxyCodeLine{1982      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{1983      ae\_state *\_state);}
+\DoxyCodeLine{1984 \textcolor{keywordtype}{void} kdtreetsqueryresultsx(kdtree* kdt,}
+\DoxyCodeLine{1985      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1986      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{1987      ae\_state *\_state);}
+\DoxyCodeLine{1988 \textcolor{keywordtype}{void} kdtreetsqueryresultsxy(kdtree* kdt,}
+\DoxyCodeLine{1989      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1990      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{1991      ae\_state *\_state);}
+\DoxyCodeLine{1992 \textcolor{keywordtype}{void} kdtreetsqueryresultstags(kdtree* kdt,}
+\DoxyCodeLine{1993      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1994      \textcolor{comment}{/* Integer */} ae\_vector* tags,}
+\DoxyCodeLine{1995      ae\_state *\_state);}
+\DoxyCodeLine{1996 \textcolor{keywordtype}{void} kdtreetsqueryresultsdistances(kdtree* kdt,}
+\DoxyCodeLine{1997      kdtreerequestbuffer* buf,}
+\DoxyCodeLine{1998      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{1999      ae\_state *\_state);}
+\DoxyCodeLine{2000 \textcolor{keywordtype}{void} kdtreequeryresultsxi(kdtree* kdt,}
+\DoxyCodeLine{2001      \textcolor{comment}{/* Real    */} ae\_matrix* x,}
+\DoxyCodeLine{2002      ae\_state *\_state);}
+\DoxyCodeLine{2003 \textcolor{keywordtype}{void} kdtreequeryresultsxyi(kdtree* kdt,}
+\DoxyCodeLine{2004      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{2005      ae\_state *\_state);}
+\DoxyCodeLine{2006 \textcolor{keywordtype}{void} kdtreequeryresultstagsi(kdtree* kdt,}
+\DoxyCodeLine{2007      \textcolor{comment}{/* Integer */} ae\_vector* tags,}
+\DoxyCodeLine{2008      ae\_state *\_state);}
+\DoxyCodeLine{2009 \textcolor{keywordtype}{void} kdtreequeryresultsdistancesi(kdtree* kdt,}
+\DoxyCodeLine{2010      \textcolor{comment}{/* Real    */} ae\_vector* r,}
+\DoxyCodeLine{2011      ae\_state *\_state);}
+\DoxyCodeLine{2012 \textcolor{keywordtype}{void} kdtreeexplorebox(kdtree* kdt,}
+\DoxyCodeLine{2013      \textcolor{comment}{/* Real    */} ae\_vector* boxmin,}
+\DoxyCodeLine{2014      \textcolor{comment}{/* Real    */} ae\_vector* boxmax,}
+\DoxyCodeLine{2015      ae\_state *\_state);}
+\DoxyCodeLine{2016 \textcolor{keywordtype}{void} kdtreeexplorenodetype(kdtree* kdt,}
+\DoxyCodeLine{2017      ae\_int\_t node,}
+\DoxyCodeLine{2018      ae\_int\_t* nodetype,}
+\DoxyCodeLine{2019      ae\_state *\_state);}
+\DoxyCodeLine{2020 \textcolor{keywordtype}{void} kdtreeexploreleaf(kdtree* kdt,}
+\DoxyCodeLine{2021      ae\_int\_t node,}
+\DoxyCodeLine{2022      \textcolor{comment}{/* Real    */} ae\_matrix* xy,}
+\DoxyCodeLine{2023      ae\_int\_t* k,}
+\DoxyCodeLine{2024      ae\_state *\_state);}
+\DoxyCodeLine{2025 \textcolor{keywordtype}{void} kdtreeexploresplit(kdtree* kdt,}
+\DoxyCodeLine{2026      ae\_int\_t node,}
+\DoxyCodeLine{2027      ae\_int\_t* d,}
+\DoxyCodeLine{2028      \textcolor{keywordtype}{double}* s,}
+\DoxyCodeLine{2029      ae\_int\_t* nodele,}
+\DoxyCodeLine{2030      ae\_int\_t* nodege,}
+\DoxyCodeLine{2031      ae\_state *\_state);}
+\DoxyCodeLine{2032 \textcolor{keywordtype}{void} kdtreealloc(ae\_serializer* s, kdtree* tree, ae\_state *\_state);}
+\DoxyCodeLine{2033 \textcolor{keywordtype}{void} kdtreeserialize(ae\_serializer* s, kdtree* tree, ae\_state *\_state);}
+\DoxyCodeLine{2034 \textcolor{keywordtype}{void} kdtreeunserialize(ae\_serializer* s, kdtree* tree, ae\_state *\_state);}
+\DoxyCodeLine{2035 \textcolor{keywordtype}{void} \_kdtreerequestbuffer\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{2036 \textcolor{keywordtype}{void} \_kdtreerequestbuffer\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{2037 \textcolor{keywordtype}{void} \_kdtreerequestbuffer\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{2038 \textcolor{keywordtype}{void} \_kdtreerequestbuffer\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{2039 \textcolor{keywordtype}{void} \_kdtree\_init(\textcolor{keywordtype}{void}* \_p, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{2040 \textcolor{keywordtype}{void} \_kdtree\_init\_copy(\textcolor{keywordtype}{void}* \_dst, \textcolor{keywordtype}{void}* \_src, ae\_state *\_state, ae\_bool make\_automatic);}
+\DoxyCodeLine{2041 \textcolor{keywordtype}{void} \_kdtree\_clear(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{2042 \textcolor{keywordtype}{void} \_kdtree\_destroy(\textcolor{keywordtype}{void}* \_p);}
+\DoxyCodeLine{2043 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2044 }
+\DoxyCodeLine{2045 \}}
+\DoxyCodeLine{2046 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2047 }
+
+\end{DoxyCode}

@@ -1,0 +1,414 @@
+\hypertarget{interactor_8h_source}{}\doxysection{interactor.\+h}
+\label{interactor_8h_source}\index{include/gui/interactor.h@{include/gui/interactor.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef INTERACTOR\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define INTERACTOR\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <vtkObjectFactory.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <vtkInteractorStyleTrackballActor.h>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <vtkRendererCollection.h>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <vtkTextActor.h>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <vtkTextProperty.h>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <vtkActor2DCollection.h>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <vtkPicker.h>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <vtkPropPicker.h>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <vtkProp.h>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <qcursor.h>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{comment}{/*Ref to QMainWindow*/}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}gui/mainscreen.h"{}}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{comment}{//Calibration To Convert Pose}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include "{}core/calibration.h"{}}}
+\DoxyCodeLine{20 \mbox{\hyperlink{struct_calibration}{Calibration}} interactor\_calibration;}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{comment}{//Speed of Movement}}
+\DoxyCodeLine{23 \textcolor{keywordtype}{int} speed = 1;}
+\DoxyCodeLine{24 \textcolor{keywordtype}{bool} information = \textcolor{keyword}{true};}
+\DoxyCodeLine{25 \textcolor{keywordtype}{bool} interactor\_camera\_B = \textcolor{keyword}{false}; \textcolor{comment}{//Are we in Camera B?}}
+\DoxyCodeLine{26 \textcolor{keywordtype}{bool} middleDown = \textcolor{keyword}{false}; \textcolor{comment}{// Is CM button down?}}
+\DoxyCodeLine{27 \textcolor{keywordtype}{bool} leftDown = \textcolor{keyword}{false}; \textcolor{comment}{//Is LM button down?}}
+\DoxyCodeLine{28 \textcolor{keywordtype}{bool} rightDown = \textcolor{keyword}{false}; \textcolor{comment}{//Is RM button down}}
+\DoxyCodeLine{29 \textcolor{keywordtype}{int} rightDownY = 0; \textcolor{comment}{//Y Pixel when RM Clicked}}
+\DoxyCodeLine{30 \textcolor{keywordtype}{double} rightDownModelZ = 0; \textcolor{comment}{//Model's Z Translation when RM Clicked}}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32 \textcolor{keyword}{class }\mbox{\hyperlink{class_key_press_interactor_style}{KeyPressInteractorStyle}} : \textcolor{keyword}{public} vtkInteractorStyleTrackballActor}
+\DoxyCodeLine{33 \{}
+\DoxyCodeLine{34 \textcolor{keyword}{public}:}
+\DoxyCodeLine{35     \textcolor{keyword}{static} \mbox{\hyperlink{class_key_press_interactor_style}{KeyPressInteractorStyle}}* New();}
+\DoxyCodeLine{36     vtkTypeMacro(\mbox{\hyperlink{class_key_press_interactor_style}{KeyPressInteractorStyle}}, vtkInteractorStyleTrackballActor);}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38     \textcolor{comment}{/*Pointer to Main Window*/}}
+\DoxyCodeLine{39     \mbox{\hyperlink{class_main_screen}{MainScreen}}* ms\_;}
+\DoxyCodeLine{40     \textcolor{keywordtype}{void} initialize\_MainScreen(\mbox{\hyperlink{class_main_screen}{MainScreen}}* ms) \{}
+\DoxyCodeLine{41         ms\_ = ms;}
+\DoxyCodeLine{42     \}}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{comment}{//Picked Function}}
+\DoxyCodeLine{45     \textcolor{keywordtype}{bool} ActivePick()}
+\DoxyCodeLine{46     \{}
+\DoxyCodeLine{47         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{48         \textcolor{keywordflow}{else} \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{49     \}}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51     \textcolor{comment}{//KeyPress Turns Off Other Char Hotkeys}}
+\DoxyCodeLine{52     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnChar() \{}
+\DoxyCodeLine{53         vtkRenderWindowInteractor *rwi = this-\/>Interactor;}
+\DoxyCodeLine{54         std::string key = rwi-\/>GetKeySym();}
+\DoxyCodeLine{55         \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Escape"{}} || key == \textcolor{stringliteral}{"{}escape"{}} || key == \textcolor{stringliteral}{"{}ESC"{}} || key == \textcolor{stringliteral}{"{}Esc"{}} || key == \textcolor{stringliteral}{"{}esc"{}})}
+\DoxyCodeLine{56         \{}
+\DoxyCodeLine{57             ms\_-\/>VTKEscapeSignal();}
+\DoxyCodeLine{58         \}}
+\DoxyCodeLine{59     \}}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61     \textcolor{comment}{//Keypress Function}}
+\DoxyCodeLine{62     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnKeyPress()}
+\DoxyCodeLine{63     \{}
+\DoxyCodeLine{64         \textcolor{comment}{// Get the keypress}}
+\DoxyCodeLine{65         vtkRenderWindowInteractor *rwi = this-\/>Interactor;}
+\DoxyCodeLine{66         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{67         \{}
+\DoxyCodeLine{68             std::string key = rwi-\/>GetKeySym();}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70             \textcolor{comment}{// Handle information toggle}}
+\DoxyCodeLine{71             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}i"{}} || key == \textcolor{stringliteral}{"{}I"{}})}
+\DoxyCodeLine{72             \{}
+\DoxyCodeLine{73                 vtkTextActor*  text = vtkTextActor::SafeDownCast(this-\/>Interactor-\/>GetRenderWindow()-\/>GetRenderers()-\/>GetFirstRenderer()-\/>GetActors2D()-\/>GetLastActor2D());}
+\DoxyCodeLine{74                 \textcolor{keywordflow}{if} (information == \textcolor{keyword}{true}) \{ information = \textcolor{keyword}{false}; text-\/>GetTextProperty()-\/>SetOpacity(0.0); \}}
+\DoxyCodeLine{75                 \textcolor{keywordflow}{else} \{ information = \textcolor{keyword}{true}; text-\/>GetTextProperty()-\/>SetOpacity(1.0); \}}
+\DoxyCodeLine{76             \}}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{78             this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{79             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{80         \}}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{83         std::string key = rwi-\/>GetKeySym();}
+\DoxyCodeLine{84         \textcolor{keywordtype}{double}* Position = actor-\/>GetPosition();}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86         \textcolor{comment}{//Shift Class}}
+\DoxyCodeLine{87         \textcolor{keywordflow}{if} (rwi-\/>GetShiftKey())}
+\DoxyCodeLine{88         \{}
+\DoxyCodeLine{89             \textcolor{comment}{//Handle Increase Request}}
+\DoxyCodeLine{90             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}plus"{}})}
+\DoxyCodeLine{91                 \textcolor{keywordflow}{if} (speed < 20) speed++;}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{93             \textcolor{comment}{//Handle Decrease Request}}
+\DoxyCodeLine{94             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}underscore"{}})}
+\DoxyCodeLine{95                 \textcolor{keywordflow}{if} (speed > 1) speed-\/-\/;}
+\DoxyCodeLine{96 }
+\DoxyCodeLine{97             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{98             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{99             \{}
+\DoxyCodeLine{100                 actor-\/>RotateX(speed);}
+\DoxyCodeLine{101                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{102             \}}
+\DoxyCodeLine{103             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{104             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{105             \{}
+\DoxyCodeLine{106                 actor-\/>RotateX(-\/1 * speed);}
+\DoxyCodeLine{107                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{108             \}}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{111             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{112             \{}
+\DoxyCodeLine{113                 actor-\/>RotateY(-\/1 * speed);}
+\DoxyCodeLine{114                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{115             \}}
+\DoxyCodeLine{116 }
+\DoxyCodeLine{117             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{118             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{119             \{}
+\DoxyCodeLine{120                 actor-\/>RotateY(speed);}
+\DoxyCodeLine{121                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{122             \}}
+\DoxyCodeLine{123         \}}
+\DoxyCodeLine{124         \textcolor{comment}{//Control Class}}
+\DoxyCodeLine{125         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (rwi-\/>GetControlKey())}
+\DoxyCodeLine{126         \{}
+\DoxyCodeLine{127             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{128             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{129             \{}
+\DoxyCodeLine{130                 actor-\/>SetPosition(Position[0], Position[1], Position[2] + speed);}
+\DoxyCodeLine{131                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{132             \}}
+\DoxyCodeLine{133             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{134             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{135             \{}
+\DoxyCodeLine{136                 actor-\/>SetPosition(Position[0], Position[1], Position[2] -\/ speed);}
+\DoxyCodeLine{137                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{138             \}}
+\DoxyCodeLine{139 }
+\DoxyCodeLine{140             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{141             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{142             \{}
+\DoxyCodeLine{143                 actor-\/>RotateZ(-\/1 * speed);}
+\DoxyCodeLine{144                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{145             \}}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{147             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{148             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{149             \{}
+\DoxyCodeLine{150                 actor-\/>RotateZ(speed);}
+\DoxyCodeLine{151                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{152             \}}
+\DoxyCodeLine{153         \}}
+\DoxyCodeLine{154         \textcolor{comment}{//Naked Class}}
+\DoxyCodeLine{155         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{156         \{}
+\DoxyCodeLine{157             \textcolor{comment}{//Handle Increase Request}}
+\DoxyCodeLine{158             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}equal"{}})}
+\DoxyCodeLine{159                 \textcolor{keywordflow}{if} (speed < 20) speed++;}
+\DoxyCodeLine{160 }
+\DoxyCodeLine{161             \textcolor{comment}{//Handle Decrease Request}}
+\DoxyCodeLine{162             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}minus"{}})}
+\DoxyCodeLine{163                 \textcolor{keywordflow}{if} (speed > 1) speed-\/-\/;}
+\DoxyCodeLine{164 }
+\DoxyCodeLine{165             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{166             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Up"{}})}
+\DoxyCodeLine{167             \{}
+\DoxyCodeLine{168                 actor-\/>SetPosition(Position[0], Position[1] + speed, Position[2]);}
+\DoxyCodeLine{169                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{170             \}}
+\DoxyCodeLine{171             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{172             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Down"{}})}
+\DoxyCodeLine{173             \{}
+\DoxyCodeLine{174                 actor-\/>SetPosition(Position[0], Position[1] -\/ speed, Position[2]);}
+\DoxyCodeLine{175                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{176             \}}
+\DoxyCodeLine{177 }
+\DoxyCodeLine{178             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{179             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Left"{}})}
+\DoxyCodeLine{180             \{}
+\DoxyCodeLine{181                 actor-\/>SetPosition(Position[0] -\/ speed, Position[1], Position[2]);}
+\DoxyCodeLine{182                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{183             \}}
+\DoxyCodeLine{184 }
+\DoxyCodeLine{185             \textcolor{comment}{// Handle an arrow key}}
+\DoxyCodeLine{186             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}Right"{}})}
+\DoxyCodeLine{187             \{}
+\DoxyCodeLine{188                 actor-\/>SetPosition(Position[0] + speed, Position[1], Position[2]);}
+\DoxyCodeLine{189                 this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{190             \}}
+\DoxyCodeLine{191 }
+\DoxyCodeLine{192             \textcolor{comment}{// Handle information toggle}}
+\DoxyCodeLine{193             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}i"{}} || key == \textcolor{stringliteral}{"{}I"{}})}
+\DoxyCodeLine{194             \{}
+\DoxyCodeLine{195                 \textcolor{keywordflow}{if} (information == \textcolor{keyword}{true}) information = \textcolor{keyword}{false};}
+\DoxyCodeLine{196                 \textcolor{keywordflow}{else} information = \textcolor{keyword}{true};}
+\DoxyCodeLine{197             \}}
+\DoxyCodeLine{198 }
+\DoxyCodeLine{199             \textcolor{comment}{// Handle information toggle}}
+\DoxyCodeLine{200             \textcolor{keywordflow}{if} (key == \textcolor{stringliteral}{"{}p"{}} || key == \textcolor{stringliteral}{"{}P"{}})}
+\DoxyCodeLine{201             \{}
+\DoxyCodeLine{202                 \textcolor{keywordflow}{if} (!ms\_-\/>currently\_optimizing\_) \{}
+\DoxyCodeLine{203                     ms\_-\/>VTKMakePrincipalSignal(actor);}
+\DoxyCodeLine{204                     \textcolor{keywordflow}{return};}
+\DoxyCodeLine{205                 \}}
+\DoxyCodeLine{206             \}}
+\DoxyCodeLine{207 }
+\DoxyCodeLine{208         \}}
+\DoxyCodeLine{209 }
+\DoxyCodeLine{210         \textcolor{comment}{//Information Toggle}}
+\DoxyCodeLine{211         std::string infoText = \textcolor{stringliteral}{"{}Location: <"{}};}
+\DoxyCodeLine{212         vtkTextActor*  text = vtkTextActor::SafeDownCast(this-\/>Interactor-\/>GetRenderWindow()-\/>GetRenderers()-\/>GetFirstRenderer()-\/>GetActors2D()-\/>GetLastActor2D());}
+\DoxyCodeLine{213         \textcolor{keywordflow}{if} (information == \textcolor{keyword}{true})}
+\DoxyCodeLine{214         \{}
+\DoxyCodeLine{215             \textcolor{keywordflow}{if} (interactor\_camera\_B == \textcolor{keyword}{false}) \{}
+\DoxyCodeLine{216                 infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{217                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{218                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{219                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{220                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{221                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{222 }
+\DoxyCodeLine{223             \}}
+\DoxyCodeLine{224             \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{225                 \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_B = \mbox{\hyperlink{struct_point6_d}{Point6D}}(actor-\/>GetPosition()[0], actor-\/>GetPosition()[1], actor-\/>GetPosition()[2],}
+\DoxyCodeLine{226                     actor-\/>GetOrientation()[0], actor-\/>GetOrientation()[1], actor-\/>GetOrientation()[2]);}
+\DoxyCodeLine{227                 \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_A = interactor\_calibration.convert\_Pose\_B\_to\_Pose\_A(current\_position\_B);}
+\DoxyCodeLine{228                 infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.x) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{229                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.y) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{230                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.z) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{231                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.xa) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{232                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.ya) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{233                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.za) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{234             \}}
+\DoxyCodeLine{235             text-\/>GetTextProperty()-\/>SetOpacity(1.0);}
+\DoxyCodeLine{236             text-\/>GetTextProperty()-\/>SetColor(actor-\/>GetProperty()-\/>GetColor());}
+\DoxyCodeLine{237         \}}
+\DoxyCodeLine{238         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{239             text-\/>GetTextProperty()-\/>SetOpacity(0.0);}
+\DoxyCodeLine{240         text-\/>SetInput(infoText.c\_str());}
+\DoxyCodeLine{241         this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{242 }
+\DoxyCodeLine{243         \textcolor{comment}{//Forward events}}
+\DoxyCodeLine{244         vtkInteractorStyleTrackballActor::OnKeyPress();}
+\DoxyCodeLine{245     \}}
+\DoxyCodeLine{246 }
+\DoxyCodeLine{247     \textcolor{comment}{//Left Mouse Down Function}}
+\DoxyCodeLine{248     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnLeftButtonDown()}
+\DoxyCodeLine{249     \{}
+\DoxyCodeLine{250         leftDown = \textcolor{keyword}{true};}
+\DoxyCodeLine{251 }
+\DoxyCodeLine{252         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{253         vtkInteractorStyleTrackballActor::OnLeftButtonDown();}
+\DoxyCodeLine{254     \}}
+\DoxyCodeLine{255 }
+\DoxyCodeLine{256     \textcolor{comment}{//Right Mouse Down Function}}
+\DoxyCodeLine{257     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnRightButtonDown()}
+\DoxyCodeLine{258     \{}
+\DoxyCodeLine{259         rightDown = \textcolor{keyword}{true};}
+\DoxyCodeLine{260         rightDownY = QCursor::pos().y();}
+\DoxyCodeLine{261         }
+\DoxyCodeLine{262         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{263         vtkInteractorStyleTrackballActor::OnRightButtonDown();}
+\DoxyCodeLine{264 }
+\DoxyCodeLine{265         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{266             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{267         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{268         rightDownModelZ = actor-\/>GetPosition()[2];}
+\DoxyCodeLine{269     \}}
+\DoxyCodeLine{270 }
+\DoxyCodeLine{271     \textcolor{comment}{//Middle Mouse Down Funtion}}
+\DoxyCodeLine{272     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMiddleButtonDown() \{}
+\DoxyCodeLine{273         middleDown = \textcolor{keyword}{true};}
+\DoxyCodeLine{274 }
+\DoxyCodeLine{275         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{276         vtkInteractorStyleTrackballActor::OnMiddleButtonDown();}
+\DoxyCodeLine{277     \}}
+\DoxyCodeLine{278 }
+\DoxyCodeLine{279     \textcolor{comment}{//Left Mouse Up Function}}
+\DoxyCodeLine{280     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnLeftButtonUp()}
+\DoxyCodeLine{281     \{}
+\DoxyCodeLine{282         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL)}
+\DoxyCodeLine{283             \textcolor{keywordflow}{return};}
+\DoxyCodeLine{284         vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{285 }
+\DoxyCodeLine{286         leftDown = \textcolor{keyword}{false};}
+\DoxyCodeLine{287         \textcolor{comment}{//Information Toggle}}
+\DoxyCodeLine{288         std::string infoText = \textcolor{stringliteral}{"{}Location: <"{}};}
+\DoxyCodeLine{289         vtkTextActor*  text = vtkTextActor::SafeDownCast(this-\/>Interactor-\/>GetRenderWindow()-\/>GetRenderers()-\/>GetFirstRenderer()-\/>GetActors2D()-\/>GetLastActor2D());}
+\DoxyCodeLine{290         \textcolor{keywordflow}{if} (information == \textcolor{keyword}{true})}
+\DoxyCodeLine{291         \{}
+\DoxyCodeLine{292             \textcolor{keywordflow}{if} (interactor\_camera\_B == \textcolor{keyword}{false}) \{}
+\DoxyCodeLine{293                 infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{294                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{295                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{296                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{297                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{298                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{299 }
+\DoxyCodeLine{300             \}}
+\DoxyCodeLine{301             \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{302                 \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_B = \mbox{\hyperlink{struct_point6_d}{Point6D}}(actor-\/>GetPosition()[0], actor-\/>GetPosition()[1], actor-\/>GetPosition()[2],}
+\DoxyCodeLine{303                     actor-\/>GetOrientation()[0], actor-\/>GetOrientation()[1], actor-\/>GetOrientation()[2]);}
+\DoxyCodeLine{304                 \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_A = interactor\_calibration.convert\_Pose\_B\_to\_Pose\_A(current\_position\_B);}
+\DoxyCodeLine{305                 infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.x) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{306                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.y) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{307                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.z) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{308                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.xa) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{309                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.ya) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{310                     + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.za) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{311             \}}
+\DoxyCodeLine{312             text-\/>GetTextProperty()-\/>SetOpacity(1.0);}
+\DoxyCodeLine{313             text-\/>GetTextProperty()-\/>SetColor(actor-\/>GetProperty()-\/>GetColor());}
+\DoxyCodeLine{314         \}}
+\DoxyCodeLine{315         \textcolor{keywordflow}{else}}
+\DoxyCodeLine{316             text-\/>GetTextProperty()-\/>SetOpacity(0.0);}
+\DoxyCodeLine{317         text-\/>SetInput(infoText.c\_str());}
+\DoxyCodeLine{318         this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{319         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{320         vtkInteractorStyleTrackballActor::OnLeftButtonUp();}
+\DoxyCodeLine{321     \}}
+\DoxyCodeLine{322 }
+\DoxyCodeLine{323     \textcolor{comment}{//Right Mouse Up Function}}
+\DoxyCodeLine{324     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnRightButtonUp()}
+\DoxyCodeLine{325     \{}
+\DoxyCodeLine{326         rightDown = \textcolor{keyword}{false};}
+\DoxyCodeLine{327 }
+\DoxyCodeLine{328         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{329         vtkInteractorStyleTrackballActor::OnRightButtonUp();}
+\DoxyCodeLine{330     \}}
+\DoxyCodeLine{331 }
+\DoxyCodeLine{332     \textcolor{comment}{//Middle Mouse Up Function}}
+\DoxyCodeLine{333     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMiddleButtonUp() \{}
+\DoxyCodeLine{334         middleDown = \textcolor{keyword}{false};}
+\DoxyCodeLine{335 }
+\DoxyCodeLine{336         \textcolor{comment}{//Forward Events}}
+\DoxyCodeLine{337         vtkInteractorStyleTrackballActor::OnMiddleButtonUp();}
+\DoxyCodeLine{338     \}}
+\DoxyCodeLine{339 }
+\DoxyCodeLine{340     \textcolor{comment}{//Mouse Movement}}
+\DoxyCodeLine{341     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnMouseMove()}
+\DoxyCodeLine{342     \{}
+\DoxyCodeLine{343         \textcolor{keywordflow}{if} (this-\/>InteractionProp == NULL) \textcolor{keywordflow}{return};}
+\DoxyCodeLine{344         \textcolor{keywordflow}{if} (leftDown == \textcolor{keyword}{true} || rightDown == \textcolor{keyword}{true} || middleDown == \textcolor{keyword}{true})}
+\DoxyCodeLine{345         \{}
+\DoxyCodeLine{346             vtkActor *actor = vtkActor::SafeDownCast(this-\/>InteractionProp);}
+\DoxyCodeLine{347 }
+\DoxyCodeLine{348             \textcolor{comment}{//If Right Down and Not Left or MiddleScale The Z}}
+\DoxyCodeLine{349             \textcolor{keywordflow}{if} (!leftDown \&\& !middleDown)}
+\DoxyCodeLine{350             \{}
+\DoxyCodeLine{351                 \textcolor{keywordtype}{double}* Position = actor-\/>GetPosition();}
+\DoxyCodeLine{352                 actor-\/>SetPosition(Position[0], Position[1], QCursor::pos().y() -\/ rightDownY + rightDownModelZ);}
+\DoxyCodeLine{353             \}}
+\DoxyCodeLine{354 }
+\DoxyCodeLine{355             \textcolor{comment}{//Information Toggle}}
+\DoxyCodeLine{356             std::string infoText = \textcolor{stringliteral}{"{}Location: <"{}};}
+\DoxyCodeLine{357             vtkTextActor*  text = vtkTextActor::SafeDownCast(this-\/>Interactor-\/>GetRenderWindow()-\/>GetRenderers()-\/>GetFirstRenderer()-\/>GetActors2D()-\/>GetLastActor2D());}
+\DoxyCodeLine{358             \textcolor{keywordflow}{if} (information == \textcolor{keyword}{true})}
+\DoxyCodeLine{359             \{}
+\DoxyCodeLine{360                 \textcolor{keywordflow}{if} (interactor\_camera\_B == \textcolor{keyword}{false}) \{}
+\DoxyCodeLine{361                     infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{362                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{363                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetPosition()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{364                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[0]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{365                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[1]) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{366                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})actor-\/>GetOrientation()[2]) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{367                     }
+\DoxyCodeLine{368                 \}}
+\DoxyCodeLine{369                 \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{370                     \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_B = \mbox{\hyperlink{struct_point6_d}{Point6D}}(actor-\/>GetPosition()[0], actor-\/>GetPosition()[1], actor-\/>GetPosition()[2],}
+\DoxyCodeLine{371                         actor-\/>GetOrientation()[0], actor-\/>GetOrientation()[1], actor-\/>GetOrientation()[2]);}
+\DoxyCodeLine{372                     \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_position\_A = interactor\_calibration.convert\_Pose\_B\_to\_Pose\_A(current\_position\_B);}
+\DoxyCodeLine{373                     infoText += std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.x) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{374                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.y) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{375                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.z) + \textcolor{stringliteral}{"{}>\(\backslash\)nOrientation: <"{}}}
+\DoxyCodeLine{376                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.xa) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{377                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.ya) + \textcolor{stringliteral}{"{},"{}}}
+\DoxyCodeLine{378                         + std::to\_string((\textcolor{keywordtype}{long} \textcolor{keywordtype}{double})current\_position\_A.za) + \textcolor{stringliteral}{"{}>\(\backslash\)nKeyboard Speed: "{}} + std::to\_string((\textcolor{keywordtype}{int})speed);}
+\DoxyCodeLine{379                 \}}
+\DoxyCodeLine{380                 text-\/>GetTextProperty()-\/>SetOpacity(1.0);}
+\DoxyCodeLine{381                 text-\/>GetTextProperty()-\/>SetColor(actor-\/>GetProperty()-\/>GetColor());}
+\DoxyCodeLine{382             \}}
+\DoxyCodeLine{383             \textcolor{keywordflow}{else}}
+\DoxyCodeLine{384                 text-\/>GetTextProperty()-\/>SetOpacity(0.0);}
+\DoxyCodeLine{385             text-\/>SetInput(infoText.c\_str());}
+\DoxyCodeLine{386             this-\/>Interactor-\/>GetRenderWindow()-\/>Render();}
+\DoxyCodeLine{387         \}}
+\DoxyCodeLine{388 }
+\DoxyCodeLine{389         \textcolor{comment}{// Forward Events}}
+\DoxyCodeLine{390         \textcolor{keywordflow}{if} (!rightDown)}
+\DoxyCodeLine{391             vtkInteractorStyleTrackballActor::OnMouseMove();}
+\DoxyCodeLine{392     \}}
+\DoxyCodeLine{393 \};}
+\DoxyCodeLine{394 vtkStandardNewMacro(\mbox{\hyperlink{class_key_press_interactor_style}{KeyPressInteractorStyle}});}
+\DoxyCodeLine{395 }
+\DoxyCodeLine{396 }
+\DoxyCodeLine{397 \textcolor{keyword}{class }\mbox{\hyperlink{class_camera_interactor_style}{CameraInteractorStyle}} : \textcolor{keyword}{public} vtkInteractorStyleTrackballCamera}
+\DoxyCodeLine{398 \{}
+\DoxyCodeLine{399 \textcolor{keyword}{public}:}
+\DoxyCodeLine{400     \textcolor{keyword}{static} \mbox{\hyperlink{class_camera_interactor_style}{CameraInteractorStyle}}* New();}
+\DoxyCodeLine{401     vtkTypeMacro(\mbox{\hyperlink{class_camera_interactor_style}{CameraInteractorStyle}}, vtkInteractorStyleTrackballCamera);}
+\DoxyCodeLine{402 }
+\DoxyCodeLine{403     \textcolor{comment}{//KeyPress Turns Off Other Char Hotkeys}}
+\DoxyCodeLine{404     \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} OnChar() \{\}}
+\DoxyCodeLine{405 \};}
+\DoxyCodeLine{406 vtkStandardNewMacro(\mbox{\hyperlink{class_camera_interactor_style}{CameraInteractorStyle}});}
+\DoxyCodeLine{407 }
+\DoxyCodeLine{408 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* INTERACTOR\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

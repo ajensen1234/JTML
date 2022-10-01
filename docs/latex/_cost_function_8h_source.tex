@@ -1,0 +1,60 @@
+\hypertarget{_cost_function_8h_source}{}\doxysection{Cost\+Function.\+h}
+\label{_cost_function_8h_source}\index{include/cost\_functions/CostFunction.h@{include/cost\_functions/CostFunction.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{comment}{/*Cost Function Parameters*/}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}Parameter.h"{}}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }jta\_cost\_function \{}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{CostFunction}} \{}
+\DoxyCodeLine{13     \textcolor{keyword}{public}:}
+\DoxyCodeLine{14         \textcolor{comment}{/*Constructor*/}}
+\DoxyCodeLine{15         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{CostFunction}}();}
+\DoxyCodeLine{16         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{CostFunction}}(std::string cost\_function\_name);}
+\DoxyCodeLine{17         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_cost_function}{\string~CostFunction}}();}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19         \textcolor{comment}{/*Add Parameter (w/ Default Value)*/}}
+\DoxyCodeLine{20         \_\_declspec(dllexport) \textcolor{keywordtype}{void} addParameter(\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter<double>}} new\_parameter);}
+\DoxyCodeLine{21         \_\_declspec(dllexport) \textcolor{keywordtype}{void} addParameter(\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter<int>}} new\_parameter);}
+\DoxyCodeLine{22         \_\_declspec(dllexport) \textcolor{keywordtype}{void} addParameter(\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter<bool>}} new\_parameter);}
+\DoxyCodeLine{23          }
+\DoxyCodeLine{24         \textcolor{comment}{/*Set Parameter Values (Bool for Success)*/}}
+\DoxyCodeLine{25         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} setDoubleParameterValue(std::string parameter\_name, \textcolor{keywordtype}{double} value);}
+\DoxyCodeLine{26         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} setIntParameterValue(std::string parameter\_name, \textcolor{keywordtype}{int} value);}
+\DoxyCodeLine{27         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} setBoolParameterValue(std::string parameter\_name, \textcolor{keywordtype}{bool} value);}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29         \textcolor{comment}{/*Get Parameter Values (Bool for Success)*/}}
+\DoxyCodeLine{30         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} getDoubleParameterValue(std::string parameter\_name, \textcolor{keywordtype}{double} \&value);}
+\DoxyCodeLine{31         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} getIntParameterValue(std::string parameter\_name, \textcolor{keywordtype}{int} \&value);}
+\DoxyCodeLine{32         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} getBoolParameterValue(std::string parameter\_name, \textcolor{keywordtype}{bool} \&value);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         \textcolor{comment}{/*Get Parameters by Type Groups*/}}
+\DoxyCodeLine{35         \_\_declspec(dllexport) std::vector<Parameter<double>> getDoubleParameters();}
+\DoxyCodeLine{36         \_\_declspec(dllexport) std::vector<Parameter<int>> getIntParameters();}
+\DoxyCodeLine{37         \_\_declspec(dllexport) std::vector<Parameter<bool>> getBoolParameters();}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39         \textcolor{comment}{/*Get/Set Cost Function Name*/}}
+\DoxyCodeLine{40         \_\_declspec(dllexport) std::string getCostFunctionName();}
+\DoxyCodeLine{41         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setCostFunctionName(std::string cost\_function\_name);}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{keyword}{private}:}
+\DoxyCodeLine{45         \textcolor{comment}{/*Containers for Parameters*/}}
+\DoxyCodeLine{46         std::vector<Parameter<double>> double\_parameters\_;}
+\DoxyCodeLine{47         std::vector<Parameter<int>> int\_parameters\_;}
+\DoxyCodeLine{48         std::vector<Parameter<bool>> bool\_parameters\_;}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50         \textcolor{comment}{/*Cost Function Name*/}}
+\DoxyCodeLine{51         std::string cost\_function\_name\_;}
+\DoxyCodeLine{52     \};}
+\DoxyCodeLine{53 \}}
+\DoxyCodeLine{54 }
+
+\end{DoxyCode}

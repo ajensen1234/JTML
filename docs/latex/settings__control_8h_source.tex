@@ -1,0 +1,92 @@
+\hypertarget{settings__control_8h_source}{}\doxysection{settings\+\_\+control.\+h}
+\label{settings__control_8h_source}\index{include/gui/settings\_control.h@{include/gui/settings\_control.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef SETTINGS\_CONTROL\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define SETTINGS\_CONTROL\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <qdialog.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}ui\_settings\_control.h"{}}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{/*Optimizer Settings Class*/}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}core/optimizer\_settings.h"{}}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{comment}{/*JTA Cost Function Class*/}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include "{}cost\_functions/CostFunctionManager.h"{}}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{comment}{//About OptimizerSettings Popup Header}}
+\DoxyCodeLine{14 \textcolor{keyword}{class }\mbox{\hyperlink{class_settings_control}{SettingsControl}} : \textcolor{keyword}{public} QDialog}
+\DoxyCodeLine{15 \{}
+\DoxyCodeLine{16     Q\_OBJECT}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{public}:}
+\DoxyCodeLine{19     \mbox{\hyperlink{class_settings_control}{SettingsControl}}(QWidget *parent = 0, Qt::WindowFlags flags = 0);}
+\DoxyCodeLine{20     \mbox{\hyperlink{class_settings_control}{\string~SettingsControl}}();}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22     \textcolor{comment}{/*Load Optimizer Settings from Main Window*/}}
+\DoxyCodeLine{23     \textcolor{keywordtype}{void} LoadSettings(\mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_trunk\_manager,}
+\DoxyCodeLine{24         \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_branch\_manager,}
+\DoxyCodeLine{25         \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_leaf\_manager,}
+\DoxyCodeLine{26         \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} opt\_settings);}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{keyword}{private}:}
+\DoxyCodeLine{29     Ui::settings\_control ui;}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31     \textcolor{comment}{/*Local to Settings Control Cost Function Managers*/}}
+\DoxyCodeLine{32     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_trunk\_manager\_;}
+\DoxyCodeLine{33     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_branch\_manager\_;}
+\DoxyCodeLine{34     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} sc\_leaf\_manager\_; \textcolor{comment}{// For extra Z-\/translation usually (esp. when monoplane)}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36     \textcolor{comment}{/*Optimizer Settings for Everything but the Cost Function Stuff*/}}
+\DoxyCodeLine{37     \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} opt\_settings\_;}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39 \textcolor{keyword}{public} slots:}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \textcolor{comment}{/*Save Button*/}}
+\DoxyCodeLine{42 \textcolor{keywordtype}{void} on\_save\_button\_clicked();}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44 \textcolor{comment}{/*Reset Button*/}}
+\DoxyCodeLine{45 \textcolor{keywordtype}{void} on\_reset\_button\_clicked();}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47 \textcolor{comment}{/*Cancel Button*/}}
+\DoxyCodeLine{48 \textcolor{keywordtype}{void} on\_cancel\_button\_clicked();}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 \textcolor{comment}{/*Radio buttons for stage*/}}
+\DoxyCodeLine{51 \textcolor{keywordtype}{void} on\_trunk\_radioButton\_clicked();}
+\DoxyCodeLine{52 \textcolor{keywordtype}{void} on\_branch\_radioButton\_clicked();}
+\DoxyCodeLine{53 \textcolor{keywordtype}{void} on\_leaf\_radioButton\_clicked();}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{comment}{/*List Widgets Changed*/}}
+\DoxyCodeLine{56 \textcolor{keywordtype}{void} on\_cost\_function\_listWidget\_itemSelectionChanged();}
+\DoxyCodeLine{57 \textcolor{keywordtype}{void} on\_cost\_function\_parameters\_listWidget\_itemSelectionChanged();}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59 \textcolor{comment}{/*Optimizer Settings Buttons Toggled*/}}
+\DoxyCodeLine{60 \textcolor{keywordtype}{void} on\_stage\_enabled\_checkBox\_clicked();}
+\DoxyCodeLine{61 \textcolor{keywordtype}{void} on\_budget\_spinBox\_valueChanged();}
+\DoxyCodeLine{62 \textcolor{keywordtype}{void} on\_x\_translation\_spinBox\_valueChanged();}
+\DoxyCodeLine{63 \textcolor{keywordtype}{void} on\_y\_translation\_spinBox\_valueChanged();}
+\DoxyCodeLine{64 \textcolor{keywordtype}{void} on\_z\_translation\_spinBox\_valueChanged();}
+\DoxyCodeLine{65 \textcolor{keywordtype}{void} on\_x\_rotation\_spinBox\_valueChanged();}
+\DoxyCodeLine{66 \textcolor{keywordtype}{void} on\_y\_rotation\_spinBox\_valueChanged();}
+\DoxyCodeLine{67 \textcolor{keywordtype}{void} on\_z\_rotation\_spinBox\_valueChanged();}
+\DoxyCodeLine{68 \textcolor{keywordtype}{void} on\_branch\_count\_spinBox\_valueChanged();}
+\DoxyCodeLine{69 \textcolor{keywordtype}{void} on\_double\_parameter\_spinBox\_valueChanged();}
+\DoxyCodeLine{70 \textcolor{keywordtype}{void} on\_int\_parameter\_spinBox\_valueChanged();}
+\DoxyCodeLine{71 \textcolor{keywordtype}{void} on\_bool\_parameter\_true\_radioButton\_clicked();}
+\DoxyCodeLine{72 \textcolor{keywordtype}{void} on\_bool\_parameter\_false\_radioButton\_clicked();}
+\DoxyCodeLine{73 }
+\DoxyCodeLine{74 }
+\DoxyCodeLine{75 }
+\DoxyCodeLine{76 signals:}
+\DoxyCodeLine{77     \textcolor{comment}{/*Saves the three Cost Function Manager Settings and the Optimizer Settings to:}}
+\DoxyCodeLine{78 \textcolor{comment}{    -\/ the registry}}
+\DoxyCodeLine{79 \textcolor{comment}{    -\/ their local class versions on the main window GUI*/}}
+\DoxyCodeLine{80     \textcolor{keywordtype}{void} SaveSettings(\mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}},}
+\DoxyCodeLine{81         \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}}, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}}, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}});\textcolor{comment}{//}}
+\DoxyCodeLine{82     \textcolor{comment}{/*Close Window*/}}
+\DoxyCodeLine{83     \textcolor{keywordtype}{void} Done();\textcolor{comment}{//}}
+\DoxyCodeLine{84 \};}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* SETTINGS\_CONTROL\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

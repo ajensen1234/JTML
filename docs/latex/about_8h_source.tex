@@ -1,0 +1,28 @@
+\hypertarget{about_8h_source}{}\doxysection{about.\+h}
+\label{about_8h_source}\index{include/gui/about.h@{include/gui/about.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef ABOUT\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define ABOUT\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <qdialog.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}ui\_About.h"{}}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{comment}{//About JTA Popup Header}}
+\DoxyCodeLine{8 \textcolor{keyword}{class }\mbox{\hyperlink{class_about}{About}} : \textcolor{keyword}{public} QDialog}
+\DoxyCodeLine{9 \{}
+\DoxyCodeLine{10     Q\_OBJECT}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{keyword}{public}:}
+\DoxyCodeLine{13     \mbox{\hyperlink{class_about}{About}}(QWidget *parent = 0, Qt::WindowFlags flags = 0);}
+\DoxyCodeLine{14     \mbox{\hyperlink{class_about}{\string~About}}();}
+\DoxyCodeLine{15     \textcolor{keywordtype}{void} setVersion(\textcolor{keywordtype}{int} A, \textcolor{keywordtype}{int} B, \textcolor{keywordtype}{int} C); \textcolor{comment}{// Sets Version Number Label}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{keyword}{private}:}
+\DoxyCodeLine{18     Ui::aboutJTA ui;}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 \};}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ABOUT\_H}}
+
+\end{DoxyCode}

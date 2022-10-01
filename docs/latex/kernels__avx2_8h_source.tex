@@ -1,0 +1,179 @@
+\hypertarget{kernels__avx2_8h_source}{}\doxysection{kernels\+\_\+avx2.\+h}
+\label{kernels__avx2_8h_source}\index{lib/alglib/kernels\_avx2.h@{lib/alglib/kernels\_avx2.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_kernels\_avx2\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_kernels\_avx2\_h}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#define AE\_USE\_CPP}}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29 \textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{30 \{}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#if !defined(ALGLIB\_NO\_FAST\_KERNELS) \&\& defined(\_ALGLIB\_HAS\_AVX2\_INTRINSICS)}}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33 \textcolor{keywordtype}{double} rdotv\_avx2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{34     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{35     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{36     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{37 \textcolor{keywordtype}{double} rdotv2\_avx2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{38     \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{39     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{40 \textcolor{keywordtype}{void} rcopyv\_avx2(ae\_int\_t n,}
+\DoxyCodeLine{41      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{42      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{43      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{44 \textcolor{keywordtype}{void} rcopymulv\_avx2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{45      \textcolor{keyword}{const} \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{46      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{47      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{48      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{49 \textcolor{keywordtype}{void} icopyv\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t* \_\_restrict x,}
+\DoxyCodeLine{50                 ae\_int\_t* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{51 \textcolor{keywordtype}{void} bcopyv\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_bool* \_\_restrict x,}
+\DoxyCodeLine{52                 ae\_bool* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{53 \textcolor{keywordtype}{void} rsetv\_avx2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{54      \textcolor{keyword}{const} \textcolor{keywordtype}{double} v,}
+\DoxyCodeLine{55      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{56      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{57 \textcolor{keywordtype}{void} rsetvx\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{58     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{59 \textcolor{keywordtype}{void} isetv\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t v,}
+\DoxyCodeLine{60     ae\_int\_t* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{61 \textcolor{keywordtype}{void} bsetv\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_bool v, ae\_bool* \_\_restrict x,}
+\DoxyCodeLine{62     ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{63 \textcolor{keywordtype}{void} rmulv\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{64      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{65 \textcolor{keywordtype}{void} rmulvx\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{66     \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{67 \textcolor{keywordtype}{void} raddv\_avx2(\textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{68      \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha,}
+\DoxyCodeLine{69      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{70      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{71      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{72 \textcolor{keywordtype}{void} raddvx\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{73     \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state *\_state);}
+\DoxyCodeLine{74 \textcolor{keywordtype}{void} rmergemulv\_avx2(ae\_int\_t n,}
+\DoxyCodeLine{75      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{76      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{77      \textcolor{keyword}{const} ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{78 \textcolor{keywordtype}{void} rmergemaxv\_avx2(ae\_int\_t n,}
+\DoxyCodeLine{79      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{80      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{81      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{82 \textcolor{keywordtype}{void} rmergeminv\_avx2(ae\_int\_t n,}
+\DoxyCodeLine{83      \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{84      \textcolor{comment}{/* Real    */} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{85      ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{86 \textcolor{keywordtype}{double} rmaxv\_avx2(ae\_int\_t n, \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{87 \textcolor{keywordtype}{double} rmaxabsv\_avx2(ae\_int\_t n, \textcolor{comment}{/* Real    */} \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{88 \textcolor{keywordtype}{void} rcopyvx\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{89     \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state *\_state);}
+\DoxyCodeLine{90 \textcolor{keywordtype}{void} icopyvx\_avx2(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} ae\_int\_t* \_\_restrict x,}
+\DoxyCodeLine{91                 ae\_int\_t* \_\_restrict y, ae\_state* \_\_restrict \_state);}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{93 \textcolor{keywordtype}{void} rgemv\_straight\_avx2(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{94     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a,}
+\DoxyCodeLine{95     \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{96 \textcolor{keywordtype}{void} rgemv\_transposed\_avx2(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{97     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a,}
+\DoxyCodeLine{98     \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{99 \textcolor{keywordtype}{void} rgemvx\_straight\_avx2(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{100     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a, \textcolor{keyword}{const} ae\_int\_t ia,}
+\DoxyCodeLine{101     \textcolor{keyword}{const} ae\_int\_t ja, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x,}
+\DoxyCodeLine{102     \textcolor{keywordtype}{double}* \_\_restrict y, ae\_state* \_state);}
+\DoxyCodeLine{103 \textcolor{keywordtype}{void} rgemvx\_transposed\_avx2(\textcolor{keyword}{const} ae\_int\_t m, \textcolor{keyword}{const} ae\_int\_t n,}
+\DoxyCodeLine{104     \textcolor{keyword}{const} \textcolor{keywordtype}{double} alpha, ae\_matrix* \_\_restrict a, \textcolor{keyword}{const} ae\_int\_t ia,}
+\DoxyCodeLine{105     \textcolor{keyword}{const} ae\_int\_t ja, \textcolor{keyword}{const} \textcolor{keywordtype}{double}* \_\_restrict x, \textcolor{keywordtype}{double}* \_\_restrict y,}
+\DoxyCodeLine{106     ae\_state* \_state);}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108 ae\_int\_t ablasf\_packblkh\_avx2(}
+\DoxyCodeLine{109     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src,}
+\DoxyCodeLine{110     ae\_int\_t src\_stride,}
+\DoxyCodeLine{111     ae\_int\_t op,}
+\DoxyCodeLine{112     ae\_int\_t opsrc\_length,}
+\DoxyCodeLine{113     ae\_int\_t opsrc\_width,}
+\DoxyCodeLine{114     \textcolor{keywordtype}{double}   *dst,}
+\DoxyCodeLine{115     ae\_int\_t block\_size,}
+\DoxyCodeLine{116     ae\_int\_t micro\_size);}
+\DoxyCodeLine{117 ae\_int\_t ablasf\_packblkh32\_avx2(}
+\DoxyCodeLine{118     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src,}
+\DoxyCodeLine{119     ae\_int\_t src\_stride,}
+\DoxyCodeLine{120     ae\_int\_t op,}
+\DoxyCodeLine{121     ae\_int\_t ignore\_opsrc\_length,}
+\DoxyCodeLine{122     ae\_int\_t opsrc\_width,}
+\DoxyCodeLine{123     \textcolor{keywordtype}{double}   *dst,}
+\DoxyCodeLine{124     ae\_int\_t ignore\_block\_size,}
+\DoxyCodeLine{125     ae\_int\_t micro\_size);}
+\DoxyCodeLine{126 \textcolor{keywordtype}{void} ablasf\_dotblkh\_avx2(}
+\DoxyCodeLine{127     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src\_a,}
+\DoxyCodeLine{128     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src\_b,}
+\DoxyCodeLine{129     ae\_int\_t round\_length,}
+\DoxyCodeLine{130     ae\_int\_t block\_size,}
+\DoxyCodeLine{131     ae\_int\_t micro\_size,}
+\DoxyCodeLine{132     \textcolor{keywordtype}{double} *dst,}
+\DoxyCodeLine{133     ae\_int\_t dst\_stride);}
+\DoxyCodeLine{134 \textcolor{keywordtype}{void} ablasf\_daxpby\_avx2(}
+\DoxyCodeLine{135     ae\_int\_t     n,}
+\DoxyCodeLine{136     \textcolor{keywordtype}{double}       alpha,}
+\DoxyCodeLine{137     \textcolor{keyword}{const} \textcolor{keywordtype}{double} *src,}
+\DoxyCodeLine{138     \textcolor{keywordtype}{double}       beta,}
+\DoxyCodeLine{139     \textcolor{keywordtype}{double}       *dst);}
+\DoxyCodeLine{140 ae\_bool spchol\_updatekernelabc4\_avx2(\textcolor{keywordtype}{double}* rowstorage,}
+\DoxyCodeLine{141      ae\_int\_t offss,}
+\DoxyCodeLine{142      ae\_int\_t twidth,}
+\DoxyCodeLine{143      ae\_int\_t offsu,}
+\DoxyCodeLine{144      ae\_int\_t uheight,}
+\DoxyCodeLine{145      ae\_int\_t urank,}
+\DoxyCodeLine{146      ae\_int\_t urowstride,}
+\DoxyCodeLine{147      ae\_int\_t uwidth,}
+\DoxyCodeLine{148      \textcolor{keywordtype}{double}* diagd,}
+\DoxyCodeLine{149      ae\_int\_t offsd,}
+\DoxyCodeLine{150      ae\_int\_t* raw2smap,}
+\DoxyCodeLine{151      ae\_int\_t* superrowidx,}
+\DoxyCodeLine{152      ae\_int\_t urbase,}
+\DoxyCodeLine{153      ae\_state *\_state);}
+\DoxyCodeLine{154 ae\_bool spchol\_updatekernel4444\_avx2(}
+\DoxyCodeLine{155      \textcolor{keywordtype}{double}*  rowstorage,}
+\DoxyCodeLine{156      ae\_int\_t offss,}
+\DoxyCodeLine{157      ae\_int\_t sheight,}
+\DoxyCodeLine{158      ae\_int\_t offsu,}
+\DoxyCodeLine{159      ae\_int\_t uheight,}
+\DoxyCodeLine{160      \textcolor{keywordtype}{double}*  diagd,}
+\DoxyCodeLine{161      ae\_int\_t offsd,}
+\DoxyCodeLine{162      ae\_int\_t* raw2smap,}
+\DoxyCodeLine{163      ae\_int\_t* superrowidx,}
+\DoxyCodeLine{164      ae\_int\_t urbase,}
+\DoxyCodeLine{165      ae\_state *\_state);}
+\DoxyCodeLine{166 }
+\DoxyCodeLine{167 \textcolor{comment}{/* ALGLIB\_NO\_FAST\_KERNELS, \_ALGLIB\_HAS\_AVX2\_INTRINSICS */}}
+\DoxyCodeLine{168 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{169 }
+\DoxyCodeLine{170 \}}
+\DoxyCodeLine{171 }
+\DoxyCodeLine{172 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{173 }
+
+\end{DoxyCode}

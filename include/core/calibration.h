@@ -57,6 +57,13 @@ struct Calibration {
 		biplane_calibration = false;
 		camera_A_principal_ = monoplane_principal;
 	};
+	/**
+	 * @brief 
+	 * @param biplane_A_principal 
+	 * @param biplane_B_principal 
+	 * @param origin_B 
+	 * @param axes_B 
+	 */
 	Calibration(CameraCalibration biplane_A_principal, CameraCalibration biplane_B_principal,
 		Vect_3 origin_B, Matrix_3_3 axes_B) {
 		biplane_calibration = true;

@@ -1,0 +1,28 @@
+\hypertarget{stl__reader_8h_source}{}\doxysection{stl\+\_\+reader.\+h}
+\label{stl__reader_8h_source}\index{include/core/stl\_reader.h@{include/core/stl\_reader.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{comment}{/*QT Headers*/}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <QtCore\(\backslash\)qstring.h>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <QtCore\(\backslash\)qfile.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <QtCore\(\backslash\)qfileinfo.h>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <QtCore\(\backslash\)qtextstream.h>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{keyword}{namespace }stl\_reader \{}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13     \textcolor{comment}{/*ENUM for STL file status*/}}
+\DoxyCodeLine{14     \textcolor{keyword}{enum} STL\_STATUS \{ STL\_INVALID, STL\_ASCII, STL\_BINARY \};}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16     \textcolor{comment}{/*Function to determine if file is a valid STL file and, if so, whether it is binary or ascii*/}}
+\DoxyCodeLine{17     STL\_STATUS getStlFileFormat(\textcolor{keyword}{const} QString \&path);}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19     \textcolor{comment}{/*STL reader function (binary or ascii)}}
+\DoxyCodeLine{20 \textcolor{comment}{    Populates two vector<floats>, one contains the triangle vertices, the other contains the triangle normals  */}}
+\DoxyCodeLine{21     STL\_STATUS readAnySTL(\textcolor{keyword}{const} QString \&path, std::vector<float> \&triangleVertices, std::vector<float> \&triangleNormals);}
+\DoxyCodeLine{22 \}}
+
+\end{DoxyCode}

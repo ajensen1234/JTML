@@ -1,0 +1,258 @@
+\hypertarget{optimizer__manager_8h_source}{}\doxysection{optimizer\+\_\+manager.\+h}
+\label{optimizer__manager_8h_source}\index{include/core/optimizer\_manager.h@{include/core/optimizer\_manager.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*Manages Optimization in a Seperate QT Thread*/}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#ifndef OPTIMIZER\_MANAGER\_H}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#define OPTIMIZER\_MANAGER\_H}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*Custom CUDA Headers*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <gpu\_model.cuh>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <gpu\_intensity\_frame.cuh>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <gpu\_edge\_frame.cuh>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <gpu\_dilated\_frame.cuh>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <gpu\_metrics.cuh>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include "{}calibration.h"{}}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{comment}{/*QT Threading*/}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <qobject.h>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <qthread.h>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <QModelIndex>}}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{comment}{/*Frame and Model and Location Storage*/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include "{}frame.h"{}}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include "{}model.h"{}}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}location\_storage.h"{}}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 \textcolor{comment}{/*Direct Library*/}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#include "{}direct\_data\_storage.h"{}}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{comment}{/*Custom Calibration Struct (Used in CUDA GPU METRICS)*/}}
+\DoxyCodeLine{29 \textcolor{preprocessor}{\#include "{}calibration.h"{}}}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31 \textcolor{comment}{/*Optimizer Settings*/}}
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#include "{}optimizer\_settings.h"{}}}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 \textcolor{comment}{/*Metric Types*/}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#include "{}metric\_enum.h"{}}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{comment}{/*Cost Function Library*/}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#include "{}cost\_functions/CostFunctionManager.h"{}}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#include "{}core/sym\_trap\_functions.h"{}}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{keyword}{using namespace }gpu\_cost\_function;}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44 \textcolor{keyword}{class }\mbox{\hyperlink{class_optimizer_manager}{OptimizerManager}} : \textcolor{keyword}{public} QObject}
+\DoxyCodeLine{45 \{}
+\DoxyCodeLine{46     Q\_OBJECT}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48 \textcolor{keyword}{public}:}
+\DoxyCodeLine{49     \textcolor{keyword}{explicit} \mbox{\hyperlink{class_optimizer_manager}{OptimizerManager}}(QObject* parent = 0);}
+\DoxyCodeLine{50     \textcolor{comment}{/*Sets up Everything for Optimizer and Also Handles CUDA Initialization, Can Fail!*/}}
+\DoxyCodeLine{51     \textcolor{keywordtype}{bool} Initialize(}
+\DoxyCodeLine{52         QThread\& optimizer\_thread,}
+\DoxyCodeLine{53         \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\_file,}
+\DoxyCodeLine{54         std::vector<Frame> camera\_A\_frame\_list, std::vector<Frame> camera\_B\_frame\_list, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} current\_frame\_index,}
+\DoxyCodeLine{55         std::vector<Model> model\_list, QModelIndexList selected\_models, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} primary\_model\_index,}
+\DoxyCodeLine{56         \mbox{\hyperlink{class_location_storage}{LocationStorage}} pose\_matrix,}
+\DoxyCodeLine{57         \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} opt\_settings,}
+\DoxyCodeLine{58         \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} trunk\_manager, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} branch\_manager, \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} leaf\_manager,}
+\DoxyCodeLine{59         QString opt\_directive,}
+\DoxyCodeLine{60         QString\& error\_message,}
+\DoxyCodeLine{61         \textcolor{keywordtype}{int} iter\_count);}
+\DoxyCodeLine{62     \mbox{\hyperlink{class_optimizer_manager}{\string~OptimizerManager}}();}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65     \textcolor{comment}{/* get cost numbers for symmetry plotting */}}
+\DoxyCodeLine{66     \textcolor{keywordtype}{double} EvaluateCostFunctionAtPoint(\mbox{\hyperlink{struct_point6_d}{Point6D}} point, \textcolor{keywordtype}{int} stage);}
+\DoxyCodeLine{67     \textcolor{keywordtype}{void} CalculateSymTrap();}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69 signals:}
+\DoxyCodeLine{70     \textcolor{comment}{/*Update Blue Current Optimum*/}}
+\DoxyCodeLine{71     \textcolor{keywordtype}{void} UpdateOptimum(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int});}
+\DoxyCodeLine{72     \textcolor{comment}{/*Finished*/}}
+\DoxyCodeLine{73     \textcolor{keywordtype}{void} finished();}
+\DoxyCodeLine{74     \textcolor{comment}{/*Finished Optimizing Frame, Send Optimum to MainScreen, The last bool indicates if should move to next frame*/}}
+\DoxyCodeLine{75     \textcolor{keywordtype}{void} OptimizedFrame(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{bool}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int}, \textcolor{keywordtype}{bool}, QString);}
+\DoxyCodeLine{76     \textcolor{comment}{/*Uh oh There was an Error. The string is the message*/}}
+\DoxyCodeLine{77     \textcolor{keywordtype}{void} OptimizerError(QString);}
+\DoxyCodeLine{78     \textcolor{comment}{/*Update Display with Speed, Cost Function Calls, Current Minimum*/}}
+\DoxyCodeLine{79     \textcolor{keywordtype}{void} UpdateDisplay(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{int}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int});}
+\DoxyCodeLine{80     \textcolor{comment}{/*Update Dilation Background*/}}
+\DoxyCodeLine{81     \textcolor{keywordtype}{void} UpdateDilationBackground();}
+\DoxyCodeLine{82 }
+\DoxyCodeLine{83     \textcolor{keywordtype}{void} CostFuncAtPoint(\textcolor{keywordtype}{double});}
+\DoxyCodeLine{84     \textcolor{keywordtype}{void} onUpdateOrientationSymTrap(\textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double}, \textcolor{keywordtype}{double});}
+\DoxyCodeLine{85     \textcolor{keywordtype}{void} onProgressBarUpdate(\textcolor{keywordtype}{int});}
+\DoxyCodeLine{86     \textcolor{keywordtype}{void} get\_iter\_count();}
+\DoxyCodeLine{87 }
+\DoxyCodeLine{88 \textcolor{keyword}{public} slots:}
+\DoxyCodeLine{89     \textcolor{comment}{/*Optimizer Biplane Single Model*/}}
+\DoxyCodeLine{90     \textcolor{keywordtype}{void} Optimize();}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92     \textcolor{comment}{/*Emergency Stop*/}}
+\DoxyCodeLine{93     \textcolor{keywordtype}{void} onStopOptimizer();}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95 }
+\DoxyCodeLine{96 \textcolor{keyword}{private}:}
+\DoxyCodeLine{97 }
+\DoxyCodeLine{98     \textcolor{comment}{/*Initial Variables and Objects*/}}
+\DoxyCodeLine{99     \textcolor{comment}{/*Calibration File*/}}
+\DoxyCodeLine{100     \mbox{\hyperlink{struct_calibration}{Calibration}} calibration\_;}
+\DoxyCodeLine{101 }
+\DoxyCodeLine{102     \textcolor{comment}{/*Optimizer Settings*/}}
+\DoxyCodeLine{103     \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} optimizer\_settings\_;}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105     \textcolor{comment}{/*SYM TRAP SETTINGS*/}}
+\DoxyCodeLine{106     \textcolor{keywordtype}{bool} sym\_trap\_call;}
+\DoxyCodeLine{107     \textcolor{comment}{//sym\_trap *sym\_trap\_obj;}}
+\DoxyCodeLine{108 }
+\DoxyCodeLine{109     \textcolor{comment}{/*Frames*/}}
+\DoxyCodeLine{110     std::vector<Frame> frames\_A\_;}
+\DoxyCodeLine{111     \textcolor{comment}{/*Camera B Frames*/}}
+\DoxyCodeLine{112     std::vector<Frame> frames\_B\_;}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114     \textcolor{comment}{/*Models: All Models, Selected Non-\/Primary Models, and Primary Model*/}}
+\DoxyCodeLine{115     std::vector<Model> all\_models\_;}
+\DoxyCodeLine{116     std::vector<Model> selected\_non\_primary\_models\_;}
+\DoxyCodeLine{117     \mbox{\hyperlink{class_model}{Model}} primary\_model\_;}
+\DoxyCodeLine{118     \textcolor{comment}{/*Indices of All Selected Models*/}}
+\DoxyCodeLine{119     QModelIndexList selected\_model\_list\_;}
+\DoxyCodeLine{120     \textcolor{comment}{/*Index of Primary Model*/}}
+\DoxyCodeLine{121     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} primary\_model\_index\_;}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{123     \textcolor{comment}{/*Cost Function Managers For Each Stage*/}}
+\DoxyCodeLine{124     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} trunk\_manager\_;}
+\DoxyCodeLine{125     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} branch\_manager\_;}
+\DoxyCodeLine{126     \mbox{\hyperlink{classjta__cost__function_1_1_cost_function_manager}{jta\_cost\_function::CostFunctionManager}} leaf\_manager\_;}
+\DoxyCodeLine{127 }
+\DoxyCodeLine{128     \textcolor{comment}{/*Should we progess to next frame?*/}}
+\DoxyCodeLine{129     \textcolor{keywordtype}{bool} progress\_next\_frame\_;}
+\DoxyCodeLine{130     \textcolor{comment}{/*Should we initialize with previous frame's best guess?*/}}
+\DoxyCodeLine{131     \textcolor{keywordtype}{bool} init\_prev\_frame\_;}
+\DoxyCodeLine{132     \textcolor{comment}{/*Index For Starting Frame in Optimization*/}}
+\DoxyCodeLine{133     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} start\_frame\_index\_;}
+\DoxyCodeLine{134     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} end\_frame\_index\_;}
+\DoxyCodeLine{135     \textcolor{keywordtype}{int} iter\_count;}
+\DoxyCodeLine{136 }
+\DoxyCodeLine{137     std::vector<int> img\_indices\_;}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{139     QString optimization\_directive\_;}
+\DoxyCodeLine{140 }
+\DoxyCodeLine{141     \textcolor{keywordtype}{void} create\_image\_indices(std::vector<int>\& img\_indices, \textcolor{keywordtype}{int} start, \textcolor{keywordtype}{int} end);}
+\DoxyCodeLine{142 }
+\DoxyCodeLine{143     \textcolor{comment}{/*Error Check*/}}
+\DoxyCodeLine{144     cudaError\_t cuda\_status\_;}
+\DoxyCodeLine{145 }
+\DoxyCodeLine{146     \textcolor{comment}{/*Correctly Initialized*/}}
+\DoxyCodeLine{147     \textcolor{keywordtype}{bool} succesfull\_initialization\_;}
+\DoxyCodeLine{148 }
+\DoxyCodeLine{149     \textcolor{comment}{/*Dilation Values Based on Parameter Names (Dilation or DILATION or dilation) that are ints*/}}
+\DoxyCodeLine{150     \textcolor{keywordtype}{int} trunk\_dilation\_val\_;}
+\DoxyCodeLine{151     \textcolor{keywordtype}{int} branch\_dilation\_val\_;}
+\DoxyCodeLine{152     \textcolor{keywordtype}{int} leaf\_dilation\_val\_;}
+\DoxyCodeLine{153 }
+\DoxyCodeLine{154     \textcolor{comment}{/*Black Silhouette Values Based on Parameter Names (Black\_Silhouette or Dark\_Silhouette or BLACK\_SILHOUETTE or DARK\_SILHOUETTE or black\_silhouette or dark\_silhouette)*/}}
+\DoxyCodeLine{155     \textcolor{keywordtype}{bool} trunk\_dark\_silhouette\_val\_;}
+\DoxyCodeLine{156     \textcolor{keywordtype}{bool} branch\_dark\_silhouette\_val\_;}
+\DoxyCodeLine{157     \textcolor{keywordtype}{bool} leaf\_dark\_silhouette\_val\_;}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159     \textcolor{comment}{/*GPU Metrics Class*/}}
+\DoxyCodeLine{160     GPUMetrics* gpu\_metrics\_;}
+\DoxyCodeLine{161 }
+\DoxyCodeLine{162     \textcolor{comment}{/*CUDA Cost Function Objects (Vector of GPU Models and vector of GPU Frames -\/ note Dilated and Intensity must have own vector}}
+\DoxyCodeLine{163 \textcolor{comment}{    for each stage because their values could change with the stage from a black silhouette bool or a dilation int)*/}}
+\DoxyCodeLine{164     \textcolor{comment}{/*Camera A (Monoplane or Biplane)*/}}
+\DoxyCodeLine{165     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_trunk\_A\_;}
+\DoxyCodeLine{166     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_branch\_A\_;}
+\DoxyCodeLine{167     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_leaf\_A\_;}
+\DoxyCodeLine{168     std::vector<GPUEdgeFrame*> gpu\_edge\_frames\_A\_;}
+\DoxyCodeLine{169     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_trunk\_A\_;}
+\DoxyCodeLine{170     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_branch\_A\_; }
+\DoxyCodeLine{171     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_leaf\_A\_;}
+\DoxyCodeLine{172     \textcolor{comment}{/*Camera B (Biplane only)*/}}
+\DoxyCodeLine{173     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_trunk\_B\_;}
+\DoxyCodeLine{174     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_branch\_B\_;}
+\DoxyCodeLine{175     std::vector<GPUIntensityFrame*> gpu\_intensity\_frames\_leaf\_B\_;}
+\DoxyCodeLine{176     std::vector<GPUEdgeFrame*> gpu\_edge\_frames\_B\_;}
+\DoxyCodeLine{177     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_trunk\_B\_;}
+\DoxyCodeLine{178     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_branch\_B\_;}
+\DoxyCodeLine{179     std::vector<GPUDilatedFrame*> gpu\_dilated\_frames\_leaf\_B\_;}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181     \textcolor{comment}{/*Models*/}}
+\DoxyCodeLine{182     GPUModel* gpu\_principal\_model\_;}
+\DoxyCodeLine{183     std::vector<GPUModel*> gpu\_non\_principal\_models\_;}
+\DoxyCodeLine{184 }
+\DoxyCodeLine{185     \textcolor{comment}{/*Set Search Range*/}}
+\DoxyCodeLine{186     \textcolor{keywordtype}{void} SetSearchRange(\mbox{\hyperlink{struct_point6_d}{Point6D}} range);}
+\DoxyCodeLine{187 }
+\DoxyCodeLine{188     \textcolor{comment}{/*Set Search Range*/}}
+\DoxyCodeLine{189     \textcolor{keywordtype}{void} SetStartingPoint(\mbox{\hyperlink{struct_point6_d}{Point6D}} starting\_point);}
+\DoxyCodeLine{190 }
+\DoxyCodeLine{191     \textcolor{comment}{/*Actual Range of Search Direction for Each Variable*/}}
+\DoxyCodeLine{192     \mbox{\hyperlink{struct_point6_d}{Point6D}} range\_;}
+\DoxyCodeLine{193 }
+\DoxyCodeLine{194     \textcolor{comment}{/*Starting Point For Search*/}}
+\DoxyCodeLine{195     \mbox{\hyperlink{struct_point6_d}{Point6D}} starting\_point\_;}
+\DoxyCodeLine{196 }
+\DoxyCodeLine{197     \textcolor{comment}{/*Valid Search Range*/}}
+\DoxyCodeLine{198     \textcolor{keywordtype}{bool} valid\_range\_;}
+\DoxyCodeLine{199 }
+\DoxyCodeLine{200     \textcolor{comment}{/*Budget*/}}
+\DoxyCodeLine{201     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} budget\_;}
+\DoxyCodeLine{202 }
+\DoxyCodeLine{203     \textcolor{comment}{/*Data Storage*/}}
+\DoxyCodeLine{204     \mbox{\hyperlink{class_direct_data_storage}{DirectDataStorage}} data\_;}
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206     \textcolor{comment}{/*Potentially Optimal Column Ids (Given by Convex Hull)*/}}
+\DoxyCodeLine{207     std::vector<int> potentially\_optimal\_col\_ids\_;}
+\DoxyCodeLine{208 }
+\DoxyCodeLine{209     \textcolor{comment}{/*Potentially Optimal Hyperboxes (Taken from potentially optimal column ids)*/}}
+\DoxyCodeLine{210     std::vector<HyperBox6D> potentially\_optimal\_hyperboxes\_;}
+\DoxyCodeLine{211 }
+\DoxyCodeLine{212     \textcolor{comment}{/*Convex Hull Loop of DIRECT*/}}
+\DoxyCodeLine{213     \textcolor{keywordtype}{void} ConvexHull();}
+\DoxyCodeLine{214 }
+\DoxyCodeLine{215     \textcolor{comment}{/*Trisect Potentially Optimal Hypers and Sample and Add}}
+\DoxyCodeLine{216 \textcolor{comment}{    to the storage. Delete old ones.*/}}
+\DoxyCodeLine{217     \textcolor{keywordtype}{void} TrisectPotentiallyOptimal();}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{219     \textcolor{comment}{/*Evaluate Cost Function at Given Point*/}}
+\DoxyCodeLine{220     \textcolor{keywordtype}{double} EvaluateCostFunction(\mbox{\hyperlink{struct_point6_d}{Point6D}} point);}
+\DoxyCodeLine{221 }
+\DoxyCodeLine{222     \textcolor{comment}{/*Denormalize Range Point (converts Unit Point to correct values)*/}}
+\DoxyCodeLine{223     \mbox{\hyperlink{struct_point6_d}{Point6D}} DenormalizeRange(\mbox{\hyperlink{struct_point6_d}{Point6D}} unit\_point);}
+\DoxyCodeLine{224 }
+\DoxyCodeLine{225     \textcolor{comment}{/*Denormalize Point From Center (converts Unit Point to correct values)*/}}
+\DoxyCodeLine{226     \mbox{\hyperlink{struct_point6_d}{Point6D}} DenormalizeFromCenter(\mbox{\hyperlink{struct_point6_d}{Point6D}} unit\_point);}
+\DoxyCodeLine{227 }
+\DoxyCodeLine{228     \textcolor{comment}{/*Cost Function Calls*/}}
+\DoxyCodeLine{229     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} cost\_function\_calls\_;}
+\DoxyCodeLine{230 }
+\DoxyCodeLine{231     \textcolor{comment}{/*Lowest Min Value*/}}
+\DoxyCodeLine{232     \textcolor{keywordtype}{double} current\_optimum\_value\_;}
+\DoxyCodeLine{233 }
+\DoxyCodeLine{234     \textcolor{comment}{/*Argument (Location) of Lowest Min Value*/}}
+\DoxyCodeLine{235     \mbox{\hyperlink{struct_point6_d}{Point6D}} current\_optimum\_location\_;}
+\DoxyCodeLine{236 }
+\DoxyCodeLine{237     \textcolor{comment}{/*Error Ocurred*/}}
+\DoxyCodeLine{238     \textcolor{keywordtype}{bool} error\_occurrred\_;}
+\DoxyCodeLine{239 }
+\DoxyCodeLine{240     \textcolor{comment}{/*Clock for Timing Speed*/}}
+\DoxyCodeLine{241     \textcolor{comment}{/*(Milliseconds)*/}}
+\DoxyCodeLine{242     clock\_t start\_clock\_, update\_screen\_clock\_;}
+\DoxyCodeLine{243 }
+\DoxyCodeLine{244     \textcolor{comment}{/*Store Post Matrix on Cost Functions*/}}
+\DoxyCodeLine{245     \mbox{\hyperlink{class_pose_matrix}{PoseMatrix}} pose\_storage\_;}
+\DoxyCodeLine{246 }
+\DoxyCodeLine{247     \textcolor{comment}{/*Flag For Being in Either Trunk, Branch, or Z*/}}
+\DoxyCodeLine{248     \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} search\_stage\_flag\_;}
+\DoxyCodeLine{249 }
+\DoxyCodeLine{250 \};}
+\DoxyCodeLine{251 }
+\DoxyCodeLine{252 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* OPTIMIZER\_MANAGER\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

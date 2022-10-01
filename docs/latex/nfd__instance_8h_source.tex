@@ -1,0 +1,78 @@
+\hypertarget{nfd__instance_8h_source}{}\doxysection{nfd\+\_\+instance.\+h}
+\label{nfd__instance_8h_source}\index{include/nfd/nfd\_instance.h@{include/nfd/nfd\_instance.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#include<complex>}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include<vector>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include<array>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}gpu/render\_engine.cuh"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include "{}gpu/gpu\_model.cuh"{}}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <opencv2/core/mat.hpp>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}opencv2/imgcodecs.hpp"{}}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include "{}opencv2/highgui.hpp"{}}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include "{}opencv2/imgproc.hpp"{}}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include "{}alglib/interpolation.h"{}}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{keyword}{using namespace }gpu\_cost\_function;}
+\DoxyCodeLine{14 \textcolor{keyword}{using namespace }alglib;}
+\DoxyCodeLine{15 \textcolor{comment}{/*}}
+\DoxyCodeLine{16 \textcolor{comment}{This class is beeing used to store a single instance of the NFD libarary data.}}
+\DoxyCodeLine{17 \textcolor{comment}{}}
+\DoxyCodeLine{18 \textcolor{comment}{A single instance is hereby going to refer to a single projection geometry (meaning only a single x/y rotation),}}
+\DoxyCodeLine{19 \textcolor{comment}{along with all the other data that might be associated with that. Multiple normalization coefficients are going }}
+\DoxyCodeLine{20 \textcolor{comment}{to be defined for any one instance (as you see in the Banks paper).}}
+\DoxyCodeLine{21 \textcolor{comment}{}}
+\DoxyCodeLine{22 \textcolor{comment}{The nfd\_library class is going to be used to store a library of all the instances that we create for a single projection,}}
+\DoxyCodeLine{23 \textcolor{comment}{with some extra metadata surrounding it.}}
+\DoxyCodeLine{24 \textcolor{comment}{}}
+\DoxyCodeLine{25 \textcolor{comment}{The main nfd function is going to manage all the initialization of the different models, as well as populating each of }}
+\DoxyCodeLine{26 \textcolor{comment}{the respective classes with the values that come from the different image projections.}}
+\DoxyCodeLine{27 \textcolor{comment}{}}
+\DoxyCodeLine{28 \textcolor{comment}{*/}}
+\DoxyCodeLine{29 \textcolor{keyword}{struct }\mbox{\hyperlink{structvec2d}{vec2d}} \{}
+\DoxyCodeLine{30     \textcolor{keywordtype}{float} x;}
+\DoxyCodeLine{31     \textcolor{keywordtype}{float} y;}
+\DoxyCodeLine{32     \textcolor{keywordtype}{void} set\_x(\textcolor{keywordtype}{float} xval) \{}
+\DoxyCodeLine{33         x = xval;}
+\DoxyCodeLine{34     \}}
+\DoxyCodeLine{35     \textcolor{keywordtype}{void} set\_y(\textcolor{keywordtype}{float} yval) \{}
+\DoxyCodeLine{36         y = yval;}
+\DoxyCodeLine{37     \}}
+\DoxyCodeLine{38 \};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{keyword}{class }\mbox{\hyperlink{classnfd__instance}{nfd\_instance}}}
+\DoxyCodeLine{41 \{}
+\DoxyCodeLine{42 \textcolor{keyword}{public}:}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{comment}{/*Constructor takes in the pose and creates the instance -\/ will eventually also do the projections*/}}
+\DoxyCodeLine{45     \mbox{\hyperlink{classnfd__instance}{nfd\_instance}}(GPUModel \&gpu\_mod,\textcolor{keywordtype}{float} xt, \textcolor{keywordtype}{float} yt, \textcolor{keywordtype}{float} zt, \textcolor{keywordtype}{float} xr, \textcolor{keywordtype}{float} yr, \textcolor{keywordtype}{float} zr);}
+\DoxyCodeLine{46     \mbox{\hyperlink{classnfd__instance}{\string~nfd\_instance}}();}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48     \textcolor{keywordtype}{void} print\_contour\_points();}
+\DoxyCodeLine{49     \textcolor{keywordtype}{void} print\_raw\_points();}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51     \textcolor{comment}{/*Set the pose of the instance -\/ 312 rotation order when projected*/}}
+\DoxyCodeLine{52     }
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54 \textcolor{keyword}{private}:}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56     std::complex<float> centroid\_;}
+\DoxyCodeLine{57     std::vector<std::complex<float>> fourier\_coefficients\_[128];}
+\DoxyCodeLine{58     \textcolor{keywordtype}{float} magnitude\_;}
+\DoxyCodeLine{59     std::vector<float> angle\_;}
+\DoxyCodeLine{60     \textcolor{keywordtype}{float} rot\_x\_;}
+\DoxyCodeLine{61     \textcolor{keywordtype}{float} rot\_y\_;}
+\DoxyCodeLine{62     Pose instance\_pose\_;}
+\DoxyCodeLine{63     std::vector<std::vector<int>> contour\_pts\_;}
+\DoxyCodeLine{64     \textcolor{comment}{//std::vector<int[2]> cntr\_pts\_;}}
+\DoxyCodeLine{65     real\_2d\_array contour\_points\_raw\_;}
+\DoxyCodeLine{66     std::vector<double> y\_points\_resampled\_;}
+\DoxyCodeLine{67     std::vector<double> x\_points\_resampled\_;}
+\DoxyCodeLine{68     pspline2interpolant contour\_spline\_;}
+\DoxyCodeLine{69     \textcolor{keywordtype}{int} sz\_;}
+\DoxyCodeLine{70     \textcolor{keywordtype}{void} get\_contour\_points(cv::Mat img);}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{72 \};}
+
+\end{DoxyCode}

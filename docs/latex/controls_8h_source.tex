@@ -1,0 +1,35 @@
+\hypertarget{controls_8h_source}{}\doxysection{controls.\+h}
+\label{controls_8h_source}\index{include/gui/controls.h@{include/gui/controls.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef CONTROLS\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define CONTROLS\_H}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <qdialog.h>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}ui\_controls.h"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <qgraphicsscene.h>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <qscrollbar.h>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <qgraphicsview.h>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <QGraphicsPixmapItem>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <qimage.h>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <qevent.h>}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{comment}{//Controls JTA Popup Header}}
+\DoxyCodeLine{14 \textcolor{keyword}{class }\mbox{\hyperlink{class_controls}{Controls}} : \textcolor{keyword}{public} QDialog}
+\DoxyCodeLine{15 \{}
+\DoxyCodeLine{16     Q\_OBJECT}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{public}:}
+\DoxyCodeLine{19     \mbox{\hyperlink{class_controls}{Controls}}(QWidget *parent = 0, Qt::WindowFlags flags = 0);}
+\DoxyCodeLine{20     \mbox{\hyperlink{class_controls}{\string~Controls}}();}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{private}:}
+\DoxyCodeLine{23     Ui::controls ui;}
+\DoxyCodeLine{24     QGraphicsScene *center\_scene;}
+\DoxyCodeLine{25     QGraphicsView *center\_graph;}
+\DoxyCodeLine{26     QGraphicsPixmapItem *center\_item;}
+\DoxyCodeLine{27 \};}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// CONTROLS\_H}}
+
+\end{DoxyCode}

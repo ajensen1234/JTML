@@ -1,0 +1,46 @@
+\hypertarget{model_8h_source}{}\doxysection{model.\+h}
+\label{model_8h_source}\index{include/core/model.h@{include/core/model.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*Header for Model Class Includes:}}
+\DoxyCodeLine{2 \textcolor{comment}{*/}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{comment}{/*Standard*/}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{comment}{/*VTK*/}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <vtkSmartPointer.h>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <vtkSTLReader.h>}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{comment}{/*Custom STL Reader*/}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include "{}stl\_reader.h"{}}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#ifndef MODEL\_H}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#define MODEL\_H}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{comment}{/*AS OF VERSION 3.3.1 SHOULD BE ABLE TO LOAD BOTH BINARY AND ASCII STL FILES*/}}
+\DoxyCodeLine{19 \textcolor{keyword}{class }\mbox{\hyperlink{class_model}{Model}}}
+\DoxyCodeLine{20 \{}
+\DoxyCodeLine{21 \textcolor{keyword}{public}:}
+\DoxyCodeLine{22     \mbox{\hyperlink{class_model}{Model}}(std::string file\_location, std::string model\_name, std::string model\_type);}
+\DoxyCodeLine{23     \mbox{\hyperlink{class_model}{Model}}()\{\};}
+\DoxyCodeLine{24     std::string file\_location\_; \textcolor{comment}{//Store File Location for Model}}
+\DoxyCodeLine{25     vtkSmartPointer<vtkSTLReader> cad\_reader\_; \textcolor{comment}{// Stores CAD model}}
+\DoxyCodeLine{26     std::vector<float> triangle\_vertices\_; \textcolor{comment}{//Vector of Triangle Vertices}}
+\DoxyCodeLine{27     std::vector<float> triangle\_normals\_; \textcolor{comment}{//Vector of Triangle Normals}}
+\DoxyCodeLine{28      \textcolor{comment}{/*Model Name: taken from prefix of file name. If duplicates a (x) is added*/}}
+\DoxyCodeLine{29     std::string model\_name\_;}
+\DoxyCodeLine{30     \textcolor{comment}{/*Model Type: could be femur or implant or bone or type of bone, anything really...*/}}
+\DoxyCodeLine{31     std::string model\_type\_;}
+\DoxyCodeLine{32     \textcolor{comment}{/*Bool indicating initialized correctly*/}}
+\DoxyCodeLine{33     \textcolor{keywordtype}{bool} initialized\_correctly\_;}
+\DoxyCodeLine{34 \textcolor{keyword}{private}:}
+\DoxyCodeLine{35     stl\_reader::STL\_STATUS LoadVerticesAndNormals();}
+\DoxyCodeLine{36     }
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38 \};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* MODEL\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

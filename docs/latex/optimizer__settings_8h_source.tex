@@ -1,0 +1,42 @@
+\hypertarget{optimizer__settings_8h_source}{}\doxysection{optimizer\+\_\+settings.\+h}
+\label{optimizer__settings_8h_source}\index{include/core/optimizer\_settings.h@{include/core/optimizer\_settings.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef OPTIMIZER\_SETTINGS\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define OPTIMIZER\_SETTINGS\_H}}
+\DoxyCodeLine{3 \textcolor{comment}{/*Data Structures Used by All*/}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*Declare as MetaType So Can Send*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <QMetaType>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{comment}{/*Structure that Stores the Optimizer Settings Except for the Cost Function Information which is stored in the 3 Cost Function Managers*/}}
+\DoxyCodeLine{10 \textcolor{keyword}{struct }\mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}} \{}
+\DoxyCodeLine{11     \textcolor{comment}{/*Constructor Destructor*/}}
+\DoxyCodeLine{12     \mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}}();}
+\DoxyCodeLine{13     \mbox{\hyperlink{struct_optimizer_settings}{\string~OptimizerSettings}}();}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15     \textcolor{comment}{/*Variables*/}}
+\DoxyCodeLine{16     \textcolor{comment}{/*Trunk*/}}
+\DoxyCodeLine{17     \mbox{\hyperlink{struct_point6_d}{Point6D}} trunk\_range;}
+\DoxyCodeLine{18     \textcolor{keywordtype}{int} trunk\_budget;}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20     \textcolor{comment}{/*Branch*/}}
+\DoxyCodeLine{21     \mbox{\hyperlink{struct_point6_d}{Point6D}} branch\_range;}
+\DoxyCodeLine{22     \textcolor{keywordtype}{int} branch\_budget;}
+\DoxyCodeLine{23     \textcolor{keywordtype}{int} number\_branches;}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{comment}{/*Leaf*/}}
+\DoxyCodeLine{26     \mbox{\hyperlink{struct_point6_d}{Point6D}} leaf\_range;}
+\DoxyCodeLine{27     \textcolor{keywordtype}{int} leaf\_budget;}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29     \textcolor{comment}{/*Optimizer Settings Which Stages Are on (trunk always on)*/}}
+\DoxyCodeLine{30     \textcolor{keywordtype}{bool} enable\_branch\_;}
+\DoxyCodeLine{31     \textcolor{keywordtype}{bool} enable\_leaf\_;}
+\DoxyCodeLine{32 \};}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 Q\_DECLARE\_METATYPE(\mbox{\hyperlink{struct_optimizer_settings}{OptimizerSettings}});}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/*OPTIMIZER\_SETTINGS\_H*/}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

@@ -1,0 +1,2305 @@
+\hypertarget{specialfunctions_8h_source}{}\doxysection{specialfunctions.\+h}
+\label{specialfunctions_8h_source}\index{lib/alglib/specialfunctions.h@{lib/alglib/specialfunctions.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2 \textcolor{comment}{ALGLIB 3.18.0 (source code generated 2021-\/10-\/25)}}
+\DoxyCodeLine{3 \textcolor{comment}{Copyright (c) Sergey Bochkanov (ALGLIB project).}}
+\DoxyCodeLine{4 \textcolor{comment}{}}
+\DoxyCodeLine{5 \textcolor{comment}{>>> SOURCE LICENSE >>>}}
+\DoxyCodeLine{6 \textcolor{comment}{This program is free software; you can redistribute it and/or modify}}
+\DoxyCodeLine{7 \textcolor{comment}{it under the terms of the GNU General Public License as published by}}
+\DoxyCodeLine{8 \textcolor{comment}{the Free Software Foundation (www.fsf.org); either version 2 of the }}
+\DoxyCodeLine{9 \textcolor{comment}{License, or (at your option) any later version.}}
+\DoxyCodeLine{10 \textcolor{comment}{}}
+\DoxyCodeLine{11 \textcolor{comment}{This program is distributed in the hope that it will be useful,}}
+\DoxyCodeLine{12 \textcolor{comment}{but WITHOUT ANY WARRANTY; without even the implied warranty of}}
+\DoxyCodeLine{13 \textcolor{comment}{MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}}
+\DoxyCodeLine{14 \textcolor{comment}{GNU General Public License for more details.}}
+\DoxyCodeLine{15 \textcolor{comment}{}}
+\DoxyCodeLine{16 \textcolor{comment}{A copy of the GNU General Public License is available at}}
+\DoxyCodeLine{17 \textcolor{comment}{http://www.fsf.org/licensing/licenses}}
+\DoxyCodeLine{18 \textcolor{comment}{>>> END OF LICENSE >>>}}
+\DoxyCodeLine{19 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifndef \_specialfunctions\_pkg\_h}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#define \_specialfunctions\_pkg\_h}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include "{}ap.h"{}}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include "{}alglibinternal.h"{}}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include "{}alglibmisc.h"{}}}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{27 \textcolor{comment}{//}}
+\DoxyCodeLine{28 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)}}
+\DoxyCodeLine{29 \textcolor{comment}{//}}
+\DoxyCodeLine{31 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{32 \{}
+\DoxyCodeLine{33 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GAMMAFUNC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NORMALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IBETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IGAMMAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{44 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{45 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHISQUAREDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BINOMIALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{49 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_EXPINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{50 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{51 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JACOBIANELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{52 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{53 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRIGINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{54 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHEBYSHEV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{56 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_POISSONDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{58 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{59 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{60 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{61 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FRESNEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{62 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{63 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_PSIF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{64 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{65 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AIRYF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{67 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_DAWSON) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{68 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{69 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HERMITE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{70 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{71 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LEGENDRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{72 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{73 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BESSEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{74 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{75 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LAGUERRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{77 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{78 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80 \}}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{83 \textcolor{comment}{//}}
+\DoxyCodeLine{84 \textcolor{comment}{// THIS SECTION CONTAINS C++ INTERFACE}}
+\DoxyCodeLine{85 \textcolor{comment}{//}}
+\DoxyCodeLine{87 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib}
+\DoxyCodeLine{88 \{}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{90 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GAMMAFUNC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{94 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NORMALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{95 }
+\DoxyCodeLine{96 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{97 }
+\DoxyCodeLine{98 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IBETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{101 }
+\DoxyCodeLine{102 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{103 }
+\DoxyCodeLine{104 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{105 }
+\DoxyCodeLine{106 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IGAMMAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{112 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHISQUAREDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{115 }
+\DoxyCodeLine{116 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{117 }
+\DoxyCodeLine{118 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BINOMIALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{120 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{121 }
+\DoxyCodeLine{122 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_EXPINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{124 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{126 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JACOBIANELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{127 }
+\DoxyCodeLine{128 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{129 }
+\DoxyCodeLine{130 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRIGINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{131 }
+\DoxyCodeLine{132 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{133 }
+\DoxyCodeLine{134 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHEBYSHEV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{135 }
+\DoxyCodeLine{136 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{137 }
+\DoxyCodeLine{138 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_POISSONDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{139 }
+\DoxyCodeLine{140 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{141 }
+\DoxyCodeLine{142 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{144 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{145 }
+\DoxyCodeLine{146 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FRESNEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{147 }
+\DoxyCodeLine{148 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{149 }
+\DoxyCodeLine{150 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_PSIF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{151 }
+\DoxyCodeLine{152 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{153 }
+\DoxyCodeLine{154 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AIRYF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{155 }
+\DoxyCodeLine{156 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{157 }
+\DoxyCodeLine{158 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_DAWSON) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{159 }
+\DoxyCodeLine{160 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{161 }
+\DoxyCodeLine{162 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HERMITE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{163 }
+\DoxyCodeLine{164 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{165 }
+\DoxyCodeLine{166 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LEGENDRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{167 }
+\DoxyCodeLine{168 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{169 }
+\DoxyCodeLine{170 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BESSEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{171 }
+\DoxyCodeLine{172 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{173 }
+\DoxyCodeLine{174 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LAGUERRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{176 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{177 }
+\DoxyCodeLine{178 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{179 }
+\DoxyCodeLine{180 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{181 }
+\DoxyCodeLine{182 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GAMMAFUNC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{183 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{184 \textcolor{comment}{Gamma function}}
+\DoxyCodeLine{185 \textcolor{comment}{}}
+\DoxyCodeLine{186 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{187 \textcolor{comment}{    X   -\/   argument}}
+\DoxyCodeLine{188 \textcolor{comment}{}}
+\DoxyCodeLine{189 \textcolor{comment}{Domain:}}
+\DoxyCodeLine{190 \textcolor{comment}{    0 < X < 171.6}}
+\DoxyCodeLine{191 \textcolor{comment}{    -\/170 < X < 0, X is not an integer.}}
+\DoxyCodeLine{192 \textcolor{comment}{}}
+\DoxyCodeLine{193 \textcolor{comment}{Relative error:}}
+\DoxyCodeLine{194 \textcolor{comment}{ arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{195 \textcolor{comment}{    IEEE    -\/170,-\/33      20000       2.3e-\/15     3.3e-\/16}}
+\DoxyCodeLine{196 \textcolor{comment}{    IEEE     -\/33,  33     20000       9.4e-\/16     2.2e-\/16}}
+\DoxyCodeLine{197 \textcolor{comment}{    IEEE      33, 171.6   20000       2.3e-\/15     3.2e-\/16}}
+\DoxyCodeLine{198 \textcolor{comment}{}}
+\DoxyCodeLine{199 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{200 \textcolor{comment}{Original copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{201 \textcolor{comment}{Translated to AlgoPascal by Bochkanov Sergey (2005, 2006, 2007).}}
+\DoxyCodeLine{202 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{203 \textcolor{keywordtype}{double} gammafunction(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{204 }
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{207 \textcolor{comment}{Natural logarithm of gamma function}}
+\DoxyCodeLine{208 \textcolor{comment}{}}
+\DoxyCodeLine{209 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{210 \textcolor{comment}{    X       -\/   argument}}
+\DoxyCodeLine{211 \textcolor{comment}{}}
+\DoxyCodeLine{212 \textcolor{comment}{Result:}}
+\DoxyCodeLine{213 \textcolor{comment}{    logarithm of the absolute value of the Gamma(X).}}
+\DoxyCodeLine{214 \textcolor{comment}{}}
+\DoxyCodeLine{215 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{216 \textcolor{comment}{    SgnGam  -\/   sign(Gamma(X))}}
+\DoxyCodeLine{217 \textcolor{comment}{}}
+\DoxyCodeLine{218 \textcolor{comment}{Domain:}}
+\DoxyCodeLine{219 \textcolor{comment}{    0 < X < 2.55e305}}
+\DoxyCodeLine{220 \textcolor{comment}{    -\/2.55e305 < X < 0, X is not an integer.}}
+\DoxyCodeLine{221 \textcolor{comment}{}}
+\DoxyCodeLine{222 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{223 \textcolor{comment}{arithmetic      domain        \# trials     peak         rms}}
+\DoxyCodeLine{224 \textcolor{comment}{   IEEE    0, 3                 28000     5.4e-\/16     1.1e-\/16}}
+\DoxyCodeLine{225 \textcolor{comment}{   IEEE    2.718, 2.556e305     40000     3.5e-\/16     8.3e-\/17}}
+\DoxyCodeLine{226 \textcolor{comment}{The error criterion was relative when the function magnitude}}
+\DoxyCodeLine{227 \textcolor{comment}{was greater than one but absolute when it was less than one.}}
+\DoxyCodeLine{228 \textcolor{comment}{}}
+\DoxyCodeLine{229 \textcolor{comment}{The following test used the relative error criterion, though}}
+\DoxyCodeLine{230 \textcolor{comment}{at certain points the relative error could be much higher than}}
+\DoxyCodeLine{231 \textcolor{comment}{indicated.}}
+\DoxyCodeLine{232 \textcolor{comment}{   IEEE    -\/200, -\/4             10000     4.8e-\/16     1.3e-\/16}}
+\DoxyCodeLine{233 \textcolor{comment}{}}
+\DoxyCodeLine{234 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{235 \textcolor{comment}{Copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{236 \textcolor{comment}{Translated to AlgoPascal by Bochkanov Sergey (2005, 2006, 2007).}}
+\DoxyCodeLine{237 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{238 \textcolor{keywordtype}{double} lngamma(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} \&sgngam, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{239 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{240 }
+\DoxyCodeLine{241 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NORMALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{242 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{243 \textcolor{comment}{Error function}}
+\DoxyCodeLine{244 \textcolor{comment}{}}
+\DoxyCodeLine{245 \textcolor{comment}{The integral is}}
+\DoxyCodeLine{246 \textcolor{comment}{}}
+\DoxyCodeLine{247 \textcolor{comment}{                          x}}
+\DoxyCodeLine{248 \textcolor{comment}{                           -\/}}
+\DoxyCodeLine{249 \textcolor{comment}{                2         | |          2}}
+\DoxyCodeLine{250 \textcolor{comment}{  erf(x)  =  -\/-\/-\/-\/-\/-\/-\/-\/     |    exp( -\/ t  ) dt.}}
+\DoxyCodeLine{251 \textcolor{comment}{             sqrt(pi)   | |}}
+\DoxyCodeLine{252 \textcolor{comment}{                         -\/}}
+\DoxyCodeLine{253 \textcolor{comment}{                          0}}
+\DoxyCodeLine{254 \textcolor{comment}{}}
+\DoxyCodeLine{255 \textcolor{comment}{For 0 <= |x| < 1, erf(x) = x * P4(x**2)/Q5(x**2); otherwise}}
+\DoxyCodeLine{256 \textcolor{comment}{erf(x) = 1 -\/ erfc(x).}}
+\DoxyCodeLine{257 \textcolor{comment}{}}
+\DoxyCodeLine{258 \textcolor{comment}{}}
+\DoxyCodeLine{259 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{260 \textcolor{comment}{}}
+\DoxyCodeLine{261 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{262 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{263 \textcolor{comment}{   IEEE      0,1         30000       3.7e-\/16     1.0e-\/16}}
+\DoxyCodeLine{264 \textcolor{comment}{}}
+\DoxyCodeLine{265 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{266 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{267 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{268 \textcolor{keywordtype}{double} errorfunction(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{269 }
+\DoxyCodeLine{270 }
+\DoxyCodeLine{271 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{272 \textcolor{comment}{Complementary error function}}
+\DoxyCodeLine{273 \textcolor{comment}{}}
+\DoxyCodeLine{274 \textcolor{comment}{ 1 -\/ erf(x) =}}
+\DoxyCodeLine{275 \textcolor{comment}{}}
+\DoxyCodeLine{276 \textcolor{comment}{                          inf.}}
+\DoxyCodeLine{277 \textcolor{comment}{                            -\/}}
+\DoxyCodeLine{278 \textcolor{comment}{                 2         | |          2}}
+\DoxyCodeLine{279 \textcolor{comment}{  erfc(x)  =  -\/-\/-\/-\/-\/-\/-\/-\/     |    exp( -\/ t  ) dt}}
+\DoxyCodeLine{280 \textcolor{comment}{              sqrt(pi)   | |}}
+\DoxyCodeLine{281 \textcolor{comment}{                          -\/}}
+\DoxyCodeLine{282 \textcolor{comment}{                           x}}
+\DoxyCodeLine{283 \textcolor{comment}{}}
+\DoxyCodeLine{284 \textcolor{comment}{}}
+\DoxyCodeLine{285 \textcolor{comment}{For small x, erfc(x) = 1 -\/ erf(x); otherwise rational}}
+\DoxyCodeLine{286 \textcolor{comment}{approximations are computed.}}
+\DoxyCodeLine{287 \textcolor{comment}{}}
+\DoxyCodeLine{288 \textcolor{comment}{}}
+\DoxyCodeLine{289 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{290 \textcolor{comment}{}}
+\DoxyCodeLine{291 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{292 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{293 \textcolor{comment}{   IEEE      0,26.6417   30000       5.7e-\/14     1.5e-\/14}}
+\DoxyCodeLine{294 \textcolor{comment}{}}
+\DoxyCodeLine{295 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{296 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{297 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{298 \textcolor{keywordtype}{double} errorfunctionc(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{299 }
+\DoxyCodeLine{300 }
+\DoxyCodeLine{301 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{302 \textcolor{comment}{Same as normalcdf(), obsolete name.}}
+\DoxyCodeLine{303 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{304 \textcolor{keywordtype}{double} normaldistribution(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{305 }
+\DoxyCodeLine{306 }
+\DoxyCodeLine{307 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{308 \textcolor{comment}{Normal distribution PDF}}
+\DoxyCodeLine{309 \textcolor{comment}{}}
+\DoxyCodeLine{310 \textcolor{comment}{Returns Gaussian probability density function:}}
+\DoxyCodeLine{311 \textcolor{comment}{}}
+\DoxyCodeLine{312 \textcolor{comment}{               1}}
+\DoxyCodeLine{313 \textcolor{comment}{   f(x)  = -\/-\/-\/-\/-\/-\/-\/-\/-\/ * exp(-\/x\string^2/2)}}
+\DoxyCodeLine{314 \textcolor{comment}{           sqrt(2pi)}}
+\DoxyCodeLine{315 \textcolor{comment}{}}
+\DoxyCodeLine{316 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{317 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{318 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{319 \textcolor{keywordtype}{double} normalpdf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{320 }
+\DoxyCodeLine{321 }
+\DoxyCodeLine{322 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{323 \textcolor{comment}{Normal distribution CDF}}
+\DoxyCodeLine{324 \textcolor{comment}{}}
+\DoxyCodeLine{325 \textcolor{comment}{Returns the area under the Gaussian probability density}}
+\DoxyCodeLine{326 \textcolor{comment}{function, integrated from minus infinity to x:}}
+\DoxyCodeLine{327 \textcolor{comment}{}}
+\DoxyCodeLine{328 \textcolor{comment}{                           x}}
+\DoxyCodeLine{329 \textcolor{comment}{                            -\/}}
+\DoxyCodeLine{330 \textcolor{comment}{                  1        | |          2}}
+\DoxyCodeLine{331 \textcolor{comment}{   ndtr(x)  = -\/-\/-\/-\/-\/-\/-\/-\/-\/    |    exp( -\/ t /2 ) dt}}
+\DoxyCodeLine{332 \textcolor{comment}{              sqrt(2pi)  | |}}
+\DoxyCodeLine{333 \textcolor{comment}{                          -\/}}
+\DoxyCodeLine{334 \textcolor{comment}{                         -\/inf.}}
+\DoxyCodeLine{335 \textcolor{comment}{}}
+\DoxyCodeLine{336 \textcolor{comment}{            =  ( 1 + erf(z) ) / 2}}
+\DoxyCodeLine{337 \textcolor{comment}{            =  erfc(z) / 2}}
+\DoxyCodeLine{338 \textcolor{comment}{}}
+\DoxyCodeLine{339 \textcolor{comment}{where z = x/sqrt(2). Computation is via the functions}}
+\DoxyCodeLine{340 \textcolor{comment}{erf and erfc.}}
+\DoxyCodeLine{341 \textcolor{comment}{}}
+\DoxyCodeLine{342 \textcolor{comment}{}}
+\DoxyCodeLine{343 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{344 \textcolor{comment}{}}
+\DoxyCodeLine{345 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{346 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{347 \textcolor{comment}{   IEEE     -\/13,0        30000       3.4e-\/14     6.7e-\/15}}
+\DoxyCodeLine{348 \textcolor{comment}{}}
+\DoxyCodeLine{349 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{350 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{351 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{352 \textcolor{keywordtype}{double} normalcdf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{353 }
+\DoxyCodeLine{354 }
+\DoxyCodeLine{355 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{356 \textcolor{comment}{Inverse of the error function}}
+\DoxyCodeLine{357 \textcolor{comment}{}}
+\DoxyCodeLine{358 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{359 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{360 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{361 \textcolor{keywordtype}{double} inverf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} e, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{362 }
+\DoxyCodeLine{363 }
+\DoxyCodeLine{364 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{365 \textcolor{comment}{Same as invnormalcdf(), deprecated name}}
+\DoxyCodeLine{366 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{367 \textcolor{keywordtype}{double} invnormaldistribution(\textcolor{keyword}{const} \textcolor{keywordtype}{double} y0, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{368 }
+\DoxyCodeLine{369 }
+\DoxyCodeLine{370 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{371 \textcolor{comment}{Inverse of Normal CDF}}
+\DoxyCodeLine{372 \textcolor{comment}{}}
+\DoxyCodeLine{373 \textcolor{comment}{Returns the argument, x, for which the area under the}}
+\DoxyCodeLine{374 \textcolor{comment}{Gaussian probability density function (integrated from}}
+\DoxyCodeLine{375 \textcolor{comment}{minus infinity to x) is equal to y.}}
+\DoxyCodeLine{376 \textcolor{comment}{}}
+\DoxyCodeLine{377 \textcolor{comment}{}}
+\DoxyCodeLine{378 \textcolor{comment}{For small arguments 0 < y < exp(-\/2), the program computes}}
+\DoxyCodeLine{379 \textcolor{comment}{z = sqrt( -\/2.0 * log(y) );  then the approximation is}}
+\DoxyCodeLine{380 \textcolor{comment}{x = z -\/ log(z)/z  -\/ (1/z) P(1/z) / Q(1/z).}}
+\DoxyCodeLine{381 \textcolor{comment}{There are two rational functions P/Q, one for 0 < y < exp(-\/32)}}
+\DoxyCodeLine{382 \textcolor{comment}{and the other for y up to exp(-\/2).  For larger arguments,}}
+\DoxyCodeLine{383 \textcolor{comment}{w = y -\/ 0.5, and  x/sqrt(2pi) = w + w**3 R(w**2)/S(w**2)).}}
+\DoxyCodeLine{384 \textcolor{comment}{}}
+\DoxyCodeLine{385 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{386 \textcolor{comment}{}}
+\DoxyCodeLine{387 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{388 \textcolor{comment}{arithmetic   domain        \# trials      peak         rms}}
+\DoxyCodeLine{389 \textcolor{comment}{   IEEE     0.125, 1        20000       7.2e-\/16     1.3e-\/16}}
+\DoxyCodeLine{390 \textcolor{comment}{   IEEE     3e-\/308, 0.135   50000       4.6e-\/16     9.8e-\/17}}
+\DoxyCodeLine{391 \textcolor{comment}{}}
+\DoxyCodeLine{392 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{393 \textcolor{comment}{Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{394 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{395 \textcolor{keywordtype}{double} invnormalcdf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} y0, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{396 }
+\DoxyCodeLine{397 }
+\DoxyCodeLine{398 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{399 \textcolor{comment}{Bivariate normal PDF}}
+\DoxyCodeLine{400 \textcolor{comment}{}}
+\DoxyCodeLine{401 \textcolor{comment}{Returns probability density function of the bivariate  Gaussian  with}}
+\DoxyCodeLine{402 \textcolor{comment}{correlation parameter equal to Rho:}}
+\DoxyCodeLine{403 \textcolor{comment}{}}
+\DoxyCodeLine{404 \textcolor{comment}{                         1              (    x\string^2 -\/ 2*rho*x*y + y\string^2  )}}
+\DoxyCodeLine{405 \textcolor{comment}{    f(x,y,rho) = -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ * exp( -\/ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ )}}
+\DoxyCodeLine{406 \textcolor{comment}{                 2pi*sqrt(1-\/rho\string^2)      (        2*(1-\/rho\string^2)        )}}
+\DoxyCodeLine{407 \textcolor{comment}{}}
+\DoxyCodeLine{408 \textcolor{comment}{}}
+\DoxyCodeLine{409 \textcolor{comment}{with -\/1<rho<+1 and arbitrary x, y.}}
+\DoxyCodeLine{410 \textcolor{comment}{}}
+\DoxyCodeLine{411 \textcolor{comment}{This function won't fail as long as Rho is in (-\/1,+1) range.}}
+\DoxyCodeLine{412 \textcolor{comment}{}}
+\DoxyCodeLine{413 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{414 \textcolor{comment}{     Copyright 15.11.2019 by Bochkanov Sergey}}
+\DoxyCodeLine{415 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{416 \textcolor{keywordtype}{double} bivariatenormalpdf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} \textcolor{keywordtype}{double} rho, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{417 }
+\DoxyCodeLine{418 }
+\DoxyCodeLine{419 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{420 \textcolor{comment}{Bivariate normal CDF}}
+\DoxyCodeLine{421 \textcolor{comment}{}}
+\DoxyCodeLine{422 \textcolor{comment}{Returns the area under the bivariate Gaussian  PDF  with  correlation}}
+\DoxyCodeLine{423 \textcolor{comment}{parameter equal to Rho, integrated from minus infinity to (x,y):}}
+\DoxyCodeLine{424 \textcolor{comment}{}}
+\DoxyCodeLine{425 \textcolor{comment}{}}
+\DoxyCodeLine{426 \textcolor{comment}{                                          x      y}}
+\DoxyCodeLine{427 \textcolor{comment}{                                          -\/      -\/}}
+\DoxyCodeLine{428 \textcolor{comment}{                            1            | |    | |}}
+\DoxyCodeLine{429 \textcolor{comment}{    bvn(x,y,rho) = -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/   |      |   f(u,v,rho)*du*dv}}
+\DoxyCodeLine{430 \textcolor{comment}{                    2pi*sqrt(1-\/rho\string^2)  | |    | |}}
+\DoxyCodeLine{431 \textcolor{comment}{                                        -\/      -\/}}
+\DoxyCodeLine{432 \textcolor{comment}{                                       -\/INF   -\/INF}}
+\DoxyCodeLine{433 \textcolor{comment}{}}
+\DoxyCodeLine{434 \textcolor{comment}{}}
+\DoxyCodeLine{435 \textcolor{comment}{where}}
+\DoxyCodeLine{436 \textcolor{comment}{}}
+\DoxyCodeLine{437 \textcolor{comment}{                      (    u\string^2 -\/ 2*rho*u*v + v\string^2  )}}
+\DoxyCodeLine{438 \textcolor{comment}{    f(u,v,rho)   = exp( -\/ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ )}}
+\DoxyCodeLine{439 \textcolor{comment}{                      (        2*(1-\/rho\string^2)        )}}
+\DoxyCodeLine{440 \textcolor{comment}{}}
+\DoxyCodeLine{441 \textcolor{comment}{}}
+\DoxyCodeLine{442 \textcolor{comment}{with -\/1<rho<+1 and arbitrary x, y.}}
+\DoxyCodeLine{443 \textcolor{comment}{}}
+\DoxyCodeLine{444 \textcolor{comment}{This subroutine uses high-\/precision approximation scheme proposed  by}}
+\DoxyCodeLine{445 \textcolor{comment}{Alan Genz in "{}Numerical  Computation  of  Rectangular  Bivariate  and}}
+\DoxyCodeLine{446 \textcolor{comment}{Trivariate Normal and  t  probabilities"{},  which  computes  CDF  with}}
+\DoxyCodeLine{447 \textcolor{comment}{absolute error roughly equal to 1e-\/14.}}
+\DoxyCodeLine{448 \textcolor{comment}{}}
+\DoxyCodeLine{449 \textcolor{comment}{This function won't fail as long as Rho is in (-\/1,+1) range.}}
+\DoxyCodeLine{450 \textcolor{comment}{}}
+\DoxyCodeLine{451 \textcolor{comment}{  -\/-\/ ALGLIB -\/-\/}}
+\DoxyCodeLine{452 \textcolor{comment}{     Copyright 15.11.2019 by Bochkanov Sergey}}
+\DoxyCodeLine{453 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{454 \textcolor{keywordtype}{double} bivariatenormalcdf(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} \textcolor{keywordtype}{double} rho, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{455 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{456 }
+\DoxyCodeLine{457 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IBETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{458 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{459 \textcolor{comment}{Incomplete beta integral}}
+\DoxyCodeLine{460 \textcolor{comment}{}}
+\DoxyCodeLine{461 \textcolor{comment}{Returns incomplete beta integral of the arguments, evaluated}}
+\DoxyCodeLine{462 \textcolor{comment}{from zero to x.  The function is defined as}}
+\DoxyCodeLine{463 \textcolor{comment}{}}
+\DoxyCodeLine{464 \textcolor{comment}{                 x}}
+\DoxyCodeLine{465 \textcolor{comment}{    -\/            -\/}}
+\DoxyCodeLine{466 \textcolor{comment}{   | (a+b)      | |  a-\/1     b-\/1}}
+\DoxyCodeLine{467 \textcolor{comment}{ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/    |   t   (1-\/t)   dt.}}
+\DoxyCodeLine{468 \textcolor{comment}{  -\/     -\/     | |}}
+\DoxyCodeLine{469 \textcolor{comment}{ | (a) | (b)   -\/}}
+\DoxyCodeLine{470 \textcolor{comment}{                0}}
+\DoxyCodeLine{471 \textcolor{comment}{}}
+\DoxyCodeLine{472 \textcolor{comment}{The domain of definition is 0 <= x <= 1.  In this}}
+\DoxyCodeLine{473 \textcolor{comment}{implementation a and b are restricted to positive values.}}
+\DoxyCodeLine{474 \textcolor{comment}{The integral from x to 1 may be obtained by the symmetry}}
+\DoxyCodeLine{475 \textcolor{comment}{relation}}
+\DoxyCodeLine{476 \textcolor{comment}{}}
+\DoxyCodeLine{477 \textcolor{comment}{   1 -\/ incbet( a, b, x )  =  incbet( b, a, 1-\/x ).}}
+\DoxyCodeLine{478 \textcolor{comment}{}}
+\DoxyCodeLine{479 \textcolor{comment}{The integral is evaluated by a continued fraction expansion}}
+\DoxyCodeLine{480 \textcolor{comment}{or, when b*x is small, by a power series.}}
+\DoxyCodeLine{481 \textcolor{comment}{}}
+\DoxyCodeLine{482 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{483 \textcolor{comment}{}}
+\DoxyCodeLine{484 \textcolor{comment}{Tested at uniformly distributed random points (a,b,x) with a and b}}
+\DoxyCodeLine{485 \textcolor{comment}{in "{}domain"{} and x between 0 and 1.}}
+\DoxyCodeLine{486 \textcolor{comment}{                                       Relative error}}
+\DoxyCodeLine{487 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{488 \textcolor{comment}{   IEEE      0,5         10000       6.9e-\/15     4.5e-\/16}}
+\DoxyCodeLine{489 \textcolor{comment}{   IEEE      0,85       250000       2.2e-\/13     1.7e-\/14}}
+\DoxyCodeLine{490 \textcolor{comment}{   IEEE      0,1000      30000       5.3e-\/12     6.3e-\/13}}
+\DoxyCodeLine{491 \textcolor{comment}{   IEEE      0,10000    250000       9.3e-\/11     7.1e-\/12}}
+\DoxyCodeLine{492 \textcolor{comment}{   IEEE      0,100000    10000       8.7e-\/10     4.8e-\/11}}
+\DoxyCodeLine{493 \textcolor{comment}{Outputs smaller than the IEEE gradual underflow threshold}}
+\DoxyCodeLine{494 \textcolor{comment}{were excluded from these statistics.}}
+\DoxyCodeLine{495 \textcolor{comment}{}}
+\DoxyCodeLine{496 \textcolor{comment}{Cephes Math Library, Release 2.8:  June, 2000}}
+\DoxyCodeLine{497 \textcolor{comment}{Copyright 1984, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{498 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{499 \textcolor{keywordtype}{double} incompletebeta(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{500 }
+\DoxyCodeLine{501 }
+\DoxyCodeLine{502 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{503 \textcolor{comment}{Inverse of imcomplete beta integral}}
+\DoxyCodeLine{504 \textcolor{comment}{}}
+\DoxyCodeLine{505 \textcolor{comment}{Given y, the function finds x such that}}
+\DoxyCodeLine{506 \textcolor{comment}{}}
+\DoxyCodeLine{507 \textcolor{comment}{ incbet( a, b, x ) = y .}}
+\DoxyCodeLine{508 \textcolor{comment}{}}
+\DoxyCodeLine{509 \textcolor{comment}{The routine performs interval halving or Newton iterations to find the}}
+\DoxyCodeLine{510 \textcolor{comment}{root of incbet(a,b,x) -\/ y = 0.}}
+\DoxyCodeLine{511 \textcolor{comment}{}}
+\DoxyCodeLine{512 \textcolor{comment}{}}
+\DoxyCodeLine{513 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{514 \textcolor{comment}{}}
+\DoxyCodeLine{515 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{516 \textcolor{comment}{               x     a,b}}
+\DoxyCodeLine{517 \textcolor{comment}{arithmetic   domain  domain  \# trials    peak       rms}}
+\DoxyCodeLine{518 \textcolor{comment}{   IEEE      0,1    .5,10000   50000    5.8e-\/12   1.3e-\/13}}
+\DoxyCodeLine{519 \textcolor{comment}{   IEEE      0,1   .25,100    100000    1.8e-\/13   3.9e-\/15}}
+\DoxyCodeLine{520 \textcolor{comment}{   IEEE      0,1     0,5       50000    1.1e-\/12   5.5e-\/15}}
+\DoxyCodeLine{521 \textcolor{comment}{With a and b constrained to half-\/integer or integer values:}}
+\DoxyCodeLine{522 \textcolor{comment}{   IEEE      0,1    .5,10000   50000    5.8e-\/12   1.1e-\/13}}
+\DoxyCodeLine{523 \textcolor{comment}{   IEEE      0,1    .5,100    100000    1.7e-\/14   7.9e-\/16}}
+\DoxyCodeLine{524 \textcolor{comment}{With a = .5, b constrained to half-\/integer or integer values:}}
+\DoxyCodeLine{525 \textcolor{comment}{   IEEE      0,1    .5,10000   10000    8.3e-\/11   1.0e-\/11}}
+\DoxyCodeLine{526 \textcolor{comment}{}}
+\DoxyCodeLine{527 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{528 \textcolor{comment}{Copyright 1984, 1996, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{529 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{530 \textcolor{keywordtype}{double} invincompletebeta(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{531 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{532 }
+\DoxyCodeLine{533 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{534 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{535 \textcolor{comment}{Student's t distribution}}
+\DoxyCodeLine{536 \textcolor{comment}{}}
+\DoxyCodeLine{537 \textcolor{comment}{Computes the integral from minus infinity to t of the Student}}
+\DoxyCodeLine{538 \textcolor{comment}{t distribution with integer k > 0 degrees of freedom:}}
+\DoxyCodeLine{539 \textcolor{comment}{}}
+\DoxyCodeLine{540 \textcolor{comment}{                                     t}}
+\DoxyCodeLine{541 \textcolor{comment}{                                     -\/}}
+\DoxyCodeLine{542 \textcolor{comment}{                                    | |}}
+\DoxyCodeLine{543 \textcolor{comment}{             -\/                      |         2   -\/(k+1)/2}}
+\DoxyCodeLine{544 \textcolor{comment}{            | ( (k+1)/2 )           |  (     x   )}}
+\DoxyCodeLine{545 \textcolor{comment}{      -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/        |  ( 1 + -\/-\/-\/ )        dx}}
+\DoxyCodeLine{546 \textcolor{comment}{                    -\/               |  (      k  )}}
+\DoxyCodeLine{547 \textcolor{comment}{      sqrt( k pi ) | ( k/2 )        |}}
+\DoxyCodeLine{548 \textcolor{comment}{                                  | |}}
+\DoxyCodeLine{549 \textcolor{comment}{                                   -\/}}
+\DoxyCodeLine{550 \textcolor{comment}{                                  -\/inf.}}
+\DoxyCodeLine{551 \textcolor{comment}{}}
+\DoxyCodeLine{552 \textcolor{comment}{Relation to incomplete beta integral:}}
+\DoxyCodeLine{553 \textcolor{comment}{}}
+\DoxyCodeLine{554 \textcolor{comment}{       1 -\/ stdtr(k,t) = 0.5 * incbet( k/2, 1/2, z )}}
+\DoxyCodeLine{555 \textcolor{comment}{where}}
+\DoxyCodeLine{556 \textcolor{comment}{       z = k/(k + t**2).}}
+\DoxyCodeLine{557 \textcolor{comment}{}}
+\DoxyCodeLine{558 \textcolor{comment}{For t < -\/2, this is the method of computation.  For higher t,}}
+\DoxyCodeLine{559 \textcolor{comment}{a direct method is derived from integration by parts.}}
+\DoxyCodeLine{560 \textcolor{comment}{Since the function is symmetric about t=0, the area under the}}
+\DoxyCodeLine{561 \textcolor{comment}{right tail of the density is found by calling the function}}
+\DoxyCodeLine{562 \textcolor{comment}{with -\/t instead of t.}}
+\DoxyCodeLine{563 \textcolor{comment}{}}
+\DoxyCodeLine{564 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{565 \textcolor{comment}{}}
+\DoxyCodeLine{566 \textcolor{comment}{Tested at random 1 <= k <= 25.  The "{}domain"{} refers to t.}}
+\DoxyCodeLine{567 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{568 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{569 \textcolor{comment}{   IEEE     -\/100,-\/2      50000       5.9e-\/15     1.4e-\/15}}
+\DoxyCodeLine{570 \textcolor{comment}{   IEEE     -\/2,100      500000       2.7e-\/15     4.9e-\/17}}
+\DoxyCodeLine{571 \textcolor{comment}{}}
+\DoxyCodeLine{572 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{573 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{574 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{575 \textcolor{keywordtype}{double} studenttdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} t, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{576 }
+\DoxyCodeLine{577 }
+\DoxyCodeLine{578 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{579 \textcolor{comment}{Functional inverse of Student's t distribution}}
+\DoxyCodeLine{580 \textcolor{comment}{}}
+\DoxyCodeLine{581 \textcolor{comment}{Given probability p, finds the argument t such that stdtr(k,t)}}
+\DoxyCodeLine{582 \textcolor{comment}{is equal to p.}}
+\DoxyCodeLine{583 \textcolor{comment}{}}
+\DoxyCodeLine{584 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{585 \textcolor{comment}{}}
+\DoxyCodeLine{586 \textcolor{comment}{Tested at random 1 <= k <= 100.  The "{}domain"{} refers to p:}}
+\DoxyCodeLine{587 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{588 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{589 \textcolor{comment}{   IEEE    .001,.999     25000       5.7e-\/15     8.0e-\/16}}
+\DoxyCodeLine{590 \textcolor{comment}{   IEEE    10\string^-\/6,.001    25000       2.0e-\/12     2.9e-\/14}}
+\DoxyCodeLine{591 \textcolor{comment}{}}
+\DoxyCodeLine{592 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{593 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{594 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{595 \textcolor{keywordtype}{double} invstudenttdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} p, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{596 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{597 }
+\DoxyCodeLine{598 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{599 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{600 \textcolor{comment}{F distribution}}
+\DoxyCodeLine{601 \textcolor{comment}{}}
+\DoxyCodeLine{602 \textcolor{comment}{Returns the area from zero to x under the F density}}
+\DoxyCodeLine{603 \textcolor{comment}{function (also known as Snedcor's density or the}}
+\DoxyCodeLine{604 \textcolor{comment}{variance ratio density).  This is the density}}
+\DoxyCodeLine{605 \textcolor{comment}{of x = (u1/df1)/(u2/df2), where u1 and u2 are random}}
+\DoxyCodeLine{606 \textcolor{comment}{variables having Chi square distributions with df1}}
+\DoxyCodeLine{607 \textcolor{comment}{and df2 degrees of freedom, respectively.}}
+\DoxyCodeLine{608 \textcolor{comment}{The incomplete beta integral is used, according to the}}
+\DoxyCodeLine{609 \textcolor{comment}{formula}}
+\DoxyCodeLine{610 \textcolor{comment}{}}
+\DoxyCodeLine{611 \textcolor{comment}{P(x) = incbet( df1/2, df2/2, (df1*x/(df2 + df1*x) ).}}
+\DoxyCodeLine{612 \textcolor{comment}{}}
+\DoxyCodeLine{613 \textcolor{comment}{}}
+\DoxyCodeLine{614 \textcolor{comment}{The arguments a and b are greater than zero, and x is}}
+\DoxyCodeLine{615 \textcolor{comment}{nonnegative.}}
+\DoxyCodeLine{616 \textcolor{comment}{}}
+\DoxyCodeLine{617 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{618 \textcolor{comment}{}}
+\DoxyCodeLine{619 \textcolor{comment}{Tested at random points (a,b,x).}}
+\DoxyCodeLine{620 \textcolor{comment}{}}
+\DoxyCodeLine{621 \textcolor{comment}{               x     a,b                     Relative error:}}
+\DoxyCodeLine{622 \textcolor{comment}{arithmetic  domain  domain     \# trials      peak         rms}}
+\DoxyCodeLine{623 \textcolor{comment}{   IEEE      0,1    0,100       100000      9.8e-\/15     1.7e-\/15}}
+\DoxyCodeLine{624 \textcolor{comment}{   IEEE      1,5    0,100       100000      6.5e-\/15     3.5e-\/16}}
+\DoxyCodeLine{625 \textcolor{comment}{   IEEE      0,1    1,10000     100000      2.2e-\/11     3.3e-\/12}}
+\DoxyCodeLine{626 \textcolor{comment}{   IEEE      1,5    1,10000     100000      1.1e-\/11     1.7e-\/13}}
+\DoxyCodeLine{627 \textcolor{comment}{}}
+\DoxyCodeLine{628 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{629 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{630 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{631 \textcolor{keywordtype}{double} fdistribution(\textcolor{keyword}{const} ae\_int\_t a, \textcolor{keyword}{const} ae\_int\_t b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{632 }
+\DoxyCodeLine{633 }
+\DoxyCodeLine{634 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{635 \textcolor{comment}{Complemented F distribution}}
+\DoxyCodeLine{636 \textcolor{comment}{}}
+\DoxyCodeLine{637 \textcolor{comment}{Returns the area from x to infinity under the F density}}
+\DoxyCodeLine{638 \textcolor{comment}{function (also known as Snedcor's density or the}}
+\DoxyCodeLine{639 \textcolor{comment}{variance ratio density).}}
+\DoxyCodeLine{640 \textcolor{comment}{}}
+\DoxyCodeLine{641 \textcolor{comment}{}}
+\DoxyCodeLine{642 \textcolor{comment}{                     inf.}}
+\DoxyCodeLine{643 \textcolor{comment}{                      -\/}}
+\DoxyCodeLine{644 \textcolor{comment}{             1       | |  a-\/1      b-\/1}}
+\DoxyCodeLine{645 \textcolor{comment}{1-\/P(x)  =  -\/-\/-\/-\/-\/-\/    |   t    (1-\/t)    dt}}
+\DoxyCodeLine{646 \textcolor{comment}{           B(a,b)  | |}}
+\DoxyCodeLine{647 \textcolor{comment}{                    -\/}}
+\DoxyCodeLine{648 \textcolor{comment}{                     x}}
+\DoxyCodeLine{649 \textcolor{comment}{}}
+\DoxyCodeLine{650 \textcolor{comment}{}}
+\DoxyCodeLine{651 \textcolor{comment}{The incomplete beta integral is used, according to the}}
+\DoxyCodeLine{652 \textcolor{comment}{formula}}
+\DoxyCodeLine{653 \textcolor{comment}{}}
+\DoxyCodeLine{654 \textcolor{comment}{P(x) = incbet( df2/2, df1/2, (df2/(df2 + df1*x) ).}}
+\DoxyCodeLine{655 \textcolor{comment}{}}
+\DoxyCodeLine{656 \textcolor{comment}{}}
+\DoxyCodeLine{657 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{658 \textcolor{comment}{}}
+\DoxyCodeLine{659 \textcolor{comment}{Tested at random points (a,b,x) in the indicated intervals.}}
+\DoxyCodeLine{660 \textcolor{comment}{               x     a,b                     Relative error:}}
+\DoxyCodeLine{661 \textcolor{comment}{arithmetic  domain  domain     \# trials      peak         rms}}
+\DoxyCodeLine{662 \textcolor{comment}{   IEEE      0,1    1,100       100000      3.7e-\/14     5.9e-\/16}}
+\DoxyCodeLine{663 \textcolor{comment}{   IEEE      1,5    1,100       100000      8.0e-\/15     1.6e-\/15}}
+\DoxyCodeLine{664 \textcolor{comment}{   IEEE      0,1    1,10000     100000      1.8e-\/11     3.5e-\/13}}
+\DoxyCodeLine{665 \textcolor{comment}{   IEEE      1,5    1,10000     100000      2.0e-\/11     3.0e-\/12}}
+\DoxyCodeLine{666 \textcolor{comment}{}}
+\DoxyCodeLine{667 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{668 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{669 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{670 \textcolor{keywordtype}{double} fcdistribution(\textcolor{keyword}{const} ae\_int\_t a, \textcolor{keyword}{const} ae\_int\_t b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{671 }
+\DoxyCodeLine{672 }
+\DoxyCodeLine{673 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{674 \textcolor{comment}{Inverse of complemented F distribution}}
+\DoxyCodeLine{675 \textcolor{comment}{}}
+\DoxyCodeLine{676 \textcolor{comment}{Finds the F density argument x such that the integral}}
+\DoxyCodeLine{677 \textcolor{comment}{from x to infinity of the F density is equal to the}}
+\DoxyCodeLine{678 \textcolor{comment}{given probability p.}}
+\DoxyCodeLine{679 \textcolor{comment}{}}
+\DoxyCodeLine{680 \textcolor{comment}{This is accomplished using the inverse beta integral}}
+\DoxyCodeLine{681 \textcolor{comment}{function and the relations}}
+\DoxyCodeLine{682 \textcolor{comment}{}}
+\DoxyCodeLine{683 \textcolor{comment}{     z = incbi( df2/2, df1/2, p )}}
+\DoxyCodeLine{684 \textcolor{comment}{     x = df2 (1-\/z) / (df1 z).}}
+\DoxyCodeLine{685 \textcolor{comment}{}}
+\DoxyCodeLine{686 \textcolor{comment}{Note: the following relations hold for the inverse of}}
+\DoxyCodeLine{687 \textcolor{comment}{the uncomplemented F distribution:}}
+\DoxyCodeLine{688 \textcolor{comment}{}}
+\DoxyCodeLine{689 \textcolor{comment}{     z = incbi( df1/2, df2/2, p )}}
+\DoxyCodeLine{690 \textcolor{comment}{     x = df2 z / (df1 (1-\/z)).}}
+\DoxyCodeLine{691 \textcolor{comment}{}}
+\DoxyCodeLine{692 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{693 \textcolor{comment}{}}
+\DoxyCodeLine{694 \textcolor{comment}{Tested at random points (a,b,p).}}
+\DoxyCodeLine{695 \textcolor{comment}{}}
+\DoxyCodeLine{696 \textcolor{comment}{             a,b                     Relative error:}}
+\DoxyCodeLine{697 \textcolor{comment}{arithmetic  domain     \# trials      peak         rms}}
+\DoxyCodeLine{698 \textcolor{comment}{ For p between .001 and 1:}}
+\DoxyCodeLine{699 \textcolor{comment}{   IEEE     1,100       100000      8.3e-\/15     4.7e-\/16}}
+\DoxyCodeLine{700 \textcolor{comment}{   IEEE     1,10000     100000      2.1e-\/11     1.4e-\/13}}
+\DoxyCodeLine{701 \textcolor{comment}{ For p between 10\string^-\/6 and 10\string^-\/3:}}
+\DoxyCodeLine{702 \textcolor{comment}{   IEEE     1,100        50000      1.3e-\/12     8.4e-\/15}}
+\DoxyCodeLine{703 \textcolor{comment}{   IEEE     1,10000      50000      3.0e-\/12     4.8e-\/14}}
+\DoxyCodeLine{704 \textcolor{comment}{}}
+\DoxyCodeLine{705 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{706 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{707 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{708 \textcolor{keywordtype}{double} invfdistribution(\textcolor{keyword}{const} ae\_int\_t a, \textcolor{keyword}{const} ae\_int\_t b, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{709 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{710 }
+\DoxyCodeLine{711 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IGAMMAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{712 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{713 \textcolor{comment}{Incomplete gamma integral}}
+\DoxyCodeLine{714 \textcolor{comment}{}}
+\DoxyCodeLine{715 \textcolor{comment}{The function is defined by}}
+\DoxyCodeLine{716 \textcolor{comment}{}}
+\DoxyCodeLine{717 \textcolor{comment}{                          x}}
+\DoxyCodeLine{718 \textcolor{comment}{                           -\/}}
+\DoxyCodeLine{719 \textcolor{comment}{                  1       | |  -\/t  a-\/1}}
+\DoxyCodeLine{720 \textcolor{comment}{ igam(a,x)  =   -\/-\/-\/-\/-\/     |   e   t   dt.}}
+\DoxyCodeLine{721 \textcolor{comment}{                 -\/      | |}}
+\DoxyCodeLine{722 \textcolor{comment}{                | (a)    -\/}}
+\DoxyCodeLine{723 \textcolor{comment}{                          0}}
+\DoxyCodeLine{724 \textcolor{comment}{}}
+\DoxyCodeLine{725 \textcolor{comment}{}}
+\DoxyCodeLine{726 \textcolor{comment}{In this implementation both arguments must be positive.}}
+\DoxyCodeLine{727 \textcolor{comment}{The integral is evaluated by either a power series or}}
+\DoxyCodeLine{728 \textcolor{comment}{continued fraction expansion, depending on the relative}}
+\DoxyCodeLine{729 \textcolor{comment}{values of a and x.}}
+\DoxyCodeLine{730 \textcolor{comment}{}}
+\DoxyCodeLine{731 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{732 \textcolor{comment}{}}
+\DoxyCodeLine{733 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{734 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{735 \textcolor{comment}{   IEEE      0,30       200000       3.6e-\/14     2.9e-\/15}}
+\DoxyCodeLine{736 \textcolor{comment}{   IEEE      0,100      300000       9.9e-\/14     1.5e-\/14}}
+\DoxyCodeLine{737 \textcolor{comment}{}}
+\DoxyCodeLine{738 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{739 \textcolor{comment}{Copyright 1985, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{740 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{741 \textcolor{keywordtype}{double} incompletegamma(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{742 }
+\DoxyCodeLine{743 }
+\DoxyCodeLine{744 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{745 \textcolor{comment}{Complemented incomplete gamma integral}}
+\DoxyCodeLine{746 \textcolor{comment}{}}
+\DoxyCodeLine{747 \textcolor{comment}{The function is defined by}}
+\DoxyCodeLine{748 \textcolor{comment}{}}
+\DoxyCodeLine{749 \textcolor{comment}{}}
+\DoxyCodeLine{750 \textcolor{comment}{ igamc(a,x)   =   1 -\/ igam(a,x)}}
+\DoxyCodeLine{751 \textcolor{comment}{}}
+\DoxyCodeLine{752 \textcolor{comment}{                           inf.}}
+\DoxyCodeLine{753 \textcolor{comment}{                             -\/}}
+\DoxyCodeLine{754 \textcolor{comment}{                    1       | |  -\/t  a-\/1}}
+\DoxyCodeLine{755 \textcolor{comment}{              =   -\/-\/-\/-\/-\/     |   e   t   dt.}}
+\DoxyCodeLine{756 \textcolor{comment}{                   -\/      | |}}
+\DoxyCodeLine{757 \textcolor{comment}{                  | (a)    -\/}}
+\DoxyCodeLine{758 \textcolor{comment}{                            x}}
+\DoxyCodeLine{759 \textcolor{comment}{}}
+\DoxyCodeLine{760 \textcolor{comment}{}}
+\DoxyCodeLine{761 \textcolor{comment}{In this implementation both arguments must be positive.}}
+\DoxyCodeLine{762 \textcolor{comment}{The integral is evaluated by either a power series or}}
+\DoxyCodeLine{763 \textcolor{comment}{continued fraction expansion, depending on the relative}}
+\DoxyCodeLine{764 \textcolor{comment}{values of a and x.}}
+\DoxyCodeLine{765 \textcolor{comment}{}}
+\DoxyCodeLine{766 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{767 \textcolor{comment}{}}
+\DoxyCodeLine{768 \textcolor{comment}{Tested at random a, x.}}
+\DoxyCodeLine{769 \textcolor{comment}{               a         x                      Relative error:}}
+\DoxyCodeLine{770 \textcolor{comment}{arithmetic   domain   domain     \# trials      peak         rms}}
+\DoxyCodeLine{771 \textcolor{comment}{   IEEE     0.5,100   0,100      200000       1.9e-\/14     1.7e-\/15}}
+\DoxyCodeLine{772 \textcolor{comment}{   IEEE     0.01,0.5  0,100      200000       1.4e-\/13     1.6e-\/15}}
+\DoxyCodeLine{773 \textcolor{comment}{}}
+\DoxyCodeLine{774 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{775 \textcolor{comment}{Copyright 1985, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{776 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{777 \textcolor{keywordtype}{double} incompletegammac(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{778 }
+\DoxyCodeLine{779 }
+\DoxyCodeLine{780 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{781 \textcolor{comment}{Inverse of complemented imcomplete gamma integral}}
+\DoxyCodeLine{782 \textcolor{comment}{}}
+\DoxyCodeLine{783 \textcolor{comment}{Given p, the function finds x such that}}
+\DoxyCodeLine{784 \textcolor{comment}{}}
+\DoxyCodeLine{785 \textcolor{comment}{ igamc( a, x ) = p.}}
+\DoxyCodeLine{786 \textcolor{comment}{}}
+\DoxyCodeLine{787 \textcolor{comment}{Starting with the approximate value}}
+\DoxyCodeLine{788 \textcolor{comment}{}}
+\DoxyCodeLine{789 \textcolor{comment}{        3}}
+\DoxyCodeLine{790 \textcolor{comment}{ x = a t}}
+\DoxyCodeLine{791 \textcolor{comment}{}}
+\DoxyCodeLine{792 \textcolor{comment}{ where}}
+\DoxyCodeLine{793 \textcolor{comment}{}}
+\DoxyCodeLine{794 \textcolor{comment}{ t = 1 -\/ d -\/ ndtri(p) sqrt(d)}}
+\DoxyCodeLine{795 \textcolor{comment}{}}
+\DoxyCodeLine{796 \textcolor{comment}{and}}
+\DoxyCodeLine{797 \textcolor{comment}{}}
+\DoxyCodeLine{798 \textcolor{comment}{ d = 1/9a,}}
+\DoxyCodeLine{799 \textcolor{comment}{}}
+\DoxyCodeLine{800 \textcolor{comment}{the routine performs up to 10 Newton iterations to find the}}
+\DoxyCodeLine{801 \textcolor{comment}{root of igamc(a,x) -\/ p = 0.}}
+\DoxyCodeLine{802 \textcolor{comment}{}}
+\DoxyCodeLine{803 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{804 \textcolor{comment}{}}
+\DoxyCodeLine{805 \textcolor{comment}{Tested at random a, p in the intervals indicated.}}
+\DoxyCodeLine{806 \textcolor{comment}{}}
+\DoxyCodeLine{807 \textcolor{comment}{               a        p                      Relative error:}}
+\DoxyCodeLine{808 \textcolor{comment}{arithmetic   domain   domain     \# trials      peak         rms}}
+\DoxyCodeLine{809 \textcolor{comment}{   IEEE     0.5,100   0,0.5       100000       1.0e-\/14     1.7e-\/15}}
+\DoxyCodeLine{810 \textcolor{comment}{   IEEE     0.01,0.5  0,0.5       100000       9.0e-\/14     3.4e-\/15}}
+\DoxyCodeLine{811 \textcolor{comment}{   IEEE    0.5,10000  0,0.5        20000       2.3e-\/13     3.8e-\/14}}
+\DoxyCodeLine{812 \textcolor{comment}{}}
+\DoxyCodeLine{813 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{814 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{815 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{816 \textcolor{keywordtype}{double} invincompletegammac(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y0, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{817 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{818 }
+\DoxyCodeLine{819 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHISQUAREDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{820 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{821 \textcolor{comment}{Chi-\/square distribution}}
+\DoxyCodeLine{822 \textcolor{comment}{}}
+\DoxyCodeLine{823 \textcolor{comment}{Returns the area under the left hand tail (from 0 to x)}}
+\DoxyCodeLine{824 \textcolor{comment}{of the Chi square probability density function with}}
+\DoxyCodeLine{825 \textcolor{comment}{v degrees of freedom.}}
+\DoxyCodeLine{826 \textcolor{comment}{}}
+\DoxyCodeLine{827 \textcolor{comment}{}}
+\DoxyCodeLine{828 \textcolor{comment}{                                  x}}
+\DoxyCodeLine{829 \textcolor{comment}{                                   -\/}}
+\DoxyCodeLine{830 \textcolor{comment}{                       1          | |  v/2-\/1  -\/t/2}}
+\DoxyCodeLine{831 \textcolor{comment}{ P( x | v )   =   -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/     |   t      e     dt}}
+\DoxyCodeLine{832 \textcolor{comment}{                   v/2  -\/       | |}}
+\DoxyCodeLine{833 \textcolor{comment}{                  2    | (v/2)   -\/}}
+\DoxyCodeLine{834 \textcolor{comment}{                                  0}}
+\DoxyCodeLine{835 \textcolor{comment}{}}
+\DoxyCodeLine{836 \textcolor{comment}{where x is the Chi-\/square variable.}}
+\DoxyCodeLine{837 \textcolor{comment}{}}
+\DoxyCodeLine{838 \textcolor{comment}{The incomplete gamma integral is used, according to the}}
+\DoxyCodeLine{839 \textcolor{comment}{formula}}
+\DoxyCodeLine{840 \textcolor{comment}{}}
+\DoxyCodeLine{841 \textcolor{comment}{y = chdtr( v, x ) = igam( v/2.0, x/2.0 ).}}
+\DoxyCodeLine{842 \textcolor{comment}{}}
+\DoxyCodeLine{843 \textcolor{comment}{The arguments must both be positive.}}
+\DoxyCodeLine{844 \textcolor{comment}{}}
+\DoxyCodeLine{845 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{846 \textcolor{comment}{}}
+\DoxyCodeLine{847 \textcolor{comment}{See incomplete gamma function}}
+\DoxyCodeLine{848 \textcolor{comment}{}}
+\DoxyCodeLine{849 \textcolor{comment}{}}
+\DoxyCodeLine{850 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{851 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{852 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{853 \textcolor{keywordtype}{double} chisquaredistribution(\textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{854 }
+\DoxyCodeLine{855 }
+\DoxyCodeLine{856 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{857 \textcolor{comment}{Complemented Chi-\/square distribution}}
+\DoxyCodeLine{858 \textcolor{comment}{}}
+\DoxyCodeLine{859 \textcolor{comment}{Returns the area under the right hand tail (from x to}}
+\DoxyCodeLine{860 \textcolor{comment}{infinity) of the Chi square probability density function}}
+\DoxyCodeLine{861 \textcolor{comment}{with v degrees of freedom:}}
+\DoxyCodeLine{862 \textcolor{comment}{}}
+\DoxyCodeLine{863 \textcolor{comment}{                                 inf.}}
+\DoxyCodeLine{864 \textcolor{comment}{                                   -\/}}
+\DoxyCodeLine{865 \textcolor{comment}{                       1          | |  v/2-\/1  -\/t/2}}
+\DoxyCodeLine{866 \textcolor{comment}{ P( x | v )   =   -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/     |   t      e     dt}}
+\DoxyCodeLine{867 \textcolor{comment}{                   v/2  -\/       | |}}
+\DoxyCodeLine{868 \textcolor{comment}{                  2    | (v/2)   -\/}}
+\DoxyCodeLine{869 \textcolor{comment}{                                  x}}
+\DoxyCodeLine{870 \textcolor{comment}{}}
+\DoxyCodeLine{871 \textcolor{comment}{where x is the Chi-\/square variable.}}
+\DoxyCodeLine{872 \textcolor{comment}{}}
+\DoxyCodeLine{873 \textcolor{comment}{The incomplete gamma integral is used, according to the}}
+\DoxyCodeLine{874 \textcolor{comment}{formula}}
+\DoxyCodeLine{875 \textcolor{comment}{}}
+\DoxyCodeLine{876 \textcolor{comment}{y = chdtr( v, x ) = igamc( v/2.0, x/2.0 ).}}
+\DoxyCodeLine{877 \textcolor{comment}{}}
+\DoxyCodeLine{878 \textcolor{comment}{The arguments must both be positive.}}
+\DoxyCodeLine{879 \textcolor{comment}{}}
+\DoxyCodeLine{880 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{881 \textcolor{comment}{}}
+\DoxyCodeLine{882 \textcolor{comment}{See incomplete gamma function}}
+\DoxyCodeLine{883 \textcolor{comment}{}}
+\DoxyCodeLine{884 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{885 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{886 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{887 \textcolor{keywordtype}{double} chisquarecdistribution(\textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{888 }
+\DoxyCodeLine{889 }
+\DoxyCodeLine{890 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{891 \textcolor{comment}{Inverse of complemented Chi-\/square distribution}}
+\DoxyCodeLine{892 \textcolor{comment}{}}
+\DoxyCodeLine{893 \textcolor{comment}{Finds the Chi-\/square argument x such that the integral}}
+\DoxyCodeLine{894 \textcolor{comment}{from x to infinity of the Chi-\/square density is equal}}
+\DoxyCodeLine{895 \textcolor{comment}{to the given cumulative probability y.}}
+\DoxyCodeLine{896 \textcolor{comment}{}}
+\DoxyCodeLine{897 \textcolor{comment}{This is accomplished using the inverse gamma integral}}
+\DoxyCodeLine{898 \textcolor{comment}{function and the relation}}
+\DoxyCodeLine{899 \textcolor{comment}{}}
+\DoxyCodeLine{900 \textcolor{comment}{   x/2 = igami( df/2, y );}}
+\DoxyCodeLine{901 \textcolor{comment}{}}
+\DoxyCodeLine{902 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{903 \textcolor{comment}{}}
+\DoxyCodeLine{904 \textcolor{comment}{See inverse incomplete gamma function}}
+\DoxyCodeLine{905 \textcolor{comment}{}}
+\DoxyCodeLine{906 \textcolor{comment}{}}
+\DoxyCodeLine{907 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{908 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{909 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{910 \textcolor{keywordtype}{double} invchisquaredistribution(\textcolor{keyword}{const} \textcolor{keywordtype}{double} v, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{911 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{912 }
+\DoxyCodeLine{913 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BINOMIALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{914 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{915 \textcolor{comment}{Binomial distribution}}
+\DoxyCodeLine{916 \textcolor{comment}{}}
+\DoxyCodeLine{917 \textcolor{comment}{Returns the sum of the terms 0 through k of the Binomial}}
+\DoxyCodeLine{918 \textcolor{comment}{probability density:}}
+\DoxyCodeLine{919 \textcolor{comment}{}}
+\DoxyCodeLine{920 \textcolor{comment}{  k}}
+\DoxyCodeLine{921 \textcolor{comment}{  -\/-\/  ( n )   j      n-\/j}}
+\DoxyCodeLine{922 \textcolor{comment}{  >   (   )  p  (1-\/p)}}
+\DoxyCodeLine{923 \textcolor{comment}{  -\/-\/  ( j )}}
+\DoxyCodeLine{924 \textcolor{comment}{ j=0}}
+\DoxyCodeLine{925 \textcolor{comment}{}}
+\DoxyCodeLine{926 \textcolor{comment}{The terms are not summed directly; instead the incomplete}}
+\DoxyCodeLine{927 \textcolor{comment}{beta integral is employed, according to the formula}}
+\DoxyCodeLine{928 \textcolor{comment}{}}
+\DoxyCodeLine{929 \textcolor{comment}{y = bdtr( k, n, p ) = incbet( n-\/k, k+1, 1-\/p ).}}
+\DoxyCodeLine{930 \textcolor{comment}{}}
+\DoxyCodeLine{931 \textcolor{comment}{The arguments must be positive, with p ranging from 0 to 1.}}
+\DoxyCodeLine{932 \textcolor{comment}{}}
+\DoxyCodeLine{933 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{934 \textcolor{comment}{}}
+\DoxyCodeLine{935 \textcolor{comment}{Tested at random points (a,b,p), with p between 0 and 1.}}
+\DoxyCodeLine{936 \textcolor{comment}{}}
+\DoxyCodeLine{937 \textcolor{comment}{              a,b                     Relative error:}}
+\DoxyCodeLine{938 \textcolor{comment}{arithmetic  domain     \# trials      peak         rms}}
+\DoxyCodeLine{939 \textcolor{comment}{ For p between 0.001 and 1:}}
+\DoxyCodeLine{940 \textcolor{comment}{   IEEE     0,100       100000      4.3e-\/15     2.6e-\/16}}
+\DoxyCodeLine{941 \textcolor{comment}{}}
+\DoxyCodeLine{942 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{943 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{944 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{945 \textcolor{keywordtype}{double} binomialdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} p, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{946 }
+\DoxyCodeLine{947 }
+\DoxyCodeLine{948 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{949 \textcolor{comment}{Complemented binomial distribution}}
+\DoxyCodeLine{950 \textcolor{comment}{}}
+\DoxyCodeLine{951 \textcolor{comment}{Returns the sum of the terms k+1 through n of the Binomial}}
+\DoxyCodeLine{952 \textcolor{comment}{probability density:}}
+\DoxyCodeLine{953 \textcolor{comment}{}}
+\DoxyCodeLine{954 \textcolor{comment}{  n}}
+\DoxyCodeLine{955 \textcolor{comment}{  -\/-\/  ( n )   j      n-\/j}}
+\DoxyCodeLine{956 \textcolor{comment}{  >   (   )  p  (1-\/p)}}
+\DoxyCodeLine{957 \textcolor{comment}{  -\/-\/  ( j )}}
+\DoxyCodeLine{958 \textcolor{comment}{ j=k+1}}
+\DoxyCodeLine{959 \textcolor{comment}{}}
+\DoxyCodeLine{960 \textcolor{comment}{The terms are not summed directly; instead the incomplete}}
+\DoxyCodeLine{961 \textcolor{comment}{beta integral is employed, according to the formula}}
+\DoxyCodeLine{962 \textcolor{comment}{}}
+\DoxyCodeLine{963 \textcolor{comment}{y = bdtrc( k, n, p ) = incbet( k+1, n-\/k, p ).}}
+\DoxyCodeLine{964 \textcolor{comment}{}}
+\DoxyCodeLine{965 \textcolor{comment}{The arguments must be positive, with p ranging from 0 to 1.}}
+\DoxyCodeLine{966 \textcolor{comment}{}}
+\DoxyCodeLine{967 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{968 \textcolor{comment}{}}
+\DoxyCodeLine{969 \textcolor{comment}{Tested at random points (a,b,p).}}
+\DoxyCodeLine{970 \textcolor{comment}{}}
+\DoxyCodeLine{971 \textcolor{comment}{              a,b                     Relative error:}}
+\DoxyCodeLine{972 \textcolor{comment}{arithmetic  domain     \# trials      peak         rms}}
+\DoxyCodeLine{973 \textcolor{comment}{ For p between 0.001 and 1:}}
+\DoxyCodeLine{974 \textcolor{comment}{   IEEE     0,100       100000      6.7e-\/15     8.2e-\/16}}
+\DoxyCodeLine{975 \textcolor{comment}{ For p between 0 and .001:}}
+\DoxyCodeLine{976 \textcolor{comment}{   IEEE     0,100       100000      1.5e-\/13     2.7e-\/15}}
+\DoxyCodeLine{977 \textcolor{comment}{}}
+\DoxyCodeLine{978 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{979 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{980 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{981 \textcolor{keywordtype}{double} binomialcdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} p, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{982 }
+\DoxyCodeLine{983 }
+\DoxyCodeLine{984 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{985 \textcolor{comment}{Inverse binomial distribution}}
+\DoxyCodeLine{986 \textcolor{comment}{}}
+\DoxyCodeLine{987 \textcolor{comment}{Finds the event probability p such that the sum of the}}
+\DoxyCodeLine{988 \textcolor{comment}{terms 0 through k of the Binomial probability density}}
+\DoxyCodeLine{989 \textcolor{comment}{is equal to the given cumulative probability y.}}
+\DoxyCodeLine{990 \textcolor{comment}{}}
+\DoxyCodeLine{991 \textcolor{comment}{This is accomplished using the inverse beta integral}}
+\DoxyCodeLine{992 \textcolor{comment}{function and the relation}}
+\DoxyCodeLine{993 \textcolor{comment}{}}
+\DoxyCodeLine{994 \textcolor{comment}{1 -\/ p = incbi( n-\/k, k+1, y ).}}
+\DoxyCodeLine{995 \textcolor{comment}{}}
+\DoxyCodeLine{996 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{997 \textcolor{comment}{}}
+\DoxyCodeLine{998 \textcolor{comment}{Tested at random points (a,b,p).}}
+\DoxyCodeLine{999 \textcolor{comment}{}}
+\DoxyCodeLine{1000 \textcolor{comment}{              a,b                     Relative error:}}
+\DoxyCodeLine{1001 \textcolor{comment}{arithmetic  domain     \# trials      peak         rms}}
+\DoxyCodeLine{1002 \textcolor{comment}{ For p between 0.001 and 1:}}
+\DoxyCodeLine{1003 \textcolor{comment}{   IEEE     0,100       100000      2.3e-\/14     6.4e-\/16}}
+\DoxyCodeLine{1004 \textcolor{comment}{   IEEE     0,10000     100000      6.6e-\/12     1.2e-\/13}}
+\DoxyCodeLine{1005 \textcolor{comment}{ For p between 10\string^-\/6 and 0.001:}}
+\DoxyCodeLine{1006 \textcolor{comment}{   IEEE     0,100       100000      2.0e-\/12     1.3e-\/14}}
+\DoxyCodeLine{1007 \textcolor{comment}{   IEEE     0,10000     100000      1.5e-\/12     3.2e-\/14}}
+\DoxyCodeLine{1008 \textcolor{comment}{}}
+\DoxyCodeLine{1009 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1010 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1011 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1012 \textcolor{keywordtype}{double} invbinomialdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1013 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1014 }
+\DoxyCodeLine{1015 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_EXPINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1016 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1017 \textcolor{comment}{Exponential integral Ei(x)}}
+\DoxyCodeLine{1018 \textcolor{comment}{}}
+\DoxyCodeLine{1019 \textcolor{comment}{              x}}
+\DoxyCodeLine{1020 \textcolor{comment}{               -\/     t}}
+\DoxyCodeLine{1021 \textcolor{comment}{              | |   e}}
+\DoxyCodeLine{1022 \textcolor{comment}{   Ei(x) =   -\/|-\/   -\/-\/-\/  dt .}}
+\DoxyCodeLine{1023 \textcolor{comment}{            | |     t}}
+\DoxyCodeLine{1024 \textcolor{comment}{             -\/}}
+\DoxyCodeLine{1025 \textcolor{comment}{            -\/inf}}
+\DoxyCodeLine{1026 \textcolor{comment}{}}
+\DoxyCodeLine{1027 \textcolor{comment}{Not defined for x <= 0.}}
+\DoxyCodeLine{1028 \textcolor{comment}{See also expn.c.}}
+\DoxyCodeLine{1029 \textcolor{comment}{}}
+\DoxyCodeLine{1030 \textcolor{comment}{}}
+\DoxyCodeLine{1031 \textcolor{comment}{}}
+\DoxyCodeLine{1032 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1033 \textcolor{comment}{}}
+\DoxyCodeLine{1034 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1035 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1036 \textcolor{comment}{   IEEE       0,100       50000      8.6e-\/16     1.3e-\/16}}
+\DoxyCodeLine{1037 \textcolor{comment}{}}
+\DoxyCodeLine{1038 \textcolor{comment}{Cephes Math Library Release 2.8:  May, 1999}}
+\DoxyCodeLine{1039 \textcolor{comment}{Copyright 1999 by Stephen L. Moshier}}
+\DoxyCodeLine{1040 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1041 \textcolor{keywordtype}{double} exponentialintegralei(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1042 }
+\DoxyCodeLine{1043 }
+\DoxyCodeLine{1044 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1045 \textcolor{comment}{Exponential integral En(x)}}
+\DoxyCodeLine{1046 \textcolor{comment}{}}
+\DoxyCodeLine{1047 \textcolor{comment}{Evaluates the exponential integral}}
+\DoxyCodeLine{1048 \textcolor{comment}{}}
+\DoxyCodeLine{1049 \textcolor{comment}{                inf.}}
+\DoxyCodeLine{1050 \textcolor{comment}{                  -\/}}
+\DoxyCodeLine{1051 \textcolor{comment}{                 | |   -\/xt}}
+\DoxyCodeLine{1052 \textcolor{comment}{                 |    e}}
+\DoxyCodeLine{1053 \textcolor{comment}{     E (x)  =    |    -\/-\/-\/-\/  dt.}}
+\DoxyCodeLine{1054 \textcolor{comment}{      n          |      n}}
+\DoxyCodeLine{1055 \textcolor{comment}{               | |     t}}
+\DoxyCodeLine{1056 \textcolor{comment}{                -\/}}
+\DoxyCodeLine{1057 \textcolor{comment}{                 1}}
+\DoxyCodeLine{1058 \textcolor{comment}{}}
+\DoxyCodeLine{1059 \textcolor{comment}{}}
+\DoxyCodeLine{1060 \textcolor{comment}{Both n and x must be nonnegative.}}
+\DoxyCodeLine{1061 \textcolor{comment}{}}
+\DoxyCodeLine{1062 \textcolor{comment}{The routine employs either a power series, a continued}}
+\DoxyCodeLine{1063 \textcolor{comment}{fraction, or an asymptotic formula depending on the}}
+\DoxyCodeLine{1064 \textcolor{comment}{relative values of n and x.}}
+\DoxyCodeLine{1065 \textcolor{comment}{}}
+\DoxyCodeLine{1066 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1067 \textcolor{comment}{}}
+\DoxyCodeLine{1068 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1069 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1070 \textcolor{comment}{   IEEE      0, 30       10000       1.7e-\/15     3.6e-\/16}}
+\DoxyCodeLine{1071 \textcolor{comment}{}}
+\DoxyCodeLine{1072 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1073 \textcolor{comment}{Copyright 1985, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1074 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1075 \textcolor{keywordtype}{double} exponentialintegralen(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1076 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1077 }
+\DoxyCodeLine{1078 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JACOBIANELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1079 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1080 \textcolor{comment}{Jacobian Elliptic Functions}}
+\DoxyCodeLine{1081 \textcolor{comment}{}}
+\DoxyCodeLine{1082 \textcolor{comment}{Evaluates the Jacobian elliptic functions sn(u|m), cn(u|m),}}
+\DoxyCodeLine{1083 \textcolor{comment}{and dn(u|m) of parameter m between 0 and 1, and real}}
+\DoxyCodeLine{1084 \textcolor{comment}{argument u.}}
+\DoxyCodeLine{1085 \textcolor{comment}{}}
+\DoxyCodeLine{1086 \textcolor{comment}{These functions are periodic, with quarter-\/period on the}}
+\DoxyCodeLine{1087 \textcolor{comment}{real axis equal to the complete elliptic integral}}
+\DoxyCodeLine{1088 \textcolor{comment}{ellpk(1.0-\/m).}}
+\DoxyCodeLine{1089 \textcolor{comment}{}}
+\DoxyCodeLine{1090 \textcolor{comment}{Relation to incomplete elliptic integral:}}
+\DoxyCodeLine{1091 \textcolor{comment}{If u = ellik(phi,m), then sn(u|m) = sin(phi),}}
+\DoxyCodeLine{1092 \textcolor{comment}{and cn(u|m) = cos(phi).  Phi is called the amplitude of u.}}
+\DoxyCodeLine{1093 \textcolor{comment}{}}
+\DoxyCodeLine{1094 \textcolor{comment}{Computation is by means of the arithmetic-\/geometric mean}}
+\DoxyCodeLine{1095 \textcolor{comment}{algorithm, except when m is within 1e-\/9 of 0 or 1.  In the}}
+\DoxyCodeLine{1096 \textcolor{comment}{latter case with m close to 1, the approximation applies}}
+\DoxyCodeLine{1097 \textcolor{comment}{only for phi < pi/2.}}
+\DoxyCodeLine{1098 \textcolor{comment}{}}
+\DoxyCodeLine{1099 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1100 \textcolor{comment}{}}
+\DoxyCodeLine{1101 \textcolor{comment}{Tested at random points with u between 0 and 10, m between}}
+\DoxyCodeLine{1102 \textcolor{comment}{0 and 1.}}
+\DoxyCodeLine{1103 \textcolor{comment}{}}
+\DoxyCodeLine{1104 \textcolor{comment}{           Absolute error (* = relative error):}}
+\DoxyCodeLine{1105 \textcolor{comment}{arithmetic   function   \# trials      peak         rms}}
+\DoxyCodeLine{1106 \textcolor{comment}{   IEEE      phi         10000       9.2e-\/16*    1.4e-\/16*}}
+\DoxyCodeLine{1107 \textcolor{comment}{   IEEE      sn          50000       4.1e-\/15     4.6e-\/16}}
+\DoxyCodeLine{1108 \textcolor{comment}{   IEEE      cn          40000       3.6e-\/15     4.4e-\/16}}
+\DoxyCodeLine{1109 \textcolor{comment}{   IEEE      dn          10000       1.3e-\/12     1.8e-\/14}}
+\DoxyCodeLine{1110 \textcolor{comment}{}}
+\DoxyCodeLine{1111 \textcolor{comment}{ Peak error observed in consistency check using addition}}
+\DoxyCodeLine{1112 \textcolor{comment}{theorem for sn(u+v) was 4e-\/16 (absolute).  Also tested by}}
+\DoxyCodeLine{1113 \textcolor{comment}{the above relation to the incomplete elliptic integral.}}
+\DoxyCodeLine{1114 \textcolor{comment}{Accuracy deteriorates when u is large.}}
+\DoxyCodeLine{1115 \textcolor{comment}{}}
+\DoxyCodeLine{1116 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1117 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1118 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1119 \textcolor{keywordtype}{void} jacobianellipticfunctions(\textcolor{keyword}{const} \textcolor{keywordtype}{double} u, \textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keywordtype}{double} \&sn, \textcolor{keywordtype}{double} \&cn, \textcolor{keywordtype}{double} \&dn, \textcolor{keywordtype}{double} \&ph, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1120 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1121 }
+\DoxyCodeLine{1122 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRIGINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1123 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1124 \textcolor{comment}{Sine and cosine integrals}}
+\DoxyCodeLine{1125 \textcolor{comment}{}}
+\DoxyCodeLine{1126 \textcolor{comment}{Evaluates the integrals}}
+\DoxyCodeLine{1127 \textcolor{comment}{}}
+\DoxyCodeLine{1128 \textcolor{comment}{                         x}}
+\DoxyCodeLine{1129 \textcolor{comment}{                         -\/}}
+\DoxyCodeLine{1130 \textcolor{comment}{                        |  cos t -\/ 1}}
+\DoxyCodeLine{1131 \textcolor{comment}{  Ci(x) = eul + ln x +  |  -\/-\/-\/-\/-\/-\/-\/-\/-\/ dt,}}
+\DoxyCodeLine{1132 \textcolor{comment}{                        |      t}}
+\DoxyCodeLine{1133 \textcolor{comment}{                       -\/}}
+\DoxyCodeLine{1134 \textcolor{comment}{                        0}}
+\DoxyCodeLine{1135 \textcolor{comment}{            x}}
+\DoxyCodeLine{1136 \textcolor{comment}{            -\/}}
+\DoxyCodeLine{1137 \textcolor{comment}{           |  sin t}}
+\DoxyCodeLine{1138 \textcolor{comment}{  Si(x) =  |  -\/-\/-\/-\/-\/ dt}}
+\DoxyCodeLine{1139 \textcolor{comment}{           |    t}}
+\DoxyCodeLine{1140 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{1141 \textcolor{comment}{           0}}
+\DoxyCodeLine{1142 \textcolor{comment}{}}
+\DoxyCodeLine{1143 \textcolor{comment}{where eul = 0.57721566490153286061 is Euler's constant.}}
+\DoxyCodeLine{1144 \textcolor{comment}{The integrals are approximated by rational functions.}}
+\DoxyCodeLine{1145 \textcolor{comment}{For x > 8 auxiliary functions f(x) and g(x) are employed}}
+\DoxyCodeLine{1146 \textcolor{comment}{such that}}
+\DoxyCodeLine{1147 \textcolor{comment}{}}
+\DoxyCodeLine{1148 \textcolor{comment}{Ci(x) = f(x) sin(x) -\/ g(x) cos(x)}}
+\DoxyCodeLine{1149 \textcolor{comment}{Si(x) = pi/2 -\/ f(x) cos(x) -\/ g(x) sin(x)}}
+\DoxyCodeLine{1150 \textcolor{comment}{}}
+\DoxyCodeLine{1151 \textcolor{comment}{}}
+\DoxyCodeLine{1152 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1153 \textcolor{comment}{   Test interval = [0,50].}}
+\DoxyCodeLine{1154 \textcolor{comment}{Absolute error, except relative when > 1:}}
+\DoxyCodeLine{1155 \textcolor{comment}{arithmetic   function   \# trials      peak         rms}}
+\DoxyCodeLine{1156 \textcolor{comment}{   IEEE        Si        30000       4.4e-\/16     7.3e-\/17}}
+\DoxyCodeLine{1157 \textcolor{comment}{   IEEE        Ci        30000       6.9e-\/16     5.1e-\/17}}
+\DoxyCodeLine{1158 \textcolor{comment}{}}
+\DoxyCodeLine{1159 \textcolor{comment}{Cephes Math Library Release 2.1:  January, 1989}}
+\DoxyCodeLine{1160 \textcolor{comment}{Copyright 1984, 1987, 1989 by Stephen L. Moshier}}
+\DoxyCodeLine{1161 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1162 \textcolor{keywordtype}{void} sinecosineintegrals(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} \&si, \textcolor{keywordtype}{double} \&ci, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1163 }
+\DoxyCodeLine{1164 }
+\DoxyCodeLine{1165 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1166 \textcolor{comment}{Hyperbolic sine and cosine integrals}}
+\DoxyCodeLine{1167 \textcolor{comment}{}}
+\DoxyCodeLine{1168 \textcolor{comment}{Approximates the integrals}}
+\DoxyCodeLine{1169 \textcolor{comment}{}}
+\DoxyCodeLine{1170 \textcolor{comment}{                           x}}
+\DoxyCodeLine{1171 \textcolor{comment}{                           -\/}}
+\DoxyCodeLine{1172 \textcolor{comment}{                          | |   cosh t -\/ 1}}
+\DoxyCodeLine{1173 \textcolor{comment}{  Chi(x) = eul + ln x +   |    -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/  dt,}}
+\DoxyCodeLine{1174 \textcolor{comment}{                        | |          t}}
+\DoxyCodeLine{1175 \textcolor{comment}{                         -\/}}
+\DoxyCodeLine{1176 \textcolor{comment}{                         0}}
+\DoxyCodeLine{1177 \textcolor{comment}{}}
+\DoxyCodeLine{1178 \textcolor{comment}{              x}}
+\DoxyCodeLine{1179 \textcolor{comment}{              -\/}}
+\DoxyCodeLine{1180 \textcolor{comment}{             | |  sinh t}}
+\DoxyCodeLine{1181 \textcolor{comment}{  Shi(x) =   |    -\/-\/-\/-\/-\/-\/  dt}}
+\DoxyCodeLine{1182 \textcolor{comment}{           | |       t}}
+\DoxyCodeLine{1183 \textcolor{comment}{            -\/}}
+\DoxyCodeLine{1184 \textcolor{comment}{            0}}
+\DoxyCodeLine{1185 \textcolor{comment}{}}
+\DoxyCodeLine{1186 \textcolor{comment}{where eul = 0.57721566490153286061 is Euler's constant.}}
+\DoxyCodeLine{1187 \textcolor{comment}{The integrals are evaluated by power series for x < 8}}
+\DoxyCodeLine{1188 \textcolor{comment}{and by Chebyshev expansions for x between 8 and 88.}}
+\DoxyCodeLine{1189 \textcolor{comment}{For large x, both functions approach exp(x)/2x.}}
+\DoxyCodeLine{1190 \textcolor{comment}{Arguments greater than 88 in magnitude return MAXNUM.}}
+\DoxyCodeLine{1191 \textcolor{comment}{}}
+\DoxyCodeLine{1192 \textcolor{comment}{}}
+\DoxyCodeLine{1193 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1194 \textcolor{comment}{}}
+\DoxyCodeLine{1195 \textcolor{comment}{Test interval 0 to 88.}}
+\DoxyCodeLine{1196 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1197 \textcolor{comment}{arithmetic   function  \# trials      peak         rms}}
+\DoxyCodeLine{1198 \textcolor{comment}{   IEEE         Shi      30000       6.9e-\/16     1.6e-\/16}}
+\DoxyCodeLine{1199 \textcolor{comment}{       Absolute error, except relative when |Chi| > 1:}}
+\DoxyCodeLine{1200 \textcolor{comment}{   IEEE         Chi      30000       8.4e-\/16     1.4e-\/16}}
+\DoxyCodeLine{1201 \textcolor{comment}{}}
+\DoxyCodeLine{1202 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1203 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1204 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1205 \textcolor{keywordtype}{void} hyperbolicsinecosineintegrals(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} \&shi, \textcolor{keywordtype}{double} \&chi, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1206 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1207 }
+\DoxyCodeLine{1208 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHEBYSHEV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1209 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1210 \textcolor{comment}{Calculation of the value of the Chebyshev polynomials of the}}
+\DoxyCodeLine{1211 \textcolor{comment}{first and second kinds.}}
+\DoxyCodeLine{1212 \textcolor{comment}{}}
+\DoxyCodeLine{1213 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1214 \textcolor{comment}{    r   -\/   polynomial kind, either 1 or 2.}}
+\DoxyCodeLine{1215 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1216 \textcolor{comment}{    x   -\/   argument, -\/1 <= x <= 1}}
+\DoxyCodeLine{1217 \textcolor{comment}{}}
+\DoxyCodeLine{1218 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1219 \textcolor{comment}{    the value of the Chebyshev polynomial at x}}
+\DoxyCodeLine{1220 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1221 \textcolor{keywordtype}{double} chebyshevcalculate(\textcolor{keyword}{const} ae\_int\_t r, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1222 }
+\DoxyCodeLine{1223 }
+\DoxyCodeLine{1224 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1225 \textcolor{comment}{Summation of Chebyshev polynomials using Clenshaw's recurrence formula.}}
+\DoxyCodeLine{1226 \textcolor{comment}{}}
+\DoxyCodeLine{1227 \textcolor{comment}{This routine calculates}}
+\DoxyCodeLine{1228 \textcolor{comment}{    c[0]*T0(x) + c[1]*T1(x) + ... + c[N]*TN(x)}}
+\DoxyCodeLine{1229 \textcolor{comment}{or}}
+\DoxyCodeLine{1230 \textcolor{comment}{    c[0]*U0(x) + c[1]*U1(x) + ... + c[N]*UN(x)}}
+\DoxyCodeLine{1231 \textcolor{comment}{depending on the R.}}
+\DoxyCodeLine{1232 \textcolor{comment}{}}
+\DoxyCodeLine{1233 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1234 \textcolor{comment}{    r   -\/   polynomial kind, either 1 or 2.}}
+\DoxyCodeLine{1235 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1236 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1237 \textcolor{comment}{}}
+\DoxyCodeLine{1238 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1239 \textcolor{comment}{    the value of the Chebyshev polynomial at x}}
+\DoxyCodeLine{1240 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1241 \textcolor{keywordtype}{double} chebyshevsum(\textcolor{keyword}{const} real\_1d\_array \&c, \textcolor{keyword}{const} ae\_int\_t r, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1242 }
+\DoxyCodeLine{1243 }
+\DoxyCodeLine{1244 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1245 \textcolor{comment}{Representation of Tn as C[0] + C[1]*X + ... + C[N]*X\string^N}}
+\DoxyCodeLine{1246 \textcolor{comment}{}}
+\DoxyCodeLine{1247 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1248 \textcolor{comment}{    N   -\/   polynomial degree, n>=0}}
+\DoxyCodeLine{1249 \textcolor{comment}{}}
+\DoxyCodeLine{1250 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1251 \textcolor{comment}{    C   -\/   coefficients}}
+\DoxyCodeLine{1252 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1253 \textcolor{keywordtype}{void} chebyshevcoefficients(\textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1254 }
+\DoxyCodeLine{1255 }
+\DoxyCodeLine{1256 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1257 \textcolor{comment}{Conversion of a series of Chebyshev polynomials to a power series.}}
+\DoxyCodeLine{1258 \textcolor{comment}{}}
+\DoxyCodeLine{1259 \textcolor{comment}{Represents A[0]*T0(x) + A[1]*T1(x) + ... + A[N]*Tn(x) as}}
+\DoxyCodeLine{1260 \textcolor{comment}{B[0] + B[1]*X + ... + B[N]*X\string^N.}}
+\DoxyCodeLine{1261 \textcolor{comment}{}}
+\DoxyCodeLine{1262 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1263 \textcolor{comment}{    A   -\/   Chebyshev series coefficients}}
+\DoxyCodeLine{1264 \textcolor{comment}{    N   -\/   degree, N>=0}}
+\DoxyCodeLine{1265 \textcolor{comment}{}}
+\DoxyCodeLine{1266 \textcolor{comment}{Output parameters}}
+\DoxyCodeLine{1267 \textcolor{comment}{    B   -\/   power series coefficients}}
+\DoxyCodeLine{1268 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1269 \textcolor{keywordtype}{void} fromchebyshev(\textcolor{keyword}{const} real\_1d\_array \&a, \textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&b, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1270 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1271 }
+\DoxyCodeLine{1272 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_POISSONDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1273 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1274 \textcolor{comment}{Poisson distribution}}
+\DoxyCodeLine{1275 \textcolor{comment}{}}
+\DoxyCodeLine{1276 \textcolor{comment}{Returns the sum of the first k+1 terms of the Poisson}}
+\DoxyCodeLine{1277 \textcolor{comment}{distribution:}}
+\DoxyCodeLine{1278 \textcolor{comment}{}}
+\DoxyCodeLine{1279 \textcolor{comment}{  k         j}}
+\DoxyCodeLine{1280 \textcolor{comment}{  -\/-\/   -\/m  m}}
+\DoxyCodeLine{1281 \textcolor{comment}{  >   e    -\/-\/}}
+\DoxyCodeLine{1282 \textcolor{comment}{  -\/-\/       j!}}
+\DoxyCodeLine{1283 \textcolor{comment}{ j=0}}
+\DoxyCodeLine{1284 \textcolor{comment}{}}
+\DoxyCodeLine{1285 \textcolor{comment}{The terms are not summed directly; instead the incomplete}}
+\DoxyCodeLine{1286 \textcolor{comment}{gamma integral is employed, according to the relation}}
+\DoxyCodeLine{1287 \textcolor{comment}{}}
+\DoxyCodeLine{1288 \textcolor{comment}{y = pdtr( k, m ) = igamc( k+1, m ).}}
+\DoxyCodeLine{1289 \textcolor{comment}{}}
+\DoxyCodeLine{1290 \textcolor{comment}{The arguments must both be positive.}}
+\DoxyCodeLine{1291 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1292 \textcolor{comment}{}}
+\DoxyCodeLine{1293 \textcolor{comment}{See incomplete gamma function}}
+\DoxyCodeLine{1294 \textcolor{comment}{}}
+\DoxyCodeLine{1295 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1296 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1297 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1298 \textcolor{keywordtype}{double} poissondistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1299 }
+\DoxyCodeLine{1300 }
+\DoxyCodeLine{1301 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1302 \textcolor{comment}{Complemented Poisson distribution}}
+\DoxyCodeLine{1303 \textcolor{comment}{}}
+\DoxyCodeLine{1304 \textcolor{comment}{Returns the sum of the terms k+1 to infinity of the Poisson}}
+\DoxyCodeLine{1305 \textcolor{comment}{distribution:}}
+\DoxyCodeLine{1306 \textcolor{comment}{}}
+\DoxyCodeLine{1307 \textcolor{comment}{ inf.       j}}
+\DoxyCodeLine{1308 \textcolor{comment}{  -\/-\/   -\/m  m}}
+\DoxyCodeLine{1309 \textcolor{comment}{  >   e    -\/-\/}}
+\DoxyCodeLine{1310 \textcolor{comment}{  -\/-\/       j!}}
+\DoxyCodeLine{1311 \textcolor{comment}{ j=k+1}}
+\DoxyCodeLine{1312 \textcolor{comment}{}}
+\DoxyCodeLine{1313 \textcolor{comment}{The terms are not summed directly; instead the incomplete}}
+\DoxyCodeLine{1314 \textcolor{comment}{gamma integral is employed, according to the formula}}
+\DoxyCodeLine{1315 \textcolor{comment}{}}
+\DoxyCodeLine{1316 \textcolor{comment}{y = pdtrc( k, m ) = igam( k+1, m ).}}
+\DoxyCodeLine{1317 \textcolor{comment}{}}
+\DoxyCodeLine{1318 \textcolor{comment}{The arguments must both be positive.}}
+\DoxyCodeLine{1319 \textcolor{comment}{}}
+\DoxyCodeLine{1320 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1321 \textcolor{comment}{}}
+\DoxyCodeLine{1322 \textcolor{comment}{See incomplete gamma function}}
+\DoxyCodeLine{1323 \textcolor{comment}{}}
+\DoxyCodeLine{1324 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1325 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1326 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1327 \textcolor{keywordtype}{double} poissoncdistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1328 }
+\DoxyCodeLine{1329 }
+\DoxyCodeLine{1330 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1331 \textcolor{comment}{Inverse Poisson distribution}}
+\DoxyCodeLine{1332 \textcolor{comment}{}}
+\DoxyCodeLine{1333 \textcolor{comment}{Finds the Poisson variable x such that the integral}}
+\DoxyCodeLine{1334 \textcolor{comment}{from 0 to x of the Poisson density is equal to the}}
+\DoxyCodeLine{1335 \textcolor{comment}{given probability y.}}
+\DoxyCodeLine{1336 \textcolor{comment}{}}
+\DoxyCodeLine{1337 \textcolor{comment}{This is accomplished using the inverse gamma integral}}
+\DoxyCodeLine{1338 \textcolor{comment}{function and the relation}}
+\DoxyCodeLine{1339 \textcolor{comment}{}}
+\DoxyCodeLine{1340 \textcolor{comment}{   m = igami( k+1, y ).}}
+\DoxyCodeLine{1341 \textcolor{comment}{}}
+\DoxyCodeLine{1342 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1343 \textcolor{comment}{}}
+\DoxyCodeLine{1344 \textcolor{comment}{See inverse incomplete gamma function}}
+\DoxyCodeLine{1345 \textcolor{comment}{}}
+\DoxyCodeLine{1346 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1347 \textcolor{comment}{Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1348 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1349 \textcolor{keywordtype}{double} invpoissondistribution(\textcolor{keyword}{const} ae\_int\_t k, \textcolor{keyword}{const} \textcolor{keywordtype}{double} y, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1350 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1351 }
+\DoxyCodeLine{1352 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1353 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1354 \textcolor{comment}{Beta function}}
+\DoxyCodeLine{1355 \textcolor{comment}{}}
+\DoxyCodeLine{1356 \textcolor{comment}{}}
+\DoxyCodeLine{1357 \textcolor{comment}{                  -\/     -\/}}
+\DoxyCodeLine{1358 \textcolor{comment}{                 | (a) | (b)}}
+\DoxyCodeLine{1359 \textcolor{comment}{beta( a, b )  =  -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/.}}
+\DoxyCodeLine{1360 \textcolor{comment}{                    -\/}}
+\DoxyCodeLine{1361 \textcolor{comment}{                   | (a+b)}}
+\DoxyCodeLine{1362 \textcolor{comment}{}}
+\DoxyCodeLine{1363 \textcolor{comment}{For large arguments the logarithm of the function is}}
+\DoxyCodeLine{1364 \textcolor{comment}{evaluated using lgam(), then exponentiated.}}
+\DoxyCodeLine{1365 \textcolor{comment}{}}
+\DoxyCodeLine{1366 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1367 \textcolor{comment}{}}
+\DoxyCodeLine{1368 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1369 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1370 \textcolor{comment}{   IEEE       0,30       30000       8.1e-\/14     1.1e-\/14}}
+\DoxyCodeLine{1371 \textcolor{comment}{}}
+\DoxyCodeLine{1372 \textcolor{comment}{Cephes Math Library Release 2.0:  April, 1987}}
+\DoxyCodeLine{1373 \textcolor{comment}{Copyright 1984, 1987 by Stephen L. Moshier}}
+\DoxyCodeLine{1374 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1375 \textcolor{keywordtype}{double} beta(\textcolor{keyword}{const} \textcolor{keywordtype}{double} a, \textcolor{keyword}{const} \textcolor{keywordtype}{double} b, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1376 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1377 }
+\DoxyCodeLine{1378 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FRESNEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1379 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1380 \textcolor{comment}{Fresnel integral}}
+\DoxyCodeLine{1381 \textcolor{comment}{}}
+\DoxyCodeLine{1382 \textcolor{comment}{Evaluates the Fresnel integrals}}
+\DoxyCodeLine{1383 \textcolor{comment}{}}
+\DoxyCodeLine{1384 \textcolor{comment}{          x}}
+\DoxyCodeLine{1385 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{1386 \textcolor{comment}{         | |}}
+\DoxyCodeLine{1387 \textcolor{comment}{C(x) =   |   cos(pi/2 t**2) dt,}}
+\DoxyCodeLine{1388 \textcolor{comment}{       | |}}
+\DoxyCodeLine{1389 \textcolor{comment}{        -\/}}
+\DoxyCodeLine{1390 \textcolor{comment}{         0}}
+\DoxyCodeLine{1391 \textcolor{comment}{}}
+\DoxyCodeLine{1392 \textcolor{comment}{          x}}
+\DoxyCodeLine{1393 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{1394 \textcolor{comment}{         | |}}
+\DoxyCodeLine{1395 \textcolor{comment}{S(x) =   |   sin(pi/2 t**2) dt.}}
+\DoxyCodeLine{1396 \textcolor{comment}{       | |}}
+\DoxyCodeLine{1397 \textcolor{comment}{        -\/}}
+\DoxyCodeLine{1398 \textcolor{comment}{         0}}
+\DoxyCodeLine{1399 \textcolor{comment}{}}
+\DoxyCodeLine{1400 \textcolor{comment}{}}
+\DoxyCodeLine{1401 \textcolor{comment}{The integrals are evaluated by a power series for x < 1.}}
+\DoxyCodeLine{1402 \textcolor{comment}{For x >= 1 auxiliary functions f(x) and g(x) are employed}}
+\DoxyCodeLine{1403 \textcolor{comment}{such that}}
+\DoxyCodeLine{1404 \textcolor{comment}{}}
+\DoxyCodeLine{1405 \textcolor{comment}{C(x) = 0.5 + f(x) sin( pi/2 x**2 ) -\/ g(x) cos( pi/2 x**2 )}}
+\DoxyCodeLine{1406 \textcolor{comment}{S(x) = 0.5 -\/ f(x) cos( pi/2 x**2 ) -\/ g(x) sin( pi/2 x**2 )}}
+\DoxyCodeLine{1407 \textcolor{comment}{}}
+\DoxyCodeLine{1408 \textcolor{comment}{}}
+\DoxyCodeLine{1409 \textcolor{comment}{}}
+\DoxyCodeLine{1410 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1411 \textcolor{comment}{}}
+\DoxyCodeLine{1412 \textcolor{comment}{ Relative error.}}
+\DoxyCodeLine{1413 \textcolor{comment}{}}
+\DoxyCodeLine{1414 \textcolor{comment}{Arithmetic  function   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1415 \textcolor{comment}{  IEEE       S(x)      0, 10       10000       2.0e-\/15     3.2e-\/16}}
+\DoxyCodeLine{1416 \textcolor{comment}{  IEEE       C(x)      0, 10       10000       1.8e-\/15     3.3e-\/16}}
+\DoxyCodeLine{1417 \textcolor{comment}{}}
+\DoxyCodeLine{1418 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1419 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1420 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1421 \textcolor{keywordtype}{void} fresnelintegral(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} \&c, \textcolor{keywordtype}{double} \&s, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1422 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1423 }
+\DoxyCodeLine{1424 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_PSIF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1425 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1426 \textcolor{comment}{Psi (digamma) function}}
+\DoxyCodeLine{1427 \textcolor{comment}{}}
+\DoxyCodeLine{1428 \textcolor{comment}{             d      -\/}}
+\DoxyCodeLine{1429 \textcolor{comment}{  psi(x)  =  -\/-\/ ln | (x)}}
+\DoxyCodeLine{1430 \textcolor{comment}{             dx}}
+\DoxyCodeLine{1431 \textcolor{comment}{}}
+\DoxyCodeLine{1432 \textcolor{comment}{is the logarithmic derivative of the gamma function.}}
+\DoxyCodeLine{1433 \textcolor{comment}{For integer x,}}
+\DoxyCodeLine{1434 \textcolor{comment}{                  n-\/1}}
+\DoxyCodeLine{1435 \textcolor{comment}{                   -\/}}
+\DoxyCodeLine{1436 \textcolor{comment}{psi(n) = -\/EUL  +   >  1/k.}}
+\DoxyCodeLine{1437 \textcolor{comment}{                   -\/}}
+\DoxyCodeLine{1438 \textcolor{comment}{                  k=1}}
+\DoxyCodeLine{1439 \textcolor{comment}{}}
+\DoxyCodeLine{1440 \textcolor{comment}{This formula is used for 0 < n <= 10.  If x is negative, it}}
+\DoxyCodeLine{1441 \textcolor{comment}{is transformed to a positive argument by the reflection}}
+\DoxyCodeLine{1442 \textcolor{comment}{formula  psi(1-\/x) = psi(x) + pi cot(pi x).}}
+\DoxyCodeLine{1443 \textcolor{comment}{For general positive x, the argument is made greater than 10}}
+\DoxyCodeLine{1444 \textcolor{comment}{using the recurrence  psi(x+1) = psi(x) + 1/x.}}
+\DoxyCodeLine{1445 \textcolor{comment}{Then the following asymptotic expansion is applied:}}
+\DoxyCodeLine{1446 \textcolor{comment}{}}
+\DoxyCodeLine{1447 \textcolor{comment}{                          inf.   B}}
+\DoxyCodeLine{1448 \textcolor{comment}{                           -\/      2k}}
+\DoxyCodeLine{1449 \textcolor{comment}{psi(x) = log(x) -\/ 1/2x -\/   >   -\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{1450 \textcolor{comment}{                           -\/        2k}}
+\DoxyCodeLine{1451 \textcolor{comment}{                          k=1   2k x}}
+\DoxyCodeLine{1452 \textcolor{comment}{}}
+\DoxyCodeLine{1453 \textcolor{comment}{where the B2k are Bernoulli numbers.}}
+\DoxyCodeLine{1454 \textcolor{comment}{}}
+\DoxyCodeLine{1455 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1456 \textcolor{comment}{   Relative error (except absolute when |psi| < 1):}}
+\DoxyCodeLine{1457 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1458 \textcolor{comment}{   IEEE      0,30        30000       1.3e-\/15     1.4e-\/16}}
+\DoxyCodeLine{1459 \textcolor{comment}{   IEEE      -\/30,0       40000       1.5e-\/15     2.2e-\/16}}
+\DoxyCodeLine{1460 \textcolor{comment}{}}
+\DoxyCodeLine{1461 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1462 \textcolor{comment}{Copyright 1984, 1987, 1992, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1463 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1464 \textcolor{keywordtype}{double} psi(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1465 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1466 }
+\DoxyCodeLine{1467 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AIRYF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1468 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1469 \textcolor{comment}{Airy function}}
+\DoxyCodeLine{1470 \textcolor{comment}{}}
+\DoxyCodeLine{1471 \textcolor{comment}{Solution of the differential equation}}
+\DoxyCodeLine{1472 \textcolor{comment}{}}
+\DoxyCodeLine{1473 \textcolor{comment}{y"{}(x) = xy.}}
+\DoxyCodeLine{1474 \textcolor{comment}{}}
+\DoxyCodeLine{1475 \textcolor{comment}{The function returns the two independent solutions Ai, Bi}}
+\DoxyCodeLine{1476 \textcolor{comment}{and their first derivatives Ai'(x), Bi'(x).}}
+\DoxyCodeLine{1477 \textcolor{comment}{}}
+\DoxyCodeLine{1478 \textcolor{comment}{Evaluation is by power series summation for small x,}}
+\DoxyCodeLine{1479 \textcolor{comment}{by rational minimax approximations for large x.}}
+\DoxyCodeLine{1480 \textcolor{comment}{}}
+\DoxyCodeLine{1481 \textcolor{comment}{}}
+\DoxyCodeLine{1482 \textcolor{comment}{}}
+\DoxyCodeLine{1483 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1484 \textcolor{comment}{Error criterion is absolute when function <= 1, relative}}
+\DoxyCodeLine{1485 \textcolor{comment}{when function > 1, except * denotes relative error criterion.}}
+\DoxyCodeLine{1486 \textcolor{comment}{For large negative x, the absolute error increases as x\string^1.5.}}
+\DoxyCodeLine{1487 \textcolor{comment}{For large positive x, the relative error increases as x\string^1.5.}}
+\DoxyCodeLine{1488 \textcolor{comment}{}}
+\DoxyCodeLine{1489 \textcolor{comment}{Arithmetic  domain   function  \# trials      peak         rms}}
+\DoxyCodeLine{1490 \textcolor{comment}{IEEE        -\/10, 0     Ai        10000       1.6e-\/15     2.7e-\/16}}
+\DoxyCodeLine{1491 \textcolor{comment}{IEEE          0, 10    Ai        10000       2.3e-\/14*    1.8e-\/15*}}
+\DoxyCodeLine{1492 \textcolor{comment}{IEEE        -\/10, 0     Ai'       10000       4.6e-\/15     7.6e-\/16}}
+\DoxyCodeLine{1493 \textcolor{comment}{IEEE          0, 10    Ai'       10000       1.8e-\/14*    1.5e-\/15*}}
+\DoxyCodeLine{1494 \textcolor{comment}{IEEE        -\/10, 10    Bi        30000       4.2e-\/15     5.3e-\/16}}
+\DoxyCodeLine{1495 \textcolor{comment}{IEEE        -\/10, 10    Bi'       30000       4.9e-\/15     7.3e-\/16}}
+\DoxyCodeLine{1496 \textcolor{comment}{}}
+\DoxyCodeLine{1497 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1498 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1499 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1500 \textcolor{keywordtype}{void} airy(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double} \&ai, \textcolor{keywordtype}{double} \&aip, \textcolor{keywordtype}{double} \&bi, \textcolor{keywordtype}{double} \&bip, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1501 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1502 }
+\DoxyCodeLine{1503 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_DAWSON) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1504 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1505 \textcolor{comment}{Dawson's Integral}}
+\DoxyCodeLine{1506 \textcolor{comment}{}}
+\DoxyCodeLine{1507 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{1508 \textcolor{comment}{}}
+\DoxyCodeLine{1509 \textcolor{comment}{                            x}}
+\DoxyCodeLine{1510 \textcolor{comment}{                            -\/}}
+\DoxyCodeLine{1511 \textcolor{comment}{                     2     | |        2}}
+\DoxyCodeLine{1512 \textcolor{comment}{ dawsn(x)  =  exp( -\/x  )   |    exp( t  ) dt}}
+\DoxyCodeLine{1513 \textcolor{comment}{                         | |}}
+\DoxyCodeLine{1514 \textcolor{comment}{                          -\/}}
+\DoxyCodeLine{1515 \textcolor{comment}{                          0}}
+\DoxyCodeLine{1516 \textcolor{comment}{}}
+\DoxyCodeLine{1517 \textcolor{comment}{Three different rational approximations are employed, for}}
+\DoxyCodeLine{1518 \textcolor{comment}{the intervals 0 to 3.25; 3.25 to 6.25; and 6.25 up.}}
+\DoxyCodeLine{1519 \textcolor{comment}{}}
+\DoxyCodeLine{1520 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1521 \textcolor{comment}{}}
+\DoxyCodeLine{1522 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1523 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1524 \textcolor{comment}{   IEEE      0,10        10000       6.9e-\/16     1.0e-\/16}}
+\DoxyCodeLine{1525 \textcolor{comment}{}}
+\DoxyCodeLine{1526 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1527 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1528 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1529 \textcolor{keywordtype}{double} dawsonintegral(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1530 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1531 }
+\DoxyCodeLine{1532 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HERMITE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1533 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1534 \textcolor{comment}{Calculation of the value of the Hermite polynomial.}}
+\DoxyCodeLine{1535 \textcolor{comment}{}}
+\DoxyCodeLine{1536 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1537 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1538 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1539 \textcolor{comment}{}}
+\DoxyCodeLine{1540 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1541 \textcolor{comment}{    the value of the Hermite polynomial Hn at x}}
+\DoxyCodeLine{1542 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1543 \textcolor{keywordtype}{double} hermitecalculate(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1544 }
+\DoxyCodeLine{1545 }
+\DoxyCodeLine{1546 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1547 \textcolor{comment}{Summation of Hermite polynomials using Clenshaw's recurrence formula.}}
+\DoxyCodeLine{1548 \textcolor{comment}{}}
+\DoxyCodeLine{1549 \textcolor{comment}{This routine calculates}}
+\DoxyCodeLine{1550 \textcolor{comment}{    c[0]*H0(x) + c[1]*H1(x) + ... + c[N]*HN(x)}}
+\DoxyCodeLine{1551 \textcolor{comment}{}}
+\DoxyCodeLine{1552 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1553 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1554 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1555 \textcolor{comment}{}}
+\DoxyCodeLine{1556 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1557 \textcolor{comment}{    the value of the Hermite polynomial at x}}
+\DoxyCodeLine{1558 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1559 \textcolor{keywordtype}{double} hermitesum(\textcolor{keyword}{const} real\_1d\_array \&c, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1560 }
+\DoxyCodeLine{1561 }
+\DoxyCodeLine{1562 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1563 \textcolor{comment}{Representation of Hn as C[0] + C[1]*X + ... + C[N]*X\string^N}}
+\DoxyCodeLine{1564 \textcolor{comment}{}}
+\DoxyCodeLine{1565 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1566 \textcolor{comment}{    N   -\/   polynomial degree, n>=0}}
+\DoxyCodeLine{1567 \textcolor{comment}{}}
+\DoxyCodeLine{1568 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1569 \textcolor{comment}{    C   -\/   coefficients}}
+\DoxyCodeLine{1570 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1571 \textcolor{keywordtype}{void} hermitecoefficients(\textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1572 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1573 }
+\DoxyCodeLine{1574 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LEGENDRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1575 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1576 \textcolor{comment}{Calculation of the value of the Legendre polynomial Pn.}}
+\DoxyCodeLine{1577 \textcolor{comment}{}}
+\DoxyCodeLine{1578 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1579 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1580 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1581 \textcolor{comment}{}}
+\DoxyCodeLine{1582 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1583 \textcolor{comment}{    the value of the Legendre polynomial Pn at x}}
+\DoxyCodeLine{1584 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1585 \textcolor{keywordtype}{double} legendrecalculate(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1586 }
+\DoxyCodeLine{1587 }
+\DoxyCodeLine{1588 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1589 \textcolor{comment}{Summation of Legendre polynomials using Clenshaw's recurrence formula.}}
+\DoxyCodeLine{1590 \textcolor{comment}{}}
+\DoxyCodeLine{1591 \textcolor{comment}{This routine calculates}}
+\DoxyCodeLine{1592 \textcolor{comment}{    c[0]*P0(x) + c[1]*P1(x) + ... + c[N]*PN(x)}}
+\DoxyCodeLine{1593 \textcolor{comment}{}}
+\DoxyCodeLine{1594 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1595 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1596 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1597 \textcolor{comment}{}}
+\DoxyCodeLine{1598 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1599 \textcolor{comment}{    the value of the Legendre polynomial at x}}
+\DoxyCodeLine{1600 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1601 \textcolor{keywordtype}{double} legendresum(\textcolor{keyword}{const} real\_1d\_array \&c, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1602 }
+\DoxyCodeLine{1603 }
+\DoxyCodeLine{1604 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1605 \textcolor{comment}{Representation of Pn as C[0] + C[1]*X + ... + C[N]*X\string^N}}
+\DoxyCodeLine{1606 \textcolor{comment}{}}
+\DoxyCodeLine{1607 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1608 \textcolor{comment}{    N   -\/   polynomial degree, n>=0}}
+\DoxyCodeLine{1609 \textcolor{comment}{}}
+\DoxyCodeLine{1610 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1611 \textcolor{comment}{    C   -\/   coefficients}}
+\DoxyCodeLine{1612 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1613 \textcolor{keywordtype}{void} legendrecoefficients(\textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1614 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1615 }
+\DoxyCodeLine{1616 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BESSEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1617 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1618 \textcolor{comment}{Bessel function of order zero}}
+\DoxyCodeLine{1619 \textcolor{comment}{}}
+\DoxyCodeLine{1620 \textcolor{comment}{Returns Bessel function of order zero of the argument.}}
+\DoxyCodeLine{1621 \textcolor{comment}{}}
+\DoxyCodeLine{1622 \textcolor{comment}{The domain is divided into the intervals [0, 5] and}}
+\DoxyCodeLine{1623 \textcolor{comment}{(5, infinity). In the first interval the following rational}}
+\DoxyCodeLine{1624 \textcolor{comment}{approximation is used:}}
+\DoxyCodeLine{1625 \textcolor{comment}{}}
+\DoxyCodeLine{1626 \textcolor{comment}{}}
+\DoxyCodeLine{1627 \textcolor{comment}{       2         2}}
+\DoxyCodeLine{1628 \textcolor{comment}{(w -\/ r  ) (w -\/ r  ) P (w) / Q (w)}}
+\DoxyCodeLine{1629 \textcolor{comment}{      1         2    3       8}}
+\DoxyCodeLine{1630 \textcolor{comment}{}}
+\DoxyCodeLine{1631 \textcolor{comment}{           2}}
+\DoxyCodeLine{1632 \textcolor{comment}{where w = x  and the two r's are zeros of the function.}}
+\DoxyCodeLine{1633 \textcolor{comment}{}}
+\DoxyCodeLine{1634 \textcolor{comment}{In the second interval, the Hankel asymptotic expansion}}
+\DoxyCodeLine{1635 \textcolor{comment}{is employed with two rational functions of degree 6/6}}
+\DoxyCodeLine{1636 \textcolor{comment}{and 7/7.}}
+\DoxyCodeLine{1637 \textcolor{comment}{}}
+\DoxyCodeLine{1638 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1639 \textcolor{comment}{}}
+\DoxyCodeLine{1640 \textcolor{comment}{                     Absolute error:}}
+\DoxyCodeLine{1641 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1642 \textcolor{comment}{   IEEE      0, 30       60000       4.2e-\/16     1.1e-\/16}}
+\DoxyCodeLine{1643 \textcolor{comment}{}}
+\DoxyCodeLine{1644 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1645 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1646 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1647 \textcolor{keywordtype}{double} besselj0(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1648 }
+\DoxyCodeLine{1649 }
+\DoxyCodeLine{1650 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1651 \textcolor{comment}{Bessel function of order one}}
+\DoxyCodeLine{1652 \textcolor{comment}{}}
+\DoxyCodeLine{1653 \textcolor{comment}{Returns Bessel function of order one of the argument.}}
+\DoxyCodeLine{1654 \textcolor{comment}{}}
+\DoxyCodeLine{1655 \textcolor{comment}{The domain is divided into the intervals [0, 8] and}}
+\DoxyCodeLine{1656 \textcolor{comment}{(8, infinity). In the first interval a 24 term Chebyshev}}
+\DoxyCodeLine{1657 \textcolor{comment}{expansion is used. In the second, the asymptotic}}
+\DoxyCodeLine{1658 \textcolor{comment}{trigonometric representation is employed using two}}
+\DoxyCodeLine{1659 \textcolor{comment}{rational functions of degree 5/5.}}
+\DoxyCodeLine{1660 \textcolor{comment}{}}
+\DoxyCodeLine{1661 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1662 \textcolor{comment}{}}
+\DoxyCodeLine{1663 \textcolor{comment}{                     Absolute error:}}
+\DoxyCodeLine{1664 \textcolor{comment}{arithmetic   domain      \# trials      peak         rms}}
+\DoxyCodeLine{1665 \textcolor{comment}{   IEEE      0, 30       30000       2.6e-\/16     1.1e-\/16}}
+\DoxyCodeLine{1666 \textcolor{comment}{}}
+\DoxyCodeLine{1667 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1668 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1669 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1670 \textcolor{keywordtype}{double} besselj1(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1671 }
+\DoxyCodeLine{1672 }
+\DoxyCodeLine{1673 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1674 \textcolor{comment}{Bessel function of integer order}}
+\DoxyCodeLine{1675 \textcolor{comment}{}}
+\DoxyCodeLine{1676 \textcolor{comment}{Returns Bessel function of order n, where n is a}}
+\DoxyCodeLine{1677 \textcolor{comment}{(possibly negative) integer.}}
+\DoxyCodeLine{1678 \textcolor{comment}{}}
+\DoxyCodeLine{1679 \textcolor{comment}{The ratio of jn(x) to j0(x) is computed by backward}}
+\DoxyCodeLine{1680 \textcolor{comment}{recurrence.  First the ratio jn/jn-\/1 is found by a}}
+\DoxyCodeLine{1681 \textcolor{comment}{continued fraction expansion.  Then the recurrence}}
+\DoxyCodeLine{1682 \textcolor{comment}{relating successive orders is applied until j0 or j1 is}}
+\DoxyCodeLine{1683 \textcolor{comment}{reached.}}
+\DoxyCodeLine{1684 \textcolor{comment}{}}
+\DoxyCodeLine{1685 \textcolor{comment}{If n = 0 or 1 the routine for j0 or j1 is called}}
+\DoxyCodeLine{1686 \textcolor{comment}{directly.}}
+\DoxyCodeLine{1687 \textcolor{comment}{}}
+\DoxyCodeLine{1688 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1689 \textcolor{comment}{}}
+\DoxyCodeLine{1690 \textcolor{comment}{                     Absolute error:}}
+\DoxyCodeLine{1691 \textcolor{comment}{arithmetic   range      \# trials      peak         rms}}
+\DoxyCodeLine{1692 \textcolor{comment}{   IEEE      0, 30        5000       4.4e-\/16     7.9e-\/17}}
+\DoxyCodeLine{1693 \textcolor{comment}{}}
+\DoxyCodeLine{1694 \textcolor{comment}{}}
+\DoxyCodeLine{1695 \textcolor{comment}{Not suitable for large n or x. Use jv() (fractional order) instead.}}
+\DoxyCodeLine{1696 \textcolor{comment}{}}
+\DoxyCodeLine{1697 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1698 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1699 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1700 \textcolor{keywordtype}{double} besseljn(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1701 }
+\DoxyCodeLine{1702 }
+\DoxyCodeLine{1703 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1704 \textcolor{comment}{Bessel function of the second kind, order zero}}
+\DoxyCodeLine{1705 \textcolor{comment}{}}
+\DoxyCodeLine{1706 \textcolor{comment}{Returns Bessel function of the second kind, of order}}
+\DoxyCodeLine{1707 \textcolor{comment}{zero, of the argument.}}
+\DoxyCodeLine{1708 \textcolor{comment}{}}
+\DoxyCodeLine{1709 \textcolor{comment}{The domain is divided into the intervals [0, 5] and}}
+\DoxyCodeLine{1710 \textcolor{comment}{(5, infinity). In the first interval a rational approximation}}
+\DoxyCodeLine{1711 \textcolor{comment}{R(x) is employed to compute}}
+\DoxyCodeLine{1712 \textcolor{comment}{  y0(x)  = R(x)  +   2 * log(x) * j0(x) / PI.}}
+\DoxyCodeLine{1713 \textcolor{comment}{Thus a call to j0() is required.}}
+\DoxyCodeLine{1714 \textcolor{comment}{}}
+\DoxyCodeLine{1715 \textcolor{comment}{In the second interval, the Hankel asymptotic expansion}}
+\DoxyCodeLine{1716 \textcolor{comment}{is employed with two rational functions of degree 6/6}}
+\DoxyCodeLine{1717 \textcolor{comment}{and 7/7.}}
+\DoxyCodeLine{1718 \textcolor{comment}{}}
+\DoxyCodeLine{1719 \textcolor{comment}{}}
+\DoxyCodeLine{1720 \textcolor{comment}{}}
+\DoxyCodeLine{1721 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1722 \textcolor{comment}{}}
+\DoxyCodeLine{1723 \textcolor{comment}{ Absolute error, when y0(x) < 1; else relative error:}}
+\DoxyCodeLine{1724 \textcolor{comment}{}}
+\DoxyCodeLine{1725 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1726 \textcolor{comment}{   IEEE      0, 30       30000       1.3e-\/15     1.6e-\/16}}
+\DoxyCodeLine{1727 \textcolor{comment}{}}
+\DoxyCodeLine{1728 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1729 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1730 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1731 \textcolor{keywordtype}{double} bessely0(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1732 }
+\DoxyCodeLine{1733 }
+\DoxyCodeLine{1734 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1735 \textcolor{comment}{Bessel function of second kind of order one}}
+\DoxyCodeLine{1736 \textcolor{comment}{}}
+\DoxyCodeLine{1737 \textcolor{comment}{Returns Bessel function of the second kind of order one}}
+\DoxyCodeLine{1738 \textcolor{comment}{of the argument.}}
+\DoxyCodeLine{1739 \textcolor{comment}{}}
+\DoxyCodeLine{1740 \textcolor{comment}{The domain is divided into the intervals [0, 8] and}}
+\DoxyCodeLine{1741 \textcolor{comment}{(8, infinity). In the first interval a 25 term Chebyshev}}
+\DoxyCodeLine{1742 \textcolor{comment}{expansion is used, and a call to j1() is required.}}
+\DoxyCodeLine{1743 \textcolor{comment}{In the second, the asymptotic trigonometric representation}}
+\DoxyCodeLine{1744 \textcolor{comment}{is employed using two rational functions of degree 5/5.}}
+\DoxyCodeLine{1745 \textcolor{comment}{}}
+\DoxyCodeLine{1746 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1747 \textcolor{comment}{}}
+\DoxyCodeLine{1748 \textcolor{comment}{                     Absolute error:}}
+\DoxyCodeLine{1749 \textcolor{comment}{arithmetic   domain      \# trials      peak         rms}}
+\DoxyCodeLine{1750 \textcolor{comment}{   IEEE      0, 30       30000       1.0e-\/15     1.3e-\/16}}
+\DoxyCodeLine{1751 \textcolor{comment}{}}
+\DoxyCodeLine{1752 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1753 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1754 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1755 \textcolor{keywordtype}{double} bessely1(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1756 }
+\DoxyCodeLine{1757 }
+\DoxyCodeLine{1758 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1759 \textcolor{comment}{Bessel function of second kind of integer order}}
+\DoxyCodeLine{1760 \textcolor{comment}{}}
+\DoxyCodeLine{1761 \textcolor{comment}{Returns Bessel function of order n, where n is a}}
+\DoxyCodeLine{1762 \textcolor{comment}{(possibly negative) integer.}}
+\DoxyCodeLine{1763 \textcolor{comment}{}}
+\DoxyCodeLine{1764 \textcolor{comment}{The function is evaluated by forward recurrence on}}
+\DoxyCodeLine{1765 \textcolor{comment}{n, starting with values computed by the routines}}
+\DoxyCodeLine{1766 \textcolor{comment}{y0() and y1().}}
+\DoxyCodeLine{1767 \textcolor{comment}{}}
+\DoxyCodeLine{1768 \textcolor{comment}{If n = 0 or 1 the routine for y0 or y1 is called}}
+\DoxyCodeLine{1769 \textcolor{comment}{directly.}}
+\DoxyCodeLine{1770 \textcolor{comment}{}}
+\DoxyCodeLine{1771 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1772 \textcolor{comment}{                     Absolute error, except relative}}
+\DoxyCodeLine{1773 \textcolor{comment}{                     when y > 1:}}
+\DoxyCodeLine{1774 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1775 \textcolor{comment}{   IEEE      0, 30       30000       3.4e-\/15     4.3e-\/16}}
+\DoxyCodeLine{1776 \textcolor{comment}{}}
+\DoxyCodeLine{1777 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1778 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1779 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1780 \textcolor{keywordtype}{double} besselyn(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1781 }
+\DoxyCodeLine{1782 }
+\DoxyCodeLine{1783 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1784 \textcolor{comment}{Modified Bessel function of order zero}}
+\DoxyCodeLine{1785 \textcolor{comment}{}}
+\DoxyCodeLine{1786 \textcolor{comment}{Returns modified Bessel function of order zero of the}}
+\DoxyCodeLine{1787 \textcolor{comment}{argument.}}
+\DoxyCodeLine{1788 \textcolor{comment}{}}
+\DoxyCodeLine{1789 \textcolor{comment}{The function is defined as i0(x) = j0( ix ).}}
+\DoxyCodeLine{1790 \textcolor{comment}{}}
+\DoxyCodeLine{1791 \textcolor{comment}{The range is partitioned into the two intervals [0,8] and}}
+\DoxyCodeLine{1792 \textcolor{comment}{(8, infinity).  Chebyshev polynomial expansions are employed}}
+\DoxyCodeLine{1793 \textcolor{comment}{in each interval.}}
+\DoxyCodeLine{1794 \textcolor{comment}{}}
+\DoxyCodeLine{1795 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1796 \textcolor{comment}{}}
+\DoxyCodeLine{1797 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1798 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1799 \textcolor{comment}{   IEEE      0,30        30000       5.8e-\/16     1.4e-\/16}}
+\DoxyCodeLine{1800 \textcolor{comment}{}}
+\DoxyCodeLine{1801 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1802 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1803 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1804 \textcolor{keywordtype}{double} besseli0(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1805 }
+\DoxyCodeLine{1806 }
+\DoxyCodeLine{1807 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1808 \textcolor{comment}{Modified Bessel function of order one}}
+\DoxyCodeLine{1809 \textcolor{comment}{}}
+\DoxyCodeLine{1810 \textcolor{comment}{Returns modified Bessel function of order one of the}}
+\DoxyCodeLine{1811 \textcolor{comment}{argument.}}
+\DoxyCodeLine{1812 \textcolor{comment}{}}
+\DoxyCodeLine{1813 \textcolor{comment}{The function is defined as i1(x) = -\/i j1( ix ).}}
+\DoxyCodeLine{1814 \textcolor{comment}{}}
+\DoxyCodeLine{1815 \textcolor{comment}{The range is partitioned into the two intervals [0,8] and}}
+\DoxyCodeLine{1816 \textcolor{comment}{(8, infinity).  Chebyshev polynomial expansions are employed}}
+\DoxyCodeLine{1817 \textcolor{comment}{in each interval.}}
+\DoxyCodeLine{1818 \textcolor{comment}{}}
+\DoxyCodeLine{1819 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1820 \textcolor{comment}{}}
+\DoxyCodeLine{1821 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1822 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1823 \textcolor{comment}{   IEEE      0, 30       30000       1.9e-\/15     2.1e-\/16}}
+\DoxyCodeLine{1824 \textcolor{comment}{}}
+\DoxyCodeLine{1825 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1826 \textcolor{comment}{Copyright 1985, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1827 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1828 \textcolor{keywordtype}{double} besseli1(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1829 }
+\DoxyCodeLine{1830 }
+\DoxyCodeLine{1831 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1832 \textcolor{comment}{Modified Bessel function, second kind, order zero}}
+\DoxyCodeLine{1833 \textcolor{comment}{}}
+\DoxyCodeLine{1834 \textcolor{comment}{Returns modified Bessel function of the second kind}}
+\DoxyCodeLine{1835 \textcolor{comment}{of order zero of the argument.}}
+\DoxyCodeLine{1836 \textcolor{comment}{}}
+\DoxyCodeLine{1837 \textcolor{comment}{The range is partitioned into the two intervals [0,8] and}}
+\DoxyCodeLine{1838 \textcolor{comment}{(8, infinity).  Chebyshev polynomial expansions are employed}}
+\DoxyCodeLine{1839 \textcolor{comment}{in each interval.}}
+\DoxyCodeLine{1840 \textcolor{comment}{}}
+\DoxyCodeLine{1841 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1842 \textcolor{comment}{}}
+\DoxyCodeLine{1843 \textcolor{comment}{Tested at 2000 random points between 0 and 8.  Peak absolute}}
+\DoxyCodeLine{1844 \textcolor{comment}{error (relative when K0 > 1) was 1.46e-\/14; rms, 4.26e-\/15.}}
+\DoxyCodeLine{1845 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1846 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1847 \textcolor{comment}{   IEEE      0, 30       30000       1.2e-\/15     1.6e-\/16}}
+\DoxyCodeLine{1848 \textcolor{comment}{}}
+\DoxyCodeLine{1849 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1850 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1851 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1852 \textcolor{keywordtype}{double} besselk0(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1853 }
+\DoxyCodeLine{1854 }
+\DoxyCodeLine{1855 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1856 \textcolor{comment}{Modified Bessel function, second kind, order one}}
+\DoxyCodeLine{1857 \textcolor{comment}{}}
+\DoxyCodeLine{1858 \textcolor{comment}{Computes the modified Bessel function of the second kind}}
+\DoxyCodeLine{1859 \textcolor{comment}{of order one of the argument.}}
+\DoxyCodeLine{1860 \textcolor{comment}{}}
+\DoxyCodeLine{1861 \textcolor{comment}{The range is partitioned into the two intervals [0,2] and}}
+\DoxyCodeLine{1862 \textcolor{comment}{(2, infinity).  Chebyshev polynomial expansions are employed}}
+\DoxyCodeLine{1863 \textcolor{comment}{in each interval.}}
+\DoxyCodeLine{1864 \textcolor{comment}{}}
+\DoxyCodeLine{1865 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1866 \textcolor{comment}{}}
+\DoxyCodeLine{1867 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1868 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1869 \textcolor{comment}{   IEEE      0, 30       30000       1.2e-\/15     1.6e-\/16}}
+\DoxyCodeLine{1870 \textcolor{comment}{}}
+\DoxyCodeLine{1871 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1872 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1873 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1874 \textcolor{keywordtype}{double} besselk1(\textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1875 }
+\DoxyCodeLine{1876 }
+\DoxyCodeLine{1877 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1878 \textcolor{comment}{Modified Bessel function, second kind, integer order}}
+\DoxyCodeLine{1879 \textcolor{comment}{}}
+\DoxyCodeLine{1880 \textcolor{comment}{Returns modified Bessel function of the second kind}}
+\DoxyCodeLine{1881 \textcolor{comment}{of order n of the argument.}}
+\DoxyCodeLine{1882 \textcolor{comment}{}}
+\DoxyCodeLine{1883 \textcolor{comment}{The range is partitioned into the two intervals [0,9.55] and}}
+\DoxyCodeLine{1884 \textcolor{comment}{(9.55, infinity).  An ascending power series is used in the}}
+\DoxyCodeLine{1885 \textcolor{comment}{low range, and an asymptotic expansion in the high range.}}
+\DoxyCodeLine{1886 \textcolor{comment}{}}
+\DoxyCodeLine{1887 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1888 \textcolor{comment}{}}
+\DoxyCodeLine{1889 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1890 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1891 \textcolor{comment}{   IEEE      0,30        90000       1.8e-\/8      3.0e-\/10}}
+\DoxyCodeLine{1892 \textcolor{comment}{}}
+\DoxyCodeLine{1893 \textcolor{comment}{Error is high only near the crossover point x = 9.55}}
+\DoxyCodeLine{1894 \textcolor{comment}{between the two expansions used.}}
+\DoxyCodeLine{1895 \textcolor{comment}{}}
+\DoxyCodeLine{1896 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{1897 \textcolor{comment}{Copyright 1984, 1987, 1988, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1898 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1899 \textcolor{keywordtype}{double} besselkn(\textcolor{keyword}{const} ae\_int\_t nn, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1900 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1901 }
+\DoxyCodeLine{1902 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LAGUERRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1903 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1904 \textcolor{comment}{Calculation of the value of the Laguerre polynomial.}}
+\DoxyCodeLine{1905 \textcolor{comment}{}}
+\DoxyCodeLine{1906 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1907 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1908 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1909 \textcolor{comment}{}}
+\DoxyCodeLine{1910 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1911 \textcolor{comment}{    the value of the Laguerre polynomial Ln at x}}
+\DoxyCodeLine{1912 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1913 \textcolor{keywordtype}{double} laguerrecalculate(\textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1914 }
+\DoxyCodeLine{1915 }
+\DoxyCodeLine{1916 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1917 \textcolor{comment}{Summation of Laguerre polynomials using Clenshaw's recurrence formula.}}
+\DoxyCodeLine{1918 \textcolor{comment}{}}
+\DoxyCodeLine{1919 \textcolor{comment}{This routine calculates c[0]*L0(x) + c[1]*L1(x) + ... + c[N]*LN(x)}}
+\DoxyCodeLine{1920 \textcolor{comment}{}}
+\DoxyCodeLine{1921 \textcolor{comment}{Parameters:}}
+\DoxyCodeLine{1922 \textcolor{comment}{    n   -\/   degree, n>=0}}
+\DoxyCodeLine{1923 \textcolor{comment}{    x   -\/   argument}}
+\DoxyCodeLine{1924 \textcolor{comment}{}}
+\DoxyCodeLine{1925 \textcolor{comment}{Result:}}
+\DoxyCodeLine{1926 \textcolor{comment}{    the value of the Laguerre polynomial at x}}
+\DoxyCodeLine{1927 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1928 \textcolor{keywordtype}{double} laguerresum(\textcolor{keyword}{const} real\_1d\_array \&c, \textcolor{keyword}{const} ae\_int\_t n, \textcolor{keyword}{const} \textcolor{keywordtype}{double} x, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1929 }
+\DoxyCodeLine{1930 }
+\DoxyCodeLine{1931 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1932 \textcolor{comment}{Representation of Ln as C[0] + C[1]*X + ... + C[N]*X\string^N}}
+\DoxyCodeLine{1933 \textcolor{comment}{}}
+\DoxyCodeLine{1934 \textcolor{comment}{Input parameters:}}
+\DoxyCodeLine{1935 \textcolor{comment}{    N   -\/   polynomial degree, n>=0}}
+\DoxyCodeLine{1936 \textcolor{comment}{}}
+\DoxyCodeLine{1937 \textcolor{comment}{Output parameters:}}
+\DoxyCodeLine{1938 \textcolor{comment}{    C   -\/   coefficients}}
+\DoxyCodeLine{1939 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1940 \textcolor{keywordtype}{void} laguerrecoefficients(\textcolor{keyword}{const} ae\_int\_t n, real\_1d\_array \&c, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1941 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1942 }
+\DoxyCodeLine{1943 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{1944 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1945 \textcolor{comment}{Complete elliptic integral of the first kind}}
+\DoxyCodeLine{1946 \textcolor{comment}{}}
+\DoxyCodeLine{1947 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{1948 \textcolor{comment}{}}
+\DoxyCodeLine{1949 \textcolor{comment}{}}
+\DoxyCodeLine{1950 \textcolor{comment}{}}
+\DoxyCodeLine{1951 \textcolor{comment}{           pi/2}}
+\DoxyCodeLine{1952 \textcolor{comment}{            -\/}}
+\DoxyCodeLine{1953 \textcolor{comment}{           | |}}
+\DoxyCodeLine{1954 \textcolor{comment}{           |           dt}}
+\DoxyCodeLine{1955 \textcolor{comment}{K(m)  =    |    -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{1956 \textcolor{comment}{           |                   2}}
+\DoxyCodeLine{1957 \textcolor{comment}{         | |    sqrt( 1 -\/ m sin t )}}
+\DoxyCodeLine{1958 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{1959 \textcolor{comment}{           0}}
+\DoxyCodeLine{1960 \textcolor{comment}{}}
+\DoxyCodeLine{1961 \textcolor{comment}{using the approximation}}
+\DoxyCodeLine{1962 \textcolor{comment}{}}
+\DoxyCodeLine{1963 \textcolor{comment}{    P(x)  -\/  log x Q(x).}}
+\DoxyCodeLine{1964 \textcolor{comment}{}}
+\DoxyCodeLine{1965 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{1966 \textcolor{comment}{}}
+\DoxyCodeLine{1967 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{1968 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{1969 \textcolor{comment}{   IEEE       0,1        30000       2.5e-\/16     6.8e-\/17}}
+\DoxyCodeLine{1970 \textcolor{comment}{}}
+\DoxyCodeLine{1971 \textcolor{comment}{Cephes Math Library, Release 2.8:  June, 2000}}
+\DoxyCodeLine{1972 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{1973 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{1974 \textcolor{keywordtype}{double} ellipticintegralk(\textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{1975 }
+\DoxyCodeLine{1976 }
+\DoxyCodeLine{1977 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{1978 \textcolor{comment}{Complete elliptic integral of the first kind}}
+\DoxyCodeLine{1979 \textcolor{comment}{}}
+\DoxyCodeLine{1980 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{1981 \textcolor{comment}{}}
+\DoxyCodeLine{1982 \textcolor{comment}{}}
+\DoxyCodeLine{1983 \textcolor{comment}{}}
+\DoxyCodeLine{1984 \textcolor{comment}{           pi/2}}
+\DoxyCodeLine{1985 \textcolor{comment}{            -\/}}
+\DoxyCodeLine{1986 \textcolor{comment}{           | |}}
+\DoxyCodeLine{1987 \textcolor{comment}{           |           dt}}
+\DoxyCodeLine{1988 \textcolor{comment}{K(m)  =    |    -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{1989 \textcolor{comment}{           |                   2}}
+\DoxyCodeLine{1990 \textcolor{comment}{         | |    sqrt( 1 -\/ m sin t )}}
+\DoxyCodeLine{1991 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{1992 \textcolor{comment}{           0}}
+\DoxyCodeLine{1993 \textcolor{comment}{}}
+\DoxyCodeLine{1994 \textcolor{comment}{where m = 1 -\/ m1, using the approximation}}
+\DoxyCodeLine{1995 \textcolor{comment}{}}
+\DoxyCodeLine{1996 \textcolor{comment}{    P(x)  -\/  log x Q(x).}}
+\DoxyCodeLine{1997 \textcolor{comment}{}}
+\DoxyCodeLine{1998 \textcolor{comment}{The argument m1 is used rather than m so that the logarithmic}}
+\DoxyCodeLine{1999 \textcolor{comment}{singularity at m = 1 will be shifted to the origin; this}}
+\DoxyCodeLine{2000 \textcolor{comment}{preserves maximum accuracy.}}
+\DoxyCodeLine{2001 \textcolor{comment}{}}
+\DoxyCodeLine{2002 \textcolor{comment}{K(0) = pi/2.}}
+\DoxyCodeLine{2003 \textcolor{comment}{}}
+\DoxyCodeLine{2004 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{2005 \textcolor{comment}{}}
+\DoxyCodeLine{2006 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{2007 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{2008 \textcolor{comment}{   IEEE       0,1        30000       2.5e-\/16     6.8e-\/17}}
+\DoxyCodeLine{2009 \textcolor{comment}{}}
+\DoxyCodeLine{2010 \textcolor{comment}{Cephes Math Library, Release 2.8:  June, 2000}}
+\DoxyCodeLine{2011 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{2012 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{2013 \textcolor{keywordtype}{double} ellipticintegralkhighprecision(\textcolor{keyword}{const} \textcolor{keywordtype}{double} m1, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{2014 }
+\DoxyCodeLine{2015 }
+\DoxyCodeLine{2016 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2017 \textcolor{comment}{Incomplete elliptic integral of the first kind F(phi|m)}}
+\DoxyCodeLine{2018 \textcolor{comment}{}}
+\DoxyCodeLine{2019 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{2020 \textcolor{comment}{}}
+\DoxyCodeLine{2021 \textcolor{comment}{}}
+\DoxyCodeLine{2022 \textcolor{comment}{}}
+\DoxyCodeLine{2023 \textcolor{comment}{               phi}}
+\DoxyCodeLine{2024 \textcolor{comment}{                -\/}}
+\DoxyCodeLine{2025 \textcolor{comment}{               | |}}
+\DoxyCodeLine{2026 \textcolor{comment}{               |           dt}}
+\DoxyCodeLine{2027 \textcolor{comment}{F(phi\_\(\backslash\)m)  =    |    -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{2028 \textcolor{comment}{               |                   2}}
+\DoxyCodeLine{2029 \textcolor{comment}{             | |    sqrt( 1 -\/ m sin t )}}
+\DoxyCodeLine{2030 \textcolor{comment}{              -\/}}
+\DoxyCodeLine{2031 \textcolor{comment}{               0}}
+\DoxyCodeLine{2032 \textcolor{comment}{}}
+\DoxyCodeLine{2033 \textcolor{comment}{of amplitude phi and modulus m, using the arithmetic -\/}}
+\DoxyCodeLine{2034 \textcolor{comment}{geometric mean algorithm.}}
+\DoxyCodeLine{2035 \textcolor{comment}{}}
+\DoxyCodeLine{2036 \textcolor{comment}{}}
+\DoxyCodeLine{2037 \textcolor{comment}{}}
+\DoxyCodeLine{2038 \textcolor{comment}{}}
+\DoxyCodeLine{2039 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{2040 \textcolor{comment}{}}
+\DoxyCodeLine{2041 \textcolor{comment}{Tested at random points with m in [0, 1] and phi as indicated.}}
+\DoxyCodeLine{2042 \textcolor{comment}{}}
+\DoxyCodeLine{2043 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{2044 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{2045 \textcolor{comment}{   IEEE     -\/10,10       200000      7.4e-\/16     1.0e-\/16}}
+\DoxyCodeLine{2046 \textcolor{comment}{}}
+\DoxyCodeLine{2047 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{2048 \textcolor{comment}{Copyright 1984, 1987, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{2049 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{2050 \textcolor{keywordtype}{double} incompleteellipticintegralk(\textcolor{keyword}{const} \textcolor{keywordtype}{double} phi, \textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{2051 }
+\DoxyCodeLine{2052 }
+\DoxyCodeLine{2053 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2054 \textcolor{comment}{Complete elliptic integral of the second kind}}
+\DoxyCodeLine{2055 \textcolor{comment}{}}
+\DoxyCodeLine{2056 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{2057 \textcolor{comment}{}}
+\DoxyCodeLine{2058 \textcolor{comment}{}}
+\DoxyCodeLine{2059 \textcolor{comment}{           pi/2}}
+\DoxyCodeLine{2060 \textcolor{comment}{            -\/}}
+\DoxyCodeLine{2061 \textcolor{comment}{           | |                 2}}
+\DoxyCodeLine{2062 \textcolor{comment}{E(m)  =    |    sqrt( 1 -\/ m sin t ) dt}}
+\DoxyCodeLine{2063 \textcolor{comment}{         | |}}
+\DoxyCodeLine{2064 \textcolor{comment}{          -\/}}
+\DoxyCodeLine{2065 \textcolor{comment}{           0}}
+\DoxyCodeLine{2066 \textcolor{comment}{}}
+\DoxyCodeLine{2067 \textcolor{comment}{using the approximation}}
+\DoxyCodeLine{2068 \textcolor{comment}{}}
+\DoxyCodeLine{2069 \textcolor{comment}{     P(x)  -\/  x log x Q(x).}}
+\DoxyCodeLine{2070 \textcolor{comment}{}}
+\DoxyCodeLine{2071 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{2072 \textcolor{comment}{}}
+\DoxyCodeLine{2073 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{2074 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{2075 \textcolor{comment}{   IEEE       0, 1       10000       2.1e-\/16     7.3e-\/17}}
+\DoxyCodeLine{2076 \textcolor{comment}{}}
+\DoxyCodeLine{2077 \textcolor{comment}{Cephes Math Library, Release 2.8: June, 2000}}
+\DoxyCodeLine{2078 \textcolor{comment}{Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{2079 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{2080 \textcolor{keywordtype}{double} ellipticintegrale(\textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{2081 }
+\DoxyCodeLine{2082 }
+\DoxyCodeLine{2083 \textcolor{comment}{/*************************************************************************}}
+\DoxyCodeLine{2084 \textcolor{comment}{Incomplete elliptic integral of the second kind}}
+\DoxyCodeLine{2085 \textcolor{comment}{}}
+\DoxyCodeLine{2086 \textcolor{comment}{Approximates the integral}}
+\DoxyCodeLine{2087 \textcolor{comment}{}}
+\DoxyCodeLine{2088 \textcolor{comment}{}}
+\DoxyCodeLine{2089 \textcolor{comment}{               phi}}
+\DoxyCodeLine{2090 \textcolor{comment}{                -\/}}
+\DoxyCodeLine{2091 \textcolor{comment}{               | |}}
+\DoxyCodeLine{2092 \textcolor{comment}{               |                   2}}
+\DoxyCodeLine{2093 \textcolor{comment}{E(phi\_\(\backslash\)m)  =    |    sqrt( 1 -\/ m sin t ) dt}}
+\DoxyCodeLine{2094 \textcolor{comment}{               |}}
+\DoxyCodeLine{2095 \textcolor{comment}{             | |}}
+\DoxyCodeLine{2096 \textcolor{comment}{              -\/}}
+\DoxyCodeLine{2097 \textcolor{comment}{               0}}
+\DoxyCodeLine{2098 \textcolor{comment}{}}
+\DoxyCodeLine{2099 \textcolor{comment}{of amplitude phi and modulus m, using the arithmetic -\/}}
+\DoxyCodeLine{2100 \textcolor{comment}{geometric mean algorithm.}}
+\DoxyCodeLine{2101 \textcolor{comment}{}}
+\DoxyCodeLine{2102 \textcolor{comment}{ACCURACY:}}
+\DoxyCodeLine{2103 \textcolor{comment}{}}
+\DoxyCodeLine{2104 \textcolor{comment}{Tested at random arguments with phi in [-\/10, 10] and m in}}
+\DoxyCodeLine{2105 \textcolor{comment}{[0, 1].}}
+\DoxyCodeLine{2106 \textcolor{comment}{                     Relative error:}}
+\DoxyCodeLine{2107 \textcolor{comment}{arithmetic   domain     \# trials      peak         rms}}
+\DoxyCodeLine{2108 \textcolor{comment}{   IEEE     -\/10,10      150000       3.3e-\/15     1.4e-\/16}}
+\DoxyCodeLine{2109 \textcolor{comment}{}}
+\DoxyCodeLine{2110 \textcolor{comment}{Cephes Math Library Release 2.8:  June, 2000}}
+\DoxyCodeLine{2111 \textcolor{comment}{Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier}}
+\DoxyCodeLine{2112 \textcolor{comment}{*************************************************************************/}}
+\DoxyCodeLine{2113 \textcolor{keywordtype}{double} incompleteellipticintegrale(\textcolor{keyword}{const} \textcolor{keywordtype}{double} phi, \textcolor{keyword}{const} \textcolor{keywordtype}{double} m, \textcolor{keyword}{const} xparams \_xparams = alglib::xdefault);}
+\DoxyCodeLine{2114 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2115 \}}
+\DoxyCodeLine{2116 }
+\DoxyCodeLine{2118 \textcolor{comment}{//}}
+\DoxyCodeLine{2119 \textcolor{comment}{// THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)}}
+\DoxyCodeLine{2120 \textcolor{comment}{//}}
+\DoxyCodeLine{2122 \textcolor{comment}{}\textcolor{keyword}{namespace }alglib\_impl}
+\DoxyCodeLine{2123 \{}
+\DoxyCodeLine{2124 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_GAMMAFUNC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2125 \textcolor{keywordtype}{double} gammafunction(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2126 \textcolor{keywordtype}{double} lngamma(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double}* sgngam, ae\_state *\_state);}
+\DoxyCodeLine{2127 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2128 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_NORMALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2129 \textcolor{keywordtype}{double} errorfunction(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2130 \textcolor{keywordtype}{double} errorfunctionc(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2131 \textcolor{keywordtype}{double} normaldistribution(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2132 \textcolor{keywordtype}{double} normalpdf(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2133 \textcolor{keywordtype}{double} normalcdf(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2134 \textcolor{keywordtype}{double} inverf(\textcolor{keywordtype}{double} e, ae\_state *\_state);}
+\DoxyCodeLine{2135 \textcolor{keywordtype}{double} invnormaldistribution(\textcolor{keywordtype}{double} y0, ae\_state *\_state);}
+\DoxyCodeLine{2136 \textcolor{keywordtype}{double} invnormalcdf(\textcolor{keywordtype}{double} y0, ae\_state *\_state);}
+\DoxyCodeLine{2137 \textcolor{keywordtype}{double} bivariatenormalpdf(\textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2138      \textcolor{keywordtype}{double} y,}
+\DoxyCodeLine{2139      \textcolor{keywordtype}{double} rho,}
+\DoxyCodeLine{2140      ae\_state *\_state);}
+\DoxyCodeLine{2141 \textcolor{keywordtype}{double} bivariatenormalcdf(\textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2142      \textcolor{keywordtype}{double} y,}
+\DoxyCodeLine{2143      \textcolor{keywordtype}{double} rho,}
+\DoxyCodeLine{2144      ae\_state *\_state);}
+\DoxyCodeLine{2145 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2146 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IBETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2147 \textcolor{keywordtype}{double} incompletebeta(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2148 \textcolor{keywordtype}{double} invincompletebeta(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, \textcolor{keywordtype}{double} y, ae\_state *\_state);}
+\DoxyCodeLine{2149 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2150 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_STUDENTTDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2151 \textcolor{keywordtype}{double} studenttdistribution(ae\_int\_t k, \textcolor{keywordtype}{double} t, ae\_state *\_state);}
+\DoxyCodeLine{2152 \textcolor{keywordtype}{double} invstudenttdistribution(ae\_int\_t k, \textcolor{keywordtype}{double} p, ae\_state *\_state);}
+\DoxyCodeLine{2153 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2154 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2155 \textcolor{keywordtype}{double} fdistribution(ae\_int\_t a, ae\_int\_t b, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2156 \textcolor{keywordtype}{double} fcdistribution(ae\_int\_t a, ae\_int\_t b, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2157 \textcolor{keywordtype}{double} invfdistribution(ae\_int\_t a,}
+\DoxyCodeLine{2158      ae\_int\_t b,}
+\DoxyCodeLine{2159      \textcolor{keywordtype}{double} y,}
+\DoxyCodeLine{2160      ae\_state *\_state);}
+\DoxyCodeLine{2161 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2162 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_IGAMMAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2163 \textcolor{keywordtype}{double} incompletegamma(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2164 \textcolor{keywordtype}{double} incompletegammac(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2165 \textcolor{keywordtype}{double} invincompletegammac(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} y0, ae\_state *\_state);}
+\DoxyCodeLine{2166 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2167 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHISQUAREDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2168 \textcolor{keywordtype}{double} chisquaredistribution(\textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2169 \textcolor{keywordtype}{double} chisquarecdistribution(\textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2170 \textcolor{keywordtype}{double} invchisquaredistribution(\textcolor{keywordtype}{double} v, \textcolor{keywordtype}{double} y, ae\_state *\_state);}
+\DoxyCodeLine{2171 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2172 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BINOMIALDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2173 \textcolor{keywordtype}{double} binomialdistribution(ae\_int\_t k,}
+\DoxyCodeLine{2174      ae\_int\_t n,}
+\DoxyCodeLine{2175      \textcolor{keywordtype}{double} p,}
+\DoxyCodeLine{2176      ae\_state *\_state);}
+\DoxyCodeLine{2177 \textcolor{keywordtype}{double} binomialcdistribution(ae\_int\_t k,}
+\DoxyCodeLine{2178      ae\_int\_t n,}
+\DoxyCodeLine{2179      \textcolor{keywordtype}{double} p,}
+\DoxyCodeLine{2180      ae\_state *\_state);}
+\DoxyCodeLine{2181 \textcolor{keywordtype}{double} invbinomialdistribution(ae\_int\_t k,}
+\DoxyCodeLine{2182      ae\_int\_t n,}
+\DoxyCodeLine{2183      \textcolor{keywordtype}{double} y,}
+\DoxyCodeLine{2184      ae\_state *\_state);}
+\DoxyCodeLine{2185 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2186 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_EXPINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2187 \textcolor{keywordtype}{double} exponentialintegralei(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2188 \textcolor{keywordtype}{double} exponentialintegralen(\textcolor{keywordtype}{double} x, ae\_int\_t n, ae\_state *\_state);}
+\DoxyCodeLine{2189 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2190 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_JACOBIANELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2191 \textcolor{keywordtype}{void} jacobianellipticfunctions(\textcolor{keywordtype}{double} u,}
+\DoxyCodeLine{2192      \textcolor{keywordtype}{double} m,}
+\DoxyCodeLine{2193      \textcolor{keywordtype}{double}* sn,}
+\DoxyCodeLine{2194      \textcolor{keywordtype}{double}* cn,}
+\DoxyCodeLine{2195      \textcolor{keywordtype}{double}* dn,}
+\DoxyCodeLine{2196      \textcolor{keywordtype}{double}* ph,}
+\DoxyCodeLine{2197      ae\_state *\_state);}
+\DoxyCodeLine{2198 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2199 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_TRIGINTEGRALS) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2200 \textcolor{keywordtype}{void} sinecosineintegrals(\textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2201      \textcolor{keywordtype}{double}* si,}
+\DoxyCodeLine{2202      \textcolor{keywordtype}{double}* ci,}
+\DoxyCodeLine{2203      ae\_state *\_state);}
+\DoxyCodeLine{2204 \textcolor{keywordtype}{void} hyperbolicsinecosineintegrals(\textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2205      \textcolor{keywordtype}{double}* shi,}
+\DoxyCodeLine{2206      \textcolor{keywordtype}{double}* chi,}
+\DoxyCodeLine{2207      ae\_state *\_state);}
+\DoxyCodeLine{2208 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2209 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_CHEBYSHEV) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2210 \textcolor{keywordtype}{double} chebyshevcalculate(ae\_int\_t r,}
+\DoxyCodeLine{2211      ae\_int\_t n,}
+\DoxyCodeLine{2212      \textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2213      ae\_state *\_state);}
+\DoxyCodeLine{2214 \textcolor{keywordtype}{double} chebyshevsum(\textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2215      ae\_int\_t r,}
+\DoxyCodeLine{2216      ae\_int\_t n,}
+\DoxyCodeLine{2217      \textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2218      ae\_state *\_state);}
+\DoxyCodeLine{2219 \textcolor{keywordtype}{void} chebyshevcoefficients(ae\_int\_t n,}
+\DoxyCodeLine{2220      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2221      ae\_state *\_state);}
+\DoxyCodeLine{2222 \textcolor{keywordtype}{void} fromchebyshev(\textcolor{comment}{/* Real    */} ae\_vector* a,}
+\DoxyCodeLine{2223      ae\_int\_t n,}
+\DoxyCodeLine{2224      \textcolor{comment}{/* Real    */} ae\_vector* b,}
+\DoxyCodeLine{2225      ae\_state *\_state);}
+\DoxyCodeLine{2226 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2227 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_POISSONDISTR) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2228 \textcolor{keywordtype}{double} poissondistribution(ae\_int\_t k, \textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2229 \textcolor{keywordtype}{double} poissoncdistribution(ae\_int\_t k, \textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2230 \textcolor{keywordtype}{double} invpoissondistribution(ae\_int\_t k, \textcolor{keywordtype}{double} y, ae\_state *\_state);}
+\DoxyCodeLine{2231 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2232 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BETAF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2233 \textcolor{keywordtype}{double} beta(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} b, ae\_state *\_state);}
+\DoxyCodeLine{2234 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2235 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_FRESNEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2236 \textcolor{keywordtype}{void} fresnelintegral(\textcolor{keywordtype}{double} x, \textcolor{keywordtype}{double}* c, \textcolor{keywordtype}{double}* s, ae\_state *\_state);}
+\DoxyCodeLine{2237 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2238 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_PSIF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2239 \textcolor{keywordtype}{double} psi(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2240 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2241 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_AIRYF) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2242 \textcolor{keywordtype}{void} airy(\textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2243      \textcolor{keywordtype}{double}* ai,}
+\DoxyCodeLine{2244      \textcolor{keywordtype}{double}* aip,}
+\DoxyCodeLine{2245      \textcolor{keywordtype}{double}* bi,}
+\DoxyCodeLine{2246      \textcolor{keywordtype}{double}* bip,}
+\DoxyCodeLine{2247      ae\_state *\_state);}
+\DoxyCodeLine{2248 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2249 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_DAWSON) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2250 \textcolor{keywordtype}{double} dawsonintegral(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2251 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2252 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_HERMITE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2253 \textcolor{keywordtype}{double} hermitecalculate(ae\_int\_t n, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2254 \textcolor{keywordtype}{double} hermitesum(\textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2255      ae\_int\_t n,}
+\DoxyCodeLine{2256      \textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2257      ae\_state *\_state);}
+\DoxyCodeLine{2258 \textcolor{keywordtype}{void} hermitecoefficients(ae\_int\_t n,}
+\DoxyCodeLine{2259      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2260      ae\_state *\_state);}
+\DoxyCodeLine{2261 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2262 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LEGENDRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2263 \textcolor{keywordtype}{double} legendrecalculate(ae\_int\_t n, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2264 \textcolor{keywordtype}{double} legendresum(\textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2265      ae\_int\_t n,}
+\DoxyCodeLine{2266      \textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2267      ae\_state *\_state);}
+\DoxyCodeLine{2268 \textcolor{keywordtype}{void} legendrecoefficients(ae\_int\_t n,}
+\DoxyCodeLine{2269      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2270      ae\_state *\_state);}
+\DoxyCodeLine{2271 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2272 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_BESSEL) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2273 \textcolor{keywordtype}{double} besselj0(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2274 \textcolor{keywordtype}{double} besselj1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2275 \textcolor{keywordtype}{double} besseljn(ae\_int\_t n, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2276 \textcolor{keywordtype}{double} bessely0(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2277 \textcolor{keywordtype}{double} bessely1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2278 \textcolor{keywordtype}{double} besselyn(ae\_int\_t n, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2279 \textcolor{keywordtype}{double} besseli0(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2280 \textcolor{keywordtype}{double} besseli1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2281 \textcolor{keywordtype}{double} besselk0(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2282 \textcolor{keywordtype}{double} besselk1(\textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2283 \textcolor{keywordtype}{double} besselkn(ae\_int\_t nn, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2284 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2285 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_LAGUERRE) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2286 \textcolor{keywordtype}{double} laguerrecalculate(ae\_int\_t n, \textcolor{keywordtype}{double} x, ae\_state *\_state);}
+\DoxyCodeLine{2287 \textcolor{keywordtype}{double} laguerresum(\textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2288      ae\_int\_t n,}
+\DoxyCodeLine{2289      \textcolor{keywordtype}{double} x,}
+\DoxyCodeLine{2290      ae\_state *\_state);}
+\DoxyCodeLine{2291 \textcolor{keywordtype}{void} laguerrecoefficients(ae\_int\_t n,}
+\DoxyCodeLine{2292      \textcolor{comment}{/* Real    */} ae\_vector* c,}
+\DoxyCodeLine{2293      ae\_state *\_state);}
+\DoxyCodeLine{2294 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2295 \textcolor{preprocessor}{\#if defined(AE\_COMPILE\_ELLIPTIC) || !defined(AE\_PARTIAL\_BUILD)}}
+\DoxyCodeLine{2296 \textcolor{keywordtype}{double} ellipticintegralk(\textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2297 \textcolor{keywordtype}{double} ellipticintegralkhighprecision(\textcolor{keywordtype}{double} m1, ae\_state *\_state);}
+\DoxyCodeLine{2298 \textcolor{keywordtype}{double} incompleteellipticintegralk(\textcolor{keywordtype}{double} phi, \textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2299 \textcolor{keywordtype}{double} ellipticintegrale(\textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2300 \textcolor{keywordtype}{double} incompleteellipticintegrale(\textcolor{keywordtype}{double} phi, \textcolor{keywordtype}{double} m, ae\_state *\_state);}
+\DoxyCodeLine{2301 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2302 }
+\DoxyCodeLine{2303 \}}
+\DoxyCodeLine{2304 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{2305 }
+
+\end{DoxyCode}

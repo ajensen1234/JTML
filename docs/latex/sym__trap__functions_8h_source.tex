@@ -1,0 +1,31 @@
+\hypertarget{sym__trap__functions_8h_source}{}\doxysection{sym\+\_\+trap\+\_\+functions.\+h}
+\label{sym__trap__functions_8h_source}\index{include/core/sym\_trap\_functions.h@{include/core/sym\_trap\_functions.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include "{}core/data\_structures\_6D.h"{}}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <cmath>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <sstream>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \mbox{\hyperlink{struct_point6_d}{Point6D}} compute\_mirror\_pose(\mbox{\hyperlink{struct_point6_d}{Point6D}} point);}
+\DoxyCodeLine{9 \textcolor{keywordtype}{void} matmult4(\textcolor{keywordtype}{float} ans[4][4], \textcolor{keywordtype}{float} matrix1[4][4], \textcolor{keywordtype}{float} matrix2[4][4]);}
+\DoxyCodeLine{10 \textcolor{keywordtype}{void} matmult3(\textcolor{keywordtype}{float} ans[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} matrix1[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} matrix2[3][3]);}
+\DoxyCodeLine{11 \textcolor{keywordtype}{void} invert\_transform(\textcolor{keywordtype}{float} result[4][4], \textcolor{keyword}{const} \textcolor{keywordtype}{float} tran[4][4]);}
+\DoxyCodeLine{12 \textcolor{keywordtype}{void} equivalent\_axis\_angle\_rotation(\textcolor{keywordtype}{float} rot[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} m[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} angle);}
+\DoxyCodeLine{13 \textcolor{keywordtype}{void} cross\_product(\textcolor{keywordtype}{float} CP[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} v1[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} v2[3]);}
+\DoxyCodeLine{14 \textcolor{keywordtype}{void} dot\_product(\textcolor{keywordtype}{float}\& result, \textcolor{keyword}{const} \textcolor{keywordtype}{float} vector1[3], \textcolor{keyword}{const} \textcolor{keywordtype}{float} vector2[3]);}
+\DoxyCodeLine{15 \textcolor{keywordtype}{void} rotation\_matrix(\textcolor{keywordtype}{float} R[3][3], \mbox{\hyperlink{struct_point6_d}{Point6D}} pose);}
+\DoxyCodeLine{16 \textcolor{keywordtype}{void} create\_312\_transform(\textcolor{keywordtype}{float} transform[4][4], \mbox{\hyperlink{struct_point6_d}{Point6D}} pose);}
+\DoxyCodeLine{17 \textcolor{keywordtype}{void} getRotations312(\textcolor{keywordtype}{float}\& xr, \textcolor{keywordtype}{float}\& yr, \textcolor{keywordtype}{float}\& zr, \textcolor{keyword}{const} \textcolor{keywordtype}{float} Rot[3][3]);}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keywordtype}{void} copy\_matrix\_by\_value(\textcolor{keywordtype}{float}(\&new\_matrix)[3][3], \textcolor{keyword}{const} \textcolor{keywordtype}{float}(\&old\_matrix)[3][3]);}
+\DoxyCodeLine{20 \textcolor{keywordtype}{void} create\_vector\_of\_poses(std::vector<Point6D>\& pose\_list, \mbox{\hyperlink{struct_point6_d}{Point6D}} pose, \textcolor{keywordtype}{int} numPoses);}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{template}<\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{23 std::vector<double> \textcolor{keyword}{static} linspace(T start\_in, T end\_in, \textcolor{keywordtype}{int} num\_in);}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25 }
+
+\end{DoxyCode}

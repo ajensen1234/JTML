@@ -222,7 +222,6 @@ MainScreen::MainScreen(QWidget* parent)
 	/*INitialize Location Storage*/
 	model_locations_ = LocationStorage();
 	vw->initialize_vtk_pointers();
-	std::cout <<"Init pointers in mainscreen" <<std::endl;
 	/*Selection Model for Models*/
 	ui.single_model_radio_button->setChecked(true);
 	ui.model_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -234,9 +233,6 @@ MainScreen::MainScreen(QWidget* parent)
 
 	/*Index of Previously Selected Frame/Models*/
 	previous_frame_index_ = -1;
-	//my_viewer->initialize_vtk_pointers();
-	//my_viewer->initialize_vtk_mappers();
-	//my_viewer->initialize_vtk_renderers();
 	///*Set up VTK*/
 	vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
 	//my_viewer->initialize_vtk_pointers();
@@ -244,8 +240,10 @@ MainScreen::MainScreen(QWidget* parent)
 	//renderer = vtkSmartPointer<vtkRenderer>::New();
 	//actor_image = vtkSmartPointer<vtkActor>::New();
 	actor_image = vw->get_actor_image();
-	current_background = vtkSmartPointer<vtkImageData>::New();
-	stl_reader = vtkSmartPointer<vtkSTLReader>::New();
+	current_background = vw->get_current_background();
+	stl_reader = vw->get_stl_reader();
+	//current_background = vtkSmartPointer<vtkImageData>::New();
+	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
 	image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
 	actor_text = vtkSmartPointer<vtkTextActor>::New();
 	importer = vtkSmartPointer<vtkImageImport>::New();

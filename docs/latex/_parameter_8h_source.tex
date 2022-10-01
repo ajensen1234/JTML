@@ -1,0 +1,170 @@
+\hypertarget{_parameter_8h_source}{}\doxysection{Parameter.\+h}
+\label{_parameter_8h_source}\index{include/cost\_functions/Parameter.h@{include/cost\_functions/Parameter.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef PARAMETER\_H}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define PARAMETER\_H}}
+\DoxyCodeLine{3 \textcolor{comment}{/*Parameter Class Header*/}}
+\DoxyCodeLine{4 \textcolor{comment}{/* Info: The cost function class contains a vector of parameter classes which represent}}
+\DoxyCodeLine{5 \textcolor{comment}{any parameters (must be either double, integer, or bool) that the cost function might require.}}
+\DoxyCodeLine{6 \textcolor{comment}{These cost function parameters are added to the parameter storage vector in the constructor of}}
+\DoxyCodeLine{7 \textcolor{comment}{the cost function class. Values for the parameters can be set from the JTA client and are}}
+\DoxyCodeLine{8 \textcolor{comment}{saved between sessions. Default values for each parameter must be provided in the constructor}}
+\DoxyCodeLine{9 \textcolor{comment}{for the cost function along with a parameter type and parameter name.*/}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <type\_traits>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{comment}{/*Custom Namespace for JTA Cost Function Library (Compiling as DLL)*/}}
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }jta\_cost\_function \{}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18     \textcolor{keyword}{template} <\textcolor{keyword}{typename} Parameter\_Type>}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}} \{}
+\DoxyCodeLine{20         \textcolor{keyword}{static\_assert}((std::is\_same<double, Parameter\_Type>::value}
+\DoxyCodeLine{21             || std::is\_same<int, Parameter\_Type>::value}
+\DoxyCodeLine{22             || std::is\_same<bool, Parameter\_Type>::value), \textcolor{stringliteral}{"{}Parameter type must be double, int, or bool!"{}});}
+\DoxyCodeLine{23     \};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{keyword}{template} <>}
+\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}<double> \{}
+\DoxyCodeLine{27     \textcolor{keyword}{public}:}
+\DoxyCodeLine{28         \textcolor{comment}{/*Constructors*/}}
+\DoxyCodeLine{29         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}() \{}
+\DoxyCodeLine{30             parameter\_name\_ = \textcolor{stringliteral}{"{}Nameless Parameter"{}};}
+\DoxyCodeLine{31             parameter\_value\_ = 0;}
+\DoxyCodeLine{32             parameter\_type\_ = \textcolor{stringliteral}{"{}DOUBLE"{}};}
+\DoxyCodeLine{33         \};}
+\DoxyCodeLine{34         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}(std::string parameter\_name, \textcolor{keywordtype}{double} parameter\_value) \{}
+\DoxyCodeLine{35             parameter\_name\_ = parameter\_name;}
+\DoxyCodeLine{36             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{37             parameter\_type\_ = \textcolor{stringliteral}{"{}DOUBLE"{}};}
+\DoxyCodeLine{38         \};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \textcolor{comment}{/*Methods*/}}
+\DoxyCodeLine{41         \textcolor{comment}{/*Get Parameter Name*/}}
+\DoxyCodeLine{42         \_\_declspec(dllexport) std::string getParameterName() \{}
+\DoxyCodeLine{43             \textcolor{keywordflow}{return} parameter\_name\_;}
+\DoxyCodeLine{44         \};}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46         \textcolor{comment}{/*Get/Set Parameter Value*/}}
+\DoxyCodeLine{47         \_\_declspec(dllexport) \textcolor{keywordtype}{double} getParameterValue() \{}
+\DoxyCodeLine{48             \textcolor{keywordflow}{return} parameter\_value\_;}
+\DoxyCodeLine{49         \};}
+\DoxyCodeLine{50         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setParameterValue(\textcolor{keywordtype}{double} parameter\_value) \{}
+\DoxyCodeLine{51             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{52         \};}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         \textcolor{comment}{/*Get Class Type*/}}
+\DoxyCodeLine{55         \_\_declspec(dllexport) std::string getParameterType() \{}
+\DoxyCodeLine{56             \textcolor{keywordflow}{return} parameter\_type\_;}
+\DoxyCodeLine{57         \};}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59     \textcolor{keyword}{private}:}
+\DoxyCodeLine{60         \textcolor{comment}{/*Variables*/}}
+\DoxyCodeLine{61         \textcolor{comment}{/*Parameter Name*/}}
+\DoxyCodeLine{62         std::string parameter\_name\_;}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64         \textcolor{comment}{/*Parameter Value*/}}
+\DoxyCodeLine{65         \textcolor{keywordtype}{double} parameter\_value\_;}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67         \textcolor{comment}{/*Class Type*/}}
+\DoxyCodeLine{68         std::string parameter\_type\_;}
+\DoxyCodeLine{69     \};}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{71     \textcolor{keyword}{template} <>}
+\DoxyCodeLine{72     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}<int> \{}
+\DoxyCodeLine{73     \textcolor{keyword}{public}:}
+\DoxyCodeLine{74         \textcolor{comment}{/*Constructors*/}}
+\DoxyCodeLine{75         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}() \{}
+\DoxyCodeLine{76             parameter\_name\_ = \textcolor{stringliteral}{"{}Nameless Parameter"{}};}
+\DoxyCodeLine{77             parameter\_value\_ = 0;}
+\DoxyCodeLine{78             parameter\_type\_ = \textcolor{stringliteral}{"{}INT"{}};}
+\DoxyCodeLine{79         \};}
+\DoxyCodeLine{80         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}(std::string parameter\_name, \textcolor{keywordtype}{int} parameter\_value) \{}
+\DoxyCodeLine{81             parameter\_name\_ = parameter\_name;}
+\DoxyCodeLine{82             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{83             parameter\_type\_ = \textcolor{stringliteral}{"{}INT"{}};}
+\DoxyCodeLine{84         \};}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86         \textcolor{comment}{/*Methods*/}}
+\DoxyCodeLine{87         \textcolor{comment}{/*Get Parameter Name*/}}
+\DoxyCodeLine{88         \_\_declspec(dllexport) std::string getParameterName() \{}
+\DoxyCodeLine{89             \textcolor{keywordflow}{return} parameter\_name\_;}
+\DoxyCodeLine{90         \};}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92         \textcolor{comment}{/*Get/Set Parameter Value*/}}
+\DoxyCodeLine{93         \_\_declspec(dllexport) \textcolor{keywordtype}{int} getParameterValue() \{}
+\DoxyCodeLine{94             \textcolor{keywordflow}{return} parameter\_value\_;}
+\DoxyCodeLine{95         \};}
+\DoxyCodeLine{96         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setParameterValue(\textcolor{keywordtype}{int} parameter\_value) \{}
+\DoxyCodeLine{97             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{98         \};}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100         \textcolor{comment}{/*Get Class Type*/}}
+\DoxyCodeLine{101         \_\_declspec(dllexport) std::string getParameterType() \{}
+\DoxyCodeLine{102             \textcolor{keywordflow}{return} parameter\_type\_;}
+\DoxyCodeLine{103         \};}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105     \textcolor{keyword}{private}:}
+\DoxyCodeLine{106         \textcolor{comment}{/*Variables*/}}
+\DoxyCodeLine{107         \textcolor{comment}{/*Parameter Name*/}}
+\DoxyCodeLine{108         std::string parameter\_name\_;}
+\DoxyCodeLine{109 }
+\DoxyCodeLine{110         \textcolor{comment}{/*Parameter Value*/}}
+\DoxyCodeLine{111         \textcolor{keywordtype}{int} parameter\_value\_;}
+\DoxyCodeLine{112 }
+\DoxyCodeLine{113         \textcolor{comment}{/*Class Type*/}}
+\DoxyCodeLine{114         std::string parameter\_type\_;}
+\DoxyCodeLine{115     \};}
+\DoxyCodeLine{116 }
+\DoxyCodeLine{117     \textcolor{keyword}{template} <>}
+\DoxyCodeLine{118     \textcolor{keyword}{class }\mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}<bool> \{}
+\DoxyCodeLine{119     \textcolor{keyword}{public}:}
+\DoxyCodeLine{120         \textcolor{comment}{/*Constructors*/}}
+\DoxyCodeLine{121         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}() \{}
+\DoxyCodeLine{122             parameter\_name\_ = \textcolor{stringliteral}{"{}Nameless Parameter"{}};}
+\DoxyCodeLine{123             parameter\_value\_ = 0;}
+\DoxyCodeLine{124             parameter\_type\_ = \textcolor{stringliteral}{"{}BOOL"{}};}
+\DoxyCodeLine{125         \};}
+\DoxyCodeLine{126         \_\_declspec(dllexport) \mbox{\hyperlink{classjta__cost__function_1_1_parameter}{Parameter}}(std::string parameter\_name, \textcolor{keywordtype}{bool} parameter\_value) \{}
+\DoxyCodeLine{127             parameter\_name\_ = parameter\_name;}
+\DoxyCodeLine{128             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{129             parameter\_type\_ = \textcolor{stringliteral}{"{}BOOL"{}};}
+\DoxyCodeLine{130         \};}
+\DoxyCodeLine{131 }
+\DoxyCodeLine{132         \textcolor{comment}{/*Methods*/}}
+\DoxyCodeLine{133         \textcolor{comment}{/*Get Parameter Name*/}}
+\DoxyCodeLine{134         \_\_declspec(dllexport) std::string getParameterName() \{}
+\DoxyCodeLine{135             \textcolor{keywordflow}{return} parameter\_name\_;}
+\DoxyCodeLine{136         \};}
+\DoxyCodeLine{137 }
+\DoxyCodeLine{138         \textcolor{comment}{/*Get/Set Parameter Value*/}}
+\DoxyCodeLine{139         \_\_declspec(dllexport) \textcolor{keywordtype}{bool} getParameterValue() \{}
+\DoxyCodeLine{140             \textcolor{keywordflow}{return} parameter\_value\_;}
+\DoxyCodeLine{141         \};}
+\DoxyCodeLine{142         \_\_declspec(dllexport) \textcolor{keywordtype}{void} setParameterValue(\textcolor{keywordtype}{bool} parameter\_value) \{}
+\DoxyCodeLine{143             parameter\_value\_ = parameter\_value;}
+\DoxyCodeLine{144         \};}
+\DoxyCodeLine{145 }
+\DoxyCodeLine{146         \textcolor{comment}{/*Get Class Type*/}}
+\DoxyCodeLine{147         \_\_declspec(dllexport) std::string getParameterType() \{}
+\DoxyCodeLine{148             \textcolor{keywordflow}{return} parameter\_type\_;}
+\DoxyCodeLine{149         \};}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{151     \textcolor{keyword}{private}:}
+\DoxyCodeLine{152         \textcolor{comment}{/*Variables*/}}
+\DoxyCodeLine{153         \textcolor{comment}{/*Parameter Name*/}}
+\DoxyCodeLine{154         std::string parameter\_name\_;}
+\DoxyCodeLine{155 }
+\DoxyCodeLine{156         \textcolor{comment}{/*Parameter Value*/}}
+\DoxyCodeLine{157         \textcolor{keywordtype}{bool} parameter\_value\_;}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159         \textcolor{comment}{/*Class Type*/}}
+\DoxyCodeLine{160         std::string parameter\_type\_;}
+\DoxyCodeLine{161     \};}
+\DoxyCodeLine{162 \}}
+\DoxyCodeLine{163 }
+\DoxyCodeLine{164 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//PARAMETER\_H}}
+
+\end{DoxyCode}

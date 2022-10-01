@@ -1,0 +1,47 @@
+\hypertarget{pose__matrix_8h_source}{}\doxysection{pose\+\_\+matrix.\+h}
+\label{pose__matrix_8h_source}\index{include/gpu/pose\_matrix.h@{include/gpu/pose\_matrix.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{comment}{/*Render Engine Header for Pose Class*/}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}gpu/render\_engine.cuh"{}}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*Standard Library*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{comment}{/*Class for Storing and Retrieving Pose linked to a unique Frame/Model Pair*/}}
+\DoxyCodeLine{11 \textcolor{keyword}{class }\mbox{\hyperlink{class_pose_matrix}{PoseMatrix}} \{}
+\DoxyCodeLine{12 \textcolor{keyword}{public}:}
+\DoxyCodeLine{13     \textcolor{comment}{/*Blank Constructor/Destructor*/}}
+\DoxyCodeLine{14     \_\_declspec(dllexport) \mbox{\hyperlink{class_pose_matrix}{PoseMatrix}}();}
+\DoxyCodeLine{15     \_\_declspec(dllexport) \mbox{\hyperlink{class_pose_matrix}{\string~PoseMatrix}}();}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{comment}{/*Add New Model to Pose Matrix*/}}
+\DoxyCodeLine{18     \_\_declspec(dllexport) \textcolor{keywordtype}{void} AddModel(std::vector<gpu\_cost\_function::Pose > , std::string model\_name, \textcolor{keywordtype}{bool} is\_principal\_model);}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20     \textcolor{comment}{/*Get Model Pose (True if Successful, Else False) -\/ Pose is Returned by Passing via reference*/}}
+\DoxyCodeLine{21     \_\_declspec(dllexport) \textcolor{keywordtype}{bool} GetModelPose(std::string model\_name, \textcolor{keywordtype}{int} frame\_index, gpu\_cost\_function::Pose* pose\_container);}
+\DoxyCodeLine{22     \textcolor{comment}{/*Get Principal Model Pose*/}}
+\DoxyCodeLine{23     \_\_declspec(dllexport) \textcolor{keywordtype}{bool} GetModelPose(\textcolor{keywordtype}{int} frame\_index, gpu\_cost\_function::Pose* pose\_container);}
+\DoxyCodeLine{24     \textcolor{comment}{/*Update Stored Pose for Principal Model at given frame*/}}
+\DoxyCodeLine{25     \_\_declspec(dllexport) \textcolor{keywordtype}{bool} UpdatePrincipalModelPose(\textcolor{keywordtype}{int} frame\_index, gpu\_cost\_function::Pose pose\_container);}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27 \textcolor{keyword}{private}:}
+\DoxyCodeLine{28     \textcolor{comment}{/*Principal Model Name*/}}
+\DoxyCodeLine{29     std::string principal\_model\_name\_;}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31     \textcolor{comment}{/*Principal Model Lookup Index*/}}
+\DoxyCodeLine{32     \textcolor{keywordtype}{int} principal\_model\_index\_;}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34     \textcolor{comment}{/*Vector of All Models (Order Implies Index)*/}}
+\DoxyCodeLine{35     std::vector<std::string> model\_names\_;}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{comment}{/*Vector of All Model's Vector of Frame Poses}}
+\DoxyCodeLine{38 \textcolor{comment}{    Size of pose\_matrix\_ = \# of models by \# of frames*/}}
+\DoxyCodeLine{39     std::vector<std::vector<gpu\_cost\_function::Pose>> pose\_matrix\_;}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \};}
+
+\end{DoxyCode}

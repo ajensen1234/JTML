@@ -1,0 +1,61 @@
+\hypertarget{settings__constants_8h_source}{}\doxysection{settings\+\_\+constants.\+h}
+\label{settings__constants_8h_source}\index{include/core/settings\_constants.h@{include/core/settings\_constants.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*Constants for optimizer default settings and version*/}}
+\DoxyCodeLine{2 }
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#ifndef SETTINGS\_CONSTANTS\_H}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#define SETTINGS\_CONSTANTS\_H}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{comment}{/*Data Structures Used by All*/}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include "{}data\_structures\_6D.h"{}}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{comment}{/*Metric Type Enumerator*/}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include "{}metric\_enum.h"{}}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{comment}{/*Version Numbers*/}}
+\DoxyCodeLine{13 \textcolor{keyword}{const} \textcolor{keywordtype}{int} VER\_FIRST\_NUM = 3;}
+\DoxyCodeLine{14 \textcolor{keyword}{const} \textcolor{keywordtype}{int} VER\_MIDDLE\_NUM = 4;}
+\DoxyCodeLine{15 \textcolor{keyword}{const} \textcolor{keywordtype}{int} VER\_LAST\_NUM = 0;}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{comment}{/*Variables*/}}
+\DoxyCodeLine{18 \textcolor{comment}{/*Trunk*/}}
+\DoxyCodeLine{19 \textcolor{keyword}{const} \mbox{\hyperlink{struct_point6_d}{Point6D}} TRUNK\_RANGE = \mbox{\hyperlink{struct_point6_d}{Point6D}}(35,35,35,35,35,35);}
+\DoxyCodeLine{20 \textcolor{keyword}{const} \textcolor{keywordtype}{int} TRUNK\_BUDGET = 20000;}
+\DoxyCodeLine{21 \textcolor{keyword}{const} \textcolor{keywordtype}{int} TRUNK\_DILATION = 6;}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{comment}{/*BrancheS*/}}
+\DoxyCodeLine{24 \textcolor{keyword}{const} \mbox{\hyperlink{struct_point6_d}{Point6D}} BRANCH\_RANGE = \mbox{\hyperlink{struct_point6_d}{Point6D}}(15,15,25,25,25,25);}
+\DoxyCodeLine{25 \textcolor{keyword}{const} \textcolor{keywordtype}{int} BRANCH\_BUDGET = 5000;}
+\DoxyCodeLine{26 \textcolor{keyword}{const} \textcolor{keywordtype}{int} NUMBER\_BRANCHES = 2;}
+\DoxyCodeLine{27 \textcolor{keyword}{const} \textcolor{keywordtype}{int} BRANCH\_DILATION\_DECREASE = 2;}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29 \textcolor{comment}{/*Z-\/ SeaRCH*/}}
+\DoxyCodeLine{30 \textcolor{keyword}{const} \mbox{\hyperlink{struct_point6_d}{Point6D}} Z\_SEARCH\_RANGE = \mbox{\hyperlink{struct_point6_d}{Point6D}}(3,3,15,3,3,3);}
+\DoxyCodeLine{31 \textcolor{keyword}{const} \textcolor{keywordtype}{int} Z\_SEARCH\_BUDGET = 5000;}
+\DoxyCodeLine{32 \textcolor{keyword}{const} \textcolor{keywordtype}{int} Z\_SEARCH\_DILATION = 1;}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 \textcolor{comment}{/*Display Current Optimum During Optimization*/}}
+\DoxyCodeLine{35 \textcolor{keyword}{const} \textcolor{keywordtype}{bool} DISPLAY\_CURRENT\_OPTIMUM = \textcolor{keyword}{true};}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{comment}{/*Optimizer Settings Control Window Other Stuff*/}}
+\DoxyCodeLine{38 \textcolor{keyword}{const} \textcolor{keywordtype}{bool} ENABLE\_BRANCH = \textcolor{keyword}{true};}
+\DoxyCodeLine{39 \textcolor{keyword}{const} \textcolor{keywordtype}{bool} ENABLE\_Z = \textcolor{keyword}{true};}
+\DoxyCodeLine{40 \textcolor{keyword}{const} \textcolor{keywordtype}{bool} SCALE\_TRUNK = \textcolor{keyword}{false};}
+\DoxyCodeLine{41 \textcolor{keyword}{const} \textcolor{keywordtype}{double} SCALE\_TRUNK\_VALUE = 0.5;}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43 \textcolor{comment}{/*Edge Constants Save*/}}
+\DoxyCodeLine{44 \textcolor{keyword}{const} \textcolor{keywordtype}{int} APERTURE = 3;}
+\DoxyCodeLine{45 \textcolor{keyword}{const} \textcolor{keywordtype}{int} LOW\_THRESH = 40;}
+\DoxyCodeLine{46 \textcolor{keyword}{const} \textcolor{keywordtype}{int} HIGH\_THRESH = 120;}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48 \textcolor{comment}{/*Intensity Image Uses Black Silhouette? (True = Black, False = White)*/}}
+\DoxyCodeLine{49 \textcolor{keyword}{const} \textcolor{keywordtype}{bool} BLACK\_SILHOUETTE = \textcolor{keyword}{true};}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51 \textcolor{comment}{/*Edge and Intensity Weights If Combined*/}}
+\DoxyCodeLine{52 \textcolor{keyword}{const} \textcolor{keywordtype}{double} INTENSITY\_WEIGHT = 1;}
+\DoxyCodeLine{53 \textcolor{keyword}{const} \textcolor{keywordtype}{double} EDGE\_WEIGHT = 1;}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* SETTINGS\_CONSTANTS\_H */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}
