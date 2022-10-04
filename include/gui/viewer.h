@@ -25,6 +25,9 @@
 #include <vtkAutoInit.h> // Added post migration to Banks' lab computer
 #include <vtkInteractorStyleTrackballCamera.h> /*Alternate Camera*/
 #include <iostream>
+#include <opencv2/core.hpp>
+
+#include "core/frame.h"
 
 class viewer
 {
@@ -41,6 +44,17 @@ public:
     vtkSmartPointer<vtkImageData> get_current_background();
     vtkSmartPointer<vtkSTLReader> get_stl_reader();
     vtkSmartPointer<vtkDataSetMapper> get_image_mapper();
+    vtkSmartPointer<vtkTextActor> get_actor_text();
+    vtkSmartPointer<vtkImageImport> get_importer();
+
+    void updateDisplayBackground(cv::Mat desiredBackground);
+    void setImporterOutputToBackground();
+    void updateDisplayBackgroundtoEdgeImage(int frame_number, bool CameraASelected);
+    void updateDisplayBackgroundtoDilationImage(int frame_number, bool CameraASelected);
+    void updateDisplayBackgroundtoOriginalImage(int frame_number, bool CameraASelected);
+    void updateDisplayBackgroundtoInvertedImage(int frame_number, bool CameraASelected);
+    void setLoadedFrames(std::vector<Frame>& frames);
+    void setLoadedFrames_B(std::vector<Frame>& frames);
     
 
 private:
@@ -59,6 +73,10 @@ private:
     vtkSmartPointer<vtkCamera> my_model_camera_;
     
     bool initialized_pointers_;
+
+    std::vector<Frame> loaded_frames_;
+    std::vector<Frame> loaded_frames_B_;
+    
 
 };
 

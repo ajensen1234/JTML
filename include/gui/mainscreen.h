@@ -120,6 +120,7 @@ Q_SIGNALS:
 
 private:
 	Ui::MainScreenClass ui;
+	int curr_frame();
 
 	float start_time;
 
