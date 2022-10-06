@@ -171,6 +171,8 @@ private:
 	/*Location Storage Class*/
 	LocationStorage model_locations_;
 
+	QModelIndexList selected_model_indices();
+
 	/*Index of Previously Selected Frame/Models*/
 	int previous_frame_index_;
 	QModelIndexList previous_model_indices_;

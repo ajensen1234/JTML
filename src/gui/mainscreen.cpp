@@ -246,6 +246,11 @@ MainScreen::MainScreen(QWidget* parent)
 	actor_image = vw->get_actor_image();
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
+
+	std::cout << stl_reader << std::endl;
+	std::cout << vw->get_stl_reader() << std::endl;
+	//model_mapper_list = vw->getModelMapperList();
+	//model_actor_list = vw->getModelActorList();
 	//current_background = vtkSmartPointer<vtkImageData>::New();
 	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
 	//image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
@@ -2587,11 +2592,11 @@ void MainScreen::on_load_calibration_button_clicked() {
 		/*renderer->GetActiveCamera()->SetFocalPoint(0, 0,
 			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
 		*/
-		renderer->GetActiveCamera()->SetFocalPoint(0,0,-1);
-		renderer->GetActiveCamera()->SetPosition(0, 0, 0);
-		renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		//renderer->GetActiveCamera()->SetFocalPoint(0,0,-1);
+		//renderer->GetActiveCamera()->SetPosition(0, 0, 0);
+		//renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
 		//auto mat = renderer->GetActiveCamera()->GetProjectionTransformMatrix();
-		
+		vw->setupCameraCalibration(calibration_file_);
 
 		/*Set Checked To Monoplane but disable from further clicking*/
 		ui.camera_A_radio_button->setChecked(true);
@@ -2810,6 +2815,7 @@ void MainScreen::on_load_model_button_clicked() {
 	//Add to Loaded Models and initialize new vtk actors
 	for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 
+
 	//Scroll through list and warn if loaded model might be invalid STL file
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
 		if (!loaded_models[i].initialized_correctly_)
@@ -2834,7 +2840,15 @@ void MainScreen::on_load_model_button_clicked() {
 		model_actor_list.push_back(new_actor);
 		model_mapper_list.push_back(new_mapper);
 	}
+	//vw->setLoadedModels(loaded_models);
+	//vw->load3DModelsIntoActorAndMapperList();
+	//model_mapper_list = vw->getModelMapperList();
+	//model_actor_list = vw->getModelActorList();
+	//std::cout << &model_mapper_list << std::endl;
+	//std::cout << &vw->getModelMapperList() << std::endl;
 
+	//std::cout << renderer << std::endl;
+	//std::cout << vw->get_renderer() << std::endl;
 	//If No Loaded Models, Default Select First
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) ui.model_list_widget->setCurrentRow(0);
 
@@ -2895,11 +2909,16 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 		}
 
 		/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
-		actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-			calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-			-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-			calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		//actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
+			//calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
+			//-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
+			//calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
+			//-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		vw->placeImageActorsAccordingToCalibration(
+			calibration_file_,
+			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
+			loaded_frames[this->curr_frame()].GetOriginalImage().cols
+		);
 		//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
@@ -3120,11 +3139,16 @@ void MainScreen::on_image_list_widget_itemSelectionChanged()
 
 	/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
 	if (ui.camera_A_radio_button->isChecked()) {
-		actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-			calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-			-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-			calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
+		vw->placeImageActorsAccordingToCalibration(
+			calibration_file_,
+			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
+			loaded_frames[this->curr_frame()].GetOriginalImage().cols
+			);
+		//actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
+			//calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
+			//-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
+			//calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
+			//-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
 		//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
@@ -3263,15 +3287,23 @@ void MainScreen::on_image_list_widget_itemSelectionChanged()
 	ui.qvtk_widget->update();
 
 }
+
+QModelIndexList MainScreen::selected_model_indices(){
+	return ui.model_list_widget->selectionModel()->selectedRows();
+}
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
+
+	std::cout << "(1)" << std::endl;
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_)
 		SaveLastPose(); // Needs Work
 
 	/*Update Last Viewed Index as This One*/
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
+	//vw->loadModelActorsAndMappersWith3DData();
 
+	std::cout << "(2)" << std::endl;
 	/*Turn Off All Model Actor's Visibility and Pickability and Set the Input Connections*/
 	for (int i = 0; i < model_actor_list.size(); i++) {
 		model_actor_list[i]->PickableOff();
@@ -3279,9 +3311,12 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		model_actor_list[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
 		model_mapper_list[i]->SetInputConnection(loaded_models.at(i).cad_reader_->GetOutputPort());
 		/*also set the backgrounds to black for the model widget (should be safe as it is same size as actor list)*/
+		//vw->getModelActorList()[i]->PickableOff();
+		
 		ui.model_list_widget->item(i)->setBackgroundColor(QColor(25, 25, 25));
 	}
 
+	std::cout << "(3)" << std::endl;
 	/*Load Models to Screen*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*Hide Text if Nothing Selected*/
@@ -3298,14 +3333,26 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
+	std::cout << "(4)" << std::endl;
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Primary Model is the First One in the List
 		Make it Orange and all others Blue*/
 		if (i == 0) {
+			std::cout << "(5)" << std::endl;
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
+			std::cout << "(5.0.1)" << std::endl;
+			std::cout << "(5.0.1)" << std::endl;
 			model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
+			int rgb[3] = {214,108,35};
+			std::cout << rgb[0] << rgb[1] << std::endl;
+			std::cout << "Please print this" << std::endl;
+			std::cout << selected[0].row() << std::endl;
+			std::cout << "This is hopefully not going to be printed" << std::endl;
+			//vw->set3DModelColor(selected[i].row(), rgb);
+			std::cout << "(5.1)" << std::endl;
+
 		}
 		else {
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(33, 88, 170));
@@ -3313,6 +3360,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true)
 		{
+			std::cout << "(6)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();
@@ -3328,6 +3376,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Solid Color Model*/
 		else if (ui.solid_model_radio_button->isChecked() == true)
 		{
+			std::cout << "(7)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();
@@ -3343,6 +3392,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Transparent Model*/
 		else if (ui.transparent_model_radio_button->isChecked() == true)
 		{
+			std::cout << "(8)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();

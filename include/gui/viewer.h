@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <vtkRenderWindow.h>
+#include <vtkImageActor.h>
 #include <vtkProperty.h>
 #include <vtkCamera.h>
 #include <vtkSmartPointer.h>
@@ -28,6 +29,8 @@
 #include <opencv2/core.hpp>
 
 #include "core/frame.h"
+#include "core/calibration.h"
+#include "core/model.h"
 
 class viewer
 {
@@ -55,6 +58,16 @@ public:
     void updateDisplayBackgroundtoInvertedImage(int frame_number, bool CameraASelected);
     void setLoadedFrames(std::vector<Frame>& frames);
     void setLoadedFrames_B(std::vector<Frame>& frames);
+    void setLoadedModels(std::vector<Model> models);
+    void setLoadedModels_B(std::vector<Model> models);
+    void setupCameraCalibration(Calibration calibration);
+    void placeImageActorsAccordingToCalibration(Calibration calibration, int img_w, int img_h);
+    void load3DModelsIntoActorAndMapperList();
+    void loadModelActorsAndMappersWith3DData();
+    std::vector<vtkSmartPointer<vtkPolyDataMapper>> getModelMapperList();
+    std::vector<vtkSmartPointer<vtkActor>> getModelActorList();
+    void set3DModelColor(int index, int RGB[3]);
+    void loadModels(QStringList cad_files, QStringList cad_models);
     
 
 private:
@@ -76,6 +89,10 @@ private:
 
     std::vector<Frame> loaded_frames_;
     std::vector<Frame> loaded_frames_B_;
+   // std::vector<Model> loaded_models_;
+    std::vector<Model> loaded_models_b;
+
+    std::shared_ptr<std::vector<Model>> loaded_models_ = std::make_shared<std::vector<Model>>();
     
 
 };
