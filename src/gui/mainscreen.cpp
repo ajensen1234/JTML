@@ -247,10 +247,8 @@ MainScreen::MainScreen(QWidget* parent)
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
 
-	std::cout << stl_reader << std::endl;
-	std::cout << vw->get_stl_reader() << std::endl;
-	//model_mapper_list = vw->getModelMapperList();
-	//model_actor_list = vw->getModelActorList();
+	model_mapper_list = vw->getModelMapperList();
+	model_actor_list = vw->getModelActorList();
 	//current_background = vtkSmartPointer<vtkImageData>::New();
 	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
 	//image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
@@ -2813,8 +2811,8 @@ void MainScreen::on_load_model_button_clicked() {
 	}
 
 	//Add to Loaded Models and initialize new vtk actors
-	for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
-
+	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
+	vw->loadModels(CADFileExtensions,CADModelNames);
 
 	//Scroll through list and warn if loaded model might be invalid STL file
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
@@ -2830,7 +2828,7 @@ void MainScreen::on_load_model_button_clicked() {
 	for (int i = 0; i < CADFileExtensions.size(); i++) model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_, calibration_file_.camera_A_principal_.pixel_pitch_);
 
 	/*Initialize New vtk actors*/
-	for (int i = 0; i < CADFileExtensions.size(); i++) {
+	/*for (int i = 0; i < CADFileExtensions.size(); i++) {
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		new_actor->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
@@ -2839,16 +2837,8 @@ void MainScreen::on_load_model_button_clicked() {
 		renderer->AddActor(new_actor);
 		model_actor_list.push_back(new_actor);
 		model_mapper_list.push_back(new_mapper);
-	}
-	//vw->setLoadedModels(loaded_models);
-	//vw->load3DModelsIntoActorAndMapperList();
-	//model_mapper_list = vw->getModelMapperList();
-	//model_actor_list = vw->getModelActorList();
-	//std::cout << &model_mapper_list << std::endl;
-	//std::cout << &vw->getModelMapperList() << std::endl;
-
-	//std::cout << renderer << std::endl;
-	//std::cout << vw->get_renderer() << std::endl;
+	}*/
+	vw->load3DModelsIntoActorAndMapperList();
 	//If No Loaded Models, Default Select First
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) ui.model_list_widget->setCurrentRow(0);
 
@@ -3294,7 +3284,6 @@ QModelIndexList MainScreen::selected_model_indices(){
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
-	std::cout << "(1)" << std::endl;
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_)
 		SaveLastPose(); // Needs Work
@@ -3303,7 +3292,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
 	//vw->loadModelActorsAndMappersWith3DData();
 
-	std::cout << "(2)" << std::endl;
 	/*Turn Off All Model Actor's Visibility and Pickability and Set the Input Connections*/
 	for (int i = 0; i < model_actor_list.size(); i++) {
 		model_actor_list[i]->PickableOff();
@@ -3316,7 +3304,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		ui.model_list_widget->item(i)->setBackgroundColor(QColor(25, 25, 25));
 	}
 
-	std::cout << "(3)" << std::endl;
 	/*Load Models to Screen*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*Hide Text if Nothing Selected*/
@@ -3333,25 +3320,16 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
-	std::cout << "(4)" << std::endl;
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Primary Model is the First One in the List
 		Make it Orange and all others Blue*/
 		if (i == 0) {
-			std::cout << "(5)" << std::endl;
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
-			std::cout << "(5.0.1)" << std::endl;
-			std::cout << "(5.0.1)" << std::endl;
 			model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
 			int rgb[3] = {214,108,35};
-			std::cout << rgb[0] << rgb[1] << std::endl;
-			std::cout << "Please print this" << std::endl;
-			std::cout << selected[0].row() << std::endl;
-			std::cout << "This is hopefully not going to be printed" << std::endl;
 			//vw->set3DModelColor(selected[i].row(), rgb);
-			std::cout << "(5.1)" << std::endl;
 
 		}
 		else {
@@ -3360,7 +3338,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true)
 		{
-			std::cout << "(6)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();
@@ -3376,7 +3353,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Solid Color Model*/
 		else if (ui.solid_model_radio_button->isChecked() == true)
 		{
-			std::cout << "(7)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();
@@ -3392,7 +3368,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*Transparent Model*/
 		else if (ui.transparent_model_radio_button->isChecked() == true)
 		{
-			std::cout << "(8)" << std::endl;
 			/*Turn on Visbility and Pickability*/
 			model_actor_list[selected[i].row()]->PickableOn();
 			model_actor_list[selected[i].row()]->VisibilityOn();
