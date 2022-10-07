@@ -295,9 +295,7 @@ MainScreen::MainScreen(QWidget* parent)
 	renderer->AddActor2D(actor_text);
 	ui.qvtk_widget->GetRenderWindow()->Render();
 	vw->displayActorsInRenderer();
-	renderer->GetActors()->Print(std::cout);
 
-	actor_image->Print(std::cout);
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
 	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
@@ -2988,9 +2986,7 @@ void MainScreen::on_load_model_button_clicked() {
 	//Add to Loaded Models and initialize new vtk actors
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 	vw->loadModels(CADFileExtensions, CADModelNames);
-	std::cout << "After loading models in mainscreen" << std::endl;
 	vw->displayActorsInRenderer();
-	ui.qvtk_widget->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->Print(std::cout);
 	//Scroll through list and warn if loaded model might be invalid STL file
 	/*for (int i = 0; i < CADFileExtensions.size(); i++) {
 		std::cout << "Before checking loaded models - this should print" <<std::endl;
@@ -3010,7 +3006,6 @@ void MainScreen::on_load_model_button_clicked() {
 	}
 
 	//Populate Model List Widget
-	std::cout << "Prior to Updating Model List Widget" << std::endl;
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
 		ui.model_list_widget->addItem(CADModelNames[i]);
 	}
@@ -3035,10 +3030,8 @@ void MainScreen::on_load_model_button_clicked() {
 	vw->load3DModelsIntoActorAndMapperList();
 	renderer->Render();
 	//If No Loaded Models, Default Select First
-	std::cout << "Before model list widget changes" << std::endl;
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0)
 		ui.model_list_widget->setCurrentRow(0);
-	std::cout << "After model list widget changes" << std::endl;
 	renderer->Render();
 
 }
@@ -3504,7 +3497,6 @@ QModelIndexList MainScreen::selected_model_indices() {
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
-	std::cout << "First line of on_model_list_widget_changed" << std::endl;
 
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_)
@@ -3516,7 +3508,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Turn Off All Model Actor's Visibility and Pickability and Set the Input Connections*/
 
-	std::cout << "Before setting modal opacity to zero for unselected models" << std::endl;
 	//for (int i = 0; i < model_actor_list.size(); i++) {
 	//model_actor_list[i]->PickableOff();
 	//model_actor_list[i]->VisibilityOff();
@@ -3531,7 +3522,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	/*Load Models to Screen*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*Hide Text if Nothing Selected*/
-	std::cout << "Before setting actor visability (text actor)" << std::endl;
 	if (selected.size() == 0) {
 		actor_text->VisibilityOff();
 		if (ui.model_list_widget->currentIndex().row() >= 0) {
@@ -3544,14 +3534,12 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	}
 
 	/*Load Models*/
-	std::cout << "Before setting modal opacity and color for real " << std::endl;
 	for (int i = 0; i < selected.size(); i++) {
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Primary Model is the First One in the List
 		Make it Orange and all others Blue*/
 		if (i == 0) {
-			std::cout << "Before setting the first model orange" << std::endl;
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
 			//model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
@@ -3575,7 +3563,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			/*Opaque*/
 			//model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
 			vw->changeModelOpacityToOriginal(selected[i].row());
-			std::cout << "We madde it past setting opacity - crossing my fingers!" << std::endl;
 			ui.qvtk_widget->update();
 		}
 		/*Solid Color Model*/
@@ -3625,13 +3612,11 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*If Camera A View*/
 		if (ui.camera_A_radio_button->isChecked()) {
 			/*Set Model Pose*/
-			std::cout << "Before setting the loaded pose of the models - this should print" << std::endl;
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
 			//model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->setModelPositionAtIndex(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->setModelOrientationAtIndex(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-			std::cout << "after setting pose - PLEASE PRINT :)))))" << std::endl;
 			//model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 
 			/*Text Actor if On */
@@ -3643,14 +3628,11 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[0]) + ","
 				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[1]) + ","
 				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[2]) + ">";
-				std::cout << "before setting location and orientation info" << std::endl;
 				//std::string infoText = vw->printLocationAndOrientationOfModelAtIndex(selected[i].row());
 				vw->setActorText(vw->printLocationAndOrientationOfModelAtIndex(selected[i].row()));
 				vw->setActorTextColorToModelColorAtIndex(selected[i].row());
-				std::cout << selected[i].row() << "INDEX WE ARE WORKING WITH" << std::endl;
 				//actor_text->SetInput(infoText.c_str());
 				//actor_text->GetTextProperty()->SetColor(model_actor_list[selected[i].row()]->GetProperty()->GetColor());
-				std::cout << "After setting and printing model location and oritentation" << std::endl;
 			}
 		}
 		else {

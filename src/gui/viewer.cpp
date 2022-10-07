@@ -154,7 +154,6 @@ void viewer::placeImageActorsAccordingToCalibration(Calibration cal, int img_w, 
 
 
 void viewer::load3DModelsIntoActorAndMapperList() {
-	std::cout << "load3D Models into actor and mapper list" << std::endl;
 	for (int i = 0; i < loaded_models_->size(); i++) {
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -185,18 +184,14 @@ std::vector<vtkSmartPointer<vtkActor>> viewer::getModelActorList() {
 }
 
 void viewer::set3DModelColor(int index, double RGB[3]) {
-	std::cout << "This is definitely causing the break" << std::endl;
 	model_actor_list_[index]->GetProperty()->SetColor(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0);
-	std::cout << "If you are reading this then it definitely did not cause the break" << std::endl;
 
 }
 
 void viewer::loadModels(QStringList cad_files, QStringList cad_models) {
 	for (int i = 0; i < cad_files.size(); i++) {
 		loaded_models_->push_back(Model(cad_files[i].toStdString(), cad_models[i].toStdString(), "BLANK"));
-		std::cout << "Inside model loading for loop" << std::endl;
 	}
-	std::cout << "MODELS LOADED" << std::endl;
 }
 
 bool viewer::areModelsLoadedCorrectly(int index) {
@@ -252,7 +247,6 @@ void viewer::setModelOrientationAtIndex(int index, double xrot, double yrot, dou
 }
 
 std::string viewer::printLocationAndOrientationOfModelAtIndex(int index) {
-	std::cout << "Inside pos and orientation printing function!" << std::endl;
 	std::string infoText = "Location: <";
 	infoText += std::to_string(static_cast<long double>(model_actor_list_[index]->GetPosition()[0])) + ","
 		+ std::to_string(static_cast<long double>(model_actor_list_[index]->GetPosition()[1])) + ","
@@ -260,7 +254,6 @@ std::string viewer::printLocationAndOrientationOfModelAtIndex(int index) {
 		+ std::to_string(static_cast<long double>(model_actor_list_[index]->GetOrientation()[0])) + ","
 		+ std::to_string(static_cast<long double>(model_actor_list_[index]->GetOrientation()[1])) + ","
 		+ std::to_string(static_cast<long double>(model_actor_list_[index]->GetOrientation()[2])) + ">";
-	std::cout << "After storing location info as string inside viewer" << std::endl;
 
 	return infoText;
 }
@@ -277,7 +270,6 @@ void viewer::setActorTextColorToModelColorAtIndex(int index) {
 void viewer::renderScene() {
 	background_renderer_->Render();
 
-	std::cout << model_actor_list_.size() << std::endl;
 }
 
 void viewer::displayActorsInRenderer() {
