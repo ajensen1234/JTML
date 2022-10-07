@@ -20,77 +20,78 @@
 
 /*Kernels*/
 /*Blending Two Images Kernel*/
-__global__ void BlendGrayscaleKernel(unsigned char* dev_dest, unsigned char *dev_second, float alpha, int width, int height) {
+__global__ void BlendGrayscaleKernel(unsigned char* dev_dest, unsigned char* dev_second, float alpha, int width,
+                                     int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
-		dev_dest[i] = alpha* dev_dest[i] + (1 - alpha)*dev_second[i];
+	if (i < width * height) {
+		dev_dest[i] = alpha * dev_dest[i] + (1 - alpha) * dev_second[i];
 	}
 }
 
 /*Pasting Non Black Pixel Kernel*/
-__global__ void PasteNonBlackPixelsKernel(unsigned char* dev_dest, unsigned char *dev_second, int width, int height) {
+__global__ void PasteNonBlackPixelsKernel(unsigned char* dev_dest, unsigned char* dev_second, int width, int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
+	if (i < width * height) {
 		if (dev_second[i] > 0)
 			dev_dest[i] = dev_second[i];
 	}
 }
 
 /*Normalize Image to Range*/
-__global__ void InitializeMaxMinKernel(int *dev_max, int* dev_min)
-{
+__global__ void InitializeMaxMinKernel(int* dev_max, int* dev_min) {
 	dev_max[0] = 0;
 	dev_min[0] = 255;
 }
-__global__ void GetMaxMinPixelsKernel(unsigned char* dev_image, int *dev_max, int* dev_min, int width, int height) {
+
+__global__ void GetMaxMinPixelsKernel(unsigned char* dev_image, int* dev_max, int* dev_min, int width, int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
-		atomicMax((int *)&dev_max[0], dev_image[i]);
-		atomicMin((int *)&dev_min[0], dev_image[i]);
+	if (i < width * height) {
+		atomicMax(&dev_max[0], dev_image[i]);
+		atomicMin(&dev_min[0], dev_image[i]);
 	}
 }
-__global__ void ScaleImageToRangeKernel(unsigned char* dev_image, int *dev_max, int* dev_min, unsigned int lower_bound, unsigned int upper_bound, int width, int height) {
+
+__global__ void ScaleImageToRangeKernel(unsigned char* dev_image, int* dev_max, int* dev_min, unsigned int lower_bound,
+                                        unsigned int upper_bound, int width, int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
-		dev_image[i] = ((float)(dev_image[i] - dev_min[0]) / (float)(dev_max[0] - dev_min[0])) * ((float) (upper_bound - lower_bound)) + lower_bound;
+	if (i < width * height) {
+		dev_image[i] = (static_cast<float>(dev_image[i] - dev_min[0]) / static_cast<float>(dev_max[0] - dev_min[0])) *
+			static_cast<float>(upper_bound - lower_bound) + lower_bound;
 	}
 }
 
 /*Convolution Kernel*/
-__global__ void ConvolutionKernel(unsigned char* dev_dest_image, unsigned char* dev_input_image, float* dev_kernel, int kernel_size, int width, int height) {
+__global__ void ConvolutionKernel(unsigned char* dev_dest_image, unsigned char* dev_input_image, float* dev_kernel,
+                                  int kernel_size, int width, int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
+	if (i < width * height) {
 		/*Convert i into coordinates for grid*/
 		int i_row = i / (width);
-		int i_col = i - i_row* (width);
-		
+		int i_col = i - i_row * (width);
+
 		/*Only proceed if not out of bounds, otherwise paste original pixel (this ignores the boundaries essentially)*/
-		if ((i_row < (height - (kernel_size - 1) / 2)) && (i_row >= ((kernel_size - 1) / 2)) && (i_col <  (width - (kernel_size - 1) / 2)) && (i_col >= ((kernel_size - 1) / 2))) {
+		if ((i_row < (height - (kernel_size - 1) / 2)) && (i_row >= ((kernel_size - 1) / 2)) && (i_col < (width - (
+			kernel_size - 1) / 2)) && (i_col >= ((kernel_size - 1) / 2))) {
 			float value = 0;
 			/*For Each Row*/
 			for (int row = -1 * ((kernel_size - 1) / 2); row <= ((kernel_size - 1) / 2); row++) {
@@ -98,10 +99,12 @@ __global__ void ConvolutionKernel(unsigned char* dev_dest_image, unsigned char* 
 				for (int col = -1 * ((kernel_size - 1) / 2); col <= ((kernel_size - 1) / 2); col++) {
 					/*Get Kernel Index*/
 					int ker_row = row + ((kernel_size - 1) / 2);
-					int ker_col = -1*col + ((kernel_size - 1) / 2); //The -1 flips the kernel so its in the order described in the header
+					int ker_col = -1 * col + ((kernel_size - 1) / 2);
+					//The -1 flips the kernel so its in the order described in the header
 
 					/*Update Pixel*/
-					value += (float)dev_input_image[row*width + i + col] * dev_kernel[ker_row*kernel_size + ker_col];
+					value += static_cast<float>(dev_input_image[row * width + i + col]) * dev_kernel[ker_row *
+						kernel_size + ker_col];
 				}
 			}
 			dev_dest_image[i] = value;
@@ -110,21 +113,21 @@ __global__ void ConvolutionKernel(unsigned char* dev_dest_image, unsigned char* 
 			dev_dest_image[i] = dev_input_image[i];
 		}
 
-		
+
 	}
 
 }
 
 /*Random Image Noise*/
-__global__ void AddUniformRandomNoiseKernel(unsigned char* dev_image, float* dev_random_container, int lower_bound, int upper_bound, int width, int height) {
+__global__ void AddUniformRandomNoiseKernel(unsigned char* dev_image, float* dev_random_container, int lower_bound,
+                                            int upper_bound, int width, int height) {
 
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
-		int noisy_pixel = dev_image[i] + dev_random_container[i]*(upper_bound - lower_bound) + lower_bound;
+	if (i < width * height) {
+		int noisy_pixel = dev_image[i] + dev_random_container[i] * (upper_bound - lower_bound) + lower_bound;
 		if (noisy_pixel > 255)
 			noisy_pixel = 255;
 		else if (noisy_pixel < 0)
@@ -134,28 +137,28 @@ __global__ void AddUniformRandomNoiseKernel(unsigned char* dev_image, float* dev
 }
 
 /*Compile Grid*/
-__global__ void CompileGridKernel(unsigned char** dev_images, unsigned char* dev_grid, int image_width, int image_height, int grid_width, int grid_height) {
+__global__ void CompileGridKernel(unsigned char** dev_images, unsigned char* dev_grid, int image_width,
+                                  int image_height, int grid_width, int grid_height) {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*If Correct Width and Height*/
-	if (i < image_width*grid_width*image_height*grid_height)
-	{
+	if (i < image_width * grid_width * image_height * grid_height) {
 		/*Convert i into coordinates for grid*/
-		int i_row = i / (image_width*grid_width);
-		int i_col = i - i_row* (image_width*grid_width); // Essentially modulo. This is faster?
+		int i_row = i / (image_width * grid_width);
+		int i_col = i - i_row * (image_width * grid_width); // Essentially modulo. This is faster?
 		/*Grid Row and Column Indices (Grids are matrices of images)*/
 		int grid_row = i_row / image_height;
 		int grid_col = i_col / image_width;
 		/*Image Row and Column Indices (Image ae matrices of pixels)*/
-		int img_row = i_row - grid_row*image_height;
-		int img_col = i_col - grid_col*image_width;
+		int img_row = i_row - grid_row * image_height;
+		int img_col = i_col - grid_col * image_width;
 
 		/*Convert Grid Indices to Selection of GPU Image on device*/
-		int dev_imag_ind = grid_row*grid_width + grid_col;
+		int dev_imag_ind = grid_row * grid_width + grid_col;
 
 		/*Convert Image Indices to single "i" style index to access smaller image pixels*/
-		int dev_imag_i = img_row*image_width + img_col;
+		int dev_imag_i = img_row * image_width + img_col;
 
 		// char* x = dev_images[dev_imag_ind];
 		//dev_images[dev_imag_ind][i/4];// x[dev_imag_i];/*255.0*((float)dev_imag_i / (float)(250 * 250));*/// 
@@ -184,12 +187,13 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Kernel*/
-		BlendGrayscaleKernel << <dim_grid_image_processing_, threads_per_block >> >(destination_image->GetDeviceImagePointer(), secondary_image->GetDeviceImagePointer(), alpha,
+		BlendGrayscaleKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			destination_image->GetDeviceImagePointer(), secondary_image->GetDeviceImagePointer(), alpha,
 			width, height);
 
 		/*CUDA Get Last Error*/
@@ -209,29 +213,33 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Kernel*/
-		PasteNonBlackPixelsKernel << <dim_grid_image_processing_, threads_per_block >> >(destination_image->GetDeviceImagePointer(), secondary_image->GetDeviceImagePointer(),
+		PasteNonBlackPixelsKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			destination_image->GetDeviceImagePointer(), secondary_image->GetDeviceImagePointer(),
 			width, height);
 
 
 		/*CUDA Get Last Error*/
 		return (cudaSuccess == cudaGetLastError());
 	}
-	bool PasteNonBlackPixels(unsigned char* dev_destination_image, unsigned char* dev_secondary_image, int height, int width) {
+
+	bool PasteNonBlackPixels(unsigned char* dev_destination_image, unsigned char* dev_secondary_image, int height,
+	                         int width) {
 		/*Clear Previous Errors*/
 		cudaGetLastError();
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Kernel*/
-		PasteNonBlackPixelsKernel << <dim_grid_image_processing_, threads_per_block >> >(dev_destination_image, dev_secondary_image,
+		PasteNonBlackPixelsKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			dev_destination_image, dev_secondary_image,
 			width, height);
 
 
@@ -246,11 +254,11 @@ namespace gpu_cost_function {
 		/*Make Sure Bounds are within 0 - 255 range*/
 		if (lower_bound < 0)
 			lower_bound = 0;
-		else if (lower_bound > 255)
+		if (lower_bound > 255)
 			lower_bound = 255;
 		if (upper_bound < 0)
 			upper_bound = 0;
-		else if (upper_bound > 255)
+		if (upper_bound > 255)
 			upper_bound = 255;
 
 		/*Clear Previous Errors*/
@@ -261,21 +269,23 @@ namespace gpu_cost_function {
 		int width = grayscale_image->GetFrameWidth();
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Create Device Pointer Container for Max and Min*/
 		int* dev_max = 0;
 		int* dev_min = 0;
 		cudaMalloc((void**)&dev_max, 1 * sizeof(int));
 		cudaMalloc((void**)&dev_min, 1 * sizeof(int));
-		InitializeMaxMinKernel << <1, 1 >> > (dev_max, dev_min); // Sets dev_max = 0, dev_min = 255
+		InitializeMaxMinKernel << <1, 1 >> >(dev_max, dev_min); // Sets dev_max = 0, dev_min = 255
 
 		/*Kernels*/
-		GetMaxMinPixelsKernel << <dim_grid_image_processing_, threads_per_block >> > (grayscale_image->GetDeviceImagePointer(), dev_max, dev_min, width, height);
-		ScaleImageToRangeKernel << <dim_grid_image_processing_, threads_per_block >> > (grayscale_image->GetDeviceImagePointer(), dev_max, dev_min, lower_bound, upper_bound, width, height);
-		
+		GetMaxMinPixelsKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			grayscale_image->GetDeviceImagePointer(), dev_max, dev_min, width, height);
+		ScaleImageToRangeKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			grayscale_image->GetDeviceImagePointer(), dev_max, dev_min, lower_bound, upper_bound, width, height);
+
 		/*Free Memory for dev-max/min*/
 		cudaFree(dev_max);
 		cudaFree(dev_min);
@@ -294,7 +304,7 @@ namespace gpu_cost_function {
 	specifies the order of the kernel).
 	Results from convolving the kernel with the input image are spit out into the destination image.
 	Bool return value indicates success.*/
-	bool  Convolve(GPUImage* dest_image, GPUImage* input_image, float* dev_kernel, int kernel_size) {
+	bool Convolve(GPUImage* dest_image, GPUImage* input_image, float* dev_kernel, int kernel_size) {
 		/*Make Sure Kernel is Odd*/
 		if (kernel_size % 2 == 0)
 			return false;
@@ -309,12 +319,14 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Kernel*/
-		ConvolutionKernel << <dim_grid_image_processing_, threads_per_block >> > (dest_image->GetDeviceImagePointer(),input_image->GetDeviceImagePointer(),dev_kernel,kernel_size, width, height);
+		ConvolutionKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			dest_image->GetDeviceImagePointer(), input_image->GetDeviceImagePointer(), dev_kernel, kernel_size, width,
+			height);
 
 		/*CUDA Get Last Error*/
 		return (cudaSuccess == cudaGetLastError());
@@ -325,8 +337,9 @@ namespace gpu_cost_function {
 	snap to the lower or upper bound. Uniform range runs from lower bound to upper bound.
 	MUST CALL InitializeCUDARandom FIRST!!!
 	Bool return value indicates success.*/
-	bool AddUniformNoise(GPUImage* grayscale_image, curandGenerator_t* prng, float* dev_random_container, int lower_bound, int upper_bound){
-		
+	bool AddUniformNoise(GPUImage* grayscale_image, curandGenerator_t* prng, float* dev_random_container,
+	                     int lower_bound, int upper_bound) {
+
 		/*Clear Previous Errors*/
 		cudaGetLastError();
 
@@ -335,15 +348,16 @@ namespace gpu_cost_function {
 		int width = grayscale_image->GetFrameWidth();
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(width) / sqrt((double)threads_per_block)),
-			ceil((double)(height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Generate Random Uniform*/
 		curandGenerateUniform(*prng, dev_random_container, width * height);
 
 		/*Kernels*/
-		AddUniformRandomNoiseKernel << <dim_grid_image_processing_, threads_per_block >> > (grayscale_image->GetDeviceImagePointer(), dev_random_container, lower_bound, upper_bound, width, height);
+		AddUniformRandomNoiseKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			grayscale_image->GetDeviceImagePointer(), dev_random_container, lower_bound, upper_bound, width, height);
 
 
 		/*CUDA Get Last Error*/
@@ -354,21 +368,23 @@ namespace gpu_cost_function {
 	/*Copies An Array of GPUImages to one Grid. Image width and height are for the smaller images.
 	Grid with and height are expressed in number of small images.
 	Bool return value indiates success.*/
-	bool CompileGrid(unsigned char** dev_images, unsigned char* dev_grid, int image_width, int image_height, int grid_width, int grid_height) {
+	bool CompileGrid(unsigned char** dev_images, unsigned char* dev_grid, int image_width, int image_height,
+	                 int grid_width, int grid_height) {
 		/*Clear Previous Errors*/
 		cudaGetLastError();
 
 		/*Grid Pixel Dimensions*/
-		int grid_pixel_height = image_height*grid_height;
-		int grid_pixel_width = image_width*grid_width;
+		int grid_pixel_height = image_height * grid_height;
+		int grid_pixel_width = image_width * grid_width;
 
 		/*Image Processing Dimension Grid*/
-		dim3 dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(grid_pixel_width) / sqrt((double)threads_per_block)),
-			ceil((double)(grid_pixel_height) / sqrt((double)threads_per_block)));
+		auto dim_grid_image_processing_ = dim3::dim3(
+			ceil(static_cast<double>(grid_pixel_width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(grid_pixel_height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Kernels*/
-		CompileGridKernel << <dim_grid_image_processing_, threads_per_block >> > (dev_images, dev_grid, image_width, image_height, grid_width, grid_height);
+		CompileGridKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			dev_images, dev_grid, image_width, image_height, grid_width, grid_height);
 
 		/*CUDA Get Last Error*/
 		return (cudaSuccess == cudaGetLastError());

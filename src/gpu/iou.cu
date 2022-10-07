@@ -12,31 +12,31 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void IOU__ResetIOUScoresKernel(int *dev_intersection_score, int *dev_union_score) {
+__global__ void IOU__ResetIOUScoresKernel(int* dev_intersection_score, int* dev_union_score) {
 	dev_intersection_score[0] = 0;
 	dev_union_score[0] = 0;
 }
 
-__global__ void IOUKernel(unsigned char* dev_A, unsigned char *dev_B, int *dev_intersection_score, int *dev_union_score, int width, int height,
-	int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width)
-{
+__global__ void IOUKernel(unsigned char* dev_A, unsigned char* dev_B, int* dev_intersection_score, int* dev_union_score,
+                          int width, int height,
+                          int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width) {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*Convert to Subsize*/
-	i = (i / diff_kernel_cropped_width)*width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width + diff_kernel_left_x;
+	i = (i / diff_kernel_cropped_width) * width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width +
+		diff_kernel_left_x;
 
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
+	if (i < width * height) {
 		int A_element = dev_A[i];
 		int B_element = dev_B[i];
 
 		if (A_element > 0 || B_element > 0) {
-			atomicAdd((int *)&dev_union_score[0], 1);
+			atomicAdd(&dev_union_score[0], 1);
 			if (A_element > 0 && B_element > 0) {
-				atomicAdd((int *)&dev_intersection_score[0], 1);
+				atomicAdd(&dev_intersection_score[0], 1);
 			}
 		}
 	}
@@ -66,16 +66,18 @@ namespace gpu_cost_function {
 		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 
 		dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(diff_kernel_cropped_width) / sqrt((double)threads_per_block)),
-			ceil((double)(diff_kernel_cropped_height) / sqrt((double)threads_per_block)));
+			ceil(static_cast<double>(diff_kernel_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(diff_kernel_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*IOU Kernel*/
-		IOUKernel << <dim_grid_image_processing_, threads_per_block >> >(image_A->GetDeviceImagePointer(), image_B->GetDeviceImagePointer(), dev_intersection_score_, dev_union_score_,
+		IOUKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			image_A->GetDeviceImagePointer(), image_B->GetDeviceImagePointer(), dev_intersection_score_,
+			dev_union_score_,
 			width, height, diff_kernel_left_x, diff_kernel_bottom_y, diff_kernel_cropped_width);
 
 		/*Return IOU Score*/
 		cudaMemcpy(intersection_score_, dev_intersection_score_, sizeof(int), cudaMemcpyDeviceToHost);
 		cudaMemcpy(union_score_, dev_union_score_, sizeof(int), cudaMemcpyDeviceToHost);
-		return (double)intersection_score_[0]/ (double)union_score_[0];
+		return static_cast<double>(intersection_score_[0]) / static_cast<double>(union_score_[0]);
 	}
 }

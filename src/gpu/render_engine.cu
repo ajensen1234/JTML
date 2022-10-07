@@ -17,7 +17,7 @@
 namespace gpu_cost_function {
 
 	Pose::Pose(float x_location, float y_location, float z_location,
-		float x_angle, float y_angle, float z_angle) {
+	           float x_angle, float y_angle, float z_angle) {
 		x_location_ = x_location;
 		y_location_ = y_location;
 		z_location_ = z_location;
@@ -39,21 +39,33 @@ namespace gpu_cost_function {
 		float rotation_00, float rotation_01, float rotation_02,
 		float rotation_10, float rotation_11, float rotation_12,
 		float rotation_20, float rotation_21, float rotation_22) {
-		rotation_00_ = rotation_00; rotation_01_ = rotation_01; rotation_02_ = rotation_02;
-		rotation_10_ = rotation_10; rotation_11_ = rotation_11; rotation_12_ = rotation_12;
-		rotation_20_ = rotation_20; rotation_21_ = rotation_21; rotation_22_ = rotation_22;
+		rotation_00_ = rotation_00;
+		rotation_01_ = rotation_01;
+		rotation_02_ = rotation_02;
+		rotation_10_ = rotation_10;
+		rotation_11_ = rotation_11;
+		rotation_12_ = rotation_12;
+		rotation_20_ = rotation_20;
+		rotation_21_ = rotation_21;
+		rotation_22_ = rotation_22;
 	}
 
 	RotationMatrix::RotationMatrix() {
-		rotation_00_ = 1; rotation_01_ = 0; rotation_02_ = 0;
-		rotation_10_ = 0; rotation_11_ = 1; rotation_12_ = 0;
-		rotation_20_ = 0; rotation_21_ = 0; rotation_22_ = 1;
+		rotation_00_ = 1;
+		rotation_01_ = 0;
+		rotation_02_ = 0;
+		rotation_10_ = 0;
+		rotation_11_ = 1;
+		rotation_12_ = 0;
+		rotation_20_ = 0;
+		rotation_21_ = 0;
+		rotation_22_ = 1;
 	}
 
 	RenderEngine::RenderEngine(int width, int height, int device,
-		bool use_backface_culling,
-		float *triangles, float *normals, int triangle_count,
-		CameraCalibration camera_calibration) {
+	                           bool use_backface_culling,
+	                           float* triangles, float* normals, int triangle_count,
+	                           CameraCalibration camera_calibration) {
 
 		/*Initialize Private Host Variables*/
 		width_ = width;
@@ -63,26 +75,28 @@ namespace gpu_cost_function {
 		fragment_overflow_ = false;
 		initialized_correctly_ = true;
 		camera_calibration_ = camera_calibration;
-		pix_conversion_x_ = (float)width_ / 2.0f - camera_calibration_.principal_x_ / camera_calibration_.pixel_pitch_;
-		pix_conversion_y_ = (float)height_ / 2.0f - camera_calibration_.principal_y_ / camera_calibration_.pixel_pitch_;
+		pix_conversion_x_ = static_cast<float>(width_) / 2.0f - camera_calibration_.principal_x_ / camera_calibration_.
+			pixel_pitch_;
+		pix_conversion_y_ = static_cast<float>(height_) / 2.0f - camera_calibration_.principal_y_ / camera_calibration_.
+			pixel_pitch_;
 		dist_over_pix_pitch_ = -1.0f * camera_calibration_.principal_distance_ / camera_calibration_.pixel_pitch_;
 
 		/*Initialize Kernel Launch Sizes*/
 		dim_grid_triangles_ = dim3(
 			ceil(sqrt(
-			(double)(triangle_count_) / (double)threads_per_block)),
+				static_cast<double>(triangle_count_) / static_cast<double>(threads_per_block))),
 			ceil(sqrt(
-			(double)(triangle_count_) / (double)threads_per_block)));
+				static_cast<double>(triangle_count_) / static_cast<double>(threads_per_block))));
 		dim_grid_vertices_ = dim3(
 			ceil(sqrt(
-			(double)(3.0*triangle_count_) / (double)threads_per_block)),
+				3.0 * triangle_count_ / static_cast<double>(threads_per_block))),
 			ceil(sqrt(
-			(double)(3.0*triangle_count_) / (double)threads_per_block)));
+				3.0 * triangle_count_ / static_cast<double>(threads_per_block))));
 		dim_grid_bounding_box_ = dim3(
 			ceil(sqrt(
-			(double)(4.0*triangle_count_) / (double)threads_per_block)),
+				4.0 * triangle_count_ / static_cast<double>(threads_per_block))),
 			ceil(sqrt(
-			(double)(4.0*triangle_count_) / (double)threads_per_block)));
+				4.0 * triangle_count_ / static_cast<double>(threads_per_block))));
 
 		/*Initialize Host Variables*/
 		fragment_fill_ = 0;
@@ -126,7 +140,7 @@ namespace gpu_cost_function {
 		dev_triangles_ = 0;
 		dev_normals_ = 0;
 		dev_backface_ = 0;
-		dev_transf_vertex_zs_= 0;
+		dev_transf_vertex_zs_ = 0;
 		dev_tangent_triangle_ = 0;
 		dev_projected_triangles_ = 0;
 		dev_projected_triangles_snapped_ = 0;
@@ -177,9 +191,9 @@ namespace gpu_cost_function {
 		cudaFreeHost(fragment_fill_);
 	}
 
-	cudaError_t RenderEngine::InitializeCUDA(float *triangles, float *normals, int device) {
+	cudaError_t RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
 		/*CUDA Error Status*/
-		cudaGetLastError();  //Resets Errors
+		cudaGetLastError(); //Resets Errors
 		cudaError_t cudaStatus;
 
 		/*Choose which GPU to run on, change this on a multi-GPU system.*/
@@ -187,8 +201,7 @@ namespace gpu_cost_function {
 
 		/*Check for Errors*/
 		cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess)
-		{
+		if (cudaStatus != cudaSuccess) {
 			initialized_correctly_ = false;
 			FreeCuda();
 			return cudaStatus;
@@ -198,7 +211,7 @@ namespace gpu_cost_function {
 		cudaHostAlloc((void**)&fragment_fill_, 1 * sizeof(int), cudaHostAllocDefault);
 
 		/*Allocate GPU buffers for image, triangles.*/
-		cudaMalloc((void**)&dev_z_line_values_, width_*height_ * sizeof(float));
+		cudaMalloc((void**)&dev_z_line_values_, width_ * height_ * sizeof(float));
 
 		cudaMalloc((void**)&dev_triangles_, triangle_count_ * 9 * sizeof(float));
 
@@ -228,13 +241,12 @@ namespace gpu_cost_function {
 
 		/*Check for Errors*/
 		cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess)
-		{
+		if (cudaStatus != cudaSuccess) {
 			initialized_correctly_ = false;
 			FreeCuda();
 			return cudaStatus;
 		}
-		
+
 		/*Initialize the GPU Image*/
 		renderer_output_ = new GPUImage(width_, height_, device);
 
@@ -249,14 +261,13 @@ namespace gpu_cost_function {
 
 		/*Before Allocating Temporary Buffer for CUB to GPU, learn the size by calling the function*/
 		cub::DeviceScan::ExclusiveSum(dev_cub_storage_, cub_storage_bytes_, dev_bounding_box_triangles_sizes_,
-			dev_bounding_box_triangles_sizes_, triangle_count_);
+		                              dev_bounding_box_triangles_sizes_, triangle_count_);
 
 		cudaMalloc(&dev_cub_storage_, cub_storage_bytes_);
 
 		/*Check for Errors*/
 		cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess)
-		{
+		if (cudaStatus != cudaSuccess) {
 			initialized_correctly_ = false;
 			FreeCuda();
 			return cudaStatus;
@@ -270,7 +281,9 @@ namespace gpu_cost_function {
 
 		/*Check for Errors*/
 		cudaStatus = cudaGetLastError();
-		if (cudaStatus == cudaSuccess) initialized_correctly_ = true;
+		if (cudaStatus == cudaSuccess) {
+			initialized_correctly_ = true;
+		}
 		else {
 			initialized_correctly_ = false;
 			FreeCuda();
@@ -281,12 +294,12 @@ namespace gpu_cost_function {
 	void RenderEngine::SetPose(Pose model_pose) {
 		model_pose_ = model_pose;
 
-		float cz = cos(model_pose_.z_angle_*3.14159265358979323846f / 180.0f);
-		float sz = sin(model_pose_.z_angle_*3.14159265358979323846f / 180.0f);
-		float cx = cos(model_pose_.x_angle_*3.14159265358979323846f / 180.0f);
-		float sx = sin(model_pose_.x_angle_*3.14159265358979323846f / 180.0f);
-		float cy = cos(model_pose_.y_angle_*3.14159265358979323846f / 180.0f);
-		float sy = sin(model_pose_.y_angle_*3.14159265358979323846f / 180.0f);
+		float cz = cos(model_pose_.z_angle_ * 3.14159265358979323846f / 180.0f);
+		float sz = sin(model_pose_.z_angle_ * 3.14159265358979323846f / 180.0f);
+		float cx = cos(model_pose_.x_angle_ * 3.14159265358979323846f / 180.0f);
+		float sx = sin(model_pose_.x_angle_ * 3.14159265358979323846f / 180.0f);
+		float cy = cos(model_pose_.y_angle_ * 3.14159265358979323846f / 180.0f);
+		float sy = sin(model_pose_.y_angle_ * 3.14159265358979323846f / 180.0f);
 
 		/* R*v = RzRxRy*v */
 		model_rotation_mat_ = RotationMatrix(
@@ -300,57 +313,62 @@ namespace gpu_cost_function {
 	}
 
 
-	__global__ void ResetKernel(int *dev_bounding_box, int width, int height)
-	{
-		dev_bounding_box[0] = width - 1; /*Left Most X -> initialize with width - 1 (we are zero based) since can only be brought down*/
-		dev_bounding_box[1] = height - 1; /*Bottom Most Y -> initialize with height - 1 (we are zero based) since can only be brought down*/
+	__global__ void ResetKernel(int* dev_bounding_box, int width, int height) {
+		dev_bounding_box[0] = width - 1;
+		/*Left Most X -> initialize with width - 1 (we are zero based) since can only be brought down*/
+		dev_bounding_box[1] = height - 1;
+		/*Bottom Most Y -> initialize with height - 1 (we are zero based) since can only be brought down*/
 		dev_bounding_box[2] = 0; /*Right Most X -> initialize with zero since can only be brought up*/
 		dev_bounding_box[3] = 0; /*Top Most Y -> initialize with zero since can only be brought up*/
 	}
 
-	__global__ void WorldToPixelKernel(float *dev_triangles, float *dev_projected_triangles, int *dev_projected_triangles_snapped,
-		int vertex_count, float dist_over_pix_pitch, float pix_conversion_x, float pix_conversion_y,
-		float x_location, float y_location, float z_location, RotationMatrix model_rotation_mat,
-		float *dev_normals, bool *dev_backface, bool use_backface_culling)
-	{
+	__global__ void WorldToPixelKernel(float* dev_triangles, float* dev_projected_triangles,
+	                                   int* dev_projected_triangles_snapped,
+	                                   int vertex_count, float dist_over_pix_pitch, float pix_conversion_x,
+	                                   float pix_conversion_y,
+	                                   float x_location, float y_location, float z_location,
+	                                   RotationMatrix model_rotation_mat,
+	                                   float* dev_normals, bool* dev_backface, bool use_backface_culling) {
 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
-		if (i < vertex_count)
-		{
+		if (i < vertex_count) {
 			/*Read in Vertices*/
 			float vX = dev_triangles[(3 * i)];
 			float vY = dev_triangles[(3 * i) + 1];
 			float vZ = dev_triangles[(3 * i) + 2];
 
 			/*Transform (Rotate then Translate) Vertices*/
-			float tX = model_rotation_mat.rotation_00_*vX + model_rotation_mat.rotation_01_*vY +
-				model_rotation_mat.rotation_02_*vZ + x_location;
-			float tY = model_rotation_mat.rotation_10_*vX + model_rotation_mat.rotation_11_*vY +
-				model_rotation_mat.rotation_12_*vZ + y_location;
-			float tZ = model_rotation_mat.rotation_20_*vX + model_rotation_mat.rotation_21_*vY +
-				model_rotation_mat.rotation_22_*vZ + z_location;
+			float tX = model_rotation_mat.rotation_00_ * vX + model_rotation_mat.rotation_01_ * vY +
+				model_rotation_mat.rotation_02_ * vZ + x_location;
+			float tY = model_rotation_mat.rotation_10_ * vX + model_rotation_mat.rotation_11_ * vY +
+				model_rotation_mat.rotation_12_ * vZ + y_location;
+			float tZ = model_rotation_mat.rotation_20_ * vX + model_rotation_mat.rotation_21_ * vY +
+				model_rotation_mat.rotation_22_ * vZ + z_location;
 
 			/*Transform normal and compute dot product with vertex. Backface if >= 0. Only do on first vertex.*/
-			if (i % 3 == 0)
-			{
+			if (i % 3 == 0) {
 				float nX = dev_normals[3 * (i / 3)];
 				float nY = dev_normals[3 * (i / 3) + 1];
 				float nZ = dev_normals[3 * (i / 3) + 2];
-				float dotProduct = (model_rotation_mat.rotation_00_*nX + model_rotation_mat.rotation_01_*nY +
-					model_rotation_mat.rotation_02_*nZ)  *tX +
-					(model_rotation_mat.rotation_10_*nX + model_rotation_mat.rotation_11_*nY +
-						model_rotation_mat.rotation_12_*nZ)*tY +
-						(model_rotation_mat.rotation_20_*nX + model_rotation_mat.rotation_21_*nY +
-							model_rotation_mat.rotation_22_*nZ)* tZ;
-				if (dotProduct >= 0) dev_backface[i / 3] = true;
-				else dev_backface[i / 3] = false;
-				if (!use_backface_culling) dev_backface[i / 3] = false;
+				float dotProduct = (model_rotation_mat.rotation_00_ * nX + model_rotation_mat.rotation_01_ * nY +
+						model_rotation_mat.rotation_02_ * nZ) * tX +
+					(model_rotation_mat.rotation_10_ * nX + model_rotation_mat.rotation_11_ * nY +
+						model_rotation_mat.rotation_12_ * nZ) * tY +
+					(model_rotation_mat.rotation_20_ * nX + model_rotation_mat.rotation_21_ * nY +
+						model_rotation_mat.rotation_22_ * nZ) * tZ;
+				if (dotProduct >= 0)
+					dev_backface[i / 3] = true;
+				else
+					dev_backface[i / 3] = false;
+				if (!use_backface_culling)
+					dev_backface[i / 3] = false;
 			}
 
-			if (tZ >= 0) tZ = -.000001; /*Can't be above or at zero, so make very small..should never happen*/
+			if (tZ >= 0)
+				tZ = -.000001; /*Can't be above or at zero, so make very small..should never happen*/
 
-			float sX = (tX / tZ)*dist_over_pix_pitch + pix_conversion_x;
-			float sY = (tY / tZ)*dist_over_pix_pitch + pix_conversion_y;
+			float sX = (tX / tZ) * dist_over_pix_pitch + pix_conversion_x;
+			float sY = (tY / tZ) * dist_over_pix_pitch + pix_conversion_y;
 
 			/*Store Projected Triangles Actual Location*/
 			dev_projected_triangles[(2 * i)] = sX;
@@ -358,19 +376,17 @@ namespace gpu_cost_function {
 
 
 			/*Store Nearest Pixel of Projected Triangles (Round >= X.5 up to X + 1 and < X.5 down to X)*/
-			dev_projected_triangles_snapped[(2 * i)] = (int)floorf(sX + 0.5);
-			dev_projected_triangles_snapped[(2 * i) + 1] = (int)floorf(sY + 0.5);
+			dev_projected_triangles_snapped[(2 * i)] = static_cast<int>(floorf(sX + 0.5));
+			dev_projected_triangles_snapped[(2 * i) + 1] = static_cast<int>(floorf(sY + 0.5));
 
 		}
 	}
 
-	__global__ void BoundingBoxForTrianglesKernel(int *dev_bounding_box_triangles, int *dev_projected_triangles_snapped,
-		int triangle_count, int width, int height)
-	{
+	__global__ void BoundingBoxForTrianglesKernel(int* dev_bounding_box_triangles, int* dev_projected_triangles_snapped,
+	                                              int triangle_count, int width, int height) {
 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
-		if (i < 4 * triangle_count)
-		{
+		if (i < 4 * triangle_count) {
 			int j = i % 4;
 			if (j == 0) /* Bottom Left X */
 			{
@@ -431,13 +447,11 @@ namespace gpu_cost_function {
 		}
 	}
 
-	__global__ void BoundingBoxSizesKernel(int *dev_bounding_box_triangles, int *dev_bounding_box_triangles_sizes,
-		int triangle_count, int *dev_bounding_box, bool *dev_backface)
-	{
+	__global__ void BoundingBoxSizesKernel(int* dev_bounding_box_triangles, int* dev_bounding_box_triangles_sizes,
+	                                       int triangle_count, int* dev_bounding_box, bool* dev_backface) {
 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
-		if (i < triangle_count)
-		{
+		if (i < triangle_count) {
 			int fourI = 4 * i;
 
 			/*Load bounding box corners (LX, BY, RX, TY) to register memory*/
@@ -447,31 +461,34 @@ namespace gpu_cost_function {
 			int topY = dev_bounding_box_triangles[fourI + 3];
 
 			/*Backface*/
-			if (dev_backface[i] == false)
-			{
-				dev_bounding_box_triangles_sizes[i] = (1 + rightX - leftX)*
+			if (dev_backface[i] == false) {
+				dev_bounding_box_triangles_sizes[i] = (1 + rightX - leftX) *
 					(1 + topY - bottomY);
 			}
-			else dev_bounding_box_triangles_sizes[i] = 1; /*In "theory" should be 0, but this leads to fragments so make 1*/
+			else {
+				dev_bounding_box_triangles_sizes[i] = 1;
+				/*In "theory" should be 0, but this leads to fragments so make 1*/
+			}
 
-														  /*Store Bounding Box on Image*/
-			atomicMin((int *)&dev_bounding_box[0], leftX);
-			atomicMin((int *)&dev_bounding_box[1], bottomY);
-			atomicMax((int *)&dev_bounding_box[2], rightX);
-			atomicMax((int *)&dev_bounding_box[3], topY);
+			/*Store Bounding Box on Image*/
+			atomicMin(&dev_bounding_box[0], leftX);
+			atomicMin(&dev_bounding_box[1], bottomY);
+			atomicMax(&dev_bounding_box[2], rightX);
+			atomicMax(&dev_bounding_box[3], topY);
 		}
 	}
 
-	
-	__global__ void PrepareLaunchPacketKernel(int *dev_fragment_fill, int *dev_bounding_box_triangles_sizes, int *dev_bounding_box_triangles_sizes_prefix,
-		int triangle_count)
-	{
-		dev_fragment_fill[0] = dev_bounding_box_triangles_sizes[triangle_count - 1] + dev_bounding_box_triangles_sizes_prefix[triangle_count - 1];
+
+	__global__ void PrepareLaunchPacketKernel(int* dev_fragment_fill, int* dev_bounding_box_triangles_sizes,
+	                                          int* dev_bounding_box_triangles_sizes_prefix,
+	                                          int triangle_count) {
+		dev_fragment_fill[0] = dev_bounding_box_triangles_sizes[triangle_count - 1] +
+			dev_bounding_box_triangles_sizes_prefix[triangle_count - 1];
 	}
 
-	__global__ void StridePrefixKernel(int stride, int *dev_bounding_box_triangles_sizes, int *dev_bounding_box_triangles_sizes_prefix,
-		int* dev_stride_prefixes, int triangle_count)
-	{
+	__global__ void StridePrefixKernel(int stride, int* dev_bounding_box_triangles_sizes,
+	                                   int* dev_bounding_box_triangles_sizes_prefix,
+	                                   int* dev_stride_prefixes, int triangle_count) {
 		/*Should be slightly more then
 		(boundingBoxTrianglesSizePrefix[triangleCount - 1] + boundingBoxTrianglesSize[triangleCount - 1] ) / stride
 		*/
@@ -479,8 +496,8 @@ namespace gpu_cost_function {
 
 		int j = i * stride;
 
-		if (j < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] + dev_bounding_box_triangles_sizes[triangle_count - 1])
-		{
+		if (j < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] + dev_bounding_box_triangles_sizes[
+			triangle_count - 1]) {
 			/*Get the index for the stride elements*/
 			int low = 0;
 			int high = triangle_count;
@@ -488,17 +505,14 @@ namespace gpu_cost_function {
 			int strideIndex = -1;
 
 			/*Binary Search Loop*/
-			while (low != high)
-			{
+			while (low != high) {
 				/*Calculate Mid Index*/
 				mid = (low + high) / 2;
 
-				if (dev_bounding_box_triangles_sizes_prefix[mid] <= j)
-				{
+				if (dev_bounding_box_triangles_sizes_prefix[mid] <= j) {
 					low = mid + 1;
 				}
-				else
-				{
+				else {
 					high = mid;
 				}
 			}
@@ -507,21 +521,23 @@ namespace gpu_cost_function {
 		}
 	}
 
-	__global__ void FillTriangleKernel(int *dev_bounding_box_triangles_sizes, int *dev_bounding_box_triangles_sizes_prefix,
-		int *dev_bounding_box_triangles, unsigned char *dev_image, int triangle_count, int width, int height,
-		float *dev_projected_triangles, int* dev_stride_prefixes)
-	{
-		int i = blockIdx.x *blockDim.x + threadIdx.x;
+	__global__ void FillTriangleKernel(int* dev_bounding_box_triangles_sizes,
+	                                   int* dev_bounding_box_triangles_sizes_prefix,
+	                                   int* dev_bounding_box_triangles, unsigned char* dev_image, int triangle_count,
+	                                   int width, int height,
+	                                   float* dev_projected_triangles, int* dev_stride_prefixes) {
+		int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-		if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] + dev_bounding_box_triangles_sizes[triangle_count - 1])
-		{
+		if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] + dev_bounding_box_triangles_sizes[
+			triangle_count - 1]) {
 			/*Index of Triangle for the given stride (stride is of size 256 and the stride group is blockIdx.x)*/
 			int stridedIndex = dev_stride_prefixes[blockIdx.x];
 
 			/*Load [stridedIndex, stridedIndex + 255] at most (256) elements to another shared memory (could hit upper bound)*/
 			__shared__ int reducedBoundingBoxTrianglesSizePrefix[threads_per_block];
 			if (threadIdx.x + stridedIndex < triangle_count)
-				reducedBoundingBoxTrianglesSizePrefix[threadIdx.x] = dev_bounding_box_triangles_sizes_prefix[threadIdx.x + stridedIndex];
+				reducedBoundingBoxTrianglesSizePrefix[threadIdx.x] = dev_bounding_box_triangles_sizes_prefix[threadIdx.x
+					+ stridedIndex];
 			__syncthreads();
 
 			/*Binary Search Loop Variables*/
@@ -531,17 +547,14 @@ namespace gpu_cost_function {
 			int triangleIndex = -1;
 
 			/*Binary Search Loop*/
-			while (low != high)
-			{
+			while (low != high) {
 				/*Calculate Mid Index*/
 				mid = (low + high) / 2;
 
-				if (reducedBoundingBoxTrianglesSizePrefix[mid] <= i)
-				{
+				if (reducedBoundingBoxTrianglesSizePrefix[mid] <= i) {
 					low = mid + 1;
 				}
-				else
-				{
+				else {
 					high = mid;
 				}
 			}
@@ -568,34 +581,27 @@ namespace gpu_cost_function {
 			float y3 = dev_projected_triangles[triangleIndex6 + 5];
 
 			/*Use Barycentric Coordinates to Check if Point is In Triangle*/
-			float denominator = ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
-			float a = ((y2 - y3)*(px - x3) + (x3 - x2)*(py - y3));
+			float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+			float a = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3));
 
-			if (denominator > 0)
-			{
-				if (0 <= a && a <= denominator)
-				{
-					float b = ((y3 - y1)*(px - x3) + (x1 - x3)*(py - y3));
-					if (0 <= b && b <= denominator)
-					{
+			if (denominator > 0) {
+				if (0 <= a && a <= denominator) {
+					float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
+					if (0 <= b && b <= denominator) {
 						float c = denominator - a - b;
 						if (0 <= c && c <= denominator) {
-							dev_image[(pyPixel)*width + pxPixel] = 255;
+							dev_image[(pyPixel) * width + pxPixel] = 255;
 						}
 					}
 				}
 			}
-			else
-			{
-				if (0 >= a && a >= denominator)
-				{
-					float b = ((y3 - y1)*(px - x3) + (x1 - x3)*(py - y3));
-					if (0 >= b && b >= denominator)
-					{
+			else {
+				if (0 >= a && a >= denominator) {
+					float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
+					if (0 >= b && b >= denominator) {
 						float c = denominator - a - b;
-						if (0 >= c && c >= denominator)
-						{
-							dev_image[(pyPixel)*width + pxPixel] = 255;
+						if (0 >= c && c >= denominator) {
+							dev_image[(pyPixel) * width + pxPixel] = 255;
 						}
 					}
 				}
@@ -607,38 +613,43 @@ namespace gpu_cost_function {
 
 	cudaError_t RenderEngine::Render() {
 		/*Create Error Status*/
-		cudaGetLastError();  //Resets Errors (MAYBE DELETE TO SAVE TIME?)
-		
+		cudaGetLastError(); //Resets Errors (MAYBE DELETE TO SAVE TIME?)
+
 		/*Clear Image*/
-		cudaMemset(renderer_output_->GetDeviceImagePointer(), 0, width_*height_ * sizeof(unsigned char));
-		
+		cudaMemset(renderer_output_->GetDeviceImagePointer(), 0, width_ * height_ * sizeof(unsigned char));
+
 		/*Reset Launch Packet*/
-		ResetKernel << <1, 1 >> > (dev_bounding_box_, width_, height_);
-		
+		ResetKernel << <1, 1 >> >(dev_bounding_box_, width_, height_);
+
 		/*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
-		WorldToPixelKernel <<<dim_grid_vertices_, threads_per_block>>> (dev_triangles_, dev_projected_triangles_,
-			dev_projected_triangles_snapped_, 3 * triangle_count_,
-			dist_over_pix_pitch_, pix_conversion_x_, pix_conversion_y_,
-			model_pose_.x_location_, model_pose_.y_location_, model_pose_.z_location_,
-			model_rotation_mat_, dev_normals_, dev_backface_, use_backface_culling_);
-		
+		WorldToPixelKernel <<<dim_grid_vertices_, threads_per_block>>>(dev_triangles_, dev_projected_triangles_,
+		                                                               dev_projected_triangles_snapped_,
+		                                                               3 * triangle_count_,
+		                                                               dist_over_pix_pitch_, pix_conversion_x_,
+		                                                               pix_conversion_y_,
+		                                                               model_pose_.x_location_, model_pose_.y_location_,
+		                                                               model_pose_.z_location_,
+		                                                               model_rotation_mat_, dev_normals_, dev_backface_,
+		                                                               use_backface_culling_);
+
 		/*Calculate Bounding Boxes for Each Triangle*/
 		BoundingBoxForTrianglesKernel << <dim_grid_bounding_box_, threads_per_block >> >(dev_bounding_box_triangles_,
 			dev_projected_triangles_snapped_, triangle_count_, width_, height_);
-		
+
 		/*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
-		BoundingBoxSizesKernel <<<dim_grid_triangles_, threads_per_block>>>(dev_bounding_box_triangles_, dev_bounding_box_triangles_sizes_,
+		BoundingBoxSizesKernel <<<dim_grid_triangles_, threads_per_block>>>(
+			dev_bounding_box_triangles_, dev_bounding_box_triangles_sizes_,
 			triangle_count_, dev_bounding_box_, dev_backface_);
-	
+
 		/*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
 		cub::DeviceScan::ExclusiveSum(dev_cub_storage_, cub_storage_bytes_, dev_bounding_box_triangles_sizes_,
-			dev_bounding_box_triangles_sizes_prefix_, triangle_count_);
-		
+		                              dev_bounding_box_triangles_sizes_prefix_, triangle_count_);
+
 		/*Prepare Launch Packet and Send it to Host*/
 		/*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to process
 		(last element in dev_boundingBoxTrianglesSizePrefix and last element in dev_boundingBoxTrianglesSize)*/
 		PrepareLaunchPacketKernel <<<1, 1 >>>(dev_fragment_fill_, dev_bounding_box_triangles_sizes_,
-			dev_bounding_box_triangles_sizes_prefix_, triangle_count_);
+		                                      dev_bounding_box_triangles_sizes_prefix_, triangle_count_);
 
 		cudaMemcpy(renderer_output_->GetBoundingBox(), dev_bounding_box_, 4 * sizeof(int), cudaMemcpyDeviceToHost);
 		cudaMemcpy(fragment_fill_, dev_fragment_fill_, 1 * sizeof(int), cudaMemcpyDeviceToHost);
@@ -650,21 +661,25 @@ namespace gpu_cost_function {
 		based on the results of the point (center of pixel) in triangle test.*/
 
 		/*Error check for too many fragments.*/
-		if ((double)fragment_fill_[0] > (double)maximum_stride_size*(double)(threads_per_block - 1)) {
+		if (static_cast<double>(fragment_fill_[0]) > static_cast<double>(maximum_stride_size) * static_cast<double>(
+			threads_per_block - 1)) {
 			fprintf(stderr, "Fragment overflow! Please shrink image and/or reduce model triangle count!");
 			fragment_overflow_ = true;
 			return cudaErrorMemoryAllocation;
 		}
-		
-		StridePrefixKernel << < ceil((double)(fragment_fill_[0]) / (double)(threads_per_block*threads_per_block)), threads_per_block >> >(
-			threads_per_block, dev_bounding_box_triangles_sizes_,
-			dev_bounding_box_triangles_sizes_prefix_, dev_stride_prefixes_, triangle_count_);
-		
-		FillTriangleKernel << <ceil((double)(fragment_fill_[0]) / (double)(threads_per_block)), threads_per_block >> >(
-			dev_bounding_box_triangles_sizes_, dev_bounding_box_triangles_sizes_prefix_,
-			dev_bounding_box_triangles_, renderer_output_->GetDeviceImagePointer(),
-			triangle_count_, width_, height_, dev_projected_triangles_, dev_stride_prefixes_);
-		
+
+		StridePrefixKernel << < ceil(
+				static_cast<double>(fragment_fill_[0]) / static_cast<double>(threads_per_block * threads_per_block)),
+			threads_per_block >> >(
+				threads_per_block, dev_bounding_box_triangles_sizes_,
+				dev_bounding_box_triangles_sizes_prefix_, dev_stride_prefixes_, triangle_count_);
+
+		FillTriangleKernel << <ceil(static_cast<double>(fragment_fill_[0]) / static_cast<double>(threads_per_block)),
+			threads_per_block >> >(
+				dev_bounding_box_triangles_sizes_, dev_bounding_box_triangles_sizes_prefix_,
+				dev_bounding_box_triangles_, renderer_output_->GetDeviceImagePointer(),
+				triangle_count_, width_, height_, dev_projected_triangles_, dev_stride_prefixes_);
+
 		/*Check for Errors*/
 		return cudaGetLastError();
 	}
@@ -677,14 +692,15 @@ namespace gpu_cost_function {
 		}
 
 		/*Array for Storing Device Image on Host*/
-		unsigned char* host_image = (unsigned char*)malloc(width_*height_ * sizeof(unsigned char));
-		cudaMemcpy(host_image, renderer_output_->GetDeviceImagePointer(), width_*height_ * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+		auto host_image = static_cast<unsigned char*>(malloc(width_ * height_ * sizeof(unsigned char)));
+		cudaMemcpy(host_image, renderer_output_->GetDeviceImagePointer(), width_ * height_ * sizeof(unsigned char),
+		           cudaMemcpyDeviceToHost);
 
 		/*OpenCV Image Container/Write Function*/
-		cv::Mat projection_mat = cv::Mat(height_, width_, CV_8UC1, host_image); /*Reverse before flip*/
-		cv::Mat output_mat = cv::Mat(width_, height_, CV_8UC1);
-		cv::flip(projection_mat, output_mat, 0);
-		bool result = cv::imwrite(file_name, output_mat);
+		auto projection_mat = cv::Mat(height_, width_, CV_8UC1, host_image); /*Reverse before flip*/
+		auto output_mat = cv::Mat(width_, height_, CV_8UC1);
+		flip(projection_mat, output_mat, 0);
+		bool result = imwrite(file_name, output_mat);
 
 		/*Free Array*/
 		free(host_image);
@@ -699,14 +715,15 @@ namespace gpu_cost_function {
 		}
 
 		/*Array for Storing Device Image on Host*/
-		unsigned char* host_image = (unsigned char*)malloc(width_ * height_ * sizeof(unsigned char));
-		cudaMemcpy(host_image, renderer_output_->GetDeviceImagePointer(), width_ * height_ * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+		auto host_image = static_cast<unsigned char*>(malloc(width_ * height_ * sizeof(unsigned char)));
+		cudaMemcpy(host_image, renderer_output_->GetDeviceImagePointer(), width_ * height_ * sizeof(unsigned char),
+		           cudaMemcpyDeviceToHost);
 
 		/*OpenCV Image Container/Write Function*/
-		cv::Mat projection_mat = cv::Mat(height_, width_, CV_8UC1, host_image); /*Reverse before flip*/
-		cv::Mat output_mat = cv::Mat(width_, height_, CV_8UC1);
-		cv::flip(projection_mat, output_mat, 0);
-		
+		auto projection_mat = cv::Mat(height_, width_, CV_8UC1, host_image); /*Reverse before flip*/
+		auto output_mat = cv::Mat(width_, height_, CV_8UC1);
+		flip(projection_mat, output_mat, 0);
+
 		/*Free Array*/
 		free(host_image);
 		return output_mat;

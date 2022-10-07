@@ -12,11 +12,9 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void DilateEdgeDetectedImage_DilateKernel(unsigned char *dev_image, int width, int height,
-	int sub_left_x, int sub_bottom_y, int sub_cropped_width, int dilation)
-
-	
-{
+__global__ void DilateEdgeDetectedImage_DilateKernel(unsigned char* dev_image, int width, int height,
+                                                     int sub_left_x, int sub_bottom_y, int sub_cropped_width,
+                                                     int dilation) {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -24,21 +22,17 @@ __global__ void DilateEdgeDetectedImage_DilateKernel(unsigned char *dev_image, i
 	int l = 2 * ((i % 4) / 2) - 1;
 	int r = 2 * (i % 2) - 1;
 	i = i / 4;
-	i = (i / sub_cropped_width)*width + (i % sub_cropped_width) + sub_bottom_y * width + sub_left_x;
+	i = (i / sub_cropped_width) * width + (i % sub_cropped_width) + sub_bottom_y * width + sub_left_x;
 
 	/*Reused local variables*/
 	int pixel;
 	int location;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
-		if (dev_image[i] == WHITE_PIXEL)
-		{
-			for (int j = 1; j <= dilation; j++)
-			{
-				for (int k = 1; k <= dilation; k++)
-				{
+	if (i < width * height) {
+		if (dev_image[i] == WHITE_PIXEL) {
+			for (int j = 1; j <= dilation; j++) {
+				for (int k = 1; k <= dilation; k++) {
 					location = i + l * j * width + r * k;
 					pixel = dev_image[location];
 					if (pixel != WHITE_PIXEL)
@@ -49,24 +43,23 @@ __global__ void DilateEdgeDetectedImage_DilateKernel(unsigned char *dev_image, i
 	}
 }
 
-__global__ void DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel(unsigned char* dev_image, int width, int height,
-	int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width)
-{
+__global__ void DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel(
+	unsigned char* dev_image, int width, int height,
+	int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width) {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*Convert to Subsize*/
-	i = (i / diff_kernel_cropped_width)*width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width + diff_kernel_left_x;
+	i = (i / diff_kernel_cropped_width) * width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width +
+		diff_kernel_left_x;
 
 	/*Storage Container for Loaded Pixel*/
 	int pixel;
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
+	if (i < width * height) {
 		pixel = dev_image[i];
-		if (pixel == DILATED_PIXEL)
-		{
+		if (pixel == DILATED_PIXEL) {
 			dev_image[i] = WHITE_PIXEL;
 		}
 	}
@@ -77,7 +70,8 @@ __global__ void DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel(unsigne
 namespace gpu_cost_function {
 	bool GPUMetrics::DilateEdgeDetectedImage(GPUImage* edge_detected_image, int dilation) {
 		/*Check Dilation is Sufficient*/
-		if (dilation < 1) return true;
+		if (dilation < 1)
+			return true;
 
 		/*Clear Previous Errors*/
 		cudaGetLastError();
@@ -98,25 +92,27 @@ namespace gpu_cost_function {
 		int sub_cropped_width = sub_right_x - sub_left_x + 1;
 		int sub_cropped_height = sub_top_y - sub_bottom_y + 1;
 		dim_block_image_processing_ = dim3::dim3(
-			ceil(sqrt((double)(threads_per_block))),
-			ceil(sqrt((double)(threads_per_block))));
+			ceil(sqrt(static_cast<double>(threads_per_block))),
+			ceil(sqrt(static_cast<double>(threads_per_block))));
 
 		/* Compute launch parameters for dilation. Want 4 times the size of the sub image. */
 		dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(2.0 * sub_cropped_width) / sqrt((double)threads_per_block)),
-			ceil((double)(2.0 * sub_cropped_height) / sqrt((double)threads_per_block)));
+			ceil(2.0 * sub_cropped_width / sqrt(static_cast<double>(threads_per_block))),
+			ceil(2.0 * sub_cropped_height / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Dilation Kernel*/
-		DilateEdgeDetectedImage_DilateKernel << <dim_grid_image_processing_, threads_per_block >> >(edge_detected_image->GetDeviceImagePointer(), width, height,
+		DilateEdgeDetectedImage_DilateKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			edge_detected_image->GetDeviceImagePointer(), width, height,
 			sub_left_x, sub_bottom_y, sub_cropped_width, dilation);
 
 		/*Change Launch Parameters For Gray Dilated Edge to White Edge Pass*/
 		dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(sub_cropped_width) / sqrt((double)threads_per_block)),
-			ceil((double)(sub_cropped_height) / sqrt((double)threads_per_block)));
+			ceil(static_cast<double>(sub_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(sub_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*Change Gray Dilated Edges to White, and All Others to Black*/
-		DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel << <dim_grid_image_processing_, threads_per_block >> >(edge_detected_image->GetDeviceImagePointer(),
+		DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			edge_detected_image->GetDeviceImagePointer(),
 			width, height, sub_left_x, sub_bottom_y, sub_cropped_width);
 
 		/*CUDA Get Last Error*/

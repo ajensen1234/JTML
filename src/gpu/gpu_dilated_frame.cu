@@ -5,11 +5,11 @@
 namespace gpu_cost_function {
 	/*Constructors & Destructor*/
 	GPUDilatedFrame::GPUDilatedFrame(int width, int height,
-		int gpu_device,
-		unsigned char* host_dilated_image,
-		int dilation) : GPUFrame(width, height,
-			gpu_device,
-			host_dilated_image) {
+	                                 int gpu_device,
+	                                 unsigned char* host_dilated_image,
+	                                 int dilation) : GPUFrame(width, height,
+	                                                          gpu_device,
+	                                                          host_dilated_image) {
 		/*If Initialized Correctly*/
 		if (this->IsInitializedCorrectly()) {
 			dilation_ = dilation;
@@ -18,10 +18,13 @@ namespace gpu_cost_function {
 			dilation = 0;
 		}
 	};
+
 	GPUDilatedFrame::GPUDilatedFrame() {
 		dilation_ = 0;
 	};
-	GPUDilatedFrame::~GPUDilatedFrame() {};
+
+	GPUDilatedFrame::~GPUDilatedFrame() {
+	};
 
 	/*Get Dilation Parameters*/
 	int GPUDilatedFrame::GetDilation() {

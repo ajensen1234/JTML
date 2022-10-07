@@ -29,7 +29,7 @@ namespace gpu_cost_function {
 		cudaHostAlloc((void**)&union_score_, sizeof(int), cudaHostAllocDefault);
 		if (cudaGetLastError() != cudaSuccess)
 			initialized_correctly_ = false;
-		
+
 		/*Allocate GPU buffers for pixel score.*/
 		cudaMalloc((void**)&dev_pixel_score_, sizeof(int));
 		if (cudaGetLastError() != cudaSuccess)
@@ -62,7 +62,7 @@ namespace gpu_cost_function {
 		cudaFree(dev_pixel_score_);
 		cudaFree(dev_intersection_score_);
 		cudaFree(dev_union_score_);
-	
+
 		/*Free Host*/
 		cudaFreeHost(pixel_score_);
 		cudaFreeHost(intersection_score_);
@@ -70,18 +70,19 @@ namespace gpu_cost_function {
 	};
 
 	/*Reset White Pixel Count*/
-	__global__ void ComputeSumWhitePixels__ResetWhitePixelScoreKernel(int *dev_white_pix_count_) {
+	__global__ void ComputeSumWhitePixels__ResetWhitePixelScoreKernel(int* dev_white_pix_count_) {
 		dev_white_pix_count_[0] = 0;
 	}
 
 	/*CUDA White Pixel Sum Function*/
-	__global__ void WhitePixelSum(unsigned char *dev_dilation_comparison_image, int *dev_comparison_white_pix_count, int width, int height) {
-				int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
-		
-				if (i < width*height) {
-					if (dev_dilation_comparison_image[i] == WHITE_PIXEL)
-						atomicAdd((int *)&dev_comparison_white_pix_count[0], 1);
-				}
+	__global__ void WhitePixelSum(unsigned char* dev_dilation_comparison_image, int* dev_comparison_white_pix_count,
+	                              int width, int height) {
+		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+		if (i < width * height) {
+			if (dev_dilation_comparison_image[i] == WHITE_PIXEL)
+				atomicAdd(&dev_comparison_white_pix_count[0], 1);
+		}
 	};
 
 	/*Computes Sum of White Pixels in Image*/
@@ -94,19 +95,20 @@ namespace gpu_cost_function {
 		ComputeSumWhitePixels__ResetWhitePixelScoreKernel << <1, 1 >> >(dev_white_pix_count_);
 
 		/*Get Sum of White Pixels in Dilation Comparison Image and Total Pixel Sum*/
-				dim3 dim_grid_comparison_white_pix = dim3(
-					ceil(sqrt(
-					(double)(image->GetFrameWidth()*image->GetFrameHeight()) / (double)256)),
-					ceil(sqrt(
-					(double)(image->GetFrameWidth()*image->GetFrameHeight()) / (double)256)));
-				WhitePixelSum << <dim_grid_comparison_white_pix, 256 >> >(image->GetDeviceImagePointer(), dev_white_pix_count_, image->GetFrameWidth(), image->GetFrameHeight());
-				cudaMemcpy(&white_pix_count_, dev_white_pix_count_, sizeof(int), cudaMemcpyDeviceToHost);
+		auto dim_grid_comparison_white_pix = dim3(
+			ceil(sqrt(
+				static_cast<double>(image->GetFrameWidth() * image->GetFrameHeight()) / static_cast<double>(256))),
+			ceil(sqrt(
+				static_cast<double>(image->GetFrameWidth() * image->GetFrameHeight()) / static_cast<double>(256))));
+		WhitePixelSum << <dim_grid_comparison_white_pix, 256 >> >(image->GetDeviceImagePointer(), dev_white_pix_count_,
+		                                                          image->GetFrameWidth(), image->GetFrameHeight());
+		cudaMemcpy(&white_pix_count_, dev_white_pix_count_, sizeof(int), cudaMemcpyDeviceToHost);
 		/*Get Errors*/
 		*error = cudaGetLastError();
 		return white_pix_count_;
 
 	};
-	
+
 
 	/*Get Initialized Correctly*/
 	bool GPUMetrics::IsInitializedCorrectly() {

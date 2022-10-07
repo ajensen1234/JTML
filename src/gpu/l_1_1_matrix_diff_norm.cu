@@ -12,35 +12,36 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel(int *dev_pixel_score) {
+__global__ void L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel(int* dev_pixel_score) {
 	dev_pixel_score[0] = 0;
 }
 
-__global__ void L_1_1_MatrixDifferenceNorm_DifferenceKernel(unsigned char* dev_A, unsigned char *dev_B, int *result, int width, int height,
-	int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width)
-{
+__global__ void L_1_1_MatrixDifferenceNorm_DifferenceKernel(unsigned char* dev_A, unsigned char* dev_B, int* result,
+                                                            int width, int height,
+                                                            int diff_kernel_left_x, int diff_kernel_bottom_y,
+                                                            int diff_kernel_cropped_width) {
 	/*Global Thread*/
 	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 	/*Convert to Subsize*/
-	i = (i / diff_kernel_cropped_width)*width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width + diff_kernel_left_x;
+	i = (i / diff_kernel_cropped_width) * width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width +
+		diff_kernel_left_x;
 
 
 	/*If Correct Width and Height*/
-	if (i < width*height)
-	{
+	if (i < width * height) {
 		int diff_image = dev_A[i] - dev_B[i];
 		if (diff_image >= 0)
-			atomicAdd((int *)&result[0], diff_image);
+			atomicAdd(&result[0], diff_image);
 		else
-			atomicSub((int *)&result[0], diff_image);
+			atomicSub(&result[0], diff_image);
 	}
 
 }
 
 namespace gpu_cost_function {
 	double GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
-		
+
 		/*Extract Bounding Boxes*/
 		int* bounding_box_A = image_A->GetBoundingBox();
 		int* bounding_box_B = image_B->GetBoundingBox();
@@ -61,11 +62,12 @@ namespace gpu_cost_function {
 		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 
 		dim_grid_image_processing_ = dim3::dim3(
-			ceil((double)(diff_kernel_cropped_width) / sqrt((double)threads_per_block)),
-			ceil((double)(diff_kernel_cropped_height) / sqrt((double)threads_per_block)));
+			ceil(static_cast<double>(diff_kernel_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(diff_kernel_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 
 		/*L_{1,1} Matrix Norm Difference Kernel*/
-		L_1_1_MatrixDifferenceNorm_DifferenceKernel << <dim_grid_image_processing_, threads_per_block >> >(image_A->GetDeviceImagePointer(), image_B->GetDeviceImagePointer(), dev_pixel_score_,
+		L_1_1_MatrixDifferenceNorm_DifferenceKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			image_A->GetDeviceImagePointer(), image_B->GetDeviceImagePointer(), dev_pixel_score_,
 			width, height, diff_kernel_left_x, diff_kernel_bottom_y, diff_kernel_cropped_width);
 
 		/*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel Projected)/(Sum of Pixel Projected) )*/
