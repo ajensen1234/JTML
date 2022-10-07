@@ -13,3 +13,4 @@
 ./out/*
 ./out/build/*
 .\out\build\Release
+/out/build
