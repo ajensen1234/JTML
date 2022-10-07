@@ -32,11 +32,11 @@
 #include "core/calibration.h"
 #include "core/model.h"
 
-class viewer
+class Viewer
 {
 public:
-    viewer();
-    ~viewer();
+    Viewer();
+    ~Viewer();
 
     void initialize_vtk_pointers();
     void initialize_vtk_mappers();
@@ -50,39 +50,37 @@ public:
     vtkSmartPointer<vtkTextActor> get_actor_text();
     vtkSmartPointer<vtkImageImport> get_importer();
 
-    void updateDisplayBackground(cv::Mat desiredBackground);
-    void setImporterOutputToBackground();
-    void updateDisplayBackgroundtoEdgeImage(int frame_number, bool CameraASelected);
-    void updateDisplayBackgroundtoDilationImage(int frame_number, bool CameraASelected);
-    void updateDisplayBackgroundtoOriginalImage(int frame_number, bool CameraASelected);
-    void updateDisplayBackgroundtoInvertedImage(int frame_number, bool CameraASelected);
-    void setLoadedFrames(std::vector<Frame>& frames);
-    void setLoadedFrames_B(std::vector<Frame>& frames);
-    void setLoadedModels(std::vector<Model> models);
-    void setLoadedModels_B(std::vector<Model> models);
-    void setupCameraCalibration(Calibration calibration);
-    void placeImageActorsAccordingToCalibration(Calibration calibration, int img_w, int img_h);
-    void load3DModelsIntoActorAndMapperList();
-    void loadModelActorsAndMappersWith3DData();
-    std::vector<vtkSmartPointer<vtkPolyDataMapper>> getModelMapperList();
-    std::vector<vtkSmartPointer<vtkActor>> getModelActorList();
-    void set3DModelColor(int index, double RGB[3]);
-    void loadModels(QStringList cad_files, QStringList cad_models);
-    bool areModelsLoadedCorrectly(int index);
-    bool areModelsLoadedIncorrectly(int index);
-    void changeModelOpacityToOriginal(int index);
-    void changeModelOpacityToWireFrame(int index);
-    void changeModelOpacityToSolid(int index);
-    void changeModelOpacityToTransparent(int index);
-    void setModelPositionAtIndex(int index, double x, double y, double z);
-    void setModelOrientationAtIndex(int index, double xrot, double yrot, double zrot);
-    std::string printLocationAndOrientationOfModelAtIndex(int index);
-    void setActorText(std::string desired_text);
-    void setActorTextColorToModelColorAtIndex(int index);
-    void renderScene();
-    void displayActorsInRenderer();
+    void update_display_background(cv::Mat desiredBackground);
+    void set_importer_output_to_background();
+    void update_display_background_to_edge_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_dilation_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_original_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_inverted_image(int frame_number, bool CameraASelected);
+    void set_loaded_frames(std::vector<Frame>& frames);
+    void set_loaded_frames_b(std::vector<Frame>& frames);
+    void setup_camera_calibration(Calibration calibration);
+    void place_image_actors_according_to_calibration(Calibration calibration, int img_w, int img_h);
+    void load_3d_models_into_actor_and_mapper_list();
+    void load_model_actors_and_mappers_with_3d_data();
+    std::vector<vtkSmartPointer<vtkPolyDataMapper>> get_model_mapper_list();
+    std::vector<vtkSmartPointer<vtkActor>> get_model_actor_list();
+    void set_3d_model_color(int index, double RGB[3]);
+    void load_models(QStringList cad_files, QStringList cad_models);
+    bool are_models_loaded_correctly(int index);
+    bool are_models_loaded_incorrectly(int index);
+    void change_model_opacity_to_original(int index);
+    void change_model_opacity_to_wire_frame(int index);
+    void change_model_opacity_to_solid(int index);
+    void change_model_opacity_to_transparent(int index);
+    void set_model_position_at_index(int index, double x, double y, double z);
+    void set_model_orientation_at_index(int index, double xrot, double yrot, double zrot);
+    std::string print_location_and_orientation_of_model_at_index(int index);
+    void set_actor_text(std::string desired_text);
+    void set_actor_text_color_to_model_color_at_index(int index);
+    void render_scene();
+    void display_actors_in_renderer();
 
-    void setRenderWindowAndDisplay();
+    void set_render_window_and_display();
     
 
 private:

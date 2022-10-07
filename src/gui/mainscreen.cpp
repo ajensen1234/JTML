@@ -237,8 +237,9 @@ MainScreen::MainScreen(QWidget* parent)
 
 	/*Maximize*/
 	QRect rec = QApplication::desktop()->availableGeometry();
-	if (MINIMUM_WIDTH <= rec.width() && MINIMUM_HEIGHT <= rec.height())
+	if (MINIMUM_WIDTH <= rec.width() && MINIMUM_HEIGHT <= rec.height()) {
 		showMaximized();
+	}
 
 	/*INitialize Location Storage*/
 	model_locations_ = LocationStorage();
@@ -265,8 +266,8 @@ MainScreen::MainScreen(QWidget* parent)
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
 
-	model_mapper_list = vw->getModelMapperList();
-	model_actor_list = vw->getModelActorList();
+	model_mapper_list = vw->get_model_mapper_list();
+	model_actor_list = vw->get_model_actor_list();
 	//current_background = vtkSmartPointer<vtkImageData>::New();
 	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
 	//image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
@@ -294,7 +295,7 @@ MainScreen::MainScreen(QWidget* parent)
 	renderer->AddActor(actor_image);
 	renderer->AddActor2D(actor_text);
 	ui.qvtk_widget->GetRenderWindow()->Render();
-	vw->displayActorsInRenderer();
+	vw->display_actors_in_renderer();
 
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
@@ -332,59 +333,72 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	/*Preprocessor Width*/
 	/*Find Width of Buttons*/
 	int preprocessor_button_width = font_metrics.width(ui.preprocessor_box->title());
-	if (preprocessor_button_width < font_metrics.width(ui.load_calibration_button->text()))
+	if (preprocessor_button_width < font_metrics.width(ui.load_calibration_button->text())) {
 		preprocessor_button_width = font_metrics.width(ui.load_calibration_button->text());
-	if (preprocessor_button_width < font_metrics.width(ui.load_image_button->text()))
+	}
+	if (preprocessor_button_width < font_metrics.width(ui.load_image_button->text())) {
 		preprocessor_button_width = font_metrics.width(ui.load_image_button->text());
-	if (preprocessor_button_width < font_metrics.width(ui.load_model_button->text()))
+	}
+	if (preprocessor_button_width < font_metrics.width(ui.load_model_button->text())) {
 		preprocessor_button_width = font_metrics.width(ui.load_model_button->text());
+	}
 	/*Augment with Padding to find width of group_box*/
 	preprocessor_button_width += INSIDE_BUTTON_PADDING_X;
 	int preprocessor_group_box_width = preprocessor_button_width + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
 
 	/*Optimization Directives Width*/
 	int optimizer_button_width = font_metrics.width(ui.optimize_button->text());
-	if (optimizer_button_width < font_metrics.width(ui.optimize_all_button->text()))
+	if (optimizer_button_width < font_metrics.width(ui.optimize_all_button->text())) {
 		optimizer_button_width = font_metrics.width(ui.optimize_all_button->text());
-	if (optimizer_button_width < font_metrics.width(ui.optimize_each_button->text()))
+	}
+	if (optimizer_button_width < font_metrics.width(ui.optimize_each_button->text())) {
 		optimizer_button_width = font_metrics.width(ui.optimize_each_button->text());
-	if (optimizer_button_width < font_metrics.width(ui.optimize_from_button->text()))
+	}
+	if (optimizer_button_width < font_metrics.width(ui.optimize_from_button->text())) {
 		optimizer_button_width = font_metrics.width(ui.optimize_from_button->text());
+	}
 	/*Augment with padding to find width of group box*/
 	optimizer_button_width += INSIDE_BUTTON_PADDING_X;
 	int optimization_group_box_width = font_metrics.width(ui.optimization_box->title());
 	if (optimization_group_box_width < 2 * optimizer_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X)
+		GROUP_BOX_TO_BUTTON_PADDING_X) {
 		optimization_group_box_width = 2 * optimizer_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*image View Width*/
 	int image_view_button_width = font_metrics.width(ui.original_image_radio_button->text());
-	if (image_view_button_width < font_metrics.width(ui.inverted_image_radio_button->text()))
+	if (image_view_button_width < font_metrics.width(ui.inverted_image_radio_button->text())) {
 		image_view_button_width = font_metrics.width(ui.inverted_image_radio_button->text());
-	if (image_view_button_width < font_metrics.width(ui.edges_image_radio_button->text()))
+	}
+	if (image_view_button_width < font_metrics.width(ui.edges_image_radio_button->text())) {
 		image_view_button_width = font_metrics.width(ui.edges_image_radio_button->text());
-	if (image_view_button_width < font_metrics.width(ui.dilation_image_radio_button->text()))
+	}
+	if (image_view_button_width < font_metrics.width(ui.dilation_image_radio_button->text())) {
 		image_view_button_width = font_metrics.width(ui.dilation_image_radio_button->text());
+	}
 	/*Augment with Padding to find width of group_box*/
 	image_view_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int image_view_group_box_width = font_metrics.width(ui.image_view_box->title());
 	if (image_view_group_box_width < 2 * image_view_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X)
+		GROUP_BOX_TO_BUTTON_PADDING_X) {
 		image_view_group_box_width = 2 * image_view_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*image Selection Width*/
 	int image_selection_button_width = font_metrics.width(ui.camera_A_radio_button->text());
-	if (image_selection_button_width < font_metrics.width(ui.camera_B_radio_button->text()))
+	if (image_selection_button_width < font_metrics.width(ui.camera_B_radio_button->text())) {
 		image_selection_button_width = font_metrics.width(ui.camera_B_radio_button->text());
+	}
 	/*Augment with Padding to find width of group_box*/
 	image_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int image_selection_group_box_width = font_metrics.width(ui.image_selection_box->title());
 	if (image_selection_group_box_width < 2 * image_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X)
+		GROUP_BOX_TO_BUTTON_PADDING_X) {
 		image_selection_group_box_width = 2 * image_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*Get Largest Width Across Left Side Column*/
 	int left_column_width = std::max(std::max(std::max(preprocessor_group_box_width,
@@ -521,49 +535,59 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	/*Edge Detection Box Width*/
 	int edge_detection_box = font_metrics.width(ui.edge_detection_box->title());
 	if (edge_detection_box < font_metrics.width(ui.aperture_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888"))
+		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
 		edge_detection_box = font_metrics.width(ui.aperture_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
 			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	}
 	if (edge_detection_box < font_metrics.width(ui.low_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888"))
+		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
 		edge_detection_box = font_metrics.width(ui.low_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
 			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	}
 	if (edge_detection_box < font_metrics.width(ui.high_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888"))
+		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
 		edge_detection_box = font_metrics.width(ui.high_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
 			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	}
 	if (edge_detection_box < 2 * right_button_bigger + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X)
+		INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X) {
 		edge_detection_box = 2 * right_button_bigger + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*model View Width*/
 	int model_view_button_width = font_metrics.width(ui.original_model_radio_button->text());
-	if (model_view_button_width < font_metrics.width(ui.solid_model_radio_button->text()))
+	if (model_view_button_width < font_metrics.width(ui.solid_model_radio_button->text())) {
 		model_view_button_width = font_metrics.width(ui.solid_model_radio_button->text());
-	if (model_view_button_width < font_metrics.width(ui.transparent_model_radio_button->text()))
+	}
+	if (model_view_button_width < font_metrics.width(ui.transparent_model_radio_button->text())) {
 		model_view_button_width = font_metrics.width(ui.transparent_model_radio_button->text());
-	if (model_view_button_width < font_metrics.width(ui.wireframe_model_radio_button->text()))
+	}
+	if (model_view_button_width < font_metrics.width(ui.wireframe_model_radio_button->text())) {
 		model_view_button_width = font_metrics.width(ui.wireframe_model_radio_button->text());
+	}
 	/*Augment with Padding to find width of group_box*/
 	model_view_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int model_view_group_box_width = font_metrics.width(ui.model_view_box->title());
 	if (model_view_group_box_width < 2 * model_view_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X)
+		GROUP_BOX_TO_BUTTON_PADDING_X) {
 		model_view_group_box_width = 2 * model_view_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*model Selection Width*/
 	int model_selection_button_width = font_metrics.width(ui.single_model_radio_button->text());
-	if (model_selection_button_width < font_metrics.width(ui.multiple_model_radio_button->text()))
+	if (model_selection_button_width < font_metrics.width(ui.multiple_model_radio_button->text())) {
 		model_selection_button_width = font_metrics.width(ui.multiple_model_radio_button->text());
+	}
 	/*Augment with Padding to find width of group_box*/
 	model_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int model_selection_group_box_width = font_metrics.width(ui.model_selection_box->title());
 	if (model_selection_group_box_width < 2 * model_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X)
+		GROUP_BOX_TO_BUTTON_PADDING_X) {
 		model_selection_group_box_width = 2 * model_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
 			GROUP_BOX_TO_BUTTON_PADDING_X;
+	}
 
 	/*Get Largest Width Across Right Side Column*/
 	int right_column_width = std::max(std::max(
@@ -840,30 +864,42 @@ void MainScreen::on_actionSave_Pose_triggered() {
 	if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
 		QTextStream stream(&file);
 		stream << "JTA_EULER_POSE\nX_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_ROT\t\tX_ROT\t\tY_ROT\n";
-		if (QString::number(saved_pose.x).length() < 7)
+		if (QString::number(saved_pose.x).length() < 7) {
 			stream << saved_pose.x << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.x << ",\t";
-		if (QString::number(saved_pose.y).length() < 7)
+		}
+		if (QString::number(saved_pose.y).length() < 7) {
 			stream << saved_pose.y << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.y << ",\t";
-		if (QString::number(saved_pose.z).length() < 7)
+		}
+		if (QString::number(saved_pose.z).length() < 7) {
 			stream << saved_pose.z << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.z << ",\t";
-		if (QString::number(saved_pose.za).length() < 7)
+		}
+		if (QString::number(saved_pose.za).length() < 7) {
 			stream << saved_pose.za << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.za << ",\t";
-		if (QString::number(saved_pose.xa).length() < 7)
+		}
+		if (QString::number(saved_pose.xa).length() < 7) {
 			stream << saved_pose.xa << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.xa << ",\t";
-		if (QString::number(saved_pose.ya).length() < 7)
+		}
+		if (QString::number(saved_pose.ya).length() < 7) {
 			stream << saved_pose.ya << ",\t\t";
-		else
+		}
+		else {
 			stream << saved_pose.ya << ",\n";
+		}
 	}
 }
 
@@ -899,26 +935,36 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
 		for (int i = 0; i < ui.image_list_widget->count(); i++) {
 			Point6D saved_pose = model_locations_.GetPose(i, selected[0].row());
 
-			if (QString::number(saved_pose.x).length() < 7)
+			if (QString::number(saved_pose.x).length() < 7) {
 				stream << saved_pose.x << ",\t\t";
-			else
+			}
+			else {
 				stream << saved_pose.x << ",\t";
-			if (QString::number(saved_pose.y).length() < 7)
+			}
+			if (QString::number(saved_pose.y).length() < 7) {
 				stream << saved_pose.y << ",\t\t";
-			else
+			}
+			else {
 				stream << saved_pose.y << ",\t";
-			if (QString::number(saved_pose.z).length() < 7)
+			}
+			if (QString::number(saved_pose.z).length() < 7) {
 				stream << saved_pose.z << ",\t\t";
-			else
+			}
+			else {
 				stream << saved_pose.z << ",\t";
-			if (QString::number(saved_pose.za).length() < 7)
+			}
+			if (QString::number(saved_pose.za).length() < 7) {
 				stream << saved_pose.za << ",\t\t";
-			else
+			}
+			else {
 				stream << saved_pose.za << ",\t";
-			if (QString::number(saved_pose.xa).length() < 7)
+			}
+			if (QString::number(saved_pose.xa).length() < 7) {
 				stream << saved_pose.xa << ",\t\t";
-			else
+			}
+			else {
 				stream << saved_pose.xa << ",\t";
+			}
 			stream << saved_pose.ya << ",\n";
 		}
 	}
@@ -1133,8 +1179,9 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
 
 // Start Symtrap Optimizer
 void MainScreen::optimizer_launch_slot() {
-	if (!sym_trap_running)
+	if (!sym_trap_running) {
 		LaunchOptimizer("Sym_Trap");
+	}
 }
 
 
@@ -1352,31 +1399,31 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 	/*If Viewing Inverted Images Update*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.inverted_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), true);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
 
 		}
 		else {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 	/*If Viewing Edge Images Update*/
 	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+			vw->update_display_background_to_edge_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 	/*If Viewing Dilated Images Update*/
 	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -1390,30 +1437,30 @@ void MainScreen::on_actionReset_Remove_All_Segmentation_triggered() {
 	/*If Viewing Inverted Images Update*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.inverted_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), true);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 	/*If Viewing Edge Images Update*/
 	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 	/*If Viewing Dilated Images Update*/
 	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -1503,10 +1550,12 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 
 		cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
 		cv::Mat padded;
-		if (orig_inverted.cols > orig_inverted.rows)
+		if (orig_inverted.cols > orig_inverted.rows) {
 			padded.create(orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-		else
+		}
+		else {
 			padded.create(orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
+		}
 		unsigned int padded_width = padded.cols;
 		unsigned int padded_height = padded.rows;
 		padded.setTo(cv::Scalar::all(0));
@@ -1986,10 +2035,12 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 
 		cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
 		cv::Mat padded;
-		if (orig_inverted.cols > orig_inverted.rows)
+		if (orig_inverted.cols > orig_inverted.rows) {
 			padded.create(orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-		else
+		}
+		else {
 			padded.create(orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
+		}
 		unsigned int padded_width = padded.cols;
 		unsigned int padded_height = padded.rows;
 		padded.setTo(cv::Scalar::all(0));
@@ -2745,7 +2796,7 @@ void MainScreen::on_load_calibration_button_clicked() {
 		//renderer->GetActiveCamera()->SetPosition(0, 0, 0);
 		//renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
 		//auto mat = renderer->GetActiveCamera()->GetProjectionTransformMatrix();
-		vw->setupCameraCalibration(calibration_file_);
+		vw->setup_camera_calibration(calibration_file_);
 
 		/*Set Checked To Monoplane but disable from further clicking*/
 		ui.camera_A_radio_button->setChecked(true);
@@ -2819,8 +2870,9 @@ void MainScreen::on_load_image_button_clicked() {
 			dilation_val = (trunk_manager_.getActiveCostFunctionClass())->getIntParameters().at(i).getParameterValue();
 		}
 	}
-	if (dilation_val < 0)
+	if (dilation_val < 0) {
 		dilation_val = 0;
+	}
 
 	/*Check to See if Calibration Loaded*/
 	if (calibrated_for_monoplane_viewport_ == false && calibrated_for_biplane_viewport_ == false) {
@@ -2857,14 +2909,14 @@ void MainScreen::on_load_image_button_clicked() {
 		}
 		/*Exit Label*/
 	stop:;
-		vw->setLoadedFrames(loaded_frames);
+		vw->set_loaded_frames(loaded_frames);
 
 		//If No Loaded Frames, Default Select First
 		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0) {
 			ui.image_list_widget->setCurrentRow(0);
 		}
 
-		//this->vw->setLoadedFrames(loaded_frames);
+		//this->vw->set_loaded_frames(loaded_frames);
 
 
 	}
@@ -2923,10 +2975,11 @@ void MainScreen::on_load_image_button_clicked() {
 	stop_biplane:;
 
 		//If No Loaded Frames, Default Select First
-		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0)
+		if (ui.image_list_widget->currentRow() < 0 && loaded_frames.size() > 0) {
 			ui.image_list_widget->setCurrentRow(0);
-		vw->setLoadedFrames(loaded_frames);
-		vw->setLoadedFrames_B(loaded_frames_B);
+		}
+		vw->set_loaded_frames(loaded_frames);
+		vw->set_loaded_frames_b(loaded_frames_B);
 	}
 
 }
@@ -2983,22 +3036,12 @@ void MainScreen::on_load_model_button_clicked() {
 		CADModelNames.push_back(temp_model_name);
 	}
 
-	//Add to Loaded Models and initialize new vtk actors
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
-	vw->loadModels(CADFileExtensions, CADModelNames);
-	vw->displayActorsInRenderer();
-	//Scroll through list and warn if loaded model might be invalid STL file
-	/*for (int i = 0; i < CADFileExtensions.size(); i++) {
-		std::cout << "Before checking loaded models - this should print" <<std::endl;
-		if (!loaded_models[i].initialized_correctly_){
-			std::cout << "Inside loaded model checking - this will not print" << std::endl;
-			QMessageBox::warning(this, "Warning!", "It is possible that " + CADModelNames[i] + " (" + CADFileExtensions[i] + ")" +
-				" is an invalid or corrupted STL file format. Proceed with caution!", QMessageBox::Ok);
-		}
-	}*/
+	vw->load_models(CADFileExtensions, CADModelNames);
+	vw->display_actors_in_renderer();
 
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
-		if (vw->areModelsLoadedIncorrectly(i)) {
+		if (vw->are_models_loaded_incorrectly(i)) {
 			QMessageBox::warning(this, "Warning!",
 			                     "It is Possible that " + CADModelNames[i] + " (" + CADFileExtensions[i] + ") " +
 			                     " is an invalid or corrupted STL file format. Proceed with caution!", QMessageBox::Ok);
@@ -3016,23 +3059,11 @@ void MainScreen::on_load_model_button_clicked() {
 		                              calibration_file_.camera_A_principal_.pixel_pitch_);
 	}
 
-	/*Initialize New vtk actors*/
-	/*for (int i = 0; i < CADFileExtensions.size(); i++) {
-		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
-		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-		new_actor->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
-		new_mapper->SetInputConnection(stl_reader->GetOutputPort());
-		new_actor->SetMapper(new_mapper);
-		renderer->AddActor(new_actor);
-		model_actor_list.push_back(new_actor);
-		model_mapper_list.push_back(new_mapper);
-	}*/
-	vw->load3DModelsIntoActorAndMapperList();
-	renderer->Render();
+	vw->load_3d_models_into_actor_and_mapper_list();
 	//If No Loaded Models, Default Select First
-	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0)
+	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
 		ui.model_list_widget->setCurrentRow(0);
-	renderer->Render();
+	}
 
 }
 
@@ -3074,26 +3105,20 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		if (ui.original_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame(), true);
+			vw->update_display_background_to_original_image(this->curr_frame(), true);
 		}
 		else if (ui.inverted_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), true);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
 		}
 		else if (ui.edges_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
 			/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 
-		/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
-		//actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-		//calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-		//-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-		//calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-		//-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		vw->placeImageActorsAccordingToCalibration(
+		vw->place_image_actors_according_to_calibration(
 			calibration_file_,
 			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
 			loaded_frames[this->curr_frame()].GetOriginalImage().cols
@@ -3190,28 +3215,21 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		if (ui.original_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame()
-			                                           , false);
+			vw->update_display_background_to_original_image(this->curr_frame()
+			                                                , false);
 		}
 		else if (ui.inverted_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 		else if (ui.edges_image_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+			vw->update_display_background_to_edge_image(this->curr_frame(), false);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 
-		/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
-		actor_image->SetPosition(
-			-.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-			calibration_file_.camera_B_principal_.principal_x_ / calibration_file_.camera_B_principal_.pixel_pitch_,
-			-.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-			calibration_file_.camera_B_principal_.principal_y_ / calibration_file_.camera_B_principal_.pixel_pitch_,
-			-1 * calibration_file_.camera_B_principal_.principal_distance_ / calibration_file_.camera_B_principal_.
-			pixel_pitch_);
-		//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
+		vw->place_image_actors_according_to_calibration(calibration_file_.camera_B_principal_, loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
+			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols);
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
@@ -3233,14 +3251,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 				/*Text Actor if On*/
 				if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
 					/*Display In Terms of Camera A*/
+					vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(ui.image_list_widget->currentIndex().row()));
 					std::string infoText = "Location: <";
-					infoText += std::to_string(static_cast<long double>(loaded_pose.x)) + ","
-						+ std::to_string(static_cast<long double>(loaded_pose.y)) + ","
-						+ std::to_string(static_cast<long double>(loaded_pose.z)) + ">\nOrientation: <"
-						+ std::to_string(static_cast<long double>(loaded_pose.xa)) + ","
-						+ std::to_string(static_cast<long double>(loaded_pose.ya)) + ","
-						+ std::to_string(static_cast<long double>(loaded_pose.za)) + ">";
-					actor_text->SetInput(infoText.c_str());
 				}
 			}
 		}
@@ -3270,12 +3282,14 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 void MainScreen::on_image_list_widget_itemSelectionChanged() {
 	/*Make Sure A View is Selected*/
 	if (ui.original_image_radio_button->isChecked() == false && ui.inverted_image_radio_button->isChecked() == false
-		&& ui.edges_image_radio_button->isChecked() == false && ui.dilation_image_radio_button->isChecked() == false)
+		&& ui.edges_image_radio_button->isChecked() == false && ui.dilation_image_radio_button->isChecked() == false) {
 		ui.original_image_radio_button->setChecked(true);
+	}
 
 	/*Save Last Pair Pose if not currently optimizing*/
-	if (!currently_optimizing_)
+	if (!currently_optimizing_) {
 		SaveLastPose();
+	}
 
 	/*Update Last Viewed Index as This One*/
 	previous_frame_index_ = ui.image_list_widget->currentIndex().row();
@@ -3300,41 +3314,41 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 	if (ui.original_image_radio_button->isChecked() == true) {
 		/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame(), true);
+			vw->update_display_background_to_original_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame(), false);
+			vw->update_display_background_to_original_image(this->curr_frame(), false);
 		}
 	}
 	else if (ui.inverted_image_radio_button->isChecked() == true) {
 		/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), true);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 	}
 	else if (ui.edges_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+			vw->update_display_background_to_edge_image(this->curr_frame(), false);
 		}
 	}
 	else {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 	}
 
 	/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
 	if (ui.camera_A_radio_button->isChecked()) {
-		vw->placeImageActorsAccordingToCalibration(
+		vw->place_image_actors_according_to_calibration(
 			calibration_file_,
 			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
 			loaded_frames[this->curr_frame()].GetOriginalImage().cols
@@ -3380,59 +3394,22 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 		/*Solid Color Model*/
 		else if (ui.solid_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 		/*Transparent Model*/
 		else if (ui.transparent_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*transparent*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(.2);
-
+			vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 		/*Wireframe Model*/
-		else {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Sets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToWireframe();
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+		else if (ui.wireframe_model_radio_button->isChecked()) {
+			vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 
@@ -3441,25 +3418,18 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			/*Set Model Pose*/
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
-			model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-			model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-
+			vw->set_model_position_at_index(selected[i].row(),
+				loaded_pose.x,
+				loaded_pose.y,
+				loaded_pose.z);
+			vw->set_model_orientation_at_index(selected[i].row(),
+				loaded_pose.xa,
+				loaded_pose.ya,
+				loaded_pose.za);
 			/*Text Actor if On*/
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-				std::string infoText = "Location: <";
-				infoText += std::to_string(
-						static_cast<long double>(model_actor_list[selected[i].row()]->GetPosition()[0])) + ","
-					+ std::to_string(static_cast<long double>(model_actor_list[selected[i].row()]->GetPosition()[1])) +
-					","
-					+ std::to_string(static_cast<long double>(model_actor_list[selected[i].row()]->GetPosition()[2])) +
-					">\nOrientation: <"
-					+ std::to_string(static_cast<long double>(model_actor_list[selected[i].row()]->GetOrientation()[0]))
-					+ ","
-					+ std::to_string(static_cast<long double>(model_actor_list[selected[i].row()]->GetOrientation()[1]))
-					+ ","
-					+ std::to_string(static_cast<long double>(model_actor_list[selected[i].row()]->GetOrientation()[2]))
-					+ ">";
-				actor_text->SetInput(infoText.c_str());
+				vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(selected[i].row()));
+				vw->set_actor_text_color_to_model_color_at_index(selected[i].row());
 			}
 		}
 		else {
@@ -3468,21 +3438,19 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
 			Point6D relative_B_pose = calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-			model_actor_list[selected[i].row()]->SetPosition(relative_B_pose.x, relative_B_pose.y, relative_B_pose.z);
-			model_actor_list[selected[i].row()]->SetOrientation(relative_B_pose.xa, relative_B_pose.ya,
-			                                                    relative_B_pose.za);
+			vw->set_model_position_at_index(selected[i].row(),
+				relative_B_pose.x,
+				relative_B_pose.y,
+				relative_B_pose.z);
+			vw->set_model_orientation_at_index(selected[i].row(),
+				relative_B_pose.xa,
+				relative_B_pose.ya,
+				relative_B_pose.za);
 
 			/*Text Actor if On*/
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-				/*Display In Terms of Camera A*/
-				std::string infoText = "Location: <";
-				infoText += std::to_string(static_cast<long double>(loaded_pose.x)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.y)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.z)) + ">\nOrientation: <"
-					+ std::to_string(static_cast<long double>(loaded_pose.xa)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.ya)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.za)) + ">";
-				actor_text->SetInput(infoText.c_str());
+				vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(selected[i].row()));
+				vw->set_actor_text_color_to_model_color_at_index(selected[i].row());
 			}
 		}
 	}
@@ -3499,25 +3467,14 @@ QModelIndexList MainScreen::selected_model_indices() {
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Save Last Pair Pose if not currently optimizing*/
-	if (!currently_optimizing_)
+	if (!currently_optimizing_) {
 		SaveLastPose(); // Needs Work
+	}
 
 	/*Update Last Viewed Index as This One*/
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
-	vw->loadModelActorsAndMappersWith3DData();
+	vw->load_model_actors_and_mappers_with_3d_data();
 
-	/*Turn Off All Model Actor's Visibility and Pickability and Set the Input Connections*/
-
-	//for (int i = 0; i < model_actor_list.size(); i++) {
-	//model_actor_list[i]->PickableOff();
-	//model_actor_list[i]->VisibilityOff();
-	//model_actor_list[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
-	//model_mapper_list[i]->SetInputConnection(loaded_models.at(i).cad_reader_->GetOutputPort());
-	///*also set the backgrounds to black for the model widget (should be safe as it is same size as actor list)*/
-	////vw->getModelActorList()[i]->PickableOff();
-
-	//ui.model_list_widget->item(i)->setBackgroundColor(QColor(25, 25, 25));
-	//}
 
 	/*Load Models to Screen*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
@@ -3536,76 +3493,32 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
 
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		/*Primary Model is the First One in the List
-		Make it Orange and all others Blue*/
 		if (i == 0) {
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
 			//model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
 			double rgb[3] = {214.0, 108.0, 35.0};
-			vw->set3DModelColor(selected[i].row(), rgb);
+			vw->set_3d_model_color(selected[i].row(), rgb);
 
 		}
 		else {
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(33, 88, 170));
 		}
-		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			//model_actor_list[selected[i].row()]->PickableOn();
-			//model_actor_list[selected[i].row()]->VisibilityOn();
-			///*Resets WireFrame*/
-			//model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			///*Resets Solid Color*/
-			//model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			//model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Opaque*/
-			//model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
-			vw->changeModelOpacityToOriginal(selected[i].row());
+			vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
 		}
-		/*Solid Color Model*/
 		else if (ui.solid_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
 		}
-		/*Transparent Model*/
 		else if (ui.transparent_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*transparent*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(.2);
-
+			vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 		/*Wireframe Model*/
-		else {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Sets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToWireframe();
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+		else if (ui.wireframe_model_radio_button->isChecked()) {
+			vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 
@@ -3615,24 +3528,14 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
 			//model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-			vw->setModelPositionAtIndex(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
-			vw->setModelOrientationAtIndex(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+			vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+			vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 			//model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 
 			/*Text Actor if On */
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-				//std::string infoText = "Location: <";
-				//infoText += std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[0]) + ","
-				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[1]) + ","
-				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[2]) + ">\nOrientation: <"
-				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[0]) + ","
-				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[1]) + ","
-				//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[2]) + ">";
-				//std::string infoText = vw->printLocationAndOrientationOfModelAtIndex(selected[i].row());
-				vw->setActorText(vw->printLocationAndOrientationOfModelAtIndex(selected[i].row()));
-				vw->setActorTextColorToModelColorAtIndex(selected[i].row());
-				//actor_text->SetInput(infoText.c_str());
-				//actor_text->GetTextProperty()->SetColor(model_actor_list[selected[i].row()]->GetProperty()->GetColor());
+				vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(selected[i].row()));
+				vw->set_actor_text_color_to_model_color_at_index(selected[i].row());
 			}
 		}
 		else {
@@ -3641,26 +3544,22 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
 			Point6D relative_B_pose = calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-			model_actor_list[selected[i].row()]->SetPosition(relative_B_pose.x, relative_B_pose.y, relative_B_pose.z);
-			model_actor_list[selected[i].row()]->SetOrientation(relative_B_pose.xa, relative_B_pose.ya,
-			                                                    relative_B_pose.za);
-
+			vw->set_model_position_at_index(selected[i].row(),
+				relative_B_pose.x,
+				relative_B_pose.y,
+				relative_B_pose.z);
+			vw->set_model_orientation_at_index(selected[i].row(),
+				relative_B_pose.xa,
+				relative_B_pose.ya,
+				relative_B_pose.za);
+				
 			/*Text Actor if On*/
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-				/*Display In Terms of Camera A*/
-				std::string infoText = "Location: <";
-				infoText += std::to_string(static_cast<long double>(loaded_pose.x)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.y)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.z)) + ">\nOrientation: <"
-					+ std::to_string(static_cast<long double>(loaded_pose.xa)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.ya)) + ","
-					+ std::to_string(static_cast<long double>(loaded_pose.za)) + ">";
-				actor_text->SetInput(infoText.c_str());
+				vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(selected[i].row()));
+				vw->set_actor_text_color_to_model_color_at_index(selected[i].row());
 			}
 		}
 	}
-
-	vw->renderScene();
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
 }
@@ -3683,73 +3582,34 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	/*Get Selected Indices on Model List Widget*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*No Point Swapping if just one*/
-	if (selected.size() <= 1)
+	if (selected.size() <= 1) {
 		return;
+	}
 
 	for (int i = 0; i < selected.size(); i++) {
-		if (selected[i].row() != index_new_principal)
+		if (selected[i].row() != index_new_principal) {
 			ui.model_list_widget->item(selected[i].row())->setSelected(false);
+		}
 	}
 	for (int i = 0; i < selected.size(); i++) {
-		if (selected[i].row() != index_new_principal)
+		if (selected[i].row() != index_new_principal) {
 			ui.model_list_widget->item(selected[i].row())->setSelected(true);
+		}
 	}
-	/*Select The Principal*/
-	/*Original Model*/
 	if (ui.original_model_radio_button->isChecked() == true) {
-		/*Turn on Visbility and Pickability*/
-		model_actor_list[index_new_principal]->PickableOn();
-		model_actor_list[index_new_principal]->VisibilityOn();
-		/*Resets WireFrame*/
-		model_actor_list[index_new_principal]->GetProperty()->SetRepresentationToSurface();
-		/*Resets Solid Color*/
-		model_actor_list[index_new_principal]->GetProperty()->SetAmbient(0);
-		model_actor_list[index_new_principal]->GetProperty()->SetDiffuse(1);
-		/*Opaque*/
-		model_actor_list[index_new_principal]->GetProperty()->SetOpacity(1);
+		vw->change_model_opacity_to_original(index_new_principal);
 		ui.qvtk_widget->update();
 	}
-	/*Solid Color Model*/
 	else if (ui.solid_model_radio_button->isChecked() == true) {
-		/*Turn on Visbility and Pickability*/
-		model_actor_list[index_new_principal]->PickableOn();
-		model_actor_list[index_new_principal]->VisibilityOn();
-		/*Resets WireFrame*/
-		model_actor_list[index_new_principal]->GetProperty()->SetRepresentationToSurface();
-		/*Solid Color*/
-		model_actor_list[index_new_principal]->GetProperty()->SetAmbient(1);
-		model_actor_list[index_new_principal]->GetProperty()->SetDiffuse(0);
-		/*Opaque*/
-		model_actor_list[index_new_principal]->GetProperty()->SetOpacity(1);
+		vw->change_model_opacity_to_solid(index_new_principal);
 		ui.qvtk_widget->update();
 	}
-	/*Transparent Model*/
 	else if (ui.transparent_model_radio_button->isChecked() == true) {
-		/*Turn on Visbility and Pickability*/
-		model_actor_list[index_new_principal]->PickableOn();
-		model_actor_list[index_new_principal]->VisibilityOn();
-		/*Resets WireFrame*/
-		model_actor_list[index_new_principal]->GetProperty()->SetRepresentationToSurface();
-		/*Solid Color*/
-		model_actor_list[index_new_principal]->GetProperty()->SetAmbient(1);
-		model_actor_list[index_new_principal]->GetProperty()->SetDiffuse(0);
-		/*transparent*/
-		model_actor_list[index_new_principal]->GetProperty()->SetOpacity(.2);
-
+		vw->change_model_opacity_to_transparent(index_new_principal);
 		ui.qvtk_widget->update();
 	}
-	/*Wireframe Model*/
-	else {
-		/*Turn on Visbility and Pickability*/
-		model_actor_list[index_new_principal]->PickableOn();
-		model_actor_list[index_new_principal]->VisibilityOn();
-		/*Resets Solid Color*/
-		model_actor_list[index_new_principal]->GetProperty()->SetAmbient(0);
-		model_actor_list[index_new_principal]->GetProperty()->SetDiffuse(1);
-		/*Sets WireFrame*/
-		model_actor_list[index_new_principal]->GetProperty()->SetRepresentationToWireframe();
-		/*Opaque*/
-		model_actor_list[index_new_principal]->GetProperty()->SetOpacity(1);
+	else if (ui.wireframe_model_radio_button->isChecked()) {
+		vw->change_model_opacity_to_wire_frame(index_new_principal);
 		ui.qvtk_widget->update();
 	}
 
@@ -3812,8 +3672,9 @@ void MainScreen::on_single_model_radio_button_clicked() {
 
 	/*If Multiple Selections Choose First One Selected*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-	if (selected.size() > 0)
+	if (selected.size() > 0) {
 		ui.model_list_widget->setCurrentIndex(selected[0]);
+	}
 };
 
 void MainScreen::on_multiple_model_radio_button_clicked() {
@@ -3826,10 +3687,10 @@ void MainScreen::on_original_image_radio_button_clicked() {
 	/*Only Do Something if Loaded Frames, Skip*/
 	if (ui.image_list_widget->currentRow() >= 0) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame(), true);
+			vw->update_display_background_to_original_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoOriginalImage(this->curr_frame(), false);
+			vw->update_display_background_to_original_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -3840,10 +3701,10 @@ void MainScreen::on_inverted_image_radio_button_clicked() {
 	/*Only Do Something if Loaded Frames, Skip*/
 	if (ui.image_list_widget->currentRow() >= 0) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), true);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoInvertedImage(this->curr_frame(), false);
+			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -3854,10 +3715,10 @@ void MainScreen::on_edges_image_radio_button_clicked() {
 	/*Only Do Something if Loaded Frames, Skip*/
 	if (ui.image_list_widget->currentRow() >= 0) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+			vw->update_display_background_to_edge_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -3868,108 +3729,50 @@ void MainScreen::on_dilation_image_radio_button_clicked() {
 	/*Only Do Something if Loaded Frames, Skip*/
 	if (ui.image_list_widget->currentRow() >= 0) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 }
 
-/*Model View Radio Buttons*/
-/*Original View*/
 void MainScreen::on_original_model_radio_button_clicked() {
-	//Load Selected CAD implant(s)
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 	}
 }
 
-/*Solid Color View*/
 void MainScreen::on_solid_model_radio_button_clicked() {
-	//Load Selected CAD implant(s)
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		/*Original Model*/
 		if (ui.solid_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 	}
 }
 
-/*transparent View*/
 void MainScreen::on_transparent_model_radio_button_clicked() {
-	//Load Selected CAD implant(s)
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		/*Original Model*/
 		if (ui.transparent_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(1);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(0);
-			/*transparent*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(.2);
-
+			vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 	}
 }
 
-/*WireFrame View*/
 void MainScreen::on_wireframe_model_radio_button_clicked() {
-	//Load Selected CAD implant(s)
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		/*Original Model*/
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
-			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
-			/*Sets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToWireframe();
-			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
 		}
 	}
@@ -4031,8 +3834,9 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 				                              getParameterValue();
 			}
 		}
-		if (dilation_val < 0)
+		if (dilation_val < 0) {
 			dilation_val = 0;
+		}
 
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.image_list_widget->currentIndex().row() <
 			loaded_frames.size()) {
@@ -4052,20 +3856,20 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 		/*If Edge View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+				vw->update_display_background_to_edge_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
 		}
@@ -4110,8 +3914,9 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 				                              getParameterValue();
 			}
 		}
-		if (dilation_val < 0)
+		if (dilation_val < 0) {
 			dilation_val = 0;
+		}
 
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.image_list_widget->currentIndex().row() <
 			loaded_frames.size()) {
@@ -4131,20 +3936,20 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 		/*If Edge View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+				vw->update_display_background_to_edge_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 			}
 			ui.qvtk_widget->update();
 		}
@@ -4190,8 +3995,9 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 				                              getParameterValue();
 			}
 		}
-		if (dilation_val < 0)
+		if (dilation_val < 0) {
 			dilation_val = 0;
+		}
 
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.image_list_widget->currentIndex().row() <
 			loaded_frames.size()) {
@@ -4211,20 +4017,20 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 		/*If Edge View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+				vw->update_display_background_to_edge_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 			if (ui.camera_A_radio_button->isChecked()) {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 			}
 			else {
-				vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+				vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
 		}
@@ -4250,8 +4056,9 @@ void MainScreen::on_apply_all_edge_button_clicked() {
 			dilation_val = trunk_manager_.getActiveCostFunctionClass()->getIntParameters().at(i).getParameterValue();
 		}
 	}
-	if (dilation_val < 0)
+	if (dilation_val < 0) {
 		dilation_val = 0;
+	}
 
 	/*Apply Edge Detect to All Images*/
 	for (int i = 0; i < loaded_frames.size(); i++) {
@@ -4271,20 +4078,20 @@ void MainScreen::on_apply_all_edge_button_clicked() {
 	/*If Edge View Selected*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), true);
+			vw->update_display_background_to_edge_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoEdgeImage(this->curr_frame(), false);
+			vw->update_display_background_to_edge_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
 	/*If Dilation View Selected*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -4389,11 +4196,13 @@ void MainScreen::SaveLastPose() {
 			Point6D last_pose(position_curr[0], position_curr[1], position_curr[2],
 			                  orientation_curr[0], orientation_curr[1], orientation_curr[2]);
 			/*If Camera B View, Save in Camera A coordinates*/
-			if (ui.camera_A_radio_button->isChecked())
+			if (ui.camera_A_radio_button->isChecked()) {
 				model_locations_.SavePose(previous_frame_index_, previous_model_indices_[i].row(), last_pose);
-			else
+			}
+			else {
 				model_locations_.SavePose(previous_frame_index_, previous_model_indices_[i].row(),
 				                          calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
+			}
 		}
 	}
 }
@@ -4571,8 +4380,9 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 			currently_optimizing_ = false;
 			EnableAll();
 			/*Display Finished*/
-			if (!error_occurred)
+			if (!error_occurred) {
 				QMessageBox::information(this, "Finished!", "All frames optimized!", QMessageBox::Ok);
+			}
 		}
 
 	}
@@ -4678,10 +4488,10 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 void MainScreen::onUpdateDilationBackground() {
 	if (ui.dilation_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked() == true) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}
@@ -4696,8 +4506,9 @@ void MainScreen::LoadSettingsBetweenSessions() {
 	QSettings setting("JointTrackAutoGPU", Version);
 	bool first_time_loading = false;
 	QStringList groupList = setting.childGroups();
-	if (groupList.size() == 0)
+	if (groupList.size() == 0) {
 		first_time_loading = true;
+	}
 
 	/*Not First Time Loading*/
 	if (!first_time_loading) {
@@ -4845,26 +4656,32 @@ void MainScreen::LoadSettingsBetweenSessions() {
 		int gpu_device_count = 0, device_count;
 		struct cudaDeviceProp properties;
 		cudaError_t cudaResultCode = cudaGetDeviceCount(&device_count);
-		if (cudaResultCode != cudaSuccess)
+		if (cudaResultCode != cudaSuccess) {
 			device_count = 0;
+		}
 		/* Machines with no GPUs can still report one emulation device */
 		for (int device = 0; device < device_count; ++device) {
 			cudaGetDeviceProperties(&properties, device);
 			if (properties.major != 9999 && properties.major >= 5) /* 9999 means emulation only */
+			{
 				++gpu_device_count;
+			}
 		}
 		/*If no Cuda Compatitble Devices with Compute Capability Greater Than 5, Exit*/
 		if (gpu_device_count == 0) {
-			if (device_count == 0)
+			if (device_count == 0) {
 				QMessageBox::critical(this, "Error!", "No CUDA capable GPU detected! Optimizer will not run!",
 				                      QMessageBox::Ok);
-			else if (properties.major == 9999)
+			}
+			else if (properties.major == 9999) {
 				QMessageBox::critical(this, "Error!", "GPU is emulation only! Optimizer will not run!",
 				                      QMessageBox::Ok);
-			else
+			}
+			else {
 				QMessageBox::critical(this, "Error!",
 				                      "GPU does not have high enough compute capability! Optimizer will not run!\nPlease upgrade to device with compute capability 5.0 or higher!",
 				                      QMessageBox::Ok);
+			}
 		}
 		else {
 			/*First Time Loading Message Will Now Go Away By Marking in Registry*/
@@ -5222,11 +5039,13 @@ void MainScreen::UpdateDilationFrames() {
 			dilation_val = trunk_manager_.getActiveCostFunctionClass()->getIntParameters().at(i).getParameterValue();
 		}
 	}
-	if (dilation_val < 0)
+	if (dilation_val < 0) {
 		dilation_val = 0;
+	}
 	/*Mahfouz Case*/
-	if (trunk_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ")
+	if (trunk_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ") {
 		dilation_val = 3;
+	}
 
 	/*Apply Dilation to All Images*/
 	for (int i = 0; i < loaded_frames.size(); i++) {
@@ -5238,10 +5057,10 @@ void MainScreen::UpdateDilationFrames() {
 	/*If Dilation View Selected*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
 		if (ui.camera_A_radio_button->isChecked()) {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), true);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 		}
 		else {
-			vw->updateDisplayBackgroundtoDilationImage(this->curr_frame(), false);
+			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 		}
 		ui.qvtk_widget->update();
 	}

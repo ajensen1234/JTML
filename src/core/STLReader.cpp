@@ -9,7 +9,7 @@
 #include <bitset>
 
 namespace stl_reader_BIG {
-	STL_STATUS getStlFileFormat(const QString &path) {
+	STL_STATUS getStlFileFormat(const QString& path) {
 		/* TAKEN FROM: https://stackoverflow.com/questions/26171521/verifying-that-an-stl-file-is-ascii-or-binary */
 		/* CREDIT FOR THIS FUNCTION GOES TO STACK OVERFLOW USERS: OnlineCop, Remy Lebeau, and Powerswitch*/
 		// Each facet contains:
@@ -21,8 +21,7 @@ namespace stl_reader_BIG {
 
 		QFile file(path);
 		bool canFileBeOpened = file.open(QIODevice::ReadOnly);
-		if (!canFileBeOpened)
-		{
+		if (!canFileBeOpened) {
 			qDebug("\n\tUnable to open \"%s\"", qPrintable(path));
 			return STL_INVALID;
 		}
@@ -31,10 +30,9 @@ namespace stl_reader_BIG {
 		size_t fileSize = fileInfo.size();
 
 		// The minimum size of an empty ASCII file is 15 bytes.
-		if (fileSize < 15)
-		{
+		if (fileSize < 15) {
 			// "solid " and "endsolid " markers for an ASCII file
-			qDebug("\n\tThe STL file is not long enough (%u bytes).", uint(fileSize));
+			qDebug("\n\tThe STL file is not long enough (%u bytes).", static_cast<uint>(fileSize));
 			file.close();
 			return STL_INVALID;
 		}
@@ -44,15 +42,12 @@ namespace stl_reader_BIG {
 
 		// Look for text "solid " in first 6 bytes, indicating the possibility that this is an ASCII STL format.
 		QByteArray sixBytes = file.read(6);
-		if (sixBytes.startsWith("solid "))
-		{
+		if (sixBytes.startsWith("solid ")) {
 			QString line;
 			QTextStream in(&file);
-			while (!in.atEnd())
-			{
+			while (!in.atEnd()) {
 				line = in.readLine();
-				if (line.contains("endsolid"))
-				{
+				if (line.contains("endsolid")) {
 					file.close();
 					return STL_ASCII;
 				}
@@ -60,24 +55,21 @@ namespace stl_reader_BIG {
 		}
 
 		// Wasn't an ASCII file. Reset and check for binary.
-		if (!file.reset())
-		{
+		if (!file.reset()) {
 			qDebug("\n\tCannot seek to the 0th byte (before the header)");
 			file.close();
 			return STL_INVALID;
 		}
 
 		// 80-byte header + 4-byte "number of triangles" for a binary file
-		if (fileSize < 84)
-		{
-			qDebug("\n\tThe STL file is not long enough (%u bytes).", uint(fileSize));
+		if (fileSize < 84) {
+			qDebug("\n\tThe STL file is not long enough (%u bytes).", static_cast<uint>(fileSize));
 			file.close();
 			return STL_INVALID;
 		}
 
 		// Header is from bytes 0-79; numTriangleBytes starts at byte offset 80.
-		if (!file.seek(80))
-		{
+		if (!file.seek(80)) {
 			qDebug("\n\tCannot seek to the 80th byte (after the header)");
 			file.close();
 			return STL_INVALID;
@@ -85,8 +77,7 @@ namespace stl_reader_BIG {
 
 		// Read the number of triangles, uint32_t (4 bytes), little-endian
 		QByteArray nTrianglesBytes = file.read(4);
-		if (nTrianglesBytes.size() != 4)
-		{
+		if (nTrianglesBytes.size() != 4) {
 			qDebug("\n\tCannot read the number of triangles (after the header)");
 			file.close();
 			return STL_INVALID;
@@ -95,8 +86,7 @@ namespace stl_reader_BIG {
 		uint32_t nTriangles = *((uint32_t*)nTrianglesBytes.data());
 
 		// Verify that file size equals the sum of header + nTriangles value + all triangles
-		if (fileSize == (84 + (nTriangles * facetSize)))
-		{
+		if (fileSize == (84 + (nTriangles * facetSize))) {
 			file.close();
 			return STL_BINARY;
 		}
@@ -104,44 +94,40 @@ namespace stl_reader_BIG {
 		return STL_INVALID;
 	}
 
-	STL_STATUS readAnySTL(const QString &path, std::vector<std::vector<float>> &stl_storage) {
+	STL_STATUS readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
 		/*STL reader function (binary or ascii)
 		Returns a vector of two vector<floats>, one contains the traingle vertices, the other contains the triangle normals*/
 
 		// Read in file and get status
 		switch (getStlFileFormat(path)) {
-		case STL_STATUS::STL_INVALID:
+		case STL_INVALID:
 			std::cout << "ERROR: Invalid STL file.\n";
-			return STL_STATUS::STL_INVALID;
+			return STL_INVALID;
 			break;
-		case STL_STATUS::STL_ASCII: {
+		case STL_ASCII: {
 			// OLD CRUDE ASCII READER
 			std::ifstream file(path.toStdString());
 			std::vector<float> triangleVertices;
 			std::vector<float> triangleNormals;
 			std::string str;
-			while (std::getline(file, str))
-			{
+			while (std::getline(file, str)) {
 				std::string buf;
 				std::stringstream ss(str);
 
 				std::vector<std::string> tokens;
-				while (ss >> buf)
+				while (ss >> buf) {
 					tokens.push_back(buf);
+				}
 
-				if (tokens.size() == 4)
-				{
-					if (tokens[0] == "vertex")
-					{
+				if (tokens.size() == 4) {
+					if (tokens[0] == "vertex") {
 						triangleVertices.push_back(std::stof(tokens[1]));
 						triangleVertices.push_back(std::stof(tokens[2]));
 						triangleVertices.push_back(std::stof(tokens[3]));
 					}
 				}
-				if (tokens.size() == 5)
-				{
-					if (tokens[0] == "facet" && tokens[1] == "normal")
-					{
+				if (tokens.size() == 5) {
+					if (tokens[0] == "facet" && tokens[1] == "normal") {
 						triangleNormals.push_back(std::stof(tokens[2]));
 						triangleNormals.push_back(std::stof(tokens[3]));
 						triangleNormals.push_back(std::stof(tokens[4]));
@@ -151,14 +137,14 @@ namespace stl_reader_BIG {
 			stl_storage.clear();
 			stl_storage.push_back(triangleVertices);
 			stl_storage.push_back(triangleNormals);
-			return STL_STATUS::STL_ASCII;
+			return STL_ASCII;
 			break;
 		}
-		case STL_STATUS::STL_BINARY: {
+		case STL_BINARY: {
 			std::ifstream stl_file(path.toStdString().c_str(), std::ios::in | std::ios::binary);
 			if (!stl_file) {
 				std::cout << "ERROR: Could not read STL file.\n";
-				return STL_STATUS::STL_INVALID;
+				return STL_INVALID;
 			}
 
 			/*Read in 80 byte header and 4 byte unsigned int representing the number of triangles*/
@@ -194,7 +180,7 @@ namespace stl_reader_BIG {
 			stl_storage.clear();
 			stl_storage.push_back(triangleVertices);
 			stl_storage.push_back(triangleNormals);
-			return STL_STATUS::STL_BINARY;
+			return STL_BINARY;
 			break;
 		}
 		}

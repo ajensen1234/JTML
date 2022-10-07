@@ -1,6 +1,6 @@
 add_executable(vtk-tester
     vtk_tester.cpp
-    ${PROJECT_SOURCE_DIR}/src/gui/viewer.cpp 
+    "../../src/gui/viewer.cpp" 
     ${PROJECT_SOURCE_DIR}/include/gui/viewer.h 
 
 )

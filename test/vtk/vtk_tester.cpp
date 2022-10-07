@@ -31,7 +31,7 @@ int main(){
     vtkNew<vtkRenderer> my_renderer;
     auto actor = vtkSmartPointer<vtkActor>::New();
     print_hello();
-    viewer vw;
+    Viewer vw;
     vw.initialize_vtk_pointers();
     vw.initialize_vtk_mappers();
     vw.initialize_vtk_renderers();
@@ -40,16 +40,16 @@ int main(){
     QStringList fem_path_extension("./test_case/KR_left_8_fem.stl"); 
     QStringList fem_loaded_name(QFileInfo(QString::fromStdString(fem_path_extension[0].toStdString())).baseName());
     Calibration cal = read_calibration(cal_path);
-    vw.setupCameraCalibration(cal);
-    vw.placeImageActorsAccordingToCalibration(cal,1024,1024);
+    vw.setup_camera_calibration(cal);
+    vw.place_image_actors_according_to_calibration(cal,1024,1024);
     std::vector<Frame> frame = {Frame(img_path,3,0,150,6)};
-    vw.setLoadedFrames(frame);
-    vw.updateDisplayBackgroundtoOriginalImage(0,true);
-    vw.setModelOrientationAtIndex(0,0,0,0);
-    vw.setModelPositionAtIndex(0,0,0,-800);
-    vw.loadModels(fem_path_extension,fem_loaded_name);
+    vw.set_loaded_frames(frame);
+    vw.update_display_background_to_original_image(0,true);
+    vw.set_model_orientation_at_index(0,0,0,0);
+    vw.set_model_position_at_index(0,0,0,-800);
+    vw.load_models(fem_path_extension,fem_loaded_name);
     
-    vw.setRenderWindowAndDisplay();
+    vw.set_render_window_and_display();
 
 
 

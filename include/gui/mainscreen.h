@@ -159,7 +159,7 @@ private:
     vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera_style_interactor;
 
 
-    std::shared_ptr<viewer> vw = std::make_shared<viewer>();
+    std::shared_ptr<Viewer> vw = std::make_shared<Viewer>();
 
 
     /*View Menu Radio Button Container*/

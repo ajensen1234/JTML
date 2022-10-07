@@ -1,16 +1,16 @@
 #include "gui/viewer.h"
 
-viewer::viewer() {
+Viewer::Viewer() {
 	initialize_vtk_pointers();
 	initialize_vtk_mappers();
 	initialize_vtk_renderers();
 
 }
 
-viewer::~viewer() {
+Viewer::~Viewer() {
 }
 
-void viewer::initialize_vtk_pointers() {
+void Viewer::initialize_vtk_pointers() {
 
 	//TODO: Throw a catch statement here to make sure there are no errors
 	background_renderer_ = vtkSmartPointer<vtkRenderer>::New();
@@ -27,54 +27,54 @@ void viewer::initialize_vtk_pointers() {
 	render_window_ = vtkSmartPointer<vtkRenderWindow>::New();
 }
 
-void viewer::initialize_vtk_mappers() {
+void Viewer::initialize_vtk_mappers() {
 	image_mapper_->SetInputData(current_background_);
 	actor_image_->SetPickable(0);
 	actor_text_->SetPickable(0);
 	actor_image_->SetMapper(image_mapper_);
 }
 
-void viewer::initialize_vtk_renderers() {
+void Viewer::initialize_vtk_renderers() {
 	background_renderer_->AddActor(actor_image_);
 	background_renderer_->AddActor2D(actor_text_);
 
 }
 
-void viewer::load_render_window(vtkSmartPointer<vtkRenderWindow> in) {
+void Viewer::load_render_window(vtkSmartPointer<vtkRenderWindow> in) {
 	qvtk_render_window_ = in;
 }
 
-vtkSmartPointer<vtkRenderer> viewer::get_renderer() {
+vtkSmartPointer<vtkRenderer> Viewer::get_renderer() {
 	return background_renderer_;
 }
 
-vtkSmartPointer<vtkActor> viewer::get_actor_image() {
+vtkSmartPointer<vtkActor> Viewer::get_actor_image() {
 	return actor_image_;
 }
 
-vtkSmartPointer<vtkImageData> viewer::get_current_background() {
+vtkSmartPointer<vtkImageData> Viewer::get_current_background() {
 	return current_background_;
 }
 
-vtkSmartPointer<vtkSTLReader> viewer::get_stl_reader() {
+vtkSmartPointer<vtkSTLReader> Viewer::get_stl_reader() {
 	return stl_reader_;
 }
 
-vtkSmartPointer<vtkDataSetMapper> viewer::get_image_mapper() {
+vtkSmartPointer<vtkDataSetMapper> Viewer::get_image_mapper() {
 	return image_mapper_;
 }
 
-vtkSmartPointer<vtkTextActor> viewer::get_actor_text() {
+vtkSmartPointer<vtkTextActor> Viewer::get_actor_text() {
 	return actor_text_;
 }
 
-vtkSmartPointer<vtkImageImport> viewer::get_importer() {
+vtkSmartPointer<vtkImageImport> Viewer::get_importer() {
 	return importer_;
 }
 
-void viewer::updateDisplayBackground(cv::Mat desiredBackground) {
+void Viewer::update_display_background(cv::Mat desiredBackground) {
 	if (current_background_) {
-		this->setImporterOutputToBackground();
+		this->set_importer_output_to_background();
 	}
 	importer_->SetDataSpacing(1, 1, 1);
 	importer_->SetDataOrigin(0, 0, 0);
@@ -87,57 +87,57 @@ void viewer::updateDisplayBackground(cv::Mat desiredBackground) {
 	importer_->Update();
 }
 
-void viewer::setImporterOutputToBackground() {
+void Viewer::set_importer_output_to_background() {
 	importer_->SetOutput(current_background_);
 }
 
-void viewer::setLoadedFrames(std::vector<Frame>& frames) {
+void Viewer::set_loaded_frames(std::vector<Frame>& frames) {
 	loaded_frames_ = frames;
 }
 
 
-void viewer::setLoadedFrames_B(std::vector<Frame>& frames) {
+void Viewer::set_loaded_frames_b(std::vector<Frame>& frames) {
 	loaded_frames_B_ = frames;
 }
 
-void viewer::updateDisplayBackgroundtoEdgeImage(int frame_number, bool CameraASelected) {
+void Viewer::update_display_background_to_edge_image(int frame_number, bool CameraASelected) {
 	if (CameraASelected) {
-		updateDisplayBackground(loaded_frames_[frame_number].GetEdgeImage());
+		update_display_background(loaded_frames_[frame_number].GetEdgeImage());
 	}
 	else if (!CameraASelected) {
-		updateDisplayBackground(loaded_frames_B_[frame_number].GetEdgeImage());
+		update_display_background(loaded_frames_B_[frame_number].GetEdgeImage());
 	}
 }
 
-void viewer::updateDisplayBackgroundtoOriginalImage(int frame_number, bool CameraASelected) {
+void Viewer::update_display_background_to_original_image(int frame_number, bool CameraASelected) {
 	if (CameraASelected) {
-		updateDisplayBackground(loaded_frames_[frame_number].GetOriginalImage());
+		update_display_background(loaded_frames_[frame_number].GetOriginalImage());
 	}
 	else if (!CameraASelected) {
-		updateDisplayBackground(loaded_frames_B_[frame_number].GetOriginalImage());
+		update_display_background(loaded_frames_B_[frame_number].GetOriginalImage());
 	}
 }
 
 
-void viewer::updateDisplayBackgroundtoDilationImage(int frame_number, bool CameraASelected) {
+void Viewer::update_display_background_to_dilation_image(int frame_number, bool CameraASelected) {
 	if (CameraASelected) {
-		updateDisplayBackground(loaded_frames_[frame_number].GetDilationImage());
+		update_display_background(loaded_frames_[frame_number].GetDilationImage());
 	}
 	else if (!CameraASelected) {
-		updateDisplayBackground(loaded_frames_B_[frame_number].GetDilationImage());
+		update_display_background(loaded_frames_B_[frame_number].GetDilationImage());
 	}
 }
 
-void viewer::updateDisplayBackgroundtoInvertedImage(int frame_number, bool CameraASelected) {
+void Viewer::update_display_background_to_inverted_image(int frame_number, bool CameraASelected) {
 	if (CameraASelected) {
-		updateDisplayBackground(loaded_frames_[frame_number].GetInvertedImage());
+		update_display_background(loaded_frames_[frame_number].GetInvertedImage());
 	}
 	else if (!CameraASelected) {
-		updateDisplayBackground(loaded_frames_B_[frame_number].GetInvertedImage());
+		update_display_background(loaded_frames_B_[frame_number].GetInvertedImage());
 	}
 }
 
-void viewer::setupCameraCalibration(Calibration calibration) {
+void Viewer::setup_camera_calibration(Calibration calibration) {
 	background_renderer_->GetActiveCamera()->SetFocalPoint(0, 0, -1);
 	background_renderer_->GetActiveCamera()->SetPosition(0, 0, 0);
 	background_renderer_->GetActiveCamera()->SetClippingRange(0.1, 2.0 *
@@ -145,7 +145,7 @@ void viewer::setupCameraCalibration(Calibration calibration) {
 	                                                          calibration.camera_A_principal_.pixel_pitch_);
 }
 
-void viewer::placeImageActorsAccordingToCalibration(Calibration cal, int img_w, int img_h) {
+void Viewer::place_image_actors_according_to_calibration(Calibration cal, int img_w, int img_h) {
 	actor_image_->SetPosition(
 		-0.5 * img_w + cal.camera_A_principal_.principal_x_ / cal.camera_A_principal_.pixel_pitch_,
 		-0.5 * img_h + cal.camera_A_principal_.principal_y_ / cal.camera_A_principal_.pixel_pitch_,
@@ -153,7 +153,7 @@ void viewer::placeImageActorsAccordingToCalibration(Calibration cal, int img_w, 
 }
 
 
-void viewer::load3DModelsIntoActorAndMapperList() {
+void Viewer::load_3d_models_into_actor_and_mapper_list() {
 	for (int i = 0; i < loaded_models_->size(); i++) {
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -166,7 +166,7 @@ void viewer::load3DModelsIntoActorAndMapperList() {
 	}
 }
 
-void viewer::loadModelActorsAndMappersWith3DData() {
+void Viewer::load_model_actors_and_mappers_with_3d_data() {
 	for (int i = 0; i < model_actor_list_.size(); i++) {
 		model_actor_list_[i]->PickableOff();
 		model_actor_list_[i]->VisibilityOff();
@@ -175,34 +175,34 @@ void viewer::loadModelActorsAndMappersWith3DData() {
 	}
 }
 
-std::vector<vtkSmartPointer<vtkPolyDataMapper>> viewer::getModelMapperList() {
+std::vector<vtkSmartPointer<vtkPolyDataMapper>> Viewer::get_model_mapper_list() {
 	return model_mapper_list_;
 }
 
-std::vector<vtkSmartPointer<vtkActor>> viewer::getModelActorList() {
+std::vector<vtkSmartPointer<vtkActor>> Viewer::get_model_actor_list() {
 	return model_actor_list_;
 }
 
-void viewer::set3DModelColor(int index, double RGB[3]) {
+void Viewer::set_3d_model_color(int index, double RGB[3]) {
 	model_actor_list_[index]->GetProperty()->SetColor(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0);
 
 }
 
-void viewer::loadModels(QStringList cad_files, QStringList cad_models) {
+void Viewer::load_models(QStringList cad_files, QStringList cad_models) {
 	for (int i = 0; i < cad_files.size(); i++) {
 		loaded_models_->push_back(Model(cad_files[i].toStdString(), cad_models[i].toStdString(), "BLANK"));
 	}
 }
 
-bool viewer::areModelsLoadedCorrectly(int index) {
+bool Viewer::are_models_loaded_correctly(int index) {
 	return loaded_models_->at(index).initialized_correctly_;
 }
 
-bool viewer::areModelsLoadedIncorrectly(int index) {
+bool Viewer::are_models_loaded_incorrectly(int index) {
 	return !loaded_models_->at(index).initialized_correctly_;
 }
 
-void viewer::changeModelOpacityToOriginal(int index) {
+void Viewer::change_model_opacity_to_original(int index) {
 	model_actor_list_[index]->PickableOn();
 	model_actor_list_[index]->VisibilityOn();
 	model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
@@ -211,7 +211,7 @@ void viewer::changeModelOpacityToOriginal(int index) {
 	model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
-void viewer::changeModelOpacityToWireFrame(int index) {
+void Viewer::change_model_opacity_to_wire_frame(int index) {
 	model_actor_list_[index]->PickableOn();
 	model_actor_list_[index]->VisibilityOn();
 	model_actor_list_[index]->GetProperty()->SetAmbient(0);
@@ -220,7 +220,7 @@ void viewer::changeModelOpacityToWireFrame(int index) {
 	model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
-void viewer::changeModelOpacityToTransparent(int index) {
+void Viewer::change_model_opacity_to_transparent(int index) {
 	model_actor_list_[index]->PickableOn();
 	model_actor_list_[index]->VisibilityOn();
 	model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
@@ -229,7 +229,7 @@ void viewer::changeModelOpacityToTransparent(int index) {
 	model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
-void viewer::changeModelOpacityToSolid(int index) {
+void Viewer::change_model_opacity_to_solid(int index) {
 	model_actor_list_[index]->PickableOn();
 	model_actor_list_[index]->VisibilityOn();
 	model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
@@ -238,15 +238,15 @@ void viewer::changeModelOpacityToSolid(int index) {
 	model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
-void viewer::setModelPositionAtIndex(int index, double x, double y, double z) {
+void Viewer::set_model_position_at_index(int index, double x, double y, double z) {
 	model_actor_list_[index]->SetPosition(x, y, z);
 }
 
-void viewer::setModelOrientationAtIndex(int index, double xrot, double yrot, double zrot) {
+void Viewer::set_model_orientation_at_index(int index, double xrot, double yrot, double zrot) {
 	model_actor_list_[index]->SetOrientation(xrot, yrot, zrot);
 }
 
-std::string viewer::printLocationAndOrientationOfModelAtIndex(int index) {
+std::string Viewer::print_location_and_orientation_of_model_at_index(int index) {
 	std::string infoText = "Location: <";
 	infoText += std::to_string(static_cast<long double>(model_actor_list_[index]->GetPosition()[0])) + ","
 		+ std::to_string(static_cast<long double>(model_actor_list_[index]->GetPosition()[1])) + ","
@@ -258,25 +258,25 @@ std::string viewer::printLocationAndOrientationOfModelAtIndex(int index) {
 	return infoText;
 }
 
-void viewer::setActorText(std::string desired_text) {
+void Viewer::set_actor_text(std::string desired_text) {
 	actor_text_->SetInput(desired_text.c_str());
 }
 
-void viewer::setActorTextColorToModelColorAtIndex(int index) {
+void Viewer::set_actor_text_color_to_model_color_at_index(int index) {
 	actor_text_->GetTextProperty()->SetColor(model_actor_list_[index]->GetProperty()->GetColor());
 }
 
 
-void viewer::renderScene() {
+void Viewer::render_scene() {
 	background_renderer_->Render();
 
 }
 
-void viewer::displayActorsInRenderer() {
+void Viewer::display_actors_in_renderer() {
 	background_renderer_->GetActors()->Print(std::cout);
 }
 
-void viewer::setRenderWindowAndDisplay() {
+void Viewer::set_render_window_and_display() {
 	render_window_->AddRenderer(background_renderer_);
 	render_window_->SetWindowName("My Window");
 	render_window_->Render();

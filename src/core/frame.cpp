@@ -1,7 +1,6 @@
 /*Frame Header*/
 #include "core/frame.h"
 
-using namespace cv;
 
 /*Constructor*/
 Frame::Frame(std::string file_location, int aperture, int low_threshold,
@@ -11,7 +10,7 @@ Frame::Frame(std::string file_location, int aperture, int low_threshold,
 	file_location_ = file_location;
 
 	/*Read in to the original*/
-	flip(imread(file_location, CV_8UC1), original_image_, 0);
+	flip(cv::imread(file_location, CV_8UC1), original_image_, 0);
 	height_ = original_image_.rows;
 	width_ = original_image_.cols;
 
@@ -46,7 +45,7 @@ void Frame::SetEdgeImage(int aperture, int low_threshold,
 /*Recalculate Dilated Image*/
 void Frame::SetDilatedImage(int dilation) {
 	dilation_ = dilation;
-	dilate(edge_image_, dilation_image_, Mat(), Point(-1, -1), dilation_);
+	dilate(edge_image_, dilation_image_, cv::Mat(), cv::Point(-1, -1), dilation_);
 }
 
 /*Return Original Image*/

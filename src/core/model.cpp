@@ -28,4 +28,3 @@ Model::Model(std::string file_location, std::string model_name, std::string mode
 stl_reader::STL_STATUS Model::LoadVerticesAndNormals() {
 	return stl_reader::readAnySTL(QString::fromStdString(file_location_), triangle_vertices_, triangle_normals_);
 }
-
