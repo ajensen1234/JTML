@@ -1,11 +1,10 @@
 #include "gui/Controls.h"
 
 //Controls JTA Popup CPP
-Controls::Controls(QWidget *parent, Qt::WindowFlags flags)
-	: QDialog(parent, flags)
-{
+Controls::Controls(QWidget* parent, Qt::WindowFlags flags)
+	: QDialog(parent, flags) {
 	ui.setupUi(this);
-	QDialog::setFixedSize(520, 500);
+	setFixedSize(520, 500);
 
 	center_scene = new QGraphicsScene;
 	center_scene->setSceneRect(0, 0, 500, 1620);
@@ -23,8 +22,7 @@ Controls::Controls(QWidget *parent, Qt::WindowFlags flags)
 	center_scene->addItem(center_item);
 }
 
-Controls::~Controls()
-{
+Controls::~Controls() {
 	delete center_graph;
 	delete center_scene;
 }

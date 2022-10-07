@@ -7,7 +7,8 @@ viewer::viewer() {
 
 }
 
-viewer::~viewer() {}
+viewer::~viewer() {
+}
 
 void viewer::initialize_vtk_pointers() {
 

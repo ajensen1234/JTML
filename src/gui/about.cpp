@@ -5,9 +5,8 @@
 #include <cuda_runtime.h>
 
 //About JTA Popup CPP
-About::About(QWidget *parent, Qt::WindowFlags flags)
-	: QDialog(parent, flags)
-{
+About::About(QWidget* parent, Qt::WindowFlags flags)
+	: QDialog(parent, flags) {
 	ui.setupUi(this);
 
 	/*Check CUDA Stats*/
@@ -29,7 +28,8 @@ About::About(QWidget *parent, Qt::WindowFlags flags)
 	}
 	else if (gpu_device_count == 0) {
 		ui.gpu_label->setText(QString(properties.name) + " (Incompatible)");
-		ui.cc_label->setText(QString::number(properties.major) + "." + QString::number(properties.minor) + " (Too Low)");
+		ui.cc_label->
+		   setText(QString::number(properties.major) + "." + QString::number(properties.minor) + " (Too Low)");
 	}
 	else {
 		ui.gpu_label->setText(QString(properties.name));
@@ -47,7 +47,9 @@ About::About(QWidget *parent, Qt::WindowFlags flags)
 	QFontMetrics text_metric(ui.copyright_label->font());
 
 	/*Adjust for Title Height*/
-	ui.detected_group_box->setStyleSheet(ui.detected_group_box->styleSheet() += "QGroupBox { margin-top: " + QString::number(text_metric.height() / 2) + "px; }");
+	ui.detected_group_box->setStyleSheet(
+		ui.detected_group_box->styleSheet() += "QGroupBox { margin-top: " + QString::number(text_metric.height() / 2) +
+		"px; }");
 
 	/*Constants for Sizing Adjustments*/
 	int GROUP_BOX_TO_LABEL_X = 50;
@@ -60,9 +62,12 @@ About::About(QWidget *parent, Qt::WindowFlags flags)
 	int INSIDE_BUTTON_PADDING_Y = 30;
 
 	/*Get Max Width*/
-	int max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.gpu_description_label->text()) + text_metric.width(ui.gpu_label->text());
-	if (max_width < GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.cc_description_label->text()) + text_metric.width(ui.cc_label->text()))
-		max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.cc_description_label->text()) + text_metric.width(ui.cc_label->text());
+	int max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.gpu_description_label->text()) +
+		text_metric.width(ui.gpu_label->text());
+	if (max_width < GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.cc_description_label->text()) +
+		text_metric.width(ui.cc_label->text()))
+		max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X + text_metric.width(ui.cc_description_label->text()) +
+			text_metric.width(ui.cc_label->text());
 	int group_box_width = max_width;
 	if (max_width < title_metric.width(ui.title_label->text()))
 		max_width = title_metric.width(ui.title_label->text());
@@ -94,7 +99,8 @@ About::About(QWidget *parent, Qt::WindowFlags flags)
 		text_metric.width(ui.gpu_description_label->text()),
 		text_metric.height()));
 	ui.cc_description_label->setGeometry(QRect(
-		GROUP_BOX_TO_LABEL_X + text_metric.width(ui.gpu_description_label->text()) - text_metric.width(ui.cc_description_label->text()),
+		GROUP_BOX_TO_LABEL_X + text_metric.width(ui.gpu_description_label->text()) - text_metric.width(
+			ui.cc_description_label->text()),
 		ui.gpu_description_label->geometry().bottom() + LABEL_TO_LABEL_Y,
 		text_metric.width(ui.cc_description_label->text()),
 		text_metric.height()));
@@ -115,17 +121,15 @@ About::About(QWidget *parent, Qt::WindowFlags flags)
 		text_metric.height() + INSIDE_BUTTON_PADDING_Y));
 
 	/*Set Minimum Width and Height*/
-	QDialog::setFixedSize(331 + max_width, ui.close_button->geometry().bottom() + 25);
+	setFixedSize(331 + max_width, ui.close_button->geometry().bottom() + 25);
 
 }
 
-About::~About()
-{
+About::~About() {
 }
 
 //Set Version Number
-void About::setVersion(int A, int B, int C)
-{
+void About::setVersion(int A, int B, int C) {
 	ui.version_label->setText("Version " + QString::number(A) + "." + QString::number(B) + "."
 		+ QString::number(C));
 }
