@@ -227,6 +227,8 @@ MainScreen::MainScreen(QWidget* parent)
 	/*INitialize Location Storage*/
 	model_locations_ = LocationStorage();
 	vw->initialize_vtk_pointers();
+	vw->initialize_vtk_mappers();
+	vw->initialize_vtk_renderers();
 	/*Selection Model for Models*/
 	ui.single_model_radio_button->setChecked(true);
 	ui.model_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -275,7 +277,10 @@ MainScreen::MainScreen(QWidget* parent)
 	renderer->AddActor(actor_image);
 	renderer->AddActor2D(actor_text);
 	ui.qvtk_widget->GetRenderWindow()->Render();
-
+	vw->displayActorsInRenderer();
+	renderer->GetActors()->Print(std::cout);
+	
+	actor_image->Print(std::cout);
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
 	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
@@ -2813,15 +2818,27 @@ void MainScreen::on_load_model_button_clicked() {
 	//Add to Loaded Models and initialize new vtk actors
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 	vw->loadModels(CADFileExtensions,CADModelNames);
-
+	std::cout << "After loading models in mainscreen" << std::endl;
+	vw->displayActorsInRenderer();
+	ui.	qvtk_widget->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->Print(std::cout);
 	//Scroll through list and warn if loaded model might be invalid STL file
-	for (int i = 0; i < CADFileExtensions.size(); i++) {
-		if (!loaded_models[i].initialized_correctly_)
+	/*for (int i = 0; i < CADFileExtensions.size(); i++) {
+		std::cout << "Before checking loaded models - this should print" <<std::endl;
+		if (!loaded_models[i].initialized_correctly_){
+			std::cout << "Inside loaded model checking - this will not print" << std::endl;
 			QMessageBox::warning(this, "Warning!", "It is possible that " + CADModelNames[i] + " (" + CADFileExtensions[i] + ")" +
 				" is an invalid or corrupted STL file format. Proceed with caution!", QMessageBox::Ok);
+		}
+	}*/
+
+	for (int i = 0; i < CADFileExtensions.size(); i++){
+		if (vw->areModelsLoadedIncorrectly(i)){
+			QMessageBox::warning(this,"Warning!", "It is Possible that " + CADModelNames[i] + " (" + CADFileExtensions[i] + ") " + " is an invalid or corrupted STL file format. Proceed with caution!", QMessageBox::Ok);
+		}
 	}
 
 	//Populate Model List Widget
+	std::cout << "Prior to Updating Model List Widget" <<std::endl;
 	for (int i = 0; i < CADFileExtensions.size(); i++)  ui.model_list_widget->addItem(CADModelNames[i]);
 
 	/*Load Blank Poses for Available Frames (and Default Blank Poses even if no frames for viewing without frame)*/
@@ -2839,8 +2856,12 @@ void MainScreen::on_load_model_button_clicked() {
 		model_mapper_list.push_back(new_mapper);
 	}*/
 	vw->load3DModelsIntoActorAndMapperList();
+	renderer->Render();
 	//If No Loaded Models, Default Select First
+	std::cout << "Before model list widget changes" << std::endl;
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) ui.model_list_widget->setCurrentRow(0);
+	std::cout << "After model list widget changes" << std::endl;
+	renderer->Render();
 
 }
 
@@ -3283,6 +3304,7 @@ QModelIndexList MainScreen::selected_model_indices(){
 }
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
+	std::cout <<"First line of on_model_list_widget_changed" << std::endl;
 
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_)
@@ -3290,23 +3312,26 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Update Last Viewed Index as This One*/
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
-	//vw->loadModelActorsAndMappersWith3DData();
+	vw->loadModelActorsAndMappersWith3DData();
 
 	/*Turn Off All Model Actor's Visibility and Pickability and Set the Input Connections*/
-	for (int i = 0; i < model_actor_list.size(); i++) {
-		model_actor_list[i]->PickableOff();
-		model_actor_list[i]->VisibilityOff();
-		model_actor_list[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
-		model_mapper_list[i]->SetInputConnection(loaded_models.at(i).cad_reader_->GetOutputPort());
-		/*also set the backgrounds to black for the model widget (should be safe as it is same size as actor list)*/
-		//vw->getModelActorList()[i]->PickableOff();
+	
+	std::cout << "Before setting modal opacity to zero for unselected models" << std::endl;
+	//for (int i = 0; i < model_actor_list.size(); i++) {
+		//model_actor_list[i]->PickableOff();
+		//model_actor_list[i]->VisibilityOff();
+		//model_actor_list[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
+		//model_mapper_list[i]->SetInputConnection(loaded_models.at(i).cad_reader_->GetOutputPort());
+		///*also set the backgrounds to black for the model widget (should be safe as it is same size as actor list)*/
+		////vw->getModelActorList()[i]->PickableOff();
 		
-		ui.model_list_widget->item(i)->setBackgroundColor(QColor(25, 25, 25));
-	}
+		//ui.model_list_widget->item(i)->setBackgroundColor(QColor(25, 25, 25));
+	//}
 
 	/*Load Models to Screen*/
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*Hide Text if Nothing Selected*/
+	std::cout << "Before setting actor visability (text actor)" << std::endl;
 	if (selected.size() == 0) {
 		actor_text->VisibilityOff();
 		if (ui.model_list_widget->currentIndex().row() >= 0) {
@@ -3319,17 +3344,19 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	}
 
 	/*Load Models*/
+	std::cout << "Before setting modal opacity and color for real " << std::endl;
 	for (int i = 0; i < selected.size(); i++) {
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Primary Model is the First One in the List
 		Make it Orange and all others Blue*/
 		if (i == 0) {
+			std::cout << "Before setting the first model orange" << std::endl;
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
-			int rgb[3] = {214,108,35};
-			//vw->set3DModelColor(selected[i].row(), rgb);
+			//model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
+			double rgb[3] = {214.0,108.0,35.0};
+			vw->set3DModelColor(selected[i].row(), rgb);
 
 		}
 		else {
@@ -3339,15 +3366,17 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		if (ui.original_model_radio_button->isChecked() == true)
 		{
 			/*Turn on Visbility and Pickability*/
-			model_actor_list[selected[i].row()]->PickableOn();
-			model_actor_list[selected[i].row()]->VisibilityOn();
-			/*Resets WireFrame*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
-			/*Resets Solid Color*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
-			model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
+			//model_actor_list[selected[i].row()]->PickableOn();
+			//model_actor_list[selected[i].row()]->VisibilityOn();
+			///*Resets WireFrame*/
+			//model_actor_list[selected[i].row()]->GetProperty()->SetRepresentationToSurface();
+			///*Resets Solid Color*/
+			//model_actor_list[selected[i].row()]->GetProperty()->SetAmbient(0);
+			//model_actor_list[selected[i].row()]->GetProperty()->SetDiffuse(1);
 			/*Opaque*/
-			model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			//model_actor_list[selected[i].row()]->GetProperty()->SetOpacity(1);
+			vw->changeModelOpacityToOriginal(selected[i].row());
+			std::cout << "We madde it past setting opacity - crossing my fingers!" << std::endl;
 			ui.qvtk_widget->update();
 		}
 		/*Solid Color Model*/
@@ -3400,22 +3429,32 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		/*If Camera A View*/
 		if (ui.camera_A_radio_button->isChecked()) {
 			/*Set Model Pose*/
+			std::cout << "Before setting the loaded pose of the models - this should print" <<std::endl;
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(), selected[i].row());
-			model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-			model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+			//model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
+			vw->setModelPositionAtIndex(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+			vw->setModelOrientationAtIndex(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+			std::cout << "after setting pose - PLEASE PRINT :)))))" << std::endl;
+			//model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 
 			/*Text Actor if On */
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5)
 			{
-				std::string infoText = "Location: <";
-				infoText += std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[0]) + ","
-					+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[1]) + ","
-					+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[2]) + ">\nOrientation: <"
-					+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[0]) + ","
-					+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[1]) + ","
-					+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[2]) + ">";
-				actor_text->SetInput(infoText.c_str());
-				actor_text->GetTextProperty()->SetColor(model_actor_list[selected[i].row()]->GetProperty()->GetColor());
+				//std::string infoText = "Location: <";
+				//infoText += std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[0]) + ","
+					//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[1]) + ","
+					//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetPosition()[2]) + ">\nOrientation: <"
+					//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[0]) + ","
+					//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[1]) + ","
+					//+ std::to_string((long double)model_actor_list[selected[i].row()]->GetOrientation()[2]) + ">";
+				std::cout << "before setting location and orientation info" << std::endl;
+				//std::string infoText = vw->printLocationAndOrientationOfModelAtIndex(selected[i].row());
+				vw->setActorText(vw->printLocationAndOrientationOfModelAtIndex(selected[i].row()));
+				vw->setActorTextColorToModelColorAtIndex(selected[i].row());
+				std::cout << selected[i].row() << "INDEX WE ARE WORKING WITH" << std::endl;
+				//actor_text->SetInput(infoText.c_str());
+				//actor_text->GetTextProperty()->SetColor(model_actor_list[selected[i].row()]->GetProperty()->GetColor());
+				std::cout << "After setting and printing model location and oritentation" << std::endl;
 			}
 		}
 		else { /*Else, Camera B View*/
@@ -3440,7 +3479,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			}
 		}
 	}
-
+	
+	vw->renderScene();
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
 }

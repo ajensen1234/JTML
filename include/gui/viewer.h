@@ -66,8 +66,23 @@ public:
     void loadModelActorsAndMappersWith3DData();
     std::vector<vtkSmartPointer<vtkPolyDataMapper>> getModelMapperList();
     std::vector<vtkSmartPointer<vtkActor>> getModelActorList();
-    void set3DModelColor(int index, int RGB[3]);
+    void set3DModelColor(int index, double RGB[3]);
     void loadModels(QStringList cad_files, QStringList cad_models);
+    bool areModelsLoadedCorrectly(int index);
+    bool areModelsLoadedIncorrectly(int index);
+    void changeModelOpacityToOriginal(int index);
+    void changeModelOpacityToWireFrame(int index);
+    void changeModelOpacityToSolid(int index);
+    void changeModelOpacityToTransparent(int index);
+    void setModelPositionAtIndex(int index, double x, double y, double z);
+    void setModelOrientationAtIndex(int index, double xrot, double yrot, double zrot);
+    std::string printLocationAndOrientationOfModelAtIndex(int index);
+    void setActorText(std::string desired_text);
+    void setActorTextColorToModelColorAtIndex(int index);
+    void renderScene();
+    void displayActorsInRenderer();
+
+    void setRenderWindowAndDisplay();
     
 
 private:
@@ -84,6 +99,7 @@ private:
     vtkSmartPointer<vtkRenderWindow> qvtk_render_window_;
     vtkSmartPointer<vtkCamera> my_image_camera_;
     vtkSmartPointer<vtkCamera> my_model_camera_;
+    vtkSmartPointer<vtkRenderWindow> render_window_;
     
     bool initialized_pointers_;
 

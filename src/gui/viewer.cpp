@@ -26,47 +26,48 @@ void viewer::initialize_vtk_pointers(){
     actor_text_->GetTextProperty()->SetFontSize(16);
     actor_text_->GetTextProperty()->SetFontFamilyToCourier();
     actor_text_->SetPosition2(0, 0);
-    actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Red
+    actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Reda
+    render_window_ = vtkSmartPointer<vtkRenderWindow>::New();
 }
 
 void viewer::initialize_vtk_mappers(){
-    image_mapper_->SetInputData(this->current_background_);
+    image_mapper_->SetInputData(current_background_);
     actor_image_->SetPickable(0);
     actor_text_->SetPickable(0);
-    actor_image_->SetMapper(this->image_mapper_);
+    actor_image_->SetMapper(image_mapper_);
 }
 
 void viewer::initialize_vtk_renderers(){
-    this->background_renderer_->AddActor(this->actor_image_);
-    this->background_renderer_->AddActor2D(this->actor_text_);
+    background_renderer_->AddActor(actor_image_);
+    background_renderer_->AddActor2D(actor_text_);
 }
 
 void viewer::load_render_window(vtkSmartPointer<vtkRenderWindow> in){
-    this->qvtk_render_window_ = in;
+    qvtk_render_window_ = in;
 }
 
 vtkSmartPointer<vtkRenderer> viewer::get_renderer(){
-    return this->background_renderer_;
+    return background_renderer_;
 }
 
 vtkSmartPointer<vtkActor> viewer::get_actor_image(){
-    return this->actor_image_;
+    return actor_image_;
 }
 
 vtkSmartPointer<vtkImageData> viewer::get_current_background(){
-    return this->current_background_;
+    return current_background_;
 }
 vtkSmartPointer<vtkSTLReader> viewer::get_stl_reader(){
-    return this->stl_reader_;
+    return stl_reader_;
 }
 vtkSmartPointer<vtkDataSetMapper> viewer::get_image_mapper(){
-    return this->image_mapper_;
+    return image_mapper_;
 }
 vtkSmartPointer<vtkTextActor> viewer::get_actor_text(){
-    return this->actor_text_;
+    return actor_text_;
 }
 vtkSmartPointer<vtkImageImport> viewer::get_importer(){
-    return this->importer_;
+    return importer_;
 }
 
 void viewer::updateDisplayBackground(cv::Mat desiredBackground){
@@ -95,14 +96,6 @@ void viewer::setLoadedFrames(std::vector<Frame>& frames){
 
 void viewer::setLoadedFrames_B(std::vector<Frame>& frames){
     loaded_frames_B_ = frames;
-}
-
-void viewer::setLoadedModels(std::vector<Model> models){
-    int i = 1;
-}
-
-void viewer::setLoadedModels_B(std::vector<Model> models){
-    int i = 1;
 }
 
 void viewer::updateDisplayBackgroundtoEdgeImage(int frame_number,bool CameraASelected){
@@ -157,11 +150,13 @@ void viewer::placeImageActorsAccordingToCalibration(Calibration cal, int img_w, 
 
 
 void viewer::load3DModelsIntoActorAndMapperList() {
+    std::cout << "load3D Models into actor and mapper list" << std::endl;
     for (int i = 0; i < loaded_models_->size(); i ++){
         vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
         vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
         new_actor->GetProperty()->SetColor(33.0/255.0, 88.0/255.0,170.0/255.0); // Go gators
-        new_mapper->SetInputConnection(stl_reader_->GetOutputPort());
+        new_mapper->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
+        new_actor->SetMapper(new_mapper);
         model_actor_list_.push_back(new_actor);
         model_mapper_list_.push_back(new_mapper);
         background_renderer_->AddActor(new_actor);
@@ -184,14 +179,108 @@ std::vector<vtkSmartPointer<vtkActor>> viewer::getModelActorList(){
     return model_actor_list_;
 }
 
-void viewer::set3DModelColor(int index, int RGB[3]){
+void viewer::set3DModelColor(int index, double RGB[3]){
     std::cout << "This is definitely causing the break" << std::endl;
-    model_actor_list_[index]->GetProperty()->SetColor(RGB[0]/255, RGB[1]/255, RGB[2]/255);
+    model_actor_list_[index]->GetProperty()->SetColor(RGB[0]/255.0, RGB[1]/255.0, RGB[2]/255.0);
+    std::cout << "If you are reading this then it definitely did not cause the break" << std::endl;
 
 }
 
 void viewer::loadModels(QStringList cad_files, QStringList cad_models){
     for (int i = 0; i < cad_files.size(); i++){
         loaded_models_->push_back(Model(cad_files[i].toStdString(),cad_models[i].toStdString(),"BLANK"));
+        std::cout << "Inside model loading for loop" << std::endl;
     }
+    std::cout << "MODELS LOADED" << std::endl;
+}
+
+bool viewer::areModelsLoadedCorrectly(int index){
+    return loaded_models_->at(index).initialized_correctly_;
+}
+
+bool viewer::areModelsLoadedIncorrectly(int index){
+    return !loaded_models_->at(index).initialized_correctly_;
+}
+
+void viewer::changeModelOpacityToOriginal(int index){
+    model_actor_list_[index]->PickableOn();
+    model_actor_list_[index]->VisibilityOn();
+    model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
+    model_actor_list_[index]->GetProperty()->SetAmbient(0);
+    model_actor_list_[index]->GetProperty()->SetDiffuse(1);
+    model_actor_list_[index]->GetProperty()->SetOpacity(1);
+}
+void viewer::changeModelOpacityToWireFrame(int index){
+    model_actor_list_[index]->PickableOn();
+    model_actor_list_[index]->VisibilityOn();
+    model_actor_list_[index]->GetProperty()->SetAmbient(0);
+    model_actor_list_[index]->GetProperty()->SetDiffuse(1);
+    model_actor_list_[index]->GetProperty()->SetRepresentationToWireframe();
+    model_actor_list_[index]->GetProperty()->SetOpacity(1);
+}
+void viewer::changeModelOpacityToTransparent(int index){
+    model_actor_list_[index]->PickableOn();
+    model_actor_list_[index]->VisibilityOn();
+    model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
+    model_actor_list_[index]->GetProperty()->SetAmbient(1);
+    model_actor_list_[index]->GetProperty()->SetDiffuse(0);
+    model_actor_list_[index]->GetProperty()->SetOpacity(1);
+}
+void viewer::changeModelOpacityToSolid(int index){
+    model_actor_list_[index]->PickableOn();
+    model_actor_list_[index]->VisibilityOn();
+    model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
+    model_actor_list_[index]->GetProperty()->SetAmbient(0);
+    model_actor_list_[index]->GetProperty()->SetDiffuse(1);
+    model_actor_list_[index]->GetProperty()->SetOpacity(1);
+}
+
+void viewer::setModelPositionAtIndex(int index, double x, double y, double z){
+    model_actor_list_[index]->SetPosition(x,y,z);
+}
+
+void viewer::setModelOrientationAtIndex(int index, double xrot, double yrot, double zrot){
+    model_actor_list_[index]->SetOrientation(xrot, yrot, zrot);
+}
+
+std::string viewer::printLocationAndOrientationOfModelAtIndex(int index){
+    std::cout << "Inside pos and orientation printing function!" << std::endl;
+    std::string infoText = "Location: <";
+				infoText += std::to_string((long double)model_actor_list_[index]->GetPosition()[0]) + ","
+					+ std::to_string((long double)model_actor_list_[index]->GetPosition()[1]) + ","
+					+ std::to_string((long double)model_actor_list_[index]->GetPosition()[2]) + ">\nOrientation: <"
+					+ std::to_string((long double)model_actor_list_[index]->GetOrientation()[0]) + ","
+					+ std::to_string((long double)model_actor_list_[index]->GetOrientation()[1]) + ","
+					+ std::to_string((long double)model_actor_list_[index]->GetOrientation()[2]) + ">";
+    std::cout << "After storing location info as string inside viewer" << std::endl;
+
+    return infoText;
+}
+
+void viewer::setActorText(std::string desired_text){
+    actor_text_->SetInput(desired_text.c_str());
+}
+void viewer::setActorTextColorToModelColorAtIndex(int index){
+    actor_text_->GetTextProperty()->SetColor(model_actor_list_[index]->GetProperty()->GetColor());
+}
+
+
+void viewer::renderScene(){
+    background_renderer_->Render();
+
+    std::cout << model_actor_list_.size() << std::endl;
+}
+
+void viewer::displayActorsInRenderer(){
+    background_renderer_->GetActors()->Print(std::cout);
+}
+
+void viewer::setRenderWindowAndDisplay(){
+    render_window_->AddRenderer(background_renderer_);
+    render_window_->SetWindowName("My Window");
+    render_window_->Render();
+    vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    interactor->SetRenderWindow(render_window_);
+    render_window_->Render();
+    interactor->Start();
 }
