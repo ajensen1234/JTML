@@ -226,15 +226,15 @@ void Viewer::change_model_opacity_to_transparent(int index) {
 	model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
 	model_actor_list_[index]->GetProperty()->SetAmbient(1);
 	model_actor_list_[index]->GetProperty()->SetDiffuse(0);
-	model_actor_list_[index]->GetProperty()->SetOpacity(1);
+	model_actor_list_[index]->GetProperty()->SetOpacity(0.2);
 }
 
 void Viewer::change_model_opacity_to_solid(int index) {
 	model_actor_list_[index]->PickableOn();
 	model_actor_list_[index]->VisibilityOn();
 	model_actor_list_[index]->GetProperty()->SetRepresentationToSurface();
-	model_actor_list_[index]->GetProperty()->SetAmbient(0);
-	model_actor_list_[index]->GetProperty()->SetDiffuse(1);
+	model_actor_list_[index]->GetProperty()->SetAmbient(1);
+	model_actor_list_[index]->GetProperty()->SetDiffuse(0);
 	model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
