@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(QT_VERSION 5)
 set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -43,3 +41,6 @@ add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(lib)
 add_subdirectory(packaging)
+
+enable_testing()
+

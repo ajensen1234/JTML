@@ -52,6 +52,7 @@
 #include <vtkAutoInit.h> // Added post migration to Banks' lab computer
 #include <vtkInteractorStyleTrackballCamera.h> /*Alternate Camera*/
 
+
 /*Frame and Model and Location Storage*/
 #include "core/frame.h"
 #include "core/model.h"
