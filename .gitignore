@@ -8,3 +8,4 @@
 .vscode
 ./*build
 ./cmake*build*
+./cmake-build-release
