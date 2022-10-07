@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\JTML\JTA-CMake\out\build\Release\src\cost_functions\JTA_Cost_Functions_autogen\mocs_compilation_Release.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\CostFunction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\CostFunctionManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DD_NEW_POLE_CONSTRAINT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DIRECT_DILATION.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DIRECT_DILATION_POLE_CONSTRAINT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DIRECT_DILATION_SAME_Z.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DIRECT_DILATION_T1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\DIRECT_MAHFOUZ.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\JTML\JTA-CMake\src\cost_functions\sym_trap_function.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\CostFunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\CostFunctionManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DD_NEW_POLE_CONSTRAINTCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DIRECT_DILATIONCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DIRECT_DILATION_POLE_CONSTRAINTCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DIRECT_DILATION_SAME_ZCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DIRECT_DILATION_T1CustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\DIRECT_MAHFOUZCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\Parameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\Stage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\JTML\JTA-CMake\include\cost_functions\sym_trap_functionCustomVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\JTML\JTA-CMake\src\cost_functions\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0278CDC7-CE92-3D31-97BF-AAEA89079033}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{7B0730DD-89A1-37CA-94FD-943C8714C01E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

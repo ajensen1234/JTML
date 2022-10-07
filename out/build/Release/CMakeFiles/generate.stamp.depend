@@ -1,0 +1,148 @@
+# CMake generation dependency list for this directory.
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Caffe2Config.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Caffe2ConfigVersion.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Caffe2Targets-release.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Caffe2Targets.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/FindCUDA.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/FindCUDNN.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/CMakeInitializeConfigs.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA/select_compute_arch.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindPackageHandleStandardArgs.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindPackageMessage.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/public/cuda.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/public/mkl.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/public/mkldnn.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/public/threads.cmake
+C:/JTML-deps/libtorch/share/cmake/Caffe2/public/utils.cmake
+C:/JTML-deps/libtorch/share/cmake/Torch/TorchConfig.cmake
+C:/JTML-deps/libtorch/share/cmake/Torch/TorchConfigVersion.cmake
+C:/JTML-deps/opencv-4.5.5/build/OpenCVConfig-version.cmake
+C:/JTML-deps/opencv-4.5.5/build/OpenCVConfig.cmake
+C:/JTML-deps/opencv-4.5.5/build/OpenCVModules.cmake
+C:/JTML/JTA-CMake/CMakeLists.txt
+C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/3.22.22040401-MSVC_2/CMakeCUDACompiler.cmake
+C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/3.22.22040401-MSVC_2/CMakeCXXCompiler.cmake
+C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/3.22.22040401-MSVC_2/CMakeRCCompiler.cmake
+C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/3.22.22040401-MSVC_2/CMakeSystem.cmake
+C:/JTML/JTA-CMake/out/build/Release/detect_cuda_compute_capabilities.cu
+C:/JTML/JTA-CMake/out/build/Release/detect_cuda_version.cc
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeCUDAInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeCXXInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeConfigurableFile.in
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeGenericSystem.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeInitializeConfigs.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeParseArguments.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeRCInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CMakeSystemSpecificInitialize.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CheckCXXSourceCompiles.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CheckIncludeFileCXX.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/CheckLibraryExists.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Compiler/MSVC-CXX.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Compiler/NVIDIA-CUDA.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/FindPackageMessage.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/FindThreads.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Internal/CheckSourceCompiles.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Platform/Windows-NVIDIA-CUDA.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Platform/Windows.cmake
+C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.22/Modules/Platform/WindowsPaths.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkChartsCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonColor.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonComputationalGeometry.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonDataModel.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonExecutionModel.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonMath.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonMisc.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonSystem.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkCommonTransforms.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkDICOMParser.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersExtraction.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersGeneral.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersGeometry.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersHybrid.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersModeling.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersSources.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkFiltersStatistics.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkGUISupportQt.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOGeometry.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOImage.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOLegacy.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOXML.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkIOXMLParser.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingColor.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingFourier.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingGeneral.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingHybrid.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkImagingSources.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkInfovisCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkInteractionStyle.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkInteractionWidgets.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkMetaIO.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingAnnotation.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingContext2D.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingFreeType.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingOpenGL2.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkRenderingVolume.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkUtilitiesEncodeString.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkViewsContext2D.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkViewsCore.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkalglib.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkexpat.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkfreetype.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkglew.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkjpeg.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkkwiml.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkpng.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtksys.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtktiff.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/Modules/vtkzlib.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/UseVTK.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/VTKConfig.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/VTKConfigVersion.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/VTKTargets-release.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/VTKTargets.cmake
+C:/Program Files/VTK/lib/cmake/vtk-7.1/vtkModuleAPI.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5Config.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5ConfigVersion.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5/Qt5ModuleLocation.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfig.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigExtras.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreConfigVersion.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Core/Qt5CoreMacros.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5GuiConfig.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QGifPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QICNSPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QICOPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QJpegPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QMinimalIntegrationPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QOffscreenIntegrationPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QSvgIconPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QSvgPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QTgaPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QTiffPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QTuioTouchPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QWbmpPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QWebpPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QWindowsIntegrationPlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Gui/Qt5Gui_QXdgDesktopPortalThemePlugin.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfig.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfigExtras.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfigVersion.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Widgets/Qt5WidgetsMacros.cmake
+C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5Widgets/Qt5Widgets_QWindowsVistaStylePlugin.cmake

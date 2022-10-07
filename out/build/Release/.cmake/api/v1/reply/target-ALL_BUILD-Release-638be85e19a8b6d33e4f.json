@@ -1,0 +1,57 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "jtml_nfd::@9c09fb08c8bba7f94191"
+		},
+		{
+			"id" : "jtml_core::@0618756b1ff51bca1a0e"
+		},
+		{
+			"id" : "JTA_Cost_Functions::@b1f7acad79b3a856781b"
+		},
+		{
+			"id" : "jtml_gpu::@f01e20794e87e8eabdcb"
+		},
+		{
+			"id" : "Joint-Track-Machine-Learning::@7675e61a69a6135e3026"
+		},
+		{
+			"id" : "nfd_speed_test::@a157fbec0b9e0d11b661"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "vtk-tester::@ba48e013d72d382d4899"
+		},
+		{
+			"id" : "alglib::@9fd3bdc916712fc0d780"
+		}
+	],
+	"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

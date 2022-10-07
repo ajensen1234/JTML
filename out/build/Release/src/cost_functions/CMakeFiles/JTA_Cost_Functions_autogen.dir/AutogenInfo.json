@@ -1,0 +1,205 @@
+{
+	"BUILD_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/JTA_Cost_Functions_autogen",
+	"CMAKE_BINARY_DIR" : "C:/JTML/JTA-CMake/out/build/Release",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/JTML/JTA-CMake/src/cost_functions",
+	"CMAKE_EXECUTABLE" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/JTML/JTA-CMake/src/cost_functions/CMakeLists.txt",
+		"C:/Program Files/VTK/lib/cmake/vtk-7.1/UseVTK.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/JTML/JTA-CMake",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/CostFunction.h",
+			"MU",
+			"NSRM3VXEVA/moc_CostFunction.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/CostFunctionManager.h",
+			"MU",
+			"NSRM3VXEVA/moc_CostFunctionManager.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DD_NEW_POLE_CONSTRAINTCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DD_NEW_POLE_CONSTRAINTCustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DIRECT_DILATIONCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DIRECT_DILATIONCustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DIRECT_DILATION_POLE_CONSTRAINTCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DIRECT_DILATION_POLE_CONSTRAINTCustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DIRECT_DILATION_SAME_ZCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DIRECT_DILATION_SAME_ZCustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DIRECT_DILATION_T1CustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DIRECT_DILATION_T1CustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/DIRECT_MAHFOUZCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_DIRECT_MAHFOUZCustomVariables.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/Parameter.h",
+			"MU",
+			"NSRM3VXEVA/moc_Parameter.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/Stage.h",
+			"MU",
+			"NSRM3VXEVA/moc_Stage.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/cost_functions/sym_trap_functionCustomVariables.h",
+			"MU",
+			"NSRM3VXEVA/moc_sym_trap_functionCustomVariables.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/JTA_Cost_Functions_autogen/include",
+	"INCLUDE_DIR_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/JTA_Cost_Functions_autogen/include_Release",
+	"MOC_COMPILATION_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/JTA_Cost_Functions_autogen/mocs_compilation.cpp",
+	"MOC_COMPILATION_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/JTA_Cost_Functions_autogen/mocs_compilation_Release.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"JTA_Cost_Functions_EXPORTS",
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NO_DEBUG",
+		"QT_WIDGETS_LIB",
+		"WIN32",
+		"vtkRenderingCore_INCLUDE=\"C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/vtkRenderingCore_AUTOINIT_vtkInteractionStyle_vtkRenderingFreeType_vtkRenderingOpenGL2.h\""
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Program Files/VTK/include/vtk-7.1",
+		"C:/JTML/JTA-CMake/include",
+		"C:/JTML/JTA-CMake/include/cost_functions",
+		"C:/JTML/JTA-CMake/include/gpu",
+		"C:/Qt/5.15.2/msvc2019_64/include",
+		"C:/Qt/5.15.2/msvc2019_64/include/QtCore",
+		"C:/Qt/5.15.2/msvc2019_64/mkspecs/win32-msvc",
+		"C:/Qt/5.15.2/msvc2019_64/include/QtGui",
+		"C:/Qt/5.15.2/msvc2019_64/include/QtANGLE",
+		"C:/Qt/5.15.2/msvc2019_64/include/QtWidgets",
+		"C:/JTML-deps/libtorch/include",
+		"C:/JTML-deps/libtorch/include/torch/csrc/api/include",
+		"C:/Program Files/NVIDIA Corporation/NvToolsExt/include",
+		"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include",
+		"C:/Program Files/NVIDIA Corporation/NvToolsExt/include",
+		"C:/cuda/include",
+		"C:/JTML-deps/opencv-4.5.5/build",
+		"C:/JTML-deps/opencv-4.5.5/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/core/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/flann/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/imgproc/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/ml/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/photo/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/dnn/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/features2d/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/imgcodecs/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/videoio/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/calib3d/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/highgui/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/objdetect/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/stitching/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/ts/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/video/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/gapi/include"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : true,
+	"PARALLEL" : 6,
+	"PARSE_CACHE_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/CMakeFiles/JTA_Cost_Functions_autogen.dir/ParseCache.txt",
+	"PARSE_CACHE_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/CMakeFiles/JTA_Cost_Functions_autogen.dir/ParseCache_Release.txt",
+	"QT_MOC_EXECUTABLE" : "C:/Qt/5.15.2/msvc2019_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "C:/Qt/5.15.2/msvc2019_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/CMakeFiles/JTA_Cost_Functions_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/cost_functions/CMakeFiles/JTA_Cost_Functions_autogen.dir/AutogenUsed_Release.txt",
+	"SOURCES" : 
+	[
+		[ "C:/JTML/JTA-CMake/src/cost_functions/CostFunction.cpp", "MU", null ],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/CostFunctionManager.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/DD_NEW_POLE_CONSTRAINT.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/DIRECT_DILATION.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/DIRECT_DILATION_POLE_CONSTRAINT.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/DIRECT_DILATION_SAME_Z.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/DIRECT_DILATION_T1.cpp",
+			"MU",
+			null
+		],
+		[ "C:/JTML/JTA-CMake/src/cost_functions/DIRECT_MAHFOUZ.cpp", "MU", null ],
+		[
+			"C:/JTML/JTA-CMake/src/cost_functions/sym_trap_function.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}

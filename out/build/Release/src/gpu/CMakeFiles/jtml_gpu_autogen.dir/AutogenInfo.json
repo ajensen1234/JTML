@@ -1,0 +1,143 @@
+{
+	"BUILD_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/jtml_gpu_autogen",
+	"CMAKE_BINARY_DIR" : "C:/JTML/JTA-CMake/out/build/Release",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/JTML/JTA-CMake/src/gpu",
+	"CMAKE_EXECUTABLE" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"C:/JTML/JTA-CMake/src/gpu/CMakeLists.txt",
+		"C:/Program Files/VTK/lib/cmake/vtk-7.1/UseVTK.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "C:/JTML/JTA-CMake",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"C:/JTML/JTA-CMake/include/gpu/camera_calibration.h",
+			"MU",
+			"U2T6FW266A/moc_camera_calibration.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/gpu/cuda_launch_parameters.h",
+			"MU",
+			"U2T6FW266A/moc_cuda_launch_parameters.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/gpu/gpu_toolbox.h",
+			"MU",
+			"U2T6FW266A/moc_gpu_toolbox.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/gpu/pixel_grayscale_colors.h",
+			"MU",
+			"U2T6FW266A/moc_pixel_grayscale_colors.cpp",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/include/gpu/pose_matrix.h",
+			"MU",
+			"U2T6FW266A/moc_pose_matrix.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/jtml_gpu_autogen/include",
+	"INCLUDE_DIR_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/jtml_gpu_autogen/include_Release",
+	"MOC_COMPILATION_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/jtml_gpu_autogen/mocs_compilation.cpp",
+	"MOC_COMPILATION_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/jtml_gpu_autogen/mocs_compilation_Release.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"WIN32",
+		"jtml_gpu_EXPORTS",
+		"vtkRenderingCore_INCLUDE=\"C:/JTML/JTA-CMake/out/build/Release/CMakeFiles/vtkRenderingCore_AUTOINIT_vtkInteractionStyle_vtkRenderingFreeType_vtkRenderingOpenGL2.h\""
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"C:/Program Files/VTK/include/vtk-7.1",
+		"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include",
+		"C:/JTML/JTA-CMake/include/gpu",
+		"C:/JTML/JTA-CMake/include",
+		"C:/JTML-deps/opencv-4.5.5/build",
+		"C:/JTML-deps/opencv-4.5.5/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/core/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/flann/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/imgproc/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/ml/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/photo/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/dnn/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/features2d/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/imgcodecs/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/videoio/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/calib3d/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/highgui/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/objdetect/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/stitching/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/ts/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/video/include",
+		"C:/JTML-deps/opencv-4.5.5/modules/gapi/include"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : true,
+	"PARALLEL" : 6,
+	"PARSE_CACHE_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/CMakeFiles/jtml_gpu_autogen.dir/ParseCache.txt",
+	"PARSE_CACHE_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/CMakeFiles/jtml_gpu_autogen.dir/ParseCache_Release.txt",
+	"QT_MOC_EXECUTABLE" : "C:/Qt/5.15.2/msvc2019_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "C:/Qt/5.15.2/msvc2019_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/CMakeFiles/jtml_gpu_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE_Release" : "C:/JTML/JTA-CMake/out/build/Release/src/gpu/CMakeFiles/jtml_gpu_autogen.dir/AutogenUsed_Release.txt",
+	"SOURCES" : 
+	[
+		[ "C:/JTML/JTA-CMake/src/gpu/dilate_edge_detected_image.cu", "MU", null ],
+		[
+			"C:/JTML/JTA-CMake/src/gpu/edge_detect_rendered_implant_model.cu",
+			"MU",
+			null
+		],
+		[
+			"C:/JTML/JTA-CMake/src/gpu/fast_implant_dilation_metric.cu",
+			"MU",
+			null
+		],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_dilated_frame.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_edge_frame.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_frame.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_image.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_image_functions.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_intensity_frame.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_metrics.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/gpu_model.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/implant_mahfouz_metric.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/iou.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/l_1_1_matrix_diff_norm.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/metric_toolbox.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/pose_matrix.cpp", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/registration_metric.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/render_drr_engine.cu", "MU", null ],
+		[ "C:/JTML/JTA-CMake/src/gpu/render_engine.cu", "MU", null ]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}
