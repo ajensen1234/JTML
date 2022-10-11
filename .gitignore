@@ -6,3 +6,6 @@
 *.vs*
 /.vscode
 .vscode
+/out/build
+/out
+*.json
