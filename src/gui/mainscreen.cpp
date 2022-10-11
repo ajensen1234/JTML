@@ -3038,8 +3038,6 @@ void MainScreen::on_load_model_button_clicked() {
 
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 	vw->load_models(CADFileExtensions, CADModelNames);
-	vw->display_actors_in_renderer();
-
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
 		if (vw->are_models_loaded_incorrectly(i)) {
 			QMessageBox::warning(this, "Warning!",
@@ -3060,6 +3058,7 @@ void MainScreen::on_load_model_button_clicked() {
 	}
 
 	vw->load_3d_models_into_actor_and_mapper_list();
+	vw->load_model_actors_and_mappers_with_3d_data();
 	//If No Loaded Models, Default Select First
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
 		ui.model_list_widget->setCurrentRow(0);
@@ -3353,12 +3352,6 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
 			loaded_frames[this->curr_frame()].GetOriginalImage().cols
 		);
-		//actor_image->SetPosition(-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-		//calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-		//-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-		//calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-		//-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
@@ -3462,18 +3455,21 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 QModelIndexList MainScreen::selected_model_indices() {
 	return ui.model_list_widget->selectionModel()->selectedRows();
 }
+void MainScreen::remove_background_highlights_from_model_list_widget() {
+	for (int i = 0; i < loaded_models.size();i++) {
+		ui.model_list_widget->item(i)->setBackground(Qt::transparent);
+	}
+}
+
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
-
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_) {
 		SaveLastPose(); // Needs Work
 	}
-
 	/*Update Last Viewed Index as This One*/
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
-	vw->load_model_actors_and_mappers_with_3d_data();
 
 
 	/*Load Models to Screen*/
@@ -3489,20 +3485,23 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	else {
 		actor_text->VisibilityOn();
 	}
-
+	vw->make_all_models_invisible();
+	remove_background_highlights_from_model_list_widget();
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
-
 		if (i == 0) {
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
 			/*Set VTK Model Color to Orange*/
 			//model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
-			double rgb[3] = {214.0, 108.0, 35.0};
-			vw->set_3d_model_color(selected[i].row(), rgb);
+			vw->make_model_visible_and_pickable_at_index(selected[i].row());
+			vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
 
 		}
 		else {
+			vw->make_model_visible_and_pickable_at_index(i);
+			vw->set_3d_model_color(i, UF_BLUE);
 			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(33, 88, 170));
+			ui.model_list_widget->item(0)->setBackground(Qt::transparent);
 		}
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
@@ -3776,6 +3775,7 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 			ui.qvtk_widget->update();
 		}
 	}
+	
 }
 
 /*KeyPress Event*/
@@ -4191,8 +4191,8 @@ void MainScreen::SaveLastPose() {
 	/*Save Last Pair Pose*/
 	if (previous_model_indices_.size() > 0 && previous_frame_index_ != -1) {
 		for (int i = 0; i < previous_model_indices_.size(); i++) {
-			double* position_curr = model_actor_list[previous_model_indices_[i].row()]->GetPosition();
-			double* orientation_curr = model_actor_list[previous_model_indices_[i].row()]->GetOrientation();
+			double* position_curr = vw->get_model_position_at_index(previous_model_indices_[i].row());
+			double* orientation_curr = vw->get_model_orientation_at_index(previous_model_indices_[i].row());
 			Point6D last_pose(position_curr[0], position_curr[1], position_curr[2],
 			                  orientation_curr[0], orientation_curr[1], orientation_curr[2]);
 			/*If Camera B View, Save in Camera A coordinates*/

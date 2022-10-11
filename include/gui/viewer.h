@@ -26,11 +26,15 @@
 #include <vtkAutoInit.h> // Added post migration to Banks' lab computer
 #include <vtkInteractorStyleTrackballCamera.h> /*Alternate Camera*/
 #include <iostream>
+#include <qabstractitemmodel.h>
 #include <opencv2/core.hpp>
+#include <QList>
 
 #include "core/frame.h"
 #include "core/calibration.h"
 #include "core/model.h"
+#include <set>
+
 
 class Viewer
 {
@@ -73,6 +77,8 @@ public:
     void change_model_opacity_to_solid(int index);
     void change_model_opacity_to_transparent(int index);
     void set_model_position_at_index(int index, double x, double y, double z);
+    double* get_model_position_at_index(int index);
+    double* get_model_orientation_at_index(int index);
     void set_model_orientation_at_index(int index, double xrot, double yrot, double zrot);
     std::string print_location_and_orientation_of_model_at_index(int index);
     void set_actor_text(std::string desired_text);
@@ -81,6 +87,10 @@ public:
     void display_actors_in_renderer();
 
     void set_render_window_and_display();
+    void make_image_invisible();
+    void make_model_invisible_and_nonpickable_at_index(int index);
+    void make_model_visible_and_pickable_at_index(int index);
+    void make_all_models_invisible();
     
 
 private:

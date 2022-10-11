@@ -122,9 +122,13 @@ Q_SIGNALS:
 private:
     Ui::MainScreenClass ui;
 
+    double UF_BLUE[3] = { 0, 33, 165 };
+    double UF_ORANGE[3] = { 250, 70, 22 };
+
     int curr_frame();
 
     float start_time;
+    void remove_background_highlights_from_model_list_widget();
 
     /*GUI FUNCTIONS*/
     /*Arrange Layout (Do this in code so scales across different DPI monitors and handles weird fonts)*/

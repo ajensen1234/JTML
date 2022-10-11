@@ -91,6 +91,11 @@ void Viewer::set_importer_output_to_background() {
 	importer_->SetOutput(current_background_);
 }
 
+void Viewer::make_image_invisible() {
+	actor_image_->SetVisibility(false);
+}
+
+
 void Viewer::set_loaded_frames(std::vector<Frame>& frames) {
 	loaded_frames_ = frames;
 }
@@ -155,6 +160,7 @@ void Viewer::place_image_actors_according_to_calibration(Calibration cal, int im
 
 void Viewer::load_3d_models_into_actor_and_mapper_list() {
 	for (int i = 0; i < loaded_models_->size(); i++) {
+		std::cout << loaded_models_->at(i).model_name_ << std::endl;
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		new_actor->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0); // Go gators
@@ -171,7 +177,7 @@ void Viewer::load_model_actors_and_mappers_with_3d_data() {
 		model_actor_list_[i]->PickableOff();
 		model_actor_list_[i]->VisibilityOff();
 		model_actor_list_[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
-		model_mapper_list_[i]->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
+		//model_mapper_list_[i]->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
 	}
 }
 
@@ -285,3 +291,32 @@ void Viewer::set_render_window_and_display() {
 	render_window_->Render();
 	interactor->Start();
 }
+
+double* Viewer::get_model_orientation_at_index(int index) {
+	return model_actor_list_[index]->GetOrientation();
+
+}
+
+double* Viewer::get_model_position_at_index(int index) {
+	return model_actor_list_[index]->GetPosition();
+}
+
+
+void Viewer::make_model_invisible_and_nonpickable_at_index(int index) {
+	model_actor_list_[index]->PickableOff();
+	model_actor_list_[index]->VisibilityOff();
+}
+
+void Viewer::make_model_visible_and_pickable_at_index(int index) {
+	model_actor_list_[index]->PickableOn();
+	model_actor_list_[index]->VisibilityOn();
+}
+void Viewer::make_all_models_invisible() {
+	for (auto model : model_actor_list_) {
+		model->VisibilityOff();
+		model->PickableOff();
+	}
+}
+
+
+
