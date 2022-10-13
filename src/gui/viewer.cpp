@@ -48,6 +48,11 @@ vtkSmartPointer<vtkRenderer> Viewer::get_renderer() {
 	return background_renderer_;
 }
 
+int Viewer::get_number_of_model_actors() {
+	return this->model_actor_list_.size();
+}
+
+
 vtkSmartPointer<vtkActor> Viewer::get_actor_image() {
 	return actor_image_;
 }
@@ -163,7 +168,6 @@ void Viewer::load_3d_models_into_actor_and_mapper_list() {
 		std::cout << loaded_models_->at(i).model_name_ << std::endl;
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-		new_actor->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0); // Go gators
 		new_mapper->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
 		new_actor->SetMapper(new_mapper);
 		model_actor_list_.push_back(new_actor);
@@ -176,8 +180,6 @@ void Viewer::load_model_actors_and_mappers_with_3d_data() {
 	for (int i = 0; i < model_actor_list_.size(); i++) {
 		model_actor_list_[i]->PickableOff();
 		model_actor_list_[i]->VisibilityOff();
-		model_actor_list_[i]->GetProperty()->SetColor(33.0 / 255.0, 88.0 / 255.0, 170.0 / 255.0);
-		//model_mapper_list_[i]->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
 	}
 }
 
@@ -191,6 +193,7 @@ std::vector<vtkSmartPointer<vtkActor>> Viewer::get_model_actor_list() {
 
 void Viewer::set_3d_model_color(int index, double RGB[3]) {
 	model_actor_list_[index]->GetProperty()->SetColor(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0);
+	std::cout << "Set 3D Idx: " << std::to_string(index) << std::endl;
 
 }
 
@@ -313,10 +316,12 @@ void Viewer::make_model_visible_and_pickable_at_index(int index) {
 }
 void Viewer::make_all_models_invisible() {
 	for (auto model : model_actor_list_) {
-		model->VisibilityOff();
 		model->PickableOff();
+		model->VisibilityOff();
 	}
 }
 
 
-
+std::shared_ptr<std::vector<Model>> Viewer::get_loaded_models() {
+	return loaded_models_;
+}

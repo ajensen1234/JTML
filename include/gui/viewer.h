@@ -56,10 +56,6 @@ public:
 
     void update_display_background(cv::Mat desiredBackground);
     void set_importer_output_to_background();
-    void update_display_background_to_edge_image(int frame_number, bool CameraASelected);
-    void update_display_background_to_dilation_image(int frame_number, bool CameraASelected);
-    void update_display_background_to_original_image(int frame_number, bool CameraASelected);
-    void update_display_background_to_inverted_image(int frame_number, bool CameraASelected);
     void set_loaded_frames(std::vector<Frame>& frames);
     void set_loaded_frames_b(std::vector<Frame>& frames);
     void setup_camera_calibration(Calibration calibration);
@@ -85,13 +81,21 @@ public:
     void set_actor_text_color_to_model_color_at_index(int index);
     void render_scene();
     void display_actors_in_renderer();
+    int get_number_of_model_actors();
 
     void set_render_window_and_display();
     void make_image_invisible();
     void make_model_invisible_and_nonpickable_at_index(int index);
     void make_model_visible_and_pickable_at_index(int index);
     void make_all_models_invisible();
-    
+
+	// Changing Background Functions
+    void update_display_background_to_edge_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_dilation_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_original_image(int frame_number, bool CameraASelected);
+    void update_display_background_to_inverted_image(int frame_number, bool CameraASelected);
+
+    std::shared_ptr<std::vector<Model>> get_loaded_models();
 
 private:
 
@@ -113,7 +117,6 @@ private:
 
     std::vector<Frame> loaded_frames_;
     std::vector<Frame> loaded_frames_B_;
-   // std::vector<Model> loaded_models_;
     std::vector<Model> loaded_models_b;
 
     std::shared_ptr<std::vector<Model>> loaded_models_ = std::make_shared<std::vector<Model>>();

@@ -122,8 +122,10 @@ Q_SIGNALS:
 private:
     Ui::MainScreenClass ui;
 
-    double UF_BLUE[3] = { 0, 33, 165 };
-    double UF_ORANGE[3] = { 250, 70, 22 };
+    double UF_BLUE[3] = { 0, 82 , 204 };
+    double UF_ORANGE[3] = { 255, 77, 0 };
+
+    void print_selected_item();
 
     int curr_frame();
 
@@ -173,7 +175,6 @@ private:
     std::vector<Frame> loaded_frames;
     std::vector<Frame> loaded_frames_B; /*If Biplane mode, need second group of loaded frames for camera B*/
     std::vector<Model> loaded_models;
-
     /*Location Storage Class*/
     LocationStorage model_locations_;
 

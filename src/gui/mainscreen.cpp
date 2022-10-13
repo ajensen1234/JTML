@@ -1013,8 +1013,8 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 				auto loaded_pose = Point6D(LineList[0].toDouble(), LineList[1].toDouble(), LineList[2].toDouble(),
 				                           LineList[4].toDouble(), LineList[5].toDouble(), LineList[3].toDouble());
 				model_locations_.SavePose(ui.image_list_widget->currentRow(), selected[0].row(), loaded_pose);
-				model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-				model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+				vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+				vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 				ui.qvtk_widget->update();
 			}
 			else {
@@ -1036,8 +1036,8 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 					auto loaded_pose = Point6D(LineList[0].toDouble(), LineList[1].toDouble(), LineList[2].toDouble(),
 					                           LineList[4].toDouble(), LineList[5].toDouble(), LineList[3].toDouble());
 					model_locations_.SavePose(ui.image_list_widget->currentRow(), selected[0].row(), loaded_pose);
-					model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-					model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+					vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+					vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 					ui.qvtk_widget->update();
 				}
 				else {
@@ -1072,8 +1072,8 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
 	}
 	Point6D prev_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() - 1, selected[0].row());
 	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), prev_pose);
-	model_actor_list[selected[0].row()]->SetPosition(prev_pose.x, prev_pose.y, prev_pose.z);
-	model_actor_list[selected[0].row()]->SetOrientation(prev_pose.xa, prev_pose.ya, prev_pose.za);
+	vw->set_model_position_at_index(selected[0].row(), prev_pose.x, prev_pose.y, prev_pose.z);
+	vw->set_model_orientation_at_index(selected[0].row(), prev_pose.xa, prev_pose.ya, prev_pose.za);
 	ui.qvtk_widget->update();
 }
 
@@ -1111,8 +1111,8 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
 	Point6D next_pose = model_locations_.GetPose(ui.image_list_widget->currentRow() + 1, selected[0].row());
 	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), next_pose);
 
-	model_actor_list[selected[0].row()]->SetPosition(next_pose.x, next_pose.y, next_pose.z);
-	model_actor_list[selected[0].row()]->SetOrientation(next_pose.xa, next_pose.ya, next_pose.za);
+	vw->set_model_position_at_index(selected[0].row(), next_pose.x, next_pose.y, next_pose.z);
+	vw->set_model_orientation_at_index(selected[0].row(), next_pose.xa, next_pose.ya, next_pose.za);
 	ui.qvtk_widget->update();
 }
 
@@ -1163,8 +1163,8 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
 			}
 			if (ui.image_list_widget->currentRow() >= 0) {
 				Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
-				model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-				model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+				vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+				vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 				ui.qvtk_widget->update();
 			}
 		}
@@ -3038,6 +3038,11 @@ void MainScreen::on_load_model_button_clicked() {
 
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 	vw->load_models(CADFileExtensions, CADModelNames);
+	for (int i = 0; i<CADFileExtensions.size(); i++) {
+		loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
+			CADModelNames[i].toStdString(),
+			"BLANK"));
+	}
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
 		if (vw->are_models_loaded_incorrectly(i)) {
 			QMessageBox::warning(this, "Warning!",
@@ -3197,8 +3202,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 		/*Save Last Pair Pose*/
 		for (int r = 0; r < selected.size(); r++) {
 			if (selected.size() != 0 && previous_frame_index_ != -1 && !currently_optimizing_) {
-				double* position_curr = model_actor_list[selected[r].row()]->GetPosition();
-				double* orientation_curr = model_actor_list[selected[r].row()]->GetOrientation();
+				double* position_curr = vw->get_model_position_at_index(selected[r].row());
+				double* orientation_curr = vw->get_model_orientation_at_index(selected[r].row());
 				Point6D last_pose(position_curr[0], position_curr[1], position_curr[2],
 				                  orientation_curr[0], orientation_curr[1], orientation_curr[2]);
 				/*If Camera B View, Save in Camera A coordinates*/
@@ -3242,10 +3247,14 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 				Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 				                                               selected[r].row());
 				Point6D relative_B_pose = calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-				model_actor_list[selected[r].row()]->SetPosition(relative_B_pose.x, relative_B_pose.y,
-				                                                 relative_B_pose.z);
-				model_actor_list[selected[r].row()]->SetOrientation(relative_B_pose.xa, relative_B_pose.ya,
-				                                                    relative_B_pose.za);
+				vw->set_model_position_at_index(selected[r].row(), 
+					relative_B_pose.x, 
+					relative_B_pose.y, 
+					relative_B_pose.z);
+				vw->set_model_orientation_at_index(selected[r].row(),
+					relative_B_pose.xa,
+					relative_B_pose.ya,
+					relative_B_pose.za);
 
 				/*Text Actor if On*/
 				if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
@@ -3259,15 +3268,12 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 		if (currently_optimizing_ && calibrated_for_biplane_viewport_) {
 			/*Save Last Pair Pose*/
 			for (int r = 0; r < selected.size(); r++) {
-				auto current_pose = Point6D(model_actor_list[selected[r].row()]->GetPosition()[0],
-				                            model_actor_list[selected[r].row()]->GetPosition()[1],
-				                            model_actor_list[selected[r].row()]->GetPosition()[2],
-				                            model_actor_list[selected[r].row()]->GetOrientation()[0],
-				                            model_actor_list[selected[r].row()]->GetOrientation()[1],
-				                            model_actor_list[selected[r].row()]->GetOrientation()[2]);
+				auto curr_pos = vw->get_model_position_at_index(selected[r].row());
+				auto curr_or = vw->get_model_orientation_at_index(selected[r].row());
+				auto current_pose = Point6D(curr_pos[0], curr_pos[1], curr_pos[2], curr_or[0], curr_or[1], curr_or[2]);
 				current_pose = calibration_file_.convert_Pose_A_to_Pose_B(current_pose);
-				model_actor_list[selected[r].row()]->SetPosition(current_pose.x, current_pose.y, current_pose.z);
-				model_actor_list[selected[r].row()]->SetOrientation(current_pose.xa, current_pose.ya, current_pose.za);
+				vw->set_model_position_at_index(selected[r].row(), current_pose.x, current_pose.y, current_pose.z);
+				vw->set_model_orientation_at_index(selected[r].row(), current_pose.xa, current_pose.ya, current_pose.za);
 			}
 		}
 		/*update qvtk widget*/
@@ -3460,10 +3466,16 @@ void MainScreen::remove_background_highlights_from_model_list_widget() {
 		ui.model_list_widget->item(i)->setBackground(Qt::transparent);
 	}
 }
+void MainScreen::print_selected_item() {
+	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	for (int i = 0; i<selected.size();i++) {
+	}
+}
 
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
+	std::cout << "Beginning of Model List Widget Changing!" << std::endl;
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_) {
 		SaveLastPose(); // Needs Work
@@ -3471,9 +3483,10 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	/*Update Last Viewed Index as This One*/
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
 
-
 	/*Load Models to Screen*/
+	vw->make_all_models_invisible();
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	std::cout << selected.size() << std::endl;
 	/*Hide Text if Nothing Selected*/
 	if (selected.size() == 0) {
 		actor_text->VisibilityOff();
@@ -3485,23 +3498,21 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	else {
 		actor_text->VisibilityOn();
 	}
-	vw->make_all_models_invisible();
-	remove_background_highlights_from_model_list_widget();
+	
+	for (auto item :selected) {
+		std::cout << item.row() << std::endl;
+	}
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
 		if (i == 0) {
-			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(214, 108, 35));
-			/*Set VTK Model Color to Orange*/
-			//model_actor_list[selected[i].row()]->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
-			vw->make_model_visible_and_pickable_at_index(selected[i].row());
+			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(QRgb(UF_ORANGE)));
 			vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
 
 		}
-		else {
-			vw->make_model_visible_and_pickable_at_index(i);
-			vw->set_3d_model_color(i, UF_BLUE);
-			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(33, 88, 170));
-			ui.model_list_widget->item(0)->setBackground(Qt::transparent);
+		else  {
+			//vw->make_model_visible_and_pickable_at_index(i);
+			vw->set_3d_model_color(selected[i].row(), UF_BLUE);
+			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(QRgb(UF_BLUE)));
 		}
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
@@ -3526,10 +3537,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			/*Set Model Pose*/
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
-			//model_actor_list[selected[i].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-			//model_actor_list[selected[i].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 
 			/*Text Actor if On */
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
@@ -3775,7 +3784,6 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 			ui.qvtk_widget->update();
 		}
 	}
-	
 }
 
 /*KeyPress Event*/
@@ -4228,6 +4236,12 @@ void MainScreen::LaunchOptimizer(QString directive) {
 		previous_frame_index_ ||
 		ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
 		ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
+		for (auto frame : loaded_frames) {
+			std::cout << frame.file_location_ << std::endl;
+		}
+		for (auto model : loaded_models) {
+			std::cout << model.file_location_ << std::endl;
+		}
 		QMessageBox::critical(this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
 		return;
 	}
@@ -4321,8 +4335,8 @@ void MainScreen::updateOrientationSymTrap_MS(double x, double y, double z, doubl
 	Point6D new_orientation(x, y, z, xa, ya, za);
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), new_orientation);
-	model_actor_list[selected[0].row()]->SetPosition(new_orientation.x, new_orientation.y, new_orientation.z);
-	model_actor_list[selected[0].row()]->SetOrientation(new_orientation.xa, new_orientation.ya, new_orientation.za);
+	vw->set_model_position_at_index(selected[0].row(), new_orientation.x, new_orientation.y, new_orientation.z);
+	vw->set_model_orientation_at_index(selected[0].row(), new_orientation.xa, new_orientation.ya, new_orientation.za);
 	ui.qvtk_widget->update();
 }
 
@@ -4336,9 +4350,9 @@ void MainScreen::onUpdateOptimum(double x, double y, double z, double xa, double
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
 	}
-	if (primary_model_index < model_actor_list.size()) {
-		model_actor_list[primary_model_index]->SetPosition(CurrentPose.x, CurrentPose.y, CurrentPose.z);
-		model_actor_list[primary_model_index]->SetOrientation(CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
+	if (primary_model_index < loaded_models.size()) { //TODO: Find a better way to represent this
+		vw->set_model_position_at_index(primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
+		vw->set_model_orientation_at_index(primary_model_index, CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
 		ui.qvtk_widget->update();
 	}
 
@@ -4352,9 +4366,9 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
 	}
-	if (primary_model_index < model_actor_list.size()) {
-		model_actor_list[primary_model_index]->SetPosition(CurrentPose.x, CurrentPose.y, CurrentPose.z);
-		model_actor_list[primary_model_index]->SetOrientation(CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
+	if (primary_model_index < loaded_models.size()) { //todo: Find a better way to get size of model_actor_list
+		vw->set_model_position_at_index(primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
+		vw->set_model_orientation_at_index(primary_model_index, CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
 		ui.qvtk_widget->update();
 	}
 	else {
@@ -4456,12 +4470,10 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	else {
 		level << "Finished";
 	}
-	auto CurrentPose = Point6D(model_actor_list[primary_model_index]->GetPosition()[0],
-	                           model_actor_list[primary_model_index]->GetPosition()[1],
-	                           model_actor_list[primary_model_index]->GetPosition()[2],
-	                           model_actor_list[primary_model_index]->GetOrientation()[0],
-	                           model_actor_list[primary_model_index]->GetOrientation()[1],
-	                           model_actor_list[primary_model_index]->GetOrientation()[2]);
+	auto current_position = vw->get_model_position_at_index(primary_model_index);
+	auto current_orientation = vw->get_model_orientation_at_index(primary_model_index);
+	auto CurrentPose = Point6D(current_position[0], current_position[1], current_position[2],
+		current_orientation[0], current_orientation[1], current_orientation[2]);
 	if (ui.camera_B_radio_button->isChecked() == true) {
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
@@ -5081,12 +5093,6 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
 
 
 	for (int i = 0; i < ui.image_list_widget->count(); i++) {
-		//	double* pos = model_actor_list[selected[0].row()]->GetPosition();
-		//double* ori = model_actor_list[selected[0].row()]->GetOrientation();
-		//Point6D curr_tib_pose(pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]);
-
-		//model_locations_.SavePose(i,selected[0].row(), curr_tib_pose);
-
 		Point6D fem_pose = model_locations_.GetPose(i, selected[1].row());
 		Point6D tib_pose_orig = model_locations_.GetPose(i, selected[0].row());
 
