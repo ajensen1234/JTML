@@ -26,13 +26,13 @@
 #include "gpu/gpu_model.cuh"
 
 //About JTA Popup Header
-class DRRTool : public QDialog
-{
+class DRRTool : public QDialog {
 	Q_OBJECT
 
 public:
-	DRRTool(Model model, CameraCalibration calibration, double model_z_plane, QWidget *parent = 0, Qt::WindowFlags flags = 0);
-	~DRRTool();
+	DRRTool(Model model, CameraCalibration calibration, double model_z_plane, QWidget* parent = 0,
+	        Qt::WindowFlags flags = 0);
+	~DRRTool() override;
 
 	/*Draw DRR*/
 	void DrawDRR();

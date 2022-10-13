@@ -258,24 +258,16 @@ MainScreen::MainScreen(QWidget* parent)
 	previous_frame_index_ = -1;
 	///*Set up VTK*/
 	vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
-	//my_viewer->initialize_vtk_pointers();
 	renderer = vw->get_renderer();
-	//renderer = vtkSmartPointer<vtkRenderer>::New();
-	//actor_image = vtkSmartPointer<vtkActor>::New();
 	actor_image = vw->get_actor_image();
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
 
 	model_mapper_list = vw->get_model_mapper_list();
 	model_actor_list = vw->get_model_actor_list();
-	//current_background = vtkSmartPointer<vtkImageData>::New();
-	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
-	//image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
 	image_mapper = vw->get_image_mapper();
 	actor_text = vw->get_actor_text();
 	importer = vw->get_importer();
-	//actor_text = vtkSmartPointer<vtkTextActor>::New();
-	//importer = vtkSmartPointer<vtkImageImport>::New();
 	key_press_vtk = vtkSmartPointer<KeyPressInteractorStyle>::New(); /*Custom Interactor from JTA*/
 	key_press_vtk->initialize_MainScreen(this);
 	camera_style_interactor = vtkSmartPointer<CameraInteractorStyle>::New();
@@ -291,15 +283,14 @@ MainScreen::MainScreen(QWidget* parent)
 	actor_image->SetPickable(0);
 	actor_text->SetPickable(0);
 	actor_image->SetMapper(image_mapper);
-	ui.qvtk_widget->GetRenderWindow()->AddRenderer(renderer);
-	renderer->AddActor(actor_image);
-	renderer->AddActor2D(actor_text);
+	vw->load_render_window(ui.qvtk_widget->GetRenderWindow());
+	vw->load_renderers_into_render_window();
 	ui.qvtk_widget->GetRenderWindow()->Render();
-	vw->display_actors_in_renderer();
 
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
 	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+
 
 	/*Pose Estimate Progress and Label Not Visible*/
 	ui.pose_progress->setValue(0);
@@ -2788,14 +2779,6 @@ void MainScreen::on_load_calibration_button_clicked() {
 	/*Set Up QVTK Widget For Calibration*/
 	/*Monoplane (Left Viewport)*/
 	if (calibrated_for_monoplane_viewport_) {
-		/*Set Up Calibration to Home QVTKWidget*/
-		/*renderer->GetActiveCamera()->SetFocalPoint(0, 0,
-			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		*/
-		//renderer->GetActiveCamera()->SetFocalPoint(0,0,-1);
-		//renderer->GetActiveCamera()->SetPosition(0, 0, 0);
-		//renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		//auto mat = renderer->GetActiveCamera()->GetProjectionTransformMatrix();
 		vw->setup_camera_calibration(calibration_file_);
 
 		/*Set Checked To Monoplane but disable from further clicking*/
@@ -2808,14 +2791,9 @@ void MainScreen::on_load_calibration_button_clicked() {
 		/*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE USE BUTTON*/
 		if (ui.image_list_widget->currentIndex().row() >= 0) {
 			/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
-			actor_image->SetPosition(
-				-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-				calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-				-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-				calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-				-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.
-				pixel_pitch_);
-			//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
+			vw->place_image_actors_according_to_calibration(calibration_file_,
+				loaded_frames[this->curr_frame()].GetOriginalImage().cols,
+				loaded_frames[this->curr_frame()].GetOriginalImage().rows);
 			renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 				loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 				loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,

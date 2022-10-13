@@ -14,6 +14,7 @@ void Viewer::initialize_vtk_pointers() {
 
 	//TODO: Throw a catch statement here to make sure there are no errors
 	background_renderer_ = vtkSmartPointer<vtkRenderer>::New();
+	scene_renderer_ = vtkSmartPointer<vtkRenderer>::New();
 	actor_image_ = vtkSmartPointer<vtkActor>::New();
 	current_background_ = vtkSmartPointer<vtkImageData>::New();
 	stl_reader_ = vtkSmartPointer<vtkSTLReader>::New();
@@ -322,6 +323,22 @@ void Viewer::make_all_models_invisible() {
 }
 
 
+
 std::shared_ptr<std::vector<Model>> Viewer::get_loaded_models() {
 	return loaded_models_;
 }
+
+void Viewer::load_renderers_into_render_window() {
+	scene_renderer_->SetLayer(0);
+	background_renderer_->SetLayer(1);
+	background_renderer_->InteractiveOn();
+	qvtk_render_window_->SetNumberOfLayers(2);
+	qvtk_render_window_->AddRenderer(background_renderer_);
+	qvtk_render_window_->AddRenderer(scene_renderer_);
+}
+
+
+void Viewer::print_render_window() {
+	qvtk_render_window_->Print(std::cout);
+}
+
