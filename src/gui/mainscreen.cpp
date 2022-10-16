@@ -80,65 +80,18 @@ int MainScreen::curr_frame() {
 /*Global Interactor Variable*/
 vtkSmartPointer<KeyPressInteractorStyle> key_press_vtk;
 
-/*Camera Angle Funtion(Used to Determine Correct Camera for Frame*/
-/*OLD FUNCTION, DEPRECATED*/
-double setAngle(vtkSmartPointer<vtkRenderer> renderer, int height) {
-	double angle = 180.0 / 3.1415926535897932384626433832795028841971693993751 *
-		std::acos(
-			(
-				std::pow(
-					(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[0]),
-					2) +
-				(renderer->GetActiveCamera()->GetFocalPoint()[1] + .5 * height - renderer->GetActiveCamera()->
-					GetPosition()[1]) *
-				(renderer->GetActiveCamera()->GetFocalPoint()[1] - .5 * height - renderer->GetActiveCamera()->
-					GetPosition()[1]) +
-				std::pow(
-					(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[2]),
-					2)
-			) /
-			(
-				std::sqrt(
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[
-							0]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[1] + .5 * height - renderer->GetActiveCamera()->
-							GetPosition()[1]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[
-							2]), 2)
-				) *
-				std::sqrt(
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[
-							0]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[1] - .5 * height - renderer->GetActiveCamera()->
-							GetPosition()[1]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[
-							2]), 2)
-				)
-			));
-	return angle;
-};
 /*New Function*/
 double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
 	//Used to Set Height/2 = To The Bigger of the Width/2 + X Offset vs Height/2 + Y Offset,
 	// now just set to height/2 + y_offset
 	if (CameraA) {
-		double y = /*std::max(width*calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_A_principal_.principal_x_),*/
-			height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_A_principal_.principal_y_)/*)*/;
+		double y = height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
+			abs(calibration_file_.camera_A_principal_.principal_y_);
 		return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
 			atan2(y, calibration_file_.camera_A_principal_.principal_distance_);
 	}
-	double y = /*std::max(width*calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_B_principal_.principal_x_),*/
-		height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
-		abs(calibration_file_.camera_B_principal_.principal_y_)/*)*/;
+	double y =height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
+		abs(calibration_file_.camera_B_principal_.principal_y_);
 	return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
 		atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
 }
@@ -3048,6 +3001,8 @@ void MainScreen::on_load_model_button_clicked() {
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
 		ui.model_list_widget->setCurrentRow(0);
 	}
+
+	vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_, loaded_frames[0].GetOriginalImage().cols, loaded_frames[0].GetOriginalImage().rows);
 
 }
 

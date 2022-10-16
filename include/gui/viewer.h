@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <vtkRenderWindow.h>
+#include <vtkTransform.h>
+#include <vtkMatrix4x4.h>
 #include <vtkImageActor.h>
 #include <vtkProperty.h>
 #include <vtkCamera.h>
@@ -34,7 +36,6 @@
 #include "core/frame.h"
 #include "core/calibration.h"
 #include "core/model.h"
-#include <set>
 
 
 class Viewer {
@@ -110,6 +111,13 @@ public:
 	vtkActor* get_model_actor_at_index(int index);
 	vtkSmartPointer<vtkRenderWindowInteractor> get_interactor();
 
+	void calculate_and_set_window_center_from_calibration(const int w, const int h, const float cx, const float cy);
+	void calculate_and_set_viewing_angle_from_calibration(const int h, const int fy);
+	void calculate_and_set_camera_aspect_from_calibration(const int fx, const int fy);
+	void set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h);
+	void set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h);
+
+
 private:
 	vtkSmartPointer<vtkRenderWindowInteractor> render_window_interactor_ = nullptr;
 	std::vector<vtkSmartPointer<vtkActor>> model_actor_list_;
@@ -123,9 +131,10 @@ private:
 	vtkSmartPointer<vtkTextActor> actor_text_;
 	vtkSmartPointer<vtkImageImport> importer_;
 	vtkSmartPointer<vtkRenderWindow> qvtk_render_window_;
-	vtkSmartPointer<vtkCamera> my_image_camera_;
-	vtkSmartPointer<vtkCamera> my_model_camera_;
+	vtkSmartPointer<vtkCamera> scene_camera_;
+	vtkSmartPointer<vtkCamera> background_camera_;
 	vtkSmartPointer<vtkRenderWindow> render_window_;
+
 
 	bool initialized_pointers_;
 

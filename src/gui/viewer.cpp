@@ -17,6 +17,9 @@ void Viewer::initialize_vtk_pointers() {
 	//TODO: Throw a catch statement here to make sure there are no errors
 	background_renderer_ = vtkSmartPointer<vtkRenderer>::New();
 	scene_renderer_ = vtkSmartPointer<vtkRenderer>::New();
+
+	background_camera_ = background_renderer_->GetActiveCamera();
+	scene_camera_ = scene_renderer_->GetActiveCamera();
 	actor_image_ = vtkSmartPointer<vtkActor>::New();
 	current_background_ = vtkSmartPointer<vtkImageData>::New();
 	stl_reader_ = vtkSmartPointer<vtkSTLReader>::New();
@@ -27,7 +30,6 @@ void Viewer::initialize_vtk_pointers() {
 	actor_text_->GetTextProperty()->SetFontFamilyToCourier();
 	actor_text_->SetPosition2(0, 0);
 	actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Reda
-	//render_window_ = vtkSmartPointer<vtkRenderWindow>::New();
 	render_window_interactor_ = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 }
 
@@ -162,9 +164,12 @@ void Viewer::setup_camera_calibration(Calibration calibration) {
 
 void Viewer::place_image_actors_according_to_calibration(Calibration cal, int img_w, int img_h) {
 	actor_image_->SetPosition(
-		-0.5 * img_w + cal.camera_A_principal_.principal_x_ / cal.camera_A_principal_.pixel_pitch_,
-		-0.5 * img_h + cal.camera_A_principal_.principal_y_ / cal.camera_A_principal_.pixel_pitch_,
+		-0.5 * img_w, //+ cal.camera_A_principal_.principal_x_ / cal.camera_A_principal_.pixel_pitch_,
+		-0.5 * img_h, //+ cal.camera_A_principal_.principal_y_ / cal.camera_A_principal_.pixel_pitch_,
 		-1 * cal.camera_A_principal_.principal_distance_ / cal.camera_A_principal_.pixel_pitch_);
+
+	background_camera_->ParallelProjectionOn();
+	background_camera_->SetParallelScale(0.5 * img_h);
 }
 
 
@@ -177,7 +182,6 @@ void Viewer::load_3d_models_into_actor_and_mapper_list() {
 		new_actor->SetMapper(new_mapper);
 		model_actor_list_.push_back(new_actor);
 		model_mapper_list_.push_back(new_mapper);
-		//background_renderer_->AddActor(new_actor);
 		scene_renderer_->AddActor(new_actor);
 	}
 }
@@ -338,6 +342,7 @@ void Viewer::load_renderers_into_render_window() {
 	background_renderer_->InteractiveOff();
 	scene_renderer_->SetLayer(1);
 	scene_renderer_->InteractiveOn();
+	scene_renderer_->GetActiveCamera()->SetFocalPoint(0, 0, -1);
 	qvtk_render_window_->SetNumberOfLayers(2);
 	qvtk_render_window_->AddRenderer(background_renderer_);
 	qvtk_render_window_->AddRenderer(scene_renderer_);
@@ -378,3 +383,53 @@ vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
 	return render_window_interactor_;
 }
 
+void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h) {
+	float cx = cal.camera_A_principal_.cx() + (w/2);
+	float cy = (h/2) - cal.camera_A_principal_.cy();
+	float fx = cal.camera_A_principal_.fx();
+	float fy = cal.camera_A_principal_.fy();
+
+	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
+	calculate_and_set_viewing_angle_from_calibration(h, fy);
+	calculate_and_set_camera_aspect_from_calibration(fx, fy);
+	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
+}
+void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h) {
+	float cx = cal.camera_A_principal_.cx();
+	float cy = cal.camera_A_principal_.cy();
+	float fx = cal.camera_A_principal_.fx();
+	float fy = cal.camera_A_principal_.fy();
+
+	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
+	calculate_and_set_viewing_angle_from_calibration(h, fy);
+	calculate_and_set_camera_aspect_from_calibration(fx, fy);
+	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
+	
+}
+
+
+void Viewer::calculate_and_set_window_center_from_calibration(const int w, const int h, const float cx, const float cy) {
+	float wcx = -(2 * cx - w) / w;
+	float wcy = (2 * cy - h) / h;
+
+	scene_camera_->SetWindowCenter(wcx, wcy);
+}
+
+void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h, const int fy) {
+	long double angle = (180.0 / 3.1415926535897932384626433832795028841971693993751) * 2
+		* atan2(h, 2 * fy);
+	scene_camera_->SetViewAngle(angle);
+}
+
+void Viewer::calculate_and_set_camera_aspect_from_calibration(const int fx, const int fy) {
+	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
+	m->Identity();
+	double aspect = fy / fx;
+	m->SetElement(0, 0, 1 / aspect);
+
+	vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
+	t->SetMatrix(m);
+
+	scene_camera_->SetUserTransform(t);
+
+}
