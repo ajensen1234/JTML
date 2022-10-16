@@ -1,5 +1,7 @@
 #include "gui/viewer.h"
 
+#include <vtkRendererCollection.h>
+
 Viewer::Viewer() {
 	initialize_vtk_pointers();
 	initialize_vtk_mappers();
@@ -25,7 +27,8 @@ void Viewer::initialize_vtk_pointers() {
 	actor_text_->GetTextProperty()->SetFontFamilyToCourier();
 	actor_text_->SetPosition2(0, 0);
 	actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0); //Earth Reda
-	render_window_ = vtkSmartPointer<vtkRenderWindow>::New();
+	//render_window_ = vtkSmartPointer<vtkRenderWindow>::New();
+	render_window_interactor_ = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 }
 
 void Viewer::initialize_vtk_mappers() {
@@ -43,6 +46,7 @@ void Viewer::initialize_vtk_renderers() {
 
 void Viewer::load_render_window(vtkSmartPointer<vtkRenderWindow> in) {
 	qvtk_render_window_ = in;
+	render_window_interactor_->SetRenderWindow(qvtk_render_window_);
 }
 
 vtkSmartPointer<vtkRenderer> Viewer::get_renderer() {
@@ -173,7 +177,8 @@ void Viewer::load_3d_models_into_actor_and_mapper_list() {
 		new_actor->SetMapper(new_mapper);
 		model_actor_list_.push_back(new_actor);
 		model_mapper_list_.push_back(new_mapper);
-		background_renderer_->AddActor(new_actor);
+		//background_renderer_->AddActor(new_actor);
+		scene_renderer_->AddActor(new_actor);
 	}
 }
 
@@ -329,9 +334,10 @@ std::shared_ptr<std::vector<Model>> Viewer::get_loaded_models() {
 }
 
 void Viewer::load_renderers_into_render_window() {
-	scene_renderer_->SetLayer(0);
-	background_renderer_->SetLayer(1);
-	background_renderer_->InteractiveOn();
+	background_renderer_->SetLayer(0);
+	background_renderer_->InteractiveOff();
+	scene_renderer_->SetLayer(1);
+	scene_renderer_->InteractiveOn();
 	qvtk_render_window_->SetNumberOfLayers(2);
 	qvtk_render_window_->AddRenderer(background_renderer_);
 	qvtk_render_window_->AddRenderer(scene_renderer_);
@@ -340,5 +346,35 @@ void Viewer::load_renderers_into_render_window() {
 
 void Viewer::print_render_window() {
 	qvtk_render_window_->Print(std::cout);
+}
+
+void Viewer::make_actor_text_invisible() {
+	vtkTextActor::SafeDownCast(actor_text_)->GetTextProperty()->SetOpacity(0.0);
+}
+
+void Viewer::make_actor_text_visible() {
+	vtkTextActor::SafeDownCast(actor_text_)->GetTextProperty()->SetOpacity(1.0);
+}
+
+void Viewer::load_in_interactor_style(vtkSmartPointer<vtkInteractorStyleTrackballActor> in) {
+	render_window_interactor_->SetInteractorStyle(in);
+}
+
+int Viewer::model_actor_list_size() {
+	return model_actor_list_.size();
+}
+
+vtkActor* Viewer::get_model_actor_at_index(int index) {
+	return model_actor_list_[index].GetPointer();
+}
+
+void Viewer::print_interactor_information() {
+	render_window_interactor_->Print(std::cout);
+	int num_ren = render_window_interactor_->GetRenderWindow()->GetRenderers()->GetNumberOfItems();
+	std::cout << "Number of renderers: " << num_ren << std::endl;
+}
+
+vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
+	return render_window_interactor_;
 }
 

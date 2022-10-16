@@ -12,8 +12,11 @@
 #include <vtkProp.h>
 #include <qcursor.h>
 
+#include <utility>
+
 /*Ref to QMainWindow*/
 #include "gui/mainscreen.h"
+#include "gui/viewer.h"
 
 //Calibration To Convert Pose
 #include "core/calibration.h"
@@ -36,7 +39,7 @@ public:
 
 	/*Pointer to Main Window*/
 	MainScreen* ms_;
-	std::shared_ptr<Viewer> viewer_;
+	std::shared_ptr<Viewer> viewer_ = nullptr;
 
 	void initialize_MainScreen(MainScreen* ms) {
 		ms_ = ms;
@@ -67,21 +70,23 @@ public:
 	void OnKeyPress() override {
 		// Get the keypress
 		vtkRenderWindowInteractor* rwi = this->Interactor;
+		if (rwi == viewer_->get_interactor()) {
+		}
 		if (this->InteractionProp == NULL) {
 			std::string key = rwi->GetKeySym();
-
-			// Handle information toggle
-			if (key == "i" || key == "I") {
 				vtkTextActor* text = vtkTextActor::SafeDownCast(
 					this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors2D()->
 					      GetLastActor2D());
+
+			// Handle information toggle
+			if (key == "i" || key == "I") {
 				if (information == true) {
 					information = false;
-					text->GetTextProperty()->SetOpacity(0.0);
+					viewer_->make_actor_text_invisible();
 				}
 				else {
 					information = true;
-					text->GetTextProperty()->SetOpacity(1.0);
+					viewer_->make_actor_text_visible();
 				}
 			}
 
@@ -277,8 +282,10 @@ public:
 		if (this->InteractionProp == NULL) {
 			return;
 		}
+
 		vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
 		rightDownModelZ = actor->GetPosition()[2];
+
 	}
 
 	//Middle Mouse Down Funtion
@@ -410,6 +417,11 @@ public:
 
 		// Forward Events
 		if (!rightDown) {
+			vtkActor* actor1 = vtkActor::SafeDownCast(this->InteractionProp);
+			if (actor1 == viewer_->get_model_actor_at_index(0)) {
+			} else if (actor1 == viewer_->get_model_actor_at_index(1)) {
+			} else {
+			}
 			vtkInteractorStyleTrackballActor::OnMouseMove();
 		}
 	}

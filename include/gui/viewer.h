@@ -29,6 +29,7 @@
 #include <qabstractitemmodel.h>
 #include <opencv2/core.hpp>
 #include <QList>
+#include <vtkInteractorStyleTrackballActor.h>
 
 #include "core/frame.h"
 #include "core/calibration.h"
@@ -99,9 +100,18 @@ public:
 
 	std::shared_ptr<std::vector<Model>> get_loaded_models();
 	void print_render_window();
+	void make_actor_text_invisible();
+	void make_actor_text_visible();
 
+	void load_in_interactor_style(vtkSmartPointer<vtkInteractorStyleTrackballActor> in);
+	int model_actor_list_size();
+
+	void print_interactor_information();
+	vtkActor* get_model_actor_at_index(int index);
+	vtkSmartPointer<vtkRenderWindowInteractor> get_interactor();
 
 private:
+	vtkSmartPointer<vtkRenderWindowInteractor> render_window_interactor_ = nullptr;
 	std::vector<vtkSmartPointer<vtkActor>> model_actor_list_;
 	std::vector<vtkSmartPointer<vtkPolyDataMapper>> model_mapper_list_;
 	vtkSmartPointer<vtkRenderer> background_renderer_;
@@ -124,6 +134,9 @@ private:
 	std::vector<Model> loaded_models_b;
 
 	std::shared_ptr<std::vector<Model>> loaded_models_ = std::make_shared<std::vector<Model>>();
+
+
+
 
 
 };

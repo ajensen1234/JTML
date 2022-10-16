@@ -270,6 +270,7 @@ MainScreen::MainScreen(QWidget* parent)
 	importer = vw->get_importer();
 	key_press_vtk = vtkSmartPointer<KeyPressInteractorStyle>::New(); /*Custom Interactor from JTA*/
 	key_press_vtk->initialize_MainScreen(this);
+	key_press_vtk->initialize_viewer(vw);
 	camera_style_interactor = vtkSmartPointer<CameraInteractorStyle>::New();
 	//vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New(); /*Alternate Angled Interactor*/
 	/*Text Actor Property*/
@@ -289,7 +290,8 @@ MainScreen::MainScreen(QWidget* parent)
 
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
-	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+	vw->load_in_interactor_style(key_press_vtk);
+	//ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 
 
 	/*Pose Estimate Progress and Label Not Visible*/
@@ -3554,8 +3556,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	/*Get Model Actor*/
 	int index_new_principal = -1;
-	for (int i = 0; i < model_actor_list.size(); i++) {
-		if (model_actor_list[i].GetPointer() == new_principal_actor) {
+	for (int i = 0; vw->model_actor_list_size(); i++) {
+		if (vw->get_model_actor_at_index(i) == new_principal_actor) {
 			index_new_principal = i;
 			break;
 		}
@@ -3756,6 +3758,7 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 
 void MainScreen::on_wireframe_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	vw->print_interactor_information();
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
