@@ -80,65 +80,18 @@ int MainScreen::curr_frame() {
 /*Global Interactor Variable*/
 vtkSmartPointer<KeyPressInteractorStyle> key_press_vtk;
 
-/*Camera Angle Funtion(Used to Determine Correct Camera for Frame*/
-/*OLD FUNCTION, DEPRECATED*/
-double setAngle(vtkSmartPointer<vtkRenderer> renderer, int height) {
-	double angle = 180.0 / 3.1415926535897932384626433832795028841971693993751 *
-		std::acos(
-			(
-				std::pow(
-					(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[0]),
-					2) +
-				(renderer->GetActiveCamera()->GetFocalPoint()[1] + .5 * height - renderer->GetActiveCamera()->
-					GetPosition()[1]) *
-				(renderer->GetActiveCamera()->GetFocalPoint()[1] - .5 * height - renderer->GetActiveCamera()->
-					GetPosition()[1]) +
-				std::pow(
-					(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[2]),
-					2)
-			) /
-			(
-				std::sqrt(
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[
-							0]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[1] + .5 * height - renderer->GetActiveCamera()->
-							GetPosition()[1]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[
-							2]), 2)
-				) *
-				std::sqrt(
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[0] - renderer->GetActiveCamera()->GetPosition()[
-							0]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[1] - .5 * height - renderer->GetActiveCamera()->
-							GetPosition()[1]), 2) +
-					std::pow(
-						(renderer->GetActiveCamera()->GetFocalPoint()[2] - renderer->GetActiveCamera()->GetPosition()[
-							2]), 2)
-				)
-			));
-	return angle;
-};
 /*New Function*/
 double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
 	//Used to Set Height/2 = To The Bigger of the Width/2 + X Offset vs Height/2 + Y Offset,
 	// now just set to height/2 + y_offset
 	if (CameraA) {
-		double y = /*std::max(width*calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_A_principal_.principal_x_),*/
-			height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_A_principal_.principal_y_)/*)*/;
+		double y = height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
+			abs(calibration_file_.camera_A_principal_.principal_y_);
 		return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
 			atan2(y, calibration_file_.camera_A_principal_.principal_distance_);
 	}
-	double y = /*std::max(width*calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
-			abs(calibration_file_.camera_B_principal_.principal_x_),*/
-		height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
-		abs(calibration_file_.camera_B_principal_.principal_y_)/*)*/;
+	double y =height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
+		abs(calibration_file_.camera_B_principal_.principal_y_);
 	return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
 		atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
 }
@@ -258,26 +211,19 @@ MainScreen::MainScreen(QWidget* parent)
 	previous_frame_index_ = -1;
 	///*Set up VTK*/
 	vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
-	//my_viewer->initialize_vtk_pointers();
 	renderer = vw->get_renderer();
-	//renderer = vtkSmartPointer<vtkRenderer>::New();
-	//actor_image = vtkSmartPointer<vtkActor>::New();
 	actor_image = vw->get_actor_image();
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
 
 	model_mapper_list = vw->get_model_mapper_list();
 	model_actor_list = vw->get_model_actor_list();
-	//current_background = vtkSmartPointer<vtkImageData>::New();
-	//stl_reader = vtkSmartPointer<vtkSTLReader>::New();
-	//image_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
 	image_mapper = vw->get_image_mapper();
 	actor_text = vw->get_actor_text();
 	importer = vw->get_importer();
-	//actor_text = vtkSmartPointer<vtkTextActor>::New();
-	//importer = vtkSmartPointer<vtkImageImport>::New();
 	key_press_vtk = vtkSmartPointer<KeyPressInteractorStyle>::New(); /*Custom Interactor from JTA*/
 	key_press_vtk->initialize_MainScreen(this);
+	key_press_vtk->initialize_viewer(vw);
 	camera_style_interactor = vtkSmartPointer<CameraInteractorStyle>::New();
 	//vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New(); /*Alternate Angled Interactor*/
 	/*Text Actor Property*/
@@ -291,15 +237,15 @@ MainScreen::MainScreen(QWidget* parent)
 	actor_image->SetPickable(0);
 	actor_text->SetPickable(0);
 	actor_image->SetMapper(image_mapper);
-	ui.qvtk_widget->GetRenderWindow()->AddRenderer(renderer);
-	renderer->AddActor(actor_image);
-	renderer->AddActor2D(actor_text);
+	vw->load_render_window(ui.qvtk_widget->GetRenderWindow());
+	vw->load_renderers_into_render_window();
 	ui.qvtk_widget->GetRenderWindow()->Render();
-	vw->display_actors_in_renderer();
 
 	/*Interactor*/
 	key_press_vtk->AutoAdjustCameraClippingRangeOff();
-	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+	vw->load_in_interactor_style(key_press_vtk);
+	//ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+
 
 	/*Pose Estimate Progress and Label Not Visible*/
 	ui.pose_progress->setValue(0);
@@ -2788,14 +2734,6 @@ void MainScreen::on_load_calibration_button_clicked() {
 	/*Set Up QVTK Widget For Calibration*/
 	/*Monoplane (Left Viewport)*/
 	if (calibrated_for_monoplane_viewport_) {
-		/*Set Up Calibration to Home QVTKWidget*/
-		/*renderer->GetActiveCamera()->SetFocalPoint(0, 0,
-			-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		*/
-		//renderer->GetActiveCamera()->SetFocalPoint(0,0,-1);
-		//renderer->GetActiveCamera()->SetPosition(0, 0, 0);
-		//renderer->GetActiveCamera()->SetClippingRange(.1, 2.0 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.pixel_pitch_);
-		//auto mat = renderer->GetActiveCamera()->GetProjectionTransformMatrix();
 		vw->setup_camera_calibration(calibration_file_);
 
 		/*Set Checked To Monoplane but disable from further clicking*/
@@ -2808,14 +2746,9 @@ void MainScreen::on_load_calibration_button_clicked() {
 		/*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE USE BUTTON*/
 		if (ui.image_list_widget->currentIndex().row() >= 0) {
 			/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
-			actor_image->SetPosition(
-				-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols +
-				calibration_file_.camera_A_principal_.principal_x_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-				-.5 * loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows +
-				calibration_file_.camera_A_principal_.principal_y_ / calibration_file_.camera_A_principal_.pixel_pitch_,
-				-1 * calibration_file_.camera_A_principal_.principal_distance_ / calibration_file_.camera_A_principal_.
-				pixel_pitch_);
-			//renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer, loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
+			vw->place_image_actors_according_to_calibration(calibration_file_,
+				loaded_frames[this->curr_frame()].GetOriginalImage().cols,
+				loaded_frames[this->curr_frame()].GetOriginalImage().rows);
 			renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 				loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 				loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
@@ -3068,6 +3001,8 @@ void MainScreen::on_load_model_button_clicked() {
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
 		ui.model_list_widget->setCurrentRow(0);
 	}
+
+	vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_, loaded_frames[0].GetOriginalImage().cols, loaded_frames[0].GetOriginalImage().rows);
 
 }
 
@@ -3576,8 +3511,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	/*Get Model Actor*/
 	int index_new_principal = -1;
-	for (int i = 0; i < model_actor_list.size(); i++) {
-		if (model_actor_list[i].GetPointer() == new_principal_actor) {
+	for (int i = 0; vw->model_actor_list_size(); i++) {
+		if (vw->get_model_actor_at_index(i) == new_principal_actor) {
 			index_new_principal = i;
 			break;
 		}
@@ -3778,6 +3713,7 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 
 void MainScreen::on_wireframe_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+	vw->print_interactor_information();
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());

@@ -11,19 +11,18 @@
 #include "cost_functions/CostFunctionManager.h"
 
 //About OptimizerSettings Popup Header
-class SettingsControl : public QDialog
-{
+class SettingsControl : public QDialog {
 	Q_OBJECT
 
 public:
-	SettingsControl(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-	~SettingsControl();
+	SettingsControl(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+	~SettingsControl() override;
 
 	/*Load Optimizer Settings from Main Window*/
 	void LoadSettings(jta_cost_function::CostFunctionManager sc_trunk_manager,
-		jta_cost_function::CostFunctionManager sc_branch_manager,
-		jta_cost_function::CostFunctionManager sc_leaf_manager,
-		OptimizerSettings opt_settings);
+	                  jta_cost_function::CostFunctionManager sc_branch_manager,
+	                  jta_cost_function::CostFunctionManager sc_leaf_manager,
+	                  OptimizerSettings opt_settings);
 
 private:
 	Ui::settings_control ui;
@@ -37,40 +36,38 @@ private:
 	OptimizerSettings opt_settings_;
 
 public slots:
+	/*Save Button*/
+	void on_save_button_clicked();
 
-/*Save Button*/
-void on_save_button_clicked();
+	/*Reset Button*/
+	void on_reset_button_clicked();
 
-/*Reset Button*/
-void on_reset_button_clicked();
+	/*Cancel Button*/
+	void on_cancel_button_clicked();
 
-/*Cancel Button*/
-void on_cancel_button_clicked();
+	/*Radio buttons for stage*/
+	void on_trunk_radioButton_clicked();
+	void on_branch_radioButton_clicked();
+	void on_leaf_radioButton_clicked();
 
-/*Radio buttons for stage*/
-void on_trunk_radioButton_clicked();
-void on_branch_radioButton_clicked();
-void on_leaf_radioButton_clicked();
+	/*List Widgets Changed*/
+	void on_cost_function_listWidget_itemSelectionChanged();
+	void on_cost_function_parameters_listWidget_itemSelectionChanged();
 
-/*List Widgets Changed*/
-void on_cost_function_listWidget_itemSelectionChanged();
-void on_cost_function_parameters_listWidget_itemSelectionChanged();
-
-/*Optimizer Settings Buttons Toggled*/
-void on_stage_enabled_checkBox_clicked();
-void on_budget_spinBox_valueChanged();
-void on_x_translation_spinBox_valueChanged();
-void on_y_translation_spinBox_valueChanged();
-void on_z_translation_spinBox_valueChanged();
-void on_x_rotation_spinBox_valueChanged();
-void on_y_rotation_spinBox_valueChanged();
-void on_z_rotation_spinBox_valueChanged();
-void on_branch_count_spinBox_valueChanged();
-void on_double_parameter_spinBox_valueChanged();
-void on_int_parameter_spinBox_valueChanged();
-void on_bool_parameter_true_radioButton_clicked();
-void on_bool_parameter_false_radioButton_clicked();
-
+	/*Optimizer Settings Buttons Toggled*/
+	void on_stage_enabled_checkBox_clicked();
+	void on_budget_spinBox_valueChanged();
+	void on_x_translation_spinBox_valueChanged();
+	void on_y_translation_spinBox_valueChanged();
+	void on_z_translation_spinBox_valueChanged();
+	void on_x_rotation_spinBox_valueChanged();
+	void on_y_rotation_spinBox_valueChanged();
+	void on_z_rotation_spinBox_valueChanged();
+	void on_branch_count_spinBox_valueChanged();
+	void on_double_parameter_spinBox_valueChanged();
+	void on_int_parameter_spinBox_valueChanged();
+	void on_bool_parameter_true_radioButton_clicked();
+	void on_bool_parameter_false_radioButton_clicked();
 
 
 signals:
@@ -78,9 +75,10 @@ signals:
 	- the registry
 	- their local class versions on the main window GUI*/
 	void SaveSettings(OptimizerSettings,
-		jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager);//
+	                  jta_cost_function::CostFunctionManager, jta_cost_function::CostFunctionManager,
+	                  jta_cost_function::CostFunctionManager); //
 	/*Close Window*/
-	void Done();//
+	void Done(); //
 };
 
 #endif /* SETTINGS_CONTROL_H */

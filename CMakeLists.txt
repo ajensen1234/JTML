@@ -28,6 +28,7 @@ vtkGUISupportQt
 vtkChartsCore
 vtkViewsContext2D
 vtkRenderingAnnotation
+vtkInteractionStyle
 )
 
 

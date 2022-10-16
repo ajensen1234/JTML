@@ -11,19 +11,18 @@
 #include <qevent.h>
 
 //Controls JTA Popup Header
-class Controls : public QDialog
-{
+class Controls : public QDialog {
 	Q_OBJECT
 
 public:
-	Controls(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-	~Controls();
+	Controls(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+	~Controls() override;
 
 private:
 	Ui::controls ui;
-	QGraphicsScene *center_scene;
-	QGraphicsView *center_graph;
-	QGraphicsPixmapItem *center_item;
+	QGraphicsScene* center_scene;
+	QGraphicsView* center_graph;
+	QGraphicsPixmapItem* center_item;
 };
 
 #endif // CONTROLS_H

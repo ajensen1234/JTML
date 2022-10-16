@@ -5,13 +5,12 @@
 #include "ui_About.h"
 
 //About JTA Popup Header
-class About : public QDialog
-{
+class About : public QDialog {
 	Q_OBJECT
 
 public:
-	About(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-	~About();
+	About(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+	~About() override;
 	void setVersion(int A, int B, int C); // Sets Version Number Label
 
 private:
