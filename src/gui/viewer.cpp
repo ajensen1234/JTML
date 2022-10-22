@@ -363,13 +363,13 @@ void Viewer::load_renderers_into_render_window(Calibration cal) {
 	if(cal.type_ == "UF") {
 		focal_dir = -1;
 	} else if (cal.type_ == "Denver") {
-		focal_dir = 1;
+		focal_dir = -1;
 	} else {
 		focal_dir = 1;
 	}
 	std::cout <<"Focal DIrection" << focal_dir << std::endl;
-	scene_camera_->SetFocalPoint(0, 0, focal_dir);
 	scene_camera_->SetPosition(0, 0, 0);
+	scene_camera_->SetFocalPoint(0, 0, focal_dir);
 	qvtk_render_window_->SetNumberOfLayers(2);
 	qvtk_render_window_->AddRenderer(background_renderer_);
 	qvtk_render_window_->AddRenderer(scene_renderer_);
@@ -449,6 +449,8 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibrat
 void Viewer::calculate_and_set_window_center_from_calibration(const int w, const int h, const float cx, const float cy) {
 	float wcx = -(2 * cx - w) / w;
 	float wcy = (2 * cy - h) / h;
+
+	std::cout << "Window Center: " << wcx << ", " << wcy << std::endl;
 
 	//scene_camera_->SetFocalPoint(0, 0, -1);
 	scene_camera_->SetWindowCenter(wcx, wcy);
