@@ -53,9 +53,10 @@ struct Matrix_3_3 {
 struct Calibration {
 
 	/* Constructors for Monoplane and Biplane*/
-	Calibration(CameraCalibration monoplane_principal) {
+	Calibration(CameraCalibration monoplane_principal, std::string type = "UF") {
 		biplane_calibration = false;
 		camera_A_principal_ = monoplane_principal;
+		type_ = type;
 	};
 	/**
 	 * @brief 
@@ -78,6 +79,9 @@ struct Calibration {
 
 	/*Calibrated For Biplane?*/
 	bool biplane_calibration;
+
+	/*Which group? (helps determine z-axis direction*/
+	std::string type_;
 
 	/*Storage*/
 	CameraCalibration camera_A_principal_; /*used for both monoplane and biplane*/

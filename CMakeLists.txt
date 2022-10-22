@@ -19,7 +19,7 @@ find_package(Torch REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 
-find_package(VTK COMPONENTS
+find_package(VTK 7 REQUIRED COMPONENTS
 vtkRenderingCore
 vtkRenderingOpenGL2
 vtkIOCore

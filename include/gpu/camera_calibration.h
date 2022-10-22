@@ -1,6 +1,8 @@
 #ifndef CAMERA_CALIBRATION_H
 #define CAMERA_CALIBRATION_H
 
+#include <iostream>
+
 struct CameraCalibration {
 	CameraCalibration(float principal_distance, float principal_x, float principal_y, float pixel_pitch) {
 		principal_distance_ = principal_distance;
@@ -33,12 +35,18 @@ struct CameraCalibration {
 	 * @param cy Y principal point[px].
 	 */
 	CameraCalibration(float fx, float sc, float cx, float fy, float cy){
-		camera_matrix_[0] = fx;
-		camera_matrix_[1] = 0;
-		camera_matrix_[2] = cx;
+		fx_ = fx;
+		fy_ = fy;
+		cx_ = cx;
+		cy_ = cy;
+		pixel_pitch_ = 0.375; // TODO: placeholder pixel pitch for denver
+		principal_distance_ = fx_ * pixel_pitch_;
+		camera_matrix_[0] = fx_;
+		camera_matrix_[1] = sc;
+		camera_matrix_[2] = cx_;
 		camera_matrix_[3] = 0;
-		camera_matrix_[4] = fy;
-		camera_matrix_[5] = cy;
+		camera_matrix_[4] = fy_;
+		camera_matrix_[5] = cy_;
 		camera_matrix_[6] = 0;
 		camera_matrix_[7] = 0;
 		camera_matrix_[8] = 1;
@@ -68,6 +76,16 @@ struct CameraCalibration {
 	}
 	float cy() {
 		return cy_;
+	}
+
+	void print_values() {
+		for (auto i : camera_matrix_) {
+			std::cout << i << std::endl;
+		}
+		std::cout << fx() << std::endl;
+		std::cout << fy() << std::endl;
+		std::cout << cx() << std::endl;
+		std::cout << cy() << std::endl;
 	}
 
 private:

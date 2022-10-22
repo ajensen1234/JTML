@@ -11,6 +11,19 @@ void LocationStorage::LoadNewModel(double principal_distance, double pixel_pitch
 	}
 	no_image_location_storage_vector_.push_back(Point6D(0, 0, -.25 * principal_distance / pixel_pitch, 0, 0, 0));
 }
+void LocationStorage::LoadNewModel(Calibration calibration) {
+	double z_pos;
+	if (calibration.type_ == "Denver") {
+		z_pos = 0.25 * calibration.camera_A_principal_.fx();
+	} else if (calibration.type_ == "UF") {
+		z_pos = -0.25 * calibration.camera_A_principal_.principal_distance_ / calibration.camera_A_principal_.pixel_pitch_;
+	}
+	for (int i = 0; i < location_storage_matrix_.size(); i++) {
+		location_storage_matrix_[i].push_back(Point6D(0, 0, z_pos, 0, 0, 0));
+	}
+	no_image_location_storage_vector_.push_back(Point6D(0, 0, z_pos, 0, 0, 0));
+}
+
 
 /*Add New Frame to JTA-GPU So Initialize ALl Loaded Models with
 Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0) for that Frame*/

@@ -58,7 +58,7 @@ public:
 	void set_importer_output_to_background();
 	void set_loaded_frames(std::vector<Frame>& frames);
 	void set_loaded_frames_b(std::vector<Frame>& frames);
-	void setup_camera_calibration(Calibration calibration);
+	void setup_camera_calibration(Calibration cal);
 	void place_image_actors_according_to_calibration(Calibration calibration, int img_w, int img_h);
 	void load_3d_models_into_actor_and_mapper_list();
 	void load_model_actors_and_mappers_with_3d_data();
@@ -96,7 +96,7 @@ public:
 	void update_display_background_to_inverted_image(int frame_number, bool CameraASelected);
 
 	// Render Window Setup
-	void load_renderers_into_render_window();
+	void load_renderers_into_render_window(Calibration cal);
 	void load_render_window(vtkSmartPointer<vtkRenderWindow> in);
 
 	std::shared_ptr<std::vector<Model>> get_loaded_models();
@@ -113,9 +113,11 @@ public:
 
 	void calculate_and_set_window_center_from_calibration(const int w, const int h, const float cx, const float cy);
 	void calculate_and_set_viewing_angle_from_calibration(const int h, const int fy);
-	void calculate_and_set_camera_aspect_from_calibration(const int fx, const int fy);
+	void calculate_and_set_camera_aspect_from_calibration(const float fx, const float fy);
 	void set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h);
 	void set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h);
+
+	void print_scene_camera_directions();
 
 
 private:

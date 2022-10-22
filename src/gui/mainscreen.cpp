@@ -238,7 +238,7 @@ MainScreen::MainScreen(QWidget* parent)
 	actor_text->SetPickable(0);
 	actor_image->SetMapper(image_mapper);
 	vw->load_render_window(ui.qvtk_widget->GetRenderWindow());
-	vw->load_renderers_into_render_window();
+	//vw->load_renderers_into_render_window();
 	ui.qvtk_widget->GetRenderWindow()->Render();
 
 	/*Interactor*/
@@ -2711,15 +2711,14 @@ void MainScreen::on_load_calibration_button_clicked() {
 			interactor_calibration = calibration_file_;
 		}
 		else if (InputList[0] == "image") {
-			CameraCalibration denver_calibration_A(InputList[6].toFloat(), InputList[7].toFloat(),
-			                                       InputList[8].toFloat(), InputList[10].toFloat(),
-			                                       InputList[11].toFloat());
+			CameraCalibration denver_calibration_A(InputList[6].toDouble(), InputList[7].toDouble(),
+			                                       InputList[8].toDouble(), InputList[10].toDouble(),
+			                                       InputList[11].toDouble());
 
 			calibrated_for_monoplane_viewport_ = true;
 			calibrated_for_biplane_viewport_ = false;
-			calibration_file_ = Calibration(denver_calibration_A);
+			calibration_file_ = Calibration(denver_calibration_A,"Denver");
 			inputFile.close();
-			return;
 		}
 		/*Invalid Code*/
 		else {
@@ -2733,6 +2732,7 @@ void MainScreen::on_load_calibration_button_clicked() {
 	}
 	/*Set Up QVTK Widget For Calibration*/
 	/*Monoplane (Left Viewport)*/
+	vw->load_renderers_into_render_window(calibration_file_);
 	if (calibrated_for_monoplane_viewport_) {
 		vw->setup_camera_calibration(calibration_file_);
 
@@ -2757,7 +2757,6 @@ void MainScreen::on_load_calibration_button_clicked() {
 
 		/*Disable Reloading Calibration File*/
 		ui.load_calibration_button->setDisabled(true);
-
 		/*Enable View Menu Until Calbration Loaded*/
 		ui.actionReset_View->setDisabled(false);
 		ui.actionReset_Normal_Up->setDisabled(false);
@@ -2991,18 +2990,25 @@ void MainScreen::on_load_model_button_clicked() {
 
 	/*Load Blank Poses for Available Frames (and Default Blank Poses even if no frames for viewing without frame)*/
 	for (int i = 0; i < CADFileExtensions.size(); i++) {
-		model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_,
-		                              calibration_file_.camera_A_principal_.pixel_pitch_);
+		//model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_,
+		//`                              calibration_file_.camera_A_principal_.pixel_pitch_);
+		model_locations_.LoadNewModel(calibration_file_);
 	}
-
 	vw->load_3d_models_into_actor_and_mapper_list();
 	vw->load_model_actors_and_mappers_with_3d_data();
 	//If No Loaded Models, Default Select First
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
 		ui.model_list_widget->setCurrentRow(0);
 	}
-
-	vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_, loaded_frames[0].GetOriginalImage().cols, loaded_frames[0].GetOriginalImage().rows);
+	if (calibration_file_.type_ == "UF") {
+		vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_, 
+			loaded_frames[0].GetOriginalImage().cols, 
+			loaded_frames[0].GetOriginalImage().rows);
+	} else if (calibration_file_.type_ == "Denver") {
+		vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(calibration_file_,
+			loaded_frames[0].GetOriginalImage().cols,
+			loaded_frames[0].GetOriginalImage().rows);
+	}
 
 }
 
@@ -3352,6 +3358,9 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			/*Set Model Pose*/
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
+			std::cout << loaded_pose.x << std::endl;
+			std::cout << loaded_pose.y << std::endl;
+			std::cout << loaded_pose.z << std::endl;
 			vw->set_model_position_at_index(selected[i].row(),
 				loaded_pose.x,
 				loaded_pose.y,
@@ -3474,7 +3483,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			                                               selected[i].row());
 			vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-
+			
 			/*Text Actor if On */
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
 				vw->set_actor_text(vw->print_location_and_orientation_of_model_at_index(selected[i].row()));
@@ -3713,7 +3722,8 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 
 void MainScreen::on_wireframe_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-	vw->print_interactor_information();
+	vw->print_scene_camera_directions();
+	vw->set_model_position_at_index(0, 0, 0, 1000);
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());

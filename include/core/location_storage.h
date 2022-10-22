@@ -7,6 +7,7 @@
 
 /*Direct Library*/
 #include "data_structures_6D.h"
+#include "core/calibration.h"
 
 class LocationStorage {
 public:
@@ -16,6 +17,7 @@ public:
 	/*Add New Model to JTA-GPU So Initialize ALl Loaded Frames with 
 	Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0)*/
 	void LoadNewModel(double principal_distance, double pixel_pitch);
+	void LoadNewModel(Calibration calibration);
 	/*Add New Frame to JTA-GPU So Initialize ALl Loaded Models with
 	Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0) for that Frame*/
 	void LoadNewFrame();

@@ -154,19 +154,35 @@ void Viewer::update_display_background_to_inverted_image(int frame_number, bool 
 	}
 }
 
-void Viewer::setup_camera_calibration(Calibration calibration) {
-	background_renderer_->GetActiveCamera()->SetFocalPoint(0, 0, -1);
-	background_renderer_->GetActiveCamera()->SetPosition(0, 0, 0);
-	background_renderer_->GetActiveCamera()->SetClippingRange(0.1, 2.0 *
-	                                                          calibration.camera_A_principal_.principal_distance_ /
-	                                                          calibration.camera_A_principal_.pixel_pitch_);
+void Viewer::setup_camera_calibration(Calibration cal) {
+
+	if (cal.type_ == "UF") {
+		background_camera_->SetFocalPoint(0, 0, -1);
+
+	} else {
+		background_camera_->SetFocalPoint(0, 0, -1);
+	}
+
+
+	background_camera_->SetPosition(0, 0, 0);
+	background_camera_->SetClippingRange(0.1, 2.0 *
+	                                                          cal.camera_A_principal_.fy());
+
+
 }
 
 void Viewer::place_image_actors_according_to_calibration(Calibration cal, int img_w, int img_h) {
-	actor_image_->SetPosition(
-		-0.5 * img_w, //+ cal.camera_A_principal_.principal_x_ / cal.camera_A_principal_.pixel_pitch_,
-		-0.5 * img_h, //+ cal.camera_A_principal_.principal_y_ / cal.camera_A_principal_.pixel_pitch_,
-		-1 * cal.camera_A_principal_.principal_distance_ / cal.camera_A_principal_.pixel_pitch_);
+	const float x_pos =  -0.5 * img_w;
+	const float y_pos =  -0.5 * img_h;
+	float z_pos;
+	if (cal.type_ == "UF") {
+		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;//-1 * cal.camera_A_principal_.principal_distance_ / cal.camera_A_principal_.pixel_pitch_;
+	} else {
+		std::cout << "We aren't in kansas anymore" << std::endl;
+		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;
+	}
+	actor_image_->SetPosition(x_pos, y_pos, z_pos);
+
 
 	background_camera_->ParallelProjectionOn();
 	background_camera_->SetParallelScale(0.5 * img_h);
@@ -259,6 +275,7 @@ void Viewer::change_model_opacity_to_solid(int index) {
 
 void Viewer::set_model_position_at_index(int index, double x, double y, double z) {
 	model_actor_list_[index]->SetPosition(x, y, z);
+	std::cout << x <<  y <<  z << std::endl;
 }
 
 void Viewer::set_model_orientation_at_index(int index, double xrot, double yrot, double zrot) {
@@ -337,12 +354,22 @@ std::shared_ptr<std::vector<Model>> Viewer::get_loaded_models() {
 	return loaded_models_;
 }
 
-void Viewer::load_renderers_into_render_window() {
+void Viewer::load_renderers_into_render_window(Calibration cal) {
 	background_renderer_->SetLayer(0);
 	background_renderer_->InteractiveOff();
 	scene_renderer_->SetLayer(1);
 	scene_renderer_->InteractiveOn();
-	scene_renderer_->GetActiveCamera()->SetFocalPoint(0, 0, -1);
+	float focal_dir;
+	if(cal.type_ == "UF") {
+		focal_dir = -1;
+	} else if (cal.type_ == "Denver") {
+		focal_dir = 1;
+	} else {
+		focal_dir = 1;
+	}
+	std::cout <<"Focal DIrection" << focal_dir << std::endl;
+	scene_camera_->SetFocalPoint(0, 0, focal_dir);
+	scene_camera_->SetPosition(0, 0, 0);
 	qvtk_render_window_->SetNumberOfLayers(2);
 	qvtk_render_window_->AddRenderer(background_renderer_);
 	qvtk_render_window_->AddRenderer(scene_renderer_);
@@ -389,21 +416,32 @@ void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration c
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
+	std::cout << fx << std::endl;
+	std::cout << fy << std::endl;
+	std::cout << cx<< std::endl;
+	std::cout << cy << std::endl;
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
 	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
 }
 void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h) {
+	std::cout << "VW: Before grabbing camera matrix values" << std::endl;
 	float cx = cal.camera_A_principal_.cx();
 	float cy = cal.camera_A_principal_.cy();
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
+	std::cout << fx << std::endl;
+	std::cout << fy << std::endl;
+	std::cout << cx<< std::endl;
+	std::cout << cy << std::endl;
+	
+
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
-	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
+	scene_camera_->SetClippingRange(-10000, 10000);
 	
 }
 
@@ -412,6 +450,7 @@ void Viewer::calculate_and_set_window_center_from_calibration(const int w, const
 	float wcx = -(2 * cx - w) / w;
 	float wcy = (2 * cy - h) / h;
 
+	//scene_camera_->SetFocalPoint(0, 0, -1);
 	scene_camera_->SetWindowCenter(wcx, wcy);
 }
 
@@ -421,15 +460,67 @@ void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h, const
 	scene_camera_->SetViewAngle(angle);
 }
 
-void Viewer::calculate_and_set_camera_aspect_from_calibration(const int fx, const int fy) {
+void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx, const float fy) {
 	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
+	std::cout << "After setting pointer to matrix 4x4" << std::endl;
 	m->Identity();
+	std::cout << "After setting identity/before setting aspect" << std::endl;
+	std::cout << "fx: " << fx << ", fy: " << fy << std::endl;
 	double aspect = fy / fx;
+	std::cout << "Before setting first matrix value as aspect" << std::endl;
 	m->SetElement(0, 0, 1 / aspect);
+	std::cout << aspect << std::endl;
 
+	std::cout << "Camera Matrix ";
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			std::cout << m->GetElement(i, j) << ", ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "Before createing transofrmation matrix" << std::endl;
 	vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
+
+	std::cout << "Before setting transformation to be the matrix" << std::endl;
 	t->SetMatrix(m);
 
+	std::cout << "Before setting scene camera with defined user transform" << std::endl;
 	scene_camera_->SetUserTransform(t);
 
 }
+
+void Viewer::print_scene_camera_directions() {
+	double fp[3];
+	double vu[3];
+	double pn[3];
+	double pn_img[3];
+	scene_camera_->GetFocalPoint(fp);
+	scene_camera_->GetViewUp(vu);
+	scene_camera_->GetViewPlaneNormal(pn);
+	background_camera_->GetViewPlaneNormal(pn_img);
+
+	std::cout << "Focal Point: ";
+	for (auto i: fp) {
+		std::cout << i << ", ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "View Up: ";
+	for (auto i: vu) {
+		std::cout << i << ", ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "View Plane Normal: ";
+	for (auto i: pn) {
+		std::cout << i << ", ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "View Plane Normal(Background): ";
+	for (auto i: pn_img) {
+		std::cout << i << ", ";
+	}
+	std::cout << std::endl;
+}
+
