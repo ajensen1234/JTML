@@ -41,6 +41,8 @@ struct CameraCalibration {
 		cy_ = cy;
 		pixel_pitch_ = 0.375; // TODO: placeholder pixel pitch for denver
 		principal_distance_ = fx_ * pixel_pitch_;
+		principal_x_ = (cx_ - 512) * pixel_pitch_;
+		principal_y_ = (512 - cy_)* pixel_pitch_;
 		camera_matrix_[0] = fx_;
 		camera_matrix_[1] = sc;
 		camera_matrix_[2] = cx_;

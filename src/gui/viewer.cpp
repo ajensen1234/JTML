@@ -363,7 +363,7 @@ void Viewer::load_renderers_into_render_window(Calibration cal) {
 	if(cal.type_ == "UF") {
 		focal_dir = -1;
 	} else if (cal.type_ == "Denver") {
-		focal_dir = -1;
+		focal_dir = 1;
 	} else {
 		focal_dir = 1;
 	}
@@ -411,37 +411,34 @@ vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h) {
-	float cx = cal.camera_A_principal_.cx() + (w/2);
-	float cy = (h/2) - cal.camera_A_principal_.cy();
+	float cx = cal.camera_A_principal_.cx();
+	float cy = cal.camera_A_principal_.cy();
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
-	std::cout << fx << std::endl;
-	std::cout << fy << std::endl;
-	std::cout << cx<< std::endl;
-	std::cout << cy << std::endl;
+	std::cout << "fx: " << fx << std::endl;
+	std::cout << "fy: "<< fy << std::endl;
+	std::cout << "cx: "<< cx<< std::endl;
+	std::cout << "cy: "<< cy << std::endl;
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
 	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
 }
 void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h) {
-	std::cout << "VW: Before grabbing camera matrix values" << std::endl;
 	float cx = cal.camera_A_principal_.cx();
 	float cy = cal.camera_A_principal_.cy();
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
-	std::cout << fx << std::endl;
-	std::cout << fy << std::endl;
-	std::cout << cx<< std::endl;
-	std::cout << cy << std::endl;
-	
-
+	std::cout << "fx: " << fx << std::endl;
+	std::cout << "fy: "<< fy << std::endl;
+	std::cout << "cx: "<< cx<< std::endl;
+	std::cout << "cy: "<< cy << std::endl;
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
-	scene_camera_->SetClippingRange(-10000, 10000);
+	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
 	
 }
 

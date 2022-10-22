@@ -3428,7 +3428,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
 
 	/*Load Models to Screen*/
-	vw->make_all_models_invisible();
+	//vw->make_all_models_invisible();
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	std::cout << selected.size() << std::endl;
 	/*Hide Text if Nothing Selected*/
