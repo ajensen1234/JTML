@@ -708,6 +708,16 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	/*Check if there is enough room*/
 	if (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().right() - 2 *
 		GROUP_BOX_TO_QVTK_PADDING_X > MINIMUM_QVTK_WIDGET_WIDTH) {
+		int qvtk_side_length;
+		if ((ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
+		                                  right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X) > (ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
+			                                  .top() + font_metrics.height() / 2) + 1)) {
+			qvtk_side_length = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
+				.top() + font_metrics.height() / 2) + 1;
+		}else {
+			qvtk_side_length = (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
+				right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X);
+		}
 		ui.qvtk_widget->setGeometry(QRect(ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
 		                                  ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
@@ -753,10 +763,18 @@ void MainScreen::resizeEvent(QResizeEvent* event) {
 	/*Expansion Constants*/
 	int horizontal_expansion = this->width() - this->minimumWidth();
 	int vertical_expansion = this->height() - this->minimumHeight();
+	int total_expansion;
+
+	if (horizontal_expansion > vertical_expansion) {
+		total_expansion = vertical_expansion;
+	}
+	else {
+		total_expansion = horizontal_expansion;
+	}
 
 	/*Expand QVTK Widget*/
-	ui.qvtk_widget->resize(qvtk_widget_starting_width_ + horizontal_expansion,
-	                       qvtk_widget_starting_height_ + vertical_expansion);
+	ui.qvtk_widget->resize(qvtk_widget_starting_width_ + total_expansion,
+	                       qvtk_widget_starting_height_ + total_expansion);
 
 	/*Extend List Widgets and Their Group Boxes*/
 	ui.image_list_widget->resize(ui.image_list_widget->size().width(),
@@ -3750,6 +3768,8 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 	}
 	delete gpu_frame;
 	delete gpu_mod;
+
+	std::cout << ui.qvtk_widget->width() << ", " << ui.qvtk_widget->height() << std::endl;
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
