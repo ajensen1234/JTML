@@ -2083,6 +2083,12 @@ QMenu::separator {
       <height>881</height>
      </rect>
     </property>
+    <property name="maximumSize">
+     <size>
+      <width>1024</width>
+      <height>1024</height>
+     </size>
+    </property>
    </widget>
    <widget class="QGroupBox" name="edge_detection_box">
     <property name="geometry">

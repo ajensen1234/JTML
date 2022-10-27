@@ -7,6 +7,7 @@
 
 /*Camera Principal Calibration*/
 #include "camera_calibration.h"
+#include <string>
 
 /*Launch Parameters*/
 #include "cuda_launch_parameters.h"
@@ -107,6 +108,7 @@ namespace gpu_cost_function {
 		float pix_conversion_x_;
 		float pix_conversion_y_;
 		float dist_over_pix_pitch_;
+		float fx_, fy_, cx_, cy_;
 
 		/*Fragment Fill (Number of Fragments to Test for Fill)*/
 		int* fragment_fill_;

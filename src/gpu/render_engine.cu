@@ -75,6 +75,17 @@ namespace gpu_cost_function {
 		fragment_overflow_ = false;
 		initialized_correctly_ = true;
 		camera_calibration_ = camera_calibration;
+		if (camera_calibration_.type_ == "UF") {
+			fx_ = -1.0f * camera_calibration_.principal_distance_ / camera_calibration_.pixel_pitch_;
+			fy_ = -1.0f * camera_calibration_.principal_distance_ / camera_calibration_.pixel_pitch_;
+			cx_ = static_cast<float>(width_) / 2.0f - camera_calibration_.principal_x_ / camera_calibration_.pixel_pitch_;
+			cy_ = static_cast<float>(height) / 2.0f - camera_calibration_.principal_y_ / camera_calibration_.pixel_pitch_;
+		} else if (camera_calibration_.type_ == "Denver") {
+			fx_ = camera_calibration_.fx();
+			fy_ = -camera_calibration_.fy();
+			cx_ = camera_calibration_.cx();
+			cy_ = height - camera_calibration_.cy();
+		}
 		pix_conversion_x_ = static_cast<float>(width_) / 2.0f - camera_calibration_.principal_x_ / camera_calibration_.
 			pixel_pitch_;
 		pix_conversion_y_ = static_cast<float>(height_) / 2.0f - camera_calibration_.principal_y_ / camera_calibration_.
@@ -328,7 +339,7 @@ namespace gpu_cost_function {
 	                                   float pix_conversion_y,
 	                                   float x_location, float y_location, float z_location,
 	                                   RotationMatrix model_rotation_mat,
-	                                   float* dev_normals, bool* dev_backface, bool use_backface_culling) {
+	                                   float* dev_normals, bool* dev_backface, bool use_backface_culling, float fx, float fy, float cx, float cy) {
 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
 		if (i < vertex_count) {
@@ -363,12 +374,15 @@ namespace gpu_cost_function {
 				if (!use_backface_culling)
 					dev_backface[i / 3] = false;
 			}
-
-			if (tZ >= 0)
+			// Need to change this condition - it definitely can be higher than zero if you are using a different calibration setup.
+			if (tZ == 0)
 				tZ = -.000001; /*Can't be above or at zero, so make very small..should never happen*/
 
-			float sX = (tX / tZ) * dist_over_pix_pitch + pix_conversion_x;
-			float sY = (tY / tZ) * dist_over_pix_pitch + pix_conversion_y;
+			// float sX = (tX / tZ) * dist_over_pix_pitch + pix_conversion_x;
+			// float sY = (tY / tZ) * dist_over_pix_pitch + pix_conversion_y;
+
+			float sX = (tX / tZ) * fx + cx;
+			float sY = (tY / tZ) * fy + cy;
 
 			/*Store Projected Triangles Actual Location*/
 			dev_projected_triangles[(2 * i)] = sX;
@@ -630,7 +644,7 @@ namespace gpu_cost_function {
 		                                                               model_pose_.x_location_, model_pose_.y_location_,
 		                                                               model_pose_.z_location_,
 		                                                               model_rotation_mat_, dev_normals_, dev_backface_,
-		                                                               use_backface_culling_);
+		                                                               use_backface_culling_, fx_, fy_, cx_, cy_);
 
 		/*Calculate Bounding Boxes for Each Triangle*/
 		BoundingBoxForTrianglesKernel << <dim_grid_bounding_box_, threads_per_block >> >(dev_bounding_box_triangles_,

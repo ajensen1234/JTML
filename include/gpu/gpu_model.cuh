@@ -57,6 +57,8 @@ namespace gpu_cost_function {
 		__declspec(dllexport) bool RenderPrimaryCamera(Pose model_pose);
 		__declspec(dllexport) bool RenderSecondaryCamera(Pose model_pose);
 
+		__declspec(dllexport) void RenderPrimaryCameraAndWriteImage(Pose model_pose, std::string img_name);
+
 		/*Render DRR to cache function (returns true if worked correctly)
 		Primary is used in monoplane and biplane, Secondary only used in biplane*/
 		__declspec(dllexport) bool RenderDRRPrimaryCamera(Pose model_pose, float lower_bound, float upper_bound);

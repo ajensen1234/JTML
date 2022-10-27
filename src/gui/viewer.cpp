@@ -425,6 +425,7 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibrat
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
 	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
+	scene_camera_->SetViewUp(0, -1, 0);
 	
 }
 
@@ -447,14 +448,23 @@ void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h, const
 void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx, const float fy) {
 	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
 	m->Identity();
-	double aspect = fy / fx;
+	double aspect = fx / fy;
 	m->SetElement(0, 0, 1 / aspect);
 
 	vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
 
 	t->SetMatrix(m);
-
 	scene_camera_->SetUserTransform(t);
+
+	vtkMatrix4x4* mat  = scene_camera_->GetProjectionTransformMatrix(scene_renderer_);
+
+	for (int i = 0; i<4; i++) {
+		for (int j = 0; j<4; j++) {
+			std::cout << mat->GetElement(i, j) << ", ";
+		}
+		std::cout << std::endl;
+	}
+
 
 }
 

@@ -99,6 +99,11 @@ namespace gpu_cost_function {
 		}
 		return false;
 	};
+	void GPUModel::RenderPrimaryCameraAndWriteImage(Pose model_pose, std::string img_name) {
+		RenderPrimaryCamera(model_pose);
+		primary_cam_render_engine_->WriteImage(img_name);
+	};
+
 
 	bool GPUModel::RenderSecondaryCamera(Pose model_pose) {
 		if (initialized_correctly_ && biplane_mode_) {

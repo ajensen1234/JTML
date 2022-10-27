@@ -3714,8 +3714,42 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 
 void MainScreen::on_wireframe_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-	vw->print_scene_camera_directions();
-	vw->set_model_position_at_index(0, 0, 0, 1000);
+	Model model = loaded_models[selected[0].row()];
+	int frame_idx = ui.image_list_widget->selectionModel()->selectedRows()[0].row();
+	Point6D point6d = model_locations_.GetPose(frame_idx, selected[0].row());
+	Pose pose = Pose(point6d.x, point6d.y, point6d.z, point6d.xa, point6d.ya, point6d.za);
+	Frame frame = loaded_frames[frame_idx];
+	auto gpu_frame = new GPUDilatedFrame(frame.GetDilationImage().cols,
+		frame.GetDilationImage().cols,
+		0,
+		frame.GetDilationImage().data,
+		4);
+
+	GPUModel* gpu_mod = new GPUModel(model.model_name_,
+		true,
+		1024,
+		1024,
+		0,
+		true,
+		&model.triangle_vertices_[0],
+		&model.triangle_normals_[0],
+		model.triangle_vertices_.size() / 9,
+		calibration_file_.camera_A_principal_);
+	if (gpu_mod->IsInitializedCorrectly()) {
+		gpu_mod->RenderPrimaryCamera(pose);
+		if (gpu_mod->RenderPrimaryCamera(pose)) {
+			std::cout << "Rendered okay" << std::endl;
+			if (!gpu_mod->WritePrimaryCameraRenderedImage("test_image.tif")) {
+				gpu_frame->GetGPUImage()->WriteImage("x_ray_img.tif");
+				if (!gpu_frame->IsInitializedCorrectly()) {
+					std::cout << "AYAYAYAYYYAY" << std::endl;
+				}
+			}
+
+		}
+	}
+	delete gpu_frame;
+	delete gpu_mod;
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
