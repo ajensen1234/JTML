@@ -178,7 +178,6 @@ void Viewer::place_image_actors_according_to_calibration(Calibration cal, int im
 	if (cal.type_ == "UF") {
 		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;//-1 * cal.camera_A_principal_.principal_distance_ / cal.camera_A_principal_.pixel_pitch_;
 	} else {
-		std::cout << "We aren't in kansas anymore" << std::endl;
 		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;
 	}
 	actor_image_->SetPosition(x_pos, y_pos, z_pos);
@@ -191,7 +190,6 @@ void Viewer::place_image_actors_according_to_calibration(Calibration cal, int im
 
 void Viewer::load_3d_models_into_actor_and_mapper_list() {
 	for (int i = 0; i < loaded_models_->size(); i++) {
-		std::cout << loaded_models_->at(i).model_name_ << std::endl;
 		vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
 		vtkSmartPointer<vtkPolyDataMapper> new_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		new_mapper->SetInputConnection(loaded_models_->at(i).cad_reader_->GetOutputPort());
@@ -219,7 +217,6 @@ std::vector<vtkSmartPointer<vtkActor>> Viewer::get_model_actor_list() {
 
 void Viewer::set_3d_model_color(int index, double RGB[3]) {
 	model_actor_list_[index]->GetProperty()->SetColor(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0);
-	std::cout << "Set 3D Idx: " << std::to_string(index) << std::endl;
 
 }
 
@@ -275,7 +272,6 @@ void Viewer::change_model_opacity_to_solid(int index) {
 
 void Viewer::set_model_position_at_index(int index, double x, double y, double z) {
 	model_actor_list_[index]->SetPosition(x, y, z);
-	std::cout << x <<  y <<  z << std::endl;
 }
 
 void Viewer::set_model_orientation_at_index(int index, double xrot, double yrot, double zrot) {
@@ -367,7 +363,6 @@ void Viewer::load_renderers_into_render_window(Calibration cal) {
 	} else {
 		focal_dir = 1;
 	}
-	std::cout <<"Focal DIrection" << focal_dir << std::endl;
 	scene_camera_->SetPosition(0, 0, 0);
 	scene_camera_->SetFocalPoint(0, 0, focal_dir);
 	qvtk_render_window_->SetNumberOfLayers(2);
@@ -403,7 +398,6 @@ vtkActor* Viewer::get_model_actor_at_index(int index) {
 void Viewer::print_interactor_information() {
 	render_window_interactor_->Print(std::cout);
 	int num_ren = render_window_interactor_->GetRenderWindow()->GetRenderers()->GetNumberOfItems();
-	std::cout << "Number of renderers: " << num_ren << std::endl;
 }
 
 vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
@@ -411,15 +405,11 @@ vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h) {
-	float cx = cal.camera_A_principal_.cx();
-	float cy = cal.camera_A_principal_.cy();
+	float cx = cal.camera_A_principal_.cx() + w/2;
+	float cy = h/2 - cal.camera_A_principal_.cy();
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
-	std::cout << "fx: " << fx << std::endl;
-	std::cout << "fy: "<< fy << std::endl;
-	std::cout << "cx: "<< cx<< std::endl;
-	std::cout << "cy: "<< cy << std::endl;
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
@@ -431,10 +421,6 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibrat
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
 
-	std::cout << "fx: " << fx << std::endl;
-	std::cout << "fy: "<< fy << std::endl;
-	std::cout << "cx: "<< cx<< std::endl;
-	std::cout << "cy: "<< cy << std::endl;
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
@@ -447,7 +433,6 @@ void Viewer::calculate_and_set_window_center_from_calibration(const int w, const
 	float wcx = -(2 * cx - w) / w;
 	float wcy = (2 * cy - h) / h;
 
-	std::cout << "Window Center: " << wcx << ", " << wcy << std::endl;
 
 	//scene_camera_->SetFocalPoint(0, 0, -1);
 	scene_camera_->SetWindowCenter(wcx, wcy);
@@ -461,29 +446,14 @@ void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h, const
 
 void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx, const float fy) {
 	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
-	std::cout << "After setting pointer to matrix 4x4" << std::endl;
 	m->Identity();
-	std::cout << "After setting identity/before setting aspect" << std::endl;
-	std::cout << "fx: " << fx << ", fy: " << fy << std::endl;
 	double aspect = fy / fx;
-	std::cout << "Before setting first matrix value as aspect" << std::endl;
 	m->SetElement(0, 0, 1 / aspect);
-	std::cout << aspect << std::endl;
 
-	std::cout << "Camera Matrix ";
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			std::cout << m->GetElement(i, j) << ", ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "Before createing transofrmation matrix" << std::endl;
 	vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
 
-	std::cout << "Before setting transformation to be the matrix" << std::endl;
 	t->SetMatrix(m);
 
-	std::cout << "Before setting scene camera with defined user transform" << std::endl;
 	scene_camera_->SetUserTransform(t);
 
 }
@@ -498,28 +468,5 @@ void Viewer::print_scene_camera_directions() {
 	scene_camera_->GetViewPlaneNormal(pn);
 	background_camera_->GetViewPlaneNormal(pn_img);
 
-	std::cout << "Focal Point: ";
-	for (auto i: fp) {
-		std::cout << i << ", ";
-	}
-	std::cout << std::endl;
-
-	std::cout << "View Up: ";
-	for (auto i: vu) {
-		std::cout << i << ", ";
-	}
-	std::cout << std::endl;
-
-	std::cout << "View Plane Normal: ";
-	for (auto i: pn) {
-		std::cout << i << ", ";
-	}
-	std::cout << std::endl;
-
-	std::cout << "View Plane Normal(Background): ";
-	for (auto i: pn_img) {
-		std::cout << i << ", ";
-	}
-	std::cout << std::endl;
 }
 

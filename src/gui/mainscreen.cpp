@@ -3358,9 +3358,6 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			/*Set Model Pose*/
 			Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
 			                                               selected[i].row());
-			std::cout << loaded_pose.x << std::endl;
-			std::cout << loaded_pose.y << std::endl;
-			std::cout << loaded_pose.z << std::endl;
 			vw->set_model_position_at_index(selected[i].row(),
 				loaded_pose.x,
 				loaded_pose.y,
@@ -3419,7 +3416,6 @@ void MainScreen::print_selected_item() {
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
-	std::cout << "Beginning of Model List Widget Changing!" << std::endl;
 	/*Save Last Pair Pose if not currently optimizing*/
 	if (!currently_optimizing_) {
 		SaveLastPose(); // Needs Work
@@ -3428,9 +3424,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	previous_model_indices_ = ui.model_list_widget->selectionModel()->selectedRows();
 
 	/*Load Models to Screen*/
-	//vw->make_all_models_invisible();
+	vw->make_all_models_invisible();
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-	std::cout << selected.size() << std::endl;
 	/*Hide Text if Nothing Selected*/
 	if (selected.size() == 0) {
 		actor_text->VisibilityOff();
@@ -3443,9 +3438,6 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		actor_text->VisibilityOn();
 	}
 	
-	for (auto item :selected) {
-		std::cout << item.row() << std::endl;
-	}
 	/*Load Models*/
 	for (int i = 0; i < selected.size(); i++) {
 		if (i == 0) {
@@ -4182,12 +4174,6 @@ void MainScreen::LaunchOptimizer(QString directive) {
 		previous_frame_index_ ||
 		ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
 		ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
-		for (auto frame : loaded_frames) {
-			std::cout << frame.file_location_ << std::endl;
-		}
-		for (auto model : loaded_models) {
-			std::cout << model.file_location_ << std::endl;
-		}
 		QMessageBox::critical(this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
 		return;
 	}
