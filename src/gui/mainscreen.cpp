@@ -703,34 +703,38 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 		      right_column_width - 2 * GROUP_BOX_TO_BUTTON_PADDING_X,
 		      ui.model_selection_box->height() - (ui.single_model_radio_button->geometry().bottomLeft().y() +
 			      RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + GROUP_BOX_TO_BUTTON_PADDING_Y)));
+	int qvtk_side_length;
 
 	/*Arrange QVTK Widget*/
 	/*Check if there is enough room*/
 	if (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().right() - 2 *
 		GROUP_BOX_TO_QVTK_PADDING_X > MINIMUM_QVTK_WIDGET_WIDTH) {
-		int qvtk_side_length;
 		if ((ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
 		                                  right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X) > (ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
 			                                  .top() + font_metrics.height() / 2) + 1)) {
 			qvtk_side_length = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-				.top() + font_metrics.height() / 2) + 1;
+				.top() + font_metrics.height() / 2) + 1; // original height
 		}else {
 			qvtk_side_length = (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
-				right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X);
+				right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X); // original width
 		}
 		ui.qvtk_widget->setGeometry(QRect(ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
-		                                  ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
-		                                  right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X,
-		                                  ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-			                                  .top() + font_metrics.height() / 2) + 1));
+		                                  qvtk_side_length,
+		                                  qvtk_side_length));
 	}
 	else {
+		if (MINIMUM_QVTK_WIDGET_WIDTH >	ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
+			                                  .top() + font_metrics.height() / 2) + 1) {
+			qvtk_side_length = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
+				.top() + font_metrics.height() / 2) + 1;
+		} else {
+			qvtk_side_length = MINIMUM_QVTK_WIDGET_WIDTH;
+		}
 		ui.qvtk_widget->setGeometry(QRect(ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
-		                                  MINIMUM_QVTK_WIDGET_WIDTH,
-		                                  ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-			                                  .top() + font_metrics.height() / 2) + 1));
+		                                  qvtk_side_length,
+		                                  qvtk_side_length));
 		/*Shift Over Right Hand Column*/
 		ui.edge_detection_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                   ui.edge_detection_box->geometry().top()));
