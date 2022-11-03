@@ -449,7 +449,7 @@ void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx, co
 	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
 	m->Identity();
 	double aspect = fx / fy;
-	m->SetElement(0, 0, 1 / aspect);
+	m->SetElement(0, 0, aspect);
 
 	vtkSmartPointer<vtkTransform> t = vtkSmartPointer<vtkTransform>::New();
 
