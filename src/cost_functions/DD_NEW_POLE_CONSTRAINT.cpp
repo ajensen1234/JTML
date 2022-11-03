@@ -71,6 +71,10 @@ namespace jta_cost_function {
 		float s_y = cz*sx*sy + cy*sz;
 		float s_z = -cx*sy;
 
+		float a_x = cz * sy + cy * sz * sx;
+		float a_y = sy * sz - sx * cy * cz;
+		float a_z = cx * cy;
+
 		/*2-Norm (minimized) solution for alpha and beta*/
 		double alpha = (r_x*p.x_location_ + r_y*p.y_location_ + r_z*p.z_location_ - (r_x*np.x_location_ + r_y*np.y_location_ + r_z*np.z_location_)) / (r_x*r_x + r_y*r_y + r_z*r_z);
 		double beta = (s_x*p.x_location_ + s_y*p.y_location_ + s_z*p.z_location_ - (s_x*np.x_location_ + s_y*np.y_location_ + s_z*np.z_location_)) / (s_x*s_x + s_y*s_y + s_z*s_z);
@@ -81,6 +85,12 @@ namespace jta_cost_function {
 		double v_z = alpha*r_z + beta*s_z + np.z_location_ - p.z_location_;
 		/*Shift tibia using magnitude of minimized distances*/
 		double shortest_distance = sqrt(v_x*v_x + v_y*v_y + v_z*v_z);
+
+		double z_delX = s_x * (np.x_location_ - p.x_location_);
+		double z_delY = s_y * (np.y_location_ - p.y_location_);
+		double zdel_Z = s_z * (np.z_location_ - p.z_location_);
+		double dist = sqrt(z_delX * z_delX + z_delY * z_delY + zdel_Z * zdel_Z);
+
 
 		/*Parameter*/
 		double pole_weight;
@@ -95,6 +105,6 @@ namespace jta_cost_function {
 			gpu_metrics_->FastImplantDilationMetric(gpu_principal_model_->GetPrimaryCameraRenderedImage(),
 				gpu_dilated_frames_A_->at(current_frame_index_), DIRECT_DILATION_current_dilation_parameter));
 
-		return metric_score + pole_weight*shortest_distance;
+		return metric_score + pole_weight*dist;
 	}
 }
