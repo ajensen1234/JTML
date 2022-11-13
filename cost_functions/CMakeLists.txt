@@ -1,0 +1,2 @@
+add_subdirectory(sym_trap)
+add_subdirectory(direct_dilation)

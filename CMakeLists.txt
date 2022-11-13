@@ -42,6 +42,7 @@ add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(lib)
 add_subdirectory(packaging)
+add_subdirectory(cost_functions)
 
 enable_testing()
 

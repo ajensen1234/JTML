@@ -2,6 +2,7 @@
 
 /*Cost Function Parameters*/
 #include "Parameter.h"
+#include "gpu_imports.h"
 
 /*Cost Function Tools Library*/
 
