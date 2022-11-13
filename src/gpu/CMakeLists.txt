@@ -38,7 +38,6 @@ target_include_directories(jtml_gpu PUBLIC ${HEADER_DIR})
 
 
 get_target_property(TARGET_LIBRARIES jtml_gpu LINK_LIBRARIES)
-list(REMOVE_ITEM TARGET_LIBRARIES vtkRenderingQt vtkViewsGeovis vtkViewsQt)
 set_property(TARGET jtml_gpu PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
 
 target_include_directories(jtml_gpu PUBLIC ${PROJECT_SOURCE_DIR}/include)
