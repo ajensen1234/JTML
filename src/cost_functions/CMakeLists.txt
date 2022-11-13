@@ -10,13 +10,6 @@ add_library(JTA_Cost_Functions
 		SHARED
 		CostFunction.cpp
 		CostFunctionManager.cpp
-		DD_NEW_POLE_CONSTRAINT.cpp
-		DIRECT_DILATION.cpp
-		DIRECT_DILATION_POLE_CONSTRAINT.cpp
-		DIRECT_DILATION_SAME_Z.cpp
-		DIRECT_DILATION_T1.cpp
-		DIRECT_MAHFOUZ.cpp
-		sym_trap_function.cpp
 		${HEADER_FILES})
 
 
