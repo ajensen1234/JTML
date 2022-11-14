@@ -14,15 +14,36 @@
     },
     {
       "name": "x64-Release",
-      "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "generator": "Visual Studio 17 2022 Win64",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": []
+      "variables": [
+        {
+          "name": "Torch_DIR",
+          "value": "C:\\JTML-deps\\libtorch\\share\\cmake\\Torch",
+          "type": "PATH"
+        },
+        {
+          "name": "CUDNN_INCLUDE_PATH",
+          "value": "C:/cuda/include/",
+          "type": "PATH"
+        },
+        {
+          "name": "CUDNN_LIBRARY_PATH",
+          "value": "C:/cuda/lib/x64/cudnn.lib",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "OpenCV_DIR",
+          "value": "C:\\JTML-deps\\opencv-4.5.5\\build",
+          "type": "PATH"
+        }
+      ]
     }
   ]
 }
