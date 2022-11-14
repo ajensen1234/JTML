@@ -22,7 +22,6 @@ add_library(JTA_Cost_Functions
 
 
 
-include(${VTK_USE_FILE})
 target_link_libraries(JTA_Cost_Functions ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(JTA_Cost_Functions ${TORCH_LIBRARIES})
 #target_link_libraries(JTA_Cost_Functions ${VTK_LIBRARIES})

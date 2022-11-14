@@ -359,16 +359,6 @@ QMenu::separator {
 	background: #2158AA;
 }</string>
   </property>
-  <widget class="QVTKWidget" name="qvtkWidget">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>30</y>
-     <width>650</width>
-     <height>650</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="drr_image_label">
    <property name="geometry">
     <rect>
@@ -632,12 +622,22 @@ QMenu::separator {
     </property>
    </widget>
   </widget>
+  <widget class="QVTKOpenGLNativeWidget" name="qvtkWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>0</y>
+     <width>681</width>
+     <height>681</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKWidget</class>
-   <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <class>QVTKOpenGLNativeWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>QVTKOpenGLNativeWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

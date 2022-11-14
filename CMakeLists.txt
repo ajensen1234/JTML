@@ -19,20 +19,19 @@ find_package(Torch REQUIRED)
 find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 
-find_package(VTK 7 REQUIRED COMPONENTS
-vtkRenderingCore
-vtkRenderingOpenGL2
-vtkIOCore
-vtkIOGeometry
-vtkGUISupportQt
-vtkChartsCore
-vtkViewsContext2D
-vtkRenderingAnnotation
-vtkInteractionStyle
+find_package(VTK 9 REQUIRED COMPONENTS
+RenderingCore
+RenderingOpenGL2
+IOCore
+IOImage
+IOGeometry
+GUISupportQt
+ChartsCore
+ViewsContext2D
+RenderingAnnotation
+InteractionStyle
 )
 
-
-include(${VTK_USE_FILE})
 
 set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})

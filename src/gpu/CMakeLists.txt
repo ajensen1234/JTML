@@ -27,7 +27,6 @@ add_library(jtml_gpu SHARED
 
 
 set_target_properties(jtml_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-include(${VTK_USE_FILE})
 #target_link_libraries(jtml_gpu ${VTK_LIBRARIES})
 target_link_libraries(jtml_gpu ${OpenCV_LIBRARIES})
 target_link_libraries(jtml_gpu ${CUDA_CUBLAS_LIBRARIES})

@@ -26,6 +26,12 @@ target_link_libraries(${PROJECT_NAME} jtml_nfd)
 target_link_libraries(${PROJECT_NAME} ${JTA_LIBS})
 target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES})
 
+vtk_module_autoinit(
+    TARGETS ${PROJECT_NAME}
+    MODULES ${VTK_LIBRARIES}
+)
+
+
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
