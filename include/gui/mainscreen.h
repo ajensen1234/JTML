@@ -71,7 +71,6 @@
 #include "drr_tool.h"
 
 /* Symmetry Trap Analysis Window*/
-#include "gui/sym_trap.h"
 
 /*Cost Function Library*/
 #include "cost_functions/CostFunctionManager.h"
@@ -231,7 +230,6 @@ private:
 	SettingsControl* settings_control;
 
 	/*Sym Trap Window*/
-	sym_trap* sym_trap_control;
 
 	/*Calculate Viewing Angle (Accounts for Offsets)*/
 	double CalculateViewingAngle(int width, int height, bool CameraA);
@@ -341,7 +339,6 @@ public Q_SLOTS:
 
 	void on_actionCopy_Previous_Pose_triggered();
 
-	void on_actionLaunch_Tool_triggered();
 
 	void on_actionAmbiguous_Pose_Processing_triggered();
 

@@ -333,6 +333,9 @@ namespace jta_cost_function {
 		CostFunction instance_DD_NEW_POLE_CONSTRAINT = CostFunction("DD_NEW_POLE_CONSTRAINT");
 		instance_DD_NEW_POLE_CONSTRAINT.addParameter(Parameter<int>("Dilation",3));
 		instance_DD_NEW_POLE_CONSTRAINT.addParameter(Parameter<double>("PoleWeight",75));
+		instance_DD_NEW_POLE_CONSTRAINT.addParameter(Parameter<bool>("X_TRANS", false));
+		instance_DD_NEW_POLE_CONSTRAINT.addParameter(Parameter<bool>("Y_TRANS", false));
+		instance_DD_NEW_POLE_CONSTRAINT.addParameter(Parameter<bool>("Z_TRANS", false));
 		available_cost_functions_.push_back(instance_DD_NEW_POLE_CONSTRAINT);
 		/*End Cost Function Listing*/
 

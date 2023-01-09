@@ -299,9 +299,10 @@ void Viewer::set_actor_text_color_to_model_color_at_index(int index) {
 }
 
 
+
 void Viewer::render_scene() {
 	background_renderer_->Render();
-
+	scene_renderer_->Render();
 }
 
 void Viewer::display_actors_in_renderer() {

@@ -86,15 +86,41 @@ namespace jta_cost_function {
 		/*Shift tibia using magnitude of minimized distances*/
 		double shortest_distance = sqrt(v_x*v_x + v_y*v_y + v_z*v_z);
 
-		double z_delX = s_x * (np.x_location_ - p.x_location_);
-		double z_delY = s_y * (np.y_location_ - p.y_location_);
-		double zdel_Z = s_z * (np.z_location_ - p.z_location_);
-		double dist = sqrt(z_delX * z_delX + z_delY * z_delY + zdel_Z * zdel_Z);
+		double z_delX = a_x * (np.x_location_ - p.x_location_);
+		double z_delY = a_y * (np.y_location_ - p.y_location_);
+		double z_delZ = a_z * (np.z_location_ - p.z_location_);
+		double Z_dist = sqrt(z_delX * z_delX + z_delY * z_delY + z_delZ * z_delZ);
 
+
+		double x_delX = s_x * (np.x_location_ - p.x_location_);
+		double x_delY = s_y * (np.y_location_ - p.y_location_);
+		double x_delZ = s_z * (np.z_location_ - p.z_location_);
+		double X_dist = sqrt(x_delX * x_delX + x_delY * x_delY + x_delZ * x_delZ);
+
+		double y_delX = s_x * (np.x_location_ - p.x_location_);
+		double y_delY = s_y * (np.y_location_ - p.y_location_);
+		double y_delZ = s_z * (np.z_location_ - p.z_location_);
+		double Y_dist = sqrt(y_delX * y_delX + y_delY * y_delY + y_delZ * y_delZ);
 
 		/*Parameter*/
 		double pole_weight;
+		bool x_tran, y_tran, z_tran;
 		this->getActiveCostFunctionClass()->getDoubleParameterValue("PoleWeight", pole_weight);
+		this->getActiveCostFunctionClass()->getBoolParameterValue("X_TRANS", x_tran);
+		this->getActiveCostFunctionClass()->getBoolParameterValue("Y_TRANS", y_tran);
+		this->getActiveCostFunctionClass()->getBoolParameterValue("Z_TRANS", z_tran);
+
+		double min_dist;
+
+		if (x_tran) {
+			min_dist += X_dist * pole_weight;
+		}
+		if (y_tran) {
+			min_dist += Y_dist * pole_weight;
+		}
+		if (z_tran) {
+			min_dist += Z_dist * pole_weight;
+		}
 
 		/*Direct Dilation begin */
 		/*Render*/
@@ -105,6 +131,6 @@ namespace jta_cost_function {
 			gpu_metrics_->FastImplantDilationMetric(gpu_principal_model_->GetPrimaryCameraRenderedImage(),
 				gpu_dilated_frames_A_->at(current_frame_index_), DIRECT_DILATION_current_dilation_parameter));
 
-		return metric_score + pole_weight*dist;
+		return metric_score + min_dist;
 	}
 }
