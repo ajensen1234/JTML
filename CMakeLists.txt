@@ -16,7 +16,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 find_package(Torch REQUIRED)
 #find_package(VTK 7.1.1 REQUIRED)
-find_package(cuda REQUIRED)
+#find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
 
 find_package(VTK 9 REQUIRED COMPONENTS

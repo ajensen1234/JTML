@@ -25,7 +25,7 @@
       "variables": [
         {
           "name": "Torch_DIR",
-          "value": "C:\\JTML-deps\\libtorch\\share\\cmake\\Torch",
+          "value": "C:/JTML-deps/libtorch/share/cmake/Torch",
           "type": "PATH"
         },
         {
