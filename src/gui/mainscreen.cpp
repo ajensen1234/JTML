@@ -3504,8 +3504,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 		// Set a style sheet for selected items in the list widget, controls background colors for .stl model names
 		ui.model_list_widget->setStyleSheet( 
-			"QListView::item{background-color:rgb(0,33,165);}"
-			"QListView::item:selected{background-color: rgb(250,70,22);}" );
+			"QListView::item{background-color: rgb("");}" // Leaving it blank sets unselected items to share the background color of JTML
+			"QListView::item:selected{background-color: rgb(250, 70, 22);}");
 
 		// If first selected item, make the model orange. Otherwise, make it blue.
 		if (i == 0) {
