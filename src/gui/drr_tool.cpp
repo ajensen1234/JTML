@@ -25,7 +25,7 @@ DRRTool::DRRTool(Model model, CameraCalibration calibration, double model_z_plan
 	renderer_ = vtkSmartPointer<vtkRenderer>::New();
 	drr_interactor = vtkSmartPointer<DRRInteractorStyle>::New();
 	drr_interactor->initialize_DRRTool(this);
-	ui.qvtkWidget->GetRenderWindow()->AddRenderer(renderer_);
+	ui.qvtkWidget->renderWindow()->AddRenderer(renderer_);
 	actor_ = vtkSmartPointer<vtkActor>::New();
 	mapper_ = vtkSmartPointer<vtkPolyDataMapper>::New();
 	actor_->GetProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0, 35.0 / 255.0);
@@ -69,7 +69,7 @@ DRRTool::DRRTool(Model model, CameraCalibration calibration, double model_z_plan
 
 	/*Interactor*/
 	drr_interactor->AutoAdjustCameraClippingRangeOff();
-	ui.qvtkWidget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(drr_interactor);
+	ui.qvtkWidget->renderWindow()->GetInteractor()->SetInteractorStyle(drr_interactor);
 
 	/*Initialize Local Image Memory*/
 	host_image_ = static_cast<unsigned char*>(malloc(
