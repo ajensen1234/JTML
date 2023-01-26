@@ -120,8 +120,8 @@ Q_SIGNALS:
 private:
 	Ui::MainScreenClass ui;
 
-	double UF_BLUE[3] = {0, 82, 204};
-	double UF_ORANGE[3] = {255, 77, 0};
+	double UF_BLUE[3] = {0,72,204};
+	double UF_ORANGE[3] = {255,77,0};
 
 	void print_selected_item();
 

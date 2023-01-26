@@ -237,7 +237,7 @@ MainScreen::MainScreen(QWidget* parent)
 	actor_image->SetPickable(0);
 	actor_text->SetPickable(0);
 	actor_image->SetMapper(image_mapper);
-	vw->load_render_window(ui.qvtk_widget->GetRenderWindow());
+	vw->load_render_window(ui.qvtk_widget->renderWindow());
 	//vw->load_renderers_into_render_window();
 	ui.qvtk_widget->renderWindow()->Render();
 
@@ -254,7 +254,7 @@ MainScreen::MainScreen(QWidget* parent)
 
 	/*Update*/
 	ui.qvtk_widget->update();
-	ui.qvtk_widget->GetRenderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
 
 	/*Not Currently Optimizing*/
 	currently_optimizing_ = false;
@@ -985,7 +985,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 				vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 				vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 				ui.qvtk_widget->update();
-				ui.qvtk_widget->GetRenderWindow()->Render();
+				ui.qvtk_widget->renderWindow()->Render();
 			}
 			else {
 				QMessageBox::critical(this, "Error!", "Invalid Pose!", QMessageBox::Ok);
@@ -1009,7 +1009,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 					vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 					vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 					ui.qvtk_widget->update();
-					ui.qvtk_widget->GetRenderWindow()->Render();
+					ui.qvtk_widget->renderWindow()->Render();
 				}
 				else {
 					QMessageBox::critical(this, "Error!", "Invalid Pose!", QMessageBox::Ok);
@@ -1186,7 +1186,7 @@ void MainScreen::on_actionReset_View_triggered() {
 				loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
 				true));
 		}
-		ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+		ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
 	}
@@ -1215,7 +1215,7 @@ void MainScreen::on_actionReset_View_triggered() {
 			                                           -1 * calibration_file_.camera_A_principal_.principal_distance_ /
 			                                           calibration_file_.camera_A_principal_.pixel_pitch_);
 		}
-		ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
+		ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
 	}
@@ -1235,7 +1235,7 @@ void MainScreen::on_actionModel_Interaction_Mode_triggered() {
 		ui.actionModel_Interaction_Mode->setChecked(true);
 		return;
 	}
-	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
+	ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
 };
@@ -1258,7 +1258,7 @@ void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
 		                                           -1 * calibration_file_.camera_A_principal_.principal_distance_ /
 		                                           calibration_file_.camera_A_principal_.pixel_pitch_);
 	}
-	ui.qvtk_widget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
+	ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
 };
@@ -3498,39 +3498,44 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	else {
 		actor_text->VisibilityOn();
 	}
-	
-	/*Load Models*/
-	for (int i = 0; i < selected.size(); i++) {
-		if (i == 0) {
-			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(QRgb(UF_ORANGE)));
-			vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
 
+	/*Load Models and set their respective colors in the model list widget*/
+	for (int i = 0; i < selected.size(); i++) {
+
+		// Set a style sheet for selected items in the list widget, controls background colors for .stl model names
+		ui.model_list_widget->setStyleSheet( 
+			"QListView::item{background-color: rgb("");}" // Leaving it blank sets unselected items to share the background color of JTML
+			"QListView::item:selected{background-color: rgb(250, 70, 22);}");
+
+		// If first selected item, make the model orange. Otherwise, make it blue.
+		if (i == 0) {
+			vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
 		}
 		else  {
 			//vw->make_model_visible_and_pickable_at_index(i);
 			vw->set_3d_model_color(selected[i].row(), UF_BLUE);
-			ui.model_list_widget->item(selected[i].row())->setBackgroundColor(QColor(QRgb(UF_BLUE)));
 		}
+
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
 		}
 		else if (ui.solid_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
 		}
 		else if (ui.transparent_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
 		}
 		/*Wireframe Model*/
 		else if (ui.wireframe_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
 		}
 
 		/*If Camera A View*/
@@ -3571,7 +3576,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	}
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
 }
 
 /*Make Selected Actor Principal from VTK*/
