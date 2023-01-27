@@ -22,7 +22,6 @@
 #include <qtextstream.h>
 #include "gui/interactor.h"
 
-
 /*Messages*/
 #include <qmessagebox.h>
 
@@ -76,7 +75,6 @@ int MainScreen::curr_frame() {
 	return ui.image_list_widget->currentIndex().row();
 }
 
-
 /*Global Interactor Variable*/
 vtkSmartPointer<KeyPressInteractorStyle> key_press_vtk;
 
@@ -87,20 +85,18 @@ double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
 	if (CameraA) {
 		double y = height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
 			abs(calibration_file_.camera_A_principal_.principal_y_);
-		return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
+		return 180.0 / pi * 2.0 *
 			atan2(y, calibration_file_.camera_A_principal_.principal_distance_);
 	}
 	double y =height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
 		abs(calibration_file_.camera_B_principal_.principal_y_);
-	return 180.0 / 3.1415926535897932384626433832795028841971693993751 * 2.0 *
+	return 180.0 / pi * 2.0 *
 		atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
 }
 
 /*Constructor*/
-MainScreen::MainScreen(QWidget* parent)
-	: QMainWindow(parent) {
+MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 	ui.setupUi(this);
-
 
 	this->start_time = -1;
 	sym_trap_running = false;
@@ -338,6 +334,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	if (image_selection_button_width < font_metrics.width(ui.camera_B_radio_button->text())) {
 		image_selection_button_width = font_metrics.width(ui.camera_B_radio_button->text());
 	}
+
 	/*Augment with Padding to find width of group_box*/
 	image_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int image_selection_group_box_width = font_metrics.width(ui.image_selection_box->title());
@@ -439,21 +436,17 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 		      text_height + INSIDE_RADIO_BUTTON_PADDING_Y));
 	/*image Selection*/
 	/*Check Size of Application, If not big enough for listwidget, resize application*/
-	int image_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y +
-		text_height + INSIDE_RADIO_BUTTON_PADDING_Y +
-		RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE;
-	if (GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().bottomLeft().y() + image_selection_box_height +
-		APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height()
-		< this->height()) {
-		image_selection_box_height = this->height() - (GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().
+	int image_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y + text_height + 
+		INSIDE_RADIO_BUTTON_PADDING_Y + RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE;
+
+	int total_box_height = GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().bottomLeft().y() + 
+		APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height() + image_selection_box_height;
+	
+	(total_box_height < this->height()) ? image_selection_box_height = this->height() - (GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().
 			bottomLeft().y() + APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->
-			height());
-	}
-	else {
-		this->setMinimumHeight(
-			GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().bottomLeft().y() + image_selection_box_height +
-			APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height());
-	}
+			height())
+		: this->setMinimumHeight(total_box_height);
+
 	ui.image_selection_box->setGeometry(
 		QRect(APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X,
 		      GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().bottomLeft().y(),
@@ -481,20 +474,15 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
 	/*Edge Detection Box Width*/
 	int edge_detection_box = font_metrics.width(ui.edge_detection_box->title());
-	if (edge_detection_box < font_metrics.width(ui.aperture_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
-		edge_detection_box = font_metrics.width(ui.aperture_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	int x_padding = LABEL_TO_SPIN_BOX_PADDING_X + INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888");
+	if (edge_detection_box < font_metrics.width(ui.aperture_label->text()) + x_padding) {
+		edge_detection_box = font_metrics.width(ui.aperture_label->text()) + x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
 	}
-	if (edge_detection_box < font_metrics.width(ui.low_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
-		edge_detection_box = font_metrics.width(ui.low_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	if (edge_detection_box < font_metrics.width(ui.low_threshold_label->text()) + x_padding) {
+		edge_detection_box = font_metrics.width(ui.low_threshold_label->text()) + x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
 	}
-	if (edge_detection_box < font_metrics.width(ui.high_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-		INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888")) {
-		edge_detection_box = font_metrics.width(ui.high_threshold_label->text()) + LABEL_TO_SPIN_BOX_PADDING_X +
-			INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888") + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+	if (edge_detection_box < font_metrics.width(ui.high_threshold_label->text()) + x_padding) {
+		edge_detection_box = font_metrics.width(ui.high_threshold_label->text()) + x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
 	}
 	if (edge_detection_box < 2 * right_button_bigger + BUTTON_TO_BUTTON_PADDING_X + 2 *
 		INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X) {
@@ -530,17 +518,14 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	/*Augment with Padding to find width of group_box*/
 	model_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
 	int model_selection_group_box_width = font_metrics.width(ui.model_selection_box->title());
-	if (model_selection_group_box_width < 2 * model_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-		GROUP_BOX_TO_BUTTON_PADDING_X) {
-		model_selection_group_box_width = 2 * model_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 *
-			GROUP_BOX_TO_BUTTON_PADDING_X;
+	int model_box_pad = 2 * model_selection_button_width + BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+
+	if (model_selection_group_box_width < model_box_pad) {
+		model_selection_group_box_width = model_box_pad;
 	}
 
 	/*Get Largest Width Across Right Side Column*/
-	int right_column_width = std::max(std::max(
-		                                  edge_detection_box,
-		                                  model_view_group_box_width),
-	                                  model_selection_group_box_width);
+	int right_column_width = std::max(std::max(edge_detection_box, model_view_group_box_width),model_selection_group_box_width);
 
 	/*Set Group Box Widths, Heights, and Member Objects Accordingly*/
 	/*Edge Detection Box*/
@@ -658,21 +643,18 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 		      text_height + INSIDE_RADIO_BUTTON_PADDING_Y));
 	/*model Selection*/
 	/*Check Size of Application, If not big enough for listwidget, resize application*/
-	int model_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y +
-		text_height + INSIDE_RADIO_BUTTON_PADDING_Y +
-		RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE;
-	if (GROUP_BOX_TO_GROUP_BOX_Y + ui.model_view_box->geometry().bottomLeft().y() + model_selection_box_height +
-		APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height()
-		< this->height()) {
-		model_selection_box_height = this->height() - (GROUP_BOX_TO_GROUP_BOX_Y + ui.model_view_box->geometry().
-			bottomLeft().y() + APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->
-			height());
+	int model_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y + INSIDE_RADIO_BUTTON_PADDING_Y + 
+		RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE + group_box_to_top_button_y + text_height;
+
+	total_box_height = GROUP_BOX_TO_GROUP_BOX_Y + ui.model_view_box->geometry().bottomLeft().y() +
+		APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + ui.menuBar->height() + model_selection_box_height + group_box_to_top_button_y;
+
+	if (total_box_height < this->height()) {
+		model_selection_box_height = this->height() - (total_box_height - model_selection_box_height);
 	}
 	else {
 		int old_height = this->height();
-		this->setMinimumHeight(
-			GROUP_BOX_TO_GROUP_BOX_Y + ui.model_view_box->geometry().bottomLeft().y() + model_selection_box_height +
-			APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height());
+		this->setMinimumHeight(total_box_height);
 		QRect updated_image_selection_group_box_geometry = ui.image_selection_box->geometry();
 		updated_image_selection_group_box_geometry.setHeight(
 			updated_image_selection_group_box_geometry.height() + this->height() - old_height);
@@ -708,29 +690,23 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
 	/*Arrange QVTK Widget*/
 	/*Check if there is enough room*/
-	if (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().right() - 2 *
-		GROUP_BOX_TO_QVTK_PADDING_X > MINIMUM_QVTK_WIDGET_WIDTH) {
-		if ((ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
-		                                  right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X) > (ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-			                                  .top() + font_metrics.height() / 2) + 1)) {
-			qvtk_side_length = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-				.top() + font_metrics.height() / 2) + 1; // original height
-		}else {
-			qvtk_side_length = (ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().
-				right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X); // original width
-		}
+	int widget_detection_width = ui.edge_detection_box->geometry().left() - ui.preprocessor_box->geometry().right() - 2 * GROUP_BOX_TO_QVTK_PADDING_X;
+	int widget_detection_height = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry().top() + font_metrics.height() / 2);
+
+	if (widget_detection_width > MINIMUM_QVTK_WIDGET_WIDTH) {
+		qvtk_side_length = ((widget_detection_width) > (widget_detection_height + 1)) 
+			? widget_detection_height + 1 // original height
+			: widget_detection_width;
+
 		ui.qvtk_widget->setGeometry(QRect(ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
 		                                  qvtk_side_length,
 		                                  qvtk_side_length));
 	}
 	else {
-		if (MINIMUM_QVTK_WIDGET_WIDTH >	ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-			                                  .top() + font_metrics.height() / 2) + 1) {
-			qvtk_side_length = ui.model_selection_box->geometry().bottom() - (ui.preprocessor_box->geometry()
-				.top() + font_metrics.height() / 2) + 1;
-		} else {
-			qvtk_side_length = MINIMUM_QVTK_WIDGET_WIDTH;
+		qvtk_side_length = (MINIMUM_QVTK_WIDGET_WIDTH > widget_detection_height + 1) 
+			? widget_detection_height + 1
+			: MINIMUM_QVTK_WIDGET_WIDTH;
 		}
 		ui.qvtk_widget->setGeometry(QRect(ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
@@ -745,7 +721,6 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 		                                    ui.model_selection_box->geometry().top()));
 		/*New Minimum*/
 		this->setMinimumWidth(ui.edge_detection_box->geometry().right() + APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X);
-	}
 
 	/*Initialize the Starting heights and widths*/
 	/*Original Sizes After Construction for Main Screen List Widgets, their Group Boxes and QVTK Widget*/
@@ -1275,7 +1250,7 @@ void MainScreen::on_actionSegment_FemHR_triggered() {
 	/*Deserialize the ScriptModule from a file using torch::jit::load().
 	NOTE: Because this is a traced model, it can only be used with a batch size of 1. To work around this, one must
 	convert to Torch Script via Annotation.*/
-	/* std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETSeg_BS6_LIMA1024Actual_070519_2_TORCH_SCRIPT.pt"; */
+	
 	QString pt_model_location = QFileDialog::getOpenFileName(this, tr("Load Trained Femoral Segmentation Architecture"),
 	                                                         ".", tr("Torch File (*.pt)"));
 	if (pt_model_location.toStdString() != "") {
@@ -1288,8 +1263,6 @@ void MainScreen::on_actionSegment_TibHR_triggered() {
 	NOTE: Because this is a traced model, it can only be used with a batch size of 1. To work around this, one must
 	convert to Torch Script via Annotation.*/
 
-	/*Removed the code below to allow for the user to pick and choose which network they want to load instead of using hard-coded paths*/
-	/* std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNET_BS8_LIMA1024TibActual_070619_BS8_LIMA1024TibActual_070619_TORCH_SCRIPT.pt";*/
 	QString pt_model_location = QFileDialog::getOpenFileName(this, tr("Load Trained Tibial Segmentation Architecture"),
 	                                                         ".", tr("Torch File (*.pt)"));
 	if (pt_model_location.toStdString() != "") {
@@ -1297,23 +1270,11 @@ void MainScreen::on_actionSegment_TibHR_triggered() {
 	}
 }
 
-void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned int input_width,
-                                       unsigned int input_height) {
-	// std::shared_ptr<torch::jit::script::Module> model(torch::jit::load(pt_model_location, torch::kCUDA));
-	// Commented out above part to resolve error E0289+
-	//   std::shared_ptr<torch::jit::Module> model(torch::jit::load(pt_model_location, torch::kCUDA));
+void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned int input_width, unsigned int input_height) {
+
 	torch::jit::Module module(torch::jit::load(pt_model_location, torch::kCUDA));
 	torch::jit::Module* model = &module; // would this work as a pointer
-	/*object shared_ptr cannot be converted from _T to torch::jit::Module */
-	/* typecasting might be a solution */
 
-	/* try
-	{
-		model = torch::jit::load(pt_model_location, torch::kCUDA);
-	} */
-	/* catch (const c10::Error& e) {
-		QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-	}*/
 	if (model == nullptr) {
 		QMessageBox::critical(this, "Error!",
 		                      QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location),
@@ -1328,28 +1289,8 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 	ui.qvtk_widget->renderWindow()->Render();
 
 	/*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted Image*/
-	//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
 	bool black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
 	for (int i = 0; i < ui.image_list_widget->count(); i++) {
-		//cv::Mat correct_inversion = (255 * black_sil_used) + ((1 - 2 * black_sil_used) * loaded_frames[i].GetOriginalImage());
-		//cv::Mat padded;
-		//if (correct_inversion.cols > correct_inversion.rows)
-		//	padded.create(correct_inversion.cols, correct_inversion.cols, correct_inversion.type());
-		//else
-		//	padded.create(correct_inversion.rows, correct_inversion.rows, correct_inversion.type());
-		//unsigned int padded_width = padded.cols;
-		//unsigned int padded_height = padded.rows;
-		//padded.setTo(cv::Scalar::all(0));
-		//correct_inversion.copyTo(padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows)));
-		//cv::resize(padded, padded, cv::Size(input_width, input_height));
-		//cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
-		//	input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
-		//std::vector<torch::jit::IValue> inputs;
-		//inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
-		//cudaMemcpy(padded.data, (255 * (model->forward(inputs).toTensor() > 0)).to(torch::dtype(torch::kByte)).flip({ 2 }).data_ptr(),
-		//	input_width * input_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-		//cv::resize(padded, padded, cv::Size(padded_width, padded_height));
-		//cv::Mat unpadded = padded(cv::Rect(0, 0, correct_inversion.cols, correct_inversion.rows));
 
 		cv::Mat unpadded = segment_image(loaded_frames[i].GetOriginalImage(), black_sil_used, model, input_width,
 		                                 input_height);
@@ -1621,9 +1562,9 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 		//	QString::number(orientation[0]), QMessageBox::Ok);
 
 		/*Convert from (0,0) Centered*/
-		float za_rad = orientation[0] * 3.14159265358979323846 / 180.0;
-		float xa_rad = orientation[1] * 3.14159265358979323846 / 180.0;
-		float ya_rad = orientation[2] * 3.14159265358979323846 / 180.0;
+		float za_rad = orientation[0] * pi / 180.0;
+		float xa_rad = orientation[1] * pi / 180.0;
+		float ya_rad = orientation[2] * pi / 180.0;
 		float cz = cos(za_rad);
 		float sz = sin(za_rad);
 		float cx = cos(xa_rad);
@@ -1657,20 +1598,20 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 
 			}
 			else {
-				xa = -3.14159265358979323846 / 2.0;
+				xa = -pi / 2.0;
 				za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
 				ya = 0;
 			}
 		}
 		else {
-			xa = 3.14159265358979323846 / 2.0;
+			xa = pi / 2.0;
 			za = atan2(R_orig.A_13_, R_orig.A_11_);
 			ya = 0;
 		}
 
-		xa = xa * 180.0 / 3.14159265358979323846;
-		ya = ya * 180.0 / 3.14159265358979323846;
-		za = za * 180.0 / 3.14159265358979323846;
+		xa = xa * 180.0 / pi;
+		ya = ya * 180.0 / pi;
+		za = za * 180.0 / pi;
 		/*
 				QMessageBox::critical(this, "Error!", QString::number(x) + ", " +
 					QString::number(y) + ", " +
@@ -1716,236 +1657,6 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 
 }
 
-//void MainScreen::on_actionEstimate_Femoral_Implant_s_Algorithm_2_triggered() {
-////Must be in Single Selection Mode to Load Pose
-//if (ui.multiple_model_radio_button->isChecked()) {
-//QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Estimate Kinematics!", QMessageBox::Ok);
-//return;
-//}
-
-////Must load a model
-//if (loaded_models.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load a model!", QMessageBox::Ok);
-//return;
-//}
-
-////Must have loaded image
-//if (loaded_frames.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load images!", QMessageBox::Ok);
-//return;
-//}
-
-///*Pose Estimate Progress and Label Visible*/
-//ui.pose_progress->setValue(5);
-//ui.pose_progress->setVisible(1);
-//ui.pose_label->setText("Initializing high resolution segmentation...");
-//ui.pose_label->setVisible(1);
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-
-
-///*Segment*/
-//this->on_actionSegment_FemHR_triggered();
-//unsigned int input_height = 1024;
-//unsigned int input_width = 1024;
-//unsigned int orig_height = loaded_frames[0].GetInvertedImage().rows;
-//unsigned int orig_width = loaded_frames[0].GetInvertedImage().cols;
-//unsigned char* host_image = (unsigned char*)malloc(input_width * input_height * sizeof(unsigned char));
-//ui.pose_label->setText("Initializing STL model on GPU...");
-//ui.qvtk_widget->update();
-
-///*STL Information*/
-//vector<vector<float>> triangle_information;
-//QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-//stl_reader_BIG::readAnySTL(QString::fromStdString(loaded_models[selected[0].row()].file_location_), triangle_information);
-
-///*GPU Models for the current Model*/
-//gpu_cost_function::GPUModel* gpu_mod = new gpu_cost_function::GPUModel("model", true, orig_height, orig_width, 0, false, // switched cols and rows because the stored image is inverted?
-//&(triangle_information[0])[0], &(triangle_information[1])[0], triangle_information[0].size() / 9, calibration_file_.camera_A_principal_); // BACKFACE CULLING APPEARS TO BE GIVING ERRORS
-
-//ui.pose_progress->setValue(55);
-//ui.pose_label->setText("Initializing femoral implant pose estimation...");
-//ui.qvtk_widget->update();
-
-///*Load JIT Model*/
-//std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLima1024_07192019_HRProcessed_Fem_07232019_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module module(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model = &module;
-//if (model == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Load JIT Z Model*/
-//std::string pt_model_z_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLima1024_07192019_HRProcessed_Fem_08012019_Z_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model_z(torch::jit::load(pt_model_z_location, torch::kCUDA));
-//torch::jit::Module module_z(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model_z = &module_z;
-//if (model_z == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z (From Area), then X,Y.
-//After this, convert to non (0,0) centered orientation.
-//Finally, update */
-//ui.pose_progress->setValue(65);
-//ui.pose_label->setText("Estimating femoral implant poses...");
-//ui.qvtk_widget->update();
-//float* orientation = new float[3];
-//float* z_norm = new float[1];
-//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
-//for (int i = 0; i < ui.image_list_widget->count(); i++) {
-
-//cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-//cv::Mat padded;
-//if (orig_inverted.cols > orig_inverted.rows)
-//padded.create(orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-//else
-//padded.create(orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-//unsigned int padded_width = padded.cols;
-//unsigned int padded_height = padded.rows;
-//padded.setTo(cv::Scalar::all(0));
-//orig_inverted.copyTo(padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-//cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-//cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
-//input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
-//std::vector<torch::jit::IValue> inputs;
-//inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
-//cudaMemcpy(orientation, model->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//3 * sizeof(float), cudaMemcpyDeviceToHost);
-//cudaMemcpy(z_norm, model_z->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//sizeof(float), cudaMemcpyDeviceToHost);
-
-///*Flip Segment*/
-//cv::Mat output_mat_seg = cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-//cv::flip(orig_inverted, output_mat_seg, 0);
-
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, -calibration_file_.camera_A_principal_.principal_distance_, orientation[1], orientation[2], orientation[0]));
-
-///*Copy To Mat*/
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-
-///*OpenCV Image Container/Write Function*/
-//cv::Mat projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image); /*Reverse before flip*/
-//cv::Mat output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get Scale*/
-//double z = -calibration_file_.camera_A_principal_.principal_distance_ * z_norm[0];
-
-///*Reproject*/
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-//projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-//output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get X and Y*/
-//cv::Mat proj64;
-//output_mat.convertTo(proj64, CV_64FC1);
-//cv::Mat seg64;
-//output_mat_seg.convertTo(seg64, CV_64FC1);
-//cv::Point2d x_y_point = cv::phaseCorrelate(proj64, seg64) * (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-//calibration_file_.camera_A_principal_.principal_distance_;
-//double x = x_y_point.x;
-//double y = -1 * x_y_point.y;
-
-
-///*Convert from (0,0) Centered*/
-//float za_rad = orientation[0] * 3.14159265358979323846 / 180.0;
-//float xa_rad = orientation[1] * 3.14159265358979323846 / 180.0;
-//float ya_rad = orientation[2] * 3.14159265358979323846 / 180.0;
-//float cz = cos(za_rad);
-//float sz = sin(za_rad);
-//float cx = cos(xa_rad);
-//float sx = sin(xa_rad);
-//float cy = cos(ya_rad);
-//float sy = sin(ya_rad);
-//Matrix_3_3 R_g(
-//cz * cy - sz * sx * sy, -1.0 * sz * cx, cz * sy + sz * cy * sx,
-//sz * cy + cz * sx * sy, cz * cx, sz * sy - cz * cy * sx,
-//-1.0 * cx * sy, sx, cx * cy);
-//float theta_x = std::atan(-1.0 * y / z);
-//float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-//Matrix_3_3 R_x(
-//1, 0, 0,
-//0, cos(theta_x), -sin(theta_x),
-//0, sin(theta_x), cos(theta_x));
-//Matrix_3_3 R_y(
-//cos(theta_y), 0, sin(theta_y),
-//0, 1, 0,
-//-sin(theta_y), 0, cos(theta_y));
-//Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-///*Rot Mat To Eul ZXY*/
-///*Algorithm To Recover Z - X - Y Euler Angles*/
-//float xa, ya, za;
-//if (R_orig.A_32_ < 1) {
-//if (R_orig.A_32_ > -1) {
-//xa = asin(R_orig.A_32_);
-//za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-//ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-//}
-//else {
-//xa = -3.14159265358979323846 / 2.0;
-//za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-//}
-//else {
-//xa = 3.14159265358979323846 / 2.0;
-//za = atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-
-//xa = xa * 180.0 / 3.14159265358979323846;
-//ya = ya * 180.0 / 3.14159265358979323846;
-//za = za * 180.0 / 3.14159265358979323846;
-
-///*Update Model Pose*/
-//model_locations_.SavePose(i, ui.model_list_widget->currentRow(), Point6D(x, y, z, xa, ya, za));
-
-//ui.pose_progress->setValue(65 + 30 * (double)(i + 1) / (double)ui.image_list_widget->count());
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-//}
-
-//ui.pose_progress->setValue(98);
-//ui.pose_label->setText("Deleting old models...");
-//ui.qvtk_widget->update();
-
-///*Delete GPU Model*/
-//delete gpu_mod;
-
-///*Free Array*/
-//free(host_image);
-
-///*Free Values*/
-//delete orientation;
-//delete z_norm;
-
-///*Update Model*/
-//Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
-//model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-//model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-//ui.qvtk_widget->update();
-
-//ui.pose_progress->setValue(100);
-//ui.pose_label->setText("Finished!");
-//ui.qvtk_widget->update();
-
-///*Pose Estimate Progress and Label Not Visible*/
-//ui.pose_progress->setVisible(0);
-//ui.pose_label->setVisible(0);
-
-//}
 void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	//Must be in Single Selection Mode to Load Pose
 	if (ui.multiple_model_radio_button->isChecked()) {
@@ -2095,9 +1806,9 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 		double y = -1 * x_y_point.y;
 
 		/*Convert from (0,0) Centered*/
-		float za_rad = orientation[0] * 3.14159265358979323846 / 180.0;
-		float xa_rad = orientation[1] * 3.14159265358979323846 / 180.0;
-		float ya_rad = orientation[2] * 3.14159265358979323846 / 180.0;
+		float za_rad = orientation[0] * pi / 180.0;
+		float xa_rad = orientation[1] * pi / 180.0;
+		float ya_rad = orientation[2] * pi / 180.0;
 		float cz = cos(za_rad);
 		float sz = sin(za_rad);
 		float cx = cos(xa_rad);
@@ -2131,20 +1842,20 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 
 			}
 			else {
-				xa = -3.14159265358979323846 / 2.0;
+				xa = -pi / 2.0;
 				za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
 				ya = 0;
 			}
 		}
 		else {
-			xa = 3.14159265358979323846 / 2.0;
+			xa = pi / 2.0;
 			za = atan2(R_orig.A_13_, R_orig.A_11_);
 			ya = 0;
 		}
 
-		xa = xa * 180.0 / 3.14159265358979323846;
-		ya = ya * 180.0 / 3.14159265358979323846;
-		za = za * 180.0 / 3.14159265358979323846;
+		xa = xa * 180.0 / pi;
+		ya = ya * 180.0 / pi;
+		za = za * 180.0 / pi;
 
 		model_locations_.SavePose(i, ui.model_list_widget->currentRow(), Point6D(x, y, z, xa, ya, za));
 		ui.pose_progress->setValue(
@@ -2181,466 +1892,6 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_progress->setVisible(false);
 	ui.pose_label->setVisible(false);
 }
-
-//void MainScreen::on_actionEstimate_Tibial_Implant_s_Alternative_Algorithm_triggered() {
-////Must be in Single Selection Mode to Load Pose
-//if (ui.multiple_model_radio_button->isChecked()) {
-//QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Estimate Kinematics!", QMessageBox::Ok);
-//return;
-//}
-
-////Must load a model
-//if (loaded_models.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load a model!", QMessageBox::Ok);
-//return;
-//}
-
-////Must have loaded image
-//if (loaded_frames.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load images!", QMessageBox::Ok);
-//return;
-//}
-
-///*Pose Estimate Progress and Label Visible*/
-//ui.pose_progress->setValue(5);
-//ui.pose_progress->setVisible(1);
-//ui.pose_label->setText("Initializing high resolution segmentation...");
-//ui.pose_label->setVisible(1);
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-
-
-///*Segment*/
-//this->on_actionSegment_TibHR_triggered();
-//unsigned int input_height = 1024;
-//unsigned int input_width = 1024;
-//unsigned int orig_height = loaded_frames[0].GetInvertedImage().rows;
-//unsigned int orig_width = loaded_frames[0].GetInvertedImage().cols;
-//unsigned char* host_image = (unsigned char*)malloc(input_width * input_height * sizeof(unsigned char));
-//ui.pose_label->setText("Initializing STL model on GPU...");
-//ui.qvtk_widget->update();
-
-///*STL Information*/
-//vector<vector<float>> triangle_information;
-//QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-//stl_reader_BIG::readAnySTL(QString::fromStdString(loaded_models[selected[0].row()].file_location_), triangle_information);
-
-///*GPU Models for the current Model*/
-//gpu_cost_function::GPUModel* gpu_mod = new gpu_cost_function::GPUModel("model", true, orig_height, orig_width, 0, false, // switched cols and rows because the stored image is inverted?
-//&(triangle_information[0])[0], &(triangle_information[1])[0], triangle_information[0].size() / 9, calibration_file_.camera_A_principal_); // BACKFACE CULLING APPEARS TO BE GIVING ERRORS
-
-//ui.pose_progress->setValue(55);
-//ui.pose_label->setText("Initializing tibial implant pose estimation...");
-//ui.qvtk_widget->update();
-
-///*Load JIT Model*/
-//std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLimaTib1024_08012019_HRProcessed_Tib_08022019_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module module(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model = &module;
-//if (model == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Load JIT Z Model*/
-//std::string pt_model_z_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLimaTib1024_08012019_HRProcessed_Tib_08052019_Z_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model_z(torch::jit::load(pt_model_z_location, torch::kCUDA));
-//torch::jit::Module module_z(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model_z = &module_z;
-//if (model_z == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z (From Area), then X,Y.
-//After this, convert to non (0,0) centered orientation.
-//Finally, update */
-//ui.pose_progress->setValue(65);
-//ui.pose_label->setText("Estimating tibial implant poses...");
-//ui.qvtk_widget->update();
-//float* orientation = new float[3];
-//float* z_norm = new float[1];
-//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
-//for (int i = 0; i < ui.image_list_widget->count(); i++) {
-
-//cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-//cv::Mat padded;
-//if (orig_inverted.cols > orig_inverted.rows)
-//padded.create(orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-//else
-//padded.create(orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-//unsigned int padded_width = padded.cols;
-//unsigned int padded_height = padded.rows;
-//padded.setTo(cv::Scalar::all(0));
-//orig_inverted.copyTo(padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-//cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-//cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
-//input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
-//std::vector<torch::jit::IValue> inputs;
-//inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
-//cudaMemcpy(orientation, model->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//3 * sizeof(float), cudaMemcpyDeviceToHost);
-//cudaMemcpy(z_norm, model_z->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//sizeof(float), cudaMemcpyDeviceToHost);
-
-///*Flip Segment*/
-//cv::Mat output_mat_seg = cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-//cv::flip(orig_inverted, output_mat_seg, 0);
-
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, -calibration_file_.camera_A_principal_.principal_distance_, orientation[1], orientation[2], orientation[0]));
-
-///*Copy To Mat*/
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-
-///*OpenCV Image Container/Write Function*/
-//cv::Mat projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image); /*Reverse before flip*/
-//cv::Mat output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get Scale*/
-//double z = -calibration_file_.camera_A_principal_.principal_distance_ * z_norm[0];
-
-///*Reproject*/
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-//projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-//output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get X and Y*/
-//cv::Mat proj64;
-//output_mat.convertTo(proj64, CV_64FC1);
-//cv::Mat seg64;
-//output_mat_seg.convertTo(seg64, CV_64FC1);
-//cv::Point2d x_y_point = cv::phaseCorrelate(proj64, seg64) * (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-//calibration_file_.camera_A_principal_.principal_distance_;
-//double x = x_y_point.x;
-//double y = -1 * x_y_point.y;
-
-
-///*Convert from (0,0) Centered*/
-//float za_rad = orientation[0] * 3.14159265358979323846 / 180.0;
-//float xa_rad = orientation[1] * 3.14159265358979323846 / 180.0;
-//float ya_rad = orientation[2] * 3.14159265358979323846 / 180.0;
-//float cz = cos(za_rad);
-//float sz = sin(za_rad);
-//float cx = cos(xa_rad);
-//float sx = sin(xa_rad);
-//float cy = cos(ya_rad);
-//float sy = sin(ya_rad);
-//Matrix_3_3 R_g(
-//cz * cy - sz * sx * sy, -1.0 * sz * cx, cz * sy + sz * cy * sx,
-//sz * cy + cz * sx * sy, cz * cx, sz * sy - cz * cy * sx,
-//-1.0 * cx * sy, sx, cx * cy);
-//float theta_x = std::atan(-1.0 * y / z);
-//float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-//Matrix_3_3 R_x(
-//1, 0, 0,
-//0, cos(theta_x), -sin(theta_x),
-//0, sin(theta_x), cos(theta_x));
-//Matrix_3_3 R_y(
-//cos(theta_y), 0, sin(theta_y),
-//0, 1, 0,
-//-sin(theta_y), 0, cos(theta_y));
-//Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-///*Rot Mat To Eul ZXY*/
-///*Algorithm To Recover Z - X - Y Euler Angles*/
-//float xa, ya, za;
-//if (R_orig.A_32_ < 1) {
-//if (R_orig.A_32_ > -1) {
-//xa = asin(R_orig.A_32_);
-//za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-//ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-//}
-//else {
-//xa = -3.14159265358979323846 / 2.0;
-//za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-//}
-//else {
-//xa = 3.14159265358979323846 / 2.0;
-//za = atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-
-//xa = xa * 180.0 / 3.14159265358979323846;
-//ya = ya * 180.0 / 3.14159265358979323846;
-//za = za * 180.0 / 3.14159265358979323846;
-
-///*Update Model Pose*/
-//model_locations_.SavePose(i, ui.model_list_widget->currentRow(), Point6D(x, y, z, xa, ya, za));
-
-//ui.pose_progress->setValue(65 + 30 * (double)(i + 1) / (double)ui.image_list_widget->count());
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-//}
-
-//ui.pose_progress->setValue(98);
-//ui.pose_label->setText("Deleting old models...");
-//ui.qvtk_widget->update();
-
-///*Delete GPU Model*/
-//delete gpu_mod;
-
-///*Free Array*/
-//free(host_image);
-
-///*Free Values*/
-//delete orientation;
-//delete z_norm;
-
-///*Update Model*/
-//Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
-//model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-//model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-//ui.qvtk_widget->update();
-
-//ui.pose_progress->setValue(100);
-//ui.pose_label->setText("Finished!");
-//ui.qvtk_widget->update();
-
-///*Pose Estimate Progress and Label Not Visible*/
-//ui.pose_progress->setVisible(0);
-//ui.pose_label->setVisible(0);
-//}
-//void MainScreen::on_actionEstimate_Scapula_s_triggered() {
-////Must be in Single Selection Mode to Load Pose
-//if (ui.multiple_model_radio_button->isChecked()) {
-//QMessageBox::critical(this, "Error!", "Must Be in Single Model Selection Mode to Estimate Kinematics!", QMessageBox::Ok);
-//return;
-//}
-
-////Must load a model
-//if (loaded_models.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load a model!", QMessageBox::Ok);
-//return;
-//}
-
-////Must have loaded image
-//if (loaded_frames.size() < 1) {
-//QMessageBox::critical(this, "Error!", "Must load images!", QMessageBox::Ok);
-//return;
-//}
-
-///*Pose Estimate Progress and Label Visible*/
-//ui.pose_progress->setValue(5);
-//ui.pose_progress->setVisible(1);
-//ui.pose_label->setText("Initializing high resolution segmentation...");
-//ui.pose_label->setVisible(1);
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-
-
-///*Segment*/
-//segmentHelperFunction("C:/TorchScriptTrainedNetworks/HRNETSeg_BS24_dataAkiraMayPaperNoPatient18Scapula_512_072419_2_TORCH_SCRIPT.pt", 512, 512);
-//unsigned int input_height = 512;
-//unsigned int input_width = 512;
-//unsigned int orig_height = loaded_frames[0].GetInvertedImage().rows;
-//unsigned int orig_width = loaded_frames[0].GetInvertedImage().cols;
-//unsigned char* host_image = (unsigned char*)malloc(orig_width * orig_height * sizeof(unsigned char));
-//ui.pose_label->setText("Initializing STL model on GPU...");
-//ui.qvtk_widget->update();
-
-///*STL Information*/
-//vector<vector<float>> triangle_information;
-//QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-//stl_reader_BIG::readAnySTL(QString::fromStdString(loaded_models[selected[0].row()].file_location_), triangle_information);
-
-///*GPU Models for the current Model*/
-//gpu_cost_function::GPUModel* gpu_mod = new gpu_cost_function::GPUModel("model", true, orig_height, orig_width, 0, false, // switched cols and rows because the stored image is inverted?
-//&(triangle_information[0])[0], &(triangle_information[1])[0], triangle_information[0].size() / 9, calibration_file_.camera_A_principal_); // BACKFACE CULLING APPEARS TO BE GIVING ERRORS
-
-//ui.pose_progress->setValue(55);
-//ui.pose_label->setText("Initializing scapula pose estimation...");
-//ui.qvtk_widget->update();
-
-///*Load JIT Model*/
-//std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataAkiraPt18_HRProcessed_Sca_08062019_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module module(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model = &module;
-//if (model == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Load JIT Z Model*/
-//std::string pt_model_z_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataAkiraPt18_HRProcessed_Sca_08062019_Z_1_TORCH_SCRIPT.pt";
-//// std::shared_ptr<torch::jit::Module> model_z(torch::jit::load(pt_model_z_location, torch::kCUDA));
-//torch::jit::Module module_z(torch::jit::load(pt_model_location, torch::kCUDA));
-//torch::jit::Module* model_z = &module_z;
-//if (model_z == nullptr)
-//{
-//QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot load PyTorch Torch Script model at: " + pt_model_location), QMessageBox::Ok);
-//return;
-//}
-
-///*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z (From Area), then X,Y.
-//After this, convert to non (0,0) centered orientation.
-//Finally, update */
-//ui.pose_progress->setValue(65);
-//ui.pose_label->setText("Estimating scapula poses...");
-//ui.qvtk_widget->update();
-//float* orientation = new float[3];
-//float* z_norm = new float[1];
-//torch::Tensor gpu_byte_placeholder(torch::zeros({ 1, 1, input_height, input_width }, torch::device(torch::kCUDA).dtype(torch::kByte)));
-//for (int i = 0; i < ui.image_list_widget->count(); i++) {
-
-//cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-//cv::Mat padded;
-//if (orig_inverted.cols > orig_inverted.rows)
-//padded.create(orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-//else
-//padded.create(orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-//unsigned int padded_width = padded.cols;
-//unsigned int padded_height = padded.rows;
-//padded.setTo(cv::Scalar::all(0));
-//orig_inverted.copyTo(padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-//cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-//cudaMemcpy(gpu_byte_placeholder.data_ptr(), padded.data,
-//input_width * input_height * sizeof(unsigned char), cudaMemcpyHostToDevice);
-//std::vector<torch::jit::IValue> inputs;
-//inputs.push_back(gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({ 2 })); // Must flip first
-//cudaMemcpy(orientation, model->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//3 * sizeof(float), cudaMemcpyDeviceToHost);
-//cudaMemcpy(z_norm, model_z->forward(inputs).toTensor().to(torch::dtype(torch::kFloat)).data_ptr(),
-//sizeof(float), cudaMemcpyDeviceToHost);
-
-///*Flip Segment*/
-//cv::Mat output_mat_seg = cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-//cv::flip(orig_inverted, output_mat_seg, 0);
-
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, -calibration_file_.camera_A_principal_.principal_distance_, orientation[1], orientation[2], orientation[0]));
-
-///*Copy To Mat*/
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-
-///*OpenCV Image Container/Write Function*/
-//cv::Mat projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image); /*Reverse before flip*/
-//cv::Mat output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get Scale*/
-//double z = -calibration_file_.camera_A_principal_.principal_distance_ * z_norm[0];
-
-///*Reproject*/
-///*Render*/
-//gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-//cudaMemcpy(host_image, gpu_mod->GetPrimaryCameraRenderedImagePointer(), orig_width * orig_height * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-//projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-//output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-//cv::flip(projection_mat, output_mat, 0);
-
-///*Get X and Y*/
-//cv::Mat proj64;
-//output_mat.convertTo(proj64, CV_64FC1);
-//cv::Mat seg64;
-//output_mat_seg.convertTo(seg64, CV_64FC1);
-//cv::Point2d x_y_point = cv::phaseCorrelate(proj64, seg64) * (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-//calibration_file_.camera_A_principal_.principal_distance_;
-//double x = x_y_point.x;
-//double y = -1 * x_y_point.y;
-
-
-///*Convert from (0,0) Centered*/
-//float za_rad = orientation[0] * 3.14159265358979323846 / 180.0;
-//float xa_rad = orientation[1] * 3.14159265358979323846 / 180.0;
-//float ya_rad = orientation[2] * 3.14159265358979323846 / 180.0;
-//float cz = cos(za_rad);
-//float sz = sin(za_rad);
-//float cx = cos(xa_rad);
-//float sx = sin(xa_rad);
-//float cy = cos(ya_rad);
-//float sy = sin(ya_rad);
-//Matrix_3_3 R_g(
-//cz * cy - sz * sx * sy, -1.0 * sz * cx, cz * sy + sz * cy * sx,
-//sz * cy + cz * sx * sy, cz * cx, sz * sy - cz * cy * sx,
-//-1.0 * cx * sy, sx, cx * cy);
-//float theta_x = std::atan(-1.0 * y / z);
-//float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-//Matrix_3_3 R_x(
-//1, 0, 0,
-//0, cos(theta_x), -sin(theta_x),
-//0, sin(theta_x), cos(theta_x));
-//Matrix_3_3 R_y(
-//cos(theta_y), 0, sin(theta_y),
-//0, 1, 0,
-//-sin(theta_y), 0, cos(theta_y));
-//Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-///*Rot Mat To Eul ZXY*/
-///*Algorithm To Recover Z - X - Y Euler Angles*/
-//float xa, ya, za;
-//if (R_orig.A_32_ < 1) {
-//if (R_orig.A_32_ > -1) {
-//xa = asin(R_orig.A_32_);
-//za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-//ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-//}
-//else {
-//xa = -3.14159265358979323846 / 2.0;
-//za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-//}
-//else {
-//xa = 3.14159265358979323846 / 2.0;
-//za = atan2(R_orig.A_13_, R_orig.A_11_);
-//ya = 0;
-//}
-
-//xa = xa * 180.0 / 3.14159265358979323846;
-//ya = ya * 180.0 / 3.14159265358979323846;
-//za = za * 180.0 / 3.14159265358979323846;
-
-///*Update Model Pose*/
-//model_locations_.SavePose(i, ui.model_list_widget->currentRow(), Point6D(x, y, z, xa, ya, za));
-
-//ui.pose_progress->setValue(65 + 30 * (double)(i + 1) / (double)ui.image_list_widget->count());
-//ui.qvtk_widget->update();
-//qApp->processEvents();
-//}
-//QMessageBox::critical(this, "Error!", "zzzzzzzzzz!", QMessageBox::Ok);
-
-//ui.pose_progress->setValue(98);
-//ui.pose_label->setText("Deleting old models...");
-//ui.qvtk_widget->update();
-
-///*Delete GPU Model*/
-//delete gpu_mod;
-
-///*Free Array*/
-//free(host_image);
-
-///*Free Values*/
-//delete orientation;
-//delete z_norm;
-
-///*Update Model*/
-//Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
-//model_actor_list[selected[0].row()]->SetPosition(loaded_pose.x, loaded_pose.y, loaded_pose.z);
-//model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-//ui.qvtk_widget->update();
-
-//ui.pose_progress->setValue(100);
-//ui.pose_label->setText("Finished!");
-//ui.qvtk_widget->update();
-
-///*Pose Estimate Progress and Label Not Visible*/
-//ui.pose_progress->setVisible(0);
-//ui.pose_label->setVisible(0);
-//}
 
 void MainScreen::on_actionNFD_Pose_Estimate_triggered() {
 	JTML_NFD nfd_obj;

@@ -137,6 +137,7 @@ private:
 	vtkSmartPointer<vtkCamera> background_camera_;
 	vtkSmartPointer<vtkRenderWindow> render_window_;
 
+	double pi = 3.14159265358979323846;
 
 	bool initialized_pointers_;
 

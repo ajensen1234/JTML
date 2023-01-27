@@ -118,6 +118,8 @@ Q_SIGNALS:
 	void UpdateTimeRemaining(int);
 
 private:
+	double pi = 3.14159265358979323846;
+
 	Ui::MainScreenClass ui;
 
 	double UF_BLUE[3] = {0,72,204};
