@@ -23,7 +23,7 @@
 Calibration interactor_calibration;
 
 //Speed of Movement
-int speed = 1;
+double speed = 1;
 bool information = true;
 bool interactor_camera_B = false; //Are we in Camera B?
 bool middleDown = false; // Is CM button down?
@@ -102,8 +102,11 @@ public:
 		if (rwi->GetShiftKey()) {
 			//Handle Increase Request
 			if (key == "plus") {
-				if (speed < 20) {
+				if (speed < 20 && speed >= 1) {
 					speed++;
+				}
+				else if (speed < 1) {
+					speed += 0.1;
 				}
 			}
 
@@ -111,6 +114,9 @@ public:
 			if (key == "underscore") {
 				if (speed > 1) {
 					speed--;
+				}
+				else if (speed >= 0.2) {
+					speed -= 0.1;
 				}
 			}
 
@@ -166,8 +172,11 @@ public:
 		else {
 			//Handle Increase Request
 			if (key == "equal") {
-				if (speed < 20) {
+				if (speed < 20 && speed >= 1) {
 					speed++;
+				}
+				else if (speed < 1) {
+					speed += 0.1;
 				}
 			}
 
@@ -175,6 +184,9 @@ public:
 			if (key == "minus") {
 				if (speed > 1) {
 					speed--;
+				}
+				else if (speed >= 0.2) {
+					speed -= 0.1;
 				}
 			}
 
