@@ -1270,6 +1270,26 @@ void MainScreen::on_actionSegment_TibHR_triggered() {
 	}
 }
 
+void MainScreen::update_image_list_widget() {
+	/*If Viewing Inverted Images Update*/
+	if (ui.inverted_image_radio_button->isChecked()) {
+		vw->update_display_background_to_inverted_image(this->curr_frame(), ui.camera_A_radio_button->isChecked());
+	}
+	/*If Viewing Edge Images Update*/
+	else if (ui.edges_image_radio_button->isChecked()) {
+		vw->update_display_background_to_edge_image(this->curr_frame(), ui.camera_A_radio_button->isChecked());
+	}
+	/*If Viewing Dilated Images Update*/
+	else if (ui.dilation_image_radio_button->isChecked()) {
+		vw->update_display_background_to_dilation_image(this->curr_frame(), ui.camera_A_radio_button->isChecked());
+	}
+	else if (ui.original_image_radio_button->isChecked()) {
+		vw->update_display_background_to_original_image(this->curr_frame(), true);
+	}
+	ui.qvtk_widget->update();
+	ui.qvtk_widget->renderWindow()->Render();
+}
+
 void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned int input_width, unsigned int input_height) {
 
 	torch::jit::Module module(torch::jit::load(pt_model_location, torch::kCUDA));
@@ -1311,47 +1331,13 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 			loaded_frames_B[i].SetDilatedImage(dilation_val);
 		}
 
-		ui.pose_progress->setValue(
-			20 + 30 * static_cast<double>(i + 1) / static_cast<double>(ui.image_list_widget->count()));
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-
-
-	}
-
-	/*If Viewing Inverted Images Update*/
-	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.inverted_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
-
-		}
-		else {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
+		ui.pose_progress->setValue(20 + 30 * static_cast<double>(i + 1) / static_cast<double>(ui.image_list_widget->count()));
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
 	}
-	/*If Viewing Edge Images Update*/
-	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_edge_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_edge_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-	}
-	/*If Viewing Dilated Images Update*/
-	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+
+	if (ui.image_list_widget->currentIndex().row() >= 0) {
+		update_image_list_widget();
 	}
 }
 
@@ -1360,38 +1346,8 @@ void MainScreen::on_actionReset_Remove_All_Segmentation_triggered() {
 		loaded_frames[i].ResetFromOriginal();
 	}
 
-	/*If Viewing Inverted Images Update*/
-	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.inverted_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-	}
-	/*If Viewing Edge Images Update*/
-	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.edges_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_edge_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-	}
-	/*If Viewing Dilated Images Update*/
-	else if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	if (ui.image_list_widget->currentIndex().row() >= 0) {
+		update_image_list_widget();
 	}
 }
 
@@ -2353,20 +2309,7 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 		ui.high_threshold_slider->
 		   setValue(loaded_frames[ui.image_list_widget->currentIndex().row()].GetHighThreshold());
 
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		if (ui.original_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_original_image(this->curr_frame(), true);
-		}
-		else if (ui.inverted_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
-		}
-		else if (ui.edges_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_edge_image(this->curr_frame(), true);
-		}
-		else {
-			/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
-			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
-		}
+		update_image_list_widget();
 
 		vw->place_image_actors_according_to_calibration(
 			calibration_file_,
@@ -2464,20 +2407,7 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 		ui.high_threshold_slider->setValue(
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetHighThreshold());
 
-		/*Display Corresponding Radio Button view to main QVTK widget*/
-		if (ui.original_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_original_image(this->curr_frame()
-			                                                , false);
-		}
-		else if (ui.inverted_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
-		else if (ui.edges_image_radio_button->isChecked() == true) {
-			vw->update_display_background_to_edge_image(this->curr_frame(), false);
-		}
-		else {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
-		}
+		update_image_list_widget();
 
 		vw->place_image_actors_according_to_calibration(calibration_file_.camera_B_principal_, loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols);
@@ -2562,42 +2492,7 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetHighThreshold());
 	}
 
-
-	/*Display Corresponding Radio Button view to main QVTK widget*/
-	if (ui.original_image_radio_button->isChecked() == true) {
-		/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_original_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_original_image(this->curr_frame(), false);
-		}
-	}
-	else if (ui.inverted_image_radio_button->isChecked() == true) {
-		/*Convert Selected Frame's Corresponding Picture to VTK Image Data*/
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
-	}
-	else if (ui.edges_image_radio_button->isChecked() == true) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_edge_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_edge_image(this->curr_frame(), false);
-		}
-	}
-	else {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_dilation_image(this->curr_frame(), false);
-		}
-	}
+	update_image_list_widget();
 
 	/*Upload Image Data to Screen, Shift Image Location to Center In Middle of Screen and Adjust View Angle*/
 	if (ui.camera_A_radio_button->isChecked()) {
@@ -2934,53 +2829,6 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
-}
-
-/*Multiple Selection For Models Radio buttons*/
-void MainScreen::on_single_model_radio_button_clicked() {
-	/*Change Selection Mode*/
-	ui.model_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
-
-	/*If Multiple Selections Choose First One Selected*/
-	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
-	if (selected.size() > 0) {
-		ui.model_list_widget->setCurrentIndex(selected[0]);
-	}
-};
-
-void MainScreen::on_multiple_model_radio_button_clicked() {
-	ui.model_list_widget->setSelectionMode(QAbstractItemView::MultiSelection);
-}
-
-/*Image View Radio Buttons*/
-/*Display Original Image*/
-void MainScreen::on_original_image_radio_button_clicked() {
-	/*Only Do Something if Loaded Frames, Skip*/
-	if (ui.image_list_widget->currentRow() >= 0) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_original_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_original_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-	}
-}
-
-/*Display Inverted Image*/
-void MainScreen::on_inverted_image_radio_button_clicked() {
-	/*Only Do Something if Loaded Frames, Skip*/
-	if (ui.image_list_widget->currentRow() >= 0) {
-		if (ui.camera_A_radio_button->isChecked()) {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), true);
-		}
-		else {
-			vw->update_display_background_to_inverted_image(this->curr_frame(), false);
-		}
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
-	}
 }
 
 /*Display Edge Detected Image*/
