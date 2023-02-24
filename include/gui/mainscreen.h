@@ -152,7 +152,7 @@ private:
 	bool calibrated_for_monoplane_viewport_;
 	bool calibrated_for_biplane_viewport_;
 
-	/*VTK Variables*/
+	/*VTK Variables for main Viewer*/
 	std::vector<vtkSmartPointer<vtkActor>> model_actor_list;
 	std::vector<vtkSmartPointer<vtkPolyDataMapper>> model_mapper_list;
 	vtkSmartPointer<vtkRenderer> renderer;
@@ -164,9 +164,14 @@ private:
 	vtkSmartPointer<vtkImageImport> importer;
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera_style_interactor;
 
+	/* VTK Variables for Coronal Plane Viewer*/
+	vtkSmartPointer<vtkRenderer> coronal_renderer;
 
+	// Main viewer
 	std::shared_ptr<Viewer> vw = std::make_shared<Viewer>();
 
+	// Coronal Plane Viewer
+	std::shared_ptr<Viewer> coronal_vw = std::make_shared<Viewer>();
 
 	/*View Menu Radio Button Container*/
 	QActionGroup *alignmentGroup, *alignmentGroupSegment;

@@ -195,6 +195,9 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 	vw->initialize_vtk_pointers();
 	vw->initialize_vtk_mappers();
 	vw->initialize_vtk_renderers();
+	coronal_vw->initialize_vtk_pointers();
+	coronal_vw->initialize_vtk_mappers();
+	coronal_vw->initialize_vtk_renderers();
 	/*Selection Model for Models*/
 	ui.single_model_radio_button->setChecked(true);
 	ui.model_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -208,10 +211,11 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 	///*Set up VTK*/
 	vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
 	renderer = vw->get_renderer();
+	// coronal_renderer = coronal_vw->get_renderer();
+	coronal_renderer = renderer;
 	actor_image = vw->get_actor_image();
 	current_background = vw->get_current_background();
 	stl_reader = vw->get_stl_reader();
-
 	model_mapper_list = vw->get_model_mapper_list();
 	model_actor_list = vw->get_model_actor_list();
 	image_mapper = vw->get_image_mapper();
@@ -234,6 +238,7 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 	actor_text->SetPickable(0);
 	actor_image->SetMapper(image_mapper);
 	vw->load_render_window(ui.qvtk_widget->renderWindow());
+	coronal_vw->load_render_window(ui.qvtk_cpv->renderWindow());
 	//vw->load_renderers_into_render_window();
 	ui.qvtk_widget->renderWindow()->Render();
 
@@ -254,6 +259,10 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 
 	/*Not Currently Optimizing*/
 	currently_optimizing_ = false;
+
+	QSizePolicy p = ui.qvtk_widget->sizePolicy();
+	p.setHeightForWidth(true);
+	ui.qvtk_widget->setSizePolicy(p);
 
 }
 
@@ -712,13 +721,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 		                                  ui.preprocessor_box->geometry().top() + font_metrics.height() / 2,
 		                                  qvtk_side_length,
 		                                  qvtk_side_length));
-		/*Shift Over Right Hand Column*/
-		ui.edge_detection_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-		                                   ui.edge_detection_box->geometry().top()));
-		ui.model_view_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-		                               ui.model_view_box->geometry().top()));
-		ui.model_selection_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-		                                    ui.model_selection_box->geometry().top()));
+		ui.qvtk_widget->resize(qvtk_side_length, qvtk_side_length);
 		/*New Minimum*/
 		this->setMinimumWidth(ui.edge_detection_box->geometry().right() + APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X);
 
@@ -729,7 +732,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	model_list_widget_starting_height_ = ui.model_list_widget->geometry().height();
 	model_selection_box_starting_height_ = ui.model_selection_box->geometry().height();
 	qvtk_widget_starting_height_ = ui.qvtk_widget->geometry().height();
-	qvtk_widget_starting_width_ = ui.qvtk_widget->geometry().width();
+	qvtk_widget_starting_width_ = ui.qvtk_widget->geometry().height();
 }
 
 /*Handle Resize Event*/
@@ -752,28 +755,16 @@ void MainScreen::resizeEvent(QResizeEvent* event) {
 		total_expansion = horizontal_expansion;
 	}
 
-	/*Expand QVTK Widget*/
-	ui.qvtk_widget->resize(qvtk_widget_starting_width_ + total_expansion,
-	                       qvtk_widget_starting_height_ + total_expansion);
+	/* Maintain square aspect ratio and correct positioning for the main viewer window and the coronal plane viewer */
+	QPoint p_main = QPoint::QPoint(ui.gridLayout_3->geometry().left() + (ui.gridLayout_3->geometry().width() / 2) - ((qvtk_widget_starting_height_ + total_expansion) / 2), ui.pose_progress->geometry().bottom());
+	QRect r_main = QRect::QRect(p_main, QSize(qvtk_widget_starting_height_ + total_expansion, qvtk_widget_starting_height_ + total_expansion));
 
-	/*Extend List Widgets and Their Group Boxes*/
-	ui.image_list_widget->resize(ui.image_list_widget->size().width(),
-	                             image_list_widget_starting_height_ + vertical_expansion);
-	ui.model_list_widget->resize(ui.model_list_widget->size().width(),
-	                             model_list_widget_starting_height_ + vertical_expansion);
-	ui.image_selection_box->resize(ui.image_selection_box->size().width(),
-	                               image_selection_box_starting_height_ + vertical_expansion);
-	ui.model_selection_box->resize(ui.model_selection_box->size().width(),
-	                               model_selection_box_starting_height_ + vertical_expansion);
+	QPoint p_cpv = QPoint::QPoint(ui.Right->geometry().left(), ui.Right->geometry().top());
+	QRect r_cpv = QRect::QRect(p_cpv, QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
 
-	/*Shift Over Right Column*/
-	ui.edge_detection_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-	                                   ui.edge_detection_box->geometry().top()));
-	ui.model_view_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-	                               ui.model_view_box->geometry().top()));
-	ui.model_selection_box->move(QPoint(ui.qvtk_widget->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
-	                                    ui.model_selection_box->geometry().top()));
-
+	/*Expand QVTK Widgets*/
+	ui.qvtk_widget->setGeometry(r_main);
+	ui.qvtk_cpv->setGeometry(r_cpv);
 }
 
 /*MENU BAR BUTTONS*/
@@ -959,8 +950,12 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 				model_locations_.SavePose(ui.image_list_widget->currentRow(), selected[0].row(), loaded_pose);
 				vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 				vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+				coronal_vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 				ui.qvtk_widget->update();
 				ui.qvtk_widget->renderWindow()->Render();
+				ui.qvtk_cpv->update();
+				ui.qvtk_cpv->renderWindow()->Render();
 			}
 			else {
 				QMessageBox::critical(this, "Error!", "Invalid Pose!", QMessageBox::Ok);
@@ -985,6 +980,8 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 					vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 					ui.qvtk_widget->update();
 					ui.qvtk_widget->renderWindow()->Render();
+					ui.qvtk_cpv->update();
+					ui.qvtk_cpv->renderWindow()->Render();
 				}
 				else {
 					QMessageBox::critical(this, "Error!", "Invalid Pose!", QMessageBox::Ok);
@@ -1020,8 +1017,12 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
 	model_locations_.SavePose(ui.image_list_widget->currentRow(), ui.model_list_widget->currentRow(), prev_pose);
 	vw->set_model_position_at_index(selected[0].row(), prev_pose.x, prev_pose.y, prev_pose.z);
 	vw->set_model_orientation_at_index(selected[0].row(), prev_pose.xa, prev_pose.ya, prev_pose.za);
+	coronal_vw->set_model_position_at_index(selected[0].row(), prev_pose.x, prev_pose.y, prev_pose.z);
+	coronal_vw->set_model_orientation_at_index(selected[0].row(), prev_pose.xa, prev_pose.ya, prev_pose.za);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 // For passing current pose into sym_trap window
@@ -1060,8 +1061,12 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
 
 	vw->set_model_position_at_index(selected[0].row(), next_pose.x, next_pose.y, next_pose.z);
 	vw->set_model_orientation_at_index(selected[0].row(), next_pose.xa, next_pose.ya, next_pose.za);
+	coronal_vw->set_model_position_at_index(selected[0].row(), next_pose.x, next_pose.y, next_pose.z);
+	coronal_vw->set_model_orientation_at_index(selected[0].row(), next_pose.xa, next_pose.ya, next_pose.za);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 }
 
@@ -1114,8 +1119,12 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
 				Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentRow(), selected[0].row());
 				vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 				vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+				coronal_vw->set_model_position_at_index(selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 				ui.qvtk_widget->update();
 				ui.qvtk_widget->renderWindow()->Render();
+				ui.qvtk_cpv->update();
+				ui.qvtk_cpv->renderWindow()->Render();
 			}
 		}
 		else {
@@ -1164,6 +1173,8 @@ void MainScreen::on_actionReset_View_triggered() {
 		ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 	else {
 		/*Rest to Camera Interaction Mode*/
@@ -1193,6 +1204,8 @@ void MainScreen::on_actionReset_View_triggered() {
 		ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 };
 
@@ -1200,6 +1213,8 @@ void MainScreen::on_actionReset_Normal_Up_triggered() {
 	renderer->GetActiveCamera()->SetViewUp(0, 1, 0);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 void MainScreen::on_actionModel_Interaction_Mode_triggered() {
@@ -1213,6 +1228,8 @@ void MainScreen::on_actionModel_Interaction_Mode_triggered() {
 	ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(key_press_vtk);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 };
 
 
@@ -1236,6 +1253,8 @@ void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
 	ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(camera_style_interactor);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 };
 
 /*About Menu*/
@@ -1284,10 +1303,12 @@ void MainScreen::update_image_list_widget() {
 		vw->update_display_background_to_dilation_image(this->curr_frame(), ui.camera_A_radio_button->isChecked());
 	}
 	else if (ui.original_image_radio_button->isChecked()) {
-		vw->update_display_background_to_original_image(this->curr_frame(), true);
+		vw->update_display_background_to_original_image(this->curr_frame(), ui.original_image_radio_button->isChecked());
 	}
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned int input_width, unsigned int input_height) {
@@ -1307,6 +1328,8 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 	ui.pose_label->setText("Segmenting images...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted Image*/
 	bool black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
@@ -1334,6 +1357,8 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location, unsigned i
 		ui.pose_progress->setValue(20 + 30 * static_cast<double>(i + 1) / static_cast<double>(ui.image_list_widget->count()));
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 
 	if (ui.image_list_widget->currentIndex().row() >= 0) {
@@ -1378,6 +1403,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	ui.pose_label->setVisible(true);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 	qApp->processEvents();
 
 
@@ -1391,6 +1418,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	ui.pose_label->setText("Initializing STL model on GPU...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*STL Information*/
 	vector<vector<float>> triangle_information;
@@ -1409,6 +1438,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	ui.pose_label->setText("Initializing femoral implant pose estimation...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Load JIT Model*/
 	/*std::string pt_model_location = "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLima1024_07192019_HRProcessed_Fem_07232019_1_TORCH_SCRIPT.pt"; */
@@ -1432,6 +1463,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	ui.pose_label->setText("Estimating femoral implant poses...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 	auto orientation = new float[3];
 	torch::Tensor gpu_byte_placeholder(torch::zeros({1, 1, input_height, input_width},
 	                                                device(torch::kCUDA).dtype(torch::kByte)));
@@ -1581,6 +1614,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 			65 + 30 * static_cast<double>(i + 1) / static_cast<double>(ui.image_list_widget->count()));
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 		qApp->processEvents();
 	}
 
@@ -1588,6 +1623,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	ui.pose_label->setText("Deleting old models...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Delete GPU Model*/
 	delete gpu_mod;
@@ -1601,11 +1638,15 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 	model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	ui.pose_progress->setValue(100);
 	ui.pose_label->setText("Finished!");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Pose Estimate Progress and Label Not Visible*/
 	ui.pose_progress->setVisible(false);
@@ -1640,6 +1681,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_label->setVisible(true);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 	qApp->processEvents();
 
 
@@ -1653,6 +1696,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_label->setText("Initializing STL model on GPU...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*STL Information*/
 	vector<vector<float>> triangle_information;
@@ -1671,6 +1716,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_label->setText("Initializing tibial implant pose estimation...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Load JIT Model*/
 	/* Removing the below code to allow for the user to select the model they wish to use*/
@@ -1695,6 +1742,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_label->setText("Estimating tibial implant poses...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 	auto orientation = new float[3];
 	torch::Tensor gpu_byte_placeholder(torch::zeros({1, 1, input_height, input_width},
 	                                                device(torch::kCUDA).dtype(torch::kByte)));
@@ -1818,6 +1867,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 			65 + 30 * static_cast<double>(i + 1) / static_cast<double>(ui.image_list_widget->count()));
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 		qApp->processEvents();
 	}
 
@@ -1825,6 +1876,8 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	ui.pose_label->setText("Deleting old models...");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Delete GPU Model*/
 	delete gpu_mod;
@@ -1838,11 +1891,15 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 	model_actor_list[selected[0].row()]->SetOrientation(loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	ui.pose_progress->setValue(100);
 	ui.pose_label->setText("Finished!");
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*Pose Estimate Progress and Label Not Visible*/
 	ui.pose_progress->setVisible(false);
@@ -1882,7 +1939,6 @@ void MainScreen::on_actionOptimizer_Settings_triggered() {
 }
 
 /*Symmetry Trap Window*/
-
 
 /*DRR Settings Window*/
 void MainScreen::on_actionDRR_Settings_triggered() {
@@ -1994,9 +2050,10 @@ void MainScreen::on_load_calibration_button_clicked() {
 	/*Set Up QVTK Widget For Calibration*/
 	/*Monoplane (Left Viewport)*/
 	vw->load_renderers_into_render_window(calibration_file_);
+	coronal_vw->load_renderers_into_render_window(calibration_file_);
 	if (calibrated_for_monoplane_viewport_) {
 		vw->setup_camera_calibration(calibration_file_);
-
+		coronal_vw->setup_camera_calibration(calibration_file_);
 		/*Set Checked To Monoplane but disable from further clicking*/
 		ui.camera_A_radio_button->setChecked(true);
 		ui.camera_A_radio_button->setDisabled(true);
@@ -2231,6 +2288,7 @@ void MainScreen::on_load_model_button_clicked() {
 
 	//for (int i = 0; i < CADFileExtensions.size(); i++) loaded_models.push_back(Model(CADFileExtensions[i].toStdString(), CADModelNames[i].toStdString(), "BLANK"));
 	vw->load_models(CADFileExtensions, CADModelNames);
+	coronal_vw->load_models(CADFileExtensions, CADModelNames);
 	for (int i = 0; i<CADFileExtensions.size(); i++) {
 		loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
 			CADModelNames[i].toStdString(),
@@ -2256,6 +2314,7 @@ void MainScreen::on_load_model_button_clicked() {
 		model_locations_.LoadNewModel(calibration_file_);
 	}
 	vw->load_3d_models_into_actor_and_mapper_list();
+	coronal_vw->load_3d_models_into_actor_and_mapper_list();
 	vw->load_model_actors_and_mappers_with_3d_data();
 	//If No Loaded Models, Default Select First
 	if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
@@ -2265,8 +2324,14 @@ void MainScreen::on_load_model_button_clicked() {
 		vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_, 
 			loaded_frames[0].GetOriginalImage().cols, 
 			loaded_frames[0].GetOriginalImage().rows);
+		coronal_vw->set_vtk_camera_from_calibration_and_image_size_if_jta(calibration_file_,
+			loaded_frames[0].GetOriginalImage().cols,
+			loaded_frames[0].GetOriginalImage().rows);
 	} else if (calibration_file_.type_ == "Denver") {
 		vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(calibration_file_,
+			loaded_frames[0].GetOriginalImage().cols,
+			loaded_frames[0].GetOriginalImage().rows);
+		coronal_vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(calibration_file_,
 			loaded_frames[0].GetOriginalImage().cols,
 			loaded_frames[0].GetOriginalImage().rows);
 	}
@@ -2312,6 +2377,11 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 		update_image_list_widget();
 
 		vw->place_image_actors_according_to_calibration(
+			calibration_file_,
+			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
+			loaded_frames[this->curr_frame()].GetOriginalImage().cols
+		);
+		coronal_vw->place_image_actors_according_to_calibration(
 			calibration_file_,
 			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
 			loaded_frames[this->curr_frame()].GetOriginalImage().cols
@@ -2370,6 +2440,8 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 		/*update qvtk widget*/
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 
 }
@@ -2411,7 +2483,13 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 
 		vw->place_image_actors_according_to_calibration(calibration_file_.camera_B_principal_, loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols);
+		coronal_vw->place_image_actors_according_to_calibration(calibration_file_.camera_B_principal_, loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
+			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols);
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
+			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
+			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
+			false));
+		coronal_renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
 			false));
@@ -2429,6 +2507,14 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 					relative_B_pose.y, 
 					relative_B_pose.z);
 				vw->set_model_orientation_at_index(selected[r].row(),
+					relative_B_pose.xa,
+					relative_B_pose.ya,
+					relative_B_pose.za);
+				coronal_vw->set_model_position_at_index(selected[r].row(),
+					relative_B_pose.x,
+					relative_B_pose.y,
+					relative_B_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[r].row(),
 					relative_B_pose.xa,
 					relative_B_pose.ya,
 					relative_B_pose.za);
@@ -2451,11 +2537,15 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 				current_pose = calibration_file_.convert_Pose_A_to_Pose_B(current_pose);
 				vw->set_model_position_at_index(selected[r].row(), current_pose.x, current_pose.y, current_pose.z);
 				vw->set_model_orientation_at_index(selected[r].row(), current_pose.xa, current_pose.ya, current_pose.za);
+				coronal_vw->set_model_position_at_index(selected[r].row(), current_pose.x, current_pose.y, current_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[r].row(), current_pose.xa, current_pose.ya, current_pose.za);
 			}
 		}
 		/*update qvtk widget*/
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 }
 
@@ -2501,7 +2591,16 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
 			loaded_frames[this->curr_frame()].GetOriginalImage().cols
 		);
+		coronal_vw->place_image_actors_according_to_calibration(
+			calibration_file_,
+			loaded_frames[this->curr_frame()].GetOriginalImage().rows,
+			loaded_frames[this->curr_frame()].GetOriginalImage().cols
+		);
 		renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
+			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
+			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
+			true));
+		coronal_renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().cols,
 			loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows,
 			true));
@@ -2537,27 +2636,28 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 		/*Original Model*/
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
-			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_original(selected[i].row());
 		}
 		/*Solid Color Model*/
 		else if (ui.solid_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_solid(selected[i].row());
-			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 		}
 		/*Transparent Model*/
 		else if (ui.transparent_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
-			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 		}
 		/*Wireframe Model*/
 		else if (ui.wireframe_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
-			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
 		}
+
+		ui.qvtk_widget->update();
+		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 
 		/*If Camera A View*/
 		if (ui.camera_A_radio_button->isChecked()) {
@@ -2569,6 +2669,14 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 				loaded_pose.y,
 				loaded_pose.z);
 			vw->set_model_orientation_at_index(selected[i].row(),
+				loaded_pose.xa,
+				loaded_pose.ya,
+				loaded_pose.za);
+			coronal_vw->set_model_position_at_index(selected[i].row(),
+				loaded_pose.x,
+				loaded_pose.y,
+				loaded_pose.z);
+			coronal_vw->set_model_orientation_at_index(selected[i].row(),
 				loaded_pose.xa,
 				loaded_pose.ya,
 				loaded_pose.za);
@@ -2592,6 +2700,14 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 				relative_B_pose.xa,
 				relative_B_pose.ya,
 				relative_B_pose.za);
+			coronal_vw->set_model_position_at_index(selected[i].row(),
+				relative_B_pose.x,
+				relative_B_pose.y,
+				relative_B_pose.z);
+			coronal_vw->set_model_orientation_at_index(selected[i].row(),
+				relative_B_pose.xa,
+				relative_B_pose.ya,
+				relative_B_pose.za);
 
 			/*Text Actor if On*/
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
@@ -2603,6 +2719,8 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 	/*update qvtk widget*/
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 }
 
@@ -2632,6 +2750,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
 	/*Load Models to Screen*/
 	vw->make_all_models_invisible();
+	coronal_vw->make_all_models_invisible();
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	/*Hide Text if Nothing Selected*/
 	if (selected.size() == 0) {
@@ -2656,33 +2775,36 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 		// If first selected item, make the model orange. Otherwise, make it blue.
 		if (i == 0) {
 			vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
+			coronal_vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
 		}
 		else  {
 			//vw->make_model_visible_and_pickable_at_index(i);
 			vw->set_3d_model_color(selected[i].row(), UF_BLUE);
+			coronal_vw->set_3d_model_color(selected[i].row(), UF_BLUE);
 		}
 
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
-			ui.qvtk_widget->update();
-			ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_original(selected[i].row());
 		}
 		else if (ui.solid_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_solid(selected[i].row());
-			ui.qvtk_widget->update();
-			ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 		}
 		else if (ui.transparent_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
-			ui.qvtk_widget->update();
-			ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 		}
 		/*Wireframe Model*/
 		else if (ui.wireframe_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
-			ui.qvtk_widget->update();
-			ui.qvtk_widget->renderWindow()->Render();
+			coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
 		}
+
+		ui.qvtk_widget->update();
+		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 
 		/*If Camera A View*/
 		if (ui.camera_A_radio_button->isChecked()) {
@@ -2691,6 +2813,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			                                               selected[i].row());
 			vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
 			vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+			coronal_vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+			coronal_vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
 			
 			/*Text Actor if On */
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
@@ -2712,6 +2836,14 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 				relative_B_pose.xa,
 				relative_B_pose.ya,
 				relative_B_pose.za);
+			coronal_vw->set_model_position_at_index(selected[i].row(),
+				relative_B_pose.x,
+				relative_B_pose.y,
+				relative_B_pose.z);
+			coronal_vw->set_model_orientation_at_index(selected[i].row(),
+				relative_B_pose.xa,
+				relative_B_pose.ya,
+				relative_B_pose.za);
 				
 			/*Text Actor if On*/
 			if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
@@ -2723,6 +2855,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
 	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 /*Make Selected Actor Principal from VTK*/
@@ -2759,24 +2893,25 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	}
 	if (ui.original_model_radio_button->isChecked() == true) {
 		vw->change_model_opacity_to_original(index_new_principal);
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
 	else if (ui.solid_model_radio_button->isChecked() == true) {
 		vw->change_model_opacity_to_solid(index_new_principal);
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
 	else if (ui.transparent_model_radio_button->isChecked() == true) {
 		vw->change_model_opacity_to_transparent(index_new_principal);
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
 	else if (ui.wireframe_model_radio_button->isChecked()) {
 		vw->change_model_opacity_to_wire_frame(index_new_principal);
-		ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
+
+	ui.qvtk_widget->update();
+	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 	/*If Camera A View*/
 	if (ui.camera_A_radio_button->isChecked()) {
@@ -2828,7 +2963,7 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 	}
 	/*Update qvtkWidget*/
 	ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
 }
 
 /*Display Edge Detected Image*/
@@ -2866,8 +3001,11 @@ void MainScreen::on_original_model_radio_button_clicked() {
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.original_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_original(selected[i].row());
+			coronal_vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 	}
 }
@@ -2877,8 +3015,11 @@ void MainScreen::on_solid_model_radio_button_clicked() {
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.solid_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_solid(selected[i].row());
+			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 	}
 }
@@ -2888,8 +3029,11 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.transparent_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
+			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 	}
 }
@@ -2937,8 +3081,11 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 	for (int i = 0; i < selected.size(); i++) {
 		if (ui.wireframe_model_radio_button->isChecked() == true) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
+			coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 	}
 }
@@ -2957,12 +3104,16 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
 		if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
 			actor_text->GetTextProperty()->SetOpacity(0.0);
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		else {
 			actor_text->GetTextProperty()->SetOpacity(1.0);
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 	}
 }
@@ -3029,7 +3180,9 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
@@ -3040,7 +3193,9 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 				vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*Save To Optimizer Settings and Registry*/
 		QString Version = "Version" + QString::number(VER_FIRST_NUM) +
@@ -3111,7 +3266,9 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
@@ -3122,7 +3279,9 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 				vw->update_display_background_to_dilation_image(this->curr_frame(), true);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*Save To Optimizer Settings and Registry*/
 		QString Version = "Version" + QString::number(VER_FIRST_NUM) +
@@ -3194,7 +3353,9 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 				vw->update_display_background_to_edge_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*If Dilation View Selected*/
 		if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
@@ -3205,7 +3366,9 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 				vw->update_display_background_to_dilation_image(this->curr_frame(), false);
 			}
 			ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_widget->renderWindow()->Render();
+			ui.qvtk_cpv->update();
+			ui.qvtk_cpv->renderWindow()->Render();
 		}
 		/*Save To Optimizer Settings and Registry*/
 		QString Version = "Version" + QString::number(VER_FIRST_NUM) +
@@ -3258,6 +3421,8 @@ void MainScreen::on_apply_all_edge_button_clicked() {
 		}
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 	/*If Dilation View Selected*/
 	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
@@ -3269,6 +3434,8 @@ void MainScreen::on_apply_all_edge_button_clicked() {
 		}
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 	/*Save To Optimizer Settings and Registry*/
 	QString Version = "Version" + QString::number(VER_FIRST_NUM) +
@@ -3499,7 +3666,9 @@ void MainScreen::updateOrientationSymTrap_MS(double x, double y, double z, doubl
 	vw->set_model_position_at_index(selected[0].row(), new_orientation.x, new_orientation.y, new_orientation.z);
 	vw->set_model_orientation_at_index(selected[0].row(), new_orientation.xa, new_orientation.ya, new_orientation.za);
 	ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 /*OPTIMIZATION
@@ -3517,6 +3686,8 @@ void MainScreen::onUpdateOptimum(double x, double y, double z, double xa, double
 		vw->set_model_orientation_at_index(primary_model_index, CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 
 }
@@ -3534,6 +3705,8 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
 		vw->set_model_orientation_at_index(primary_model_index, CurrentPose.xa, CurrentPose.ya, CurrentPose.za);
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 	else {
 		/*Display Finished*/
@@ -3658,7 +3831,9 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 
 	/*update qvtk*/
 	ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 }
 
 /*Update Background if Dilation Selected and Moving From Trunk to Branch OR Branch to Z Search*/
@@ -3672,6 +3847,8 @@ void MainScreen::onUpdateDilationBackground() {
 		}
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 }
 
@@ -4242,6 +4419,8 @@ void MainScreen::UpdateDilationFrames() {
 		}
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+		ui.qvtk_cpv->update();
+		ui.qvtk_cpv->renderWindow()->Render();
 	}
 }
 
@@ -4274,6 +4453,8 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
 	model_actor_list[selected[0].row()]->SetOrientation(current_img_pos.xa, current_img_pos.ya, current_img_pos.za);
 
 	ui.qvtk_widget->update();
-		ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_widget->renderWindow()->Render();
+	ui.qvtk_cpv->update();
+	ui.qvtk_cpv->renderWindow()->Render();
 
 }
