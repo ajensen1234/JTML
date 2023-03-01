@@ -17,7 +17,7 @@ namespace stl_reader_BIG {
 		//  - Vertices: 3x floats (4 byteach, 12 bytes total)
 		//  - AttributeCount: 1 short (2 bytes)
 		// Total: 50 bytes per facet
-		const size_t facetSize = 3 * sizeof(float_t) + 3 * 3 * sizeof(float_t) + sizeof(uint16_t);
+		const size_t facetSize = 3 * sizeof(float) + 3 * 3 * sizeof(float) + sizeof(uint16_t);
 
 		QFile file(path);
 		bool canFileBeOpened = file.open(QIODevice::ReadOnly);

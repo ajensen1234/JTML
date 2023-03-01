@@ -451,10 +451,10 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 	int total_box_height = GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().bottomLeft().y() + 
 		APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->height() + image_selection_box_height;
 	
-	(total_box_height < this->height()) ? image_selection_box_height = this->height() - (GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().
+	/*(total_box_height < this->height()) ? image_selection_box_height = this->height() - (GROUP_BOX_TO_GROUP_BOX_Y + ui.image_view_box->geometry().
 			bottomLeft().y() + APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y + ui.menuBar->
 			height())
-		: this->setMinimumHeight(total_box_height);
+		: this->setMinimumHeight(total_box_height);*/
 
 	ui.image_selection_box->setGeometry(
 		QRect(APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X,
@@ -756,11 +756,11 @@ void MainScreen::resizeEvent(QResizeEvent* event) {
 	}
 
 	/* Maintain square aspect ratio and correct positioning for the main viewer window and the coronal plane viewer */
-	QPoint p_main = QPoint::QPoint(ui.gridLayout_3->geometry().left() + (ui.gridLayout_3->geometry().width() / 2) - ((qvtk_widget_starting_height_ + total_expansion) / 2), ui.pose_progress->geometry().bottom());
-	QRect r_main = QRect::QRect(p_main, QSize(qvtk_widget_starting_height_ + total_expansion, qvtk_widget_starting_height_ + total_expansion));
+	QPoint p_main = QPoint(ui.gridLayout_3->geometry().left() + (ui.gridLayout_3->geometry().width() / 2) - ((qvtk_widget_starting_height_ + total_expansion) / 2), ui.pose_progress->geometry().bottom());
+	QRect r_main = QRect(p_main, QSize(qvtk_widget_starting_height_ + total_expansion, qvtk_widget_starting_height_ + total_expansion));
 
-	QPoint p_cpv = QPoint::QPoint(ui.Right->geometry().left(), ui.Right->geometry().top());
-	QRect r_cpv = QRect::QRect(p_cpv, QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
+	QPoint p_cpv = QPoint(ui.Right->geometry().left(), ui.Right->geometry().top());
+	QRect r_cpv = QRect(p_cpv, QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
 
 	/*Expand QVTK Widgets*/
 	ui.qvtk_widget->setGeometry(r_main);

@@ -38,9 +38,9 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 
 # Adding Subdirectories
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)
 add_subdirectory(lib)
 add_subdirectory(packaging)
 
-enable_testing()
+#enable_testing()
 

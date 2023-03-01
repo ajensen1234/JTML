@@ -16,5 +16,6 @@
 /out/build
 *build*/
 *idea*/
-
+.cmake
+CMakeFiles
 CMakeSettings.json

@@ -187,7 +187,7 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -213,7 +213,7 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -233,7 +233,7 @@ namespace gpu_cost_function {
 		cudaGetLastError();
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -269,7 +269,7 @@ namespace gpu_cost_function {
 		int width = grayscale_image->GetFrameWidth();
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -319,7 +319,7 @@ namespace gpu_cost_function {
 			return false;
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -348,7 +348,7 @@ namespace gpu_cost_function {
 		int width = grayscale_image->GetFrameWidth();
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block))));
 
@@ -378,7 +378,7 @@ namespace gpu_cost_function {
 		int grid_pixel_width = image_width * grid_width;
 
 		/*Image Processing Dimension Grid*/
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(grid_pixel_width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(grid_pixel_height) / sqrt(static_cast<double>(threads_per_block))));
 

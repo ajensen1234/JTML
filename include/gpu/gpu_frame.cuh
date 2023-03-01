@@ -24,27 +24,27 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads the four host images
 		else, marked as not initialized correctly*/
-		__declspec(dllexport) GPUFrame(int width, int height,
+		  GPUFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_image);
 		/*Default constructor. Marked as not initialized correctly.*/
-		__declspec(dllexport) GPUFrame();
+		  GPUFrame();
 
 		/*Default Destructor*/
-		__declspec(dllexport) ~GPUFrame();
+		  ~GPUFrame();
 
 		/*Get pointer to the images on the GPU Image*/
-		__declspec(dllexport) unsigned char* GetDeviceImagePointer();
+		  unsigned char* GetDeviceImagePointer();
 
 		/*Get pointer to the actual GPU Image*/
-		__declspec(dllexport) GPUImage* GetGPUImage();
+		  GPUImage* GetGPUImage();
 
 		/*Get Image Size Parameters*/
-		__declspec(dllexport) int GetFrameHeight();
-		__declspec(dllexport) int GetFrameWidth();
+		  int GetFrameHeight();
+		  int GetFrameWidth();
 
 		/*Get Is Initialized Correctly*/
-		__declspec(dllexport) bool IsInitializedCorrectly();
+		  bool IsInitializedCorrectly();
 
 	private:
 		/*GPU Image*/

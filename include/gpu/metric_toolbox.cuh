@@ -19,22 +19,22 @@
 //	class MetricToolbox : public RegistrationMetric {
 //	public:
 //		/*Constructor & Destructor*/
-//		__declspec(dllexport) MetricToolbox(int width, int height);
-//		__declspec(dllexport) MetricToolbox();
+//		  MetricToolbox(int width, int height);
+//		  MetricToolbox();
 //
 //		/*Compute Dilation Metrics*/
-//		__declspec(dllexport) double ComputeDilationMetric(int *bounding_box_packet);
+//		  double ComputeDilationMetric(int *bounding_box_packet);
 //
 //		/*Compute Mahfouz Metric*/
-//		__declspec(dllexport) double ComputeMahfouzMetric(int *bounding_box_packet);
+//		  double ComputeMahfouzMetric(int *bounding_box_packet);
 //
 //		/*Set/Get Dilation*/
-//		__declspec(dllexport) void SetDilation(int dilation);
-//		__declspec(dllexport) int GetDilation();
+//		  void SetDilation(int dilation);
+//		  int GetDilation();
 //
 //		/*Set/Get "Is the Silhouette Black?"*/
-//		__declspec(dllexport) void SetBlackSilhouette(bool black_silhouette);
-//		__declspec(dllexport) bool GetBlackSilhouette();
+//		  void SetBlackSilhouette(bool black_silhouette);
+//		  bool GetBlackSilhouette();
 //
 //	private:
 //		/*Dilation Constant*/

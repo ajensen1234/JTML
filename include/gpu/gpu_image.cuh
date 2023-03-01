@@ -12,42 +12,42 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads blank image
 		else, DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage(int width, int height, int gpu_device);
+		  GPUImage(int width, int height, int gpu_device);
 		/*If successful, uploads host_image
 		else, DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage(int width, int height, int gpu_device, unsigned char* host_image);
+		  GPUImage(int width, int height, int gpu_device, unsigned char* host_image);
 		/*Default constructor. DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage();
+		  GPUImage();
 
 		/*Destructor*/
-		__declspec(dllexport) ~GPUImage();
+		  ~GPUImage();
 
 		/*Upload Blank Image to Device (returns true if successful)*/
-		__declspec(dllexport) bool UploadBlankImageToGPU(int width, int height);
+		  bool UploadBlankImageToGPU(int width, int height);
 		/*Upload Image to Device (returns true if successful)*/
-		__declspec(dllexport) bool UploadImageToGPU(int width, int height, unsigned char* host_image);
+		  bool UploadImageToGPU(int width, int height, unsigned char* host_image);
 
 		/*Remove Image from Device (returns true if successful)*/
-		__declspec(dllexport) bool RemoveImageFromGPU();
+		  bool RemoveImageFromGPU();
 
 		/*Check to See if Image is On the Device*/
-		__declspec(dllexport) bool CheckImageOnGPU();
+		  bool CheckImageOnGPU();
 
 		/*Get Pointer to Device (GPU) Image*/
-		__declspec(dllexport) unsigned char* GetDeviceImagePointer();
+		  unsigned char* GetDeviceImagePointer();
 
 		/*Get Pointer to Bounding Box*/
-		__declspec(dllexport) int* GetBoundingBox();
+		  int* GetBoundingBox();
 
 		/*Is the GPU model properly initialized?*/
-		__declspec(dllexport) bool IsInitializedCorrectly();
+		  bool IsInitializedCorrectly();
 
 		/*Write a .png to Location of Device Image*/
-		__declspec(dllexport) bool WriteImage(std::string file_name);
+		  bool WriteImage(std::string file_name);
 
 		/*Get Image Size Parameters*/
-		__declspec(dllexport) int GetFrameHeight();
-		__declspec(dllexport) int GetFrameWidth();
+		  int GetFrameHeight();
+		  int GetFrameWidth();
 
 	private:
 		/*Pointer to Device Image on GPU*/
