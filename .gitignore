@@ -20,7 +20,8 @@
 CMakeFiles
 CMakeSettings.json
 build
-CMakeCache.txt
+.CMakeCache
+/CMakeCache.txt
 cmake_install.cmake
 CPackConfig.cmake
 CPackSourceConfig.cmake
