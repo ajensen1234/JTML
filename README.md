@@ -44,7 +44,7 @@ I'm not 100% sure on what *is* and what *isn't* required, but these are what I a
 
 Assuming you have the above installed correctly:
 
-1. Ensure that your [nvcc version](https://linuxhint.com/update_alternatives_ubuntu/) that is used in terminal is 12.0
+1. Ensure that your [nvcc version](https://linuxhint.com/update_alternatives_ubuntu/) that is used in terminal is 12.0, and that your GPU is being seen correctly. This can be verified by running the commands 'nvidia-smi', and 'nvcc --version'.
 2. In CCMake, enable advanced mode by hitting 't': 
     1. Ensure that CMAKE_CXX_COMPILER_AR and CMAKE_CXX_COMPILER_RANLIB are pointing to wherever gcc-ar-12 and gcc-ranlib-12 are on your machine. Mine were located at /usr/bin/
     2. Ensure all CUDA-related environment variables are pointing to the contents of the cuda-12 folder. Mine was located in /usr/local/cuda-12
