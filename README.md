@@ -44,8 +44,8 @@ Assuming you have the above installed correctly:
 
 1. Ensure that your nvcc version that is selected in terminal is 12.0
 2. In CCMake, enable advanced mode by hitting 't': 
-    1. Ensure that CMAKE_CXX_COMPILER_AR and CMAKE_CXX_COMPILER_RANLIB are pointing to wherever gcc-ar-12 and gcc-ranlib-12 are on your machine.
-    2. Ensure all CUDA-related environment variables are pointing to the contents of the cuda-12 folder. Mine was located in /usr/local/cuda-12, but YMMV
+    1. Ensure that CMAKE_CXX_COMPILER_AR and CMAKE_CXX_COMPILER_RANLIB are pointing to wherever gcc-ar-12 and gcc-ranlib-12 are on your machine. Mine were located at /usr/bin/
+    2. Ensure all CUDA-related environment variables are pointing to the contents of the cuda-12 folder. Mine was located in /usr/local/cuda-12
     3. Ensure that the CUDA version being seen by ccmake (after configuring the first time) is 12.1. Not sure why it doesn't say 12.0, I think this is an artifact of the nvcc version included in CUDA 12.
     4. Ensure the rest of the environment variables are pointing to the right places (libtorch, Qt5, Torch, OpenCV, VTK)
 3. Hit 'c' to configure, and if anything comes up red, review it and modify as needed. Configure until no *required* environment variables are missing.
