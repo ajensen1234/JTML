@@ -18,14 +18,23 @@
 *NOTE: Install stuff in their default directories to make this easier*
 
 export CUDAToolkit_ROOT=/usr/local/cuda-12/bin
-export Qt5Core_DIR=~/Qt/5.15.2/gcc_64/lib/cmake/Qt5
+
+export Qt5Core_DIR=\~/Qt/5.15.2/gcc_64/lib/cmake/Qt5
+
 export CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12
-export Torch_DIR=~/libtorch/share/cmake/Torch
-export OpenCV_DIR=~/opencv-4.x/build
-export VTK_DIR=~/VTK-9.2.6/build
+
+export Torch_DIR=\~/libtorch/share/cmake/Torch
+
+export OpenCV_DIR=\~/opencv-4.x/build
+
+export VTK_DIR=\~/VTK-9.2.6/build
+
 export CUDA_HOME="/usr/local/cuda-12/"
+
 export PATH="/usr/local/cuda-12/bin:$PATH"
+
 export PATH="~/opencv-4.x/modules/core/include:$PATH"
+
 
 I'm not 100% sure on what *is* and what *isn't* required, but these are what I added and everything managed to run well. Exclude the above at your own risk.
 
