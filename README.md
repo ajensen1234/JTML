@@ -1,4 +1,6 @@
-# Important information for compilation, building, and running on Linux!
+# Compilation, Generation, and Building Joint-Track Machine Learning on Linux
+
+This was done on Pop! os 22.04 LTS, 64-bit
 
 ## Dependencies
 
