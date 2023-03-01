@@ -2,13 +2,13 @@
 
 ## Dependencies
 
-1. [Qt 5.15.2]{https://doc.qt.io/qt-5/gettingstarted.html}
-2. [VTK 9.2.6]{https://vtk.org/download/}
-3. [OpenCV 4.7]{https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html}
-4. [GCC 12]{https://itslinuxfoss.com/install-gcc-ubuntu-22-04/#2}
-5. [CUDA 12.0]{https://developer.nvidia.com/cuda-12-0-0-download-archive}
+1. [Qt 5.15.2](https://doc.qt.io/qt-5/gettingstarted.html)
+2. [VTK 9.2.6](https://vtk.org/download/)
+3. [OpenCV 4.7](https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html)
+4. [GCC 12](https://itslinuxfoss.com/install-gcc-ubuntu-22-04/#2)
+5. [CUDA 12.0](https://developer.nvidia.com/cuda-12-0-0-download-archive)
 6. NVIDIA driver 525
-7. [Libtorch 1.13]{https://pytorch.org/get-started/locally/}
+7. [Libtorch 1.13](https://pytorch.org/get-started/locally/)
 8. CCMake (not required, but is what I used to compile and generate, it made things easier than the GUI or VSCode)
 
 ## Environment Variables
