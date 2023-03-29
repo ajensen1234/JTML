@@ -2,8 +2,8 @@
 #include "gpu/gpu_metrics.cuh"
 
 /*Cuda*/
-#include "cuda_runtime.h"
-#include "cuda.h"
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 /*Grayscale Colors*/
 #include "pixel_grayscale_colors.h"
@@ -91,12 +91,12 @@ namespace gpu_cost_function {
 		int sub_top_y = min(bounding_box[3] + dilation, height - dilation - 1);
 		int sub_cropped_width = sub_right_x - sub_left_x + 1;
 		int sub_cropped_height = sub_top_y - sub_bottom_y + 1;
-		dim_block_image_processing_ = dim3::dim3(
+		dim_block_image_processing_ = dim3(
 			ceil(sqrt(static_cast<double>(threads_per_block))),
 			ceil(sqrt(static_cast<double>(threads_per_block))));
 
 		/* Compute launch parameters for dilation. Want 4 times the size of the sub image. */
-		dim_grid_image_processing_ = dim3::dim3(
+		dim_grid_image_processing_ = dim3(
 			ceil(2.0 * sub_cropped_width / sqrt(static_cast<double>(threads_per_block))),
 			ceil(2.0 * sub_cropped_height / sqrt(static_cast<double>(threads_per_block))));
 
@@ -106,7 +106,7 @@ namespace gpu_cost_function {
 			sub_left_x, sub_bottom_y, sub_cropped_width, dilation);
 
 		/*Change Launch Parameters For Gray Dilated Edge to White Edge Pass*/
-		dim_grid_image_processing_ = dim3::dim3(
+		dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(sub_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(sub_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 

@@ -10,15 +10,15 @@ namespace gpu_cost_function {
 	class GPUDilatedFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
-		__declspec(dllexport) GPUDilatedFrame(int width, int height,
+		  GPUDilatedFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_dilated_image,
 			int dilation);
-		__declspec(dllexport) GPUDilatedFrame();
-		__declspec(dllexport) ~GPUDilatedFrame();
+		  GPUDilatedFrame();
+		  ~GPUDilatedFrame();
 
 		/*Get Dilation Parameters*/
-		__declspec(dllexport) int GetDilation();
+		  int GetDilation();
 
 	private:
 		/*Dilation*/

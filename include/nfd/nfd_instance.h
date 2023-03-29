@@ -4,7 +4,7 @@
 #include<array>
 #include "gpu/render_engine.cuh"
 #include "gpu/gpu_model.cuh"
-#include <opencv2/core/mat.hpp>
+#include "opencv2/core/mat.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"

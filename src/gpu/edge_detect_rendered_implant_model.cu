@@ -101,10 +101,10 @@ namespace gpu_cost_function {
 		If 256, we have 16 x 16 Blocks (Read in at one less on less on all 4 sides, so 14 x 14). */
 		int sub_cropped_width = bounding_box[2] - bounding_box[0] + 1;
 		int sub_cropped_height = bounding_box[3] - bounding_box[1] + 1;
-		dim_block_image_processing_ = dim3::dim3(
+		dim_block_image_processing_ = dim3(
 			ceil(sqrt(static_cast<double>(threads_per_block))),
 			ceil(sqrt(static_cast<double>(threads_per_block))));
-		dim_grid_image_processing_ = dim3::dim3(
+		dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(sub_cropped_width) / static_cast<double>(dim_block_image_processing_.x - 2)),
 			ceil(static_cast<double>(sub_cropped_height) / static_cast<double>(dim_block_image_processing_.y - 2)));
 
@@ -115,7 +115,7 @@ namespace gpu_cost_function {
 				bounding_box[3], width);
 
 		/*Change Launch Parameters For Gray Edge to White Edge Pass*/
-		dim_grid_image_processing_ = dim3::dim3(
+		dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(sub_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(sub_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 

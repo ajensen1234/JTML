@@ -16,25 +16,25 @@
 //	class RegistrationMetric {
 //	public:
 //		/*Constructor & Destructor*/
-//		__declspec(dllexport) RegistrationMetric(int width, int height);
-//		__declspec(dllexport) RegistrationMetric();
-//		__declspec(dllexport) ~RegistrationMetric();
+//		  RegistrationMetric(int width, int height);
+//		  RegistrationMetric();
+//		  ~RegistrationMetric();
 //
 //		/*CUDA API Initialization (Allocation, etc.) Must return cudaSuccess else call destructor.*/
-//		__declspec(dllexport) cudaError_t InitializeCUDA(unsigned char* dev_image,
+//		  cudaError_t InitializeCUDA(unsigned char* dev_image,
 //			unsigned char* edge_comparison_image, unsigned char* dilation_comparison_image, unsigned char* intensity_comparison_image, int device);
 //
 //		/*Reset Edge Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		__declspec(dllexport) cudaError_t SetEdgeComparisonImage(unsigned char* edge_comparison_image);
+//		  cudaError_t SetEdgeComparisonImage(unsigned char* edge_comparison_image);
 //
 //		/*Reset Dilation Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		__declspec(dllexport) cudaError_t SetDilationComparisonImage(unsigned char* dilation_comparison_image);
+//		  cudaError_t SetDilationComparisonImage(unsigned char* dilation_comparison_image);
 //
 //		/*Reset Intensity Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		__declspec(dllexport) cudaError_t SetIntensityComparisonImage(unsigned char* intensity_comparison_image);
+//		  cudaError_t SetIntensityComparisonImage(unsigned char* intensity_comparison_image);
 //
 //		/*Write a .png to Location of Device Image*/
-//		__declspec(dllexport) void WriteImage(std::string file_location);
+//		  void WriteImage(std::string file_location);
 //
 //	protected:
 //		/*Initialized CUDA Check*/

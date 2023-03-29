@@ -14,7 +14,6 @@ add_executable(${PROJECT_NAME}
 	main.cpp
 	mainscreen.cpp
 	settings_control.cpp
-	
 	viewer.cpp
 	${HEADER_FILES}
 	${HEADER_DIR}/mainscreen.qrc)
