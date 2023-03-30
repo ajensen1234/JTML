@@ -2197,8 +2197,8 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
-                 <color alpha="128">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
                   <red>33</red>
                   <green>88</green>
                   <blue>170</blue>
@@ -2271,8 +2271,8 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
-                 <color alpha="128">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
                   <red>33</red>
                   <green>88</green>
                   <blue>170</blue>
@@ -2345,8 +2345,8 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
-                 <color alpha="128">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
                   <red>33</red>
                   <green>88</green>
                   <blue>170</blue>
@@ -2359,7 +2359,6 @@ QMenu::separator {
             <property name="font">
              <font>
               <pointsize>12</pointsize>
-              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -2398,7 +2397,6 @@ QProgressBar::chunk {
             <property name="font">
              <font>
               <pointsize>12</pointsize>
-              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -2434,7 +2432,7 @@ QProgressBar::chunk {
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="Right" stretch="1,0,0,2">
+       <layout class="QVBoxLayout" name="Right" stretch="1,0,0,1">
         <item>
          <widget class="QVTKOpenGLNativeWidget" name="qvtk_cpv">
           <property name="sizePolicy">
@@ -3830,19 +3828,17 @@ QMenu::separator {
      <x>0</x>
      <y>0</y>
      <width>1147</width>
-     <height>29</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3863,7 +3859,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuOptions">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3879,7 +3874,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuOptimizer">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3891,7 +3885,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuHelp">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
