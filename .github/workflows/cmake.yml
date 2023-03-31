@@ -20,6 +20,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Download NVCC
+      # We want to download cudatoolkit so that our build step has access to this
+      run: |
+      wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
+      sudo sh cuda_12.1.0_530.30.02_linux.run
+
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
