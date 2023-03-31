@@ -20,20 +20,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Download NVCC with wget
-      uses: wei/wget@v1
+    - uses: Jimver/cuda-toolkitv@0.2.10
+      id: cuda-toolkit
       with:
-        args:
-          https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+        cuda: 12.1.0
 
-    - name: Download NVCC
-      # We want to download cudatoolkit so that our build step has access to this
+    - name: Testing NVCC
       run: |
-        sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
-        wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
-        sudo dpkg -i cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
-        sudo cp /var/cuda-repo-ubuntu2204-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
-        sudo apt-get update && sudo apt-get -y install cuda
+        nvcc -v
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
