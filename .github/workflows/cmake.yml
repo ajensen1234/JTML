@@ -11,7 +11,7 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  linux-build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
@@ -20,15 +20,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Download Things we need
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget
+    - name: Download NVCC with wget
+      uses: wei/wget@v1
+      with:
+        args:
+          https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
 
     - name: Download NVCC
       # We want to download cudatoolkit so that our build step has access to this
       run: |
-        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
         sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
         wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
         sudo dpkg -i cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
