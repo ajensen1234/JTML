@@ -20,11 +20,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Download Things we need
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+
     - name: Download NVCC
       # We want to download cudatoolkit so that our build step has access to this
       run: |
-      wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
-      sudo sh cuda_12.1.0_530.30.02_linux.run
+        wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
+        sudo sh cuda_12.1.0_530.30.02_linux.run
 
 
     - name: Configure CMake
