@@ -14,7 +14,7 @@ set(CMAKE_AUTOUIC ON)
 
 # Finding Required Packages
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
-find_package(Torch REQUIRED PATHS /libtorch/share/cmake/Torch/)
+find_package(Torch REQUIRED PATHS ~/libtorch/share/cmake/Torch/)
 #find_package(VTK 7.1.1 REQUIRED)
 #find_package(cuda REQUIRED)
 find_package(OpenCV REQUIRED)
