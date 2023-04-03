@@ -20,6 +20,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Download and build opencv
+      run: |
+        cd ~
+        wget -q -O ~/opencv.zip https://github.com/opencv/opencv/archive/4.5.5.zip
+        unzip opencv.zip
+        cd opencv
+        mkdir -p build && cd build
+        cmake ../opencv
+        cmake --build .
     - uses: Jimver/cuda-toolkit@v0.2.10
       id: cuda-toolkit
       with:
@@ -39,7 +48,6 @@ jobs:
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
-
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
