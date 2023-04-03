@@ -25,7 +25,7 @@ jobs:
         cd ~
         wget -q -O ~/opencv.zip https://github.com/opencv/opencv/archive/4.5.5.zip
         ls ~
-        unzip opencv.zip
+        unzip -q opencv.zip -d ~/opencv
         ls ~
         cd opencv
         mkdir -p build && cd build
