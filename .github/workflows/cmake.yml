@@ -27,7 +27,9 @@ jobs:
 
     - name: Libtorch download and unzip
       run: |
+        cd ~
         wget -q -O ~/libtorch.zip https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip
+        ls ~
         unzip ~/libtorch.zip
         ls ~/libtorch
 
