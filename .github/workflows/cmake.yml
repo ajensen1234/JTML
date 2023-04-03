@@ -27,7 +27,7 @@ jobs:
         unzip opencv.zip
         cd opencv
         mkdir -p build && cd build
-        cmake ../opencv
+        cmake ..
         cmake --build .
     - uses: Jimver/cuda-toolkit@v0.2.10
       id: cuda-toolkit
