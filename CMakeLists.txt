@@ -31,7 +31,7 @@ ChartsCore
 ViewsContext2D
 RenderingAnnotation
 InteractionStyle
-)
+PATHS ~/VTK-9.2.6/build/)
 
 
 set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
