@@ -20,9 +20,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Download VTK
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+
+    - name: Download and build VTK
       run: |
-        sudo apt install vtk9
+        cd ~
+        wget -q https://vtk.org/files/release/9.2/VTK-9.2.6.tar.gz
+        tar -xzf VTK-9.2.6.tar.gz
+        cd VTK-9.2.6
+        mkdir build -p && cd build
+        cmake .. -DVTK_GROUP_ENABLE_Qt=YES
 
     - name: Download and build opencv
       run: |
@@ -56,8 +64,6 @@ jobs:
       run: |
         nvcc --version
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
