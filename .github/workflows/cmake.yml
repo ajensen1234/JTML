@@ -31,6 +31,8 @@ jobs:
         cd VTK-9.2.6
         mkdir build -p && cd build
         cmake .. -DVTK_GROUP_ENABLE_Qt=YES
+        cmake .. -DVTK_GROUP_ENABLE_Qt=YES.
+        cmake --build .
 
     - name: Download and build opencv
       run: |
