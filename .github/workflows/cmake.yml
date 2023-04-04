@@ -48,6 +48,9 @@ jobs:
         ls ~
         unzip ~/libtorch.zip
         ls ~/libtorch
+    - name: Edit ivalue_inl.h for slots conflict
+      run: |
+        sed -i '28i#undef slots;' ~/libtorch/include/ATen/core/ivalue_inl.h
 
     - name: Testing NVCC
       run: |
