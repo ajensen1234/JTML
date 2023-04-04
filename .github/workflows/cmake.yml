@@ -20,6 +20,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Download VTK
+      run: |
+        sudo apt install vtk9
+
     - name: Download and build opencv
       run: |
         cd ~
