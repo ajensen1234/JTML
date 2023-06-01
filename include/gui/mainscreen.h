@@ -270,8 +270,9 @@ public Q_SLOTS:
 	void on_image_list_widget_itemSelectionChanged(); /*Image List Widget Changed*/
 	void on_model_list_widget_itemSelectionChanged(); /*Model List Widget Changed*/
 
+	void on_original_image_radio_button_clicked();
+	void on_inverted_image_radio_button_clicked();
 	void on_edges_image_radio_button_clicked();
-
 	void on_dilation_image_radio_button_clicked();
 
 	/*Model Radio Buttons*/
