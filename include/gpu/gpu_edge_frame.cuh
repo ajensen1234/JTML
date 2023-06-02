@@ -10,17 +10,17 @@ namespace gpu_cost_function {
 	class GPUEdgeFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
-		__declspec(dllexport) GPUEdgeFrame(int width, int height,
+		JTML_DLL GPUEdgeFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_edge_image,
 			int high_threshold, int low_threshold, int aperture);
-		__declspec(dllexport) GPUEdgeFrame();
-		__declspec(dllexport) ~GPUEdgeFrame();
+		JTML_DLL GPUEdgeFrame();
+		JTML_DLL ~GPUEdgeFrame();
 
 		/*Get Canny Parameters*/
-		__declspec(dllexport) int GetCannyHighThreshold();
-		__declspec(dllexport) int GetCannyLowThreshold();
-		__declspec(dllexport) int GetCannyAperture();
+		JTML_DLL int GetCannyHighThreshold();
+		JTML_DLL int GetCannyLowThreshold();
+		JTML_DLL int GetCannyAperture();
 	private:
 
 		/*Canny Parameters*/

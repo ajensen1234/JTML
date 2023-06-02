@@ -33,45 +33,45 @@ namespace jta_cost_function {
 		Also sets an active cost function (default is the DIRECT_DILATION).
 		The parameters are all default. To load previously saved session parameters, the constructor
 		for the client will call the updateCostFunctionParameterValues(...)*/
-		__declspec(dllexport) CostFunctionManager(Stage stage);
-		__declspec(dllexport) CostFunctionManager();
-		__declspec(dllexport) ~CostFunctionManager();
+		JTML_DLL CostFunctionManager(Stage stage);
+		JTML_DLL CostFunctionManager();
+		JTML_DLL ~CostFunctionManager();
 
 		/*Set Active Cost Function*/
-		__declspec(dllexport) void setActiveCostFunction(std::string cost_function_name);
+		JTML_DLL void setActiveCostFunction(std::string cost_function_name);
 
 		/*Update Cost Function Values from Saved Session*/
-		__declspec(dllexport) bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, double value);
-		__declspec(dllexport) bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, int value);
-		__declspec(dllexport) bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, bool value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, double value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, int value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, bool value);
 
 		/*Call Initialization for Active Cost Function*/
-		__declspec(dllexport) bool InitializeActiveCostFunction(std::string &error_message);
+		JTML_DLL bool InitializeActiveCostFunction(std::string &error_message);
 
 		/*Call Destructor for Active Cost Function*/
-		__declspec(dllexport) bool DestructActiveCostFunction(std::string &error_message);
+		JTML_DLL bool DestructActiveCostFunction(std::string &error_message);
 
 		/*Call Active Cost Function*/
-		__declspec(dllexport) double callActiveCostFunction();
+		JTML_DLL double callActiveCostFunction();
 
 		/*Get Active Cost Function*/
-		__declspec(dllexport) std::string getActiveCostFunction();
+		JTML_DLL std::string getActiveCostFunction();
 
 
 		/*Get Active Cost Function Class*/
-		__declspec(dllexport) CostFunction* getActiveCostFunctionClass();
+		JTML_DLL CostFunction* getActiveCostFunctionClass();
 
 		/*Get Cost Function Class*/
-		__declspec(dllexport) CostFunction* getCostFunctionClass(std::string cost_function_name);
+		JTML_DLL CostFunction* getCostFunctionClass(std::string cost_function_name);
 
 		/*Get Vector of Cost Functions*/
-		__declspec(dllexport) std::vector<CostFunction> getAvailableCostFunctions();
+		JTML_DLL std::vector<CostFunction> getAvailableCostFunctions();
 
 		/*Set Current Frame Index*/
-		__declspec(dllexport) void setCurrentFrameIndex(unsigned int current_frame_index);
+		JTML_DLL void setCurrentFrameIndex(unsigned int current_frame_index);
 
 		/*Upload Data (Images,Poses etc.)*/
-		__declspec(dllexport) void UploadData(std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
+		JTML_DLL void UploadData(std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
 		std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_A,
 		std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_A,
 		std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_B,
