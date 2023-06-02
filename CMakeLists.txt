@@ -36,6 +36,7 @@ InteractionStyle
 set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
 
+
 # Adding Subdirectories
 add_subdirectory(src)
 add_subdirectory(test)
