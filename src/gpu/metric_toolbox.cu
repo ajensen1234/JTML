@@ -164,10 +164,10 @@
 //
 //		/* Compute launch parameters for edge detection.
 //		If 256, we have 16 x 16 Blocks (Read in at one less on less on all 4 sides, so 14 x 14). */
-//		dim_block_image_processing_ = dim3::dim3(
+//		dim_block_image_processing_ = dim3(
 //			ceil(sqrt((double)(threads_per_block))),
 //			ceil(sqrt((double)(threads_per_block))));
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)sub_cropped_width / (double)(dim_block_image_processing_.x - 2)),
 //			ceil((double)sub_cropped_height / (double)(dim_block_image_processing_.y - 2)));
 //
@@ -177,7 +177,7 @@
 //				dev_image_, sub_left_x, sub_bottom_y, sub_right_x, sub_top_y, width_, dilation_);
 //
 //		/* Compute launch parameters for dilation. Want 4 times the size of the sub image. */
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)(2.0 * sub_cropped_width) / sqrt((double)threads_per_block)),
 //			ceil((double)(2.0 * sub_cropped_height) / sqrt((double)threads_per_block)));
 //
@@ -194,7 +194,7 @@
 //		int diff_kernel_cropped_width = diff_kernel_right_x - diff_kernel_left_x + 1;
 //		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 //
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)(diff_kernel_cropped_width) / sqrt((double)threads_per_block)),
 //			ceil((double)(diff_kernel_cropped_height) / sqrt((double)threads_per_block)));
 //
@@ -395,7 +395,7 @@
 //		int diff_kernel_cropped_width = diff_kernel_right_x - diff_kernel_left_x + 1;
 //		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 //
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)(diff_kernel_cropped_width) / sqrt((double)threads_per_block)),
 //			ceil((double)(diff_kernel_cropped_height) / sqrt((double)threads_per_block)));
 //
@@ -440,10 +440,10 @@
 //
 //		/* Compute launch parameters for edge detection.
 //		If 256, we have 16 x 16 Blocks (Read in at one less on less on all 4 sides, so 14 x 14). */
-//		dim_block_image_processing_ = dim3::dim3(
+//		dim_block_image_processing_ = dim3(
 //			ceil(sqrt((double)(threads_per_block))),
 //			ceil(sqrt((double)(threads_per_block))));
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)sub_cropped_width / (double)(dim_block_image_processing_.x - 2)),
 //			ceil((double)sub_cropped_height / (double)(dim_block_image_processing_.y - 2)));
 //
@@ -453,7 +453,7 @@
 //				dev_image_, sub_left_x, sub_bottom_y, sub_right_x, sub_top_y, width_, 3);
 //
 //		/* Compute launch parameters for dilation. Want 4 times the size of the sub image. */
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)(2.0 * sub_cropped_width) / sqrt((double)threads_per_block)),
 //			ceil((double)(2.0 * sub_cropped_height) / sqrt((double)threads_per_block)));
 //
@@ -469,7 +469,7 @@
 //		diff_kernel_cropped_width = diff_kernel_right_x - diff_kernel_left_x + 1;
 //		diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 //
-//		dim_grid_image_processing_ = dim3::dim3(
+//		dim_grid_image_processing_ = dim3(
 //			ceil((double)(diff_kernel_cropped_width) / sqrt((double)threads_per_block)),
 //			ceil((double)(diff_kernel_cropped_height) / sqrt((double)threads_per_block)));
 //

@@ -469,7 +469,7 @@ namespace gpu_cost_function {
 		int diff_kernel_cropped_width = diff_kernel_right_x - diff_kernel_left_x + 1;
 		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
 
-		auto dim_grid_image_processing_ = dim3::dim3(
+		auto dim_grid_image_processing_ = dim3(
 			ceil(static_cast<double>(diff_kernel_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
 			ceil(static_cast<double>(diff_kernel_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 

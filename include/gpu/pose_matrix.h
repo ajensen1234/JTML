@@ -2,7 +2,7 @@
 
 /*Render Engine Header for Pose Class*/
 #include "gpu/render_engine.cuh"
-
+#include "core/preprocessor-defs.h"
 /*Standard Library*/
 #include <vector>
 #include <string>

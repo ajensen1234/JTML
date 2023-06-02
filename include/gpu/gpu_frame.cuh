@@ -3,6 +3,7 @@
 
 /*GPU Image Class*/
 #include "gpu/gpu_image.cuh"
+#include "core/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -24,27 +25,27 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads the four host images
 		else, marked as not initialized correctly*/
-		__declspec(dllexport) GPUFrame(int width, int height,
+		JTML_DLL GPUFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_image);
 		/*Default constructor. Marked as not initialized correctly.*/
-		__declspec(dllexport) GPUFrame();
+		JTML_DLL GPUFrame();
 
 		/*Default Destructor*/
-		__declspec(dllexport) ~GPUFrame();
+		JTML_DLL ~GPUFrame();
 
 		/*Get pointer to the images on the GPU Image*/
-		__declspec(dllexport) unsigned char* GetDeviceImagePointer();
+		JTML_DLL unsigned char* GetDeviceImagePointer();
 
 		/*Get pointer to the actual GPU Image*/
-		__declspec(dllexport) GPUImage* GetGPUImage();
+		JTML_DLL GPUImage* GetGPUImage();
 
 		/*Get Image Size Parameters*/
-		__declspec(dllexport) int GetFrameHeight();
-		__declspec(dllexport) int GetFrameWidth();
+		JTML_DLL int GetFrameHeight();
+		JTML_DLL int GetFrameWidth();
 
 		/*Get Is Initialized Correctly*/
-		__declspec(dllexport) bool IsInitializedCorrectly();
+		JTML_DLL bool IsInitializedCorrectly();
 
 	private:
 		/*GPU Image*/

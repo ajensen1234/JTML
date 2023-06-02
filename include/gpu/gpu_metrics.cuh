@@ -14,6 +14,7 @@
 
 /*Pose Matrix Class*/
 #include "pose_matrix.h"
+#include "core/preprocessor-defs.h"
 
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/

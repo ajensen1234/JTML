@@ -18,6 +18,7 @@
 
 /*Pose Matrix Class*/
 #include "pose_matrix.h"
+#include "core/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
