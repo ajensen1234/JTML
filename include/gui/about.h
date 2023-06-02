@@ -2,7 +2,7 @@
 #define ABOUT_H
 
 #include <qdialog.h>
-#include "ui_About.h"
+#include "ui_about.h"
 
 //About JTA Popup Header
 class About : public QDialog {

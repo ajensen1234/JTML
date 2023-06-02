@@ -1,4 +1,4 @@
-#include "gui/Controls.h"
+#include "gui/controls.h"
 
 //Controls JTA Popup CPP
 Controls::Controls(QWidget* parent, Qt::WindowFlags flags)

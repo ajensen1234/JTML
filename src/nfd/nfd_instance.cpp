@@ -42,7 +42,7 @@ void nfd_instance::get_contour_points(cv::Mat img) {
 			sz_ = ctr.size();
 			contour_points_raw_.setlength(sz_, 2);
 			for (int i = 0; i < ctr.size(); i++) {
-				Point pt = ctr[i].x;
+				// Point pt = ctr[i].x;
 				contour_points_raw_[i][0] = ctr[i].x;
 				contour_points_raw_[i][1] = ctr[i].y;
 

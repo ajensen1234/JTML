@@ -3,6 +3,7 @@
 
 /*Class for Storing Cost Function Info*/
 #include "CostFunction.h"
+#include "core/preprocessor-defs.h"
 
 /*Cost Function Tools Library*/
 #include "gpu/gpu_image.cuh"

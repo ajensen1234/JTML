@@ -2,6 +2,7 @@
 
 /*Cost Function Parameters*/
 #include "Parameter.h"
+#include "core/preprocessor-defs.h"
 
 /*Standard Library*/
 #include <vector>
