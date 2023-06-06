@@ -25,6 +25,29 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads the four host images
 		else, marked as not initialized correctly*/
+<<<<<<< HEAD
+		  GPUFrame(int width, int height,
+			int gpu_device,
+			unsigned char* host_image);
+		/*Default constructor. Marked as not initialized correctly.*/
+		  GPUFrame();
+
+		/*Default Destructor*/
+		  ~GPUFrame();
+
+		/*Get pointer to the images on the GPU Image*/
+		  unsigned char* GetDeviceImagePointer();
+
+		/*Get pointer to the actual GPU Image*/
+		  GPUImage* GetGPUImage();
+
+		/*Get Image Size Parameters*/
+		  int GetFrameHeight();
+		  int GetFrameWidth();
+
+		/*Get Is Initialized Correctly*/
+		  bool IsInitializedCorrectly();
+=======
 		JTML_DLL GPUFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_image);
@@ -46,6 +69,7 @@ namespace gpu_cost_function {
 
 		/*Get Is Initialized Correctly*/
 		JTML_DLL bool IsInitializedCorrectly();
+>>>>>>> main-merge
 
 	private:
 		/*GPU Image*/

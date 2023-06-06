@@ -118,71 +118,45 @@ void Viewer::set_loaded_frames_b(std::vector<Frame>& frames) {
 }
 
 void Viewer::update_display_background_to_edge_image(int frame_number, bool CameraASelected) {
-	if (CameraASelected) {
-		update_display_background(loaded_frames_[frame_number].GetEdgeImage());
-	}
-	else if (!CameraASelected) {
-		update_display_background(loaded_frames_B_[frame_number].GetEdgeImage());
-	}
+	// if 1, do 2. Else, do 3 (ternary operator)
+	(CameraASelected) ? update_display_background(loaded_frames_[frame_number].GetEdgeImage()) 
+					  : update_display_background(loaded_frames_B_[frame_number].GetEdgeImage());
 }
 
 void Viewer::update_display_background_to_original_image(int frame_number, bool CameraASelected) {
-	if (CameraASelected) {
-		update_display_background(loaded_frames_[frame_number].GetOriginalImage());
-	}
-	else if (!CameraASelected) {
-		update_display_background(loaded_frames_B_[frame_number].GetOriginalImage());
-	}
+	(CameraASelected) ? update_display_background(loaded_frames_[frame_number].GetOriginalImage())
+					  : update_display_background(loaded_frames_B_[frame_number].GetOriginalImage());
 }
 
 
 void Viewer::update_display_background_to_dilation_image(int frame_number, bool CameraASelected) {
-	if (CameraASelected) {
-		update_display_background(loaded_frames_[frame_number].GetDilationImage());
-	}
-	else if (!CameraASelected) {
-		update_display_background(loaded_frames_B_[frame_number].GetDilationImage());
-	}
+	(CameraASelected) ? update_display_background(loaded_frames_[frame_number].GetDilationImage())
+					  : update_display_background(loaded_frames_B_[frame_number].GetDilationImage());
 }
 
 void Viewer::update_display_background_to_inverted_image(int frame_number, bool CameraASelected) {
-	if (CameraASelected) {
-		update_display_background(loaded_frames_[frame_number].GetInvertedImage());
-	}
-	else if (!CameraASelected) {
-		update_display_background(loaded_frames_B_[frame_number].GetInvertedImage());
-	}
+	(CameraASelected) ? update_display_background(loaded_frames_[frame_number].GetInvertedImage()) 
+					  : update_display_background(loaded_frames_B_[frame_number].GetInvertedImage());
 }
 
 void Viewer::setup_camera_calibration(Calibration cal) {
-
-	if (cal.type_ == "UF") {
-		background_camera_->SetFocalPoint(0, 0, -1);
-
-	} else {
-		background_camera_->SetFocalPoint(0, 0, -1);
-	}
-
-
+	(cal.type_ == "UF") ? background_camera_->SetFocalPoint(0, 0, -1)
+						: background_camera_->SetFocalPoint(0, 0, -1);
 	background_camera_->SetPosition(0, 0, 0);
-	background_camera_->SetClippingRange(0.1, 2.0 *
-	                                                          cal.camera_A_principal_.fy());
+	background_camera_->SetClippingRange(0.1, 2.0 * cal.camera_A_principal_.fy());
+}
 
-
+void Viewer::setup_camera_coronal_plane() {
+	background_camera_->SetPosition(-1,1,0);
 }
 
 void Viewer::place_image_actors_according_to_calibration(Calibration cal, int img_w, int img_h) {
 	const float x_pos =  -0.5 * img_w;
 	const float y_pos =  -0.5 * img_h;
 	float z_pos;
-	if (cal.type_ == "UF") {
-		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;//-1 * cal.camera_A_principal_.principal_distance_ / cal.camera_A_principal_.pixel_pitch_;
-	} else {
-		z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;
-	}
+	(cal.type_ == "UF") ? z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_
+						: z_pos = -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;
 	actor_image_->SetPosition(x_pos, y_pos, z_pos);
-
-
 	background_camera_->ParallelProjectionOn();
 	background_camera_->SetParallelScale(0.5 * img_h);
 }
@@ -298,8 +272,6 @@ void Viewer::set_actor_text_color_to_model_color_at_index(int index) {
 	actor_text_->GetTextProperty()->SetColor(model_actor_list_[index]->GetProperty()->GetColor());
 }
 
-
-
 void Viewer::render_scene() {
 	background_renderer_->Render();
 	scene_renderer_->Render();
@@ -313,6 +285,7 @@ void Viewer::set_render_window_and_display() {
 	render_window_->AddRenderer(background_renderer_);
 	render_window_->SetWindowName("My Window");
 	render_window_->Render();
+
 	vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	interactor->SetRenderWindow(render_window_);
 	render_window_->Render();
@@ -357,13 +330,9 @@ void Viewer::load_renderers_into_render_window(Calibration cal) {
 	scene_renderer_->SetLayer(1);
 	scene_renderer_->InteractiveOn();
 	float focal_dir;
-	if(cal.type_ == "UF") {
-		focal_dir = -1;
-	} else if (cal.type_ == "Denver") {
-		focal_dir = 1;
-	} else {
-		focal_dir = 1;
-	}
+	// This was setting focal_dir to 1 if cal.type_ was denver or any others - decided to remove the dever else statement in response to that. 
+	// Sets focal_dir = -1 if "UF", else sets to 1
+	focal_dir = (cal.type_ == "UF") ? -1 : 1;
 	scene_camera_->SetPosition(0, 0, 0);
 	scene_camera_->SetFocalPoint(0, 0, focal_dir);
 	qvtk_render_window_->SetNumberOfLayers(2);
@@ -416,6 +385,7 @@ void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration c
 	calculate_and_set_camera_aspect_from_calibration(fx, fy);
 	scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
 }
+
 void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibration cal, int w, int h) {
 	float cx = cal.camera_A_principal_.cx();
 	float cy = cal.camera_A_principal_.cy();
@@ -430,7 +400,6 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(Calibrat
 	
 }
 
-
 void Viewer::calculate_and_set_window_center_from_calibration(const int w, const int h, const float cx, const float cy) {
 	float wcx = -(2 * cx - w) / w;
 	float wcy = (2 * cy - h) / h;
@@ -441,7 +410,7 @@ void Viewer::calculate_and_set_window_center_from_calibration(const int w, const
 }
 
 void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h, const int fy) {
-	long double angle = (180.0 / 3.1415926535897932384626433832795028841971693993751) * 2
+	long double angle = (180.0 / pi) * 2
 		* atan2(h, 2 * fy);
 	scene_camera_->SetViewAngle(angle);
 }
@@ -478,6 +447,4 @@ void Viewer::print_scene_camera_directions() {
 	scene_camera_->GetViewUp(vu);
 	scene_camera_->GetViewPlaneNormal(pn);
 	background_camera_->GetViewPlaneNormal(pn_img);
-
 }
-
