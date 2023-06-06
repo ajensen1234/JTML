@@ -371,10 +371,12 @@ vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(Calibration cal, int w, int h) {
-	float cx = cal.camera_A_principal_.cx() + w/2;
-	float cy = h/2 - cal.camera_A_principal_.cy();
+	float cx = w/2 - cal.camera_A_principal_.cx();
+	float cy = h/2 + cal.camera_A_principal_.cy();
 	float fx = cal.camera_A_principal_.fx();
 	float fy = cal.camera_A_principal_.fy();
+
+	std::cout << cx << ", " << cy << std::endl;
 
 	calculate_and_set_window_center_from_calibration(w, h, cx, cy);
 	calculate_and_set_viewing_angle_from_calibration(h, fy);
