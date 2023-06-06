@@ -12,25 +12,6 @@ namespace gpu_cost_function {
 	class GPUIntensityFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
-<<<<<<< HEAD
-		  GPUIntensityFrame(int width, int height,
-			int gpu_device,
-			unsigned char* host_intensity_image,
-			bool dark_silhouette, unsigned char* host_inverted_image);
-		  GPUIntensityFrame();
-		  ~GPUIntensityFrame();
-
-		/*Set/Get Dark Silhohuette*/
-		  bool IsSilhouetteDark();
-		  void SetSilhouetteDark(bool dark_silhouette);
-
-		/*Get pointer to the images on the GPU Images for the Intensity Image or if Dark Silhouette True
-		returns a pointer to the Inverted Image*/
-		  unsigned char* GetWhiteSilhouetteDeviceImagePointer();
-
-		/*Get pointer to the actual GPU Image*/
-		  GPUImage* GetInvertedGPUImage();
-=======
 		JTML_DLL GPUIntensityFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_intensity_image,
@@ -48,7 +29,6 @@ namespace gpu_cost_function {
 
 		/*Get pointer to the actual GPU Image*/
 		JTML_DLL GPUImage* GetInvertedGPUImage();
->>>>>>> main-merge
 
 	private:
 		/*GPU Image for Inverted Intensity Image*/

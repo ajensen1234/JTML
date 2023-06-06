@@ -8,6 +8,7 @@
   /home/nicholasverdugo/JTA-CMake/include/core/metric_enum.h \
   /home/nicholasverdugo/JTA-CMake/include/core/model.h \
   /home/nicholasverdugo/JTA-CMake/include/core/optimizer_settings.h \
+  /home/nicholasverdugo/JTA-CMake/include/core/preprocessor-defs.h \
   /home/nicholasverdugo/JTA-CMake/include/core/stl_reader.h \
   /home/nicholasverdugo/JTA-CMake/include/core/sym_trap_functions.h \
   /home/nicholasverdugo/JTA-CMake/include/cost_functions/CostFunction.h \

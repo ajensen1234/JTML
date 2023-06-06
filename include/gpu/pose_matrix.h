@@ -11,20 +11,6 @@
 class PoseMatrix {
 public:
 	/*Blank Constructor/Destructor*/
-<<<<<<< HEAD
-	  PoseMatrix();
-	  ~PoseMatrix();
-
-	/*Add New Model to Pose Matrix*/
-	  void AddModel(std::vector<gpu_cost_function::Pose > , std::string model_name, bool is_principal_model);
-
-	/*Get Model Pose (True if Successful, Else False) - Pose is Returned by Passing via reference*/
-	  bool GetModelPose(std::string model_name, int frame_index, gpu_cost_function::Pose* pose_container);
-	/*Get Principal Model Pose*/
-	  bool GetModelPose(int frame_index, gpu_cost_function::Pose* pose_container);
-	/*Update Stored Pose for Principal Model at given frame*/
-	  bool UpdatePrincipalModelPose(int frame_index, gpu_cost_function::Pose pose_container);
-=======
 	JTML_DLL PoseMatrix();
 	JTML_DLL ~PoseMatrix();
 
@@ -37,7 +23,6 @@ public:
 	JTML_DLL bool GetModelPose(int frame_index, gpu_cost_function::Pose* pose_container);
 	/*Update Stored Pose for Principal Model at given frame*/
 	JTML_DLL bool UpdatePrincipalModelPose(int frame_index, gpu_cost_function::Pose pose_container);
->>>>>>> main-merge
 
 private:
 	/*Principal Model Name*/

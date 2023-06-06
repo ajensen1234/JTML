@@ -23,34 +23,20 @@
 namespace gpu_cost_function {
 	/*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 	struct Pose {
-<<<<<<< HEAD
-		  Pose(float x_location, float y_location, float z_location,
-			float x_angle, float y_angle, float z_angle);
-		  Pose();
-=======
 		JTML_DLL Pose(float x_location, float y_location, float z_location,
 			float x_angle, float y_angle, float z_angle);
 		JTML_DLL Pose();
->>>>>>> main-merge
 		float x_location_, y_location_, z_location_,
 			x_angle_, y_angle_, z_angle_;
 	};
 
 	/*Rotation Matrix structure to store ZXY Rotation Matrix*/
 	struct RotationMatrix {
-<<<<<<< HEAD
-		  RotationMatrix(
-			float rotation_00, float rotation_01, float rotation_02,
-			float rotation_10, float rotation_11, float rotation_12,
-			float rotation_20, float rotation_21, float rotation_22);
-		  RotationMatrix();
-=======
 		JTML_DLL RotationMatrix(
 			float rotation_00, float rotation_01, float rotation_02,
 			float rotation_10, float rotation_11, float rotation_12,
 			float rotation_20, float rotation_21, float rotation_22);
 		JTML_DLL RotationMatrix();
->>>>>>> main-merge
 		float
 			rotation_00_, rotation_01_, rotation_02_,
 			rotation_10_, rotation_11_, rotation_12_,
@@ -61,26 +47,6 @@ namespace gpu_cost_function {
 	class RenderEngine {
 	public:
 		/*Constructor & Destructor*/
-<<<<<<< HEAD
-		  RenderEngine(int width, int height, int device, 
-			bool use_backface_culling,
-			float *triangles, float *normals,  int triangle_count, 
-			CameraCalibration camera_calibration);
-		  RenderEngine();
-		  ~RenderEngine();
-
-		/*Set Pose of Model*/
-		  void SetPose(Pose model_pose);
-
-		/*Write a .png to Location of Device Image*/
-		  bool WriteImage(std::string file_name);
-
-		/*Render (Opaque) Image to GPUImage renderer_output_'s dev_image_ via Kernel calls (CUDA)*/
-		  cudaError_t Render();
-
-		/*Create an object that returns the pointer to the opencv Mat object*/
-		  cv::Mat GetcvMatImage();
-=======
 		JTML_DLL RenderEngine(int width, int height, int device, 
 			bool use_backface_culling,
 			float *triangles, float *normals,  int triangle_count, 
@@ -99,7 +65,6 @@ namespace gpu_cost_function {
 
 		/*Create an object that returns the pointer to the opencv Mat object*/
 		JTML_DLL cv::Mat GetcvMatImage();
->>>>>>> main-merge
 
 		/*Render DRR (Digitally Reconstructed Radiograph) to GPUImage renderer_output_'s dev_image_ via Kernel calls (CUDA)
 		Lower Bound Variable: All line integrals below this value will be marked as 0 in the intensity display.
@@ -107,15 +72,6 @@ namespace gpu_cost_function {
 		The remaning line integrals that belong to the interval [lower_bound,upper_bound] will be linearly interpolated
 		and then converted to an uchar (i.e. an int from 0 to 255) using (uchar)(255*(value-lower_bound)/(upper_bound-lower_bound)).
 		Note: 0 <= lower_bound <= upper_bound. */
-<<<<<<< HEAD
-		  cudaError_t RenderDRR(float lower_bound, float upper_bound);
-
-		/*Get Pointer to Rendererd GPU Image*/
-		  GPUImage* GetRenderOutput();
-
-		/*Is the Render Engine properly initialized?*/
-		  bool IsInitializedCorrectly();
-=======
 		JTML_DLL cudaError_t RenderDRR(float lower_bound, float upper_bound);
 
 		/*Get Pointer to Rendererd GPU Image*/
@@ -123,7 +79,6 @@ namespace gpu_cost_function {
 
 		/*Is the Render Engine properly initialized?*/
 		JTML_DLL bool IsInitializedCorrectly();
->>>>>>> main-merge
 
 	private:
 

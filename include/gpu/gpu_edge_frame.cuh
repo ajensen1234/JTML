@@ -11,19 +11,6 @@ namespace gpu_cost_function {
 	class GPUEdgeFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
-<<<<<<< HEAD
-		  GPUEdgeFrame(int width, int height,
-			int gpu_device,
-			unsigned char* host_edge_image,
-			int high_threshold, int low_threshold, int aperture);
-		  GPUEdgeFrame();
-		  ~GPUEdgeFrame();
-
-		/*Get Canny Parameters*/
-		  int GetCannyHighThreshold();
-		  int GetCannyLowThreshold();
-		  int GetCannyAperture();
-=======
 		JTML_DLL GPUEdgeFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_edge_image,
@@ -35,7 +22,6 @@ namespace gpu_cost_function {
 		JTML_DLL int GetCannyHighThreshold();
 		JTML_DLL int GetCannyLowThreshold();
 		JTML_DLL int GetCannyAperture();
->>>>>>> main-merge
 	private:
 
 		/*Canny Parameters*/

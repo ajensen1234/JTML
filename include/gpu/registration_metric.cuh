@@ -16,27 +16,6 @@
 //	class RegistrationMetric {
 //	public:
 //		/*Constructor & Destructor*/
-<<<<<<< HEAD
-//		  RegistrationMetric(int width, int height);
-//		  RegistrationMetric();
-//		  ~RegistrationMetric();
-//
-//		/*CUDA API Initialization (Allocation, etc.) Must return cudaSuccess else call destructor.*/
-//		  cudaError_t InitializeCUDA(unsigned char* dev_image,
-//			unsigned char* edge_comparison_image, unsigned char* dilation_comparison_image, unsigned char* intensity_comparison_image, int device);
-//
-//		/*Reset Edge Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		  cudaError_t SetEdgeComparisonImage(unsigned char* edge_comparison_image);
-//
-//		/*Reset Dilation Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		  cudaError_t SetDilationComparisonImage(unsigned char* dilation_comparison_image);
-//
-//		/*Reset Intensity Comparison Image Pointer (must be same size as one used in cuda initialization*/
-//		  cudaError_t SetIntensityComparisonImage(unsigned char* intensity_comparison_image);
-//
-//		/*Write a .png to Location of Device Image*/
-//		  void WriteImage(std::string file_location);
-=======
 //		JTML_DLL RegistrationMetric(int width, int height);
 //		JTML_DLL RegistrationMetric();
 //		JTML_DLL ~RegistrationMetric();
@@ -56,7 +35,6 @@
 //
 //		/*Write a .png to Location of Device Image*/
 //		JTML_DLL void WriteImage(std::string file_location);
->>>>>>> main-merge
 //
 //	protected:
 //		/*Initialized CUDA Check*/

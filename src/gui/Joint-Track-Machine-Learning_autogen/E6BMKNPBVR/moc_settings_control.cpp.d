@@ -2,6 +2,7 @@
   /home/nicholasverdugo/JTA-CMake/src/gui/Joint-Track-Machine-Learning_autogen/moc_predefs.h \
   /home/nicholasverdugo/JTA-CMake/include/core/data_structures_6D.h \
   /home/nicholasverdugo/JTA-CMake/include/core/optimizer_settings.h \
+  /home/nicholasverdugo/JTA-CMake/include/core/preprocessor-defs.h \
   /home/nicholasverdugo/JTA-CMake/include/cost_functions/CostFunction.h \
   /home/nicholasverdugo/JTA-CMake/include/cost_functions/CostFunctionManager.h \
   /home/nicholasverdugo/JTA-CMake/include/cost_functions/DD_NEW_POLE_CONSTRAINTCustomVariables.h \
