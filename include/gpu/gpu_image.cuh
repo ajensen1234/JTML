@@ -4,6 +4,7 @@
 /*Standard Library*/
 #include <string>
 #include <iostream>
+#include "core/preprocessor-defs.h"
 
 /*GPU Cost Function Library Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -12,42 +13,42 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads blank image
 		else, DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage(int width, int height, int gpu_device);
+		JTML_DLL GPUImage(int width, int height, int gpu_device);
 		/*If successful, uploads host_image
 		else, DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage(int width, int height, int gpu_device, unsigned char* host_image);
+		JTML_DLL GPUImage(int width, int height, int gpu_device, unsigned char* host_image);
 		/*Default constructor. DeviceImage marked as not having uploaded to GPU*/
-		__declspec(dllexport) GPUImage();
+		JTML_DLL GPUImage();
 
 		/*Destructor*/
-		__declspec(dllexport) ~GPUImage();
+		JTML_DLL ~GPUImage();
 
 		/*Upload Blank Image to Device (returns true if successful)*/
-		__declspec(dllexport) bool UploadBlankImageToGPU(int width, int height);
+		JTML_DLL bool UploadBlankImageToGPU(int width, int height);
 		/*Upload Image to Device (returns true if successful)*/
-		__declspec(dllexport) bool UploadImageToGPU(int width, int height, unsigned char* host_image);
+		JTML_DLL bool UploadImageToGPU(int width, int height, unsigned char* host_image);
 
 		/*Remove Image from Device (returns true if successful)*/
-		__declspec(dllexport) bool RemoveImageFromGPU();
+		JTML_DLL bool RemoveImageFromGPU();
 
 		/*Check to See if Image is On the Device*/
-		__declspec(dllexport) bool CheckImageOnGPU();
+		JTML_DLL bool CheckImageOnGPU();
 
 		/*Get Pointer to Device (GPU) Image*/
-		__declspec(dllexport) unsigned char* GetDeviceImagePointer();
+		JTML_DLL unsigned char* GetDeviceImagePointer();
 
 		/*Get Pointer to Bounding Box*/
-		__declspec(dllexport) int* GetBoundingBox();
+		JTML_DLL int* GetBoundingBox();
 
 		/*Is the GPU model properly initialized?*/
-		__declspec(dllexport) bool IsInitializedCorrectly();
+		JTML_DLL bool IsInitializedCorrectly();
 
 		/*Write a .png to Location of Device Image*/
-		__declspec(dllexport) bool WriteImage(std::string file_name);
+		JTML_DLL bool WriteImage(std::string file_name);
 
 		/*Get Image Size Parameters*/
-		__declspec(dllexport) int GetFrameHeight();
-		__declspec(dllexport) int GetFrameWidth();
+		JTML_DLL int GetFrameHeight();
+		JTML_DLL int GetFrameWidth();
 
 	private:
 		/*Pointer to Device Image on GPU*/

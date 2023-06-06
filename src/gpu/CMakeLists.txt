@@ -31,11 +31,11 @@ set_target_properties(jtml_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(jtml_gpu ${OpenCV_LIBRARIES})
 target_link_libraries(jtml_gpu ${CUDA_CUBLAS_LIBRARIES})
 target_link_libraries(jtml_gpu ${CUDA_LIBRARIES})
-target_link_libraries(jtml_gpu curand.lib)
 target_include_directories(jtml_gpu PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 target_include_directories(jtml_gpu PUBLIC ${HEADER_DIR})
-
-
+if (MSVC)
+        target_link_libraries(jtml_gpu curand.lib)
+endif()
 get_target_property(TARGET_LIBRARIES jtml_gpu LINK_LIBRARIES)
 set_property(TARGET jtml_gpu PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
 

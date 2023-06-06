@@ -19,22 +19,22 @@
 //	class MetricToolbox : public RegistrationMetric {
 //	public:
 //		/*Constructor & Destructor*/
-//		__declspec(dllexport) MetricToolbox(int width, int height);
-//		__declspec(dllexport) MetricToolbox();
+//		JTML_DLL MetricToolbox(int width, int height);
+//		JTML_DLL MetricToolbox();
 //
 //		/*Compute Dilation Metrics*/
-//		__declspec(dllexport) double ComputeDilationMetric(int *bounding_box_packet);
+//		JTML_DLL double ComputeDilationMetric(int *bounding_box_packet);
 //
 //		/*Compute Mahfouz Metric*/
-//		__declspec(dllexport) double ComputeMahfouzMetric(int *bounding_box_packet);
+//		JTML_DLL double ComputeMahfouzMetric(int *bounding_box_packet);
 //
 //		/*Set/Get Dilation*/
-//		__declspec(dllexport) void SetDilation(int dilation);
-//		__declspec(dllexport) int GetDilation();
+//		JTML_DLL void SetDilation(int dilation);
+//		JTML_DLL int GetDilation();
 //
 //		/*Set/Get "Is the Silhouette Black?"*/
-//		__declspec(dllexport) void SetBlackSilhouette(bool black_silhouette);
-//		__declspec(dllexport) bool GetBlackSilhouette();
+//		JTML_DLL void SetBlackSilhouette(bool black_silhouette);
+//		JTML_DLL bool GetBlackSilhouette();
 //
 //	private:
 //		/*Dilation Constant*/

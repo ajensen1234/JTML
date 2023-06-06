@@ -2,7 +2,7 @@
 #define CAMERA_CALIBRATION_H
 
 #include <string>
-
+#include "core/preprocessor-defs.h"
 struct CameraCalibration {
 	CameraCalibration(float principal_distance, float principal_x, float principal_y, float pixel_pitch) {
 		type_ = "UF";

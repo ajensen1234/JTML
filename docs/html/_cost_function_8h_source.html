@@ -107,33 +107,33 @@ $(document).ready(function(){initNavTree('_cost_function_8h_source.html',''); in
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="classjta__cost__function_1_1_cost_function.html">   12</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">CostFunction</a> {</div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>        <span class="comment">/*Constructor*/</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        __declspec(dllexport) <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">CostFunction</a>();</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        __declspec(dllexport) <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">CostFunction</a>(std::string cost_function_name);</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        __declspec(dllexport) <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">~CostFunction</a>();</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        JTML_DLL <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">CostFunction</a>();</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        JTML_DLL <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">CostFunction</a>(std::string cost_function_name);</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        JTML_DLL <a class="code hl_class" href="classjta__cost__function_1_1_cost_function.html">~CostFunction</a>();</div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="comment">/*Add Parameter (w/ Default Value)*/</span></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        __declspec(dllexport) <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;double&gt;</a> new_parameter);</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        __declspec(dllexport) <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;int&gt;</a> new_parameter);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        __declspec(dllexport) <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;bool&gt;</a> new_parameter);</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        JTML_DLL <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;double&gt;</a> new_parameter);</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        JTML_DLL <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;int&gt;</a> new_parameter);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        JTML_DLL <span class="keywordtype">void</span> addParameter(<a class="code hl_class" href="classjta__cost__function_1_1_parameter.html">Parameter&lt;bool&gt;</a> new_parameter);</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>         </div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        <span class="comment">/*Set Parameter Values (Bool for Success)*/</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        __declspec(dllexport) <span class="keywordtype">bool</span> setDoubleParameterValue(std::string parameter_name, <span class="keywordtype">double</span> value);</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        __declspec(dllexport) <span class="keywordtype">bool</span> setIntParameterValue(std::string parameter_name, <span class="keywordtype">int</span> value);</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        __declspec(dllexport) <span class="keywordtype">bool</span> setBoolParameterValue(std::string parameter_name, <span class="keywordtype">bool</span> value);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        JTML_DLL <span class="keywordtype">bool</span> setDoubleParameterValue(std::string parameter_name, <span class="keywordtype">double</span> value);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        JTML_DLL <span class="keywordtype">bool</span> setIntParameterValue(std::string parameter_name, <span class="keywordtype">int</span> value);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        JTML_DLL <span class="keywordtype">bool</span> setBoolParameterValue(std::string parameter_name, <span class="keywordtype">bool</span> value);</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <span class="comment">/*Get Parameter Values (Bool for Success)*/</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        __declspec(dllexport) <span class="keywordtype">bool</span> getDoubleParameterValue(std::string parameter_name, <span class="keywordtype">double</span> &amp;value);</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        __declspec(dllexport) <span class="keywordtype">bool</span> getIntParameterValue(std::string parameter_name, <span class="keywordtype">int</span> &amp;value);</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        __declspec(dllexport) <span class="keywordtype">bool</span> getBoolParameterValue(std::string parameter_name, <span class="keywordtype">bool</span> &amp;value);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        JTML_DLL <span class="keywordtype">bool</span> getDoubleParameterValue(std::string parameter_name, <span class="keywordtype">double</span> &amp;value);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        JTML_DLL <span class="keywordtype">bool</span> getIntParameterValue(std::string parameter_name, <span class="keywordtype">int</span> &amp;value);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        JTML_DLL <span class="keywordtype">bool</span> getBoolParameterValue(std::string parameter_name, <span class="keywordtype">bool</span> &amp;value);</div>
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="comment">/*Get Parameters by Type Groups*/</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        __declspec(dllexport) std::vector&lt;Parameter&lt;double&gt;&gt; getDoubleParameters();</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        __declspec(dllexport) std::vector&lt;Parameter&lt;int&gt;&gt; getIntParameters();</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        __declspec(dllexport) std::vector&lt;Parameter&lt;bool&gt;&gt; getBoolParameters();</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        JTML_DLL std::vector&lt;Parameter&lt;double&gt;&gt; getDoubleParameters();</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        JTML_DLL std::vector&lt;Parameter&lt;int&gt;&gt; getIntParameters();</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        JTML_DLL std::vector&lt;Parameter&lt;bool&gt;&gt; getBoolParameters();</div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <span class="comment">/*Get/Set Cost Function Name*/</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        __declspec(dllexport) std::string getCostFunctionName();</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        __declspec(dllexport) <span class="keywordtype">void</span> setCostFunctionName(std::string cost_function_name);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        JTML_DLL std::string getCostFunctionName();</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        JTML_DLL <span class="keywordtype">void</span> setCostFunctionName(std::string cost_function_name);</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keyword">private</span>:</div>
