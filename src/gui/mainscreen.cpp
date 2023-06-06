@@ -211,7 +211,6 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 	///*Set up VTK*/
 	vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
 	renderer = vw->get_renderer();
-	// coronal_renderer = coronal_vw->get_renderer();
 	coronal_renderer = renderer;
 	actor_image = vw->get_actor_image();
 	current_background = vw->get_current_background();
@@ -1146,7 +1145,7 @@ void MainScreen::optimizer_launch_slot() {
 
 /*Stop Optimizer*/
 void MainScreen::on_actionStop_Optimizer_triggered() {
-	if (ui.actionStop_Optimizer->isEnabled() == true) {
+	if (ui.actionStop_Optimizer->isEnabled() ) {
 		emit StopOptimizer();
 		QMessageBox::warning(this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
 	}
@@ -2054,6 +2053,7 @@ void MainScreen::on_load_calibration_button_clicked() {
 	if (calibrated_for_monoplane_viewport_) {
 		vw->setup_camera_calibration(calibration_file_);
 		coronal_vw->setup_camera_calibration(calibration_file_);
+		coronal_vw->setup_camera_coronal_plane();
 		/*Set Checked To Monoplane but disable from further clicking*/
 		ui.camera_A_radio_button->setChecked(true);
 		ui.camera_A_radio_button->setDisabled(true);
@@ -2350,7 +2350,7 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 	/*Make Sure A Row is Selected*/
 	if (ui.image_list_widget->currentIndex().row() >= 0) {
 		/*Disable Checking if biplane and save pose*/
-		if (calibrated_for_biplane_viewport_ == true) {
+		if (calibrated_for_biplane_viewport_) {
 			ui.camera_A_radio_button->setDisabled(true);
 			ui.camera_B_radio_button->setDisabled(false);
 
@@ -2554,8 +2554,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 /* this is where we are setting the current background */
 void MainScreen::on_image_list_widget_itemSelectionChanged() {
 	/*Make Sure A View is Selected*/
-	if (ui.original_image_radio_button->isChecked() == false && ui.inverted_image_radio_button->isChecked() == false
-		&& ui.edges_image_radio_button->isChecked() == false && ui.dilation_image_radio_button->isChecked() == false) {
+	if (!ui.original_image_radio_button->isChecked() && !ui.inverted_image_radio_button->isChecked()
+		&& !ui.edges_image_radio_button->isChecked() && !ui.dilation_image_radio_button->isChecked()) {
 		ui.original_image_radio_button->setChecked(true);
 	}
 
@@ -2634,17 +2634,17 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 
 		/*Display Corresponding Radio Button view to main QVTK widget*/
 		/*Original Model*/
-		if (ui.original_model_radio_button->isChecked() == true) {
+		if (ui.original_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_original(selected[i].row());
 			coronal_vw->change_model_opacity_to_original(selected[i].row());
 		}
 		/*Solid Color Model*/
-		else if (ui.solid_model_radio_button->isChecked() == true) {
+		else if (ui.solid_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_solid(selected[i].row());
 			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 		}
 		/*Transparent Model*/
-		else if (ui.transparent_model_radio_button->isChecked() == true) {
+		else if (ui.transparent_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
 			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 		}
@@ -2783,15 +2783,15 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 			coronal_vw->set_3d_model_color(selected[i].row(), UF_BLUE);
 		}
 
-		if (ui.original_model_radio_button->isChecked() == true) {
+		if (ui.original_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_original(selected[i].row());
 			coronal_vw->change_model_opacity_to_original(selected[i].row());
 		}
-		else if (ui.solid_model_radio_button->isChecked() == true) {
+		else if (ui.solid_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_solid(selected[i].row());
 			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 		}
-		else if (ui.transparent_model_radio_button->isChecked() == true) {
+		else if (ui.transparent_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
 			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 		}
@@ -2891,15 +2891,15 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 			ui.model_list_widget->item(selected[i].row())->setSelected(true);
 		}
 	}
-	if (ui.original_model_radio_button->isChecked() == true) {
+	if (ui.original_model_radio_button->isChecked()) {
 		vw->change_model_opacity_to_original(index_new_principal);
 		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
-	else if (ui.solid_model_radio_button->isChecked() == true) {
+	else if (ui.solid_model_radio_button->isChecked()) {
 		vw->change_model_opacity_to_solid(index_new_principal);
 		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
-	else if (ui.transparent_model_radio_button->isChecked() == true) {
+	else if (ui.transparent_model_radio_button->isChecked()) {
 		vw->change_model_opacity_to_transparent(index_new_principal);
 		coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
 	}
@@ -3017,7 +3017,7 @@ void MainScreen::on_dilation_image_radio_button_clicked() {
 void MainScreen::on_original_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-		if (ui.original_model_radio_button->isChecked() == true) {
+		if (ui.original_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_original(selected[i].row());
 			coronal_vw->change_model_opacity_to_original(selected[i].row());
 			ui.qvtk_widget->update();
@@ -3031,7 +3031,7 @@ void MainScreen::on_original_model_radio_button_clicked() {
 void MainScreen::on_solid_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-		if (ui.solid_model_radio_button->isChecked() == true) {
+		if (ui.solid_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_solid(selected[i].row());
 			coronal_vw->change_model_opacity_to_solid(selected[i].row());
 			ui.qvtk_widget->update();
@@ -3045,7 +3045,7 @@ void MainScreen::on_solid_model_radio_button_clicked() {
 void MainScreen::on_transparent_model_radio_button_clicked() {
 	QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
 	for (int i = 0; i < selected.size(); i++) {
-		if (ui.transparent_model_radio_button->isChecked() == true) {
+		if (ui.transparent_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_transparent(selected[i].row());
 			coronal_vw->change_model_opacity_to_transparent(selected[i].row());
 			ui.qvtk_widget->update();
@@ -3097,7 +3097,7 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 
 	std::cout << ui.qvtk_widget->width() << ", " << ui.qvtk_widget->height() << std::endl;
 	for (int i = 0; i < selected.size(); i++) {
-		if (ui.wireframe_model_radio_button->isChecked() == true) {
+		if (ui.wireframe_model_radio_button->isChecked()) {
 			vw->change_model_opacity_to_wire_frame(selected[i].row());
 			coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
 			ui.qvtk_widget->update();
@@ -3112,13 +3112,14 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
 void MainScreen::keyPressEvent(QKeyEvent* event) {
 	/*Stop Optimizer*/
 	if (event->key() == Qt::Key_Escape) {
-		if (ui.actionStop_Optimizer->isEnabled() == true) {
+		if (ui.actionStop_Optimizer->isEnabled() ) {
 			emit StopOptimizer();
 			QMessageBox::warning(this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
 		}
 	}
 	/*Toggle Information View*/
 	if (event->key() == Qt::Key_I) {
+		std::cout << "I!" << std::endl;
 		if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
 			actor_text->GetTextProperty()->SetOpacity(0.0);
 		}
@@ -3127,13 +3128,43 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
 		}
 		ui.qvtk_widget->update();
 		ui.qvtk_widget->renderWindow()->Render();
+	}
+	/* Update cpv on left click ISNT WORKING :( */
+	if (event->key() == Qt::Key_Space) {
+		QModelIndexList selected = ui.model_list_widget->selectionModel()->selectedRows();
+		std::cout << "Left Click!" << std::endl;
+		/*If Camera A View*/
+		for (int i = 0; i < selected.size(); i++) {
+			if (ui.camera_A_radio_button->isChecked()) {
+				/*Set Model Pose*/
+				Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
+															selected[i].row());
+				coronal_vw->set_model_position_at_index(selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[i].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+			}
+			else {
+				/*Else, Camera B View*/
+				/*Convert To relative Camera B Pose as storage is done in camera A coordinates and rotations*/
+				Point6D loaded_pose = model_locations_.GetPose(ui.image_list_widget->currentIndex().row(),
+															selected[i].row());
+				Point6D relative_B_pose = calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
+				coronal_vw->set_model_position_at_index(selected[i].row(),
+					relative_B_pose.x,
+					relative_B_pose.y,
+					relative_B_pose.z);
+				coronal_vw->set_model_orientation_at_index(selected[i].row(),
+					relative_B_pose.xa,
+					relative_B_pose.ya,
+					relative_B_pose.za);
+			}
+		}
 		ui.qvtk_cpv->update();
 		ui.qvtk_cpv->renderWindow()->Render();
 	}
 }
 
 void MainScreen::VTKEscapeSignal() {
-	if (ui.actionStop_Optimizer->isEnabled() == true) {
+	if (ui.actionStop_Optimizer->isEnabled() ) {
 		emit StopOptimizer();
 		QMessageBox::warning(this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
 	}
@@ -3151,7 +3182,7 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 			low_val = loaded_frames[ui.image_list_widget->currentIndex().row()].GetLowThreshold();
 			high_val = loaded_frames[ui.image_list_widget->currentIndex().row()].GetHighThreshold();
 		}
-		else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+		else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 			low_val = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetLowThreshold();
 			high_val = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetHighThreshold();
 		}
@@ -3178,7 +3209,7 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 					high_val);
 				loaded_frames[ui.image_list_widget->currentIndex().row()].SetDilatedImage(dilation_val);
 			}
-			else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+			else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 				loaded_frames_B[ui.image_list_widget->currentIndex().row()].SetEdgeImage(ui.aperture_spin_box->value(),
 					low_val,
 					high_val);
@@ -3189,19 +3220,19 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
 		/*   Update image based on selected radio button   */
 		if (ui.image_list_widget->currentIndex().row() >= 0) {
 			/*If Original View Selected*/
-			if (ui.original_image_radio_button->isChecked() == true) {
+			if (ui.original_image_radio_button->isChecked()) {
 				on_original_image_radio_button_clicked();
 			}
 			/*If Inverted View Selected*/
-			if (ui.inverted_image_radio_button->isChecked() == true) {
+			if (ui.inverted_image_radio_button->isChecked()) {
 				on_inverted_image_radio_button_clicked();
 			}
 			/*If Edge View Selected*/
-			if (ui.edges_image_radio_button->isChecked() == true) {
+			if (ui.edges_image_radio_button->isChecked()) {
 				on_edges_image_radio_button_clicked();
 			}
 			/*If Dilation View Selected*/
-			if (ui.dilation_image_radio_button->isChecked() == true) {
+			if (ui.dilation_image_radio_button->isChecked()) {
 				on_dilation_image_radio_button_clicked();
 			}
 		}
@@ -3231,7 +3262,7 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 			aperture = loaded_frames[ui.image_list_widget->currentIndex().row()].GetAperture();
 			high_val = loaded_frames[ui.image_list_widget->currentIndex().row()].GetHighThreshold();
 		}
-		else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+		else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 			aperture = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetAperture();
 			high_val = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetHighThreshold();
 		}
@@ -3258,7 +3289,7 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 					high_val);
 				loaded_frames[ui.image_list_widget->currentIndex().row()].SetDilatedImage(dilation_val);
 			}
-			else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+			else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 				loaded_frames_B[ui.image_list_widget->currentIndex().row()].SetEdgeImage(aperture,
 					ui.low_threshold_slider->value(),
 					high_val);
@@ -3268,19 +3299,19 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
 		/*   Update image based on selected radio button   */
 		if (ui.image_list_widget->currentIndex().row() >= 0) {
 			/*If Original View Selected*/
-			if (ui.original_image_radio_button->isChecked() == true) {
+			if (ui.original_image_radio_button->isChecked()) {
 				on_original_image_radio_button_clicked();
 			}
 			/*If Inverted View Selected*/
-			if (ui.inverted_image_radio_button->isChecked() == true) {
+			if (ui.inverted_image_radio_button->isChecked()) {
 				on_inverted_image_radio_button_clicked();
 			}
 			/*If Edge View Selected*/
-			if (ui.edges_image_radio_button->isChecked() == true) {
+			if (ui.edges_image_radio_button->isChecked()) {
 				on_edges_image_radio_button_clicked();
 			}
 			/*If Dilation View Selected*/
-			if (ui.dilation_image_radio_button->isChecked() == true) {
+			if (ui.dilation_image_radio_button->isChecked()) {
 				on_dilation_image_radio_button_clicked();
 			}
 		}
@@ -3311,7 +3342,7 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 			aperture = loaded_frames[ui.image_list_widget->currentIndex().row()].GetAperture();
 			low_val = loaded_frames[ui.image_list_widget->currentIndex().row()].GetLowThreshold();
 		}
-		else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+		else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 			aperture = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetAperture();
 			low_val = loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetLowThreshold();
 		}
@@ -3338,7 +3369,7 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 					ui.high_threshold_slider->value());
 				loaded_frames[ui.image_list_widget->currentIndex().row()].SetDilatedImage(dilation_val);
 			}
-			else if (ui.camera_B_radio_button->isChecked() && calibrated_for_biplane_viewport_) {
+			else if (ui.camera_B_radio_button->isChecked()&& calibrated_for_biplane_viewport_) {
 				loaded_frames_B[ui.image_list_widget->currentIndex().row()].SetEdgeImage(aperture,
 					low_val,
 					ui.high_threshold_slider->value());
@@ -3348,19 +3379,19 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 		/*   Update image based on selected radio button   */
 		if (ui.image_list_widget->currentIndex().row() >= 0) {
 			/*If Original View Selected*/
-			if (ui.original_image_radio_button->isChecked() == true) {
+			if (ui.original_image_radio_button->isChecked()) {
 				on_original_image_radio_button_clicked();
 			}
 			/*If Inverted View Selected*/
-			if (ui.inverted_image_radio_button->isChecked() == true) {
+			if (ui.inverted_image_radio_button->isChecked()) {
 				on_inverted_image_radio_button_clicked();
 			}
 			/*If Edge View Selected*/
-			if (ui.edges_image_radio_button->isChecked() == true) {
+			if (ui.edges_image_radio_button->isChecked()) {
 				on_edges_image_radio_button_clicked();
 			}
 			/*If Dilation View Selected*/
-			if (ui.dilation_image_radio_button->isChecked() == true) {
+			if (ui.dilation_image_radio_button->isChecked()) {
 				on_dilation_image_radio_button_clicked();
 			}
 		}
@@ -3408,19 +3439,19 @@ void MainScreen::on_apply_all_edge_button_clicked() {
 	/*   Update image based on selected radio button   */
 	if (ui.image_list_widget->currentIndex().row() >= 0) {
 		/*If Original View Selected*/
-		if (ui.original_image_radio_button->isChecked() == true) {
+		if (ui.original_image_radio_button->isChecked()) {
 			on_original_image_radio_button_clicked();
 		}
 		/*If Inverted View Selected*/
-		if (ui.inverted_image_radio_button->isChecked() == true) {
+		if (ui.inverted_image_radio_button->isChecked()) {
 			on_inverted_image_radio_button_clicked();
 		}
 		/*If Edge View Selected*/
-		if (ui.edges_image_radio_button->isChecked() == true) {
+		if (ui.edges_image_radio_button->isChecked()) {
 			on_edges_image_radio_button_clicked();
 		}
 		/*If Dilation View Selected*/
-		if (ui.dilation_image_radio_button->isChecked() == true) {
+		if (ui.dilation_image_radio_button->isChecked()) {
 			on_dilation_image_radio_button_clicked();
 		}
 	}
@@ -3665,7 +3696,7 @@ void MainScreen::onUpdateOptimum(double x, double y, double z, double xa, double
                                  unsigned int primary_model_index) {
 	/*Update Blue's Location*/
 	auto CurrentPose = Point6D(x, y, z, xa, ya, za);
-	if (ui.camera_B_radio_button->isChecked() == true) {
+	if (ui.camera_B_radio_button->isChecked()) {
 		CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
 	}
 	if (primary_model_index < loaded_models.size()) { //TODO: Find a better way to represent this
@@ -3686,7 +3717,7 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa, doubl
                                   unsigned int primary_model_index, bool error_occurred, QString optimizer_directive) {
 	/*Update Actor*/
 	auto CurrentPose = Point6D(x, y, z, xa, ya, za);
-	if (ui.camera_B_radio_button->isChecked() == true) {
+	if (ui.camera_B_radio_button->isChecked()) {
 		CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
 	}
 	if (primary_model_index < loaded_models.size()) { //todo: Find a better way to get size of model_actor_list
@@ -3802,7 +3833,7 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 	auto current_orientation = vw->get_model_orientation_at_index(primary_model_index);
 	auto CurrentPose = Point6D(current_position[0], current_position[1], current_position[2],
 		current_orientation[0], current_orientation[1], current_orientation[2]);
-	if (ui.camera_B_radio_button->isChecked() == true) {
+	if (ui.camera_B_radio_button->isChecked()) {
 		CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
 	}
 
@@ -3829,7 +3860,7 @@ void MainScreen::onUpdateDisplay(double iteration_speed, int current_iteration, 
 
 /*Update Background if Dilation Selected and Moving From Trunk to Branch OR Branch to Z Search*/
 void MainScreen::onUpdateDilationBackground() {
-	if (ui.dilation_image_radio_button->isChecked() == true) {
+	if (ui.dilation_image_radio_button->isChecked()) {
 		on_dilation_image_radio_button_clicked();
 		ui.qvtk_cpv->update();
 		ui.qvtk_cpv->renderWindow()->Render();
@@ -4394,7 +4425,7 @@ void MainScreen::UpdateDilationFrames() {
 		}
 	}
 	/*If Dilation View Selected*/
-	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked() == true) {
+	if (ui.image_list_widget->currentIndex().row() >= 0 && ui.dilation_image_radio_button->isChecked()) {
 		on_dilation_image_radio_button_clicked();
 		ui.qvtk_cpv->update();
 		ui.qvtk_cpv->renderWindow()->Render();

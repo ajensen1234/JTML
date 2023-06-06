@@ -146,6 +146,10 @@ void Viewer::setup_camera_calibration(Calibration cal) {
 	background_camera_->SetClippingRange(0.1, 2.0 * cal.camera_A_principal_.fy());
 }
 
+void Viewer::setup_camera_coronal_plane() {
+	background_camera_->SetPosition(-1,1,0);
+}
+
 void Viewer::place_image_actors_according_to_calibration(Calibration cal, int img_w, int img_h) {
 	const float x_pos =  -0.5 * img_w;
 	const float y_pos =  -0.5 * img_h;

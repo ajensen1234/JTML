@@ -59,6 +59,7 @@ public:
 	void set_loaded_frames(std::vector<Frame>& frames);
 	void set_loaded_frames_b(std::vector<Frame>& frames);
 	void setup_camera_calibration(Calibration cal);
+	void setup_camera_coronal_plane();
 	void place_image_actors_according_to_calibration(Calibration calibration, int img_w, int img_h);
 	void load_3d_models_into_actor_and_mapper_list();
 	void load_model_actors_and_mappers_with_3d_data();
