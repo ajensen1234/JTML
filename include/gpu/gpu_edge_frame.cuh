@@ -3,6 +3,7 @@
 
 /*GPU Frame Class*/
 #include "gpu/gpu_frame.cuh"
+#include "core/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -10,6 +11,7 @@ namespace gpu_cost_function {
 	class GPUEdgeFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
+<<<<<<< HEAD
 		  GPUEdgeFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_edge_image,
@@ -21,6 +23,19 @@ namespace gpu_cost_function {
 		  int GetCannyHighThreshold();
 		  int GetCannyLowThreshold();
 		  int GetCannyAperture();
+=======
+		JTML_DLL GPUEdgeFrame(int width, int height,
+			int gpu_device,
+			unsigned char* host_edge_image,
+			int high_threshold, int low_threshold, int aperture);
+		JTML_DLL GPUEdgeFrame();
+		JTML_DLL ~GPUEdgeFrame();
+
+		/*Get Canny Parameters*/
+		JTML_DLL int GetCannyHighThreshold();
+		JTML_DLL int GetCannyLowThreshold();
+		JTML_DLL int GetCannyAperture();
+>>>>>>> main-merge
 	private:
 
 		/*Canny Parameters*/

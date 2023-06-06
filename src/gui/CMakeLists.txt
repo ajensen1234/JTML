@@ -30,6 +30,12 @@ vtk_module_autoinit(
     MODULES ${VTK_LIBRARIES}
 )
 
+if(MSVC)
+	add_compile_definitions(_WIN32)
+	add_compile_definitions(_WIN64)
+	add_compile_definitions(JTML_EXPORTS)
+endif()
+
 
 
 

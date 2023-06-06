@@ -3,6 +3,7 @@
 
 /*Class for Storing Cost Function Info*/
 #include "CostFunction.h"
+#include "core/preprocessor-defs.h"
 
 /*Cost Function Tools Library*/
 #include "gpu/gpu_image.cuh"
@@ -33,45 +34,45 @@ namespace jta_cost_function {
 		Also sets an active cost function (default is the DIRECT_DILATION).
 		The parameters are all default. To load previously saved session parameters, the constructor
 		for the client will call the updateCostFunctionParameterValues(...)*/
-		  CostFunctionManager(Stage stage);
-		  CostFunctionManager();
-		  ~CostFunctionManager();
+		JTML_DLL CostFunctionManager(Stage stage);
+		JTML_DLL CostFunctionManager();
+		JTML_DLL ~CostFunctionManager();
 
 		/*Set Active Cost Function*/
-		  void setActiveCostFunction(std::string cost_function_name);
+		JTML_DLL void setActiveCostFunction(std::string cost_function_name);
 
 		/*Update Cost Function Values from Saved Session*/
-		  bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, double value);
-		  bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, int value);
-		  bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, bool value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, double value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, int value);
+		JTML_DLL bool updateCostFunctionParameterValues(std::string cost_function_name, std::string parameter_name, bool value);
 
 		/*Call Initialization for Active Cost Function*/
-		  bool InitializeActiveCostFunction(std::string &error_message);
+		JTML_DLL bool InitializeActiveCostFunction(std::string &error_message);
 
 		/*Call Destructor for Active Cost Function*/
-		  bool DestructActiveCostFunction(std::string &error_message);
+		JTML_DLL bool DestructActiveCostFunction(std::string &error_message);
 
 		/*Call Active Cost Function*/
-		  double callActiveCostFunction();
+		JTML_DLL double callActiveCostFunction();
 
 		/*Get Active Cost Function*/
-		  std::string getActiveCostFunction();
+		JTML_DLL std::string getActiveCostFunction();
 
 
 		/*Get Active Cost Function Class*/
-		  CostFunction* getActiveCostFunctionClass();
+		JTML_DLL CostFunction* getActiveCostFunctionClass();
 
 		/*Get Cost Function Class*/
-		  CostFunction* getCostFunctionClass(std::string cost_function_name);
+		JTML_DLL CostFunction* getCostFunctionClass(std::string cost_function_name);
 
 		/*Get Vector of Cost Functions*/
-		  std::vector<CostFunction> getAvailableCostFunctions();
+		JTML_DLL std::vector<CostFunction> getAvailableCostFunctions();
 
 		/*Set Current Frame Index*/
-		  void setCurrentFrameIndex(unsigned int current_frame_index);
+		JTML_DLL void setCurrentFrameIndex(unsigned int current_frame_index);
 
 		/*Upload Data (Images,Poses etc.)*/
-		  void UploadData(std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
+		JTML_DLL void UploadData(std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
 		std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_A,
 		std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_A,
 		std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_B,

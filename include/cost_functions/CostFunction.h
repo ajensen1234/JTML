@@ -2,6 +2,7 @@
 
 /*Cost Function Parameters*/
 #include "Parameter.h"
+#include "core/preprocessor-defs.h"
 
 /*Standard Library*/
 #include <vector>
@@ -12,33 +13,33 @@ namespace jta_cost_function {
 	class CostFunction {
 	public:
 		/*Constructor*/
-		  CostFunction();
-		  CostFunction(std::string cost_function_name);
-		  ~CostFunction();
+		JTML_DLL CostFunction();
+		JTML_DLL CostFunction(std::string cost_function_name);
+		JTML_DLL ~CostFunction();
 
 		/*Add Parameter (w/ Default Value)*/
-		  void addParameter(Parameter<double> new_parameter);
-		  void addParameter(Parameter<int> new_parameter);
-		  void addParameter(Parameter<bool> new_parameter);
+		JTML_DLL void addParameter(Parameter<double> new_parameter);
+		JTML_DLL void addParameter(Parameter<int> new_parameter);
+		JTML_DLL void addParameter(Parameter<bool> new_parameter);
 		 
 		/*Set Parameter Values (Bool for Success)*/
-		  bool setDoubleParameterValue(std::string parameter_name, double value);
-		  bool setIntParameterValue(std::string parameter_name, int value);
-		  bool setBoolParameterValue(std::string parameter_name, bool value);
+		JTML_DLL bool setDoubleParameterValue(std::string parameter_name, double value);
+		JTML_DLL bool setIntParameterValue(std::string parameter_name, int value);
+		JTML_DLL bool setBoolParameterValue(std::string parameter_name, bool value);
 
 		/*Get Parameter Values (Bool for Success)*/
-		  bool getDoubleParameterValue(std::string parameter_name, double &value);
-		  bool getIntParameterValue(std::string parameter_name, int &value);
-		  bool getBoolParameterValue(std::string parameter_name, bool &value);
+		JTML_DLL bool getDoubleParameterValue(std::string parameter_name, double &value);
+		JTML_DLL bool getIntParameterValue(std::string parameter_name, int &value);
+		JTML_DLL bool getBoolParameterValue(std::string parameter_name, bool &value);
 
 		/*Get Parameters by Type Groups*/
-		  std::vector<Parameter<double>> getDoubleParameters();
-		  std::vector<Parameter<int>> getIntParameters();
-		  std::vector<Parameter<bool>> getBoolParameters();
+		JTML_DLL std::vector<Parameter<double>> getDoubleParameters();
+		JTML_DLL std::vector<Parameter<int>> getIntParameters();
+		JTML_DLL std::vector<Parameter<bool>> getBoolParameters();
 
 		/*Get/Set Cost Function Name*/
-		  std::string getCostFunctionName();
-		  void setCostFunctionName(std::string cost_function_name);
+		JTML_DLL std::string getCostFunctionName();
+		JTML_DLL void setCostFunctionName(std::string cost_function_name);
 
 
 	private:

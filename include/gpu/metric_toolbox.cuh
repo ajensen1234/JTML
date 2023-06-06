@@ -19,6 +19,7 @@
 //	class MetricToolbox : public RegistrationMetric {
 //	public:
 //		/*Constructor & Destructor*/
+<<<<<<< HEAD
 //		  MetricToolbox(int width, int height);
 //		  MetricToolbox();
 //
@@ -35,6 +36,24 @@
 //		/*Set/Get "Is the Silhouette Black?"*/
 //		  void SetBlackSilhouette(bool black_silhouette);
 //		  bool GetBlackSilhouette();
+=======
+//		JTML_DLL MetricToolbox(int width, int height);
+//		JTML_DLL MetricToolbox();
+//
+//		/*Compute Dilation Metrics*/
+//		JTML_DLL double ComputeDilationMetric(int *bounding_box_packet);
+//
+//		/*Compute Mahfouz Metric*/
+//		JTML_DLL double ComputeMahfouzMetric(int *bounding_box_packet);
+//
+//		/*Set/Get Dilation*/
+//		JTML_DLL void SetDilation(int dilation);
+//		JTML_DLL int GetDilation();
+//
+//		/*Set/Get "Is the Silhouette Black?"*/
+//		JTML_DLL void SetBlackSilhouette(bool black_silhouette);
+//		JTML_DLL bool GetBlackSilhouette();
+>>>>>>> main-merge
 //
 //	private:
 //		/*Dilation Constant*/

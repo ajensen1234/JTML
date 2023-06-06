@@ -4,6 +4,7 @@
 /*Standard Library*/
 #include <string>
 #include <iostream>
+#include "core/preprocessor-defs.h"
 
 /*GPU Cost Function Library Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -12,6 +13,7 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads blank image
 		else, DeviceImage marked as not having uploaded to GPU*/
+<<<<<<< HEAD
 		  GPUImage(int width, int height, int gpu_device);
 		/*If successful, uploads host_image
 		else, DeviceImage marked as not having uploaded to GPU*/
@@ -48,6 +50,44 @@ namespace gpu_cost_function {
 		/*Get Image Size Parameters*/
 		  int GetFrameHeight();
 		  int GetFrameWidth();
+=======
+		JTML_DLL GPUImage(int width, int height, int gpu_device);
+		/*If successful, uploads host_image
+		else, DeviceImage marked as not having uploaded to GPU*/
+		JTML_DLL GPUImage(int width, int height, int gpu_device, unsigned char* host_image);
+		/*Default constructor. DeviceImage marked as not having uploaded to GPU*/
+		JTML_DLL GPUImage();
+
+		/*Destructor*/
+		JTML_DLL ~GPUImage();
+
+		/*Upload Blank Image to Device (returns true if successful)*/
+		JTML_DLL bool UploadBlankImageToGPU(int width, int height);
+		/*Upload Image to Device (returns true if successful)*/
+		JTML_DLL bool UploadImageToGPU(int width, int height, unsigned char* host_image);
+
+		/*Remove Image from Device (returns true if successful)*/
+		JTML_DLL bool RemoveImageFromGPU();
+
+		/*Check to See if Image is On the Device*/
+		JTML_DLL bool CheckImageOnGPU();
+
+		/*Get Pointer to Device (GPU) Image*/
+		JTML_DLL unsigned char* GetDeviceImagePointer();
+
+		/*Get Pointer to Bounding Box*/
+		JTML_DLL int* GetBoundingBox();
+
+		/*Is the GPU model properly initialized?*/
+		JTML_DLL bool IsInitializedCorrectly();
+
+		/*Write a .png to Location of Device Image*/
+		JTML_DLL bool WriteImage(std::string file_name);
+
+		/*Get Image Size Parameters*/
+		JTML_DLL int GetFrameHeight();
+		JTML_DLL int GetFrameWidth();
+>>>>>>> main-merge
 
 	private:
 		/*Pointer to Device Image on GPU*/

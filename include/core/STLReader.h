@@ -1,9 +1,9 @@
 #pragma once
 /*QT Headers*/
-#include <qstring.h>
-#include <qfile.h>
-#include <qfileinfo.h>
-#include <qtextstream.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qtextstream.h>
 
 /*Standard Library*/
 #include <vector>

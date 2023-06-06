@@ -11,6 +11,7 @@ for the cost function along with a parameter type and parameter name.*/
 /*Standard Library*/
 #include <string>
 #include <type_traits>
+#include "core/preprocessor-defs.h"
 
 /*Custom Namespace for JTA Cost Function Library (Compiling as DLL)*/
 namespace jta_cost_function {
@@ -26,12 +27,12 @@ namespace jta_cost_function {
 	class Parameter<double> {
 	public:
 		/*Constructors*/
-		  Parameter() {
+		JTML_DLL Parameter() {
 			parameter_name_ = "Nameless Parameter";
 			parameter_value_ = 0;
 			parameter_type_ = "DOUBLE";
 		};
-		  Parameter(std::string parameter_name, double parameter_value) {
+		JTML_DLL Parameter(std::string parameter_name, double parameter_value) {
 			parameter_name_ = parameter_name;
 			parameter_value_ = parameter_value;
 			parameter_type_ = "DOUBLE";
@@ -39,27 +40,23 @@ namespace jta_cost_function {
 
 		/*Methods*/
 		/*Get Parameter Name*/
-		  std::string getParameterName() {
+		JTML_DLL std::string getParameterName() {
 			return parameter_name_;
 		};
 
 		/*Get/Set Parameter Value*/
-		  double getParameterValue() {
+		JTML_DLL double getParameterValue() {
 			return parameter_value_;
 		};
-		  void setParameterValue(double parameter_value) {
+		JTML_DLL void setParameterValue(double parameter_value) {
 			parameter_value_ = parameter_value;
 		};
 
 		/*Get Class Type*/
-		  std::string getParameterType() {
+		JTML_DLL std::string getParameterType() {
 			return parameter_type_;
 		};
-
-	private:
-		/*Variables*/
 		/*Parameter Name*/
-		std::string parameter_name_;
 
 		/*Parameter Value*/
 		double parameter_value_;
@@ -72,12 +69,12 @@ namespace jta_cost_function {
 	class Parameter<int> {
 	public:
 		/*Constructors*/
-		  Parameter() {
+		JTML_DLL Parameter() {
 			parameter_name_ = "Nameless Parameter";
 			parameter_value_ = 0;
 			parameter_type_ = "INT";
 		};
-		  Parameter(std::string parameter_name, int parameter_value) {
+		JTML_DLL Parameter(std::string parameter_name, int parameter_value) {
 			parameter_name_ = parameter_name;
 			parameter_value_ = parameter_value;
 			parameter_type_ = "INT";
@@ -85,20 +82,20 @@ namespace jta_cost_function {
 
 		/*Methods*/
 		/*Get Parameter Name*/
-		  std::string getParameterName() {
+		JTML_DLL std::string getParameterName() {
 			return parameter_name_;
 		};
 
 		/*Get/Set Parameter Value*/
-		  int getParameterValue() {
+		JTML_DLL int getParameterValue() {
 			return parameter_value_;
 		};
-		  void setParameterValue(int parameter_value) {
+		JTML_DLL void setParameterValue(int parameter_value) {
 			parameter_value_ = parameter_value;
 		};
 
 		/*Get Class Type*/
-		  std::string getParameterType() {
+		JTML_DLL std::string getParameterType() {
 			return parameter_type_;
 		};
 
@@ -118,12 +115,12 @@ namespace jta_cost_function {
 	class Parameter<bool> {
 	public:
 		/*Constructors*/
-		  Parameter() {
+		JTML_DLL Parameter() {
 			parameter_name_ = "Nameless Parameter";
 			parameter_value_ = 0;
 			parameter_type_ = "BOOL";
 		};
-		  Parameter(std::string parameter_name, bool parameter_value) {
+		JTML_DLL Parameter(std::string parameter_name, bool parameter_value) {
 			parameter_name_ = parameter_name;
 			parameter_value_ = parameter_value;
 			parameter_type_ = "BOOL";
@@ -131,20 +128,20 @@ namespace jta_cost_function {
 
 		/*Methods*/
 		/*Get Parameter Name*/
-		  std::string getParameterName() {
+		JTML_DLL std::string getParameterName() {
 			return parameter_name_;
 		};
 
 		/*Get/Set Parameter Value*/
-		  bool getParameterValue() {
+		JTML_DLL bool getParameterValue() {
 			return parameter_value_;
 		};
-		  void setParameterValue(bool parameter_value) {
+		JTML_DLL void setParameterValue(bool parameter_value) {
 			parameter_value_ = parameter_value;
 		};
 
 		/*Get Class Type*/
-		  std::string getParameterType() {
+		JTML_DLL std::string getParameterType() {
 			return parameter_type_;
 		};
 

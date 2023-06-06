@@ -3,6 +3,7 @@
 
 /*GPU Frame Class*/
 #include "gpu/gpu_frame.cuh"
+#include "core/preprocessor-defs.h"
 
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
@@ -11,6 +12,7 @@ namespace gpu_cost_function {
 	class GPUIntensityFrame : public GPUFrame {
 	public:
 		/*Constructors & Destructor*/
+<<<<<<< HEAD
 		  GPUIntensityFrame(int width, int height,
 			int gpu_device,
 			unsigned char* host_intensity_image,
@@ -28,6 +30,25 @@ namespace gpu_cost_function {
 
 		/*Get pointer to the actual GPU Image*/
 		  GPUImage* GetInvertedGPUImage();
+=======
+		JTML_DLL GPUIntensityFrame(int width, int height,
+			int gpu_device,
+			unsigned char* host_intensity_image,
+			bool dark_silhouette, unsigned char* host_inverted_image);
+		JTML_DLL GPUIntensityFrame();
+		JTML_DLL ~GPUIntensityFrame();
+
+		/*Set/Get Dark Silhohuette*/
+		JTML_DLL bool IsSilhouetteDark();
+		JTML_DLL void SetSilhouetteDark(bool dark_silhouette);
+
+		/*Get pointer to the images on the GPU Images for the Intensity Image or if Dark Silhouette True
+		returns a pointer to the Inverted Image*/
+		JTML_DLL unsigned char* GetWhiteSilhouetteDeviceImagePointer();
+
+		/*Get pointer to the actual GPU Image*/
+		JTML_DLL GPUImage* GetInvertedGPUImage();
+>>>>>>> main-merge
 
 	private:
 		/*GPU Image for Inverted Intensity Image*/

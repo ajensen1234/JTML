@@ -7,6 +7,8 @@
 /*Include opencv for image processing on rendered outputs*/
 #include <opencv2/core/mat.hpp>
 
+#include "core/preprocessor-defs.h"
+
 /*GPU Cost Function Library Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 
@@ -33,7 +35,11 @@ namespace gpu_cost_function {
 		*/
 	public:
 		/*Monoplane constructor*/
+<<<<<<< HEAD
 		  GPUModel(std::string model_name,
+=======
+		JTML_DLL GPUModel(std::string model_name,
+>>>>>>> main-merge
 			bool principal_model,
 			int width, int height, int device_primary_cam,
 			bool use_backface_culling_primary_cam,
@@ -41,7 +47,11 @@ namespace gpu_cost_function {
 			CameraCalibration camera_calibration_primary_cam);
 
 		/*Biplane constructor*/
+<<<<<<< HEAD
 		  GPUModel(std::string model_name,
+=======
+		JTML_DLL GPUModel(std::string model_name,
+>>>>>>> main-merge
 			bool principal_model,
 			int width, int height, int device_primary_cam, int device_secondary_cam,
 			bool use_backface_culling_primary_cam, bool use_backface_secondary_cam,
@@ -49,6 +59,7 @@ namespace gpu_cost_function {
 			CameraCalibration camera_calibration_primary_cam, CameraCalibration camera_calibration_secondary_cam);
 
 		/*Default Constructor and Destructor*/
+<<<<<<< HEAD
 		  GPUModel();
 		  ~GPUModel();
 
@@ -73,15 +84,46 @@ namespace gpu_cost_function {
 		Primary is used in monoplane and biplane, Secondary only used in biplane*/
 		  GPUImage* GetPrimaryCameraRenderedImage();
 		  GPUImage* GetSecondaryCameraRenderedImage();
+=======
+		JTML_DLL GPUModel();
+		JTML_DLL ~GPUModel();
+
+		/*Render to cache function (returns true if worked correctly)
+		Primary is used in monoplane and biplane, Secondary only used in biplane*/
+		JTML_DLL bool RenderPrimaryCamera(Pose model_pose);
+		JTML_DLL bool RenderSecondaryCamera(Pose model_pose);
+
+		JTML_DLL void RenderPrimaryCameraAndWriteImage(Pose model_pose, std::string img_name);
+
+		/*Render DRR to cache function (returns true if worked correctly)
+		Primary is used in monoplane and biplane, Secondary only used in biplane*/
+		JTML_DLL bool RenderDRRPrimaryCamera(Pose model_pose, float lower_bound, float upper_bound);
+		JTML_DLL bool RenderDRRSecondaryCamera(Pose model_pose, float lower_bound, float upper_bound);
+
+		/*Get pointer to rendered image on GPU
+		Primary is used in monoplane and biplane, Secondary only used in biplane*/
+		JTML_DLL unsigned char* GetPrimaryCameraRenderedImagePointer();
+		JTML_DLL unsigned char* GetSecondaryCameraRenderedImagePointer();
+
+		/*Get pointer to rendered image on GPU (GPUImage)
+		Primary is used in monoplane and biplane, Secondary only used in biplane*/
+		JTML_DLL GPUImage* GetPrimaryCameraRenderedImage();
+		JTML_DLL GPUImage* GetSecondaryCameraRenderedImage();
+>>>>>>> main-merge
 		
 		/*Get the cv::Mat output off the GPU and available for analysis
 		Mostly used for image analysis that will not happen on the GPU
 		In the future, it might be better to do this in a parallel way if all views can be rendered in parallel*/
+<<<<<<< HEAD
 		  cv::Mat GetOpenCVPrimaryRenderedImage();
+=======
+		JTML_DLL cv::Mat GetOpenCVPrimaryRenderedImage();
+>>>>>>> main-merge
 
 
 		/*Write Image to File for Primary or Secondary Cameras (bool indicates success).
 		Include the image extension (e.g. "femur_image.png").*/
+<<<<<<< HEAD
 		  bool WritePrimaryCameraRenderedImage(std::string file_name);
 		  bool WriteSecondaryCameraRenderedImage(std::string file_name);
 
@@ -103,6 +145,29 @@ namespace gpu_cost_function {
 		  void SetCurrentPrimaryCameraPose(Pose current_pose);
 		  Pose GetCurrentSecondaryCameraPose();
 		  void SetCurrentSecondaryCameraPose(Pose current_pose);
+=======
+		JTML_DLL bool WritePrimaryCameraRenderedImage(std::string file_name);
+		JTML_DLL bool WriteSecondaryCameraRenderedImage(std::string file_name);
+
+		/*Set/Get Model Name*/
+		JTML_DLL void SetModelName(std::string model_name);
+		JTML_DLL std::string GetModelName();
+
+		/*Is this the Principal Model?*/
+		JTML_DLL bool IsPrincipalModel();
+
+		/*Is the GPU model properly initialized?*/
+		JTML_DLL bool IsInitializedCorrectly();
+
+		/*Is the GPU model being rendered in biplane mode (two cameras) or monoplane mode (one camera)?*/
+		JTML_DLL bool IsBiplaneMode();
+
+		/*Get/Set Current Pose*/
+		JTML_DLL Pose GetCurrentPrimaryCameraPose();
+		JTML_DLL void SetCurrentPrimaryCameraPose(Pose current_pose);
+		JTML_DLL Pose GetCurrentSecondaryCameraPose();
+		JTML_DLL void SetCurrentSecondaryCameraPose(Pose current_pose);
+>>>>>>> main-merge
 
 	private:
 		/*Render Engines*/
