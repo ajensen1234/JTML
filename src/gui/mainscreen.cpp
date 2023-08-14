@@ -2615,7 +2615,8 @@ void MainScreen::on_load_model_button_clicked() {
       this, tr("Load Implant Model(s)"), ".", tr("CAD File(s) (*.stl)"));
 
   /*For Each Cad File Extension Create Model Name*/
-  QStringList CADModelNames, OldCADModelNames, LoadedCADModelNames;
+  QStringList CADModelNames, OldCADModelNames, LoadedCADModelNames,
+      NewCADModelNames;
 
   /*Initialize List With All CAD Model Names*/
   for (int i = 0; i < loaded_models.size(); i++) {
@@ -2656,13 +2657,16 @@ void MainScreen::on_load_model_button_clicked() {
                           QString::number(already_exists) + ")";
       }
     }
-    CADModelNames.push_back(temp_model_name);
+    CADModelNames.push_back(temp_model_name); // adding models that are new
+    NewCADModelNames.push_back(temp_model_name);
   }
 
   // for (int i = 0; i < CADFileExtensions.size(); i++)
   // loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
   // CADModelNames[i].toStdString(), "BLANK"));
-  vw->load_models(CADFileExtensions, CADModelNames);
+  vw->load_models(
+      CADFileExtensions,
+      CADModelNames); // Need to change this logic so it only has the new files
   coronal_vw->load_models(CADFileExtensions, CADModelNames);
   for (int i = 0; i < CADFileExtensions.size(); i++) {
     loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
