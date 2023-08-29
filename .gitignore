@@ -29,3 +29,4 @@ detect_cuda_compute_capabilities.cu
 detect_cuda_version.cc
 Makefile
 example_studies/KCL
+.cache
