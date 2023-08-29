@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1147</width>
+    <width>1000</width>
     <height>787</height>
    </rect>
   </property>
@@ -403,9 +403,12 @@ QMenu::separator {
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,9,2">
+     <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,9,1">
       <item>
        <layout class="QVBoxLayout" name="Left" stretch="1,1,0,2">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
         <item>
          <widget class="QGroupBox" name="preprocessor_box">
           <property name="sizePolicy">
@@ -413,6 +416,12 @@ QMenu::separator {
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
           </property>
           <property name="styleSheet">
            <string notr="true">/*
@@ -831,6 +840,12 @@ QMenu::separator {
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
           </property>
           <property name="styleSheet">
            <string notr="true">/*
@@ -1287,6 +1302,12 @@ QMenu::separator {
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="styleSheet">
            <string notr="true">/*
 	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
@@ -1707,6 +1728,12 @@ QMenu::separator {
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="styleSheet">
            <string notr="true">/*
 	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
@@ -2120,6 +2147,34 @@ QMenu::separator {
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0">
+         <widget class="QVTKOpenGLNativeWidget" name="qvtk_widget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>1</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>1024</width>
+            <height>1024</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>1</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>1</width>
+            <height>1</height>
+           </size>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -2197,7 +2252,7 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
+                <brush brushstyle="SolidPattern">
                  <color alpha="128">
                   <red>33</red>
                   <green>88</green>
@@ -2271,7 +2326,7 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
+                <brush brushstyle="SolidPattern">
                  <color alpha="128">
                   <red>33</red>
                   <green>88</green>
@@ -2345,7 +2400,7 @@ QMenu::separator {
                 </brush>
                </colorrole>
                <colorrole role="PlaceholderText">
-                <brush brushstyle="NoBrush">
+                <brush brushstyle="SolidPattern">
                  <color alpha="128">
                   <red>33</red>
                   <green>88</green>
@@ -2359,7 +2414,6 @@ QMenu::separator {
             <property name="font">
              <font>
               <pointsize>12</pointsize>
-              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -2398,7 +2452,6 @@ QProgressBar::chunk {
             <property name="font">
              <font>
               <pointsize>12</pointsize>
-              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -2409,39 +2462,29 @@ QProgressBar::chunk {
           </item>
          </layout>
         </item>
-        <item row="1" column="0">
-         <widget class="QVTKOpenGLNativeWidget" name="qvtk_widget">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>1</horstretch>
-            <verstretch>1</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>1</width>
-            <height>1</height>
-           </size>
-          </property>
-          <property name="baseSize">
-           <size>
-            <width>1</width>
-            <height>1</height>
-           </size>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="Right" stretch="1,0,0,2">
-        <item>
+        <item alignment="Qt::AlignHCenter">
          <widget class="QVTKOpenGLNativeWidget" name="qvtk_cpv">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
             <horstretch>1</horstretch>
             <verstretch>1</verstretch>
            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>280</width>
+            <height>280</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>280</width>
+            <height>280</height>
+           </size>
           </property>
           <property name="sizeIncrement">
            <size>
@@ -2467,6 +2510,12 @@ QProgressBar::chunk {
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
           </property>
           <property name="styleSheet">
            <string notr="true">/*
@@ -2971,7 +3020,7 @@ QMenu::separator {
           </property>
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>300</width>
             <height>263</height>
            </size>
           </property>
@@ -3409,6 +3458,12 @@ QMenu::separator {
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="styleSheet">
            <string notr="true">/*
 	Based on a template by Emanuel Claesson (c) 2013 with modifications by Paris Flood
@@ -3829,20 +3884,18 @@ QMenu::separator {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1147</width>
-     <height>29</height>
+     <width>1000</width>
+     <height>28</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3863,7 +3916,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuOptions">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3879,7 +3931,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuOptimizer">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -3891,7 +3942,6 @@ QMenu::separator {
    <widget class="QMenu" name="menuHelp">
     <property name="font">
      <font>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
