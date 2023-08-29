@@ -16,5 +16,16 @@
 /out/build
 *build*/
 *idea*/
-
+.cmake
+CMakeFiles
 CMakeSettings.json
+build
+.CMakeCache
+/CMakeCache.txt
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+detect_cuda_compute_capabilities.cu
+detect_cuda_version.cc
+Makefile
+example_studies/KCL

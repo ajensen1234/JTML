@@ -118,6 +118,8 @@ Q_SIGNALS:
 	void UpdateTimeRemaining(int);
 
 private:
+	double pi = 3.14159265358979323846;
+
 	Ui::MainScreenClass ui;
 
 	double UF_BLUE[3] = {0,72,204};
@@ -150,7 +152,7 @@ private:
 	bool calibrated_for_monoplane_viewport_;
 	bool calibrated_for_biplane_viewport_;
 
-	/*VTK Variables*/
+	/*VTK Variables for main Viewer*/
 	std::vector<vtkSmartPointer<vtkActor>> model_actor_list;
 	std::vector<vtkSmartPointer<vtkPolyDataMapper>> model_mapper_list;
 	vtkSmartPointer<vtkRenderer> renderer;
@@ -162,9 +164,14 @@ private:
 	vtkSmartPointer<vtkImageImport> importer;
 	vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera_style_interactor;
 
+	/* VTK Variables for Coronal Plane Viewer*/
+	vtkSmartPointer<vtkRenderer> coronal_renderer;
 
+	// Main viewer
 	std::shared_ptr<Viewer> vw = std::make_shared<Viewer>();
 
+	// Coronal Plane Viewer
+	std::shared_ptr<Viewer> coronal_vw = std::make_shared<Viewer>();
 
 	/*View Menu Radio Button Container*/
 	QActionGroup *alignmentGroup, *alignmentGroupSegment;
@@ -242,6 +249,8 @@ private:
 
 	bool sym_trap_running;
 
+	void update_image_list_widget(); /*Updates ui.image_list_widget*/
+
 public Q_SLOTS:
 	// Call Optimizer Launch
 	void optimizer_launch_slot();
@@ -261,19 +270,9 @@ public Q_SLOTS:
 	void on_image_list_widget_itemSelectionChanged(); /*Image List Widget Changed*/
 	void on_model_list_widget_itemSelectionChanged(); /*Model List Widget Changed*/
 
-	/*Multiple Selection For Models Radio buttons*/
-	void on_single_model_radio_button_clicked();
-
-	void on_multiple_model_radio_button_clicked();
-
-	/*Radio Buttons*/
-	/*Image Radio Buttons*/
 	void on_original_image_radio_button_clicked();
-
 	void on_inverted_image_radio_button_clicked();
-
 	void on_edges_image_radio_button_clicked();
-
 	void on_dilation_image_radio_button_clicked();
 
 	/*Model Radio Buttons*/

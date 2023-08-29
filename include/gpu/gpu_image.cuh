@@ -13,6 +13,7 @@ namespace gpu_cost_function {
 	public:
 		/*If successful, uploads blank image
 		else, DeviceImage marked as not having uploaded to GPU*/
+
 		JTML_DLL GPUImage(int width, int height, int gpu_device);
 		/*If successful, uploads host_image
 		else, DeviceImage marked as not having uploaded to GPU*/

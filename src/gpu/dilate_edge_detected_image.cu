@@ -2,8 +2,8 @@
 #include "gpu/gpu_metrics.cuh"
 
 /*Cuda*/
-#include "cuda_runtime.h"
-#include "cuda.h"
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 /*Grayscale Colors*/
 #include "pixel_grayscale_colors.h"

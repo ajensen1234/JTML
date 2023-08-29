@@ -56,14 +56,13 @@ namespace jta_cost_function {
 		JTML_DLL std::string getParameterType() {
 			return parameter_type_;
 		};
-
 	private:
 		/*Variables*/
 		/*Parameter Name*/
 		std::string parameter_name_;
 
 		/*Parameter Value*/
-		double parameter_value_;
+		int parameter_value_;
 
 		/*Class Type*/
 		std::string parameter_type_;

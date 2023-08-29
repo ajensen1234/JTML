@@ -27,7 +27,6 @@ namespace gpu_cost_function {
 	 The parameter alpha ranges from 0 to 1 and blends as follows: ALPHA*destination_image_pixel + (1 - ALPHA)*secondary_image_pixel.
 	 Bool return value indicates success.*/
 	JTML_DLL bool BlendGrayscaleImages(GPUImage* destination_image, GPUImage* secondary_image, float alpha);
-
 	/*Paste Non Zero (Black) Pixels of secondary_image on top of destination_image
 	Bool return value indicates success. Can pass as GPU Image* or 
 	with height/width.*/

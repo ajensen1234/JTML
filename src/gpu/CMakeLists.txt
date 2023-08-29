@@ -31,6 +31,7 @@ set_target_properties(jtml_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(jtml_gpu ${OpenCV_LIBRARIES})
 target_link_libraries(jtml_gpu ${CUDA_CUBLAS_LIBRARIES})
 target_link_libraries(jtml_gpu ${CUDA_LIBRARIES})
+
 target_include_directories(jtml_gpu PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 target_include_directories(jtml_gpu PUBLIC ${HEADER_DIR})
 if (MSVC)
