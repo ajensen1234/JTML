@@ -133,7 +133,7 @@ MainScreen::MainScreen(QWidget *parent) : QMainWindow(parent) {
           SLOT(onSaveSettings(OptimizerSettings,
                               jta_cost_function::CostFunctionManager,
                               jta_cost_function::CostFunctionManager,
-                              jta_cost_function::CostFunctionManager)),uested a
+                              jta_cost_function::CostFunctionManager)),
           Qt::DirectConnection);
 
   /* SYM TRAP */
@@ -893,41 +893,44 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
   qvtk_widget_starting_width_ = ui.qvtk_widget->geometry().height();
 }
 
-
 /* Commented out as this causes flickering on resize */
 /*Handle Resize Event*/
 
-void MainScreen::resizeEvent(QResizeEvent* event) {
-	/*Process Events*/
-	qApp->processEvents();
+void MainScreen::resizeEvent(QResizeEvent *event) {
+  /*Process Events*/
+  qApp->processEvents();
 
-	/*Resize Event*/
-	QMainWindow::resizeEvent(event);
+  /*Resize Event*/
+  QMainWindow::resizeEvent(event);
 
-	/*Expansion Constants*/
-	// int horizontal_expansion = this->width() - this->minimumWidth();
-	// int vertical_expansion = this->height() - this->minimumHeight();
-	// int total_expansion;
+  /*Expansion Constants*/
+  // int horizontal_expansion = this->width() - this->minimumWidth();
+  // int vertical_expansion = this->height() - this->minimumHeight();
+  // int total_expansion;
 
-	// if (horizontal_expansion > vertical_expansion) {
-	// 	total_expansion = vertical_expansion;
-	// }
-	// else {
-	// 	total_expansion = horizontal_expansion;
-	// }
+  // if (horizontal_expansion > vertical_expansion) {
+  // 	total_expansion = vertical_expansion;
+  // }
+  // else {
+  // 	total_expansion = horizontal_expansion;
+  // }
 
-	// /* Maintain square aspect ratio and correct positioning for the main viewer window and the coronal plane viewer */
-	// QPoint p_main = QPoint(ui.gridLayout_3->geometry().left() + (ui.gridLayout_3->geometry().width() / 2) - ((qvtk_widget_starting_height_ + total_expansion) / 2), ui.pose_progress->geometry().bottom());
-	// QRect r_main = QRect(p_main, QSize(qvtk_widget_starting_height_ + total_expansion, qvtk_widget_starting_height_ + total_expansion));
+  // /* Maintain square aspect ratio and correct positioning for the main viewer
+  // window and the coronal plane viewer */ QPoint p_main =
+  // QPoint(ui.gridLayout_3->geometry().left() +
+  // (ui.gridLayout_3->geometry().width() / 2) - ((qvtk_widget_starting_height_
+  // + total_expansion) / 2), ui.pose_progress->geometry().bottom()); QRect
+  // r_main = QRect(p_main, QSize(qvtk_widget_starting_height_ +
+  // total_expansion, qvtk_widget_starting_height_ + total_expansion));
 
-	// QPoint p_cpv = QPoint(ui.Right->geometry().left(), ui.Right->geometry().top());
-	// QRect r_cpv = QRect(p_cpv, QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
+  // QPoint p_cpv = QPoint(ui.Right->geometry().left(),
+  // ui.Right->geometry().top()); QRect r_cpv = QRect(p_cpv,
+  // QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
 
-	// /*Expand QVTK Widgets*/
-	// ui.qvtk_widget->setGeometry(r_main);
-	// ui.qvtk_cpv->setGeometry(r_cpv);
+  // /*Expand QVTK Widgets*/
+  // ui.qvtk_widget->setGeometry(r_main);
+  // ui.qvtk_cpv->setGeometry(r_cpv);
 }
-
 
 /*MENU BAR BUTTONS*/
 /*File Menu*/
