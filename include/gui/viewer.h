@@ -131,6 +131,10 @@ public:
 
   void print_scene_camera_directions();
 
+  bool windowCenterSet();
+
+  void update_window_center_on_resize();
+
 private:
   vtkSmartPointer<vtkRenderWindowInteractor> render_window_interactor_ =
       nullptr;
@@ -148,6 +152,10 @@ private:
   vtkSmartPointer<vtkCamera> scene_camera_;
   vtkSmartPointer<vtkCamera> background_camera_;
   vtkSmartPointer<vtkRenderWindow> render_window_;
+
+  bool windowCenter = false;
+  float wcx;
+  float wcy;
 
   double pi = 3.14159265358979323846;
 

@@ -903,6 +903,13 @@ void MainScreen::resizeEvent(QResizeEvent *event) {
   /*Resize Event*/
   QMainWindow::resizeEvent(event);
 
+  std::cout << "RESIZE" << endl;
+
+  if (vw->windowCenterSet()) {
+	vw->update_window_center_on_resize();
+  }
+  
+
   /*Expansion Constants*/
   // int horizontal_expansion = this->width() - this->minimumWidth();
   // int vertical_expansion = this->height() - this->minimumHeight();
@@ -2705,16 +2712,16 @@ void MainScreen::on_load_model_button_clicked() {
     vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
         calibration_file_, loaded_frames[0].GetOriginalImage().cols,
         loaded_frames[0].GetOriginalImage().rows);
-    coronal_vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
-        calibration_file_, loaded_frames[0].GetOriginalImage().cols,
-        loaded_frames[0].GetOriginalImage().rows);
+    // coronal_vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
+    //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
+    //     loaded_frames[0].GetOriginalImage().rows);
   } else if (calibration_file_.type_ == "Denver") {
     vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
         calibration_file_, loaded_frames[0].GetOriginalImage().cols,
         loaded_frames[0].GetOriginalImage().rows);
-    coronal_vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
-        calibration_file_, loaded_frames[0].GetOriginalImage().cols,
-        loaded_frames[0].GetOriginalImage().rows);
+    // coronal_vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
+    //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
+    //     loaded_frames[0].GetOriginalImage().rows);
   }
 }
 
