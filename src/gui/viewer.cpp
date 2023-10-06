@@ -424,35 +424,24 @@ void Viewer::calculate_and_set_window_center_from_calibration(const int w,
                                                               const int h,
                                                               const float cx,
                                                               const float cy) {
-	wcx = -(2 * cx - w) / w;
-	wcy = (2 * cy - h) / h;
-	
-	// float x_ratio = w / qvtk_render_window_->GetSize()[0];
-	// float y_ratio = h / qvtk_render_window_->GetSize()[1];
+  this->wcx = -(2 * cx - w) / w;
+  this->wcy = (2 * cy - h) / h;
 
-  // scene_camera_->SetFocalPoint(0, 0, -1);
   this->windowCenter = true;
   scene_camera_->SetWindowCenter(wcx, wcy);
 }
 
-bool Viewer::windowCenterSet() {
-	return this->windowCenter;
-}
+bool Viewer::windowCenterSet() { return this->windowCenter; }
 
 void Viewer::update_window_center_on_resize() {
-	// render window width and height
-	float rww = qvtk_render_window_->GetSize()[0];
-	float rwh = qvtk_render_window_->GetSize()[1];
+  // render window width and height
+  float rww = qvtk_render_window_->GetSize()[0];
+  float rwh = qvtk_render_window_->GetSize()[1];
 
-	std::cout << "rww: " << rww << endl;
-	std::cout << "rwh: " << rwh << endl;
-  std::cout << "ratio h/w:  " << rwh / rww << endl;
-  std::cout << "ratio w/h:  " << rww / rwh << endl;
-
-	// ternary to calculate whether to expand in the x or y directions
-	rww > rwh ? this->wcx *=  (rwh / rww) : this->wcy *= (rww / rwh);
-
-	scene_camera_->SetWindowCenter(this->wcx, this->wcy);
+  // ternary to calculate whether to expand in the x or y directions
+  rww > rwh
+      ? scene_camera_->SetWindowCenter(this->wcx * (rwh / rww), this->wcy)
+      : scene_camera_->SetWindowCenter(this->wcx, this->wcy * (rww / rwh));
 }
 
 void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h,
