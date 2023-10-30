@@ -2,6 +2,7 @@
 #include "core/optimizer_manager.h"
 
 /*Pose Matrix Class*/
+#include "gpu_distance_map.cuh"
 #include "pose_matrix.h"
 #include <chrono>
 #include <stdlib.h>
@@ -583,6 +584,21 @@ bool OptimizerManager::Initialize(
         succesfull_initialization_ = false;
         return succesfull_initialization_;
       }
+    }
+  }
+
+  /*Upload distance maps*/
+  for (int i = 0; i < frames_A_.size(); i++) {
+    auto distance_map = new GPUFrame(width, height, cuda_device_id,
+                                     frames_A_[i].GetDistanceMap().data);
+    distance_map->WriteGPUImage();
+    if (distance_map->IsInitializedCorrectly()) {
+      gpu_distance_maps_.push_back(distance_map);
+    } else {
+      delete distance_map;
+      error_message = "Error uploading distance map to GPU!";
+      succesfull_initialization_ = false;
+      return succesfull_initialization_;
     }
   }
 

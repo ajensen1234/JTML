@@ -39,6 +39,7 @@ namespace gpu_cost_function {
 
 		/*Get pointer to the actual GPU Image*/
 		JTML_DLL GPUImage* GetGPUImage();
+        JTML_DLL void WriteGPUImage();
 
 		/*Get Image Size Parameters*/
 		JTML_DLL int GetFrameHeight();

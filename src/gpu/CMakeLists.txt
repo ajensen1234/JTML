@@ -22,6 +22,7 @@ add_library(jtml_gpu SHARED
         registration_metric.cu
         render_drr_engine.cu
         render_engine.cu
+        gpu_distance_map.cu
         ${HEADER_FILES})
 
 

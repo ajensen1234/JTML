@@ -64,7 +64,7 @@ private:
   cv::Mat dilation_image_;
   /*Inverted Matrix  (Store in Inverted)*/
   cv::Mat inverted_image_;
-
+  cv::Mat distance_map_;
   /*Constants*/
   int aperture_;
   int low_threshold_;
