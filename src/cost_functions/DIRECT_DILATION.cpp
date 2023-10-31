@@ -70,12 +70,6 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
            gpu_dilated_frames_A_->at(current_frame_index_),
            DIRECT_DILATION_current_dilation_parameter));
 
-  // testing out distance metric...
-  // metric_score += gpu_metrics_->DistanceTransformMetricScore(
-  //    gpu_principal_model_->GetPrimaryCameraRenderedImage(),
-  //    gpu_distance_maps_->at(current_frame_index_),
-  //    DIRECT_DILATION_current_dilation_parameter);
-
   /*Biplane Mode Only*/
   if (biplane_mode_) {
     /*Render*/
@@ -95,9 +89,6 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
       gpu_principal_model_->GetPrimaryCameraRenderedImage(),
       gpu_distance_maps_->at(current_frame_index_),
       DIRECT_DILATION_current_dilation_parameter);
-  cudaError cudaStatus;
-  int new_num = gpu_metrics_->ComputeSumWhitePixels(
-      gpu_principal_model_->GetPrimaryCameraRenderedImage(), &cudaStatus);
 
   return metric_score;
 }

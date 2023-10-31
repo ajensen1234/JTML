@@ -67,11 +67,6 @@ namespace gpu_cost_function {
 			initialized_correctly_ = false;
         }
 
-        //distance_map_score_ = 0;
-        //cudaMemcpy(dev_distance_map_score_, &distance_map_score_, sizeof(int), cudaMemcpyHostToDevice);
-		//if (cudaGetLastError() != cudaSuccess){
-		//	initialized_correctly_ = false;
-        //}
 
         // Allocating memory for the edge pixels count (GPU and CPU)
         cudaMalloc((void**)&dev_edge_pixels_count_, sizeof(int));

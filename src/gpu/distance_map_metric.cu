@@ -14,7 +14,6 @@
 #include "gpu/fast_implant_dilation_metric.cuh"
 
 
-namespace gpu_cost_function{
 
     __global__ void DistanceMapMetric_Kernel(
         unsigned char* projected_image,
@@ -35,16 +34,17 @@ namespace gpu_cost_function{
         int pixel;
         int distance_map_value;
         if (i<width*height){
-            atomicAdd(&distance_map_score[0], 1);
 
             pixel = projected_image[i];
             distance_map_value = distance_map[i];
             if (pixel == EDGE_PIXEL ||  pixel == WHITE_PIXEL){
                 atomicAdd(&edge_pixel_count[0], 1);
+                atomicAdd(&distance_map_score[0], 1);
 
             }
         }
     }
+namespace gpu_cost_function{
 
     double GPUMetrics::DistanceMapMetric(
         GPUImage* projected_image,
@@ -64,7 +64,7 @@ namespace gpu_cost_function{
         int* bounding_box = projected_image->GetBoundingBox();
 
         /*Using previously written kernel to reset the metric*/
-        FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_distance_map_score_);
+        //FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_distance_map_score_);
         FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_edge_pixels_count_);
 
 		int diff_kernel_left_x = max(bounding_box[0] - dilation, 0);
@@ -94,6 +94,9 @@ namespace gpu_cost_function{
 
         cudaMemcpy(distance_map_score_, dev_distance_map_score_, sizeof(int), cudaMemcpyDeviceToHost);
         cudaMemcpy(edge_pixels_count_, dev_edge_pixels_count_, sizeof(int), cudaMemcpyDeviceToHost);
-        std::cout << *distance_map_score_ << std::endl;
+        if (*distance_map_score_  ){
+
+        }
+        std::cout << "Edge pix count : " << *edge_pixels_count_ << std::endl;
     }
 } /*end namespace gpu_cost_function*/
