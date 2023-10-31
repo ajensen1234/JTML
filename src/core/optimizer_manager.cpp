@@ -703,7 +703,10 @@ bool OptimizerManager::Initialize(
                            &gpu_intensity_frames_leaf_B_, gpu_principal_model_,
                            &gpu_non_principal_models_, gpu_metrics_,
                            &pose_storage_, calibration_.biplane_calibration);
-
+  std::cout << "Before uploading distance maps" << std::endl;
+  trunk_manager_.UploadDistanceMap(&gpu_distance_maps_);
+  branch_manager_.UploadDistanceMap(&gpu_distance_maps_);
+  leaf_manager_.UploadDistanceMap(&gpu_distance_maps_);
   return succesfull_initialization_;
 };
 

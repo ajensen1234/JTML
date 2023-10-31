@@ -50,6 +50,20 @@ namespace gpu_cost_function {
 		if (cudaGetLastError() != cudaSuccess)
 			initialized_correctly_ = false;
 
+        cudaHostAlloc((void**)distance_transform_score_, sizeof(int), cudaHostAllocDefault);
+		if (cudaGetLastError() != cudaSuccess)
+			initialized_correctly_ = false;
+        cudaMalloc((void**)dev_distance_transform_score_, sizeof(int));
+		if (cudaGetLastError() != cudaSuccess)
+			initialized_correctly_ = false;
+
+         cudaHostAlloc((void**)edge_dilated_pix_count_, sizeof(int), cudaHostAllocDefault);
+		 if (cudaGetLastError() != cudaSuccess)
+		 	initialized_correctly_ = false;
+         cudaMalloc((void**)dev_edge_dilated_pix_count_, sizeof(int));
+		 if (cudaGetLastError() != cudaSuccess)
+		 	initialized_correctly_ = false;
+
 		/*Upload (Reset) white pixel count for comparison image from Host to Device.*/
 		white_pix_count_ = 0;
 		cudaMemcpy(dev_white_pix_count_, &white_pix_count_, sizeof(int), cudaMemcpyHostToDevice);
