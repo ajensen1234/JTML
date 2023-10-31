@@ -2,6 +2,7 @@
 #include "core/optimizer_manager.h"
 
 /*Pose Matrix Class*/
+#include "gpu_model.cuh"
 #include "pose_matrix.h"
 #include <chrono>
 #include <stdlib.h>
@@ -611,6 +612,7 @@ bool OptimizerManager::Initialize(
         &primary_model_.triangle_normals_[0],
         primary_model_.triangle_vertices_.size() / 9,
         calibration_.camera_A_principal_);
+
     if (!gpu_principal_model_->IsInitializedCorrectly()) {
       delete gpu_principal_model_;
       gpu_principal_model_ = 0;
@@ -705,6 +707,7 @@ bool OptimizerManager::Initialize(
   trunk_manager_.UploadDistanceMap(&gpu_distance_maps_);
   branch_manager_.UploadDistanceMap(&gpu_distance_maps_);
   leaf_manager_.UploadDistanceMap(&gpu_distance_maps_);
+
   return succesfull_initialization_;
 };
 

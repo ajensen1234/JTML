@@ -230,7 +230,6 @@ namespace gpu_cost_function {
 			rendered_image->GetDeviceImagePointer(), comparison_frame->GetDeviceImagePointer(), dev_pixel_score_,
 			width, height, diff_kernel_left_x, diff_kernel_bottom_y, diff_kernel_cropped_width);
 
-
 		/*Return Pixel Score (# of Pixels that are white dilated edge and  black in comparison image (which is
 		a dilated version of the edge detected original x ray) minus the number of pixels that are white in the comparison
 		image and white in the dilated edge)*/
