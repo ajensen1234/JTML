@@ -6,7 +6,6 @@
 /*Custom CUDA Headers*/
 #include "calibration.h"
 #include <gpu_dilated_frame.cuh>
-#include <gpu_distance_map.cuh>
 #include <gpu_edge_frame.cuh>
 #include <gpu_intensity_frame.cuh>
 #include <gpu_metrics.cuh>

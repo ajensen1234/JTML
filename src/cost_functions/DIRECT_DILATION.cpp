@@ -61,6 +61,11 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
   /*Dilate rendered image to 1 dilation if in trunk mode*/
   double metric_score;
 
+  gpu_metrics_->DistanceMapMetric(
+      gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+      gpu_distance_maps_->at(current_frame_index_),
+      DIRECT_DILATION_current_dilation_parameter);
+
   /*(DIFFERENT FROM JTA PAPER) Dilate rendered image to same dilation as
    * comparison image*/
   metric_score =

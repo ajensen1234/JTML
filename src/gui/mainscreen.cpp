@@ -903,9 +903,6 @@ void MainScreen::resizeEvent(QResizeEvent *event) {
 
   /*Resize Event*/
   QMainWindow::resizeEvent(event);
-
-  std::cout << "RESIZE" << endl;
-
   if (vw->windowCenterSet()) {
     vw->update_window_center_on_resize();
   }

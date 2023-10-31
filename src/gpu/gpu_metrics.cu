@@ -50,25 +50,42 @@ namespace gpu_cost_function {
 		if (cudaGetLastError() != cudaSuccess)
 			initialized_correctly_ = false;
 
-        cudaHostAlloc((void**)distance_transform_score_, sizeof(int), cudaHostAllocDefault);
-		if (cudaGetLastError() != cudaSuccess)
-			initialized_correctly_ = false;
-        cudaMalloc((void**)dev_distance_transform_score_, sizeof(int));
-		if (cudaGetLastError() != cudaSuccess)
-			initialized_correctly_ = false;
-
-         cudaHostAlloc((void**)edge_dilated_pix_count_, sizeof(int), cudaHostAllocDefault);
-		 if (cudaGetLastError() != cudaSuccess)
-		 	initialized_correctly_ = false;
-         cudaMalloc((void**)dev_edge_dilated_pix_count_, sizeof(int));
-		 if (cudaGetLastError() != cudaSuccess)
-		 	initialized_correctly_ = false;
 
 		/*Upload (Reset) white pixel count for comparison image from Host to Device.*/
 		white_pix_count_ = 0;
 		cudaMemcpy(dev_white_pix_count_, &white_pix_count_, sizeof(int), cudaMemcpyHostToDevice);
 		if (cudaGetLastError() != cudaSuccess)
 			initialized_correctly_ = false;
+
+
+        cudaHostAlloc((void**)&distance_map_score_, sizeof(int), cudaHostAllocDefault);
+		if (cudaGetLastError() != cudaSuccess)
+			initialized_correctly_ = false;
+        // Allocate some memory for the dev dm score
+        cudaMalloc((void**)&dev_distance_map_score_, sizeof(int));
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+
+        distance_map_score_ = 0;
+        cudaMemcpy(dev_distance_map_score_, &distance_map_score_, sizeof(int), cudaMemcpyHostToDevice);
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+
+        // Allocating memory for the edge pixels count (GPU and CPU)
+        cudaMalloc((void**)&dev_edge_pixels_count_, sizeof(int));
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+        cudaHostAlloc((void**)&edge_pixels_count_, sizeof(int), cudaHostAllocDefault);
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+
+
+
+
 	};
 
 	GPUMetrics::~GPUMetrics() {
@@ -76,11 +93,15 @@ namespace gpu_cost_function {
 		cudaFree(dev_pixel_score_);
 		cudaFree(dev_intersection_score_);
 		cudaFree(dev_union_score_);
+        cudaFree(dev_edge_pixels_count_);
+        cudaFree(dev_distance_map_score_);
 
 		/*Free Host*/
 		cudaFreeHost(pixel_score_);
 		cudaFreeHost(intersection_score_);
 		cudaFreeHost(union_score_);
+        cudaFreeHost(distance_map_score_);
+        cudaFreeHost(edge_pixels_count_);
 	};
 
 	/*Reset White Pixel Count*/

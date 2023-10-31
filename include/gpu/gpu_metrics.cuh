@@ -68,20 +68,14 @@ namespace gpu_cost_function {
 		WARNING: ASSUMES IMAGES HAVE SAME DIMENSIONS!!!!*/
 		JTML_DLL double IOU(GPUImage* image_A, GPUImage* image_B);
 
-        JTML_DLL double DistanceTransformMetricScore(GPUImage* rendered_image, GPUFrame* distance_map, int dilation);
+        JTML_DLL double DistanceMapMetric(GPUImage* projected_image, GPUFrame* distance_map, int dilation);
+
 
 	private:
 		/*Integer for Pinned Memory if Metric Counts Pixels on GPU (as in dilation metric)
 		This is often used to compute the metric so we include it in the base class definition.*/
 		/*Initialize Pinned Memory for Slightly Faster Transfer*/
 		int* pixel_score_;
-
-        int* distance_transform_score_;
-
-        int* dev_distance_transform_score_;
-
-        int* edge_dilated_pix_count_;
-        int* dev_edge_dilated_pix_count_;
 
 		/*Gpu Counterpart of the pixel score*/
 		int* dev_pixel_score_;
@@ -106,6 +100,14 @@ namespace gpu_cost_function {
 		
 		/*Gpu Counterpart of white pixel count*/
 		int* dev_white_pix_count_;
+
+        /*Counts the number of edge pixels in an image (with GPU counterpart)*/
+        int* edge_pixels_count_;
+        int* dev_edge_pixels_count_;
+
+        // Distance map count total (with GPU counterpart)
+        int* distance_map_score_;
+        int* dev_distance_map_score_;
 	};
 }
 #endif /*GPU_METRICS_H*/

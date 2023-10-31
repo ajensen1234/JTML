@@ -7,7 +7,6 @@
 
 /*Cost Function Tools Library*/
 #include "gpu/gpu_dilated_frame.cuh"
-#include "gpu/gpu_distance_map.cuh"
 #include "gpu/gpu_edge_frame.cuh"
 #include "gpu/gpu_frame.cuh"
 #include "gpu/gpu_image.cuh"

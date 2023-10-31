@@ -87,7 +87,6 @@ void Frame::SetDistanceMap() {
   // We do this because distance transform finds closest black pixel
 
   cv::Mat inverse_edge = cv::Mat(height_, width_, CV_8UC1);
-  // cv::bitwise_not(GetEdgeImage(), inverse_edge);
   inverse_edge = (255 - edge_image_);
   cv::distanceTransform(inverse_edge, distance_map_, cv::DIST_L1, 5, CV_8UC1);
 }
