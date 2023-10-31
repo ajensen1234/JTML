@@ -35,11 +35,12 @@ namespace gpu_cost_function{
         int pixel;
         int distance_map_value;
         if (i<width*height){
+            atomicAdd(&distance_map_score[0], 1);
+
             pixel = projected_image[i];
             distance_map_value = distance_map[i];
-            if (pixel == EDGE_PIXEL || pixel == DILATED_PIXEL || pixel == WHITE_PIXEL){
-                atomicAdd(distance_map_score, distance_map_value);
-                atomicAdd(edge_pixel_count, 1);
+            if (pixel == EDGE_PIXEL ||  pixel == WHITE_PIXEL){
+                atomicAdd(&edge_pixel_count[0], 1);
 
             }
         }
@@ -63,7 +64,8 @@ namespace gpu_cost_function{
         int* bounding_box = projected_image->GetBoundingBox();
 
         /*Using previously written kernel to reset the metric*/
-        //FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_distance_map_score_);
+        FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_distance_map_score_);
+        FastImplantDilationMetric_ResetPixelScoreKernel<<<1,1>>>(dev_edge_pixels_count_);
 
 		int diff_kernel_left_x = max(bounding_box[0] - dilation, 0);
 		int diff_kernel_bottom_y = max(bounding_box[1] - dilation, 0);
@@ -77,8 +79,8 @@ namespace gpu_cost_function{
 		//	ceil(static_cast<double>(diff_kernel_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
 
         dim_grid_image_processing_ = dim3(
-            ceil(static_cast<double>(width) / sqrt(static_cast<double>(threads_per_block))),
-            ceil(static_cast<double>(height) / sqrt(static_cast<double>(threads_per_block)))
+            ceil(sqrt(static_cast<double>(width*height) / static_cast<double>(threads_per_block))),
+            ceil(sqrt(static_cast<double>(height*height) / static_cast<double>(threads_per_block)))
 );
         DistanceMapMetric_Kernel <<< dim_grid_image_processing_, threads_per_block>>>(
         projected_image->GetDeviceImagePointer(),
@@ -92,8 +94,6 @@ namespace gpu_cost_function{
 
         cudaMemcpy(distance_map_score_, dev_distance_map_score_, sizeof(int), cudaMemcpyDeviceToHost);
         cudaMemcpy(edge_pixels_count_, dev_edge_pixels_count_, sizeof(int), cudaMemcpyDeviceToHost);
-        std::cout << "Distance Metric Score: " << distance_map_score_ << std::endl;
-        std::cout << "Num Edge Pixels: " << edge_pixels_count_[0] << std::endl;
-        //return distance_map_score_[0];
+        std::cout << *distance_map_score_ << std::endl;
     }
 } /*end namespace gpu_cost_function*/

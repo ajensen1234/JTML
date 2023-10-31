@@ -61,11 +61,6 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
   /*Dilate rendered image to 1 dilation if in trunk mode*/
   double metric_score;
 
-  gpu_metrics_->DistanceMapMetric(
-      gpu_principal_model_->GetPrimaryCameraRenderedImage(),
-      gpu_distance_maps_->at(current_frame_index_),
-      DIRECT_DILATION_current_dilation_parameter);
-
   /*(DIFFERENT FROM JTA PAPER) Dilate rendered image to same dilation as
    * comparison image*/
   metric_score =
@@ -96,6 +91,13 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
              gpu_dilated_frames_B_->at(current_frame_index_),
              DIRECT_DILATION_current_dilation_parameter));
   }
+  gpu_metrics_->DistanceMapMetric(
+      gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+      gpu_distance_maps_->at(current_frame_index_),
+      DIRECT_DILATION_current_dilation_parameter);
+  cudaError cudaStatus;
+  int new_num = gpu_metrics_->ComputeSumWhitePixels(
+      gpu_principal_model_->GetPrimaryCameraRenderedImage(), &cudaStatus);
 
   return metric_score;
 }

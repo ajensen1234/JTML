@@ -235,7 +235,6 @@ namespace gpu_cost_function {
 		a dilated version of the edge detected original x ray) minus the number of pixels that are white in the comparison
 		image and white in the dilated edge)*/
 		cudaMemcpy(pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
-        std::cout << pixel_score_[0] << std::endl;
 		return -1 * pixel_score_[0];
 	};
 }
