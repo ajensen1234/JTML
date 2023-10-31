@@ -117,7 +117,30 @@ __global__ void FastImplantDilationMetric_DifferenceKernel(unsigned char* dev_im
 	}
 
 }
+__global__ void ResetDistanceTransformScoreKernel(int* dev_distance_transform_score_){
+    dev_distance_transform_score_[0] = 0;
+}
 
+__global__ void DistanceTransformMetric_Kernel(unsigned char* dev_image, unsigned char* dev_distance_transform, int* white_pix_count, int* result, int width, int height,
+int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width){
+    /*Global Thread - basically looping through all the images */
+	/*Global Thread*/
+	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+	/*Convert to Subsize*/
+	i = (i / diff_kernel_cropped_width) * width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width +
+		diff_kernel_left_x;
+
+    int pixel;
+
+    if (i < width * height){
+        pixel = dev_image[i];
+        if (pixel == DILATED_PIXEL || pixel == EDGE_PIXEL){
+            atomicAdd(&result[0], dev_distance_transform[i]);
+            atomicAdd(&white_pix_count[0], 1);
+        }
+    }
+}
 
 namespace gpu_cost_function {
 
@@ -211,4 +234,99 @@ namespace gpu_cost_function {
 		cudaMemcpy(pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
 		return -1 * pixel_score_[0];
 	};
+
+    double GPUMetrics::DistanceTransformMetricScore(GPUImage* rendered_image, GPUFrame* distance_map, int dilation){
+		/*Extract Bounding Box*/
+		int* bounding_box = rendered_image->GetBoundingBox();
+
+		/*Height and Width*/
+		int height = rendered_image->GetFrameHeight();
+		int width = rendered_image->GetFrameWidth();
+
+		/*Reset the Pixel Score*/
+		//FastImplantDilationMetric_ResetPixelScoreKernel << <1, 1 >> >(dev_pixel_score_);
+		std::cout << "Made it before resetting score kernels!!" << std::endl;
+        ResetDistanceTransformScoreKernel << <1,1>> >(dev_distance_transform_score_);
+        ResetDistanceTransformScoreKernel <<<1,1>>> (dev_edge_dilated_pix_count_);
+
+        std::cout << "Made it past resetting distance transform scores!!" << std::endl;
+		/*Explanation of widths and heights
+		IMAGE PROCESSING STAGE :
+		-NOTES : This is the edge detection, edge dilation, and overlap with sample image computation stage.Relevant
+		kernels are :
+		a).edgeKernel
+		b).dilateKernel
+		c).differenceKernel
+		- croppedWidth: The width of the cropped projection(removes black space and forms a bounding rectangle).
+		- croppedHeight : The height of the cropped projection(removes black space and forms a bounding rectangle).
+		- subCroppedWidth : The width of the cropped projection that is not in the dilation dead space betweeen
+		the "width" and the "leanWidth" (removed on either side).
+		- subCroppedHeight : The height of the cropped projection that is not in the dilation dead space betweeen
+		the "height" and the "leanHeight" (removed on either side).
+		- dilatedSubCroppedWidth : The subCroppedWidth with dilation padding(dilatedSubCroppedWidth = subCroppedWidth
+		+ 2 * dilation).
+		- dilatedSubCroppedHeight : The subCroppedHeight with dilation padding(dilatedSubCroppedHeight = subCroppedHeight
+		+ 2 * dilation).
+
+		WARNING : Pixel(x, y) coordinates are ZERO - BASED!!!
+		*******************************************************************************************************************/
+		int sub_left_x = max(bounding_box[0] - dilation, dilation);
+		int sub_bottom_y = max(bounding_box[1] - dilation, dilation);
+		int sub_right_x = min(bounding_box[2] + dilation, width - dilation - 1);
+		int sub_top_y = min(bounding_box[3] + dilation, height - dilation - 1);
+		int sub_cropped_width = sub_right_x - sub_left_x + 1;
+		int sub_cropped_height = sub_top_y - sub_bottom_y + 1;
+
+		/* Compute launch parameters for edge detection.
+		If 256, we have 16 x 16 Blocks (Read in at one less on less on all 4 sides, so 14 x 14). */
+		dim_block_image_processing_ = dim3(
+			ceil(sqrt(static_cast<double>(threads_per_block))),
+			ceil(sqrt(static_cast<double>(threads_per_block))));
+		dim_grid_image_processing_ = dim3(
+			ceil(static_cast<double>(sub_cropped_width) / static_cast<double>(dim_block_image_processing_.x - 2)),
+			ceil(static_cast<double>(sub_cropped_height) / static_cast<double>(dim_block_image_processing_.y - 2)));
+
+		/*Compute Edge Detection*/
+		FastImplantDilationMetric_EdgeKernel << <dim_grid_image_processing_, dim_block_image_processing_,
+			dim_block_image_processing_.x * dim_block_image_processing_.y * sizeof(unsigned char) >> >(
+				rendered_image->GetDeviceImagePointer(), sub_left_x, sub_bottom_y, sub_right_x, sub_top_y, width,
+				dilation);
+
+		/* Compute launch parameters for dilation. Want 4 times the size of the sub image. */
+		dim_grid_image_processing_ = dim3(
+			ceil(2.0 * sub_cropped_width / sqrt(static_cast<double>(threads_per_block))),
+			ceil(2.0 * sub_cropped_height / sqrt(static_cast<double>(threads_per_block))));
+
+		/*Dilation Kernel*/
+		FastImplantDilationMetric_DilateKernel << <dim_grid_image_processing_, threads_per_block >> >(
+			rendered_image->GetDeviceImagePointer(), width, height,
+			sub_left_x, sub_bottom_y, sub_cropped_width, dilation);
+
+
+		/* Compute launch parameters for difference. Want same size as sub image nut with no dilation padding at edges. */
+		int diff_kernel_left_x = max(bounding_box[0] - dilation, 0);
+		int diff_kernel_bottom_y = max(bounding_box[1] - dilation, 0);
+		int diff_kernel_right_x = min(bounding_box[2] + dilation, width - 1);
+		int diff_kernel_top_y = min(bounding_box[3] + dilation, height - 1);
+		int diff_kernel_cropped_width = diff_kernel_right_x - diff_kernel_left_x + 1;
+		int diff_kernel_cropped_height = diff_kernel_top_y - diff_kernel_bottom_y + 1;
+
+		dim_grid_image_processing_ = dim3(
+			ceil(static_cast<double>(diff_kernel_cropped_width) / sqrt(static_cast<double>(threads_per_block))),
+			ceil(static_cast<double>(diff_kernel_cropped_height) / sqrt(static_cast<double>(threads_per_block))));
+
+		/*Calculate Regions of No Overlap With Comparison Image*/
+		DistanceTransformMetric_Kernel << <dim_grid_image_processing_, threads_per_block >> >(
+			rendered_image->GetDeviceImagePointer(), distance_map->GetDeviceImagePointer(), dev_edge_dilated_pix_count_, dev_distance_transform_score_,
+			width, height, diff_kernel_left_x, diff_kernel_bottom_y, diff_kernel_cropped_width);
+
+		/*Return Pixel Score (# of Pixels that are white dilated edge and  black in comparison image (which is
+		a dilated version of the edge detected original x ray) minus the number of pixels that are white in the comparison
+		image and white in the dilated edge)*/
+		cudaMemcpy(distance_transform_score_, dev_distance_transform_score_, sizeof(int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(edge_dilated_pix_count_,dev_edge_dilated_pix_count_, sizeof(int), cudaMemcpyDeviceToHost);
+
+		return distance_transform_score_[0]/edge_dilated_pix_count_[0];
+
+    };
 }

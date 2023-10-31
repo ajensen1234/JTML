@@ -25,7 +25,9 @@ namespace gpu_cost_function {
 		}
 
 	};
-
+    void GPUFrame::WriteGPUImage(){
+        GetGPUImage()->WriteImage("test_gpu_image.png");
+    }
 	/*Default constructor. Marked as not initialized correctly.*/
 	GPUFrame::GPUFrame() {
 		height_ = 0;

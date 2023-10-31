@@ -2,6 +2,7 @@
 #include "core/frame.h"
 #include <opencv2/core.hpp>
 #include <opencv2/core/hal/interface.h>
+#include <opencv2/core/mat.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -34,8 +35,7 @@ Frame::Frame(std::string file_location, int aperture, int low_threshold,
   low_threshold_ = low_threshold;
   high_threshold_ = high_threshold;
   dilation_ = dilation;
-}
-
+};
 /*Recalculate Edge Detected Image*/
 void Frame::SetEdgeImage(int aperture, int low_threshold, int high_threshold,
                          bool use_reverse) {
@@ -86,12 +86,10 @@ void Frame::SetDistanceMap() {
   // transform on that inverted edge image.
   // We do this because distance transform finds closest black pixel
 
-  cv::Mat inverse_edge = cv::Mat(height_, width_, CV_32F);
-  cv::Mat inverse_edge_oriented = cv::Mat(height_, width_, CV_32F);
-  cv::bitwise_not(GetEdgeImage(), inverse_edge);
-  cv::flip(inverse_edge, inverse_edge_oriented, 0);
-  cv::distanceTransform(inverse_edge_oriented, distance_map_, cv::DIST_L1,
-                        CV_32F);
+  cv::Mat inverse_edge = cv::Mat(height_, width_, CV_8UC1);
+  // cv::bitwise_not(GetEdgeImage(), inverse_edge);
+  inverse_edge = (255 - edge_image_);
+  cv::distanceTransform(inverse_edge, distance_map_, cv::DIST_L1, 5, CV_8UC1);
 }
 
 /*Get Canny Parameters*/
