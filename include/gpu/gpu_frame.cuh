@@ -4,6 +4,7 @@
 /*GPU Image Class*/
 #include "gpu/gpu_image.cuh"
 #include "core/preprocessor-defs.h"
+#include <string>
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -39,6 +40,7 @@ namespace gpu_cost_function {
 
 		/*Get pointer to the actual GPU Image*/
 		JTML_DLL GPUImage* GetGPUImage();
+        JTML_DLL void WriteGPUImage(std::string file_name);
 
 		/*Get Image Size Parameters*/
 		JTML_DLL int GetFrameHeight();

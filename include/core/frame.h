@@ -20,55 +20,58 @@ The Frame class stores:
 
 class Frame {
 public:
-	Frame(std::string file_location, int aperture, int low_threshold,
-		int high_threshold, int dilation);
-	~Frame(){};
+  Frame(std::string file_location, int aperture, int low_threshold,
+        int high_threshold, int dilation);
+  ~Frame(){};
 
-	/*Get Set Methods for Main Variables*/
-	/*Return Original Image*/
-	cv::Mat GetOriginalImage();
-	/*Return Edge Detected Image*/
-	cv::Mat GetEdgeImage();
-	/*Return Dilated Edge Detected Image*/
-	cv::Mat GetDilationImage();
-	/*Return Inverted Intensity Image*/
-	cv::Mat GetInvertedImage();
+  /*Get Set Methods for Main Variables*/
+  /*Return Original Image*/
+  cv::Mat GetOriginalImage();
+  /*Return Edge Detected Image*/
+  cv::Mat GetEdgeImage();
+  /*Return Dilated Edge Detected Image*/
+  cv::Mat GetDilationImage();
+  /*Return Inverted Intensity Image*/
+  cv::Mat GetInvertedImage();
 
-	/*Store Public String Location*/
-	std::string file_location_;
+  cv::Mat GetDistanceMap();
 
-	/*Reset From Original (Resets Inverted/Segmented, Edge, Dilation from Original,
-	Useful if Trying to Reset from Segmentation)*/
-	void ResetFromOriginal();
+  /*Store Public String Location*/
+  std::string file_location_;
 
-	/*Recalculate Edge Detected Image*/
-	void SetEdgeImage(int aperture, int low_threshold,
-		int high_threshold, bool use_reverse = false);
-	/*Recalculate Dilated Image*/
-	void SetDilatedImage(int dilation);
+  /*Reset From Original (Resets Inverted/Segmented, Edge, Dilation from
+  Original, Useful if Trying to Reset from Segmentation)*/
+  void ResetFromOriginal();
 
-	/*Get Canny Parameters*/
-	int GetAperture();
-	int GetHighThreshold();
-	int GetLowThreshold();
+  /*Recalculate Edge Detected Image*/
+  void SetEdgeImage(int aperture, int low_threshold, int high_threshold,
+                    bool use_reverse = false);
+  /*Recalculate Dilated Image*/
+  void SetDilatedImage(int dilation);
+  void SetDistanceMap();
+
+  /*Get Canny Parameters*/
+  int GetAperture();
+  int GetHighThreshold();
+  int GetLowThreshold();
+
 private:
-	/*Original Matrix*/
-	cv::Mat original_image_;
-	/*Edge Detected Matrix*/
-	cv::Mat edge_image_;
-	/*Dilation Matrix*/
-	cv::Mat dilation_image_;
-	/*Inverted Matrix  (Store in Inverted)*/
-	cv::Mat inverted_image_;
-
-	/*Constants*/
-	int aperture_;
-	int low_threshold_;
-	int high_threshold_;
-	int dilation_;
-	int width_;
-	int height_;
-
+  /*Original Matrix*/
+  cv::Mat original_image_;
+  /*Edge Detected Matrix*/
+  cv::Mat edge_image_;
+  /*Dilation Matrix*/
+  cv::Mat dilation_image_;
+  /*Inverted Matrix  (Store in Inverted)*/
+  cv::Mat inverted_image_;
+  cv::Mat distance_map_;
+  /*Constants*/
+  int aperture_;
+  int low_threshold_;
+  int high_threshold_;
+  int dilation_;
+  int width_;
+  int height_;
 };
 
 #endif /* FRAME_H */

@@ -1,15 +1,17 @@
 /*GPU Metrics Header*/
-#include "gpu/gpu_metrics.cuh"
+// #include "gpu/gpu_metrics.cuh"
 
-/*Cuda*/
-#include "cuda_runtime.h"
-#include "cuda.h"
+// /*Cuda*/
+// #include "cuda_runtime.h"
+// #include "cuda.h"
 
-/*Grayscale Colors*/
-#include "pixel_grayscale_colors.h"
+// /*Grayscale Colors*/
+// #include "pixel_grayscale_colors.h"
 
-/*Launch Parameters*/
-#include "cuda_launch_parameters.h"
+// /*Launch Parameters*/
+// #include "cuda_launch_parameters.h"
+
+#include "fast_implant_dilation_metric.cuh"
 
 
 /*Kernels*/
@@ -116,6 +118,9 @@ __global__ void FastImplantDilationMetric_DifferenceKernel(unsigned char* dev_im
 		}
 	}
 
+}
+__global__ void ResetDistanceTransformScoreKernel(int* dev_distance_transform_score_){
+    dev_distance_transform_score_[0] = 0;
 }
 
 

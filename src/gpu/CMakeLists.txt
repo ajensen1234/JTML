@@ -5,7 +5,6 @@ file(GLOB HEADER_FILES ${HEADER_DIR}/*.cuh ${HEADER_DIR}/*.h)
 add_library(jtml_gpu SHARED
         dilate_edge_detected_image.cu
         edge_detect_rendered_implant_model.cu
-        fast_implant_dilation_metric.cu
         gpu_dilated_frame.cu
         gpu_edge_frame.cu
         gpu_frame.cu
@@ -22,6 +21,9 @@ add_library(jtml_gpu SHARED
         registration_metric.cu
         render_drr_engine.cu
         render_engine.cu
+        distance_map_metric.cu
+        fast_implant_dilation_metric.cu
+        ${HEADER_DIR}/fast_implant_dilation_metric.cuh
         ${HEADER_FILES})
 
 

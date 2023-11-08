@@ -35,10 +35,10 @@ target_compile_definitions(Study2Grid-Cmake PRIVATE _HAS_STD_BYTE=0)
 
 
 
-set(S2G_LIBS ${COSTFUNCTIONTOOLS_LIBRARY_PATH} ${jtml_gpu_library_path})
-set(S2G_INCLUDES ${COSTFUNCTIONTOOLS_INCLUDE_PATH} ${jtml_gpu_include_path} ${jtml_core_include_path})
+#set(S2G_LIBS ${COSTFUNCTIONTOOLS_LIBRARY_PATH} ${jtml_gpu_library_path})
+#set(S2G_INCLUDES ${COSTFUNCTIONTOOLS_INCLUDE_PATH} ${jtml_gpu_include_path} ${jtml_core_include_path})
 
-target_link_libraries(Study2Grid-Cmake ${S2G_LIBS})
+#target_link_libraries(Study2Grid-Cmake ${S2G_LIBS})
 target_link_libraries(Study2Grid-Cmake ${JTA_LIBS})
-target_include_directories(Study2Grid-Cmake PUBLIC ${S2G_INCLUDES})
+#target_include_directories(Study2Grid-Cmake PUBLIC ${S2G_INCLUDES})
 target_include_directories(Study2Grid-Cmake PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})

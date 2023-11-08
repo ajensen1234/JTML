@@ -2,6 +2,7 @@
 #include "gui/mainscreen.h"
 
 /*Font Manipulation*/
+#include <opencv2/highgui.hpp>
 #include <qfontmetrics.h>
 
 /*Settings Constants*/
@@ -902,13 +903,9 @@ void MainScreen::resizeEvent(QResizeEvent *event) {
 
   /*Resize Event*/
   QMainWindow::resizeEvent(event);
-
-  std::cout << "RESIZE" << endl;
-
   if (vw->windowCenterSet()) {
-	vw->update_window_center_on_resize();
+    vw->update_window_center_on_resize();
   }
-  
 
   /*Expansion Constants*/
   // int horizontal_expansion = this->width() - this->minimumWidth();
@@ -1610,6 +1607,7 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location,
                                   ui.low_threshold_slider->value(),
                                   ui.high_threshold_slider->value(), true);
     loaded_frames[i].SetDilatedImage(dilation_val);
+    loaded_frames[i].SetDistanceMap();
     if (calibrated_for_biplane_viewport_) {
       cv::Mat unpadded_biplane =
           segment_image(loaded_frames_B[i].GetOriginalImage(), black_sil_used,
@@ -3565,30 +3563,6 @@ void MainScreen::on_wireframe_model_radio_button_clicked() {
   Pose pose =
       Pose(point6d.x, point6d.y, point6d.z, point6d.xa, point6d.ya, point6d.za);
   Frame frame = loaded_frames[frame_idx];
-  auto gpu_frame = new GPUDilatedFrame(frame.GetDilationImage().cols,
-                                       frame.GetDilationImage().cols, 0,
-                                       frame.GetDilationImage().data, 4);
-
-  GPUModel *gpu_mod =
-      new GPUModel(model.model_name_, true, 1024, 1024, 0, true,
-                   &model.triangle_vertices_[0], &model.triangle_normals_[0],
-                   model.triangle_vertices_.size() / 9,
-                   calibration_file_.camera_A_principal_);
-  if (gpu_mod->IsInitializedCorrectly()) {
-    gpu_mod->RenderPrimaryCamera(pose);
-    if (gpu_mod->RenderPrimaryCamera(pose)) {
-      std::cout << "Rendered okay" << std::endl;
-      if (!gpu_mod->WritePrimaryCameraRenderedImage("test_image.tif")) {
-        gpu_frame->GetGPUImage()->WriteImage("x_ray_img.tif");
-        if (!gpu_frame->IsInitializedCorrectly()) {
-          std::cout << "AYAYAYAYYYAY" << std::endl;
-        }
-      }
-    }
-  }
-  delete gpu_frame;
-  delete gpu_mod;
-
   std::cout << ui.qvtk_widget->width() << ", " << ui.qvtk_widget->height()
             << std::endl;
   for (int i = 0; i < selected.size(); i++) {
