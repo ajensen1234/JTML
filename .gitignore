@@ -30,3 +30,4 @@ detect_cuda_version.cc
 Makefile
 example_studies/KCL
 .cache
+check

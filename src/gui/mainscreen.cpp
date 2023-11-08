@@ -1607,6 +1607,7 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location,
                                   ui.low_threshold_slider->value(),
                                   ui.high_threshold_slider->value(), true);
     loaded_frames[i].SetDilatedImage(dilation_val);
+    loaded_frames[i].SetDistanceMap();
     if (calibrated_for_biplane_viewport_) {
       cv::Mat unpadded_biplane =
           segment_image(loaded_frames_B[i].GetOriginalImage(), black_sil_used,

@@ -70,6 +70,11 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
            gpu_dilated_frames_A_->at(current_frame_index_),
            DIRECT_DILATION_current_dilation_parameter));
 
+  metric_score += gpu_metrics_->DistanceMapMetric(
+      gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+      gpu_distance_maps_->at(current_frame_index_),
+      DIRECT_DILATION_current_dilation_parameter);
+
   /*Biplane Mode Only*/
   if (biplane_mode_) {
     /*Render*/
@@ -78,17 +83,18 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
 
     /*(DIFFERENT FROM JTA PAPER) Dilate rendered image to same dilation as
      * comparison image*/
-    metric_score +=
+    double dist_score =
         (DIRECT_DILATION_current_white_pix_sum_dilated_comparison_image_B_ +
          gpu_metrics_->FastImplantDilationMetric(
              gpu_principal_model_->GetSecondaryCameraRenderedImage(),
              gpu_dilated_frames_B_->at(current_frame_index_),
              DIRECT_DILATION_current_dilation_parameter));
+    metric_score += (dist_score * dist_score);
   }
-  gpu_metrics_->DistanceMapMetric(
-      gpu_principal_model_->GetPrimaryCameraRenderedImage(),
-      gpu_distance_maps_->at(current_frame_index_),
-      DIRECT_DILATION_current_dilation_parameter);
+  // gpu_metrics_->DistanceMapMetric(
+  //     gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+  //     gpu_distance_maps_->at(current_frame_index_),
+  //     DIRECT_DILATION_current_dilation_parameter);
 
   return metric_score;
 }

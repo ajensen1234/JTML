@@ -123,26 +123,6 @@ __global__ void ResetDistanceTransformScoreKernel(int* dev_distance_transform_sc
     dev_distance_transform_score_[0] = 0;
 }
 
-__global__ void DistanceTransformMetric_Kernel(unsigned char* dev_image, unsigned char* dev_distance_transform, int* white_pix_count, int* result, int width, int height,
-int diff_kernel_left_x, int diff_kernel_bottom_y, int diff_kernel_cropped_width){
-    /*Global Thread - basically looping through all the images */
-	/*Global Thread*/
-	int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
-
-	/*Convert to Subsize*/
-	i = (i / diff_kernel_cropped_width) * width + (i % diff_kernel_cropped_width) + diff_kernel_bottom_y * width +
-		diff_kernel_left_x;
-
-    int pixel;
-
-    if (i < width * height){
-        pixel = dev_image[i];
-        if (pixel == DILATED_PIXEL || pixel == EDGE_PIXEL){
-            atomicAdd(&result[0], dev_distance_transform[i]);
-            atomicAdd(&white_pix_count[0], 1);
-        }
-    }
-}
 
 namespace gpu_cost_function {
 
