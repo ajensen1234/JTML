@@ -19,6 +19,7 @@ add_library(jtml_core STATIC
 	machine_learning_tools.cpp
 	sym_trap_functions.cpp
 	ambiguous_pose_processing.cpp
+	curvature_utilities.cpp
 	${HEADER_FILES}
 	)
 
