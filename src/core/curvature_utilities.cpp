@@ -116,14 +116,17 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
     for (int idx = 0; idx < contour->back().size(); idx++) {
         std::cout << curvature[idx] << std::endl;
     }
-    //  for (int idx = 0; idx < contour[0].size(); idx++) {
-    //      std::cout << curvature[idx] << std::endl;
-    //  }
-    //  float curv_mean = calculate_mean(curvature, contour[0].size());
-    //  float curv_std = calculate_std(curvature, contour[0].size());
-    //  float alpha = 1.5;  // How many standard deviations we care about
-    //  float curv_threshold = curv_mean + alpha * curv_std;
-    //  bool *curv_thresh_array = new bool[contour[0].size()];
+    std::cout << "Before calculating curvature mean" << std::endl;
+
+    float curv_mean = calculate_mean(curvature, contour->back().size());
+    std::cout << "Mean: " << curv_mean << std::endl;
+    std::cout << "Before caluculating stdev" << std::endl;
+    float curv_std = calculate_std(curvature, contour->back().size());
+    std::cout << "Curv STDev" << curv_std << std::endl;
+
+    float alpha = 1.5;  // How many standard deviations we care about
+    float curv_threshold = curv_mean + alpha * curv_std;
+    // bool *curv_thresh_array = new bool[contour[0].size()];
     delete (contour);
     delete (curvature);
     // delete (curv_thresh_array);
