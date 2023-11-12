@@ -4,8 +4,8 @@
 #define MAINSCREEN_SIZE_CONSTANTS_H
 
 /*Sizes for Main Window*/
- int MINIMUM_WIDTH = 1600;// 1900;
- int MINIMUM_HEIGHT = 918;// 900;
+int MINIMUM_WIDTH = 1600;  // 1900;
+int MINIMUM_HEIGHT = 918;  // 900;
 
 /*Minimum List Widget Size*/
 const int MINIMUM_LIST_WIDGET_SIZE = 100;

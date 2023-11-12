@@ -5,7 +5,7 @@ Copyright (c) Sergey Bochkanov (ALGLIB project).
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the 
+the Free Software Foundation (www.fsf.org); either version 2 of the
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -20,16 +20,17 @@ http://www.fsf.org/licensing/licenses
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-#include "stdafx.h"
 #include "solvers.h"
 
+#include "stdafx.h"
+
 // disable some irrelevant warnings
-#if (AE_COMPILER==AE_MSVC) && !defined(AE_ALL_WARNINGS)
-#pragma warning(disable:4100)
-#pragma warning(disable:4127)
-#pragma warning(disable:4611)
-#pragma warning(disable:4702)
-#pragma warning(disable:4996)
+#if (AE_COMPILER == AE_MSVC) && !defined(AE_ALL_WARNINGS)
+#pragma warning(disable : 4100)
+#pragma warning(disable : 4127)
+#pragma warning(disable : 4611)
+#pragma warning(disable : 4702)
+#pragma warning(disable : 4996)
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -37,8 +38,7 @@ http://www.fsf.org/licensing/licenses
 // THIS SECTION CONTAINS IMPLEMENTATION OF C++ INTERFACE
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib
-{
+namespace alglib {
 
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
 
@@ -72,16 +72,13 @@ namespace alglib
 /*************************************************************************
 
 *************************************************************************/
-_polynomialsolverreport_owner::_polynomialsolverreport_owner()
-{
+_polynomialsolverreport_owner::_polynomialsolverreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_polynomialsolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -95,22 +92,21 @@ _polynomialsolverreport_owner::_polynomialsolverreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::polynomialsolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::polynomialsolverreport), &_state);
+    p_struct = (alglib_impl::polynomialsolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::polynomialsolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::polynomialsolverreport));
     alglib_impl::_polynomialsolverreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_polynomialsolverreport_owner::_polynomialsolverreport_owner(const _polynomialsolverreport_owner &rhs)
-{
+_polynomialsolverreport_owner::_polynomialsolverreport_owner(
+    const _polynomialsolverreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_polynomialsolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -124,23 +120,28 @@ _polynomialsolverreport_owner::_polynomialsolverreport_owner(const _polynomialso
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: polynomialsolverreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::polynomialsolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::polynomialsolverreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: polynomialsolverreport copy constructor "
+                           "failure (source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::polynomialsolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::polynomialsolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::polynomialsolverreport));
-    alglib_impl::_polynomialsolverreport_init_copy(p_struct, const_cast<alglib_impl::polynomialsolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_polynomialsolverreport_init_copy(
+        p_struct,
+        const_cast<alglib_impl::polynomialsolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_polynomialsolverreport_owner& _polynomialsolverreport_owner::operator=(const _polynomialsolverreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_polynomialsolverreport_owner &_polynomialsolverreport_owner::operator=(
+    const _polynomialsolverreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -149,52 +150,55 @@ _polynomialsolverreport_owner& _polynomialsolverreport_owner::operator=(const _p
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: polynomialsolverreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: polynomialsolverreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(
+        p_struct != NULL,
+        "ALGLIB: polynomialsolverreport assignment constructor failure "
+        "(destination is not initialized)",
+        &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: polynomialsolverreport assignment "
+                           "constructor failure (source is not initialized)",
+                           &_state);
     alglib_impl::_polynomialsolverreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::polynomialsolverreport));
-    alglib_impl::_polynomialsolverreport_init_copy(p_struct, const_cast<alglib_impl::polynomialsolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_polynomialsolverreport_init_copy(
+        p_struct,
+        const_cast<alglib_impl::polynomialsolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_polynomialsolverreport_owner::~_polynomialsolverreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_polynomialsolverreport_owner::~_polynomialsolverreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_polynomialsolverreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::polynomialsolverreport* _polynomialsolverreport_owner::c_ptr()
-{
+alglib_impl::polynomialsolverreport *_polynomialsolverreport_owner::c_ptr() {
     return p_struct;
 }
 
-alglib_impl::polynomialsolverreport* _polynomialsolverreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::polynomialsolverreport*>(p_struct);
+alglib_impl::polynomialsolverreport *_polynomialsolverreport_owner::c_ptr()
+    const {
+    return const_cast<alglib_impl::polynomialsolverreport *>(p_struct);
 }
-polynomialsolverreport::polynomialsolverreport() : _polynomialsolverreport_owner() ,maxerr(p_struct->maxerr)
-{
-}
+polynomialsolverreport::polynomialsolverreport()
+    : _polynomialsolverreport_owner(), maxerr(p_struct->maxerr) {}
 
-polynomialsolverreport::polynomialsolverreport(const polynomialsolverreport &rhs):_polynomialsolverreport_owner(rhs) ,maxerr(p_struct->maxerr)
-{
-}
+polynomialsolverreport::polynomialsolverreport(
+    const polynomialsolverreport &rhs)
+    : _polynomialsolverreport_owner(rhs), maxerr(p_struct->maxerr) {}
 
-polynomialsolverreport& polynomialsolverreport::operator=(const polynomialsolverreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+polynomialsolverreport &polynomialsolverreport::operator=(
+    const polynomialsolverreport &rhs) {
+    if (this == &rhs) return *this;
     _polynomialsolverreport_owner::operator=(rhs);
     return *this;
 }
 
-polynomialsolverreport::~polynomialsolverreport()
-{
-}
+polynomialsolverreport::~polynomialsolverreport() {}
 
 /*************************************************************************
 Polynomial root finding.
@@ -236,13 +240,13 @@ NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
   -- ALGLIB --
      Copyright 24.02.2014 by Bochkanov Sergey
 *************************************************************************/
-void polynomialsolve(const real_1d_array &a, const ae_int_t n, complex_1d_array &x, polynomialsolverreport &rep, const xparams _xparams)
-{
+void polynomialsolve(const real_1d_array &a, const ae_int_t n,
+                     complex_1d_array &x, polynomialsolverreport &rep,
+                     const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -251,9 +255,13 @@ void polynomialsolve(const real_1d_array &a, const ae_int_t n, complex_1d_array 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::polynomialsolve(const_cast<alglib_impl::ae_vector*>(a.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::polynomialsolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::polynomialsolve(
+        const_cast<alglib_impl::ae_vector *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::polynomialsolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -263,16 +271,13 @@ void polynomialsolve(const real_1d_array &a, const ae_int_t n, complex_1d_array 
 /*************************************************************************
 
 *************************************************************************/
-_densesolverreport_owner::_densesolverreport_owner()
-{
+_densesolverreport_owner::_densesolverreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_densesolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -286,22 +291,21 @@ _densesolverreport_owner::_densesolverreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::densesolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::densesolverreport), &_state);
+    p_struct = (alglib_impl::densesolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::densesolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverreport));
     alglib_impl::_densesolverreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_densesolverreport_owner::_densesolverreport_owner(const _densesolverreport_owner &rhs)
-{
+_densesolverreport_owner::_densesolverreport_owner(
+    const _densesolverreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_densesolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -315,23 +319,27 @@ _densesolverreport_owner::_densesolverreport_owner(const _densesolverreport_owne
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: densesolverreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::densesolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::densesolverreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: densesolverreport copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::densesolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::densesolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverreport));
-    alglib_impl::_densesolverreport_init_copy(p_struct, const_cast<alglib_impl::densesolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_densesolverreport_init_copy(
+        p_struct, const_cast<alglib_impl::densesolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_densesolverreport_owner& _densesolverreport_owner::operator=(const _densesolverreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_densesolverreport_owner &_densesolverreport_owner::operator=(
+    const _densesolverreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -340,67 +348,61 @@ _densesolverreport_owner& _densesolverreport_owner::operator=(const _densesolver
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: densesolverreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: densesolverreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: densesolverreport assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: densesolverreport assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_densesolverreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverreport));
-    alglib_impl::_densesolverreport_init_copy(p_struct, const_cast<alglib_impl::densesolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_densesolverreport_init_copy(
+        p_struct, const_cast<alglib_impl::densesolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_densesolverreport_owner::~_densesolverreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_densesolverreport_owner::~_densesolverreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_densesolverreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::densesolverreport* _densesolverreport_owner::c_ptr()
-{
+alglib_impl::densesolverreport *_densesolverreport_owner::c_ptr() {
     return p_struct;
 }
 
-alglib_impl::densesolverreport* _densesolverreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::densesolverreport*>(p_struct);
+alglib_impl::densesolverreport *_densesolverreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::densesolverreport *>(p_struct);
 }
-densesolverreport::densesolverreport() : _densesolverreport_owner() ,r1(p_struct->r1),rinf(p_struct->rinf)
-{
-}
+densesolverreport::densesolverreport()
+    : _densesolverreport_owner(), r1(p_struct->r1), rinf(p_struct->rinf) {}
 
-densesolverreport::densesolverreport(const densesolverreport &rhs):_densesolverreport_owner(rhs) ,r1(p_struct->r1),rinf(p_struct->rinf)
-{
-}
+densesolverreport::densesolverreport(const densesolverreport &rhs)
+    : _densesolverreport_owner(rhs), r1(p_struct->r1), rinf(p_struct->rinf) {}
 
-densesolverreport& densesolverreport::operator=(const densesolverreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+densesolverreport &densesolverreport::operator=(const densesolverreport &rhs) {
+    if (this == &rhs) return *this;
     _densesolverreport_owner::operator=(rhs);
     return *this;
 }
 
-densesolverreport::~densesolverreport()
-{
-}
-
+densesolverreport::~densesolverreport() {}
 
 /*************************************************************************
 
 *************************************************************************/
-_densesolverlsreport_owner::_densesolverlsreport_owner()
-{
+_densesolverlsreport_owner::_densesolverlsreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_densesolverlsreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -414,22 +416,21 @@ _densesolverlsreport_owner::_densesolverlsreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::densesolverlsreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::densesolverlsreport), &_state);
+    p_struct = (alglib_impl::densesolverlsreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::densesolverlsreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverlsreport));
     alglib_impl::_densesolverlsreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_densesolverlsreport_owner::_densesolverlsreport_owner(const _densesolverlsreport_owner &rhs)
-{
+_densesolverlsreport_owner::_densesolverlsreport_owner(
+    const _densesolverlsreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_densesolverlsreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -443,23 +444,27 @@ _densesolverlsreport_owner::_densesolverlsreport_owner(const _densesolverlsrepor
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: densesolverlsreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::densesolverlsreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::densesolverlsreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: densesolverlsreport copy constructor "
+                           "failure (source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::densesolverlsreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::densesolverlsreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverlsreport));
-    alglib_impl::_densesolverlsreport_init_copy(p_struct, const_cast<alglib_impl::densesolverlsreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_densesolverlsreport_init_copy(
+        p_struct, const_cast<alglib_impl::densesolverlsreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_densesolverlsreport_owner& _densesolverlsreport_owner::operator=(const _densesolverlsreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_densesolverlsreport_owner &_densesolverlsreport_owner::operator=(
+    const _densesolverlsreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -468,52 +473,59 @@ _densesolverlsreport_owner& _densesolverlsreport_owner::operator=(const _denseso
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: densesolverlsreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: densesolverlsreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: densesolverlsreport assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: densesolverlsreport assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_densesolverlsreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::densesolverlsreport));
-    alglib_impl::_densesolverlsreport_init_copy(p_struct, const_cast<alglib_impl::densesolverlsreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_densesolverlsreport_init_copy(
+        p_struct, const_cast<alglib_impl::densesolverlsreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_densesolverlsreport_owner::~_densesolverlsreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_densesolverlsreport_owner::~_densesolverlsreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_densesolverlsreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::densesolverlsreport* _densesolverlsreport_owner::c_ptr()
-{
+alglib_impl::densesolverlsreport *_densesolverlsreport_owner::c_ptr() {
     return p_struct;
 }
 
-alglib_impl::densesolverlsreport* _densesolverlsreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::densesolverlsreport*>(p_struct);
+alglib_impl::densesolverlsreport *_densesolverlsreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::densesolverlsreport *>(p_struct);
 }
-densesolverlsreport::densesolverlsreport() : _densesolverlsreport_owner() ,r2(p_struct->r2),cx(&p_struct->cx),n(p_struct->n),k(p_struct->k)
-{
-}
+densesolverlsreport::densesolverlsreport()
+    : _densesolverlsreport_owner(),
+      r2(p_struct->r2),
+      cx(&p_struct->cx),
+      n(p_struct->n),
+      k(p_struct->k) {}
 
-densesolverlsreport::densesolverlsreport(const densesolverlsreport &rhs):_densesolverlsreport_owner(rhs) ,r2(p_struct->r2),cx(&p_struct->cx),n(p_struct->n),k(p_struct->k)
-{
-}
+densesolverlsreport::densesolverlsreport(const densesolverlsreport &rhs)
+    : _densesolverlsreport_owner(rhs),
+      r2(p_struct->r2),
+      cx(&p_struct->cx),
+      n(p_struct->n),
+      k(p_struct->k) {}
 
-densesolverlsreport& densesolverlsreport::operator=(const densesolverlsreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+densesolverlsreport &densesolverlsreport::operator=(
+    const densesolverlsreport &rhs) {
+    if (this == &rhs) return *this;
     _densesolverlsreport_owner::operator=(rhs);
     return *this;
 }
 
-densesolverlsreport::~densesolverlsreport()
-{
-}
+densesolverlsreport::~densesolverlsreport() {}
 
 /*************************************************************************
 Dense solver for A*x=b with N*N real matrix A and N*1 real vectorx  x  and
@@ -587,13 +599,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolve(const real_2d_array &a, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void rmatrixsolve(const real_2d_array &a, const ae_int_t n,
+                  const real_1d_array &b, ae_int_t &info,
+                  densesolverreport &rep, real_1d_array &x,
+                  const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -602,9 +615,13 @@ void rmatrixsolve(const real_2d_array &a, const ae_int_t n, const real_1d_array 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -666,13 +683,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const real_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void rmatrixsolvefast(const real_2d_array &a, const ae_int_t n,
+                      const real_1d_array &b, ae_int_t &info,
+                      const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -681,9 +698,12 @@ void rmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const real_1d_ar
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixsolvefast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::rmatrixsolvefast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -770,13 +790,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvem(const real_2d_array &a, const ae_int_t n, const real_2d_array &b, const ae_int_t m, const bool rfs, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams)
-{
+void rmatrixsolvem(const real_2d_array &a, const ae_int_t n,
+                   const real_2d_array &b, const ae_int_t m, const bool rfs,
+                   ae_int_t &info, densesolverreport &rep, real_2d_array &x,
+                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -785,9 +806,13 @@ void rmatrixsolvem(const real_2d_array &a, const ae_int_t n, const real_2d_array
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, rfs, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, rfs, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -856,13 +881,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void rmatrixsolvemfast(const real_2d_array &a, const ae_int_t n,
+                       const real_2d_array &b, const ae_int_t m, ae_int_t &info,
+                       const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -871,9 +896,12 @@ void rmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const real_2d_a
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixsolvemfast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::rmatrixsolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -932,13 +960,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolve(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void rmatrixlusolve(const real_2d_array &lua, const integer_1d_array &p,
+                    const ae_int_t n, const real_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, real_1d_array &x,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -947,9 +976,14 @@ void rmatrixlusolve(const real_2d_array &lua, const integer_1d_array &p, const a
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixlusolve(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixlusolve(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -986,13 +1020,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvefast(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void rmatrixlusolvefast(const real_2d_array &lua, const integer_1d_array &p,
+                        const ae_int_t n, const real_1d_array &b,
+                        ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1001,9 +1035,13 @@ void rmatrixlusolvefast(const real_2d_array &lua, const integer_1d_array &p, con
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixlusolvefast(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::rmatrixlusolvefast(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1088,13 +1126,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvem(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams)
-{
+void rmatrixlusolvem(const real_2d_array &lua, const integer_1d_array &p,
+                     const ae_int_t n, const real_2d_array &b, const ae_int_t m,
+                     ae_int_t &info, densesolverreport &rep, real_2d_array &x,
+                     const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1103,9 +1142,14 @@ void rmatrixlusolvem(const real_2d_array &lua, const integer_1d_array &p, const 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixlusolvem(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixlusolvem(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1167,13 +1211,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvemfast(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void rmatrixlusolvemfast(const real_2d_array &lua, const integer_1d_array &p,
+                         const ae_int_t n, const real_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1182,9 +1227,13 @@ void rmatrixlusolvemfast(const real_2d_array &lua, const integer_1d_array &p, co
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixlusolvemfast(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::rmatrixlusolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1225,13 +1274,15 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolve(const real_2d_array &a, const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void rmatrixmixedsolve(const real_2d_array &a, const real_2d_array &lua,
+                       const integer_1d_array &p, const ae_int_t n,
+                       const real_1d_array &b, ae_int_t &info,
+                       densesolverreport &rep, real_1d_array &x,
+                       const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1240,9 +1291,15 @@ void rmatrixmixedsolve(const real_2d_array &a, const real_2d_array &lua, const i
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixmixedsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixmixedsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1283,13 +1340,15 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolvem(const real_2d_array &a, const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams)
-{
+void rmatrixmixedsolvem(const real_2d_array &a, const real_2d_array &lua,
+                        const integer_1d_array &p, const ae_int_t n,
+                        const real_2d_array &b, const ae_int_t m,
+                        ae_int_t &info, densesolverreport &rep,
+                        real_2d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1298,9 +1357,15 @@ void rmatrixmixedsolvem(const real_2d_array &a, const real_2d_array &lua, const 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixmixedsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixmixedsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1385,13 +1450,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, const bool rfs, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams)
-{
+void cmatrixsolvem(const complex_2d_array &a, const ae_int_t n,
+                   const complex_2d_array &b, const ae_int_t m, const bool rfs,
+                   ae_int_t &info, densesolverreport &rep, complex_2d_array &x,
+                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1400,9 +1466,13 @@ void cmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const complex_2d
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, rfs, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, rfs, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1460,13 +1530,13 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void cmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n,
+                       const complex_2d_array &b, const ae_int_t m,
+                       ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1475,9 +1545,12 @@ void cmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const comple
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixsolvemfast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::cmatrixsolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1553,13 +1626,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolve(const complex_2d_array &a, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams)
-{
+void cmatrixsolve(const complex_2d_array &a, const ae_int_t n,
+                  const complex_1d_array &b, ae_int_t &info,
+                  densesolverreport &rep, complex_1d_array &x,
+                  const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1568,9 +1642,13 @@ void cmatrixsolve(const complex_2d_array &a, const ae_int_t n, const complex_1d_
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1625,13 +1703,13 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void cmatrixsolvefast(const complex_2d_array &a, const ae_int_t n,
+                      const complex_1d_array &b, ae_int_t &info,
+                      const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1640,9 +1718,12 @@ void cmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const complex
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixsolvefast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::cmatrixsolvefast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1722,13 +1803,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvem(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams)
-{
+void cmatrixlusolvem(const complex_2d_array &lua, const integer_1d_array &p,
+                     const ae_int_t n, const complex_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     complex_2d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1737,9 +1819,14 @@ void cmatrixlusolvem(const complex_2d_array &lua, const integer_1d_array &p, con
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixlusolvem(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixlusolvem(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1797,13 +1884,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvemfast(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void cmatrixlusolvemfast(const complex_2d_array &lua, const integer_1d_array &p,
+                         const ae_int_t n, const complex_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1812,9 +1900,13 @@ void cmatrixlusolvemfast(const complex_2d_array &lua, const integer_1d_array &p,
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixlusolvemfast(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::cmatrixlusolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1871,13 +1963,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolve(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams)
-{
+void cmatrixlusolve(const complex_2d_array &lua, const integer_1d_array &p,
+                    const ae_int_t n, const complex_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, complex_1d_array &x,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1886,9 +1979,14 @@ void cmatrixlusolve(const complex_2d_array &lua, const integer_1d_array &p, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixlusolve(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixlusolve(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1928,13 +2026,13 @@ NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvefast(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void cmatrixlusolvefast(const complex_2d_array &lua, const integer_1d_array &p,
+                        const ae_int_t n, const complex_1d_array &b,
+                        ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1943,9 +2041,13 @@ void cmatrixlusolvefast(const complex_2d_array &lua, const integer_1d_array &p, 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixlusolvefast(const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::cmatrixlusolvefast(
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -1983,13 +2085,15 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolvem(const complex_2d_array &a, const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams)
-{
+void cmatrixmixedsolvem(const complex_2d_array &a, const complex_2d_array &lua,
+                        const integer_1d_array &p, const ae_int_t n,
+                        const complex_2d_array &b, const ae_int_t m,
+                        ae_int_t &info, densesolverreport &rep,
+                        complex_2d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -1998,9 +2102,15 @@ void cmatrixmixedsolvem(const complex_2d_array &a, const complex_2d_array &lua, 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixmixedsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixmixedsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2037,13 +2147,15 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolve(const complex_2d_array &a, const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams)
-{
+void cmatrixmixedsolve(const complex_2d_array &a, const complex_2d_array &lua,
+                       const integer_1d_array &p, const ae_int_t n,
+                       const complex_1d_array &b, ae_int_t &info,
+                       densesolverreport &rep, complex_1d_array &x,
+                       const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2052,9 +2164,15 @@ void cmatrixmixedsolve(const complex_2d_array &a, const complex_2d_array &lua, c
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::cmatrixmixedsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), const_cast<alglib_impl::ae_matrix*>(lua.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), n, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::cmatrixmixedsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(lua.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()), n,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2136,13 +2254,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvem(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams)
-{
+void spdmatrixsolvem(const real_2d_array &a, const ae_int_t n,
+                     const bool isupper, const real_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     real_2d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2151,9 +2270,13 @@ void spdmatrixsolvem(const real_2d_array &a, const ae_int_t n, const bool isuppe
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::spdmatrixsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2210,13 +2333,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void spdmatrixsolvemfast(const real_2d_array &a, const ae_int_t n,
+                         const bool isupper, const real_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2225,9 +2349,12 @@ void spdmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const bool is
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixsolvemfast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::spdmatrixsolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2309,13 +2436,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolve(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void spdmatrixsolve(const real_2d_array &a, const ae_int_t n,
+                    const bool isupper, const real_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, real_1d_array &x,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2324,9 +2452,13 @@ void spdmatrixsolve(const real_2d_array &a, const ae_int_t n, const bool isupper
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::spdmatrixsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2383,13 +2515,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void spdmatrixsolvefast(const real_2d_array &a, const ae_int_t n,
+                        const bool isupper, const real_1d_array &b,
+                        ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2398,9 +2530,12 @@ void spdmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const bool isu
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixsolvefast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::spdmatrixsolvefast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2462,13 +2597,15 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvem(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams)
-{
+void spdmatrixcholeskysolvem(const real_2d_array &cha, const ae_int_t n,
+                             const bool isupper, const real_2d_array &b,
+                             const ae_int_t m, ae_int_t &info,
+                             densesolverreport &rep, real_2d_array &x,
+                             const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2477,9 +2614,13 @@ void spdmatrixcholeskysolvem(const real_2d_array &cha, const ae_int_t n, const b
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixcholeskysolvem(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::spdmatrixcholeskysolvem(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2516,13 +2657,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvemfast(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void spdmatrixcholeskysolvemfast(const real_2d_array &cha, const ae_int_t n,
+                                 const bool isupper, const real_2d_array &b,
+                                 const ae_int_t m, ae_int_t &info,
+                                 const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2531,9 +2673,12 @@ void spdmatrixcholeskysolvemfast(const real_2d_array &cha, const ae_int_t n, con
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixcholeskysolvemfast(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::spdmatrixcholeskysolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2592,13 +2737,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolve(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void spdmatrixcholeskysolve(const real_2d_array &cha, const ae_int_t n,
+                            const bool isupper, const real_1d_array &b,
+                            ae_int_t &info, densesolverreport &rep,
+                            real_1d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2607,9 +2753,13 @@ void spdmatrixcholeskysolve(const real_2d_array &cha, const ae_int_t n, const bo
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixcholeskysolve(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::spdmatrixcholeskysolve(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2644,13 +2794,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvefast(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void spdmatrixcholeskysolvefast(const real_2d_array &cha, const ae_int_t n,
+                                const bool isupper, const real_1d_array &b,
+                                ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2659,9 +2809,12 @@ void spdmatrixcholeskysolvefast(const real_2d_array &cha, const ae_int_t n, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::spdmatrixcholeskysolvefast(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::spdmatrixcholeskysolvefast(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2736,13 +2889,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams)
-{
+void hpdmatrixsolvem(const complex_2d_array &a, const ae_int_t n,
+                     const bool isupper, const complex_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     complex_2d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2751,9 +2905,13 @@ void hpdmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const bool isu
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixsolvem(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::hpdmatrixsolvem(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2811,13 +2969,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void hpdmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n,
+                         const bool isupper, const complex_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2826,9 +2985,12 @@ void hpdmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const bool
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixsolvemfast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::hpdmatrixsolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2903,13 +3065,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolve(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams)
-{
+void hpdmatrixsolve(const complex_2d_array &a, const ae_int_t n,
+                    const bool isupper, const complex_1d_array &b,
+                    ae_int_t &info, densesolverreport &rep, complex_1d_array &x,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2918,9 +3081,13 @@ void hpdmatrixsolve(const complex_2d_array &a, const ae_int_t n, const bool isup
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixsolve(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::hpdmatrixsolve(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -2979,13 +3146,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void hpdmatrixsolvefast(const complex_2d_array &a, const ae_int_t n,
+                        const bool isupper, const complex_1d_array &b,
+                        ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -2994,9 +3161,12 @@ void hpdmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const bool 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixsolvefast(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::hpdmatrixsolvefast(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3059,13 +3229,15 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvem(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams)
-{
+void hpdmatrixcholeskysolvem(const complex_2d_array &cha, const ae_int_t n,
+                             const bool isupper, const complex_2d_array &b,
+                             const ae_int_t m, ae_int_t &info,
+                             densesolverreport &rep, complex_2d_array &x,
+                             const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3074,9 +3246,13 @@ void hpdmatrixcholeskysolvem(const complex_2d_array &cha, const ae_int_t n, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixcholeskysolvem(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_matrix*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::hpdmatrixcholeskysolvem(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_matrix *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3112,13 +3288,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvemfast(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams)
-{
+void hpdmatrixcholeskysolvemfast(const complex_2d_array &cha, const ae_int_t n,
+                                 const bool isupper, const complex_2d_array &b,
+                                 const ae_int_t m, ae_int_t &info,
+                                 const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3127,9 +3304,12 @@ void hpdmatrixcholeskysolvemfast(const complex_2d_array &cha, const ae_int_t n, 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixcholeskysolvemfast(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_matrix*>(b.c_ptr()), m, &info, &_alglib_env_state);
+    alglib_impl::hpdmatrixcholeskysolvemfast(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_matrix *>(b.c_ptr()), m, &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3188,13 +3368,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolve(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams)
-{
+void hpdmatrixcholeskysolve(const complex_2d_array &cha, const ae_int_t n,
+                            const bool isupper, const complex_1d_array &b,
+                            ae_int_t &info, densesolverreport &rep,
+                            complex_1d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3203,9 +3384,13 @@ void hpdmatrixcholeskysolve(const complex_2d_array &cha, const ae_int_t n, const
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixcholeskysolve(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, const_cast<alglib_impl::densesolverreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::hpdmatrixcholeskysolve(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        const_cast<alglib_impl::densesolverreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3240,13 +3425,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvefast(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, const xparams _xparams)
-{
+void hpdmatrixcholeskysolvefast(const complex_2d_array &cha, const ae_int_t n,
+                                const bool isupper, const complex_1d_array &b,
+                                ae_int_t &info, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3255,9 +3440,12 @@ void hpdmatrixcholeskysolvefast(const complex_2d_array &cha, const ae_int_t n, c
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::hpdmatrixcholeskysolvefast(const_cast<alglib_impl::ae_matrix*>(cha.c_ptr()), n, isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &info, &_alglib_env_state);
+    alglib_impl::hpdmatrixcholeskysolvefast(
+        const_cast<alglib_impl::ae_matrix *>(cha.c_ptr()), n, isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &info,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3331,13 +3519,15 @@ Subroutine sets following fields of the Rep structure:
   -- ALGLIB --
      Copyright 24.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvels(const real_2d_array &a, const ae_int_t nrows, const ae_int_t ncols, const real_1d_array &b, const double threshold, ae_int_t &info, densesolverlsreport &rep, real_1d_array &x, const xparams _xparams)
-{
+void rmatrixsolvels(const real_2d_array &a, const ae_int_t nrows,
+                    const ae_int_t ncols, const real_1d_array &b,
+                    const double threshold, ae_int_t &info,
+                    densesolverlsreport &rep, real_1d_array &x,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3346,9 +3536,13 @@ void rmatrixsolvels(const real_2d_array &a, const ae_int_t nrows, const ae_int_t
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::rmatrixsolvels(const_cast<alglib_impl::ae_matrix*>(a.c_ptr()), nrows, ncols, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), threshold, &info, const_cast<alglib_impl::densesolverlsreport*>(rep.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::rmatrixsolvels(
+        const_cast<alglib_impl::ae_matrix *>(a.c_ptr()), nrows, ncols,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), threshold, &info,
+        const_cast<alglib_impl::densesolverlsreport *>(rep.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3367,16 +3561,13 @@ Following fields can be accessed by users:
 * IterationsCount - inner iterations count (0 for direct solvers)
 * R2 - squared residual
 *************************************************************************/
-_sparsesolverreport_owner::_sparsesolverreport_owner()
-{
+_sparsesolverreport_owner::_sparsesolverreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_sparsesolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -3390,22 +3581,21 @@ _sparsesolverreport_owner::_sparsesolverreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::sparsesolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::sparsesolverreport), &_state);
+    p_struct = (alglib_impl::sparsesolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::sparsesolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverreport));
     alglib_impl::_sparsesolverreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_sparsesolverreport_owner::_sparsesolverreport_owner(const _sparsesolverreport_owner &rhs)
-{
+_sparsesolverreport_owner::_sparsesolverreport_owner(
+    const _sparsesolverreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_sparsesolverreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -3419,23 +3609,27 @@ _sparsesolverreport_owner::_sparsesolverreport_owner(const _sparsesolverreport_o
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: sparsesolverreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::sparsesolverreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::sparsesolverreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: sparsesolverreport copy constructor "
+                           "failure (source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::sparsesolverreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::sparsesolverreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverreport));
-    alglib_impl::_sparsesolverreport_init_copy(p_struct, const_cast<alglib_impl::sparsesolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_sparsesolverreport_init_copy(
+        p_struct, const_cast<alglib_impl::sparsesolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_sparsesolverreport_owner& _sparsesolverreport_owner::operator=(const _sparsesolverreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_sparsesolverreport_owner &_sparsesolverreport_owner::operator=(
+    const _sparsesolverreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -3444,52 +3638,59 @@ _sparsesolverreport_owner& _sparsesolverreport_owner::operator=(const _sparsesol
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: sparsesolverreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: sparsesolverreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: sparsesolverreport assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: sparsesolverreport assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_sparsesolverreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverreport));
-    alglib_impl::_sparsesolverreport_init_copy(p_struct, const_cast<alglib_impl::sparsesolverreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_sparsesolverreport_init_copy(
+        p_struct, const_cast<alglib_impl::sparsesolverreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_sparsesolverreport_owner::~_sparsesolverreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_sparsesolverreport_owner::~_sparsesolverreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_sparsesolverreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::sparsesolverreport* _sparsesolverreport_owner::c_ptr()
-{
+alglib_impl::sparsesolverreport *_sparsesolverreport_owner::c_ptr() {
     return p_struct;
 }
 
-alglib_impl::sparsesolverreport* _sparsesolverreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::sparsesolverreport*>(p_struct);
+alglib_impl::sparsesolverreport *_sparsesolverreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::sparsesolverreport *>(p_struct);
 }
-sparsesolverreport::sparsesolverreport() : _sparsesolverreport_owner() ,terminationtype(p_struct->terminationtype),nmv(p_struct->nmv),iterationscount(p_struct->iterationscount),r2(p_struct->r2)
-{
-}
+sparsesolverreport::sparsesolverreport()
+    : _sparsesolverreport_owner(),
+      terminationtype(p_struct->terminationtype),
+      nmv(p_struct->nmv),
+      iterationscount(p_struct->iterationscount),
+      r2(p_struct->r2) {}
 
-sparsesolverreport::sparsesolverreport(const sparsesolverreport &rhs):_sparsesolverreport_owner(rhs) ,terminationtype(p_struct->terminationtype),nmv(p_struct->nmv),iterationscount(p_struct->iterationscount),r2(p_struct->r2)
-{
-}
+sparsesolverreport::sparsesolverreport(const sparsesolverreport &rhs)
+    : _sparsesolverreport_owner(rhs),
+      terminationtype(p_struct->terminationtype),
+      nmv(p_struct->nmv),
+      iterationscount(p_struct->iterationscount),
+      r2(p_struct->r2) {}
 
-sparsesolverreport& sparsesolverreport::operator=(const sparsesolverreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+sparsesolverreport &sparsesolverreport::operator=(
+    const sparsesolverreport &rhs) {
+    if (this == &rhs) return *this;
     _sparsesolverreport_owner::operator=(rhs);
     return *this;
 }
 
-sparsesolverreport::~sparsesolverreport()
-{
-}
+sparsesolverreport::~sparsesolverreport() {}
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -3516,13 +3717,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolvesks(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsespdsolvesks(const sparsematrix &a, const bool isupper,
+                       const real_1d_array &b, real_1d_array &x,
+                       sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3531,9 +3732,14 @@ void sparsespdsolvesks(const sparsematrix &a, const bool isupper, const real_1d_
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsespdsolvesks(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsespdsolvesks(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3563,13 +3769,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolve(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsespdsolve(const sparsematrix &a, const bool isupper,
+                    const real_1d_array &b, real_1d_array &x,
+                    sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3578,9 +3784,14 @@ void sparsespdsolve(const sparsematrix &a, const bool isupper, const real_1d_arr
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsespdsolve(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsespdsolve(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3610,13 +3821,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdcholeskysolve(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsespdcholeskysolve(const sparsematrix &a, const bool isupper,
+                            const real_1d_array &b, real_1d_array &x,
+                            sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3625,9 +3836,14 @@ void sparsespdcholeskysolve(const sparsematrix &a, const bool isupper, const rea
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsespdcholeskysolve(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsespdcholeskysolve(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3655,13 +3871,13 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolve(const sparsematrix &a, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsesolve(const sparsematrix &a, const real_1d_array &b,
+                 real_1d_array &x, sparsesolverreport &rep,
+                 const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3670,9 +3886,14 @@ void sparsesolve(const sparsematrix &a, const real_1d_array &b, real_1d_array &x
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolve(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolve(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3703,13 +3924,14 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparselusolve(const sparsematrix &a, const integer_1d_array &p, const integer_1d_array &q, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparselusolve(const sparsematrix &a, const integer_1d_array &p,
+                   const integer_1d_array &q, const real_1d_array &b,
+                   real_1d_array &x, sparsesolverreport &rep,
+                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3718,9 +3940,16 @@ void sparselusolve(const sparsematrix &a, const integer_1d_array &p, const integ
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparselusolve(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), const_cast<alglib_impl::ae_vector*>(p.c_ptr()), const_cast<alglib_impl::ae_vector*>(q.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparselusolve(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(p.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(q.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3733,16 +3962,13 @@ This object stores state of the sparse linear solver object.
 You should use ALGLIB functions to work with this object.
 Never try to access its fields directly!
 *************************************************************************/
-_sparsesolverstate_owner::_sparsesolverstate_owner()
-{
+_sparsesolverstate_owner::_sparsesolverstate_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_sparsesolverstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -3756,22 +3982,21 @@ _sparsesolverstate_owner::_sparsesolverstate_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::sparsesolverstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::sparsesolverstate), &_state);
+    p_struct = (alglib_impl::sparsesolverstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::sparsesolverstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverstate));
     alglib_impl::_sparsesolverstate_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_sparsesolverstate_owner::_sparsesolverstate_owner(const _sparsesolverstate_owner &rhs)
-{
+_sparsesolverstate_owner::_sparsesolverstate_owner(
+    const _sparsesolverstate_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_sparsesolverstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -3785,23 +4010,27 @@ _sparsesolverstate_owner::_sparsesolverstate_owner(const _sparsesolverstate_owne
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: sparsesolverstate copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::sparsesolverstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::sparsesolverstate), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: sparsesolverstate copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::sparsesolverstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::sparsesolverstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverstate));
-    alglib_impl::_sparsesolverstate_init_copy(p_struct, const_cast<alglib_impl::sparsesolverstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_sparsesolverstate_init_copy(
+        p_struct, const_cast<alglib_impl::sparsesolverstate *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_sparsesolverstate_owner& _sparsesolverstate_owner::operator=(const _sparsesolverstate_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_sparsesolverstate_owner &_sparsesolverstate_owner::operator=(
+    const _sparsesolverstate_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -3810,52 +4039,49 @@ _sparsesolverstate_owner& _sparsesolverstate_owner::operator=(const _sparsesolve
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: sparsesolverstate assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: sparsesolverstate assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: sparsesolverstate assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: sparsesolverstate assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_sparsesolverstate_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::sparsesolverstate));
-    alglib_impl::_sparsesolverstate_init_copy(p_struct, const_cast<alglib_impl::sparsesolverstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_sparsesolverstate_init_copy(
+        p_struct, const_cast<alglib_impl::sparsesolverstate *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_sparsesolverstate_owner::~_sparsesolverstate_owner()
-{
-    if( p_struct!=NULL )
-    {
+_sparsesolverstate_owner::~_sparsesolverstate_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_sparsesolverstate_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::sparsesolverstate* _sparsesolverstate_owner::c_ptr()
-{
+alglib_impl::sparsesolverstate *_sparsesolverstate_owner::c_ptr() {
     return p_struct;
 }
 
-alglib_impl::sparsesolverstate* _sparsesolverstate_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::sparsesolverstate*>(p_struct);
+alglib_impl::sparsesolverstate *_sparsesolverstate_owner::c_ptr() const {
+    return const_cast<alglib_impl::sparsesolverstate *>(p_struct);
 }
-sparsesolverstate::sparsesolverstate() : _sparsesolverstate_owner() 
-{
-}
+sparsesolverstate::sparsesolverstate() : _sparsesolverstate_owner() {}
 
-sparsesolverstate::sparsesolverstate(const sparsesolverstate &rhs):_sparsesolverstate_owner(rhs) 
-{
-}
+sparsesolverstate::sparsesolverstate(const sparsesolverstate &rhs)
+    : _sparsesolverstate_owner(rhs) {}
 
-sparsesolverstate& sparsesolverstate::operator=(const sparsesolverstate &rhs)
-{
-    if( this==&rhs )
-        return *this;
+sparsesolverstate &sparsesolverstate::operator=(const sparsesolverstate &rhs) {
+    if (this == &rhs) return *this;
     _sparsesolverstate_owner::operator=(rhs);
     return *this;
 }
 
-sparsesolverstate::~sparsesolverstate()
-{
-}
+sparsesolverstate::~sparsesolverstate() {}
 
 /*************************************************************************
 Solving sparse symmetric linear system A*x=b using GMRES(k) method. Sparse
@@ -3914,13 +4140,15 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvesymmetricgmres(const sparsematrix &a, const bool isupper, const real_1d_array &b, const ae_int_t k, const double epsf, const ae_int_t maxits, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsesolvesymmetricgmres(const sparsematrix &a, const bool isupper,
+                               const real_1d_array &b, const ae_int_t k,
+                               const double epsf, const ae_int_t maxits,
+                               real_1d_array &x, sparsesolverreport &rep,
+                               const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -3929,9 +4157,14 @@ void sparsesolvesymmetricgmres(const sparsematrix &a, const bool isupper, const 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolvesymmetricgmres(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), k, epsf, maxits, const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolvesymmetricgmres(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), k, epsf, maxits,
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -3985,13 +4218,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvegmres(const sparsematrix &a, const real_1d_array &b, const ae_int_t k, const double epsf, const ae_int_t maxits, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsesolvegmres(const sparsematrix &a, const real_1d_array &b,
+                      const ae_int_t k, const double epsf,
+                      const ae_int_t maxits, real_1d_array &x,
+                      sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4000,9 +4234,14 @@ void sparsesolvegmres(const sparsematrix &a, const real_1d_array &b, const ae_in
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolvegmres(const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), k, epsf, maxits, const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolvegmres(
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), k, epsf, maxits,
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4069,13 +4308,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvercreate(const ae_int_t n, sparsesolverstate &state, const xparams _xparams)
-{
+void sparsesolvercreate(const ae_int_t n, sparsesolverstate &state,
+                        const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4084,9 +4322,11 @@ void sparsesolvercreate(const ae_int_t n, sparsesolverstate &state, const xparam
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolvercreate(n, const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolvercreate(
+        n, const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4112,13 +4352,12 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetalgogmres(const sparsesolverstate &state, const ae_int_t k, const xparams _xparams)
-{
+void sparsesolversetalgogmres(const sparsesolverstate &state, const ae_int_t k,
+                              const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4127,9 +4366,11 @@ void sparsesolversetalgogmres(const sparsesolverstate &state, const ae_int_t k, 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversetalgogmres(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), k, &_alglib_env_state);
+    alglib_impl::sparsesolversetalgogmres(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()), k,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4148,13 +4389,13 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetstartingpoint(const sparsesolverstate &state, const real_1d_array &x, const xparams _xparams)
-{
+void sparsesolversetstartingpoint(const sparsesolverstate &state,
+                                  const real_1d_array &x,
+                                  const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4163,9 +4404,11 @@ void sparsesolversetstartingpoint(const sparsesolverstate &state, const real_1d_
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversetstartingpoint(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolversetstartingpoint(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4189,13 +4432,12 @@ value.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetcond(const sparsesolverstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams)
-{
+void sparsesolversetcond(const sparsesolverstate &state, const double epsf,
+                         const ae_int_t maxits, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4204,9 +4446,11 @@ void sparsesolversetcond(const sparsesolverstate &state, const double epsf, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversetcond(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), epsf, maxits, &_alglib_env_state);
+    alglib_impl::sparsesolversetcond(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()), epsf,
+        maxits, &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4246,13 +4490,14 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolvesymmetric(const sparsesolverstate &state, const sparsematrix &a, const bool isupper, const real_1d_array &b, const xparams _xparams)
-{
+void sparsesolversolvesymmetric(const sparsesolverstate &state,
+                                const sparsematrix &a, const bool isupper,
+                                const real_1d_array &b,
+                                const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4261,9 +4506,12 @@ void sparsesolversolvesymmetric(const sparsesolverstate &state, const sparsematr
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversolvesymmetric(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolversolvesymmetric(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4295,13 +4543,12 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolve(const sparsesolverstate &state, const sparsematrix &a, const real_1d_array &b, const xparams _xparams)
-{
+void sparsesolversolve(const sparsesolverstate &state, const sparsematrix &a,
+                       const real_1d_array &b, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4310,9 +4557,12 @@ void sparsesolversolve(const sparsesolverstate &state, const sparsematrix &a, co
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversolve(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolversolve(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4348,13 +4598,12 @@ s
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverresults(const sparsesolverstate &state, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsesolverresults(const sparsesolverstate &state, real_1d_array &x,
+                         sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4363,9 +4612,13 @@ void sparsesolverresults(const sparsesolverstate &state, real_1d_array &x, spars
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolverresults(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolverresults(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4394,13 +4647,12 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetxrep(const sparsesolverstate &state, const bool needxrep, const xparams _xparams)
-{
+void sparsesolversetxrep(const sparsesolverstate &state, const bool needxrep,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4409,9 +4661,11 @@ void sparsesolversetxrep(const sparsesolverstate &state, const bool needxrep, co
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolversetxrep(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), needxrep, &_alglib_env_state);
+    alglib_impl::sparsesolversetxrep(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()), needxrep,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4436,13 +4690,12 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstart(const sparsesolverstate &state, const real_1d_array &b, const xparams _xparams)
-{
+void sparsesolveroocstart(const sparsesolverstate &state,
+                          const real_1d_array &b, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4451,9 +4704,11 @@ void sparsesolveroocstart(const sparsesolverstate &state, const real_1d_array &b
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocstart(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolveroocstart(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4475,13 +4730,12 @@ related functions of this subspackage in a loop like one given below:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-bool sparsesolverooccontinue(const sparsesolverstate &state, const xparams _xparams)
-{
+bool sparsesolverooccontinue(const sparsesolverstate &state,
+                             const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4490,11 +4744,13 @@ bool sparsesolverooccontinue(const sparsesolverstate &state, const xparams _xpar
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    ae_bool result = alglib_impl::sparsesolverooccontinue(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), &_alglib_env_state);
+    ae_bool result = alglib_impl::sparsesolverooccontinue(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
-    return *(reinterpret_cast<bool*>(&result));
+    return *(reinterpret_cast<bool *>(&result));
 }
 
 /*************************************************************************
@@ -4533,13 +4789,13 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestinfo(const sparsesolverstate &state, ae_int_t &requesttype, const xparams _xparams)
-{
+void sparsesolveroocgetrequestinfo(const sparsesolverstate &state,
+                                   ae_int_t &requesttype,
+                                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4548,9 +4804,11 @@ void sparsesolveroocgetrequestinfo(const sparsesolverstate &state, ae_int_t &req
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocgetrequestinfo(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), &requesttype, &_alglib_env_state);
+    alglib_impl::sparsesolveroocgetrequestinfo(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        &requesttype, &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4587,13 +4845,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata(const sparsesolverstate &state, real_1d_array &x, const xparams _xparams)
-{
+void sparsesolveroocgetrequestdata(const sparsesolverstate &state,
+                                   real_1d_array &x, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4602,9 +4859,11 @@ void sparsesolveroocgetrequestdata(const sparsesolverstate &state, real_1d_array
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocgetrequestdata(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolveroocgetrequestdata(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4625,13 +4884,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata1(const sparsesolverstate &state, double &v, const xparams _xparams)
-{
+void sparsesolveroocgetrequestdata1(const sparsesolverstate &state, double &v,
+                                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4640,9 +4898,11 @@ void sparsesolveroocgetrequestdata1(const sparsesolverstate &state, double &v, c
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocgetrequestdata1(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), &v, &_alglib_env_state);
+    alglib_impl::sparsesolveroocgetrequestdata1(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()), &v,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4671,13 +4931,13 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocsendresult(const sparsesolverstate &state, const real_1d_array &ax, const xparams _xparams)
-{
+void sparsesolveroocsendresult(const sparsesolverstate &state,
+                               const real_1d_array &ax,
+                               const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4686,9 +4946,11 @@ void sparsesolveroocsendresult(const sparsesolverstate &state, const real_1d_arr
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocsendresult(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(ax.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolveroocsendresult(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(ax.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4733,13 +4995,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstop(const sparsesolverstate &state, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams)
-{
+void sparsesolveroocstop(const sparsesolverstate &state, real_1d_array &x,
+                         sparsesolverreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4748,9 +5009,13 @@ void sparsesolveroocstop(const sparsesolverstate &state, real_1d_array &x, spars
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolveroocstop(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::sparsesolverreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolveroocstop(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::sparsesolverreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4781,13 +5046,12 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverrequesttermination(const sparsesolverstate &state, const xparams _xparams)
-{
+void sparsesolverrequesttermination(const sparsesolverstate &state,
+                                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -4796,9 +5060,11 @@ void sparsesolverrequesttermination(const sparsesolverstate &state, const xparam
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::sparsesolverrequesttermination(const_cast<alglib_impl::sparsesolverstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::sparsesolverrequesttermination(
+        const_cast<alglib_impl::sparsesolverstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -4811,16 +5077,13 @@ This object stores state of the linear CG method.
 You should use ALGLIB functions to work with this object.
 Never try to access its fields directly!
 *************************************************************************/
-_lincgstate_owner::_lincgstate_owner()
-{
+_lincgstate_owner::_lincgstate_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_lincgstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -4834,22 +5097,20 @@ _lincgstate_owner::_lincgstate_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::lincgstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::lincgstate), &_state);
+    p_struct = (alglib_impl::lincgstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::lincgstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::lincgstate));
     alglib_impl::_lincgstate_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_lincgstate_owner::_lincgstate_owner(const _lincgstate_owner &rhs)
-{
+_lincgstate_owner::_lincgstate_owner(const _lincgstate_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_lincgstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -4863,23 +5124,26 @@ _lincgstate_owner::_lincgstate_owner(const _lincgstate_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: lincgstate copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::lincgstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::lincgstate), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: lincgstate copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::lincgstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::lincgstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::lincgstate));
-    alglib_impl::_lincgstate_init_copy(p_struct, const_cast<alglib_impl::lincgstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_lincgstate_init_copy(
+        p_struct, const_cast<alglib_impl::lincgstate *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
 }
 
-_lincgstate_owner& _lincgstate_owner::operator=(const _lincgstate_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_lincgstate_owner &_lincgstate_owner::operator=(const _lincgstate_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -4888,67 +5152,57 @@ _lincgstate_owner& _lincgstate_owner::operator=(const _lincgstate_owner &rhs)
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: lincgstate assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: lincgstate assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: lincgstate assignment constructor failure "
+                           "(destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: lincgstate assignment constructor failure "
+                           "(source is not initialized)",
+                           &_state);
     alglib_impl::_lincgstate_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::lincgstate));
-    alglib_impl::_lincgstate_init_copy(p_struct, const_cast<alglib_impl::lincgstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_lincgstate_init_copy(
+        p_struct, const_cast<alglib_impl::lincgstate *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_lincgstate_owner::~_lincgstate_owner()
-{
-    if( p_struct!=NULL )
-    {
+_lincgstate_owner::~_lincgstate_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_lincgstate_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::lincgstate* _lincgstate_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::lincgstate *_lincgstate_owner::c_ptr() { return p_struct; }
 
-alglib_impl::lincgstate* _lincgstate_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::lincgstate*>(p_struct);
+alglib_impl::lincgstate *_lincgstate_owner::c_ptr() const {
+    return const_cast<alglib_impl::lincgstate *>(p_struct);
 }
-lincgstate::lincgstate() : _lincgstate_owner() 
-{
-}
+lincgstate::lincgstate() : _lincgstate_owner() {}
 
-lincgstate::lincgstate(const lincgstate &rhs):_lincgstate_owner(rhs) 
-{
-}
+lincgstate::lincgstate(const lincgstate &rhs) : _lincgstate_owner(rhs) {}
 
-lincgstate& lincgstate::operator=(const lincgstate &rhs)
-{
-    if( this==&rhs )
-        return *this;
+lincgstate &lincgstate::operator=(const lincgstate &rhs) {
+    if (this == &rhs) return *this;
     _lincgstate_owner::operator=(rhs);
     return *this;
 }
 
-lincgstate::~lincgstate()
-{
-}
-
+lincgstate::~lincgstate() {}
 
 /*************************************************************************
 
 *************************************************************************/
-_lincgreport_owner::_lincgreport_owner()
-{
+_lincgreport_owner::_lincgreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_lincgreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -4962,22 +5216,20 @@ _lincgreport_owner::_lincgreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::lincgreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::lincgreport), &_state);
+    p_struct = (alglib_impl::lincgreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::lincgreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::lincgreport));
     alglib_impl::_lincgreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_lincgreport_owner::_lincgreport_owner(const _lincgreport_owner &rhs)
-{
+_lincgreport_owner::_lincgreport_owner(const _lincgreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_lincgreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -4991,23 +5243,27 @@ _lincgreport_owner::_lincgreport_owner(const _lincgreport_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: lincgreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::lincgreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::lincgreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: lincgreport copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::lincgreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::lincgreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::lincgreport));
-    alglib_impl::_lincgreport_init_copy(p_struct, const_cast<alglib_impl::lincgreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_lincgreport_init_copy(
+        p_struct, const_cast<alglib_impl::lincgreport *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
 }
 
-_lincgreport_owner& _lincgreport_owner::operator=(const _lincgreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_lincgreport_owner &_lincgreport_owner::operator=(
+    const _lincgreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -5016,52 +5272,56 @@ _lincgreport_owner& _lincgreport_owner::operator=(const _lincgreport_owner &rhs)
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: lincgreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: lincgreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: lincgreport assignment constructor failure "
+                           "(destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: lincgreport assignment constructor failure "
+                           "(source is not initialized)",
+                           &_state);
     alglib_impl::_lincgreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::lincgreport));
-    alglib_impl::_lincgreport_init_copy(p_struct, const_cast<alglib_impl::lincgreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_lincgreport_init_copy(
+        p_struct, const_cast<alglib_impl::lincgreport *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_lincgreport_owner::~_lincgreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_lincgreport_owner::~_lincgreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_lincgreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::lincgreport* _lincgreport_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::lincgreport *_lincgreport_owner::c_ptr() { return p_struct; }
 
-alglib_impl::lincgreport* _lincgreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::lincgreport*>(p_struct);
+alglib_impl::lincgreport *_lincgreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::lincgreport *>(p_struct);
 }
-lincgreport::lincgreport() : _lincgreport_owner() ,iterationscount(p_struct->iterationscount),nmv(p_struct->nmv),terminationtype(p_struct->terminationtype),r2(p_struct->r2)
-{
-}
+lincgreport::lincgreport()
+    : _lincgreport_owner(),
+      iterationscount(p_struct->iterationscount),
+      nmv(p_struct->nmv),
+      terminationtype(p_struct->terminationtype),
+      r2(p_struct->r2) {}
 
-lincgreport::lincgreport(const lincgreport &rhs):_lincgreport_owner(rhs) ,iterationscount(p_struct->iterationscount),nmv(p_struct->nmv),terminationtype(p_struct->terminationtype),r2(p_struct->r2)
-{
-}
+lincgreport::lincgreport(const lincgreport &rhs)
+    : _lincgreport_owner(rhs),
+      iterationscount(p_struct->iterationscount),
+      nmv(p_struct->nmv),
+      terminationtype(p_struct->terminationtype),
+      r2(p_struct->r2) {}
 
-lincgreport& lincgreport::operator=(const lincgreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+lincgreport &lincgreport::operator=(const lincgreport &rhs) {
+    if (this == &rhs) return *this;
     _lincgreport_owner::operator=(rhs);
     return *this;
 }
 
-lincgreport::~lincgreport()
-{
-}
+lincgreport::~lincgreport() {}
 
 /*************************************************************************
 This function initializes linear CG Solver. This solver is used  to  solve
@@ -5089,13 +5349,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgcreate(const ae_int_t n, lincgstate &state, const xparams _xparams)
-{
+void lincgcreate(const ae_int_t n, lincgstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5104,9 +5362,11 @@ void lincgcreate(const ae_int_t n, lincgstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgcreate(n, const_cast<alglib_impl::lincgstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgcreate(
+        n, const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5124,13 +5384,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetstartingpoint(const lincgstate &state, const real_1d_array &x, const xparams _xparams)
-{
+void lincgsetstartingpoint(const lincgstate &state, const real_1d_array &x,
+                           const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5139,9 +5398,11 @@ void lincgsetstartingpoint(const lincgstate &state, const real_1d_array &x, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetstartingpoint(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgsetstartingpoint(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5158,13 +5419,11 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecunit(const lincgstate &state, const xparams _xparams)
-{
+void lincgsetprecunit(const lincgstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5173,9 +5432,11 @@ void lincgsetprecunit(const lincgstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetprecunit(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgsetprecunit(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5191,13 +5452,11 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecdiag(const lincgstate &state, const xparams _xparams)
-{
+void lincgsetprecdiag(const lincgstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5206,9 +5465,11 @@ void lincgsetprecdiag(const lincgstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetprecdiag(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgsetprecdiag(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5232,13 +5493,12 @@ value.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetcond(const lincgstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams)
-{
+void lincgsetcond(const lincgstate &state, const double epsf,
+                  const ae_int_t maxits, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5247,9 +5507,11 @@ void lincgsetcond(const lincgstate &state, const double epsf, const ae_int_t max
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetcond(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), epsf, maxits, &_alglib_env_state);
+    alglib_impl::lincgsetcond(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()), epsf, maxits,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5281,13 +5543,13 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsolvesparse(const lincgstate &state, const sparsematrix &a, const bool isupper, const real_1d_array &b, const xparams _xparams)
-{
+void lincgsolvesparse(const lincgstate &state, const sparsematrix &a,
+                      const bool isupper, const real_1d_array &b,
+                      const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5296,9 +5558,12 @@ void lincgsolvesparse(const lincgstate &state, const sparsematrix &a, const bool
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsolvesparse(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), isupper, const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgsolvesparse(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()), isupper,
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5329,13 +5594,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgresults(const lincgstate &state, real_1d_array &x, lincgreport &rep, const xparams _xparams)
-{
+void lincgresults(const lincgstate &state, real_1d_array &x, lincgreport &rep,
+                  const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5344,9 +5608,13 @@ void lincgresults(const lincgstate &state, real_1d_array &x, lincgreport &rep, c
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgresults(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::lincgreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::lincgresults(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::lincgreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5358,13 +5626,12 @@ after N subsequent iterations.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrestartfreq(const lincgstate &state, const ae_int_t srf, const xparams _xparams)
-{
+void lincgsetrestartfreq(const lincgstate &state, const ae_int_t srf,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5373,9 +5640,11 @@ void lincgsetrestartfreq(const lincgstate &state, const ae_int_t srf, const xpar
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetrestartfreq(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), srf, &_alglib_env_state);
+    alglib_impl::lincgsetrestartfreq(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()), srf,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5398,13 +5667,12 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrupdatefreq(const lincgstate &state, const ae_int_t freq, const xparams _xparams)
-{
+void lincgsetrupdatefreq(const lincgstate &state, const ae_int_t freq,
+                         const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5413,9 +5681,11 @@ void lincgsetrupdatefreq(const lincgstate &state, const ae_int_t freq, const xpa
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetrupdatefreq(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), freq, &_alglib_env_state);
+    alglib_impl::lincgsetrupdatefreq(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()), freq,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5433,13 +5703,12 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetxrep(const lincgstate &state, const bool needxrep, const xparams _xparams)
-{
+void lincgsetxrep(const lincgstate &state, const bool needxrep,
+                  const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5448,9 +5717,11 @@ void lincgsetxrep(const lincgstate &state, const bool needxrep, const xparams _x
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::lincgsetxrep(const_cast<alglib_impl::lincgstate*>(state.c_ptr()), needxrep, &_alglib_env_state);
+    alglib_impl::lincgsetxrep(
+        const_cast<alglib_impl::lincgstate *>(state.c_ptr()), needxrep,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5462,16 +5733,13 @@ This object stores state of the LinLSQR method.
 
 You should use ALGLIB functions to work with this object.
 *************************************************************************/
-_linlsqrstate_owner::_linlsqrstate_owner()
-{
+_linlsqrstate_owner::_linlsqrstate_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_linlsqrstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -5485,22 +5753,20 @@ _linlsqrstate_owner::_linlsqrstate_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::linlsqrstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::linlsqrstate), &_state);
+    p_struct = (alglib_impl::linlsqrstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::linlsqrstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrstate));
     alglib_impl::_linlsqrstate_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_linlsqrstate_owner::_linlsqrstate_owner(const _linlsqrstate_owner &rhs)
-{
+_linlsqrstate_owner::_linlsqrstate_owner(const _linlsqrstate_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_linlsqrstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -5514,23 +5780,27 @@ _linlsqrstate_owner::_linlsqrstate_owner(const _linlsqrstate_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: linlsqrstate copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::linlsqrstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::linlsqrstate), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: linlsqrstate copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::linlsqrstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::linlsqrstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrstate));
-    alglib_impl::_linlsqrstate_init_copy(p_struct, const_cast<alglib_impl::linlsqrstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_linlsqrstate_init_copy(
+        p_struct, const_cast<alglib_impl::linlsqrstate *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_linlsqrstate_owner& _linlsqrstate_owner::operator=(const _linlsqrstate_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_linlsqrstate_owner &_linlsqrstate_owner::operator=(
+    const _linlsqrstate_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -5539,67 +5809,58 @@ _linlsqrstate_owner& _linlsqrstate_owner::operator=(const _linlsqrstate_owner &r
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: linlsqrstate assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: linlsqrstate assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: linlsqrstate assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: linlsqrstate assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_linlsqrstate_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrstate));
-    alglib_impl::_linlsqrstate_init_copy(p_struct, const_cast<alglib_impl::linlsqrstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_linlsqrstate_init_copy(
+        p_struct, const_cast<alglib_impl::linlsqrstate *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_linlsqrstate_owner::~_linlsqrstate_owner()
-{
-    if( p_struct!=NULL )
-    {
+_linlsqrstate_owner::~_linlsqrstate_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_linlsqrstate_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::linlsqrstate* _linlsqrstate_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::linlsqrstate *_linlsqrstate_owner::c_ptr() { return p_struct; }
 
-alglib_impl::linlsqrstate* _linlsqrstate_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::linlsqrstate*>(p_struct);
+alglib_impl::linlsqrstate *_linlsqrstate_owner::c_ptr() const {
+    return const_cast<alglib_impl::linlsqrstate *>(p_struct);
 }
-linlsqrstate::linlsqrstate() : _linlsqrstate_owner() 
-{
-}
+linlsqrstate::linlsqrstate() : _linlsqrstate_owner() {}
 
-linlsqrstate::linlsqrstate(const linlsqrstate &rhs):_linlsqrstate_owner(rhs) 
-{
-}
+linlsqrstate::linlsqrstate(const linlsqrstate &rhs)
+    : _linlsqrstate_owner(rhs) {}
 
-linlsqrstate& linlsqrstate::operator=(const linlsqrstate &rhs)
-{
-    if( this==&rhs )
-        return *this;
+linlsqrstate &linlsqrstate::operator=(const linlsqrstate &rhs) {
+    if (this == &rhs) return *this;
     _linlsqrstate_owner::operator=(rhs);
     return *this;
 }
 
-linlsqrstate::~linlsqrstate()
-{
-}
-
+linlsqrstate::~linlsqrstate() {}
 
 /*************************************************************************
 
 *************************************************************************/
-_linlsqrreport_owner::_linlsqrreport_owner()
-{
+_linlsqrreport_owner::_linlsqrreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_linlsqrreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -5613,22 +5874,20 @@ _linlsqrreport_owner::_linlsqrreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::linlsqrreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::linlsqrreport), &_state);
+    p_struct = (alglib_impl::linlsqrreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::linlsqrreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrreport));
     alglib_impl::_linlsqrreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_linlsqrreport_owner::_linlsqrreport_owner(const _linlsqrreport_owner &rhs)
-{
+_linlsqrreport_owner::_linlsqrreport_owner(const _linlsqrreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_linlsqrreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -5642,23 +5901,27 @@ _linlsqrreport_owner::_linlsqrreport_owner(const _linlsqrreport_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: linlsqrreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::linlsqrreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::linlsqrreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: linlsqrreport copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::linlsqrreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::linlsqrreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrreport));
-    alglib_impl::_linlsqrreport_init_copy(p_struct, const_cast<alglib_impl::linlsqrreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_linlsqrreport_init_copy(
+        p_struct, const_cast<alglib_impl::linlsqrreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_linlsqrreport_owner& _linlsqrreport_owner::operator=(const _linlsqrreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_linlsqrreport_owner &_linlsqrreport_owner::operator=(
+    const _linlsqrreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -5667,52 +5930,54 @@ _linlsqrreport_owner& _linlsqrreport_owner::operator=(const _linlsqrreport_owner
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: linlsqrreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: linlsqrreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: linlsqrreport assignment constructor "
+                           "failure (destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: linlsqrreport assignment constructor "
+                           "failure (source is not initialized)",
+                           &_state);
     alglib_impl::_linlsqrreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::linlsqrreport));
-    alglib_impl::_linlsqrreport_init_copy(p_struct, const_cast<alglib_impl::linlsqrreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_linlsqrreport_init_copy(
+        p_struct, const_cast<alglib_impl::linlsqrreport *>(rhs.p_struct),
+        &_state, ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_linlsqrreport_owner::~_linlsqrreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_linlsqrreport_owner::~_linlsqrreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_linlsqrreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::linlsqrreport* _linlsqrreport_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::linlsqrreport *_linlsqrreport_owner::c_ptr() { return p_struct; }
 
-alglib_impl::linlsqrreport* _linlsqrreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::linlsqrreport*>(p_struct);
+alglib_impl::linlsqrreport *_linlsqrreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::linlsqrreport *>(p_struct);
 }
-linlsqrreport::linlsqrreport() : _linlsqrreport_owner() ,iterationscount(p_struct->iterationscount),nmv(p_struct->nmv),terminationtype(p_struct->terminationtype)
-{
-}
+linlsqrreport::linlsqrreport()
+    : _linlsqrreport_owner(),
+      iterationscount(p_struct->iterationscount),
+      nmv(p_struct->nmv),
+      terminationtype(p_struct->terminationtype) {}
 
-linlsqrreport::linlsqrreport(const linlsqrreport &rhs):_linlsqrreport_owner(rhs) ,iterationscount(p_struct->iterationscount),nmv(p_struct->nmv),terminationtype(p_struct->terminationtype)
-{
-}
+linlsqrreport::linlsqrreport(const linlsqrreport &rhs)
+    : _linlsqrreport_owner(rhs),
+      iterationscount(p_struct->iterationscount),
+      nmv(p_struct->nmv),
+      terminationtype(p_struct->terminationtype) {}
 
-linlsqrreport& linlsqrreport::operator=(const linlsqrreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+linlsqrreport &linlsqrreport::operator=(const linlsqrreport &rhs) {
+    if (this == &rhs) return *this;
     _linlsqrreport_owner::operator=(rhs);
     return *this;
 }
 
-linlsqrreport::~linlsqrreport()
-{
-}
+linlsqrreport::~linlsqrreport() {}
 
 /*************************************************************************
 This function initializes linear LSQR Solver. This solver is used to solve
@@ -5742,13 +6007,12 @@ NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreate(const ae_int_t m, const ae_int_t n, linlsqrstate &state, const xparams _xparams)
-{
+void linlsqrcreate(const ae_int_t m, const ae_int_t n, linlsqrstate &state,
+                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5757,9 +6021,11 @@ void linlsqrcreate(const ae_int_t m, const ae_int_t n, linlsqrstate &state, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrcreate(m, n, const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrcreate(
+        m, n, const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5779,13 +6045,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2018 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreatebuf(const ae_int_t m, const ae_int_t n, const linlsqrstate &state, const xparams _xparams)
-{
+void linlsqrcreatebuf(const ae_int_t m, const ae_int_t n,
+                      const linlsqrstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5794,9 +6059,11 @@ void linlsqrcreatebuf(const ae_int_t m, const ae_int_t n, const linlsqrstate &st
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrcreatebuf(m, n, const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrcreatebuf(
+        m, n, const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5813,13 +6080,11 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecunit(const linlsqrstate &state, const xparams _xparams)
-{
+void linlsqrsetprecunit(const linlsqrstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5828,9 +6093,11 @@ void linlsqrsetprecunit(const linlsqrstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsetprecunit(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrsetprecunit(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5846,13 +6113,11 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecdiag(const linlsqrstate &state, const xparams _xparams)
-{
+void linlsqrsetprecdiag(const linlsqrstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5861,9 +6126,11 @@ void linlsqrsetprecdiag(const linlsqrstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsetprecdiag(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrsetprecdiag(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5881,13 +6148,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetlambdai(const linlsqrstate &state, const double lambdai, const xparams _xparams)
-{
+void linlsqrsetlambdai(const linlsqrstate &state, const double lambdai,
+                       const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5896,9 +6162,11 @@ void linlsqrsetlambdai(const linlsqrstate &state, const double lambdai, const xp
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsetlambdai(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), lambdai, &_alglib_env_state);
+    alglib_impl::linlsqrsetlambdai(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()), lambdai,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5926,13 +6194,12 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsolvesparse(const linlsqrstate &state, const sparsematrix &a, const real_1d_array &b, const xparams _xparams)
-{
+void linlsqrsolvesparse(const linlsqrstate &state, const sparsematrix &a,
+                        const real_1d_array &b, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5941,9 +6208,12 @@ void linlsqrsolvesparse(const linlsqrstate &state, const sparsematrix &a, const 
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsolvesparse(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), const_cast<alglib_impl::sparsematrix*>(a.c_ptr()), const_cast<alglib_impl::ae_vector*>(b.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrsolvesparse(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        const_cast<alglib_impl::sparsematrix *>(a.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(b.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -5966,13 +6236,13 @@ be setted as default values.
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetcond(const linlsqrstate &state, const double epsa, const double epsb, const ae_int_t maxits, const xparams _xparams)
-{
+void linlsqrsetcond(const linlsqrstate &state, const double epsa,
+                    const double epsb, const ae_int_t maxits,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -5981,9 +6251,11 @@ void linlsqrsetcond(const linlsqrstate &state, const double epsa, const double e
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsetcond(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), epsa, epsb, maxits, &_alglib_env_state);
+    alglib_impl::linlsqrsetcond(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()), epsa, epsb,
+        maxits, &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6014,13 +6286,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrresults(const linlsqrstate &state, real_1d_array &x, linlsqrreport &rep, const xparams _xparams)
-{
+void linlsqrresults(const linlsqrstate &state, real_1d_array &x,
+                    linlsqrreport &rep, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6029,9 +6300,13 @@ void linlsqrresults(const linlsqrstate &state, real_1d_array &x, linlsqrreport &
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrresults(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::linlsqrreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrresults(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::linlsqrreport *>(rep.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6049,13 +6324,12 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetxrep(const linlsqrstate &state, const bool needxrep, const xparams _xparams)
-{
+void linlsqrsetxrep(const linlsqrstate &state, const bool needxrep,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6064,9 +6338,11 @@ void linlsqrsetxrep(const linlsqrstate &state, const bool needxrep, const xparam
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrsetxrep(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), needxrep, &_alglib_env_state);
+    alglib_impl::linlsqrsetxrep(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()), needxrep,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6084,13 +6360,12 @@ RESULT:
   -- ALGLIB --
      Copyright 21.05.2018 by Bochkanov Sergey
 *************************************************************************/
-ae_int_t linlsqrpeekiterationscount(const linlsqrstate &s, const xparams _xparams)
-{
+ae_int_t linlsqrpeekiterationscount(const linlsqrstate &s,
+                                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6099,11 +6374,12 @@ ae_int_t linlsqrpeekiterationscount(const linlsqrstate &s, const xparams _xparam
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::ae_int_t result = alglib_impl::linlsqrpeekiterationscount(const_cast<alglib_impl::linlsqrstate*>(s.c_ptr()), &_alglib_env_state);
+    alglib_impl::ae_int_t result = alglib_impl::linlsqrpeekiterationscount(
+        const_cast<alglib_impl::linlsqrstate *>(s.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
-    return *(reinterpret_cast<ae_int_t*>(&result));
+    return *(reinterpret_cast<ae_int_t *>(&result));
 }
 
 /*************************************************************************
@@ -6133,13 +6409,12 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 08.10.2014 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrrequesttermination(const linlsqrstate &state, const xparams _xparams)
-{
+void linlsqrrequesttermination(const linlsqrstate &state,
+                               const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6148,9 +6423,11 @@ void linlsqrrequesttermination(const linlsqrstate &state, const xparams _xparams
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::linlsqrrequesttermination(const_cast<alglib_impl::linlsqrstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::linlsqrrequesttermination(
+        const_cast<alglib_impl::linlsqrstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6160,16 +6437,13 @@ void linlsqrrequesttermination(const linlsqrstate &state, const xparams _xparams
 /*************************************************************************
 
 *************************************************************************/
-_nleqstate_owner::_nleqstate_owner()
-{
+_nleqstate_owner::_nleqstate_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_nleqstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -6183,22 +6457,20 @@ _nleqstate_owner::_nleqstate_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::nleqstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::nleqstate), &_state);
+    p_struct = (alglib_impl::nleqstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::nleqstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::nleqstate));
     alglib_impl::_nleqstate_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_nleqstate_owner::_nleqstate_owner(const _nleqstate_owner &rhs)
-{
+_nleqstate_owner::_nleqstate_owner(const _nleqstate_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_nleqstate_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -6212,23 +6484,26 @@ _nleqstate_owner::_nleqstate_owner(const _nleqstate_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: nleqstate copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::nleqstate*)alglib_impl::ae_malloc(sizeof(alglib_impl::nleqstate), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: nleqstate copy constructor failure (source "
+                           "is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::nleqstate *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::nleqstate), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::nleqstate));
-    alglib_impl::_nleqstate_init_copy(p_struct, const_cast<alglib_impl::nleqstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_nleqstate_init_copy(
+        p_struct, const_cast<alglib_impl::nleqstate *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
 }
 
-_nleqstate_owner& _nleqstate_owner::operator=(const _nleqstate_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_nleqstate_owner &_nleqstate_owner::operator=(const _nleqstate_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -6237,67 +6512,73 @@ _nleqstate_owner& _nleqstate_owner::operator=(const _nleqstate_owner &rhs)
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: nleqstate assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: nleqstate assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: nleqstate assignment constructor failure "
+                           "(destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: nleqstate assignment constructor failure "
+                           "(source is not initialized)",
+                           &_state);
     alglib_impl::_nleqstate_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::nleqstate));
-    alglib_impl::_nleqstate_init_copy(p_struct, const_cast<alglib_impl::nleqstate*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_nleqstate_init_copy(
+        p_struct, const_cast<alglib_impl::nleqstate *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_nleqstate_owner::~_nleqstate_owner()
-{
-    if( p_struct!=NULL )
-    {
+_nleqstate_owner::~_nleqstate_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_nleqstate_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::nleqstate* _nleqstate_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::nleqstate *_nleqstate_owner::c_ptr() { return p_struct; }
 
-alglib_impl::nleqstate* _nleqstate_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::nleqstate*>(p_struct);
+alglib_impl::nleqstate *_nleqstate_owner::c_ptr() const {
+    return const_cast<alglib_impl::nleqstate *>(p_struct);
 }
-nleqstate::nleqstate() : _nleqstate_owner() ,needf(p_struct->needf),needfij(p_struct->needfij),xupdated(p_struct->xupdated),f(p_struct->f),fi(&p_struct->fi),j(&p_struct->j),x(&p_struct->x)
-{
-}
+nleqstate::nleqstate()
+    : _nleqstate_owner(),
+      needf(p_struct->needf),
+      needfij(p_struct->needfij),
+      xupdated(p_struct->xupdated),
+      f(p_struct->f),
+      fi(&p_struct->fi),
+      j(&p_struct->j),
+      x(&p_struct->x) {}
 
-nleqstate::nleqstate(const nleqstate &rhs):_nleqstate_owner(rhs) ,needf(p_struct->needf),needfij(p_struct->needfij),xupdated(p_struct->xupdated),f(p_struct->f),fi(&p_struct->fi),j(&p_struct->j),x(&p_struct->x)
-{
-}
+nleqstate::nleqstate(const nleqstate &rhs)
+    : _nleqstate_owner(rhs),
+      needf(p_struct->needf),
+      needfij(p_struct->needfij),
+      xupdated(p_struct->xupdated),
+      f(p_struct->f),
+      fi(&p_struct->fi),
+      j(&p_struct->j),
+      x(&p_struct->x) {}
 
-nleqstate& nleqstate::operator=(const nleqstate &rhs)
-{
-    if( this==&rhs )
-        return *this;
+nleqstate &nleqstate::operator=(const nleqstate &rhs) {
+    if (this == &rhs) return *this;
     _nleqstate_owner::operator=(rhs);
     return *this;
 }
 
-nleqstate::~nleqstate()
-{
-}
-
+nleqstate::~nleqstate() {}
 
 /*************************************************************************
 
 *************************************************************************/
-_nleqreport_owner::_nleqreport_owner()
-{
+_nleqreport_owner::_nleqreport_owner() {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_nleqreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -6311,22 +6592,20 @@ _nleqreport_owner::_nleqreport_owner()
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    p_struct = (alglib_impl::nleqreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::nleqreport), &_state);
+    p_struct = (alglib_impl::nleqreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::nleqreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::nleqreport));
     alglib_impl::_nleqreport_init(p_struct, &_state, ae_false);
     ae_state_clear(&_state);
 }
 
-_nleqreport_owner::_nleqreport_owner(const _nleqreport_owner &rhs)
-{
+_nleqreport_owner::_nleqreport_owner(const _nleqreport_owner &rhs) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
-        if( p_struct!=NULL )
-        {
+    if (setjmp(_break_jump)) {
+        if (p_struct != NULL) {
             alglib_impl::_nleqreport_destroy(p_struct);
             alglib_impl::ae_free(p_struct);
         }
@@ -6340,23 +6619,26 @@ _nleqreport_owner::_nleqreport_owner(const _nleqreport_owner &rhs)
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
     p_struct = NULL;
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: nleqreport copy constructor failure (source is not initialized)", &_state);
-    p_struct = (alglib_impl::nleqreport*)alglib_impl::ae_malloc(sizeof(alglib_impl::nleqreport), &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: nleqreport copy constructor failure "
+                           "(source is not initialized)",
+                           &_state);
+    p_struct = (alglib_impl::nleqreport *)alglib_impl::ae_malloc(
+        sizeof(alglib_impl::nleqreport), &_state);
     memset(p_struct, 0, sizeof(alglib_impl::nleqreport));
-    alglib_impl::_nleqreport_init_copy(p_struct, const_cast<alglib_impl::nleqreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_nleqreport_init_copy(
+        p_struct, const_cast<alglib_impl::nleqreport *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
 }
 
-_nleqreport_owner& _nleqreport_owner::operator=(const _nleqreport_owner &rhs)
-{
-    if( this==&rhs )
-        return *this;
+_nleqreport_owner &_nleqreport_owner::operator=(const _nleqreport_owner &rhs) {
+    if (this == &rhs) return *this;
     jmp_buf _break_jump;
     alglib_impl::ae_state _state;
-    
+
     alglib_impl::ae_state_init(&_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_state.error_msg);
 #else
@@ -6365,52 +6647,56 @@ _nleqreport_owner& _nleqreport_owner::operator=(const _nleqreport_owner &rhs)
 #endif
     }
     alglib_impl::ae_state_set_break_jump(&_state, &_break_jump);
-    alglib_impl::ae_assert(p_struct!=NULL, "ALGLIB: nleqreport assignment constructor failure (destination is not initialized)", &_state);
-    alglib_impl::ae_assert(rhs.p_struct!=NULL, "ALGLIB: nleqreport assignment constructor failure (source is not initialized)", &_state);
+    alglib_impl::ae_assert(p_struct != NULL,
+                           "ALGLIB: nleqreport assignment constructor failure "
+                           "(destination is not initialized)",
+                           &_state);
+    alglib_impl::ae_assert(rhs.p_struct != NULL,
+                           "ALGLIB: nleqreport assignment constructor failure "
+                           "(source is not initialized)",
+                           &_state);
     alglib_impl::_nleqreport_destroy(p_struct);
     memset(p_struct, 0, sizeof(alglib_impl::nleqreport));
-    alglib_impl::_nleqreport_init_copy(p_struct, const_cast<alglib_impl::nleqreport*>(rhs.p_struct), &_state, ae_false);
+    alglib_impl::_nleqreport_init_copy(
+        p_struct, const_cast<alglib_impl::nleqreport *>(rhs.p_struct), &_state,
+        ae_false);
     ae_state_clear(&_state);
     return *this;
 }
 
-_nleqreport_owner::~_nleqreport_owner()
-{
-    if( p_struct!=NULL )
-    {
+_nleqreport_owner::~_nleqreport_owner() {
+    if (p_struct != NULL) {
         alglib_impl::_nleqreport_destroy(p_struct);
         ae_free(p_struct);
     }
 }
 
-alglib_impl::nleqreport* _nleqreport_owner::c_ptr()
-{
-    return p_struct;
-}
+alglib_impl::nleqreport *_nleqreport_owner::c_ptr() { return p_struct; }
 
-alglib_impl::nleqreport* _nleqreport_owner::c_ptr() const
-{
-    return const_cast<alglib_impl::nleqreport*>(p_struct);
+alglib_impl::nleqreport *_nleqreport_owner::c_ptr() const {
+    return const_cast<alglib_impl::nleqreport *>(p_struct);
 }
-nleqreport::nleqreport() : _nleqreport_owner() ,iterationscount(p_struct->iterationscount),nfunc(p_struct->nfunc),njac(p_struct->njac),terminationtype(p_struct->terminationtype)
-{
-}
+nleqreport::nleqreport()
+    : _nleqreport_owner(),
+      iterationscount(p_struct->iterationscount),
+      nfunc(p_struct->nfunc),
+      njac(p_struct->njac),
+      terminationtype(p_struct->terminationtype) {}
 
-nleqreport::nleqreport(const nleqreport &rhs):_nleqreport_owner(rhs) ,iterationscount(p_struct->iterationscount),nfunc(p_struct->nfunc),njac(p_struct->njac),terminationtype(p_struct->terminationtype)
-{
-}
+nleqreport::nleqreport(const nleqreport &rhs)
+    : _nleqreport_owner(rhs),
+      iterationscount(p_struct->iterationscount),
+      nfunc(p_struct->nfunc),
+      njac(p_struct->njac),
+      terminationtype(p_struct->terminationtype) {}
 
-nleqreport& nleqreport::operator=(const nleqreport &rhs)
-{
-    if( this==&rhs )
-        return *this;
+nleqreport &nleqreport::operator=(const nleqreport &rhs) {
+    if (this == &rhs) return *this;
     _nleqreport_owner::operator=(rhs);
     return *this;
 }
 
-nleqreport::~nleqreport()
-{
-}
+nleqreport::~nleqreport() {}
 
 /*************************************************************************
                 LEVENBERG-MARQUARDT-LIKE NONLINEAR SOLVER
@@ -6482,13 +6768,12 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqcreatelm(const ae_int_t n, const ae_int_t m, const real_1d_array &x, nleqstate &state, const xparams _xparams)
-{
+void nleqcreatelm(const ae_int_t n, const ae_int_t m, const real_1d_array &x,
+                  nleqstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6497,9 +6782,12 @@ void nleqcreatelm(const ae_int_t n, const ae_int_t m, const real_1d_array &x, nl
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqcreatelm(n, m, const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::nleqstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::nleqcreatelm(
+        n, m, const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6575,20 +6863,22 @@ NOTES:
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
 #if !defined(AE_NO_EXCEPTIONS)
-void nleqcreatelm(const ae_int_t m, const real_1d_array &x, nleqstate &state, const xparams _xparams)
-{
+void nleqcreatelm(const ae_int_t m, const real_1d_array &x, nleqstate &state,
+                  const xparams _xparams) {
     jmp_buf _break_jump;
-    alglib_impl::ae_state _alglib_env_state;    
+    alglib_impl::ae_state _alglib_env_state;
     ae_int_t n;
 
     n = x.length();
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-        _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
+    if (setjmp(_break_jump)) _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqcreatelm(n, m, const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::nleqstate*>(state.c_ptr()), &_alglib_env_state);
+    alglib_impl::nleqcreatelm(
+        n, m, const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        &_alglib_env_state);
 
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
@@ -6614,13 +6904,12 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetcond(const nleqstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams)
-{
+void nleqsetcond(const nleqstate &state, const double epsf,
+                 const ae_int_t maxits, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6629,9 +6918,11 @@ void nleqsetcond(const nleqstate &state, const double epsf, const ae_int_t maxit
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqsetcond(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), epsf, maxits, &_alglib_env_state);
+    alglib_impl::nleqsetcond(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()), epsf, maxits,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6649,13 +6940,12 @@ provided to NLEQSolve().
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetxrep(const nleqstate &state, const bool needxrep, const xparams _xparams)
-{
+void nleqsetxrep(const nleqstate &state, const bool needxrep,
+                 const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6664,9 +6954,11 @@ void nleqsetxrep(const nleqstate &state, const bool needxrep, const xparams _xpa
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqsetxrep(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), needxrep, &_alglib_env_state);
+    alglib_impl::nleqsetxrep(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()), needxrep,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6688,13 +6980,12 @@ function value at the x+stp*d.
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetstpmax(const nleqstate &state, const double stpmax, const xparams _xparams)
-{
+void nleqsetstpmax(const nleqstate &state, const double stpmax,
+                   const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6703,9 +6994,11 @@ void nleqsetstpmax(const nleqstate &state, const double stpmax, const xparams _x
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqsetstpmax(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), stpmax, &_alglib_env_state);
+    alglib_impl::nleqsetstpmax(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()), stpmax,
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6715,13 +7008,11 @@ This function provides reverse communication interface
 Reverse communication interface is not documented or recommended to use.
 See below for functions which provide better documented API
 *************************************************************************/
-bool nleqiteration(const nleqstate &state, const xparams _xparams)
-{
+bool nleqiteration(const nleqstate &state, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6730,26 +7021,25 @@ bool nleqiteration(const nleqstate &state, const xparams _xparams)
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    ae_bool result = alglib_impl::nleqiteration(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), &_alglib_env_state);
+    ae_bool result = alglib_impl::nleqiteration(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
-    return *(reinterpret_cast<bool*>(&result));
+    return *(reinterpret_cast<bool *>(&result));
 }
 
-
 void nleqsolve(nleqstate &state,
-    void (*func)(const real_1d_array &x, double &func, void *ptr),
-    void  (*jac)(const real_1d_array &x, real_1d_array &fi, real_2d_array &jac, void *ptr),
-    void  (*rep)(const real_1d_array &x, double func, void *ptr), 
-    void *ptr,
-    const xparams _xparams)
-{
+               void (*func)(const real_1d_array &x, double &func, void *ptr),
+               void (*jac)(const real_1d_array &x, real_1d_array &fi,
+                           real_2d_array &jac, void *ptr),
+               void (*rep)(const real_1d_array &x, double func, void *ptr),
+               void *ptr, const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6758,38 +7048,38 @@ void nleqsolve(nleqstate &state,
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::ae_assert(func!=NULL, "ALGLIB: error in 'nleqsolve()' (func is NULL)", &_alglib_env_state);
-    alglib_impl::ae_assert(jac!=NULL,  "ALGLIB: error in 'nleqsolve()' (jac is NULL)", &_alglib_env_state);
-    while( alglib_impl::nleqiteration(state.c_ptr(), &_alglib_env_state) )
-    {
+    alglib_impl::ae_assert(func != NULL,
+                           "ALGLIB: error in 'nleqsolve()' (func is NULL)",
+                           &_alglib_env_state);
+    alglib_impl::ae_assert(jac != NULL,
+                           "ALGLIB: error in 'nleqsolve()' (jac is NULL)",
+                           &_alglib_env_state);
+    while (alglib_impl::nleqiteration(state.c_ptr(), &_alglib_env_state)) {
         _ALGLIB_CALLBACK_EXCEPTION_GUARD_BEGIN
-                if( state.needf )
-                {
-                    func(state.x, state.f, ptr);
-                    continue;
-                }
-                if( state.needfij )
-                {
-                    jac(state.x, state.fi, state.j, ptr);
-                    continue;
-                }
-        if( state.xupdated )
-        {
-            if( rep!=NULL )
-                rep(state.x, state.f, ptr);
+        if (state.needf) {
+            func(state.x, state.f, ptr);
+            continue;
+        }
+        if (state.needfij) {
+            jac(state.x, state.fi, state.j, ptr);
+            continue;
+        }
+        if (state.xupdated) {
+            if (rep != NULL) rep(state.x, state.f, ptr);
             continue;
         }
         goto lbl_no_callback;
         _ALGLIB_CALLBACK_EXCEPTION_GUARD_END
     lbl_no_callback:
-        alglib_impl::ae_assert(ae_false, "ALGLIB: error in 'nleqsolve' (some derivatives were not provided?)", &_alglib_env_state);
+        alglib_impl::ae_assert(ae_false,
+                               "ALGLIB: error in 'nleqsolve' (some derivatives "
+                               "were not provided?)",
+                               &_alglib_env_state);
     }
     alglib_impl::ae_state_clear(&_alglib_env_state);
 }
-
-
 
 /*************************************************************************
 NLEQ solver results
@@ -6816,13 +7106,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresults(const nleqstate &state, real_1d_array &x, nleqreport &rep, const xparams _xparams)
-{
+void nleqresults(const nleqstate &state, real_1d_array &x, nleqreport &rep,
+                 const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6831,9 +7120,12 @@ void nleqresults(const nleqstate &state, real_1d_array &x, nleqreport &rep, cons
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqresults(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::nleqreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::nleqresults(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::nleqreport *>(rep.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6849,13 +7141,12 @@ where array reallocation penalty is too large to be ignored.
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresultsbuf(const nleqstate &state, real_1d_array &x, nleqreport &rep, const xparams _xparams)
-{
+void nleqresultsbuf(const nleqstate &state, real_1d_array &x, nleqreport &rep,
+                    const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6864,9 +7155,12 @@ void nleqresultsbuf(const nleqstate &state, real_1d_array &x, nleqreport &rep, c
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqresultsbuf(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), const_cast<alglib_impl::nleqreport*>(rep.c_ptr()), &_alglib_env_state);
+    alglib_impl::nleqresultsbuf(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()),
+        const_cast<alglib_impl::nleqreport *>(rep.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
@@ -6888,13 +7182,12 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.07.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqrestartfrom(const nleqstate &state, const real_1d_array &x, const xparams _xparams)
-{
+void nleqrestartfrom(const nleqstate &state, const real_1d_array &x,
+                     const xparams _xparams) {
     jmp_buf _break_jump;
     alglib_impl::ae_state _alglib_env_state;
     alglib_impl::ae_state_init(&_alglib_env_state);
-    if( setjmp(_break_jump) )
-    {
+    if (setjmp(_break_jump)) {
 #if !defined(AE_NO_EXCEPTIONS)
         _ALGLIB_CPP_EXCEPTION(_alglib_env_state.error_msg);
 #else
@@ -6903,145 +7196,110 @@ void nleqrestartfrom(const nleqstate &state, const real_1d_array &x, const xpara
 #endif
     }
     ae_state_set_break_jump(&_alglib_env_state, &_break_jump);
-    if( _xparams.flags!=0x0 )
+    if (_xparams.flags != 0x0)
         ae_state_set_flags(&_alglib_env_state, _xparams.flags);
-    alglib_impl::nleqrestartfrom(const_cast<alglib_impl::nleqstate*>(state.c_ptr()), const_cast<alglib_impl::ae_vector*>(x.c_ptr()), &_alglib_env_state);
+    alglib_impl::nleqrestartfrom(
+        const_cast<alglib_impl::nleqstate *>(state.c_ptr()),
+        const_cast<alglib_impl::ae_vector *>(x.c_ptr()), &_alglib_env_state);
     alglib_impl::ae_state_clear(&_alglib_env_state);
     return;
 }
 #endif
-}
+}  // namespace alglib
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS IMPLEMENTATION OF COMPUTATIONAL CORE
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
-
 
 #endif
 #if defined(AE_COMPILE_DIRECTDENSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* a,
-     ae_bool havea,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-static void directdensesolvers_spdmatrixcholeskysolveinternal(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* a,
-     ae_bool havea,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* a,
-     ae_bool havea,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-static void directdensesolvers_hpdmatrixcholeskysolveinternal(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* a,
-     ae_bool havea,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-static ae_int_t directdensesolvers_densesolverrfsmax(ae_int_t n,
-     double r1,
-     double rinf,
-     ae_state *_state);
-static ae_int_t directdensesolvers_densesolverrfsmaxv2(ae_int_t n,
-     double r2,
-     ae_state *_state);
-static void directdensesolvers_rbasiclusolve(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* xb,
-     ae_state *_state);
-static void directdensesolvers_spdbasiccholeskysolve(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* xb,
-     ae_state *_state);
-static void directdensesolvers_cbasiclusolve(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* xb,
-     ae_state *_state);
-static void directdensesolvers_hpdbasiccholeskysolve(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* xb,
-     ae_state *_state);
-
+static void directdensesolvers_rmatrixlusolveinternal(
+    /* Real    */ ae_matrix *lua,
+    /* Integer */ ae_vector *p, ae_int_t n,
+    /* Real    */ ae_matrix *a, ae_bool havea,
+    /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Real    */ ae_matrix *x, ae_state *_state);
+static void directdensesolvers_spdmatrixcholeskysolveinternal(
+    /* Real    */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Real    */ ae_matrix *a, ae_bool havea,
+    /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Real    */ ae_matrix *x, ae_state *_state);
+static void directdensesolvers_cmatrixlusolveinternal(
+    /* Complex */ ae_matrix *lua,
+    /* Integer */ ae_vector *p, ae_int_t n,
+    /* Complex */ ae_matrix *a, ae_bool havea,
+    /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Complex */ ae_matrix *x, ae_state *_state);
+static void directdensesolvers_hpdmatrixcholeskysolveinternal(
+    /* Complex */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Complex */ ae_matrix *a, ae_bool havea,
+    /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Complex */ ae_matrix *x, ae_state *_state);
+static ae_int_t directdensesolvers_densesolverrfsmax(ae_int_t n, double r1,
+                                                     double rinf,
+                                                     ae_state *_state);
+static ae_int_t directdensesolvers_densesolverrfsmaxv2(ae_int_t n, double r2,
+                                                       ae_state *_state);
+static void directdensesolvers_rbasiclusolve(/* Real    */ ae_matrix *lua,
+                                             /* Integer */ ae_vector *p,
+                                             ae_int_t n,
+                                             /* Real    */ ae_vector *xb,
+                                             ae_state *_state);
+static void directdensesolvers_spdbasiccholeskysolve(
+    /* Real    */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Real    */ ae_vector *xb, ae_state *_state);
+static void directdensesolvers_cbasiclusolve(/* Complex */ ae_matrix *lua,
+                                             /* Integer */ ae_vector *p,
+                                             ae_int_t n,
+                                             /* Complex */ ae_vector *xb,
+                                             ae_state *_state);
+static void directdensesolvers_hpdbasiccholeskysolve(
+    /* Complex */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Complex */ ae_vector *xb, ae_state *_state);
 
 #endif
 #if defined(AE_COMPILE_DIRECTSPARSESOLVERS) || !defined(AE_PARTIAL_BUILD)
 
-
 #endif
 #if defined(AE_COMPILE_ITERATIVESPARSE) || !defined(AE_PARTIAL_BUILD)
-static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate* state,
-     ae_state *_state);
-static void iterativesparse_clearrequestfields(sparsesolverstate* state,
-     ae_state *_state);
-static void iterativesparse_clearreportfields(sparsesolverstate* state,
-     ae_state *_state);
-
+static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate *state,
+                                                     ae_state *_state);
+static void iterativesparse_clearrequestfields(sparsesolverstate *state,
+                                               ae_state *_state);
+static void iterativesparse_clearreportfields(sparsesolverstate *state,
+                                              ae_state *_state);
 
 #endif
 #if defined(AE_COMPILE_LINCG) || !defined(AE_PARTIAL_BUILD)
 static double lincg_defaultprecision = 1.0E-6;
-static void lincg_clearrfields(lincgstate* state, ae_state *_state);
-static void lincg_updateitersdata(lincgstate* state, ae_state *_state);
-
+static void lincg_clearrfields(lincgstate *state, ae_state *_state);
+static void lincg_updateitersdata(lincgstate *state, ae_state *_state);
 
 #endif
 #if defined(AE_COMPILE_LINLSQR) || !defined(AE_PARTIAL_BUILD)
 static double linlsqr_atol = 1.0E-6;
 static double linlsqr_btol = 1.0E-6;
-static void linlsqr_clearrfields(linlsqrstate* state, ae_state *_state);
-
+static void linlsqr_clearrfields(linlsqrstate *state, ae_state *_state);
 
 #endif
 #if defined(AE_COMPILE_NLEQ) || !defined(AE_PARTIAL_BUILD)
-static void nleq_clearrequestfields(nleqstate* state, ae_state *_state);
-static ae_bool nleq_increaselambda(double* lambdav,
-     double* nu,
-     double lambdaup,
-     ae_state *_state);
-static void nleq_decreaselambda(double* lambdav,
-     double* nu,
-     double lambdadown,
-     ae_state *_state);
-
+static void nleq_clearrequestfields(nleqstate *state, ae_state *_state);
+static ae_bool nleq_increaselambda(double *lambdav, double *nu, double lambdaup,
+                                   ae_state *_state);
+static void nleq_decreaselambda(double *lambdav, double *nu, double lambdadown,
+                                ae_state *_state);
 
 #endif
 
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 Polynomial root finding.
@@ -7083,12 +7341,9 @@ NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
   -- ALGLIB --
      Copyright 24.02.2014 by Bochkanov Sergey
 *************************************************************************/
-void polynomialsolve(/* Real    */ ae_vector* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* x,
-     polynomialsolverreport* rep,
-     ae_state *_state)
-{
+void polynomialsolve(/* Real    */ ae_vector *a, ae_int_t n,
+                     /* Complex */ ae_vector *x, polynomialsolverreport *rep,
+                     ae_state *_state) {
     ae_frame _frame_block;
     ae_vector _a;
     ae_matrix c;
@@ -7121,16 +7376,18 @@ void polynomialsolve(/* Real    */ ae_vector* a,
     ae_vector_init(&wr, 0, DT_REAL, _state, ae_true);
     ae_vector_init(&wi, 0, DT_REAL, _state, ae_true);
 
-    ae_assert(n>0, "PolynomialSolve: N<=0", _state);
-    ae_assert(a->cnt>=n+1, "PolynomialSolve: Length(A)<N+1", _state);
-    ae_assert(isfinitevector(a, n+1, _state), "PolynomialSolve: A contains infitite numbers", _state);
-    ae_assert(ae_fp_neq(a->ptr.p_double[n],(double)(0)), "PolynomialSolve: A[N]=0", _state);
-    
+    ae_assert(n > 0, "PolynomialSolve: N<=0", _state);
+    ae_assert(a->cnt >= n + 1, "PolynomialSolve: Length(A)<N+1", _state);
+    ae_assert(isfinitevector(a, n + 1, _state),
+              "PolynomialSolve: A contains infitite numbers", _state);
+    ae_assert(ae_fp_neq(a->ptr.p_double[n], (double)(0)),
+              "PolynomialSolve: A[N]=0", _state);
+
     /*
      * Prepare
      */
     ae_vector_set_length(x, n, _state);
-    
+
     /*
      * Normalize A:
      * * analytically determine NZ zero roots
@@ -7139,103 +7396,86 @@ void polynomialsolve(/* Real    */ ae_vector* a,
      *   (here NE=N-NZ)
      */
     nz = 0;
-    while(nz<n&&ae_fp_eq(a->ptr.p_double[nz],(double)(0)))
-    {
-        nz = nz+1;
+    while (nz < n && ae_fp_eq(a->ptr.p_double[nz], (double)(0))) {
+        nz = nz + 1;
     }
-    ne = n-nz;
-    for(i=nz; i<=n; i++)
-    {
-        a->ptr.p_double[i-nz] = a->ptr.p_double[i]/a->ptr.p_double[n];
+    ne = n - nz;
+    for (i = nz; i <= n; i++) {
+        a->ptr.p_double[i - nz] = a->ptr.p_double[i] / a->ptr.p_double[n];
     }
-    
+
     /*
      * For NZ<N, build companion matrix and find NE non-zero roots
      */
-    if( ne>0 )
-    {
+    if (ne > 0) {
         ae_matrix_set_length(&c, ne, ne, _state);
-        for(i=0; i<=ne-1; i++)
-        {
-            for(j=0; j<=ne-1; j++)
-            {
+        for (i = 0; i <= ne - 1; i++) {
+            for (j = 0; j <= ne - 1; j++) {
                 c.ptr.pp_double[i][j] = (double)(0);
             }
         }
-        c.ptr.pp_double[0][ne-1] = -a->ptr.p_double[0];
-        for(i=1; i<=ne-1; i++)
-        {
-            c.ptr.pp_double[i][i-1] = (double)(1);
-            c.ptr.pp_double[i][ne-1] = -a->ptr.p_double[i];
+        c.ptr.pp_double[0][ne - 1] = -a->ptr.p_double[0];
+        for (i = 1; i <= ne - 1; i++) {
+            c.ptr.pp_double[i][i - 1] = (double)(1);
+            c.ptr.pp_double[i][ne - 1] = -a->ptr.p_double[i];
         }
         status = rmatrixevd(&c, ne, 0, &wr, &wi, &vl, &vr, _state);
-        ae_assert(status, "PolynomialSolve: inernal error - EVD solver failed", _state);
-        for(i=0; i<=ne-1; i++)
-        {
+        ae_assert(status, "PolynomialSolve: inernal error - EVD solver failed",
+                  _state);
+        for (i = 0; i <= ne - 1; i++) {
             x->ptr.p_complex[i].x = wr.ptr.p_double[i];
             x->ptr.p_complex[i].y = wi.ptr.p_double[i];
         }
     }
-    
+
     /*
      * Remaining NZ zero roots
      */
-    for(i=ne; i<=n-1; i++)
-    {
+    for (i = ne; i <= n - 1; i++) {
         x->ptr.p_complex[i] = ae_complex_from_i(0);
     }
-    
+
     /*
      * Rep
      */
     rep->maxerr = (double)(0);
-    for(i=0; i<=ne-1; i++)
-    {
+    for (i = 0; i <= ne - 1; i++) {
         v = ae_complex_from_i(0);
         vv = ae_complex_from_i(1);
-        for(j=0; j<=ne; j++)
-        {
-            v = ae_c_add(v,ae_c_mul_d(vv,a->ptr.p_double[j]));
-            vv = ae_c_mul(vv,x->ptr.p_complex[i]);
+        for (j = 0; j <= ne; j++) {
+            v = ae_c_add(v, ae_c_mul_d(vv, a->ptr.p_double[j]));
+            vv = ae_c_mul(vv, x->ptr.p_complex[i]);
         }
         rep->maxerr = ae_maxreal(rep->maxerr, ae_c_abs(v, _state), _state);
     }
     ae_frame_leave(_state);
 }
 
-
-void _polynomialsolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    polynomialsolverreport *p = (polynomialsolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _polynomialsolverreport_init(void *_p, ae_state *_state,
+                                  ae_bool make_automatic) {
+    polynomialsolverreport *p = (polynomialsolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _polynomialsolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    polynomialsolverreport *dst = (polynomialsolverreport*)_dst;
-    polynomialsolverreport *src = (polynomialsolverreport*)_src;
+void _polynomialsolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                       ae_bool make_automatic) {
+    polynomialsolverreport *dst = (polynomialsolverreport *)_dst;
+    polynomialsolverreport *src = (polynomialsolverreport *)_src;
     dst->maxerr = src->maxerr;
 }
 
-
-void _polynomialsolverreport_clear(void* _p)
-{
-    polynomialsolverreport *p = (polynomialsolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _polynomialsolverreport_clear(void *_p) {
+    polynomialsolverreport *p = (polynomialsolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _polynomialsolverreport_destroy(void* _p)
-{
-    polynomialsolverreport *p = (polynomialsolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _polynomialsolverreport_destroy(void *_p) {
+    polynomialsolverreport *p = (polynomialsolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
-
 
 #endif
 #if defined(AE_COMPILE_DIRECTDENSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 Dense solver for A*x=b with N*N real matrix A and N*1 real vectorx  x  and
@@ -7283,7 +7523,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -7294,14 +7534,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -7309,14 +7549,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolve(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void rmatrixsolve(/* Real    */ ae_matrix *a, ae_int_t n,
+                  /* Real    */ ae_vector *b, ae_int_t *info,
+                  densesolverreport *rep,
+                  /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -7330,20 +7566,20 @@ void rmatrixsolve(/* Real    */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_REAL, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_REAL, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     rmatrixsolvem(a, n, &bm, 1, ae_true, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride, ae_v_len(0,n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride,
+              ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7370,13 +7606,13 @@ OUTPUT PARAMETERS
                 * -3    matrix is exactly singular (ill conditioned matrices
                         are not recognized).
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -7387,14 +7623,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -7402,12 +7638,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvefast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void rmatrixsolvefast(/* Real    */ ae_matrix *a, ae_int_t n,
+                      /* Real    */ ae_vector *b, ae_int_t *info,
+                      ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -7422,19 +7655,15 @@ void rmatrixsolvefast(/* Real    */ ae_matrix* a,
     *info = 0;
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     rmatrixlu(a, n, n, &p, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_eq(a->ptr.pp_double[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_eq(a->ptr.pp_double[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
                 b->ptr.p_double[j] = 0.0;
             }
             *info = -3;
@@ -7446,7 +7675,6 @@ void rmatrixsolvefast(/* Real    */ ae_matrix* a,
     *info = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7504,7 +7732,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -7515,14 +7743,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -7530,16 +7758,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvem(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_bool rfs,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+void rmatrixsolvem(/* Real    */ ae_matrix *a, ae_int_t n,
+                   /* Real    */ ae_matrix *b, ae_int_t m, ae_bool rfs,
+                   ae_int_t *info, densesolverreport *rep,
+                   /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix da;
     ae_matrix emptya;
@@ -7557,38 +7779,34 @@ void rmatrixsolvem(/* Real    */ ae_matrix* a,
     ae_matrix_init(&emptya, 0, 0, DT_REAL, _state, ae_true);
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&da, n, n, _state);
-    
+
     /*
      * 1. factorize matrix
      * 3. solve
      */
-    for(i=0; i<=n-1; i++)
-    {
-        ae_v_move(&da.ptr.pp_double[i][0], 1, &a->ptr.pp_double[i][0], 1, ae_v_len(0,n-1));
+    for (i = 0; i <= n - 1; i++) {
+        ae_v_move(&da.ptr.pp_double[i][0], 1, &a->ptr.pp_double[i][0], 1,
+                  ae_v_len(0, n - 1));
     }
     rmatrixlu(&da, n, n, &p, _state);
-    if( rfs )
-    {
-        directdensesolvers_rmatrixlusolveinternal(&da, &p, n, a, ae_true, b, m, info, rep, x, _state);
-    }
-    else
-    {
-        directdensesolvers_rmatrixlusolveinternal(&da, &p, n, &emptya, ae_false, b, m, info, rep, x, _state);
+    if (rfs) {
+        directdensesolvers_rmatrixlusolveinternal(&da, &p, n, a, ae_true, b, m,
+                                                  info, rep, x, _state);
+    } else {
+        directdensesolvers_rmatrixlusolveinternal(&da, &p, n, &emptya, ae_false,
+                                                  b, m, info, rep, x, _state);
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7628,7 +7846,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -7639,14 +7857,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -7654,13 +7872,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvemfast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void rmatrixsolvemfast(/* Real    */ ae_matrix *a, ae_int_t n,
+                       /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                       ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     double v;
@@ -7677,25 +7891,19 @@ void rmatrixsolvemfast(/* Real    */ ae_matrix* a,
     *info = 0;
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    
     /*
      * Check for exact degeneracy
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     rmatrixlu(a, n, n, &p, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_eq(a->ptr.pp_double[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
-                for(k=0; k<=m-1; k++)
-                {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_eq(a->ptr.pp_double[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
+                for (k = 0; k <= m - 1; k++) {
                     b->ptr.pp_double[j][k] = 0.0;
                 }
             }
@@ -7704,16 +7912,13 @@ void rmatrixsolvemfast(/* Real    */ ae_matrix* a,
             return;
         }
     }
-    
+
     /*
      * Solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( p.ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p.ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = b->ptr.pp_double[i][j];
                 b->ptr.pp_double[i][j] = b->ptr.pp_double[p.ptr.p_int[i]][j];
                 b->ptr.pp_double[p.ptr.p_int[i]][j] = v;
@@ -7725,7 +7930,6 @@ void rmatrixsolvemfast(/* Real    */ ae_matrix* a,
     *info = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7777,19 +7981,15 @@ OUTPUT PARAMETERS
                 * info>0    =>  solution
                 * info=-3   =>  filled by zeros
 
-    
+
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolve(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void rmatrixlusolve(/* Real    */ ae_matrix *lua,
+                    /* Integer */ ae_vector *p, ae_int_t n,
+                    /* Real    */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -7803,20 +8003,20 @@ void rmatrixlusolve(/* Real    */ ae_matrix* lua,
     ae_matrix_init(&bm, 0, 0, DT_REAL, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_REAL, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     rmatrixlusolvem(lua, p, n, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride, ae_v_len(0,n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride,
+              ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7842,7 +8042,7 @@ OUTPUT PARAMETERS
                         are not recognized).
                         X is filled by zeros in such cases.
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
@@ -7850,29 +8050,22 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvefast(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void rmatrixlusolvefast(/* Real    */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Real    */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
 
     *info = 0;
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_eq(lua->ptr.pp_double[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_eq(lua->ptr.pp_double[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
                 b->ptr.p_double[j] = 0.0;
             }
             *info = -3;
@@ -7882,7 +8075,6 @@ void rmatrixlusolvefast(/* Real    */ ae_matrix* lua,
     directdensesolvers_rbasiclusolve(lua, p, n, b, _state);
     *info = 1;
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -7915,7 +8107,7 @@ IMPORTANT: ! this function is NOT the most efficient linear solver provided
            !
            ! In such cases we strongly recommend you to use faster solver,
            ! RMatrixLUSolveMFast() function.
-  
+
 INPUT PARAMETERS
     LUA     -   array[N,N], LU decomposition, RMatrixLU result
     P       -   array[N], pivots array, RMatrixLU result
@@ -7938,7 +8130,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -7949,14 +8141,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -7964,16 +8156,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvem(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+void rmatrixlusolvem(/* Real    */ ae_matrix *lua,
+                     /* Integer */ ae_vector *p, ae_int_t n,
+                     /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix emptya;
 
@@ -7984,24 +8171,22 @@ void rmatrixlusolvem(/* Real    */ ae_matrix* lua,
     ae_matrix_clear(x);
     ae_matrix_init(&emptya, 0, 0, DT_REAL, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * solve
      */
-    directdensesolvers_rmatrixlusolveinternal(lua, p, n, &emptya, ae_false, b, m, info, rep, x, _state);
+    directdensesolvers_rmatrixlusolveinternal(lua, p, n, &emptya, ae_false, b,
+                                              m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -8034,7 +8219,7 @@ OUTPUT PARAMETERS:
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8045,14 +8230,14 @@ OUTPUT PARAMETERS:
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8060,14 +8245,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvemfast(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void rmatrixlusolvemfast(/* Real    */ ae_matrix *lua,
+                         /* Integer */ ae_vector *p, ae_int_t n,
+                         /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state) {
     double v;
     ae_int_t i;
     ae_int_t j;
@@ -8075,23 +8256,17 @@ void rmatrixlusolvemfast(/* Real    */ ae_matrix* lua,
 
     *info = 0;
 
-    
     /*
      * Check for exact degeneracy
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_eq(lua->ptr.pp_double[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
-                for(k=0; k<=m-1; k++)
-                {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_eq(lua->ptr.pp_double[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
+                for (k = 0; k <= m - 1; k++) {
                     b->ptr.pp_double[j][k] = 0.0;
                 }
             }
@@ -8099,16 +8274,13 @@ void rmatrixlusolvemfast(/* Real    */ ae_matrix* lua,
             return;
         }
     }
-    
+
     /*
      * Solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = b->ptr.pp_double[i][j];
                 b->ptr.pp_double[i][j] = b->ptr.pp_double[p->ptr.p_int[i]][j];
                 b->ptr.pp_double[p->ptr.p_int[i]][j] = v;
@@ -8119,7 +8291,6 @@ void rmatrixlusolvemfast(/* Real    */ ae_matrix* lua,
     rmatrixlefttrsm(n, m, lua, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
     *info = 1;
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -8157,16 +8328,12 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolve(/* Real    */ ae_matrix* a,
-     /* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void rmatrixmixedsolve(/* Real    */ ae_matrix *a,
+                       /* Real    */ ae_matrix *lua,
+                       /* Integer */ ae_vector *p, ae_int_t n,
+                       /* Real    */ ae_vector *b, ae_int_t *info,
+                       densesolverreport *rep,
+                       /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -8180,20 +8347,20 @@ void rmatrixmixedsolve(/* Real    */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_REAL, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_REAL, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     rmatrixmixedsolvem(a, lua, p, n, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride, ae_v_len(0,n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride,
+              ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -8231,38 +8398,30 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolvem(/* Real    */ ae_matrix* a,
-     /* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
-
+void rmatrixmixedsolvem(/* Real    */ ae_matrix *a,
+                        /* Real    */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                        densesolverreport *rep,
+                        /* Real    */ ae_matrix *x, ae_state *_state) {
     *info = 0;
     _densesolverreport_clear(rep);
     ae_matrix_clear(x);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         return;
     }
-    
+
     /*
      * solve
      */
-    directdensesolvers_rmatrixlusolveinternal(lua, p, n, a, ae_true, b, m, info, rep, x, _state);
+    directdensesolvers_rmatrixlusolveinternal(lua, p, n, a, ae_true, b, m, info,
+                                              rep, x, _state);
 }
-
 
 /*************************************************************************
 Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
@@ -8318,7 +8477,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8329,14 +8488,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8344,16 +8503,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvem(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_bool rfs,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+void cmatrixsolvem(/* Complex */ ae_matrix *a, ae_int_t n,
+                   /* Complex */ ae_matrix *b, ae_int_t m, ae_bool rfs,
+                   ae_int_t *info, densesolverreport *rep,
+                   /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix da;
     ae_matrix emptya;
@@ -8371,37 +8524,33 @@ void cmatrixsolvem(/* Complex */ ae_matrix* a,
     ae_matrix_init(&emptya, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&da, n, n, _state);
-    
+
     /*
      * factorize, solve
      */
-    for(i=0; i<=n-1; i++)
-    {
-        ae_v_cmove(&da.ptr.pp_complex[i][0], 1, &a->ptr.pp_complex[i][0], 1, "N", ae_v_len(0,n-1));
+    for (i = 0; i <= n - 1; i++) {
+        ae_v_cmove(&da.ptr.pp_complex[i][0], 1, &a->ptr.pp_complex[i][0], 1,
+                   "N", ae_v_len(0, n - 1));
     }
     cmatrixlu(&da, n, n, &p, _state);
-    if( rfs )
-    {
-        directdensesolvers_cmatrixlusolveinternal(&da, &p, n, a, ae_true, b, m, info, rep, x, _state);
-    }
-    else
-    {
-        directdensesolvers_cmatrixlusolveinternal(&da, &p, n, &emptya, ae_false, b, m, info, rep, x, _state);
+    if (rfs) {
+        directdensesolvers_cmatrixlusolveinternal(&da, &p, n, a, ae_true, b, m,
+                                                  info, rep, x, _state);
+    } else {
+        directdensesolvers_cmatrixlusolveinternal(&da, &p, n, &emptya, ae_false,
+                                                  b, m, info, rep, x, _state);
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
@@ -8424,13 +8573,13 @@ OUTPUT PARAMETERS:
                 * -3    matrix is exactly singular (ill conditioned matrices
                         are not recognized).
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N,M]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8441,14 +8590,14 @@ OUTPUT PARAMETERS:
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8456,13 +8605,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvemfast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void cmatrixsolvemfast(/* Complex */ ae_matrix *a, ae_int_t n,
+                       /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                       ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_complex v;
@@ -8479,25 +8624,19 @@ void cmatrixsolvemfast(/* Complex */ ae_matrix* a,
     *info = 0;
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    
     /*
      * Check for exact degeneracy
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     cmatrixlu(a, n, n, &p, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_c_eq_d(a->ptr.pp_complex[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
-                for(k=0; k<=m-1; k++)
-                {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_c_eq_d(a->ptr.pp_complex[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
+                for (k = 0; k <= m - 1; k++) {
                     b->ptr.pp_complex[j][k] = ae_complex_from_d(0.0);
                 }
             }
@@ -8506,16 +8645,13 @@ void cmatrixsolvemfast(/* Complex */ ae_matrix* a,
             return;
         }
     }
-    
+
     /*
      * Solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( p.ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p.ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = b->ptr.pp_complex[i][j];
                 b->ptr.pp_complex[i][j] = b->ptr.pp_complex[p.ptr.p_int[i]][j];
                 b->ptr.pp_complex[p.ptr.p_int[i]][j] = v;
@@ -8527,7 +8663,6 @@ void cmatrixsolvemfast(/* Complex */ ae_matrix* a,
     *info = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
@@ -8574,7 +8709,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8585,14 +8720,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8600,14 +8735,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolve(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state)
-{
+void cmatrixsolve(/* Complex */ ae_matrix *a, ae_int_t n,
+                  /* Complex */ ae_vector *b, ae_int_t *info,
+                  densesolverreport *rep,
+                  /* Complex */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -8621,20 +8752,20 @@ void cmatrixsolve(/* Complex */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1,
+               "N", ae_v_len(0, n - 1));
     cmatrixsolvem(a, n, &bm, 1, ae_true, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride,
+               "N", ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
@@ -8654,13 +8785,13 @@ OUTPUT PARAMETERS:
                 * -3    matrix is exactly singular (ill conditioned matrices
                         are not recognized).
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8671,14 +8802,14 @@ OUTPUT PARAMETERS:
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8686,12 +8817,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvefast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void cmatrixsolvefast(/* Complex */ ae_matrix *a, ae_int_t n,
+                      /* Complex */ ae_vector *b, ae_int_t *info,
+                      ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -8706,19 +8834,15 @@ void cmatrixsolvefast(/* Complex */ ae_matrix* a,
     *info = 0;
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     cmatrixlu(a, n, n, &p, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_c_eq_d(a->ptr.pp_complex[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_c_eq_d(a->ptr.pp_complex[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
                 b->ptr.p_complex[j] = ae_complex_from_d(0.0);
             }
             *info = -3;
@@ -8730,7 +8854,6 @@ void cmatrixsolvefast(/* Complex */ ae_matrix* a,
     *info = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
@@ -8781,7 +8904,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8792,14 +8915,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8807,16 +8930,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvem(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+void cmatrixlusolvem(/* Complex */ ae_matrix *lua,
+                     /* Integer */ ae_vector *p, ae_int_t n,
+                     /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix emptya;
 
@@ -8827,24 +8945,22 @@ void cmatrixlusolvem(/* Complex */ ae_matrix* lua,
     ae_matrix_clear(x);
     ae_matrix_init(&emptya, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * solve
      */
-    directdensesolvers_cmatrixlusolveinternal(lua, p, n, &emptya, ae_false, b, m, info, rep, x, _state);
+    directdensesolvers_cmatrixlusolveinternal(lua, p, n, &emptya, ae_false, b,
+                                              m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
@@ -8867,13 +8983,13 @@ OUTPUT PARAMETERS
                 * -3    matrix is exactly singular (ill conditioned matrices
                         are not recognized).
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N,M]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -8884,14 +9000,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -8899,14 +9015,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvemfast(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void cmatrixlusolvemfast(/* Complex */ ae_matrix *lua,
+                         /* Integer */ ae_vector *p, ae_int_t n,
+                         /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state) {
     ae_complex v;
     ae_int_t i;
     ae_int_t j;
@@ -8914,23 +9026,17 @@ void cmatrixlusolvemfast(/* Complex */ ae_matrix* lua,
 
     *info = 0;
 
-    
     /*
      * Check for exact degeneracy
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_c_eq_d(lua->ptr.pp_complex[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
-                for(k=0; k<=m-1; k++)
-                {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_c_eq_d(lua->ptr.pp_complex[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
+                for (k = 0; k <= m - 1; k++) {
                     b->ptr.pp_complex[j][k] = ae_complex_from_d(0.0);
                 }
             }
@@ -8938,16 +9044,13 @@ void cmatrixlusolvemfast(/* Complex */ ae_matrix* lua,
             return;
         }
     }
-    
+
     /*
      * Solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = b->ptr.pp_complex[i][j];
                 b->ptr.pp_complex[i][j] = b->ptr.pp_complex[p->ptr.p_int[i]][j];
                 b->ptr.pp_complex[p->ptr.p_int[i]][j] = v;
@@ -8958,7 +9061,6 @@ void cmatrixlusolvemfast(/* Complex */ ae_matrix* lua,
     cmatrixlefttrsm(n, m, lua, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
     *info = 1;
 }
-
 
 /*************************************************************************
 Complex dense linear solver for A*x=b with complex N*N A  given  by its LU
@@ -9012,15 +9114,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolve(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state)
-{
+void cmatrixlusolve(/* Complex */ ae_matrix *lua,
+                    /* Integer */ ae_vector *p, ae_int_t n,
+                    /* Complex */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Complex */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -9034,20 +9132,20 @@ void cmatrixlusolve(/* Complex */ ae_matrix* lua,
     ae_matrix_init(&bm, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1,
+               "N", ae_v_len(0, n - 1));
     cmatrixlusolvem(lua, p, n, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride,
+               "N", ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Complex dense linear solver for A*x=b with N*N complex A given by  its  LU
@@ -9070,11 +9168,11 @@ OUTPUT PARAMETERS
                 * -3    matrix is exactly singular (ill conditioned matrices
                         are not recognized).
                 * -1    N<=0 was passed
-                *  1    task is solved 
+                *  1    task is solved
     B       -   array[N]:
                 * info>0    =>  overwritten by solution
                 * info=-3   =>  filled by zeros
-    
+
 NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
       near-degeneracy of input matrix. It  checks  for  EXACT  degeneracy,
       because this check is easy to do. However,  very  badly  conditioned
@@ -9084,29 +9182,22 @@ NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvefast(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void cmatrixlusolvefast(/* Complex */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Complex */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
 
     *info = 0;
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_c_eq_d(lua->ptr.pp_complex[i][i],(double)(0)) )
-        {
-            for(j=0; j<=n-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_c_eq_d(lua->ptr.pp_complex[i][i], (double)(0))) {
+            for (j = 0; j <= n - 1; j++) {
                 b->ptr.p_complex[j] = ae_complex_from_d(0.0);
             }
             *info = -3;
@@ -9116,7 +9207,6 @@ void cmatrixlusolvefast(/* Complex */ ae_matrix* lua,
     directdensesolvers_cbasiclusolve(lua, p, n, b, _state);
     *info = 1;
 }
-
 
 /*************************************************************************
 Dense solver. Same as RMatrixMixedSolveM(), but for complex matrices.
@@ -9151,38 +9241,30 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolvem(/* Complex */ ae_matrix* a,
-     /* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
-
+void cmatrixmixedsolvem(/* Complex */ ae_matrix *a,
+                        /* Complex */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                        densesolverreport *rep,
+                        /* Complex */ ae_matrix *x, ae_state *_state) {
     *info = 0;
     _densesolverreport_clear(rep);
     ae_matrix_clear(x);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         return;
     }
-    
+
     /*
      * solve
      */
-    directdensesolvers_cmatrixlusolveinternal(lua, p, n, a, ae_true, b, m, info, rep, x, _state);
+    directdensesolvers_cmatrixlusolveinternal(lua, p, n, a, ae_true, b, m, info,
+                                              rep, x, _state);
 }
-
 
 /*************************************************************************
 Dense solver. Same as RMatrixMixedSolve(), but for complex matrices.
@@ -9216,16 +9298,12 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolve(/* Complex */ ae_matrix* a,
-     /* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state)
-{
+void cmatrixmixedsolve(/* Complex */ ae_matrix *a,
+                       /* Complex */ ae_matrix *lua,
+                       /* Integer */ ae_vector *p, ae_int_t n,
+                       /* Complex */ ae_vector *b, ae_int_t *info,
+                       densesolverreport *rep,
+                       /* Complex */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -9239,20 +9317,20 @@ void cmatrixmixedsolve(/* Complex */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1,
+               "N", ae_v_len(0, n - 1));
     cmatrixmixedsolvem(a, lua, p, n, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride,
+               "N", ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
@@ -9305,7 +9383,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -9316,14 +9394,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -9331,16 +9409,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvem(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+void spdmatrixsolvem(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                     /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix da;
     ae_int_t i;
@@ -9355,43 +9427,35 @@ void spdmatrixsolvem(/* Real    */ ae_matrix* a,
     ae_matrix_clear(x);
     ae_matrix_init(&da, 0, 0, DT_REAL, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&da, n, n, _state);
-    
+
     /*
      * factorize
      * solve
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( isupper )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (isupper) {
             j1 = i;
-            j2 = n-1;
-        }
-        else
-        {
+            j2 = n - 1;
+        } else {
             j1 = 0;
             j2 = i;
         }
-        ae_v_move(&da.ptr.pp_double[i][j1], 1, &a->ptr.pp_double[i][j1], 1, ae_v_len(j1,j2));
+        ae_v_move(&da.ptr.pp_double[i][j1], 1, &a->ptr.pp_double[i][j1], 1,
+                  ae_v_len(j1, j2));
     }
-    if( !spdmatrixcholesky(&da, n, isupper, _state) )
-    {
+    if (!spdmatrixcholesky(&da, n, isupper, _state)) {
         ae_matrix_set_length(x, n, m, _state);
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_double[i][j] = (double)(0);
             }
         }
@@ -9402,10 +9466,10 @@ void spdmatrixsolvem(/* Real    */ ae_matrix* a,
         return;
     }
     *info = 1;
-    directdensesolvers_spdmatrixcholeskysolveinternal(&da, n, isupper, a, ae_true, b, m, info, rep, x, _state);
+    directdensesolvers_spdmatrixcholeskysolveinternal(
+        &da, n, isupper, a, ae_true, b, m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
@@ -9433,7 +9497,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -9444,14 +9508,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -9459,14 +9523,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvemfast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void spdmatrixsolvemfast(/* Real    */ ae_matrix *a, ae_int_t n,
+                         ae_bool isupper,
+                         /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -9479,18 +9539,14 @@ void spdmatrixsolvemfast(/* Real    */ ae_matrix* a,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    if( !spdmatrixcholesky(a, n, isupper, _state) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (!spdmatrixcholesky(a, n, isupper, _state)) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 b->ptr.pp_double[i][j] = 0.0;
             }
         }
@@ -9498,19 +9554,15 @@ void spdmatrixsolvemfast(/* Real    */ ae_matrix* a,
         ae_frame_leave(_state);
         return;
     }
-    if( isupper )
-    {
+    if (isupper) {
         rmatrixlefttrsm(n, m, a, 0, 0, ae_true, ae_false, 1, b, 0, 0, _state);
         rmatrixlefttrsm(n, m, a, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
-    }
-    else
-    {
+    } else {
         rmatrixlefttrsm(n, m, a, 0, 0, ae_false, ae_false, 0, b, 0, 0, _state);
         rmatrixlefttrsm(n, m, a, 0, 0, ae_false, ae_false, 1, b, 0, 0, _state);
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
@@ -9563,7 +9615,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -9574,14 +9626,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -9589,15 +9641,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolve(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void spdmatrixsolve(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                    /* Real    */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -9611,20 +9658,20 @@ void spdmatrixsolve(/* Real    */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_REAL, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_REAL, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     spdmatrixsolvem(a, n, isupper, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride, ae_v_len(0,n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride,
+              ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
@@ -9652,7 +9699,7 @@ OUTPUT PARAMETERS
                 * info=-3   =>  filled by zeros
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -9663,14 +9710,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -9678,13 +9725,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvefast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void spdmatrixsolvefast(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                        /* Real    */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -9696,16 +9739,13 @@ void spdmatrixsolvefast(/* Real    */ ae_matrix* a,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    if( !spdmatrixcholesky(a, n, isupper, _state) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
+    if (!spdmatrixcholesky(a, n, isupper, _state)) {
+        for (i = 0; i <= n - 1; i++) {
             b->ptr.p_double[i] = 0.0;
         }
         *info = -3;
@@ -9715,7 +9755,6 @@ void spdmatrixsolvefast(/* Real    */ ae_matrix* a,
     directdensesolvers_spdbasiccholeskysolve(a, n, isupper, b, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A given
@@ -9774,16 +9813,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvem(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+void spdmatrixcholeskysolvem(/* Real    */ ae_matrix *cha, ae_int_t n,
+                             ae_bool isupper,
+                             /* Real    */ ae_matrix *b, ae_int_t m,
+                             ae_int_t *info, densesolverreport *rep,
+                             /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix emptya;
 
@@ -9794,24 +9828,22 @@ void spdmatrixcholeskysolvem(/* Real    */ ae_matrix* cha,
     ae_matrix_clear(x);
     ae_matrix_init(&emptya, 0, 0, DT_REAL, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * solve
      */
-    directdensesolvers_spdmatrixcholeskysolveinternal(cha, n, isupper, &emptya, ae_false, b, m, info, rep, x, _state);
+    directdensesolvers_spdmatrixcholeskysolveinternal(
+        cha, n, isupper, &emptya, ae_false, b, m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A given
@@ -9845,14 +9877,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix *cha, ae_int_t n,
+                                 ae_bool isupper,
+                                 /* Real    */ ae_matrix *b, ae_int_t m,
+                                 ae_int_t *info, ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
     ae_int_t k;
@@ -9860,19 +9888,14 @@ void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix* cha,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(k=0; k<=n-1; k++)
-    {
-        if( ae_fp_eq(cha->ptr.pp_double[k][k],0.0) )
-        {
-            for(i=0; i<=n-1; i++)
-            {
-                for(j=0; j<=m-1; j++)
-                {
+    for (k = 0; k <= n - 1; k++) {
+        if (ae_fp_eq(cha->ptr.pp_double[k][k], 0.0)) {
+            for (i = 0; i <= n - 1; i++) {
+                for (j = 0; j <= m - 1; j++) {
                     b->ptr.pp_double[i][j] = 0.0;
                 }
             }
@@ -9880,18 +9903,16 @@ void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix* cha,
             return;
         }
     }
-    if( isupper )
-    {
+    if (isupper) {
         rmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 1, b, 0, 0, _state);
         rmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
-    }
-    else
-    {
-        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, b, 0, 0, _state);
-        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 1, b, 0, 0, _state);
+    } else {
+        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, b, 0, 0,
+                        _state);
+        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 1, b, 0, 0,
+                        _state);
     }
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b with N*N symmetric positive definite matrix A given
@@ -9947,15 +9968,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolve(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void spdmatrixcholeskysolve(/* Real    */ ae_matrix *cha, ae_int_t n,
+                            ae_bool isupper,
+                            /* Real    */ ae_vector *b, ae_int_t *info,
+                            densesolverreport *rep,
+                            /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -9969,20 +9986,20 @@ void spdmatrixcholeskysolve(/* Real    */ ae_matrix* cha,
     ae_matrix_init(&bm, 0, 0, DT_REAL, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_REAL, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&bm.ptr.pp_double[0][0], bm.stride, &b->ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     spdmatrixcholeskysolvem(cha, n, isupper, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride, ae_v_len(0,n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &xm.ptr.pp_double[0][0], xm.stride,
+              ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b with N*N symmetric positive definite matrix A given
@@ -10014,30 +10031,23 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvefast(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void spdmatrixcholeskysolvefast(/* Real    */ ae_matrix *cha, ae_int_t n,
+                                ae_bool isupper,
+                                /* Real    */ ae_vector *b, ae_int_t *info,
+                                ae_state *_state) {
     ae_int_t i;
     ae_int_t k;
 
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(k=0; k<=n-1; k++)
-    {
-        if( ae_fp_eq(cha->ptr.pp_double[k][k],0.0) )
-        {
-            for(i=0; i<=n-1; i++)
-            {
+    for (k = 0; k <= n - 1; k++) {
+        if (ae_fp_eq(cha->ptr.pp_double[k][k], 0.0)) {
+            for (i = 0; i <= n - 1; i++) {
                 b->ptr.p_double[i] = 0.0;
             }
             *info = -3;
@@ -10046,7 +10056,6 @@ void spdmatrixcholeskysolvefast(/* Real    */ ae_matrix* cha,
     }
     directdensesolvers_spdbasiccholeskysolve(cha, n, isupper, b, _state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
@@ -10092,7 +10101,7 @@ OUTPUT PARAMETERS
     X       -   same as in RMatrixSolve
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -10103,14 +10112,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -10118,16 +10127,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvem(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+void hpdmatrixsolvem(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                     /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix da;
     ae_int_t i;
@@ -10142,42 +10145,34 @@ void hpdmatrixsolvem(/* Complex */ ae_matrix* a,
     ae_matrix_clear(x);
     ae_matrix_init(&da, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&da, n, n, _state);
-    
+
     /*
      * factorize matrix, solve
      */
-    for(i=0; i<=n-1; i++)
-    {
-        if( isupper )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (isupper) {
             j1 = i;
-            j2 = n-1;
-        }
-        else
-        {
+            j2 = n - 1;
+        } else {
             j1 = 0;
             j2 = i;
         }
-        ae_v_cmove(&da.ptr.pp_complex[i][j1], 1, &a->ptr.pp_complex[i][j1], 1, "N", ae_v_len(j1,j2));
+        ae_v_cmove(&da.ptr.pp_complex[i][j1], 1, &a->ptr.pp_complex[i][j1], 1,
+                   "N", ae_v_len(j1, j2));
     }
-    if( !hpdmatrixcholesky(&da, n, isupper, _state) )
-    {
+    if (!hpdmatrixcholesky(&da, n, isupper, _state)) {
         ae_matrix_set_length(x, n, m, _state);
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_complex[i][j] = ae_complex_from_i(0);
             }
         }
@@ -10188,10 +10183,10 @@ void hpdmatrixsolvem(/* Complex */ ae_matrix* a,
         return;
     }
     *info = 1;
-    directdensesolvers_hpdmatrixcholeskysolveinternal(&da, n, isupper, a, ae_true, b, m, info, rep, x, _state);
+    directdensesolvers_hpdmatrixcholeskysolveinternal(
+        &da, n, isupper, a, ae_true, b, m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
@@ -10220,7 +10215,7 @@ OUTPUT PARAMETERS
                 * zeros, if problem was not solved
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -10231,14 +10226,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -10246,14 +10241,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvemfast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void hpdmatrixsolvemfast(/* Complex */ ae_matrix *a, ae_int_t n,
+                         ae_bool isupper,
+                         /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -10266,18 +10257,14 @@ void hpdmatrixsolvemfast(/* Complex */ ae_matrix* a,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    if( !hpdmatrixcholesky(a, n, isupper, _state) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (!hpdmatrixcholesky(a, n, isupper, _state)) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 b->ptr.pp_complex[i][j] = ae_complex_from_d(0.0);
             }
         }
@@ -10285,19 +10272,15 @@ void hpdmatrixsolvemfast(/* Complex */ ae_matrix* a,
         ae_frame_leave(_state);
         return;
     }
-    if( isupper )
-    {
+    if (isupper) {
         cmatrixlefttrsm(n, m, a, 0, 0, ae_true, ae_false, 2, b, 0, 0, _state);
         cmatrixlefttrsm(n, m, a, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
-    }
-    else
-    {
+    } else {
         cmatrixlefttrsm(n, m, a, 0, 0, ae_false, ae_false, 0, b, 0, 0, _state);
         cmatrixlefttrsm(n, m, a, 0, 0, ae_false, ae_false, 2, b, 0, 0, _state);
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
@@ -10343,7 +10326,7 @@ OUTPUT PARAMETERS
     X       -   same as in RMatrixSolve
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -10354,14 +10337,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -10369,15 +10352,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolve(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state)
-{
+void hpdmatrixsolve(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                    /* Complex */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Complex */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -10391,20 +10369,20 @@ void hpdmatrixsolve(/* Complex */ ae_matrix* a,
     ae_matrix_init(&bm, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1,
+               "N", ae_v_len(0, n - 1));
     hpdmatrixsolvem(a, n, isupper, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride,
+               "N", ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
@@ -10427,14 +10405,14 @@ OUTPUT PARAMETERS
                 * -3    A is is exactly singular or not positive definite
                         X is filled by zeros in such cases.
                 * -1    N<=0 was passed
-                *  1    task was solved 
+                *  1    task was solved
     B       -   array[0..N-1]:
                 * overwritten by solution
                 * zeros, if A is exactly singular (diagonal of its LU
                   decomposition has exact zeros).
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -10445,14 +10423,14 @@ OUTPUT PARAMETERS
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -10460,13 +10438,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvefast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void hpdmatrixsolvefast(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                        /* Complex */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix _a;
     ae_int_t i;
@@ -10478,16 +10452,13 @@ void hpdmatrixsolvefast(/* Complex */ ae_matrix* a,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    if( !hpdmatrixcholesky(a, n, isupper, _state) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
+    if (!hpdmatrixcholesky(a, n, isupper, _state)) {
+        for (i = 0; i <= n - 1; i++) {
             b->ptr.p_complex[i] = ae_complex_from_d(0.0);
         }
         *info = -3;
@@ -10497,7 +10468,6 @@ void hpdmatrixsolvefast(/* Complex */ ae_matrix* a,
     directdensesolvers_hpdbasiccholeskysolve(a, n, isupper, b, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
@@ -10557,16 +10527,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvem(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+void hpdmatrixcholeskysolvem(/* Complex */ ae_matrix *cha, ae_int_t n,
+                             ae_bool isupper,
+                             /* Complex */ ae_matrix *b, ae_int_t m,
+                             ae_int_t *info, densesolverreport *rep,
+                             /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix emptya;
 
@@ -10577,26 +10542,24 @@ void hpdmatrixcholeskysolvem(/* Complex */ ae_matrix* cha,
     ae_matrix_clear(x);
     ae_matrix_init(&emptya, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * 1. scale matrix, max(|U[i,j]|)
      * 2. factorize scaled matrix
      * 3. solve
      */
-    directdensesolvers_hpdmatrixcholeskysolveinternal(cha, n, isupper, &emptya, ae_false, b, m, info, rep, x, _state);
+    directdensesolvers_hpdmatrixcholeskysolveinternal(
+        cha, n, isupper, &emptya, ae_false, b, m, info, rep, x, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
@@ -10629,14 +10592,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix *cha, ae_int_t n,
+                                 ae_bool isupper,
+                                 /* Complex */ ae_matrix *b, ae_int_t m,
+                                 ae_int_t *info, ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
     ae_int_t k;
@@ -10644,19 +10603,15 @@ void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix* cha,
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(k=0; k<=n-1; k++)
-    {
-        if( ae_fp_eq(cha->ptr.pp_complex[k][k].x,0.0)&&ae_fp_eq(cha->ptr.pp_complex[k][k].y,0.0) )
-        {
-            for(i=0; i<=n-1; i++)
-            {
-                for(j=0; j<=m-1; j++)
-                {
+    for (k = 0; k <= n - 1; k++) {
+        if (ae_fp_eq(cha->ptr.pp_complex[k][k].x, 0.0) &&
+            ae_fp_eq(cha->ptr.pp_complex[k][k].y, 0.0)) {
+            for (i = 0; i <= n - 1; i++) {
+                for (j = 0; j <= m - 1; j++) {
                     b->ptr.pp_complex[i][j] = ae_complex_from_d(0.0);
                 }
             }
@@ -10664,18 +10619,16 @@ void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix* cha,
             return;
         }
     }
-    if( isupper )
-    {
+    if (isupper) {
         cmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 2, b, 0, 0, _state);
         cmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 0, b, 0, 0, _state);
-    }
-    else
-    {
-        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, b, 0, 0, _state);
-        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 2, b, 0, 0, _state);
+    } else {
+        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, b, 0, 0,
+                        _state);
+        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 2, b, 0, 0,
+                        _state);
     }
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
@@ -10731,15 +10684,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolve(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state)
-{
+void hpdmatrixcholeskysolve(/* Complex */ ae_matrix *cha, ae_int_t n,
+                            ae_bool isupper,
+                            /* Complex */ ae_vector *b, ae_int_t *info,
+                            densesolverreport *rep,
+                            /* Complex */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_matrix bm;
     ae_matrix xm;
@@ -10753,20 +10702,20 @@ void hpdmatrixcholeskysolve(/* Complex */ ae_matrix* cha,
     ae_matrix_init(&bm, 0, 0, DT_COMPLEX, _state, ae_true);
     ae_matrix_init(&xm, 0, 0, DT_COMPLEX, _state, ae_true);
 
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
     ae_matrix_set_length(&bm, n, 1, _state);
-    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&bm.ptr.pp_complex[0][0], bm.stride, &b->ptr.p_complex[0], 1,
+               "N", ae_v_len(0, n - 1));
     hpdmatrixcholeskysolvem(cha, n, isupper, &bm, 1, info, rep, &xm, _state);
     ae_vector_set_length(x, n, _state);
-    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride, "N", ae_v_len(0,n-1));
+    ae_v_cmove(&x->ptr.p_complex[0], 1, &xm.ptr.pp_complex[0][0], xm.stride,
+               "N", ae_v_len(0, n - 1));
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
@@ -10798,30 +10747,24 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvefast(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state)
-{
+void hpdmatrixcholeskysolvefast(/* Complex */ ae_matrix *cha, ae_int_t n,
+                                ae_bool isupper,
+                                /* Complex */ ae_vector *b, ae_int_t *info,
+                                ae_state *_state) {
     ae_int_t i;
     ae_int_t k;
 
     *info = 0;
 
     *info = 1;
-    if( n<=0 )
-    {
+    if (n <= 0) {
         *info = -1;
         return;
     }
-    for(k=0; k<=n-1; k++)
-    {
-        if( ae_fp_eq(cha->ptr.pp_complex[k][k].x,0.0)&&ae_fp_eq(cha->ptr.pp_complex[k][k].y,0.0) )
-        {
-            for(i=0; i<=n-1; i++)
-            {
+    for (k = 0; k <= n - 1; k++) {
+        if (ae_fp_eq(cha->ptr.pp_complex[k][k].x, 0.0) &&
+            ae_fp_eq(cha->ptr.pp_complex[k][k].y, 0.0)) {
+            for (i = 0; i <= n - 1; i++) {
                 b->ptr.p_complex[i] = ae_complex_from_d(0.0);
             }
             *info = -3;
@@ -10830,7 +10773,6 @@ void hpdmatrixcholeskysolvefast(/* Complex */ ae_matrix* cha,
     }
     directdensesolvers_hpdbasiccholeskysolve(cha, n, isupper, b, _state);
 }
-
 
 /*************************************************************************
 Dense solver.
@@ -10854,7 +10796,7 @@ INPUT PARAMETERS
                 considered  zero.  Set  it to 0.0, if you don't understand
                 what it means, so the solver will choose good value on its
                 own.
-                
+
 OUTPUT PARAMETERS
     Info    -   return code:
                 * -4    SVD subroutine failed
@@ -10875,7 +10817,7 @@ Subroutine sets following fields of the Rep structure:
             Columns of CX store such vectors that A*CX[i]=0.
 
   ! FREE EDITION OF ALGLIB:
-  ! 
+  !
   ! Free Edition of ALGLIB supports following important features for  this
   ! function:
   ! * C++ version: x64 SIMD support using C++ intrinsics
@@ -10886,14 +10828,14 @@ Subroutine sets following fields of the Rep structure:
   ! in ALGLIB.
 
   ! COMMERCIAL EDITION OF ALGLIB:
-  ! 
+  !
   ! Commercial Edition of ALGLIB includes following important improvements
   ! of this function:
   ! * high-performance native backend with same C# interface (C# version)
   ! * multithreading support (C++ and C# versions)
   ! * hardware vendor (Intel) implementations of linear algebra primitives
   !   (C++ and C# versions, x86/x64 platform)
-  ! 
+  !
   ! We recommend you to read 'Working with commercial version' section  of
   ! ALGLIB Reference Manual in order to find out how to  use  performance-
   ! related features provided by commercial edition of ALGLIB.
@@ -10901,16 +10843,10 @@ Subroutine sets following fields of the Rep structure:
   -- ALGLIB --
      Copyright 24.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvels(/* Real    */ ae_matrix* a,
-     ae_int_t nrows,
-     ae_int_t ncols,
-     /* Real    */ ae_vector* b,
-     double threshold,
-     ae_int_t* info,
-     densesolverlsreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
+void rmatrixsolvels(/* Real    */ ae_matrix *a, ae_int_t nrows, ae_int_t ncols,
+                    /* Real    */ ae_vector *b, double threshold,
+                    ae_int_t *info, densesolverlsreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_vector sv;
     ae_matrix u;
@@ -10963,50 +10899,38 @@ void rmatrixsolvels(/* Real    */ ae_matrix* a,
     ae_vector_init(&buf, 0, DT_REAL, _state, ae_true);
     ae_vector_init(&w, 0, DT_REAL, _state, ae_true);
 
-    if( (nrows<=0||ncols<=0)||ae_fp_less(threshold,(double)(0)) )
-    {
+    if ((nrows <= 0 || ncols <= 0) || ae_fp_less(threshold, (double)(0))) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    if( ae_fp_eq(threshold,(double)(0)) )
-    {
-        threshold = 1000*ae_machineepsilon;
+    if (ae_fp_eq(threshold, (double)(0))) {
+        threshold = 1000 * ae_machineepsilon;
     }
-    
+
     /*
      * Factorize A first
      */
     svdfailed = !rmatrixsvd(a, nrows, ncols, 1, 2, 2, &sv, &u, &vt, _state);
-    zeroa = ae_fp_eq(sv.ptr.p_double[0],(double)(0));
-    if( svdfailed||zeroa )
-    {
-        if( svdfailed )
-        {
+    zeroa = ae_fp_eq(sv.ptr.p_double[0], (double)(0));
+    if (svdfailed || zeroa) {
+        if (svdfailed) {
             *info = -4;
-        }
-        else
-        {
+        } else {
             *info = 1;
         }
         ae_vector_set_length(x, ncols, _state);
-        for(i=0; i<=ncols-1; i++)
-        {
+        for (i = 0; i <= ncols - 1; i++) {
             x->ptr.p_double[i] = (double)(0);
         }
         rep->n = ncols;
         rep->k = ncols;
         ae_matrix_set_length(&rep->cx, ncols, ncols, _state);
-        for(i=0; i<=ncols-1; i++)
-        {
-            for(j=0; j<=ncols-1; j++)
-            {
-                if( i==j )
-                {
+        for (i = 0; i <= ncols - 1; i++) {
+            for (j = 0; j <= ncols - 1; j++) {
+                if (i == j) {
                     rep->cx.ptr.pp_double[i][j] = (double)(1);
-                }
-                else
-                {
+                } else {
                     rep->cx.ptr.pp_double[i][j] = (double)(0);
                 }
             }
@@ -11016,17 +10940,14 @@ void rmatrixsolvels(/* Real    */ ae_matrix* a,
         return;
     }
     nsv = ae_minint(ncols, nrows, _state);
-    if( nsv==ncols )
-    {
-        rep->r2 = sv.ptr.p_double[nsv-1]/sv.ptr.p_double[0];
-    }
-    else
-    {
+    if (nsv == ncols) {
+        rep->r2 = sv.ptr.p_double[nsv - 1] / sv.ptr.p_double[0];
+    } else {
         rep->r2 = (double)(0);
     }
     rep->n = ncols;
     *info = 1;
-    
+
     /*
      * Iterative refinement of xc combined with solution:
      * 1. xc = 0
@@ -11043,112 +10964,99 @@ void rmatrixsolvels(/* Real    */ ae_matrix* a,
     ae_vector_set_length(&sutb, nsv, _state);
     ae_vector_set_length(x, ncols, _state);
     ae_vector_set_length(&tmp, ncols, _state);
-    ae_vector_set_length(&ta, ncols+1, _state);
-    ae_vector_set_length(&tx, ncols+1, _state);
-    ae_vector_set_length(&buf, ncols+1, _state);
-    for(i=0; i<=ncols-1; i++)
-    {
+    ae_vector_set_length(&ta, ncols + 1, _state);
+    ae_vector_set_length(&tx, ncols + 1, _state);
+    ae_vector_set_length(&buf, ncols + 1, _state);
+    for (i = 0; i <= ncols - 1; i++) {
         x->ptr.p_double[i] = (double)(0);
     }
     kernelidx = nsv;
-    for(i=0; i<=nsv-1; i++)
-    {
-        if( ae_fp_less_eq(sv.ptr.p_double[i],threshold*sv.ptr.p_double[0]) )
-        {
+    for (i = 0; i <= nsv - 1; i++) {
+        if (ae_fp_less_eq(sv.ptr.p_double[i], threshold * sv.ptr.p_double[0])) {
             kernelidx = i;
             break;
         }
     }
-    rep->k = ncols-kernelidx;
+    rep->k = ncols - kernelidx;
     nrfs = directdensesolvers_densesolverrfsmaxv2(ncols, rep->r2, _state);
     terminatenexttime = ae_false;
     ae_vector_set_length(&rp, nrows, _state);
-    for(rfs=0; rfs<=nrfs; rfs++)
-    {
-        if( terminatenexttime )
-        {
+    for (rfs = 0; rfs <= nrfs; rfs++) {
+        if (terminatenexttime) {
             break;
         }
-        
+
         /*
          * calculate right part
          */
-        if( rfs==0 )
-        {
-            ae_v_move(&rp.ptr.p_double[0], 1, &b->ptr.p_double[0], 1, ae_v_len(0,nrows-1));
-        }
-        else
-        {
+        if (rfs == 0) {
+            ae_v_move(&rp.ptr.p_double[0], 1, &b->ptr.p_double[0], 1,
+                      ae_v_len(0, nrows - 1));
+        } else {
             smallerr = ae_true;
-            for(i=0; i<=nrows-1; i++)
-            {
-                ae_v_move(&ta.ptr.p_double[0], 1, &a->ptr.pp_double[i][0], 1, ae_v_len(0,ncols-1));
+            for (i = 0; i <= nrows - 1; i++) {
+                ae_v_move(&ta.ptr.p_double[0], 1, &a->ptr.pp_double[i][0], 1,
+                          ae_v_len(0, ncols - 1));
                 ta.ptr.p_double[ncols] = (double)(-1);
-                ae_v_move(&tx.ptr.p_double[0], 1, &x->ptr.p_double[0], 1, ae_v_len(0,ncols-1));
+                ae_v_move(&tx.ptr.p_double[0], 1, &x->ptr.p_double[0], 1,
+                          ae_v_len(0, ncols - 1));
                 tx.ptr.p_double[ncols] = b->ptr.p_double[i];
-                xdot(&ta, &tx, ncols+1, &buf, &v, &verr, _state);
+                xdot(&ta, &tx, ncols + 1, &buf, &v, &verr, _state);
                 rp.ptr.p_double[i] = -v;
-                smallerr = smallerr&&ae_fp_less(ae_fabs(v, _state),4*verr);
+                smallerr = smallerr && ae_fp_less(ae_fabs(v, _state), 4 * verr);
             }
-            if( smallerr )
-            {
+            if (smallerr) {
                 terminatenexttime = ae_true;
             }
         }
-        
+
         /*
          * solve A*dx = rp
          */
-        for(i=0; i<=ncols-1; i++)
-        {
+        for (i = 0; i <= ncols - 1; i++) {
             tmp.ptr.p_double[i] = (double)(0);
         }
-        for(i=0; i<=nsv-1; i++)
-        {
+        for (i = 0; i <= nsv - 1; i++) {
             utb.ptr.p_double[i] = (double)(0);
         }
-        for(i=0; i<=nrows-1; i++)
-        {
+        for (i = 0; i <= nrows - 1; i++) {
             v = rp.ptr.p_double[i];
-            ae_v_addd(&utb.ptr.p_double[0], 1, &u.ptr.pp_double[i][0], 1, ae_v_len(0,nsv-1), v);
+            ae_v_addd(&utb.ptr.p_double[0], 1, &u.ptr.pp_double[i][0], 1,
+                      ae_v_len(0, nsv - 1), v);
         }
-        for(i=0; i<=nsv-1; i++)
-        {
-            if( i<kernelidx )
-            {
-                sutb.ptr.p_double[i] = utb.ptr.p_double[i]/sv.ptr.p_double[i];
-            }
-            else
-            {
+        for (i = 0; i <= nsv - 1; i++) {
+            if (i < kernelidx) {
+                sutb.ptr.p_double[i] = utb.ptr.p_double[i] / sv.ptr.p_double[i];
+            } else {
                 sutb.ptr.p_double[i] = (double)(0);
             }
         }
-        for(i=0; i<=nsv-1; i++)
-        {
+        for (i = 0; i <= nsv - 1; i++) {
             v = sutb.ptr.p_double[i];
-            ae_v_addd(&tmp.ptr.p_double[0], 1, &vt.ptr.pp_double[i][0], 1, ae_v_len(0,ncols-1), v);
+            ae_v_addd(&tmp.ptr.p_double[0], 1, &vt.ptr.pp_double[i][0], 1,
+                      ae_v_len(0, ncols - 1), v);
         }
-        
+
         /*
          * update x:  x:=x+dx
          */
-        ae_v_add(&x->ptr.p_double[0], 1, &tmp.ptr.p_double[0], 1, ae_v_len(0,ncols-1));
+        ae_v_add(&x->ptr.p_double[0], 1, &tmp.ptr.p_double[0], 1,
+                 ae_v_len(0, ncols - 1));
     }
-    
+
     /*
      * fill CX
      */
-    if( rep->k>0 )
-    {
+    if (rep->k > 0) {
         ae_matrix_set_length(&rep->cx, ncols, rep->k, _state);
-        for(i=0; i<=rep->k-1; i++)
-        {
-            ae_v_move(&rep->cx.ptr.pp_double[0][i], rep->cx.stride, &vt.ptr.pp_double[kernelidx+i][0], 1, ae_v_len(0,ncols-1));
+        for (i = 0; i <= rep->k - 1; i++) {
+            ae_v_move(&rep->cx.ptr.pp_double[0][i], rep->cx.stride,
+                      &vt.ptr.pp_double[kernelidx + i][0], 1,
+                      ae_v_len(0, ncols - 1));
         }
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Internal LU solver
@@ -11156,18 +11064,13 @@ Internal LU solver
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* a,
-     ae_bool havea,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+static void directdensesolvers_rmatrixlusolveinternal(
+    /* Real    */ ae_matrix *lua,
+    /* Integer */ ae_vector *p, ae_int_t n,
+    /* Real    */ ae_matrix *a, ae_bool havea,
+    /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     ae_int_t j;
@@ -11203,20 +11106,16 @@ static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* l
     ae_vector_init(&xb, 0, DT_REAL, _state, ae_true);
     ae_vector_init(&tx, 0, DT_REAL, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]>n-1||p->ptr.p_int[i]<i )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] > n - 1 || p->ptr.p_int[i] < i) {
             *info = -1;
             ae_frame_leave(_state);
             return;
@@ -11226,21 +11125,19 @@ static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* l
     ae_vector_set_length(&y, n, _state);
     ae_vector_set_length(&xc, n, _state);
     ae_vector_set_length(&bc, n, _state);
-    ae_vector_set_length(&tx, n+1, _state);
-    ae_vector_set_length(&xa, n+1, _state);
-    ae_vector_set_length(&xb, n+1, _state);
-    
+    ae_vector_set_length(&tx, n + 1, _state);
+    ae_vector_set_length(&xa, n + 1, _state);
+    ae_vector_set_length(&xb, n + 1, _state);
+
     /*
      * estimate condition number, test for near singularity
      */
     rep->r1 = rmatrixlurcond1(lua, n, _state);
     rep->rinf = rmatrixlurcondinf(lua, n, _state);
-    if( ae_fp_less(rep->r1,rcondthreshold(_state))||ae_fp_less(rep->rinf,rcondthreshold(_state)) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (ae_fp_less(rep->r1, rcondthreshold(_state)) ||
+        ae_fp_less(rep->rinf, rcondthreshold(_state))) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_double[i][j] = (double)(0);
             }
         }
@@ -11251,26 +11148,21 @@ static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* l
         return;
     }
     *info = 1;
-    
+
     /*
      * First stage of solution: rough solution with TRSM()
      */
     mxb = 0.0;
-    for(i=0; i<=n-1; i++)
-    {
-        for(j=0; j<=m-1; j++)
-        {
+    for (i = 0; i <= n - 1; i++) {
+        for (j = 0; j <= m - 1; j++) {
             v = b->ptr.pp_double[i][j];
             mxb = ae_maxreal(mxb, ae_fabs(v, _state), _state);
             x->ptr.pp_double[i][j] = v;
         }
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = x->ptr.pp_double[i][j];
                 x->ptr.pp_double[i][j] = x->ptr.pp_double[p->ptr.p_int[i]][j];
                 x->ptr.pp_double[p->ptr.p_int[i]][j] = v;
@@ -11279,53 +11171,51 @@ static void directdensesolvers_rmatrixlusolveinternal(/* Real    */ ae_matrix* l
     }
     rmatrixlefttrsm(n, m, lua, 0, 0, ae_false, ae_true, 0, x, 0, 0, _state);
     rmatrixlefttrsm(n, m, lua, 0, 0, ae_true, ae_false, 0, x, 0, 0, _state);
-    
+
     /*
      * Second stage: iterative refinement
      */
-    if( havea )
-    {
-        for(k=0; k<=m-1; k++)
-        {
-            nrfs = directdensesolvers_densesolverrfsmax(n, rep->r1, rep->rinf, _state);
+    if (havea) {
+        for (k = 0; k <= m - 1; k++) {
+            nrfs = directdensesolvers_densesolverrfsmax(n, rep->r1, rep->rinf,
+                                                        _state);
             terminatenexttime = ae_false;
-            for(rfs=0; rfs<=nrfs-1; rfs++)
-            {
-                if( terminatenexttime )
-                {
+            for (rfs = 0; rfs <= nrfs - 1; rfs++) {
+                if (terminatenexttime) {
                     break;
                 }
-                
+
                 /*
                  * generate right part
                  */
                 smallerr = ae_true;
-                ae_v_move(&xb.ptr.p_double[0], 1, &x->ptr.pp_double[0][k], x->stride, ae_v_len(0,n-1));
-                for(i=0; i<=n-1; i++)
-                {
-                    ae_v_move(&xa.ptr.p_double[0], 1, &a->ptr.pp_double[i][0], 1, ae_v_len(0,n-1));
+                ae_v_move(&xb.ptr.p_double[0], 1, &x->ptr.pp_double[0][k],
+                          x->stride, ae_v_len(0, n - 1));
+                for (i = 0; i <= n - 1; i++) {
+                    ae_v_move(&xa.ptr.p_double[0], 1, &a->ptr.pp_double[i][0],
+                              1, ae_v_len(0, n - 1));
                     xa.ptr.p_double[n] = (double)(-1);
                     xb.ptr.p_double[n] = b->ptr.pp_double[i][k];
-                    xdot(&xa, &xb, n+1, &tx, &v, &verr, _state);
+                    xdot(&xa, &xb, n + 1, &tx, &v, &verr, _state);
                     y.ptr.p_double[i] = -v;
-                    smallerr = smallerr&&ae_fp_less(ae_fabs(v, _state),4*verr);
+                    smallerr =
+                        smallerr && ae_fp_less(ae_fabs(v, _state), 4 * verr);
                 }
-                if( smallerr )
-                {
+                if (smallerr) {
                     terminatenexttime = ae_true;
                 }
-                
+
                 /*
                  * solve and update
                  */
                 directdensesolvers_rbasiclusolve(lua, p, n, &y, _state);
-                ae_v_add(&x->ptr.pp_double[0][k], x->stride, &y.ptr.p_double[0], 1, ae_v_len(0,n-1));
+                ae_v_add(&x->ptr.pp_double[0][k], x->stride, &y.ptr.p_double[0],
+                         1, ae_v_len(0, n - 1));
             }
         }
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Internal Cholesky solver
@@ -11333,18 +11223,12 @@ Internal Cholesky solver
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_spdmatrixcholeskysolveinternal(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* a,
-     ae_bool havea,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state)
-{
+static void directdensesolvers_spdmatrixcholeskysolveinternal(
+    /* Real    */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Real    */ ae_matrix *a, ae_bool havea,
+    /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Real    */ ae_matrix *x, ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
 
@@ -11352,28 +11236,23 @@ static void directdensesolvers_spdmatrixcholeskysolveinternal(/* Real    */ ae_m
     _densesolverreport_clear(rep);
     ae_matrix_clear(x);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         return;
     }
     ae_matrix_set_length(x, n, m, _state);
-    
+
     /*
      * estimate condition number, test for near singularity
      */
     rep->r1 = spdmatrixcholeskyrcond(cha, n, isupper, _state);
     rep->rinf = rep->r1;
-    if( ae_fp_less(rep->r1,rcondthreshold(_state)) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (ae_fp_less(rep->r1, rcondthreshold(_state))) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_double[i][j] = (double)(0);
             }
         }
@@ -11383,29 +11262,25 @@ static void directdensesolvers_spdmatrixcholeskysolveinternal(/* Real    */ ae_m
         return;
     }
     *info = 1;
-    
+
     /*
      * Solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        for(j=0; j<=m-1; j++)
-        {
+    for (i = 0; i <= n - 1; i++) {
+        for (j = 0; j <= m - 1; j++) {
             x->ptr.pp_double[i][j] = b->ptr.pp_double[i][j];
         }
     }
-    if( isupper )
-    {
+    if (isupper) {
         rmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 1, x, 0, 0, _state);
         rmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 0, x, 0, 0, _state);
-    }
-    else
-    {
-        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, x, 0, 0, _state);
-        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 1, x, 0, 0, _state);
+    } else {
+        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, x, 0, 0,
+                        _state);
+        rmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 1, x, 0, 0,
+                        _state);
     }
 }
-
 
 /*************************************************************************
 Internal LU solver
@@ -11413,18 +11288,13 @@ Internal LU solver
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* a,
-     ae_bool havea,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+static void directdensesolvers_cmatrixlusolveinternal(
+    /* Complex */ ae_matrix *lua,
+    /* Integer */ ae_vector *p, ae_int_t n,
+    /* Complex */ ae_matrix *a, ae_bool havea,
+    /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     ae_int_t j;
@@ -11462,20 +11332,16 @@ static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* l
     ae_vector_init(&tx, 0, DT_COMPLEX, _state, ae_true);
     ae_vector_init(&tmpbuf, 0, DT_REAL, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]>n-1||p->ptr.p_int[i]<i )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] > n - 1 || p->ptr.p_int[i] < i) {
             *info = -1;
             ae_frame_leave(_state);
             return;
@@ -11486,21 +11352,19 @@ static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* l
     ae_vector_set_length(&xc, n, _state);
     ae_vector_set_length(&bc, n, _state);
     ae_vector_set_length(&tx, n, _state);
-    ae_vector_set_length(&xa, n+1, _state);
-    ae_vector_set_length(&xb, n+1, _state);
-    ae_vector_set_length(&tmpbuf, 2*n+2, _state);
-    
+    ae_vector_set_length(&xa, n + 1, _state);
+    ae_vector_set_length(&xb, n + 1, _state);
+    ae_vector_set_length(&tmpbuf, 2 * n + 2, _state);
+
     /*
      * estimate condition number, test for near singularity
      */
     rep->r1 = cmatrixlurcond1(lua, n, _state);
     rep->rinf = cmatrixlurcondinf(lua, n, _state);
-    if( ae_fp_less(rep->r1,rcondthreshold(_state))||ae_fp_less(rep->rinf,rcondthreshold(_state)) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (ae_fp_less(rep->r1, rcondthreshold(_state)) ||
+        ae_fp_less(rep->rinf, rcondthreshold(_state))) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_complex[i][j] = ae_complex_from_i(0);
             }
         }
@@ -11511,23 +11375,18 @@ static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* l
         return;
     }
     *info = 1;
-    
+
     /*
      * First phase: solve with TRSM()
      */
-    for(i=0; i<=n-1; i++)
-    {
-        for(j=0; j<=m-1; j++)
-        {
+    for (i = 0; i <= n - 1; i++) {
+        for (j = 0; j <= m - 1; j++) {
             x->ptr.pp_complex[i][j] = b->ptr.pp_complex[i][j];
         }
     }
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
+            for (j = 0; j <= m - 1; j++) {
                 v = x->ptr.pp_complex[i][j];
                 x->ptr.pp_complex[i][j] = x->ptr.pp_complex[p->ptr.p_int[i]][j];
                 x->ptr.pp_complex[p->ptr.p_int[i]][j] = v;
@@ -11536,15 +11395,16 @@ static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* l
     }
     cmatrixlefttrsm(n, m, lua, 0, 0, ae_false, ae_true, 0, x, 0, 0, _state);
     cmatrixlefttrsm(n, m, lua, 0, 0, ae_true, ae_false, 0, x, 0, 0, _state);
-    
+
     /*
      * solve
      */
-    for(k=0; k<=m-1; k++)
-    {
-        ae_v_cmove(&bc.ptr.p_complex[0], 1, &b->ptr.pp_complex[0][k], b->stride, "N", ae_v_len(0,n-1));
-        ae_v_cmove(&xc.ptr.p_complex[0], 1, &x->ptr.pp_complex[0][k], x->stride, "N", ae_v_len(0,n-1));
-        
+    for (k = 0; k <= m - 1; k++) {
+        ae_v_cmove(&bc.ptr.p_complex[0], 1, &b->ptr.pp_complex[0][k], b->stride,
+                   "N", ae_v_len(0, n - 1));
+        ae_v_cmove(&xc.ptr.p_complex[0], 1, &x->ptr.pp_complex[0][k], x->stride,
+                   "N", ae_v_len(0, n - 1));
+
         /*
          * Iterative refinement of xc:
          * * calculate r = bc-A*xc using extra-precise dot product
@@ -11555,53 +11415,54 @@ static void directdensesolvers_cmatrixlusolveinternal(/* Complex */ ae_matrix* l
          * 1. maximum number of iterations reached
          * 2. last iteration decreased error to the lower limit
          */
-        if( havea )
-        {
-            nrfs = directdensesolvers_densesolverrfsmax(n, rep->r1, rep->rinf, _state);
+        if (havea) {
+            nrfs = directdensesolvers_densesolverrfsmax(n, rep->r1, rep->rinf,
+                                                        _state);
             terminatenexttime = ae_false;
-            for(rfs=0; rfs<=nrfs-1; rfs++)
-            {
-                if( terminatenexttime )
-                {
+            for (rfs = 0; rfs <= nrfs - 1; rfs++) {
+                if (terminatenexttime) {
                     break;
                 }
-                
+
                 /*
                  * generate right part
                  */
                 smallerr = ae_true;
-                ae_v_cmove(&xb.ptr.p_complex[0], 1, &xc.ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
-                for(i=0; i<=n-1; i++)
-                {
-                    ae_v_cmove(&xa.ptr.p_complex[0], 1, &a->ptr.pp_complex[i][0], 1, "N", ae_v_len(0,n-1));
+                ae_v_cmove(&xb.ptr.p_complex[0], 1, &xc.ptr.p_complex[0], 1,
+                           "N", ae_v_len(0, n - 1));
+                for (i = 0; i <= n - 1; i++) {
+                    ae_v_cmove(&xa.ptr.p_complex[0], 1,
+                               &a->ptr.pp_complex[i][0], 1, "N",
+                               ae_v_len(0, n - 1));
                     xa.ptr.p_complex[n] = ae_complex_from_i(-1);
                     xb.ptr.p_complex[n] = bc.ptr.p_complex[i];
-                    xcdot(&xa, &xb, n+1, &tmpbuf, &v, &verr, _state);
+                    xcdot(&xa, &xb, n + 1, &tmpbuf, &v, &verr, _state);
                     y.ptr.p_complex[i] = ae_c_neg(v);
-                    smallerr = smallerr&&ae_fp_less(ae_c_abs(v, _state),4*verr);
+                    smallerr =
+                        smallerr && ae_fp_less(ae_c_abs(v, _state), 4 * verr);
                 }
-                if( smallerr )
-                {
+                if (smallerr) {
                     terminatenexttime = ae_true;
                 }
-                
+
                 /*
                  * solve and update
                  */
                 directdensesolvers_cbasiclusolve(lua, p, n, &y, _state);
-                ae_v_cadd(&xc.ptr.p_complex[0], 1, &y.ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+                ae_v_cadd(&xc.ptr.p_complex[0], 1, &y.ptr.p_complex[0], 1, "N",
+                          ae_v_len(0, n - 1));
             }
         }
-        
+
         /*
          * Store xc.
          * Post-scale result.
          */
-        ae_v_cmove(&x->ptr.pp_complex[0][k], x->stride, &xc.ptr.p_complex[0], 1, "N", ae_v_len(0,n-1));
+        ae_v_cmove(&x->ptr.pp_complex[0][k], x->stride, &xc.ptr.p_complex[0], 1,
+                   "N", ae_v_len(0, n - 1));
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Internal Cholesky solver
@@ -11609,18 +11470,12 @@ Internal Cholesky solver
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_hpdmatrixcholeskysolveinternal(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* a,
-     ae_bool havea,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state)
-{
+static void directdensesolvers_hpdmatrixcholeskysolveinternal(
+    /* Complex */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Complex */ ae_matrix *a, ae_bool havea,
+    /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+    densesolverreport *rep,
+    /* Complex */ ae_matrix *x, ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     ae_int_t j;
@@ -11648,12 +11503,10 @@ static void directdensesolvers_hpdmatrixcholeskysolveinternal(/* Complex */ ae_m
     ae_vector_init(&xb, 0, DT_COMPLEX, _state, ae_true);
     ae_vector_init(&tx, 0, DT_COMPLEX, _state, ae_true);
 
-    
     /*
      * prepare: check inputs, allocate space...
      */
-    if( n<=0||m<=0 )
-    {
+    if (n <= 0 || m <= 0) {
         *info = -1;
         ae_frame_leave(_state);
         return;
@@ -11662,21 +11515,18 @@ static void directdensesolvers_hpdmatrixcholeskysolveinternal(/* Complex */ ae_m
     ae_vector_set_length(&y, n, _state);
     ae_vector_set_length(&xc, n, _state);
     ae_vector_set_length(&bc, n, _state);
-    ae_vector_set_length(&tx, n+1, _state);
-    ae_vector_set_length(&xa, n+1, _state);
-    ae_vector_set_length(&xb, n+1, _state);
-    
+    ae_vector_set_length(&tx, n + 1, _state);
+    ae_vector_set_length(&xa, n + 1, _state);
+    ae_vector_set_length(&xb, n + 1, _state);
+
     /*
      * estimate condition number, test for near singularity
      */
     rep->r1 = hpdmatrixcholeskyrcond(cha, n, isupper, _state);
     rep->rinf = rep->r1;
-    if( ae_fp_less(rep->r1,rcondthreshold(_state)) )
-    {
-        for(i=0; i<=n-1; i++)
-        {
-            for(j=0; j<=m-1; j++)
-            {
+    if (ae_fp_less(rep->r1, rcondthreshold(_state))) {
+        for (i = 0; i <= n - 1; i++) {
+            for (j = 0; j <= m - 1; j++) {
                 x->ptr.pp_complex[i][j] = ae_complex_from_i(0);
             }
         }
@@ -11687,30 +11537,26 @@ static void directdensesolvers_hpdmatrixcholeskysolveinternal(/* Complex */ ae_m
         return;
     }
     *info = 1;
-    
+
     /*
      * solve
      */
-    for(i=0; i<=n-1; i++)
-    {
-        for(j=0; j<=m-1; j++)
-        {
+    for (i = 0; i <= n - 1; i++) {
+        for (j = 0; j <= m - 1; j++) {
             x->ptr.pp_complex[i][j] = b->ptr.pp_complex[i][j];
         }
     }
-    if( isupper )
-    {
+    if (isupper) {
         cmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 2, x, 0, 0, _state);
         cmatrixlefttrsm(n, m, cha, 0, 0, ae_true, ae_false, 0, x, 0, 0, _state);
-    }
-    else
-    {
-        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, x, 0, 0, _state);
-        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 2, x, 0, 0, _state);
+    } else {
+        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 0, x, 0, 0,
+                        _state);
+        cmatrixlefttrsm(n, m, cha, 0, 0, ae_false, ae_false, 2, x, 0, 0,
+                        _state);
     }
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Internal subroutine.
@@ -11722,18 +11568,14 @@ Returns maximum count of RFS iterations as function of:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static ae_int_t directdensesolvers_densesolverrfsmax(ae_int_t n,
-     double r1,
-     double rinf,
-     ae_state *_state)
-{
+static ae_int_t directdensesolvers_densesolverrfsmax(ae_int_t n, double r1,
+                                                     double rinf,
+                                                     ae_state *_state) {
     ae_int_t result;
-
 
     result = 5;
     return result;
 }
-
 
 /*************************************************************************
 Internal subroutine.
@@ -11745,17 +11587,14 @@ Returns maximum count of RFS iterations as function of:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static ae_int_t directdensesolvers_densesolverrfsmaxv2(ae_int_t n,
-     double r2,
-     ae_state *_state)
-{
+static ae_int_t directdensesolvers_densesolverrfsmaxv2(ae_int_t n, double r2,
+                                                       ae_state *_state) {
     ae_int_t result;
 
-
-    result = directdensesolvers_densesolverrfsmax(n, (double)(0), (double)(0), _state);
+    result = directdensesolvers_densesolverrfsmax(n, (double)(0), (double)(0),
+                                                  _state);
     return result;
 }
-
 
 /*************************************************************************
 Basic LU solver for PLU*x = y.
@@ -11766,38 +11605,36 @@ This subroutine assumes that:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_rbasiclusolve(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* xb,
-     ae_state *_state)
-{
+static void directdensesolvers_rbasiclusolve(/* Real    */ ae_matrix *lua,
+                                             /* Integer */ ae_vector *p,
+                                             ae_int_t n,
+                                             /* Real    */ ae_vector *xb,
+                                             ae_state *_state) {
     ae_int_t i;
     double v;
 
-
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
             v = xb->ptr.p_double[i];
             xb->ptr.p_double[i] = xb->ptr.p_double[p->ptr.p_int[i]];
             xb->ptr.p_double[p->ptr.p_int[i]] = v;
         }
     }
-    for(i=1; i<=n-1; i++)
-    {
-        v = ae_v_dotproduct(&lua->ptr.pp_double[i][0], 1, &xb->ptr.p_double[0], 1, ae_v_len(0,i-1));
-        xb->ptr.p_double[i] = xb->ptr.p_double[i]-v;
+    for (i = 1; i <= n - 1; i++) {
+        v = ae_v_dotproduct(&lua->ptr.pp_double[i][0], 1, &xb->ptr.p_double[0],
+                            1, ae_v_len(0, i - 1));
+        xb->ptr.p_double[i] = xb->ptr.p_double[i] - v;
     }
-    xb->ptr.p_double[n-1] = xb->ptr.p_double[n-1]/lua->ptr.pp_double[n-1][n-1];
-    for(i=n-2; i>=0; i--)
-    {
-        v = ae_v_dotproduct(&lua->ptr.pp_double[i][i+1], 1, &xb->ptr.p_double[i+1], 1, ae_v_len(i+1,n-1));
-        xb->ptr.p_double[i] = (xb->ptr.p_double[i]-v)/lua->ptr.pp_double[i][i];
+    xb->ptr.p_double[n - 1] =
+        xb->ptr.p_double[n - 1] / lua->ptr.pp_double[n - 1][n - 1];
+    for (i = n - 2; i >= 0; i--) {
+        v = ae_v_dotproduct(&lua->ptr.pp_double[i][i + 1], 1,
+                            &xb->ptr.p_double[i + 1], 1,
+                            ae_v_len(i + 1, n - 1));
+        xb->ptr.p_double[i] =
+            (xb->ptr.p_double[i] - v) / lua->ptr.pp_double[i][i];
     }
 }
-
 
 /*************************************************************************
 Basic Cholesky solver for ScaleA*Cholesky(A)'*x = y.
@@ -11809,80 +11646,72 @@ This subroutine assumes that:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_spdbasiccholeskysolve(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* xb,
-     ae_state *_state)
-{
+static void directdensesolvers_spdbasiccholeskysolve(
+    /* Real    */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Real    */ ae_vector *xb, ae_state *_state) {
     ae_int_t i;
     double v;
 
-
-    
     /*
      * A = L*L' or A=U'*U
      */
-    if( isupper )
-    {
-        
+    if (isupper) {
         /*
          * Solve U'*y=b first.
          */
-        for(i=0; i<=n-1; i++)
-        {
-            xb->ptr.p_double[i] = xb->ptr.p_double[i]/cha->ptr.pp_double[i][i];
-            if( i<n-1 )
-            {
+        for (i = 0; i <= n - 1; i++) {
+            xb->ptr.p_double[i] =
+                xb->ptr.p_double[i] / cha->ptr.pp_double[i][i];
+            if (i < n - 1) {
                 v = xb->ptr.p_double[i];
-                ae_v_subd(&xb->ptr.p_double[i+1], 1, &cha->ptr.pp_double[i][i+1], 1, ae_v_len(i+1,n-1), v);
+                ae_v_subd(&xb->ptr.p_double[i + 1], 1,
+                          &cha->ptr.pp_double[i][i + 1], 1,
+                          ae_v_len(i + 1, n - 1), v);
             }
         }
-        
+
         /*
          * Solve U*x=y then.
          */
-        for(i=n-1; i>=0; i--)
-        {
-            if( i<n-1 )
-            {
-                v = ae_v_dotproduct(&cha->ptr.pp_double[i][i+1], 1, &xb->ptr.p_double[i+1], 1, ae_v_len(i+1,n-1));
-                xb->ptr.p_double[i] = xb->ptr.p_double[i]-v;
+        for (i = n - 1; i >= 0; i--) {
+            if (i < n - 1) {
+                v = ae_v_dotproduct(&cha->ptr.pp_double[i][i + 1], 1,
+                                    &xb->ptr.p_double[i + 1], 1,
+                                    ae_v_len(i + 1, n - 1));
+                xb->ptr.p_double[i] = xb->ptr.p_double[i] - v;
             }
-            xb->ptr.p_double[i] = xb->ptr.p_double[i]/cha->ptr.pp_double[i][i];
+            xb->ptr.p_double[i] =
+                xb->ptr.p_double[i] / cha->ptr.pp_double[i][i];
         }
-    }
-    else
-    {
-        
+    } else {
         /*
          * Solve L*y=b first
          */
-        for(i=0; i<=n-1; i++)
-        {
-            if( i>0 )
-            {
-                v = ae_v_dotproduct(&cha->ptr.pp_double[i][0], 1, &xb->ptr.p_double[0], 1, ae_v_len(0,i-1));
-                xb->ptr.p_double[i] = xb->ptr.p_double[i]-v;
+        for (i = 0; i <= n - 1; i++) {
+            if (i > 0) {
+                v = ae_v_dotproduct(&cha->ptr.pp_double[i][0], 1,
+                                    &xb->ptr.p_double[0], 1,
+                                    ae_v_len(0, i - 1));
+                xb->ptr.p_double[i] = xb->ptr.p_double[i] - v;
             }
-            xb->ptr.p_double[i] = xb->ptr.p_double[i]/cha->ptr.pp_double[i][i];
+            xb->ptr.p_double[i] =
+                xb->ptr.p_double[i] / cha->ptr.pp_double[i][i];
         }
-        
+
         /*
          * Solve L'*x=y then.
          */
-        for(i=n-1; i>=0; i--)
-        {
-            xb->ptr.p_double[i] = xb->ptr.p_double[i]/cha->ptr.pp_double[i][i];
-            if( i>0 )
-            {
+        for (i = n - 1; i >= 0; i--) {
+            xb->ptr.p_double[i] =
+                xb->ptr.p_double[i] / cha->ptr.pp_double[i][i];
+            if (i > 0) {
                 v = xb->ptr.p_double[i];
-                ae_v_subd(&xb->ptr.p_double[0], 1, &cha->ptr.pp_double[i][0], 1, ae_v_len(0,i-1), v);
+                ae_v_subd(&xb->ptr.p_double[0], 1, &cha->ptr.pp_double[i][0], 1,
+                          ae_v_len(0, i - 1), v);
             }
         }
     }
 }
-
 
 /*************************************************************************
 Basic LU solver for ScaleA*PLU*x = y.
@@ -11894,38 +11723,36 @@ This subroutine assumes that:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_cbasiclusolve(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* xb,
-     ae_state *_state)
-{
+static void directdensesolvers_cbasiclusolve(/* Complex */ ae_matrix *lua,
+                                             /* Integer */ ae_vector *p,
+                                             ae_int_t n,
+                                             /* Complex */ ae_vector *xb,
+                                             ae_state *_state) {
     ae_int_t i;
     ae_complex v;
 
-
-    for(i=0; i<=n-1; i++)
-    {
-        if( p->ptr.p_int[i]!=i )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (p->ptr.p_int[i] != i) {
             v = xb->ptr.p_complex[i];
             xb->ptr.p_complex[i] = xb->ptr.p_complex[p->ptr.p_int[i]];
             xb->ptr.p_complex[p->ptr.p_int[i]] = v;
         }
     }
-    for(i=1; i<=n-1; i++)
-    {
-        v = ae_v_cdotproduct(&lua->ptr.pp_complex[i][0], 1, "N", &xb->ptr.p_complex[0], 1, "N", ae_v_len(0,i-1));
-        xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i],v);
+    for (i = 1; i <= n - 1; i++) {
+        v = ae_v_cdotproduct(&lua->ptr.pp_complex[i][0], 1, "N",
+                             &xb->ptr.p_complex[0], 1, "N", ae_v_len(0, i - 1));
+        xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i], v);
     }
-    xb->ptr.p_complex[n-1] = ae_c_div(xb->ptr.p_complex[n-1],lua->ptr.pp_complex[n-1][n-1]);
-    for(i=n-2; i>=0; i--)
-    {
-        v = ae_v_cdotproduct(&lua->ptr.pp_complex[i][i+1], 1, "N", &xb->ptr.p_complex[i+1], 1, "N", ae_v_len(i+1,n-1));
-        xb->ptr.p_complex[i] = ae_c_div(ae_c_sub(xb->ptr.p_complex[i],v),lua->ptr.pp_complex[i][i]);
+    xb->ptr.p_complex[n - 1] =
+        ae_c_div(xb->ptr.p_complex[n - 1], lua->ptr.pp_complex[n - 1][n - 1]);
+    for (i = n - 2; i >= 0; i--) {
+        v = ae_v_cdotproduct(&lua->ptr.pp_complex[i][i + 1], 1, "N",
+                             &xb->ptr.p_complex[i + 1], 1, "N",
+                             ae_v_len(i + 1, n - 1));
+        xb->ptr.p_complex[i] = ae_c_div(ae_c_sub(xb->ptr.p_complex[i], v),
+                                        lua->ptr.pp_complex[i][i]);
     }
 }
-
 
 /*************************************************************************
 Basic Cholesky solver for ScaleA*Cholesky(A)'*x = y.
@@ -11937,149 +11764,130 @@ This subroutine assumes that:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-static void directdensesolvers_hpdbasiccholeskysolve(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* xb,
-     ae_state *_state)
-{
+static void directdensesolvers_hpdbasiccholeskysolve(
+    /* Complex */ ae_matrix *cha, ae_int_t n, ae_bool isupper,
+    /* Complex */ ae_vector *xb, ae_state *_state) {
     ae_int_t i;
     ae_complex v;
 
-
-    
     /*
      * A = L*L' or A=U'*U
      */
-    if( isupper )
-    {
-        
+    if (isupper) {
         /*
          * Solve U'*y=b first.
          */
-        for(i=0; i<=n-1; i++)
-        {
-            xb->ptr.p_complex[i] = ae_c_div(xb->ptr.p_complex[i],ae_c_conj(cha->ptr.pp_complex[i][i], _state));
-            if( i<n-1 )
-            {
+        for (i = 0; i <= n - 1; i++) {
+            xb->ptr.p_complex[i] =
+                ae_c_div(xb->ptr.p_complex[i],
+                         ae_c_conj(cha->ptr.pp_complex[i][i], _state));
+            if (i < n - 1) {
                 v = xb->ptr.p_complex[i];
-                ae_v_csubc(&xb->ptr.p_complex[i+1], 1, &cha->ptr.pp_complex[i][i+1], 1, "Conj", ae_v_len(i+1,n-1), v);
+                ae_v_csubc(&xb->ptr.p_complex[i + 1], 1,
+                           &cha->ptr.pp_complex[i][i + 1], 1, "Conj",
+                           ae_v_len(i + 1, n - 1), v);
             }
         }
-        
+
         /*
          * Solve U*x=y then.
          */
-        for(i=n-1; i>=0; i--)
-        {
-            if( i<n-1 )
-            {
-                v = ae_v_cdotproduct(&cha->ptr.pp_complex[i][i+1], 1, "N", &xb->ptr.p_complex[i+1], 1, "N", ae_v_len(i+1,n-1));
-                xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i],v);
+        for (i = n - 1; i >= 0; i--) {
+            if (i < n - 1) {
+                v = ae_v_cdotproduct(&cha->ptr.pp_complex[i][i + 1], 1, "N",
+                                     &xb->ptr.p_complex[i + 1], 1, "N",
+                                     ae_v_len(i + 1, n - 1));
+                xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i], v);
             }
-            xb->ptr.p_complex[i] = ae_c_div(xb->ptr.p_complex[i],cha->ptr.pp_complex[i][i]);
+            xb->ptr.p_complex[i] =
+                ae_c_div(xb->ptr.p_complex[i], cha->ptr.pp_complex[i][i]);
         }
-    }
-    else
-    {
-        
+    } else {
         /*
          * Solve L*y=b first
          */
-        for(i=0; i<=n-1; i++)
-        {
-            if( i>0 )
-            {
-                v = ae_v_cdotproduct(&cha->ptr.pp_complex[i][0], 1, "N", &xb->ptr.p_complex[0], 1, "N", ae_v_len(0,i-1));
-                xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i],v);
+        for (i = 0; i <= n - 1; i++) {
+            if (i > 0) {
+                v = ae_v_cdotproduct(&cha->ptr.pp_complex[i][0], 1, "N",
+                                     &xb->ptr.p_complex[0], 1, "N",
+                                     ae_v_len(0, i - 1));
+                xb->ptr.p_complex[i] = ae_c_sub(xb->ptr.p_complex[i], v);
             }
-            xb->ptr.p_complex[i] = ae_c_div(xb->ptr.p_complex[i],cha->ptr.pp_complex[i][i]);
+            xb->ptr.p_complex[i] =
+                ae_c_div(xb->ptr.p_complex[i], cha->ptr.pp_complex[i][i]);
         }
-        
+
         /*
          * Solve L'*x=y then.
          */
-        for(i=n-1; i>=0; i--)
-        {
-            xb->ptr.p_complex[i] = ae_c_div(xb->ptr.p_complex[i],ae_c_conj(cha->ptr.pp_complex[i][i], _state));
-            if( i>0 )
-            {
+        for (i = n - 1; i >= 0; i--) {
+            xb->ptr.p_complex[i] =
+                ae_c_div(xb->ptr.p_complex[i],
+                         ae_c_conj(cha->ptr.pp_complex[i][i], _state));
+            if (i > 0) {
                 v = xb->ptr.p_complex[i];
-                ae_v_csubc(&xb->ptr.p_complex[0], 1, &cha->ptr.pp_complex[i][0], 1, "Conj", ae_v_len(0,i-1), v);
+                ae_v_csubc(&xb->ptr.p_complex[0], 1, &cha->ptr.pp_complex[i][0],
+                           1, "Conj", ae_v_len(0, i - 1), v);
             }
         }
     }
 }
 
-
-void _densesolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    densesolverreport *p = (densesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverreport_init(void *_p, ae_state *_state,
+                             ae_bool make_automatic) {
+    densesolverreport *p = (densesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _densesolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    densesolverreport *dst = (densesolverreport*)_dst;
-    densesolverreport *src = (densesolverreport*)_src;
+void _densesolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                  ae_bool make_automatic) {
+    densesolverreport *dst = (densesolverreport *)_dst;
+    densesolverreport *src = (densesolverreport *)_src;
     dst->r1 = src->r1;
     dst->rinf = src->rinf;
 }
 
-
-void _densesolverreport_clear(void* _p)
-{
-    densesolverreport *p = (densesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverreport_clear(void *_p) {
+    densesolverreport *p = (densesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _densesolverreport_destroy(void* _p)
-{
-    densesolverreport *p = (densesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverreport_destroy(void *_p) {
+    densesolverreport *p = (densesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _densesolverlsreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    densesolverlsreport *p = (densesolverlsreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverlsreport_init(void *_p, ae_state *_state,
+                               ae_bool make_automatic) {
+    densesolverlsreport *p = (densesolverlsreport *)_p;
+    ae_touch_ptr((void *)p);
     ae_matrix_init(&p->cx, 0, 0, DT_REAL, _state, make_automatic);
 }
 
-
-void _densesolverlsreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    densesolverlsreport *dst = (densesolverlsreport*)_dst;
-    densesolverlsreport *src = (densesolverlsreport*)_src;
+void _densesolverlsreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                    ae_bool make_automatic) {
+    densesolverlsreport *dst = (densesolverlsreport *)_dst;
+    densesolverlsreport *src = (densesolverlsreport *)_src;
     dst->r2 = src->r2;
     ae_matrix_init_copy(&dst->cx, &src->cx, _state, make_automatic);
     dst->n = src->n;
     dst->k = src->k;
 }
 
-
-void _densesolverlsreport_clear(void* _p)
-{
-    densesolverlsreport *p = (densesolverlsreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverlsreport_clear(void *_p) {
+    densesolverlsreport *p = (densesolverlsreport *)_p;
+    ae_touch_ptr((void *)p);
     ae_matrix_clear(&p->cx);
 }
 
-
-void _densesolverlsreport_destroy(void* _p)
-{
-    densesolverlsreport *p = (densesolverlsreport*)_p;
-    ae_touch_ptr((void*)p);
+void _densesolverlsreport_destroy(void *_p) {
+    densesolverlsreport *p = (densesolverlsreport *)_p;
+    ae_touch_ptr((void *)p);
     ae_matrix_destroy(&p->cx);
 }
 
-
 #endif
 #if defined(AE_COMPILE_DIRECTSPARSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -12106,13 +11914,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolvesks(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsespdsolvesks(sparsematrix *a, ae_bool isupper,
+                       /* Real    */ ae_vector *b,
+                       /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                       ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     sparsematrix a2;
@@ -12125,42 +11930,38 @@ void sparsespdsolvesks(sparsematrix* a,
     _sparsematrix_init(&a2, _state, ae_true);
 
     n = sparsegetnrows(a, _state);
-    ae_assert(n>0, "SparseSPDSolveSKS: N<=0", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSPDSolveSKS: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSPDSolveSKS: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSPDSolveSKS: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSPDSolveSKS: B contains infinities or NANs", _state);
+    ae_assert(n > 0, "SparseSPDSolveSKS: N<=0", _state);
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseSPDSolveSKS: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseSPDSolveSKS: cols(A)!=N",
+              _state);
+    ae_assert(b->cnt >= n, "SparseSPDSolveSKS: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSPDSolveSKS: B contains infinities or NANs", _state);
     initsparsesolverreport(rep, _state);
     ae_vector_set_length(x, n, _state);
     sparsecopytosks(a, &a2, _state);
-    if( !sparsecholeskyskyline(&a2, n, isupper, _state) )
-    {
+    if (!sparsecholeskyskyline(&a2, n, isupper, _state)) {
         rep->terminationtype = -3;
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             x->ptr.p_double[i] = (double)(0);
         }
         ae_frame_leave(_state);
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         x->ptr.p_double[i] = b->ptr.p_double[i];
     }
-    if( isupper )
-    {
+    if (isupper) {
         sparsetrsv(&a2, isupper, ae_false, 1, x, _state);
         sparsetrsv(&a2, isupper, ae_false, 0, x, _state);
-    }
-    else
-    {
+    } else {
         sparsetrsv(&a2, isupper, ae_false, 0, x, _state);
         sparsetrsv(&a2, isupper, ae_false, 1, x, _state);
     }
     rep->terminationtype = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -12187,13 +11988,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolve(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsespdsolve(sparsematrix *a, ae_bool isupper,
+                    /* Real    */ ae_vector *b,
+                    /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                    ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     ae_int_t j;
@@ -12211,40 +12009,37 @@ void sparsespdsolve(sparsematrix* a,
     ae_vector_init(&p, 0, DT_INT, _state, ae_true);
 
     n = sparsegetnrows(a, _state);
-    ae_assert(n>0, "SparseSPDSolve: N<=0", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSPDSolve: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSPDSolve: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSPDSolve: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSPDSolve: B contains infinities or NANs", _state);
+    ae_assert(n > 0, "SparseSPDSolve: N<=0", _state);
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseSPDSolve: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseSPDSolve: cols(A)!=N",
+              _state);
+    ae_assert(b->cnt >= n, "SparseSPDSolve: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSPDSolve: B contains infinities or NANs", _state);
     initsparsesolverreport(rep, _state);
     sparsecopytocrs(a, &a2, _state);
-    if( !sparsecholeskyp(&a2, isupper, &p, _state) )
-    {
+    if (!sparsecholeskyp(&a2, isupper, &p, _state)) {
         rep->terminationtype = -3;
         rsetallocv(n, 0.0, x, _state);
         ae_frame_leave(_state);
         return;
     }
     rcopyallocv(n, b, x, _state);
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         j = p.ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
         x->ptr.p_double[j] = v;
     }
-    if( isupper )
-    {
+    if (isupper) {
         sparsetrsv(&a2, isupper, ae_false, 1, x, _state);
         sparsetrsv(&a2, isupper, ae_false, 0, x, _state);
-    }
-    else
-    {
+    } else {
         sparsetrsv(&a2, isupper, ae_false, 0, x, _state);
         sparsetrsv(&a2, isupper, ae_false, 1, x, _state);
     }
-    for(i=n-1; i>=0; i--)
-    {
+    for (i = n - 1; i >= 0; i--) {
         j = p.ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
@@ -12253,7 +12048,6 @@ void sparsespdsolve(sparsematrix* a,
     rep->terminationtype = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
@@ -12280,13 +12074,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdcholeskysolve(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsespdcholeskysolve(sparsematrix *a, ae_bool isupper,
+                            /* Real    */ ae_vector *b,
+                            /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                            ae_state *_state) {
     ae_int_t i;
     ae_int_t n;
 
@@ -12294,43 +12085,39 @@ void sparsespdcholeskysolve(sparsematrix* a,
     _sparsesolverreport_clear(rep);
 
     n = sparsegetnrows(a, _state);
-    ae_assert(n>0, "SparseSPDCholeskySolve: N<=0", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSPDCholeskySolve: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSPDCholeskySolve: cols(A)!=N", _state);
-    ae_assert(sparseissks(a, _state)||sparseiscrs(a, _state), "SparseSPDCholeskySolve: A is not an SKS/CRS matrix", _state);
-    ae_assert(b->cnt>=n, "SparseSPDCholeskySolve: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSPDCholeskySolve: B contains infinities or NANs", _state);
+    ae_assert(n > 0, "SparseSPDCholeskySolve: N<=0", _state);
+    ae_assert(sparsegetnrows(a, _state) == n,
+              "SparseSPDCholeskySolve: rows(A)!=N", _state);
+    ae_assert(sparsegetncols(a, _state) == n,
+              "SparseSPDCholeskySolve: cols(A)!=N", _state);
+    ae_assert(sparseissks(a, _state) || sparseiscrs(a, _state),
+              "SparseSPDCholeskySolve: A is not an SKS/CRS matrix", _state);
+    ae_assert(b->cnt >= n, "SparseSPDCholeskySolve: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSPDCholeskySolve: B contains infinities or NANs", _state);
     initsparsesolverreport(rep, _state);
     ae_vector_set_length(x, n, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_eq(sparseget(a, i, i, _state),0.0) )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_eq(sparseget(a, i, i, _state), 0.0)) {
             rep->terminationtype = -3;
-            for(i=0; i<=n-1; i++)
-            {
+            for (i = 0; i <= n - 1; i++) {
                 x->ptr.p_double[i] = (double)(0);
             }
             return;
         }
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         x->ptr.p_double[i] = b->ptr.p_double[i];
     }
-    if( isupper )
-    {
+    if (isupper) {
         sparsetrsv(a, isupper, ae_false, 1, x, _state);
         sparsetrsv(a, isupper, ae_false, 0, x, _state);
-    }
-    else
-    {
+    } else {
         sparsetrsv(a, isupper, ae_false, 0, x, _state);
         sparsetrsv(a, isupper, ae_false, 1, x, _state);
     }
     rep->terminationtype = 1;
 }
-
 
 /*************************************************************************
 Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
@@ -12355,12 +12142,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolve(sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsesolve(sparsematrix *a,
+                 /* Real    */ ae_vector *b,
+                 /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                 ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t i;
     ae_int_t j;
@@ -12381,30 +12166,29 @@ void sparsesolve(sparsematrix* a,
     ae_vector_init(&pivq, 0, DT_INT, _state, ae_true);
 
     n = sparsegetnrows(a, _state);
-    ae_assert(n>0, "SparseSolve: N<=0", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSolve: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSolve: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSolve: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSolve: B contains infinities or NANs", _state);
+    ae_assert(n > 0, "SparseSolve: N<=0", _state);
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseSolve: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseSolve: cols(A)!=N",
+              _state);
+    ae_assert(b->cnt >= n, "SparseSolve: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSolve: B contains infinities or NANs", _state);
     initsparsesolverreport(rep, _state);
     ae_vector_set_length(x, n, _state);
     sparsecopytocrs(a, &a2, _state);
-    if( !sparselu(&a2, 0, &pivp, &pivq, _state) )
-    {
+    if (!sparselu(&a2, 0, &pivp, &pivq, _state)) {
         rep->terminationtype = -3;
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             x->ptr.p_double[i] = (double)(0);
         }
         ae_frame_leave(_state);
         return;
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         x->ptr.p_double[i] = b->ptr.p_double[i];
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         j = pivp.ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
@@ -12412,8 +12196,7 @@ void sparsesolve(sparsematrix* a,
     }
     sparsetrsv(&a2, ae_false, ae_true, 0, x, _state);
     sparsetrsv(&a2, ae_true, ae_false, 0, x, _state);
-    for(i=n-1; i>=0; i--)
-    {
+    for (i = n - 1; i >= 0; i--) {
         j = pivq.ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
@@ -12422,7 +12205,6 @@ void sparsesolve(sparsematrix* a,
     rep->terminationtype = 1;
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
@@ -12450,14 +12232,12 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparselusolve(sparsematrix* a,
-     /* Integer */ ae_vector* p,
-     /* Integer */ ae_vector* q,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparselusolve(sparsematrix *a,
+                   /* Integer */ ae_vector *p,
+                   /* Integer */ ae_vector *q,
+                   /* Real    */ ae_vector *b,
+                   /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                   ae_state *_state) {
     ae_int_t i;
     ae_int_t j;
     double v;
@@ -12467,39 +12247,40 @@ void sparselusolve(sparsematrix* a,
     _sparsesolverreport_clear(rep);
 
     n = sparsegetnrows(a, _state);
-    ae_assert(n>0, "SparseLUSolve: N<=0", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseLUSolve: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseLUSolve: cols(A)!=N", _state);
-    ae_assert(sparseiscrs(a, _state), "SparseLUSolve: A is not an SKS matrix", _state);
-    ae_assert(b->cnt>=n, "SparseLUSolve: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseLUSolve: B contains infinities or NANs", _state);
-    ae_assert(p->cnt>=n, "SparseLUSolve: length(P)<N", _state);
-    ae_assert(q->cnt>=n, "SparseLUSolve: length(Q)<N", _state);
-    for(i=0; i<=n-1; i++)
-    {
-        ae_assert(p->ptr.p_int[i]>=i&&p->ptr.p_int[i]<n, "SparseLUSolve: P is corrupted", _state);
-        ae_assert(q->ptr.p_int[i]>=i&&q->ptr.p_int[i]<n, "SparseLUSolve: Q is corrupted", _state);
+    ae_assert(n > 0, "SparseLUSolve: N<=0", _state);
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseLUSolve: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseLUSolve: cols(A)!=N",
+              _state);
+    ae_assert(sparseiscrs(a, _state), "SparseLUSolve: A is not an SKS matrix",
+              _state);
+    ae_assert(b->cnt >= n, "SparseLUSolve: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseLUSolve: B contains infinities or NANs", _state);
+    ae_assert(p->cnt >= n, "SparseLUSolve: length(P)<N", _state);
+    ae_assert(q->cnt >= n, "SparseLUSolve: length(Q)<N", _state);
+    for (i = 0; i <= n - 1; i++) {
+        ae_assert(p->ptr.p_int[i] >= i && p->ptr.p_int[i] < n,
+                  "SparseLUSolve: P is corrupted", _state);
+        ae_assert(q->ptr.p_int[i] >= i && q->ptr.p_int[i] < n,
+                  "SparseLUSolve: Q is corrupted", _state);
     }
     initsparsesolverreport(rep, _state);
     ae_vector_set_length(x, n, _state);
-    for(i=0; i<=n-1; i++)
-    {
-        if( a->didx.ptr.p_int[i]==a->uidx.ptr.p_int[i]||a->vals.ptr.p_double[a->didx.ptr.p_int[i]]==0.0 )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (a->didx.ptr.p_int[i] == a->uidx.ptr.p_int[i] ||
+            a->vals.ptr.p_double[a->didx.ptr.p_int[i]] == 0.0) {
             rep->terminationtype = -3;
-            for(i=0; i<=n-1; i++)
-            {
+            for (i = 0; i <= n - 1; i++) {
                 x->ptr.p_double[i] = (double)(0);
             }
             return;
         }
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         x->ptr.p_double[i] = b->ptr.p_double[i];
     }
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         j = p->ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
@@ -12507,8 +12288,7 @@ void sparselusolve(sparsematrix* a,
     }
     sparsetrsv(a, ae_false, ae_true, 0, x, _state);
     sparsetrsv(a, ae_true, ae_false, 0, x, _state);
-    for(i=n-1; i>=0; i--)
-    {
+    for (i = n - 1; i >= 0; i--) {
         j = q->ptr.p_int[i];
         v = x->ptr.p_double[i];
         x->ptr.p_double[i] = x->ptr.p_double[j];
@@ -12517,59 +12297,47 @@ void sparselusolve(sparsematrix* a,
     rep->terminationtype = 1;
 }
 
-
 /*************************************************************************
 Reset report fields
 
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void initsparsesolverreport(sparsesolverreport* rep, ae_state *_state)
-{
-
-
+void initsparsesolverreport(sparsesolverreport *rep, ae_state *_state) {
     rep->terminationtype = 0;
     rep->nmv = 0;
     rep->iterationscount = 0;
     rep->r2 = (double)(0);
 }
 
-
-void _sparsesolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    sparsesolverreport *p = (sparsesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverreport_init(void *_p, ae_state *_state,
+                              ae_bool make_automatic) {
+    sparsesolverreport *p = (sparsesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _sparsesolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    sparsesolverreport *dst = (sparsesolverreport*)_dst;
-    sparsesolverreport *src = (sparsesolverreport*)_src;
+void _sparsesolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                   ae_bool make_automatic) {
+    sparsesolverreport *dst = (sparsesolverreport *)_dst;
+    sparsesolverreport *src = (sparsesolverreport *)_src;
     dst->terminationtype = src->terminationtype;
     dst->nmv = src->nmv;
     dst->iterationscount = src->iterationscount;
     dst->r2 = src->r2;
 }
 
-
-void _sparsesolverreport_clear(void* _p)
-{
-    sparsesolverreport *p = (sparsesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverreport_clear(void *_p) {
+    sparsesolverreport *p = (sparsesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _sparsesolverreport_destroy(void* _p)
-{
-    sparsesolverreport *p = (sparsesolverreport*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverreport_destroy(void *_p) {
+    sparsesolverreport *p = (sparsesolverreport *)_p;
+    ae_touch_ptr((void *)p);
 }
-
 
 #endif
 #if defined(AE_COMPILE_ITERATIVESPARSE) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 Solving sparse symmetric linear system A*x=b using GMRES(k) method. Sparse
@@ -12590,7 +12358,7 @@ INPUT PARAMETERS:
                 creation).
     IsUpper -   whether upper or lower triangle of A is used:
                 * IsUpper=True  => only upper triangle is used and lower
-                                   triangle is not referenced at all 
+                                   triangle is not referenced at all
                 * IsUpper=False => only lower triangle is used and upper
                                    triangle is not referenced at all
     B       -   right part, array[N]
@@ -12605,7 +12373,7 @@ INPUT PARAMETERS:
 
 NOTE: having both EpsF=0 and MaxIts=0 means that stopping criteria will be
       chosen automatically.
-                
+
 OUTPUT PARAMETERS:
     X       -   array[N], the solution
     Rep     -   solution report:
@@ -12628,16 +12396,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvesymmetricgmres(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t k,
-     double epsf,
-     ae_int_t maxits,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsesolvesymmetricgmres(sparsematrix *a, ae_bool isupper,
+                               /* Real    */ ae_vector *b, ae_int_t k,
+                               double epsf, ae_int_t maxits,
+                               /* Real    */ ae_vector *x,
+                               sparsesolverreport *rep, ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t n;
     sparsematrix convbuf;
@@ -12652,33 +12415,39 @@ void sparsesolvesymmetricgmres(sparsematrix* a,
     _sparsesolverstate_init(&solver, _state, ae_true);
 
     n = sparsegetnrows(a, _state);
-    
+
     /*
      * Test inputs
      */
-    ae_assert(n>=1, "SparseSolveSymmetricGMRES: tried to automatically detect N from sizeof(A), got nonpositive size", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSolveSymmetricGMRES: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSolveSymmetricGMRES: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSolveSymmetricGMRES: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSolveSymmetricGMRES: B contains NAN/INF", _state);
-    ae_assert(ae_isfinite(epsf, _state)&&ae_fp_greater_eq(epsf,(double)(0)), "SparseSolveSymmetricGMRES: EpsF<0 or infinite", _state);
-    ae_assert(maxits>=0, "SparseSolveSymmetricGMRES: MaxIts<0", _state);
-    if( ae_fp_eq(epsf,(double)(0))&&maxits==0 )
-    {
+    ae_assert(n >= 1,
+              "SparseSolveSymmetricGMRES: tried to automatically detect N from "
+              "sizeof(A), got nonpositive size",
+              _state);
+    ae_assert(sparsegetnrows(a, _state) == n,
+              "SparseSolveSymmetricGMRES: rows(A)!=N", _state);
+    ae_assert(sparsegetncols(a, _state) == n,
+              "SparseSolveSymmetricGMRES: cols(A)!=N", _state);
+    ae_assert(b->cnt >= n, "SparseSolveSymmetricGMRES: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSolveSymmetricGMRES: B contains NAN/INF", _state);
+    ae_assert(ae_isfinite(epsf, _state) && ae_fp_greater_eq(epsf, (double)(0)),
+              "SparseSolveSymmetricGMRES: EpsF<0 or infinite", _state);
+    ae_assert(maxits >= 0, "SparseSolveSymmetricGMRES: MaxIts<0", _state);
+    if (ae_fp_eq(epsf, (double)(0)) && maxits == 0) {
         epsf = 1.0E-6;
     }
-    
+
     /*
      * If A is non-CRS, perform conversion
      */
-    if( !sparseiscrs(a, _state) )
-    {
+    if (!sparseiscrs(a, _state)) {
         sparsecopytocrsbuf(a, &convbuf, _state);
-        sparsesolvesymmetricgmres(&convbuf, isupper, b, k, epsf, maxits, x, rep, _state);
+        sparsesolvesymmetricgmres(&convbuf, isupper, b, k, epsf, maxits, x, rep,
+                                  _state);
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * Solve using temporary solver object
      */
@@ -12689,7 +12458,6 @@ void sparsesolvesymmetricgmres(sparsematrix* a,
     sparsesolverresults(&solver, x, rep, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 Solving sparse linear system A*x=b using GMRES(k) method.
@@ -12717,7 +12485,7 @@ INPUT PARAMETERS:
 
 NOTE: having both EpsF=0 and MaxIts=0 means that stopping criteria will be
       chosen automatically.
-                
+
 OUTPUT PARAMETERS:
     X       -   array[N], the solution
     Rep     -   solution report:
@@ -12740,15 +12508,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvegmres(sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_int_t k,
-     double epsf,
-     ae_int_t maxits,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
+void sparsesolvegmres(sparsematrix *a,
+                      /* Real    */ ae_vector *b, ae_int_t k, double epsf,
+                      ae_int_t maxits,
+                      /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                      ae_state *_state) {
     ae_frame _frame_block;
     ae_int_t n;
     sparsematrix convbuf;
@@ -12763,33 +12527,38 @@ void sparsesolvegmres(sparsematrix* a,
     _sparsesolverstate_init(&solver, _state, ae_true);
 
     n = sparsegetnrows(a, _state);
-    
+
     /*
      * Test inputs
      */
-    ae_assert(n>=1, "SparseSolveGMRES: tried to automatically detect N from sizeof(A), got nonpositive size", _state);
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSolveGMRES: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSolveGMRES: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSolveGMRES: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSolveGMRES: B contains NAN/INF", _state);
-    ae_assert(ae_isfinite(epsf, _state)&&ae_fp_greater_eq(epsf,(double)(0)), "SparseSolveGMRES: EpsF<0 or infinite", _state);
-    ae_assert(maxits>=0, "SparseSolveGMRES: MaxIts<0", _state);
-    if( ae_fp_eq(epsf,(double)(0))&&maxits==0 )
-    {
+    ae_assert(n >= 1,
+              "SparseSolveGMRES: tried to automatically detect N from "
+              "sizeof(A), got nonpositive size",
+              _state);
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseSolveGMRES: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseSolveGMRES: cols(A)!=N",
+              _state);
+    ae_assert(b->cnt >= n, "SparseSolveGMRES: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSolveGMRES: B contains NAN/INF", _state);
+    ae_assert(ae_isfinite(epsf, _state) && ae_fp_greater_eq(epsf, (double)(0)),
+              "SparseSolveGMRES: EpsF<0 or infinite", _state);
+    ae_assert(maxits >= 0, "SparseSolveGMRES: MaxIts<0", _state);
+    if (ae_fp_eq(epsf, (double)(0)) && maxits == 0) {
         epsf = 1.0E-6;
     }
-    
+
     /*
      * If A is non-CRS, perform conversion
      */
-    if( !sparseiscrs(a, _state) )
-    {
+    if (!sparseiscrs(a, _state)) {
         sparsecopytocrsbuf(a, &convbuf, _state);
         sparsesolvegmres(&convbuf, b, k, epsf, maxits, x, rep, _state);
         ae_frame_leave(_state);
         return;
     }
-    
+
     /*
      * Solve using temporary solver object
      */
@@ -12800,7 +12569,6 @@ void sparsesolvegmres(sparsematrix* a,
     sparsesolverresults(&solver, x, rep, _state);
     ae_frame_leave(_state);
 }
-
 
 /*************************************************************************
 This function initializes sparse linear iterative solver object.
@@ -12836,7 +12604,7 @@ USAGE (A is given by the SparseMatrix structure):
     It is possible to call SparseSolverSolve???() again to  solve  another
     task with same dimensionality but different matrix and/or  right  part
     without reinitializing SparseSolverState structure.
-  
+
 USAGE (out-of-core mode):
 
     1. User initializes algorithm state with SparseSolverCreate() call
@@ -12845,7 +12613,7 @@ USAGE (out-of-core mode):
     3. Optionally, user tunes solver parameters, sets starting point, etc.
     4. After that user should work with out-of-core interface  in  a  loop
        like one given below:
-       
+
         > alglib.sparsesolveroocstart(state)
         > while alglib.sparsesolverooccontinue(state) do
         >     alglib.sparsesolveroocgetrequestinfo(state, out RequestType)
@@ -12864,14 +12632,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvercreate(ae_int_t n,
-     sparsesolverstate* state,
-     ae_state *_state)
-{
-
+void sparsesolvercreate(ae_int_t n, sparsesolverstate *state,
+                        ae_state *_state) {
     _sparsesolverstate_clear(state);
 
-    ae_assert(n>=1, "SparseSolverCreate: N<=0", _state);
+    ae_assert(n >= 1, "SparseSolverCreate: N<=0", _state);
     state->n = n;
     state->running = ae_false;
     state->userterminationneeded = ae_false;
@@ -12888,7 +12653,6 @@ void sparsesolvercreate(ae_int_t n,
     iterativesparse_clearrequestfields(state, _state);
     iterativesparse_clearreportfields(state, _state);
 }
-
 
 /*************************************************************************
 This function sets the solver algorithm to GMRES(k).
@@ -12911,21 +12675,15 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetalgogmres(sparsesolverstate* state,
-     ae_int_t k,
-     ae_state *_state)
-{
-
-
-    ae_assert(k>=0, "SparseSolverSetAlgoGMRESK: K<0", _state);
+void sparsesolversetalgogmres(sparsesolverstate *state, ae_int_t k,
+                              ae_state *_state) {
+    ae_assert(k >= 0, "SparseSolverSetAlgoGMRESK: K<0", _state);
     state->algotype = 0;
-    if( k==0 )
-    {
+    if (k == 0) {
         k = 50;
     }
     state->gmresk = ae_minint(k, state->n, _state);
 }
-
 
 /*************************************************************************
 This function sets starting point.
@@ -12941,58 +12699,52 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetstartingpoint(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
-
-
-    ae_assert(state->n<=x->cnt, "SparseSolverSetStartingPoint: Length(X)<N", _state);
-    ae_assert(isfinitevector(x, state->n, _state), "SparseSolverSetStartingPoint: X contains infinite or NaN values!", _state);
+void sparsesolversetstartingpoint(sparsesolverstate *state,
+                                  /* Real    */ ae_vector *x,
+                                  ae_state *_state) {
+    ae_assert(state->n <= x->cnt, "SparseSolverSetStartingPoint: Length(X)<N",
+              _state);
+    ae_assert(
+        isfinitevector(x, state->n, _state),
+        "SparseSolverSetStartingPoint: X contains infinite or NaN values!",
+        _state);
     rcopyv(state->n, x, &state->x0, _state);
 }
-
 
 /*************************************************************************
 This function sets stopping criteria.
 
 INPUT PARAMETERS:
-    EpsF    -   algorithm will be stopped if norm of residual is less than 
+    EpsF    -   algorithm will be stopped if norm of residual is less than
                 EpsF*||b||.
-    MaxIts  -   algorithm will be stopped if number of iterations is  more 
+    MaxIts  -   algorithm will be stopped if number of iterations is  more
                 than MaxIts.
 
 OUTPUT PARAMETERS:
     State   -   structure which stores algorithm state
 
 NOTES:
-If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small 
+If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
 value.
 
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetcond(sparsesolverstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state)
-{
-
-
-    ae_assert(ae_isfinite(epsf, _state)&&ae_fp_greater_eq(epsf,(double)(0)), "SparseSolverSetCond: EpsF is negative or contains infinite or NaN values", _state);
-    ae_assert(maxits>=0, "SparseSolverSetCond: MaxIts is negative", _state);
-    if( ae_fp_eq(epsf,(double)(0))&&maxits==0 )
-    {
+void sparsesolversetcond(sparsesolverstate *state, double epsf, ae_int_t maxits,
+                         ae_state *_state) {
+    ae_assert(ae_isfinite(epsf, _state) && ae_fp_greater_eq(epsf, (double)(0)),
+              "SparseSolverSetCond: EpsF is negative or contains infinite or "
+              "NaN values",
+              _state);
+    ae_assert(maxits >= 0, "SparseSolverSetCond: MaxIts is negative", _state);
+    if (ae_fp_eq(epsf, (double)(0)) && maxits == 0) {
         state->epsf = 1.0E-6;
         state->maxits = 0;
-    }
-    else
-    {
+    } else {
         state->epsf = epsf;
         state->maxits = maxits;
     }
 }
-
 
 /*************************************************************************
 Procedure for  the  solution of A*x=b with sparse symmetric A given by its
@@ -13017,7 +12769,7 @@ INPUT PARAMETERS:
                 creation).
     IsUpper -   whether upper or lower triangle of A is used:
                 * IsUpper=True  => only upper triangle is used and lower
-                                   triangle is not referenced at all 
+                                   triangle is not referenced at all
                 * IsUpper=False => only lower triangle is used and upper
                                    triangle is not referenced at all
     B       -   right part, array[N]
@@ -13029,54 +12781,50 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolvesymmetric(sparsesolverstate* state,
-     sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
+void sparsesolversolvesymmetric(sparsesolverstate *state, sparsematrix *a,
+                                ae_bool isupper,
+                                /* Real    */ ae_vector *b, ae_state *_state) {
     ae_int_t n;
 
-
     n = state->n;
-    
+
     /*
      * Test inputs
      */
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSolverSolveSymmetric: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSolverSolveSymmetric: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSolverSolveSymmetric: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSolverSolveSymmetric: B contains NAN/INF", _state);
-    
+    ae_assert(sparsegetnrows(a, _state) == n,
+              "SparseSolverSolveSymmetric: rows(A)!=N", _state);
+    ae_assert(sparsegetncols(a, _state) == n,
+              "SparseSolverSolveSymmetric: cols(A)!=N", _state);
+    ae_assert(b->cnt >= n, "SparseSolverSolveSymmetric: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSolverSolveSymmetric: B contains NAN/INF", _state);
+
     /*
      * If A is non-CRS, perform conversion
      */
-    if( !sparseiscrs(a, _state) )
-    {
+    if (!sparseiscrs(a, _state)) {
         sparsecopytocrsbuf(a, &state->convbuf, _state);
         sparsesolversolvesymmetric(state, &state->convbuf, isupper, b, _state);
         return;
     }
-    
+
     /*
      * Solve using out-of-core API
      */
     sparsesolveroocstart(state, b, _state);
-    while(sparsesolverooccontinue(state, _state))
-    {
-        if( state->requesttype==-1 )
-        {
-            
+    while (sparsesolverooccontinue(state, _state)) {
+        if (state->requesttype == -1) {
             /*
              * Skip location reports
              */
             continue;
         }
-        ae_assert(state->requesttype==0, "SparseSolverSolveSymmetric: integrity check 7372 failed", _state);
+        ae_assert(state->requesttype == 0,
+                  "SparseSolverSolveSymmetric: integrity check 7372 failed",
+                  _state);
         sparsesmv(a, isupper, &state->x, &state->ax, _state);
     }
 }
-
 
 /*************************************************************************
 Procedure for the solution of A*x=b with sparse nonsymmetric A
@@ -13105,53 +12853,48 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolve(sparsesolverstate* state,
-     sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
+void sparsesolversolve(sparsesolverstate *state, sparsematrix *a,
+                       /* Real    */ ae_vector *b, ae_state *_state) {
     ae_int_t n;
 
-
     n = state->n;
-    
+
     /*
      * Test inputs
      */
-    ae_assert(sparsegetnrows(a, _state)==n, "SparseSolverSolve: rows(A)!=N", _state);
-    ae_assert(sparsegetncols(a, _state)==n, "SparseSolverSolve: cols(A)!=N", _state);
-    ae_assert(b->cnt>=n, "SparseSolverSolve: length(B)<N", _state);
-    ae_assert(isfinitevector(b, n, _state), "SparseSolverSolve: B contains NAN/INF", _state);
-    
+    ae_assert(sparsegetnrows(a, _state) == n, "SparseSolverSolve: rows(A)!=N",
+              _state);
+    ae_assert(sparsegetncols(a, _state) == n, "SparseSolverSolve: cols(A)!=N",
+              _state);
+    ae_assert(b->cnt >= n, "SparseSolverSolve: length(B)<N", _state);
+    ae_assert(isfinitevector(b, n, _state),
+              "SparseSolverSolve: B contains NAN/INF", _state);
+
     /*
      * If A is non-CRS, perform conversion
      */
-    if( !sparseiscrs(a, _state) )
-    {
+    if (!sparseiscrs(a, _state)) {
         sparsecopytocrsbuf(a, &state->convbuf, _state);
         sparsesolversolve(state, &state->convbuf, b, _state);
         return;
     }
-    
+
     /*
      * Solve using out-of-core API
      */
     sparsesolveroocstart(state, b, _state);
-    while(sparsesolverooccontinue(state, _state))
-    {
-        if( state->requesttype==-1 )
-        {
-            
+    while (sparsesolverooccontinue(state, _state)) {
+        if (state->requesttype == -1) {
             /*
              * Skip location reports
              */
             continue;
         }
-        ae_assert(state->requesttype==0, "SparseSolverSolve: integrity check 7372 failed", _state);
+        ae_assert(state->requesttype == 0,
+                  "SparseSolverSolve: integrity check 7372 failed", _state);
         sparsemv(a, &state->x, &state->ax, _state);
     }
 }
-
 
 /*************************************************************************
 Sparse solver results.
@@ -13184,18 +12927,14 @@ s
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverresults(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
-
+void sparsesolverresults(sparsesolverstate *state,
+                         /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                         ae_state *_state) {
     ae_vector_clear(x);
     _sparsesolverreport_clear(rep);
 
     sparsesolveroocstop(state, x, rep, _state);
 }
-
 
 /*************************************************************************
 This function turns on/off reporting during out-of-core processing.
@@ -13221,15 +12960,10 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetxrep(sparsesolverstate* state,
-     ae_bool needxrep,
-     ae_state *_state)
-{
-
-
+void sparsesolversetxrep(sparsesolverstate *state, ae_bool needxrep,
+                         ae_state *_state) {
     state->xrep = needxrep;
 }
-
 
 /*************************************************************************
 This function initiates out-of-core mode of the sparse solver.  It  should
@@ -13251,14 +12985,10 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstart(sparsesolverstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
-
-
-    ae_vector_set_length(&state->rstate.ia, 0+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 2+1, _state);
+void sparsesolveroocstart(sparsesolverstate *state,
+                          /* Real    */ ae_vector *b, ae_state *_state) {
+    ae_vector_set_length(&state->rstate.ia, 0 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 2 + 1, _state);
     state->rstate.stage = -1;
     iterativesparse_clearrequestfields(state, _state);
     iterativesparse_clearreportfields(state, _state);
@@ -13266,7 +12996,6 @@ void sparsesolveroocstart(sparsesolverstate* state,
     state->userterminationneeded = ae_false;
     rcopyv(state->n, b, &state->b, _state);
 }
-
 
 /*************************************************************************
 This function performs iterative solution of  the  linear  system  in  the
@@ -13285,18 +13014,15 @@ related functions of this subspackage in a loop like one given below:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-ae_bool sparsesolverooccontinue(sparsesolverstate* state,
-     ae_state *_state)
-{
+ae_bool sparsesolverooccontinue(sparsesolverstate *state, ae_state *_state) {
     ae_bool result;
 
-
-    ae_assert(state->running, "SparseSolverContinue: the solver is not running", _state);
+    ae_assert(state->running, "SparseSolverContinue: the solver is not running",
+              _state);
     result = iterativesparse_sparsesolveriteration(state, _state);
     state->running = result;
     return result;
 }
-
 
 /*************************************************************************
 This function is used to retrieve information  about  out-of-core  request
@@ -13322,7 +13048,7 @@ of this subspackage in a loop like one given below:
 
 INPUT PARAMETERS:
     State           -   solver running in out-of-core mode
-    
+
 OUTPUT PARAMETERS:
     RequestType     -   type of the request to process:
                         * 0   for matrix-vector product A*x, with A  being
@@ -13334,17 +13060,15 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestinfo(sparsesolverstate* state,
-     ae_int_t* requesttype,
-     ae_state *_state)
-{
-
+void sparsesolveroocgetrequestinfo(sparsesolverstate *state,
+                                   ae_int_t *requesttype, ae_state *_state) {
     *requesttype = 0;
 
-    ae_assert(state->running, "SparseSolverOOCGetRequestInfo: the solver is not running", _state);
+    ae_assert(state->running,
+              "SparseSolverOOCGetRequestInfo: the solver is not running",
+              _state);
     *requesttype = state->requesttype;
 }
-
 
 /*************************************************************************
 This function is used  to  retrieve  vector  associated  with  out-of-core
@@ -13369,7 +13093,7 @@ INPUT PARAMETERS:
     X               -   possibly  preallocated   storage;  reallocated  if
                         needed, left unchanged, if large enough  to  store
                         request data.
-    
+
 OUTPUT PARAMETERS:
     X               -   array[N] or larger, leading N elements are  filled
                         with vector X.
@@ -13378,16 +13102,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
-
-
-    ae_assert(state->running, "SparseSolverOOCGetRequestInfo: the solver is not running", _state);
+void sparsesolveroocgetrequestdata(sparsesolverstate *state,
+                                   /* Real    */ ae_vector *x,
+                                   ae_state *_state) {
+    ae_assert(state->running,
+              "SparseSolverOOCGetRequestInfo: the solver is not running",
+              _state);
     rcopyallocv(state->n, &state->x, x, _state);
 }
-
 
 /*************************************************************************
 This function is used to retrieve scalar value associated with out-of-core
@@ -13397,7 +13119,7 @@ reports.
 
 INPUT PARAMETERS:
     State           -   solver running in out-of-core mode
-    
+
 OUTPUT PARAMETERS:
     V               -   scalar value associated with the current request
 
@@ -13405,17 +13127,15 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata1(sparsesolverstate* state,
-     double* v,
-     ae_state *_state)
-{
-
+void sparsesolveroocgetrequestdata1(sparsesolverstate *state, double *v,
+                                    ae_state *_state) {
     *v = 0;
 
-    ae_assert(state->running, "SparseSolverOOCGetRequestInfo: the solver is not running", _state);
+    ae_assert(state->running,
+              "SparseSolverOOCGetRequestInfo: the solver is not running",
+              _state);
     *v = state->reply1;
 }
-
 
 /*************************************************************************
 This function is used to send user reply to out-of-core  request  sent  by
@@ -13441,17 +13161,16 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocsendresult(sparsesolverstate* state,
-     /* Real    */ ae_vector* ax,
-     ae_state *_state)
-{
-
-
-    ae_assert(state->running, "SparseSolverOOCSendResult: the solver is not running", _state);
-    ae_assert(state->requesttype==0, "SparseSolverOOCSendResult: this request type does not accept replies", _state);
+void sparsesolveroocsendresult(sparsesolverstate *state,
+                               /* Real    */ ae_vector *ax, ae_state *_state) {
+    ae_assert(state->running,
+              "SparseSolverOOCSendResult: the solver is not running", _state);
+    ae_assert(
+        state->requesttype == 0,
+        "SparseSolverOOCSendResult: this request type does not accept replies",
+        _state);
     rcopyv(state->n, ax, &state->ax, _state);
 }
-
 
 /*************************************************************************
 This  function  finalizes out-of-core mode of the linear solver. It should
@@ -13469,7 +13188,7 @@ subspackage in a loop like one given below:
 
 INPUT PARAMETERS:
     State       -   solver state
-    
+
 OUTPUT PARAMETERS:
     X       -   array[N], the solution.
                 Zero-filled on the failure (Rep.TerminationType<0).
@@ -13493,16 +13212,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstop(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state)
-{
-
+void sparsesolveroocstop(sparsesolverstate *state,
+                         /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                         ae_state *_state) {
     ae_vector_clear(x);
     _sparsesolverreport_clear(rep);
 
-    ae_assert(!state->running, "SparseSolverOOCStop: the solver is still running", _state);
+    ae_assert(!state->running,
+              "SparseSolverOOCStop: the solver is still running", _state);
     ae_vector_set_length(x, state->n, _state);
     rcopyv(state->n, &state->xf, x, _state);
     initsparsesolverreport(rep, _state);
@@ -13511,7 +13228,6 @@ void sparsesolveroocstop(sparsesolverstate* state,
     rep->terminationtype = state->repterminationtype;
     rep->r2 = state->repr2;
 }
-
 
 /*************************************************************************
 This subroutine submits request for termination of the running solver.  It
@@ -13528,7 +13244,7 @@ INPUT PARAMETERS:
 
 NOTE: calling this function on solver which is NOT running  will  have  no
       effect.
-      
+
 NOTE: multiple calls to this function are possible. First call is counted,
       subsequent calls are silently ignored.
 
@@ -13539,14 +13255,10 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverrequesttermination(sparsesolverstate* state,
-     ae_state *_state)
-{
-
-
+void sparsesolverrequesttermination(sparsesolverstate *state,
+                                    ae_state *_state) {
     state->userterminationneeded = ae_true;
 }
-
 
 /*************************************************************************
 Reverse communication sparse iteration subroutine
@@ -13554,17 +13266,14 @@ Reverse communication sparse iteration subroutine
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate* state,
-     ae_state *_state)
-{
+static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate *state,
+                                                     ae_state *_state) {
     ae_int_t outeridx;
     double res;
     double prevres;
     double res0;
     ae_bool result;
 
-
-    
     /*
      * Reverse communication preparations
      * I know it looks ugly, but it works the same way
@@ -13575,60 +13284,50 @@ static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate* state,
      *   generation - on first subroutine call
      * * values from previous call - on subsequent calls
      */
-    if( state->rstate.stage>=0 )
-    {
+    if (state->rstate.stage >= 0) {
         outeridx = state->rstate.ia.ptr.p_int[0];
         res = state->rstate.ra.ptr.p_double[0];
         prevres = state->rstate.ra.ptr.p_double[1];
         res0 = state->rstate.ra.ptr.p_double[2];
-    }
-    else
-    {
+    } else {
         outeridx = 359;
         res = -58;
         prevres = -919;
         res0 = -909;
     }
-    if( state->rstate.stage==0 )
-    {
+    if (state->rstate.stage == 0) {
         goto lbl_0;
     }
-    if( state->rstate.stage==1 )
-    {
+    if (state->rstate.stage == 1) {
         goto lbl_1;
     }
-    if( state->rstate.stage==2 )
-    {
+    if (state->rstate.stage == 2) {
         goto lbl_2;
     }
-    if( state->rstate.stage==3 )
-    {
+    if (state->rstate.stage == 3) {
         goto lbl_3;
     }
-    if( state->rstate.stage==4 )
-    {
+    if (state->rstate.stage == 4) {
         goto lbl_4;
     }
-    
+
     /*
      * Routine body
      */
     state->running = ae_true;
     iterativesparse_clearrequestfields(state, _state);
     iterativesparse_clearreportfields(state, _state);
-    
+
     /*
      * GMRES?
      */
-    if( state->algotype!=0 )
-    {
+    if (state->algotype != 0) {
         goto lbl_5;
     }
-    if( ae_fp_neq(rdotv2(state->n, &state->x0, _state),(double)(0)) )
-    {
+    if (ae_fp_neq(rdotv2(state->n, &state->x0, _state), (double)(0))) {
         goto lbl_7;
     }
-    
+
     /*
      * Starting point is default one (zero), quick initialization
      */
@@ -13636,9 +13335,9 @@ static ae_bool iterativesparse_sparsesolveriteration(sparsesolverstate* state,
     rcopyv(state->n, &state->b, &state->wrkb, _state);
     goto lbl_8;
 lbl_7:
-    
+
     /*
-     * Non-zero starting point is provided, 
+     * Non-zero starting point is provided,
      */
     rcopyv(state->n, &state->x0, &state->xf, _state);
     state->requesttype = 0;
@@ -13647,7 +13346,7 @@ lbl_7:
     goto lbl_rcomm;
 lbl_0:
     state->requesttype = -999;
-    state->repnmv = state->repnmv+1;
+    state->repnmv = state->repnmv + 1;
     rcopyv(state->n, &state->b, &state->wrkb, _state);
     raddv(state->n, -1.0, &state->ax, &state->wrkb, _state);
 lbl_8:
@@ -13656,16 +13355,15 @@ lbl_8:
     state->repr2 = rdotv2(state->n, &state->wrkb, _state);
     res0 = ae_sqrt(rdotv2(state->n, &state->b, _state), _state);
     res = ae_sqrt(state->repr2, _state);
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_9;
     }
-    
+
     /*
      * Report initial point
      */
     state->requesttype = -1;
-    state->reply1 = res*res;
+    state->reply1 = res * res;
     rcopyv(state->n, &state->xf, &state->x, _state);
     state->rstate.stage = 1;
     goto lbl_rcomm;
@@ -13673,11 +13371,11 @@ lbl_1:
     state->requesttype = -999;
 lbl_9:
 lbl_11:
-    if( !(ae_fp_greater(res,(double)(0))&&(state->maxits==0||state->repiterationscount<state->maxits)) )
-    {
+    if (!(ae_fp_greater(res, (double)(0)) &&
+          (state->maxits == 0 || state->repiterationscount < state->maxits))) {
         goto lbl_12;
     }
-    
+
     /*
      * Solve with GMRES(k) for current residual.
      *
@@ -13690,11 +13388,11 @@ lbl_11:
      * an opportunity to stop early without waiting for GMRES round to
      * complete.
      */
-    fblsgmrescreate(&state->wrkb, state->n, state->gmresk, &state->gmressolver, _state);
-    state->gmressolver.epsres = state->epsf*res0/res;
+    fblsgmrescreate(&state->wrkb, state->n, state->gmresk, &state->gmressolver,
+                    _state);
+    state->gmressolver.epsres = state->epsf * res0 / res;
 lbl_13:
-    if( !fblsgmresiteration(&state->gmressolver, _state) )
-    {
+    if (!fblsgmresiteration(&state->gmressolver, _state)) {
         goto lbl_14;
     }
     state->requesttype = 0;
@@ -13704,10 +13402,8 @@ lbl_13:
 lbl_2:
     state->requesttype = -999;
     rcopyv(state->n, &state->ax, &state->gmressolver.ax, _state);
-    state->repnmv = state->repnmv+1;
-    if( state->userterminationneeded )
-    {
-        
+    state->repnmv = state->repnmv + 1;
+    if (state->userterminationneeded) {
         /*
          * User requested termination
          */
@@ -13717,9 +13413,10 @@ lbl_2:
     }
     goto lbl_13;
 lbl_14:
-    state->repiterationscount = state->repiterationscount+state->gmressolver.itsperformed;
+    state->repiterationscount =
+        state->repiterationscount + state->gmressolver.itsperformed;
     raddv(state->n, 1.0, &state->gmressolver.xs, &state->xf, _state);
-    
+
     /*
      * Update residual, evaluate residual decrease, terminate if needed
      */
@@ -13729,49 +13426,43 @@ lbl_14:
     goto lbl_rcomm;
 lbl_3:
     state->requesttype = -999;
-    state->repnmv = state->repnmv+1;
+    state->repnmv = state->repnmv + 1;
     rcopyv(state->n, &state->b, &state->wrkb, _state);
     raddv(state->n, -1.0, &state->ax, &state->wrkb, _state);
     state->repr2 = rdotv2(state->n, &state->wrkb, _state);
     prevres = res;
     res = ae_sqrt(state->repr2, _state);
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_15;
     }
-    
+
     /*
      * Report initial point
      */
     state->requesttype = -1;
-    state->reply1 = res*res;
+    state->reply1 = res * res;
     rcopyv(state->n, &state->xf, &state->x, _state);
     state->rstate.stage = 4;
     goto lbl_rcomm;
 lbl_4:
     state->requesttype = -999;
 lbl_15:
-    if( ae_fp_less_eq(res,state->epsf*res0) )
-    {
-        
+    if (ae_fp_less_eq(res, state->epsf * res0)) {
         /*
          * Residual decrease condition met, stopping
          */
         state->repterminationtype = 1;
         goto lbl_12;
     }
-    if( ae_fp_greater_eq(res,prevres*(1-ae_sqrt(ae_machineepsilon, _state))) )
-    {
-        
+    if (ae_fp_greater_eq(res,
+                         prevres * (1 - ae_sqrt(ae_machineepsilon, _state)))) {
         /*
          * The algorithm stagnated
          */
         state->repterminationtype = 7;
         goto lbl_12;
     }
-    if( state->userterminationneeded )
-    {
-        
+    if (state->userterminationneeded) {
         /*
          * User requested termination
          */
@@ -13779,16 +13470,18 @@ lbl_15:
         result = ae_false;
         return result;
     }
-    outeridx = outeridx+1;
+    outeridx = outeridx + 1;
     goto lbl_11;
 lbl_12:
     result = ae_false;
     return result;
 lbl_5:
-    ae_assert(ae_false, "SparseSolverIteration: integrity check failed (unexpected algo)", _state);
+    ae_assert(ae_false,
+              "SparseSolverIteration: integrity check failed (unexpected algo)",
+              _state);
     result = ae_false;
     return result;
-    
+
     /*
      * Saving state
      */
@@ -13801,38 +13494,29 @@ lbl_rcomm:
     return result;
 }
 
-
 /*************************************************************************
 Clears request fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void iterativesparse_clearrequestfields(sparsesolverstate* state,
-     ae_state *_state)
-{
-
-
+static void iterativesparse_clearrequestfields(sparsesolverstate *state,
+                                               ae_state *_state) {
     state->requesttype = -999;
 }
-
 
 /*************************************************************************
 Clears report fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void iterativesparse_clearreportfields(sparsesolverstate* state,
-     ae_state *_state)
-{
-
-
+static void iterativesparse_clearreportfields(sparsesolverstate *state,
+                                              ae_state *_state) {
     state->repiterationscount = 0;
     state->repnmv = 0;
     state->repterminationtype = 0;
     state->repr2 = (double)(0);
 }
 
-
-void _sparsesolverstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    sparsesolverstate *p = (sparsesolverstate*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverstate_init(void *_p, ae_state *_state,
+                             ae_bool make_automatic) {
+    sparsesolverstate *p = (sparsesolverstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_init(&p->x0, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->b, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->xf, 0, DT_REAL, _state, make_automatic);
@@ -13844,11 +13528,10 @@ void _sparsesolverstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
     _rcommstate_init(&p->rstate, _state, make_automatic);
 }
 
-
-void _sparsesolverstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    sparsesolverstate *dst = (sparsesolverstate*)_dst;
-    sparsesolverstate *src = (sparsesolverstate*)_src;
+void _sparsesolverstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                                  ae_bool make_automatic) {
+    sparsesolverstate *dst = (sparsesolverstate *)_dst;
+    sparsesolverstate *src = (sparsesolverstate *)_src;
     dst->n = src->n;
     ae_vector_init_copy(&dst->x0, &src->x0, _state, make_automatic);
     dst->epsf = src->epsf;
@@ -13869,16 +13552,16 @@ void _sparsesolverstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_b
     ae_vector_init_copy(&dst->ax, &src->ax, _state, make_automatic);
     dst->reply1 = src->reply1;
     ae_vector_init_copy(&dst->wrkb, &src->wrkb, _state, make_automatic);
-    _sparsematrix_init_copy(&dst->convbuf, &src->convbuf, _state, make_automatic);
-    _fblsgmresstate_init_copy(&dst->gmressolver, &src->gmressolver, _state, make_automatic);
+    _sparsematrix_init_copy(&dst->convbuf, &src->convbuf, _state,
+                            make_automatic);
+    _fblsgmresstate_init_copy(&dst->gmressolver, &src->gmressolver, _state,
+                              make_automatic);
     _rcommstate_init_copy(&dst->rstate, &src->rstate, _state, make_automatic);
 }
 
-
-void _sparsesolverstate_clear(void* _p)
-{
-    sparsesolverstate *p = (sparsesolverstate*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverstate_clear(void *_p) {
+    sparsesolverstate *p = (sparsesolverstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_clear(&p->x0);
     ae_vector_clear(&p->b);
     ae_vector_clear(&p->xf);
@@ -13890,11 +13573,9 @@ void _sparsesolverstate_clear(void* _p)
     _rcommstate_clear(&p->rstate);
 }
 
-
-void _sparsesolverstate_destroy(void* _p)
-{
-    sparsesolverstate *p = (sparsesolverstate*)_p;
-    ae_touch_ptr((void*)p);
+void _sparsesolverstate_destroy(void *_p) {
+    sparsesolverstate *p = (sparsesolverstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_destroy(&p->x0);
     ae_vector_destroy(&p->b);
     ae_vector_destroy(&p->xf);
@@ -13906,10 +13587,8 @@ void _sparsesolverstate_destroy(void* _p)
     _rcommstate_destroy(&p->rstate);
 }
 
-
 #endif
 #if defined(AE_COMPILE_LINCG) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 This function initializes linear CG Solver. This solver is used  to  solve
@@ -13927,7 +13606,7 @@ USAGE:
 6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
    problem  with different matrix and/or right part without reinitializing
    LinCGState structure.
-  
+
 INPUT PARAMETERS:
     N       -   problem dimension, N>0
 
@@ -13937,13 +13616,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgcreate(ae_int_t n, lincgstate* state, ae_state *_state)
-{
+void lincgcreate(ae_int_t n, lincgstate *state, ae_state *_state) {
     ae_int_t i;
 
     _lincgstate_clear(state);
 
-    ae_assert(n>0, "LinCGCreate: N<=0", _state);
+    ae_assert(n > 0, "LinCGCreate: N<=0", _state);
     state->n = n;
     state->prectype = 0;
     state->itsbeforerestart = n;
@@ -13952,10 +13630,10 @@ void lincgcreate(ae_int_t n, lincgstate* state, ae_state *_state)
     state->maxits = 0;
     state->xrep = ae_false;
     state->running = ae_false;
-    
+
     /*
      * * allocate arrays
-     * * set RX to NAN (just for the case user calls Results() without 
+     * * set RX to NAN (just for the case user calls Results() without
      *   calling SolveSparse()
      * * set starting point to zero
      * * we do NOT initialize B here because we assume that user should
@@ -13965,8 +13643,7 @@ void lincgcreate(ae_int_t n, lincgstate* state, ae_state *_state)
     ae_vector_set_length(&state->rx, state->n, _state);
     ae_vector_set_length(&state->startx, state->n, _state);
     ae_vector_set_length(&state->b, state->n, _state);
-    for(i=0; i<=state->n-1; i++)
-    {
+    for (i = 0; i <= state->n - 1; i++) {
         state->rx.ptr.p_double[i] = _state->v_nan;
         state->startx.ptr.p_double[i] = 0.0;
         state->b.ptr.p_double[i] = (double)(0);
@@ -13981,11 +13658,10 @@ void lincgcreate(ae_int_t n, lincgstate* state, ae_state *_state)
     ae_vector_set_length(&state->mv, state->n, _state);
     ae_vector_set_length(&state->pv, state->n, _state);
     lincg_updateitersdata(state, _state);
-    ae_vector_set_length(&state->rstate.ia, 0+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 2+1, _state);
+    ae_vector_set_length(&state->rstate.ia, 0 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 2 + 1, _state);
     state->rstate.stage = -1;
 }
-
 
 /*************************************************************************
 This function sets starting point.
@@ -14000,18 +13676,19 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetstartingpoint(lincgstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetStartingPoint: you can not change starting point because LinCGIteration() function is running", _state);
-    ae_assert(state->n<=x->cnt, "LinCGSetStartingPoint: Length(X)<N", _state);
-    ae_assert(isfinitevector(x, state->n, _state), "LinCGSetStartingPoint: X contains infinite or NaN values!", _state);
-    ae_v_move(&state->startx.ptr.p_double[0], 1, &x->ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+void lincgsetstartingpoint(lincgstate *state,
+                           /* Real    */ ae_vector *x, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetStartingPoint: you can not change starting point "
+              "because LinCGIteration() function is running",
+              _state);
+    ae_assert(state->n <= x->cnt, "LinCGSetStartingPoint: Length(X)<N", _state);
+    ae_assert(isfinitevector(x, state->n, _state),
+              "LinCGSetStartingPoint: X contains infinite or NaN values!",
+              _state);
+    ae_v_move(&state->startx.ptr.p_double[0], 1, &x->ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
 }
-
 
 /*************************************************************************
 This function sets right part. By default, right part is zero.
@@ -14025,18 +13702,18 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetb(lincgstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetB: you can not set B, because function LinCGIteration is running!", _state);
-    ae_assert(b->cnt>=state->n, "LinCGSetB: Length(B)<N", _state);
-    ae_assert(isfinitevector(b, state->n, _state), "LinCGSetB: B contains infinite or NaN values!", _state);
-    ae_v_move(&state->b.ptr.p_double[0], 1, &b->ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+void lincgsetb(lincgstate *state,
+               /* Real    */ ae_vector *b, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetB: you can not set B, because function LinCGIteration "
+              "is running!",
+              _state);
+    ae_assert(b->cnt >= state->n, "LinCGSetB: Length(B)<N", _state);
+    ae_assert(isfinitevector(b, state->n, _state),
+              "LinCGSetB: B contains infinite or NaN values!", _state);
+    ae_v_move(&state->b.ptr.p_double[0], 1, &b->ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
 }
-
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -14050,14 +13727,13 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecunit(lincgstate* state, ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetPrecUnit: you can not change preconditioner, because function LinCGIteration is running!", _state);
+void lincgsetprecunit(lincgstate *state, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetPrecUnit: you can not change preconditioner, because "
+              "function LinCGIteration is running!",
+              _state);
     state->prectype = -1;
 }
-
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -14070,56 +13746,52 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecdiag(lincgstate* state, ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!", _state);
+void lincgsetprecdiag(lincgstate *state, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetPrecDiag: you can not change preconditioner, because "
+              "function LinCGIteration is running!",
+              _state);
     state->prectype = 0;
 }
-
 
 /*************************************************************************
 This function sets stopping criteria.
 
 INPUT PARAMETERS:
-    EpsF    -   algorithm will be stopped if norm of residual is less than 
+    EpsF    -   algorithm will be stopped if norm of residual is less than
                 EpsF*||b||.
-    MaxIts  -   algorithm will be stopped if number of iterations is  more 
+    MaxIts  -   algorithm will be stopped if number of iterations is  more
                 than MaxIts.
 
 OUTPUT PARAMETERS:
     State   -   structure which stores algorithm state
 
 NOTES:
-If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small 
+If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
 value.
 
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetcond(lincgstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetCond: you can not change stopping criteria when LinCGIteration() is running", _state);
-    ae_assert(ae_isfinite(epsf, _state)&&ae_fp_greater_eq(epsf,(double)(0)), "LinCGSetCond: EpsF is negative or contains infinite or NaN values", _state);
-    ae_assert(maxits>=0, "LinCGSetCond: MaxIts is negative", _state);
-    if( ae_fp_eq(epsf,(double)(0))&&maxits==0 )
-    {
+void lincgsetcond(lincgstate *state, double epsf, ae_int_t maxits,
+                  ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetCond: you can not change stopping criteria when "
+              "LinCGIteration() is running",
+              _state);
+    ae_assert(
+        ae_isfinite(epsf, _state) && ae_fp_greater_eq(epsf, (double)(0)),
+        "LinCGSetCond: EpsF is negative or contains infinite or NaN values",
+        _state);
+    ae_assert(maxits >= 0, "LinCGSetCond: MaxIts is negative", _state);
+    if (ae_fp_eq(epsf, (double)(0)) && maxits == 0) {
         state->epsf = lincg_defaultprecision;
         state->maxits = maxits;
-    }
-    else
-    {
+    } else {
         state->epsf = epsf;
         state->maxits = maxits;
     }
 }
-
 
 /*************************************************************************
 Reverse communication version of linear CG.
@@ -14127,16 +13799,13 @@ Reverse communication version of linear CG.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-ae_bool lincgiteration(lincgstate* state, ae_state *_state)
-{
+ae_bool lincgiteration(lincgstate *state, ae_state *_state) {
     ae_int_t i;
     double uvar;
     double bnorm;
     double v;
     ae_bool result;
 
-
-    
     /*
      * Reverse communication preparations
      * I know it looks ugly, but it works the same way
@@ -14147,68 +13816,62 @@ ae_bool lincgiteration(lincgstate* state, ae_state *_state)
      *   generation - on first subroutine call
      * * values from previous call - on subsequent calls
      */
-    if( state->rstate.stage>=0 )
-    {
+    if (state->rstate.stage >= 0) {
         i = state->rstate.ia.ptr.p_int[0];
         uvar = state->rstate.ra.ptr.p_double[0];
         bnorm = state->rstate.ra.ptr.p_double[1];
         v = state->rstate.ra.ptr.p_double[2];
-    }
-    else
-    {
+    } else {
         i = 359;
         uvar = -58;
         bnorm = -919;
         v = -909;
     }
-    if( state->rstate.stage==0 )
-    {
+    if (state->rstate.stage == 0) {
         goto lbl_0;
     }
-    if( state->rstate.stage==1 )
-    {
+    if (state->rstate.stage == 1) {
         goto lbl_1;
     }
-    if( state->rstate.stage==2 )
-    {
+    if (state->rstate.stage == 2) {
         goto lbl_2;
     }
-    if( state->rstate.stage==3 )
-    {
+    if (state->rstate.stage == 3) {
         goto lbl_3;
     }
-    if( state->rstate.stage==4 )
-    {
+    if (state->rstate.stage == 4) {
         goto lbl_4;
     }
-    if( state->rstate.stage==5 )
-    {
+    if (state->rstate.stage == 5) {
         goto lbl_5;
     }
-    if( state->rstate.stage==6 )
-    {
+    if (state->rstate.stage == 6) {
         goto lbl_6;
     }
-    if( state->rstate.stage==7 )
-    {
+    if (state->rstate.stage == 7) {
         goto lbl_7;
     }
-    
+
     /*
      * Routine body
      */
-    ae_assert(state->b.cnt>0, "LinCGIteration: B is not initialized (you must initialize B by LinCGSetB() call", _state);
+    ae_assert(state->b.cnt > 0,
+              "LinCGIteration: B is not initialized (you must initialize B by "
+              "LinCGSetB() call",
+              _state);
     state->running = ae_true;
     state->repnmv = 0;
     lincg_clearrfields(state, _state);
     lincg_updateitersdata(state, _state);
-    
+
     /*
      * Start 0-th iteration
      */
-    ae_v_move(&state->rx.ptr.p_double[0], 1, &state->startx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->rx.ptr.p_double[0], 1, &state->startx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     lincg_clearrfields(state, _state);
     state->needvmv = ae_true;
     state->rstate.stage = 0;
@@ -14218,23 +13881,27 @@ lbl_0:
     bnorm = (double)(0);
     state->r2 = (double)(0);
     state->meritfunction = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->r.ptr.p_double[i] = state->b.ptr.p_double[i]-state->mv.ptr.p_double[i];
-        state->r2 = state->r2+state->r.ptr.p_double[i]*state->r.ptr.p_double[i];
-        state->meritfunction = state->meritfunction+state->mv.ptr.p_double[i]*state->rx.ptr.p_double[i]-2*state->b.ptr.p_double[i]*state->rx.ptr.p_double[i];
-        bnorm = bnorm+state->b.ptr.p_double[i]*state->b.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->r.ptr.p_double[i] =
+            state->b.ptr.p_double[i] - state->mv.ptr.p_double[i];
+        state->r2 =
+            state->r2 + state->r.ptr.p_double[i] * state->r.ptr.p_double[i];
+        state->meritfunction =
+            state->meritfunction +
+            state->mv.ptr.p_double[i] * state->rx.ptr.p_double[i] -
+            2 * state->b.ptr.p_double[i] * state->rx.ptr.p_double[i];
+        bnorm = bnorm + state->b.ptr.p_double[i] * state->b.ptr.p_double[i];
     }
     bnorm = ae_sqrt(bnorm, _state);
-    
+
     /*
      * Output first report
      */
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_8;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     lincg_clearrfields(state, _state);
     state->xupdated = ae_true;
     state->rstate.stage = 1;
@@ -14242,92 +13909,83 @@ lbl_0:
 lbl_1:
     state->xupdated = ae_false;
 lbl_8:
-    
+
     /*
      * Is x0 a solution?
      */
-    if( !ae_isfinite(state->r2, _state)||ae_fp_less_eq(ae_sqrt(state->r2, _state),state->epsf*bnorm) )
-    {
+    if (!ae_isfinite(state->r2, _state) ||
+        ae_fp_less_eq(ae_sqrt(state->r2, _state), state->epsf * bnorm)) {
         state->running = ae_false;
-        if( ae_isfinite(state->r2, _state) )
-        {
+        if (ae_isfinite(state->r2, _state)) {
             state->repterminationtype = 1;
-        }
-        else
-        {
+        } else {
             state->repterminationtype = -4;
         }
         result = ae_false;
         return result;
     }
-    
+
     /*
      * Calculate Z and P
      */
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->r.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->r.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     lincg_clearrfields(state, _state);
     state->needprec = ae_true;
     state->rstate.stage = 2;
     goto lbl_rcomm;
 lbl_2:
     state->needprec = ae_false;
-    for(i=0; i<=state->n-1; i++)
-    {
+    for (i = 0; i <= state->n - 1; i++) {
         state->z.ptr.p_double[i] = state->pv.ptr.p_double[i];
         state->p.ptr.p_double[i] = state->z.ptr.p_double[i];
     }
-    
+
     /*
      * Other iterations(1..N)
      */
     state->repiterationscount = 0;
 lbl_10:
-    if( ae_false )
-    {
+    if (ae_false) {
         goto lbl_11;
     }
-    state->repiterationscount = state->repiterationscount+1;
-    
+    state->repiterationscount = state->repiterationscount + 1;
+
     /*
      * Calculate Alpha
      */
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->p.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->p.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     lincg_clearrfields(state, _state);
     state->needvmv = ae_true;
     state->rstate.stage = 3;
     goto lbl_rcomm;
 lbl_3:
     state->needvmv = ae_false;
-    if( !ae_isfinite(state->vmv, _state)||ae_fp_less_eq(state->vmv,(double)(0)) )
-    {
-        
+    if (!ae_isfinite(state->vmv, _state) ||
+        ae_fp_less_eq(state->vmv, (double)(0))) {
         /*
          * a) Overflow when calculating VMV
          * b) non-positive VMV (non-SPD matrix)
          */
         state->running = ae_false;
-        if( ae_isfinite(state->vmv, _state) )
-        {
+        if (ae_isfinite(state->vmv, _state)) {
             state->repterminationtype = -5;
-        }
-        else
-        {
+        } else {
             state->repterminationtype = -4;
         }
         result = ae_false;
         return result;
     }
     state->alpha = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->alpha = state->alpha+state->r.ptr.p_double[i]*state->z.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->alpha =
+            state->alpha + state->r.ptr.p_double[i] * state->z.ptr.p_double[i];
     }
-    state->alpha = state->alpha/state->vmv;
-    if( !ae_isfinite(state->alpha, _state) )
-    {
-        
+    state->alpha = state->alpha / state->vmv;
+    if (!ae_isfinite(state->alpha, _state)) {
         /*
          * Overflow when calculating Alpha
          */
@@ -14336,86 +13994,85 @@ lbl_3:
         result = ae_false;
         return result;
     }
-    
+
     /*
      * Next step toward solution
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->cx.ptr.p_double[i] = state->rx.ptr.p_double[i]+state->alpha*state->p.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->cx.ptr.p_double[i] =
+            state->rx.ptr.p_double[i] + state->alpha * state->p.ptr.p_double[i];
     }
-    
+
     /*
      * Calculate R:
      * * use recurrent relation to update R
-     * * at every ItsBeforeRUpdate-th iteration recalculate it from scratch, using matrix-vector product
-     *   in case R grows instead of decreasing, algorithm is terminated with positive completion code
+     * * at every ItsBeforeRUpdate-th iteration recalculate it from scratch,
+     * using matrix-vector product in case R grows instead of decreasing,
+     * algorithm is terminated with positive completion code
      */
-    if( !(state->itsbeforerupdate==0||state->repiterationscount%state->itsbeforerupdate!=0) )
-    {
+    if (!(state->itsbeforerupdate == 0 ||
+          state->repiterationscount % state->itsbeforerupdate != 0)) {
         goto lbl_12;
     }
-    
+
     /*
      * Calculate R using recurrent formula
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->cr.ptr.p_double[i] = state->r.ptr.p_double[i]-state->alpha*state->mv.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->cr.ptr.p_double[i] =
+            state->r.ptr.p_double[i] - state->alpha * state->mv.ptr.p_double[i];
         state->x.ptr.p_double[i] = state->cr.ptr.p_double[i];
     }
     goto lbl_13;
 lbl_12:
-    
+
     /*
      * Calculate R using matrix-vector multiplication
      */
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->cx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->cx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     lincg_clearrfields(state, _state);
     state->needmv = ae_true;
     state->rstate.stage = 4;
     goto lbl_rcomm;
 lbl_4:
     state->needmv = ae_false;
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->cr.ptr.p_double[i] = state->b.ptr.p_double[i]-state->mv.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->cr.ptr.p_double[i] =
+            state->b.ptr.p_double[i] - state->mv.ptr.p_double[i];
         state->x.ptr.p_double[i] = state->cr.ptr.p_double[i];
     }
-    
+
     /*
      * Calculating merit function
      * Check emergency stopping criterion
      */
     v = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        v = v+state->mv.ptr.p_double[i]*state->cx.ptr.p_double[i]-2*state->b.ptr.p_double[i]*state->cx.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        v = v + state->mv.ptr.p_double[i] * state->cx.ptr.p_double[i] -
+            2 * state->b.ptr.p_double[i] * state->cx.ptr.p_double[i];
     }
-    if( ae_fp_less(v,state->meritfunction) )
-    {
+    if (ae_fp_less(v, state->meritfunction)) {
         goto lbl_14;
     }
-    for(i=0; i<=state->n-1; i++)
-    {
-        if( !ae_isfinite(state->rx.ptr.p_double[i], _state) )
-        {
+    for (i = 0; i <= state->n - 1; i++) {
+        if (!ae_isfinite(state->rx.ptr.p_double[i], _state)) {
             state->running = ae_false;
             state->repterminationtype = -4;
             result = ae_false;
             return result;
         }
     }
-    
+
     /*
      *output last report
      */
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_16;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     lincg_clearrfields(state, _state);
     state->xupdated = ae_true;
     state->rstate.stage = 5;
@@ -14430,27 +14087,28 @@ lbl_16:
 lbl_14:
     state->meritfunction = v;
 lbl_13:
-    ae_v_move(&state->rx.ptr.p_double[0], 1, &state->cx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    
+    ae_v_move(&state->rx.ptr.p_double[0], 1, &state->cx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+
     /*
      * calculating RNorm
      *
      * NOTE: monotonic decrease of R2 is not guaranteed by algorithm.
      */
     state->r2 = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->r2 = state->r2+state->cr.ptr.p_double[i]*state->cr.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->r2 =
+            state->r2 + state->cr.ptr.p_double[i] * state->cr.ptr.p_double[i];
     }
-    
+
     /*
      *output report
      */
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_18;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     lincg_clearrfields(state, _state);
     state->xupdated = ae_true;
     state->rstate.stage = 6;
@@ -14458,38 +14116,32 @@ lbl_13:
 lbl_6:
     state->xupdated = ae_false;
 lbl_18:
-    
+
     /*
      *stopping criterion
      *achieved the required precision
      */
-    if( !ae_isfinite(state->r2, _state)||ae_fp_less_eq(ae_sqrt(state->r2, _state),state->epsf*bnorm) )
-    {
+    if (!ae_isfinite(state->r2, _state) ||
+        ae_fp_less_eq(ae_sqrt(state->r2, _state), state->epsf * bnorm)) {
         state->running = ae_false;
-        if( ae_isfinite(state->r2, _state) )
-        {
+        if (ae_isfinite(state->r2, _state)) {
             state->repterminationtype = 1;
-        }
-        else
-        {
+        } else {
             state->repterminationtype = -4;
         }
         result = ae_false;
         return result;
     }
-    if( state->repiterationscount>=state->maxits&&state->maxits>0 )
-    {
-        for(i=0; i<=state->n-1; i++)
-        {
-            if( !ae_isfinite(state->rx.ptr.p_double[i], _state) )
-            {
+    if (state->repiterationscount >= state->maxits && state->maxits > 0) {
+        for (i = 0; i <= state->n - 1; i++) {
+            if (!ae_isfinite(state->rx.ptr.p_double[i], _state)) {
                 state->running = ae_false;
                 state->repterminationtype = -4;
                 result = ae_false;
                 return result;
             }
         }
-        
+
         /*
          *if X is finite number
          */
@@ -14498,71 +14150,67 @@ lbl_18:
         result = ae_false;
         return result;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->cr.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->cr.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+
     /*
      *prepere of parameters for next iteration
      */
-    state->repnmv = state->repnmv+1;
+    state->repnmv = state->repnmv + 1;
     lincg_clearrfields(state, _state);
     state->needprec = ae_true;
     state->rstate.stage = 7;
     goto lbl_rcomm;
 lbl_7:
     state->needprec = ae_false;
-    ae_v_move(&state->cz.ptr.p_double[0], 1, &state->pv.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    if( state->repiterationscount%state->itsbeforerestart!=0 )
-    {
+    ae_v_move(&state->cz.ptr.p_double[0], 1, &state->pv.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    if (state->repiterationscount % state->itsbeforerestart != 0) {
         state->beta = (double)(0);
         uvar = (double)(0);
-        for(i=0; i<=state->n-1; i++)
-        {
-            state->beta = state->beta+state->cz.ptr.p_double[i]*state->cr.ptr.p_double[i];
-            uvar = uvar+state->z.ptr.p_double[i]*state->r.ptr.p_double[i];
+        for (i = 0; i <= state->n - 1; i++) {
+            state->beta = state->beta +
+                          state->cz.ptr.p_double[i] * state->cr.ptr.p_double[i];
+            uvar = uvar + state->z.ptr.p_double[i] * state->r.ptr.p_double[i];
         }
-        
+
         /*
          *check that UVar is't INF or is't zero
          */
-        if( !ae_isfinite(uvar, _state)||ae_fp_eq(uvar,(double)(0)) )
-        {
+        if (!ae_isfinite(uvar, _state) || ae_fp_eq(uvar, (double)(0))) {
             state->running = ae_false;
             state->repterminationtype = -4;
             result = ae_false;
             return result;
         }
-        
+
         /*
          *calculate .BETA
          */
-        state->beta = state->beta/uvar;
-        
+        state->beta = state->beta / uvar;
+
         /*
          *check that .BETA neither INF nor NaN
          */
-        if( !ae_isfinite(state->beta, _state) )
-        {
+        if (!ae_isfinite(state->beta, _state)) {
             state->running = ae_false;
             state->repterminationtype = -1;
             result = ae_false;
             return result;
         }
-        for(i=0; i<=state->n-1; i++)
-        {
-            state->p.ptr.p_double[i] = state->cz.ptr.p_double[i]+state->beta*state->p.ptr.p_double[i];
+        for (i = 0; i <= state->n - 1; i++) {
+            state->p.ptr.p_double[i] = state->cz.ptr.p_double[i] +
+                                       state->beta * state->p.ptr.p_double[i];
         }
+    } else {
+        ae_v_move(&state->p.ptr.p_double[0], 1, &state->cz.ptr.p_double[0], 1,
+                  ae_v_len(0, state->n - 1));
     }
-    else
-    {
-        ae_v_move(&state->p.ptr.p_double[0], 1, &state->cz.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    }
-    
+
     /*
      *prepere data for next iteration
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        
+    for (i = 0; i <= state->n - 1; i++) {
         /*
          *write (k+1)th iteration to (k )th iteration
          */
@@ -14573,7 +14221,7 @@ lbl_7:
 lbl_11:
     result = ae_false;
     return result;
-    
+
     /*
      * Saving state
      */
@@ -14586,17 +14234,16 @@ lbl_rcomm:
     return result;
 }
 
-
 /*************************************************************************
 Procedure for solution of A*x=b with sparse A.
 
 INPUT PARAMETERS:
     State   -   algorithm state
-    A       -   sparse matrix in the CRS format (you MUST contvert  it  to 
+    A       -   sparse matrix in the CRS format (you MUST contvert  it  to
                 CRS format by calling SparseConvertToCRS() function).
     IsUpper -   whether upper or lower triangle of A is used:
                 * IsUpper=True  => only upper triangle is used and lower
-                                   triangle is not referenced at all 
+                                   triangle is not referenced at all
                 * IsUpper=False => only lower triangle is used and upper
                                    triangle is not referenced at all
     B       -   right part, array[N]
@@ -14604,7 +14251,7 @@ INPUT PARAMETERS:
 RESULT:
     This function returns no result.
     You can get solution by calling LinCGResults()
-    
+
 NOTE: this function uses lightweight preconditioning -  multiplication  by
       inverse of diag(A). If you want, you can turn preconditioning off by
       calling LinCGSetPrecUnit(). However, preconditioning cost is low and
@@ -14614,92 +14261,75 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsolvesparse(lincgstate* state,
-     sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
+void lincgsolvesparse(lincgstate *state, sparsematrix *a, ae_bool isupper,
+                      /* Real    */ ae_vector *b, ae_state *_state) {
     ae_int_t n;
     ae_int_t i;
     double v;
     double vmv;
 
-
     n = state->n;
-    ae_assert(b->cnt>=state->n, "LinCGSetB: Length(B)<N", _state);
-    ae_assert(isfinitevector(b, state->n, _state), "LinCGSetB: B contains infinite or NaN values!", _state);
-    
+    ae_assert(b->cnt >= state->n, "LinCGSetB: Length(B)<N", _state);
+    ae_assert(isfinitevector(b, state->n, _state),
+              "LinCGSetB: B contains infinite or NaN values!", _state);
+
     /*
      * Allocate temporaries
      */
     rvectorsetlengthatleast(&state->tmpd, n, _state);
-    
+
     /*
      * Compute diagonal scaling matrix D
      */
-    if( state->prectype==0 )
-    {
-        
+    if (state->prectype == 0) {
         /*
          * Default preconditioner - inverse of matrix diagonal
          */
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             v = sparsegetdiagonal(a, i, _state);
-            if( ae_fp_greater(v,(double)(0)) )
-            {
-                state->tmpd.ptr.p_double[i] = 1/ae_sqrt(v, _state);
-            }
-            else
-            {
+            if (ae_fp_greater(v, (double)(0))) {
+                state->tmpd.ptr.p_double[i] = 1 / ae_sqrt(v, _state);
+            } else {
                 state->tmpd.ptr.p_double[i] = (double)(1);
             }
         }
-    }
-    else
-    {
-        
+    } else {
         /*
          * No diagonal scaling
          */
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             state->tmpd.ptr.p_double[i] = (double)(1);
         }
     }
-    
+
     /*
      * Solve
      */
     lincgrestart(state, _state);
     lincgsetb(state, b, _state);
-    while(lincgiteration(state, _state))
-    {
-        
+    while (lincgiteration(state, _state)) {
         /*
          * Process different requests from optimizer
          */
-        if( state->needmv )
-        {
+        if (state->needmv) {
             sparsesmv(a, isupper, &state->x, &state->mv, _state);
         }
-        if( state->needvmv )
-        {
+        if (state->needvmv) {
             sparsesmv(a, isupper, &state->x, &state->mv, _state);
-            vmv = ae_v_dotproduct(&state->x.ptr.p_double[0], 1, &state->mv.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+            vmv = ae_v_dotproduct(&state->x.ptr.p_double[0], 1,
+                                  &state->mv.ptr.p_double[0], 1,
+                                  ae_v_len(0, state->n - 1));
             state->vmv = vmv;
         }
-        if( state->needprec )
-        {
-            for(i=0; i<=n-1; i++)
-            {
-                state->pv.ptr.p_double[i] = state->x.ptr.p_double[i]*ae_sqr(state->tmpd.ptr.p_double[i], _state);
+        if (state->needprec) {
+            for (i = 0; i <= n - 1; i++) {
+                state->pv.ptr.p_double[i] =
+                    state->x.ptr.p_double[i] *
+                    ae_sqr(state->tmpd.ptr.p_double[i], _state);
             }
         }
     }
 }
-
 
 /*************************************************************************
 CG-solver: results.
@@ -14714,7 +14344,7 @@ OUTPUT PARAMETERS:
     Rep     -   optimization report:
                 * Rep.TerminationType completetion code:
                     * -5    input matrix is either not positive definite,
-                            too large or too small                            
+                            too large or too small
                     * -4    overflow/underflow during solution
                             (ill conditioned problem)
                     *  1    ||residual||<=EpsF*||b||
@@ -14727,27 +14357,26 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgresults(lincgstate* state,
-     /* Real    */ ae_vector* x,
-     lincgreport* rep,
-     ae_state *_state)
-{
-
+void lincgresults(lincgstate *state,
+                  /* Real    */ ae_vector *x, lincgreport *rep,
+                  ae_state *_state) {
     ae_vector_clear(x);
     _lincgreport_clear(rep);
 
-    ae_assert(!state->running, "LinCGResult: you can not get result, because function LinCGIteration has been launched!", _state);
-    if( x->cnt<state->n )
-    {
+    ae_assert(!state->running,
+              "LinCGResult: you can not get result, because function "
+              "LinCGIteration has been launched!",
+              _state);
+    if (x->cnt < state->n) {
         ae_vector_set_length(x, state->n, _state);
     }
-    ae_v_move(&x->ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     rep->iterationscount = state->repiterationscount;
     rep->nmv = state->repnmv;
     rep->terminationtype = state->repterminationtype;
     rep->r2 = state->r2;
 }
-
 
 /*************************************************************************
 This function sets restart frequency. By default, algorithm  is  restarted
@@ -14756,17 +14385,14 @@ after N subsequent iterations.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrestartfreq(lincgstate* state,
-     ae_int_t srf,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetRestartFreq: you can not change restart frequency when LinCGIteration() is running", _state);
-    ae_assert(srf>0, "LinCGSetRestartFreq: non-positive SRF", _state);
+void lincgsetrestartfreq(lincgstate *state, ae_int_t srf, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetRestartFreq: you can not change restart frequency when "
+              "LinCGIteration() is running",
+              _state);
+    ae_assert(srf > 0, "LinCGSetRestartFreq: non-positive SRF", _state);
     state->itsbeforerestart = srf;
 }
-
 
 /*************************************************************************
 This function sets frequency of residual recalculations.
@@ -14777,7 +14403,7 @@ of numerical errors and to stop algorithm when r_k starts to grow.
 
 Such low update frequence (1/10) gives very  little  overhead,  but  makes
 algorithm a bit more robust against numerical errors. However, you may
-change it 
+change it
 
 INPUT PARAMETERS:
     Freq    -   desired update frequency, Freq>=0.
@@ -14786,17 +14412,14 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrupdatefreq(lincgstate* state,
-     ae_int_t freq,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinCGSetRUpdateFreq: you can not change update frequency when LinCGIteration() is running", _state);
-    ae_assert(freq>=0, "LinCGSetRUpdateFreq: non-positive Freq", _state);
+void lincgsetrupdatefreq(lincgstate *state, ae_int_t freq, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinCGSetRUpdateFreq: you can not change update frequency when "
+              "LinCGIteration() is running",
+              _state);
+    ae_assert(freq >= 0, "LinCGSetRUpdateFreq: non-positive Freq", _state);
     state->itsbeforerupdate = freq;
 }
-
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -14811,13 +14434,9 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetxrep(lincgstate* state, ae_bool needxrep, ae_state *_state)
-{
-
-
+void lincgsetxrep(lincgstate *state, ae_bool needxrep, ae_state *_state) {
     state->xrep = needxrep;
 }
-
 
 /*************************************************************************
 Procedure for restart function LinCGIteration
@@ -14825,24 +14444,17 @@ Procedure for restart function LinCGIteration
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgrestart(lincgstate* state, ae_state *_state)
-{
-
-
-    ae_vector_set_length(&state->rstate.ia, 0+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 2+1, _state);
+void lincgrestart(lincgstate *state, ae_state *_state) {
+    ae_vector_set_length(&state->rstate.ia, 0 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 2 + 1, _state);
     state->rstate.stage = -1;
     lincg_clearrfields(state, _state);
 }
 
-
 /*************************************************************************
 Clears request fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void lincg_clearrfields(lincgstate* state, ae_state *_state)
-{
-
-
+static void lincg_clearrfields(lincgstate *state, ae_state *_state) {
     state->xupdated = ae_false;
     state->needmv = ae_false;
     state->needmtv = ae_false;
@@ -14851,24 +14463,18 @@ static void lincg_clearrfields(lincgstate* state, ae_state *_state)
     state->needprec = ae_false;
 }
 
-
 /*************************************************************************
 Clears request fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void lincg_updateitersdata(lincgstate* state, ae_state *_state)
-{
-
-
+static void lincg_updateitersdata(lincgstate *state, ae_state *_state) {
     state->repiterationscount = 0;
     state->repnmv = 0;
     state->repterminationtype = 0;
 }
 
-
-void _lincgstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    lincgstate *p = (lincgstate*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgstate_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    lincgstate *p = (lincgstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_init(&p->rx, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->b, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->cx, 0, DT_REAL, _state, make_automatic);
@@ -14885,11 +14491,10 @@ void _lincgstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
     _rcommstate_init(&p->rstate, _state, make_automatic);
 }
 
-
-void _lincgstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    lincgstate *dst = (lincgstate*)_dst;
-    lincgstate *src = (lincgstate*)_src;
+void _lincgstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                           ae_bool make_automatic) {
+    lincgstate *dst = (lincgstate *)_dst;
+    lincgstate *src = (lincgstate *)_src;
     ae_vector_init_copy(&dst->rx, &src->rx, _state, make_automatic);
     ae_vector_init_copy(&dst->b, &src->b, _state, make_automatic);
     dst->n = src->n;
@@ -14928,11 +14533,9 @@ void _lincgstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool mak
     _rcommstate_init_copy(&dst->rstate, &src->rstate, _state, make_automatic);
 }
 
-
-void _lincgstate_clear(void* _p)
-{
-    lincgstate *p = (lincgstate*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgstate_clear(void *_p) {
+    lincgstate *p = (lincgstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_clear(&p->rx);
     ae_vector_clear(&p->b);
     ae_vector_clear(&p->cx);
@@ -14949,11 +14552,9 @@ void _lincgstate_clear(void* _p)
     _rcommstate_clear(&p->rstate);
 }
 
-
-void _lincgstate_destroy(void* _p)
-{
-    lincgstate *p = (lincgstate*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgstate_destroy(void *_p) {
+    lincgstate *p = (lincgstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_destroy(&p->rx);
     ae_vector_destroy(&p->b);
     ae_vector_destroy(&p->cx);
@@ -14970,42 +14571,33 @@ void _lincgstate_destroy(void* _p)
     _rcommstate_destroy(&p->rstate);
 }
 
-
-void _lincgreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    lincgreport *p = (lincgreport*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgreport_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    lincgreport *p = (lincgreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _lincgreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    lincgreport *dst = (lincgreport*)_dst;
-    lincgreport *src = (lincgreport*)_src;
+void _lincgreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                            ae_bool make_automatic) {
+    lincgreport *dst = (lincgreport *)_dst;
+    lincgreport *src = (lincgreport *)_src;
     dst->iterationscount = src->iterationscount;
     dst->nmv = src->nmv;
     dst->terminationtype = src->terminationtype;
     dst->r2 = src->r2;
 }
 
-
-void _lincgreport_clear(void* _p)
-{
-    lincgreport *p = (lincgreport*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgreport_clear(void *_p) {
+    lincgreport *p = (lincgreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _lincgreport_destroy(void* _p)
-{
-    lincgreport *p = (lincgreport*)_p;
-    ae_touch_ptr((void*)p);
+void _lincgreport_destroy(void *_p) {
+    lincgreport *p = (lincgreport *)_p;
+    ae_touch_ptr((void *)p);
 }
-
 
 #endif
 #if defined(AE_COMPILE_LINLSQR) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
 This function initializes linear LSQR Solver. This solver is used to solve
@@ -15015,45 +14607,40 @@ is returned for non-compatible systems.
 USAGE:
 1. User initializes algorithm state with LinLSQRCreate() call
 2. User tunes solver parameters with  LinLSQRSetCond() and other functions
-3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state 
+3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state
    and SparseMatrix object.
 4. User calls LinLSQRResults() to get solution
-5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another  
-   problem  with different matrix and/or right part without reinitializing 
+5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another
+   problem  with different matrix and/or right part without reinitializing
    LinLSQRState structure.
-  
+
 INPUT PARAMETERS:
     M       -   number of rows in A
     N       -   number of variables, N>0
 
 OUTPUT PARAMETERS:
     State   -   structure which stores algorithm state
-    
+
 NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
       allocated place as much as possible.
 
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreate(ae_int_t m,
-     ae_int_t n,
-     linlsqrstate* state,
-     ae_state *_state)
-{
-
+void linlsqrcreate(ae_int_t m, ae_int_t n, linlsqrstate *state,
+                   ae_state *_state) {
     _linlsqrstate_clear(state);
 
-    ae_assert(m>0, "LinLSQRCreate: M<=0", _state);
-    ae_assert(n>0, "LinLSQRCreate: N<=0", _state);
+    ae_assert(m > 0, "LinLSQRCreate: M<=0", _state);
+    ae_assert(n > 0, "LinLSQRCreate: N<=0", _state);
     linlsqrcreatebuf(m, n, state, _state);
 }
-
 
 /*************************************************************************
 This function initializes linear LSQR Solver.  It  provides  exactly  same
 functionality as linlsqrcreate(), but reuses  previously  allocated  space
 as much as possible.
-  
+
 INPUT PARAMETERS:
     M       -   number of rows in A
     N       -   number of variables, N>0
@@ -15064,60 +14651,53 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2018 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreatebuf(ae_int_t m,
-     ae_int_t n,
-     linlsqrstate* state,
-     ae_state *_state)
-{
+void linlsqrcreatebuf(ae_int_t m, ae_int_t n, linlsqrstate *state,
+                      ae_state *_state) {
     ae_int_t i;
 
-
-    ae_assert(m>0, "LinLSQRCreateBuf: M<=0", _state);
-    ae_assert(n>0, "LinLSQRCreateBuf: N<=0", _state);
+    ae_assert(m > 0, "LinLSQRCreateBuf: M<=0", _state);
+    ae_assert(n > 0, "LinLSQRCreateBuf: N<=0", _state);
     state->m = m;
     state->n = n;
     state->prectype = 0;
     state->epsa = linlsqr_atol;
     state->epsb = linlsqr_btol;
-    state->epsc = 1/ae_sqrt(ae_machineepsilon, _state);
+    state->epsc = 1 / ae_sqrt(ae_machineepsilon, _state);
     state->maxits = 0;
     state->lambdai = (double)(0);
     state->xrep = ae_false;
     state->running = ae_false;
     state->repiterationscount = 0;
-    
+
     /*
      * * allocate arrays
-     * * set RX to NAN (just for the case user calls Results() without 
+     * * set RX to NAN (just for the case user calls Results() without
      *   calling SolveSparse()
      * * set B to zero
      */
     normestimatorcreate(m, n, 2, 2, &state->nes, _state);
     ae_vector_set_length(&state->rx, state->n, _state);
-    ae_vector_set_length(&state->ui, state->m+state->n, _state);
-    ae_vector_set_length(&state->uip1, state->m+state->n, _state);
+    ae_vector_set_length(&state->ui, state->m + state->n, _state);
+    ae_vector_set_length(&state->uip1, state->m + state->n, _state);
     ae_vector_set_length(&state->vip1, state->n, _state);
     ae_vector_set_length(&state->vi, state->n, _state);
     ae_vector_set_length(&state->omegai, state->n, _state);
     ae_vector_set_length(&state->omegaip1, state->n, _state);
     ae_vector_set_length(&state->d, state->n, _state);
-    ae_vector_set_length(&state->x, state->m+state->n, _state);
-    ae_vector_set_length(&state->mv, state->m+state->n, _state);
+    ae_vector_set_length(&state->x, state->m + state->n, _state);
+    ae_vector_set_length(&state->mv, state->m + state->n, _state);
     ae_vector_set_length(&state->mtv, state->n, _state);
     ae_vector_set_length(&state->b, state->m, _state);
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         state->rx.ptr.p_double[i] = _state->v_nan;
     }
-    for(i=0; i<=m-1; i++)
-    {
+    for (i = 0; i <= m - 1; i++) {
         state->b.ptr.p_double[i] = (double)(0);
     }
-    ae_vector_set_length(&state->rstate.ia, 1+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 0+1, _state);
+    ae_vector_set_length(&state->rstate.ia, 1 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 0 + 1, _state);
     state->rstate.stage = -1;
 }
-
 
 /*************************************************************************
 This function sets right part. By default, right part is zero.
@@ -15131,24 +14711,23 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetb(linlsqrstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
+void linlsqrsetb(linlsqrstate *state,
+                 /* Real    */ ae_vector *b, ae_state *_state) {
     ae_int_t i;
 
-
-    ae_assert(!state->running, "LinLSQRSetB: you can not change B when LinLSQRIteration is running", _state);
-    ae_assert(state->m<=b->cnt, "LinLSQRSetB: Length(B)<M", _state);
-    ae_assert(isfinitevector(b, state->m, _state), "LinLSQRSetB: B contains infinite or NaN values", _state);
+    ae_assert(
+        !state->running,
+        "LinLSQRSetB: you can not change B when LinLSQRIteration is running",
+        _state);
+    ae_assert(state->m <= b->cnt, "LinLSQRSetB: Length(B)<M", _state);
+    ae_assert(isfinitevector(b, state->m, _state),
+              "LinLSQRSetB: B contains infinite or NaN values", _state);
     state->bnorm2 = (double)(0);
-    for(i=0; i<=state->m-1; i++)
-    {
+    for (i = 0; i <= state->m - 1; i++) {
         state->b.ptr.p_double[i] = b->ptr.p_double[i];
-        state->bnorm2 = state->bnorm2+b->ptr.p_double[i]*b->ptr.p_double[i];
+        state->bnorm2 = state->bnorm2 + b->ptr.p_double[i] * b->ptr.p_double[i];
     }
 }
-
 
 /*************************************************************************
 This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
@@ -15162,14 +14741,13 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecunit(linlsqrstate* state, ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinLSQRSetPrecUnit: you can not change preconditioner, because function LinLSQRIteration is running!", _state);
+void linlsqrsetprecunit(linlsqrstate *state, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinLSQRSetPrecUnit: you can not change preconditioner, because "
+              "function LinLSQRIteration is running!",
+              _state);
     state->prectype = -1;
 }
-
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -15182,14 +14760,13 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecdiag(linlsqrstate* state, ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinLSQRSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!", _state);
+void linlsqrsetprecdiag(linlsqrstate *state, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinLSQRSetPrecDiag: you can not change preconditioner, because "
+              "function LinCGIteration is running!",
+              _state);
     state->prectype = 0;
 }
-
 
 /*************************************************************************
 This function sets optional Tikhonov regularization coefficient.
@@ -15200,36 +14777,32 @@ INPUT PARAMETERS:
 
 OUTPUT PARAMETERS:
     State   -   structure which stores algorithm state
-    
+
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetlambdai(linlsqrstate* state,
-     double lambdai,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinLSQRSetLambdaI: you can not set LambdaI, because function LinLSQRIteration is running", _state);
-    ae_assert(ae_isfinite(lambdai, _state)&&ae_fp_greater_eq(lambdai,(double)(0)), "LinLSQRSetLambdaI: LambdaI is infinite or NaN", _state);
+void linlsqrsetlambdai(linlsqrstate *state, double lambdai, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinLSQRSetLambdaI: you can not set LambdaI, because function "
+              "LinLSQRIteration is running",
+              _state);
+    ae_assert(
+        ae_isfinite(lambdai, _state) && ae_fp_greater_eq(lambdai, (double)(0)),
+        "LinLSQRSetLambdaI: LambdaI is infinite or NaN", _state);
     state->lambdai = lambdai;
 }
-
 
 /*************************************************************************
 
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-ae_bool linlsqriteration(linlsqrstate* state, ae_state *_state)
-{
+ae_bool linlsqriteration(linlsqrstate *state, ae_state *_state) {
     ae_int_t summn;
     double bnorm;
     ae_int_t i;
     ae_bool result;
 
-
-    
     /*
      * Reverse communication preparations
      * I know it looks ugly, but it works the same way
@@ -15240,52 +14813,43 @@ ae_bool linlsqriteration(linlsqrstate* state, ae_state *_state)
      *   generation - on first subroutine call
      * * values from previous call - on subsequent calls
      */
-    if( state->rstate.stage>=0 )
-    {
+    if (state->rstate.stage >= 0) {
         summn = state->rstate.ia.ptr.p_int[0];
         i = state->rstate.ia.ptr.p_int[1];
         bnorm = state->rstate.ra.ptr.p_double[0];
-    }
-    else
-    {
+    } else {
         summn = 359;
         i = -58;
         bnorm = -919;
     }
-    if( state->rstate.stage==0 )
-    {
+    if (state->rstate.stage == 0) {
         goto lbl_0;
     }
-    if( state->rstate.stage==1 )
-    {
+    if (state->rstate.stage == 1) {
         goto lbl_1;
     }
-    if( state->rstate.stage==2 )
-    {
+    if (state->rstate.stage == 2) {
         goto lbl_2;
     }
-    if( state->rstate.stage==3 )
-    {
+    if (state->rstate.stage == 3) {
         goto lbl_3;
     }
-    if( state->rstate.stage==4 )
-    {
+    if (state->rstate.stage == 4) {
         goto lbl_4;
     }
-    if( state->rstate.stage==5 )
-    {
+    if (state->rstate.stage == 5) {
         goto lbl_5;
     }
-    if( state->rstate.stage==6 )
-    {
+    if (state->rstate.stage == 6) {
         goto lbl_6;
     }
-    
+
     /*
      * Routine body
      */
-    ae_assert(state->b.cnt>0, "LinLSQRIteration: using non-allocated array B", _state);
-    summn = state->m+state->n;
+    ae_assert(state->b.cnt > 0, "LinLSQRIteration: using non-allocated array B",
+              _state);
+    summn = state->m + state->n;
     bnorm = ae_sqrt(state->bnorm2, _state);
     state->userterminationneeded = ae_false;
     state->running = ae_true;
@@ -15293,70 +14857,70 @@ ae_bool linlsqriteration(linlsqrstate* state, ae_state *_state)
     state->repiterationscount = 0;
     state->r2 = state->bnorm2;
     linlsqr_clearrfields(state, _state);
-    
+
     /*
      *estimate for ANorm
      */
     normestimatorrestart(&state->nes, _state);
 lbl_7:
-    if( !normestimatoriteration(&state->nes, _state) )
-    {
+    if (!normestimatoriteration(&state->nes, _state)) {
         goto lbl_8;
     }
-    if( !state->nes.needmv )
-    {
+    if (!state->nes.needmv) {
         goto lbl_9;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->nes.x.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->nes.x.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     linlsqr_clearrfields(state, _state);
     state->needmv = ae_true;
     state->rstate.stage = 0;
     goto lbl_rcomm;
 lbl_0:
     state->needmv = ae_false;
-    ae_v_move(&state->nes.mv.ptr.p_double[0], 1, &state->mv.ptr.p_double[0], 1, ae_v_len(0,state->m-1));
+    ae_v_move(&state->nes.mv.ptr.p_double[0], 1, &state->mv.ptr.p_double[0], 1,
+              ae_v_len(0, state->m - 1));
     goto lbl_7;
 lbl_9:
-    if( !state->nes.needmtv )
-    {
+    if (!state->nes.needmtv) {
         goto lbl_11;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->nes.x.ptr.p_double[0], 1, ae_v_len(0,state->m-1));
-    
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->nes.x.ptr.p_double[0], 1,
+              ae_v_len(0, state->m - 1));
+
     /*
      *matrix-vector multiplication
      */
-    state->repnmv = state->repnmv+1;
+    state->repnmv = state->repnmv + 1;
     linlsqr_clearrfields(state, _state);
     state->needmtv = ae_true;
     state->rstate.stage = 1;
     goto lbl_rcomm;
 lbl_1:
     state->needmtv = ae_false;
-    ae_v_move(&state->nes.mtv.ptr.p_double[0], 1, &state->mtv.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->nes.mtv.ptr.p_double[0], 1, &state->mtv.ptr.p_double[0],
+              1, ae_v_len(0, state->n - 1));
     goto lbl_7;
 lbl_11:
     goto lbl_7;
 lbl_8:
     normestimatorresults(&state->nes, &state->anorm, _state);
-    
+
     /*
      *initialize .RX by zeros
      */
-    for(i=0; i<=state->n-1; i++)
-    {
+    for (i = 0; i <= state->n - 1; i++) {
         state->rx.ptr.p_double[i] = (double)(0);
     }
-    
+
     /*
      *output first report
      */
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_13;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     linlsqr_clearrfields(state, _state);
     state->xupdated = ae_true;
     state->rstate.stage = 2;
@@ -15364,14 +14928,14 @@ lbl_8:
 lbl_2:
     state->xupdated = ae_false;
 lbl_13:
-    
+
     /*
      * LSQR, Step 0.
      *
      * Algorithm outline corresponds to one which was described at p.50 of
-     * "LSQR - an algorithm for sparse linear equations and sparse least 
+     * "LSQR - an algorithm for sparse linear equations and sparse least
      * squares" by C.Paige and M.Saunders with one small addition - we
-     * explicitly extend system matrix by additional N lines in order 
+     * explicitly extend system matrix by additional N lines in order
      * to handle non-zero lambda, i.e. original A is replaced by
      *         [ A        ]
      * A_mod = [          ]
@@ -15395,9 +14959,7 @@ lbl_13:
      * to avoid division by zero when Rk=0.
      */
     state->betai = bnorm;
-    if( ae_fp_eq(state->betai,(double)(0)) )
-    {
-        
+    if (ae_fp_eq(state->betai, (double)(0))) {
         /*
          * Zero right part
          */
@@ -15406,38 +14968,33 @@ lbl_13:
         result = ae_false;
         return result;
     }
-    for(i=0; i<=summn-1; i++)
-    {
-        if( i<state->m )
-        {
-            state->ui.ptr.p_double[i] = state->b.ptr.p_double[i]/state->betai;
-        }
-        else
-        {
+    for (i = 0; i <= summn - 1; i++) {
+        if (i < state->m) {
+            state->ui.ptr.p_double[i] = state->b.ptr.p_double[i] / state->betai;
+        } else {
             state->ui.ptr.p_double[i] = (double)(0);
         }
         state->x.ptr.p_double[i] = state->ui.ptr.p_double[i];
     }
-    state->repnmv = state->repnmv+1;
+    state->repnmv = state->repnmv + 1;
     linlsqr_clearrfields(state, _state);
     state->needmtv = ae_true;
     state->rstate.stage = 3;
     goto lbl_rcomm;
 lbl_3:
     state->needmtv = ae_false;
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->mtv.ptr.p_double[i] = state->mtv.ptr.p_double[i]+state->lambdai*state->ui.ptr.p_double[state->m+i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->mtv.ptr.p_double[i] =
+            state->mtv.ptr.p_double[i] +
+            state->lambdai * state->ui.ptr.p_double[state->m + i];
     }
     state->alphai = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->alphai = state->alphai+state->mtv.ptr.p_double[i]*state->mtv.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->alphai = state->alphai +
+                        state->mtv.ptr.p_double[i] * state->mtv.ptr.p_double[i];
     }
     state->alphai = ae_sqrt(state->alphai, _state);
-    if( ae_fp_eq(state->alphai,(double)(0)) )
-    {
-        
+    if (ae_fp_eq(state->alphai, (double)(0))) {
         /*
          * Orthogonality stopping criterion is met
          */
@@ -15446,110 +15003,111 @@ lbl_3:
         result = ae_false;
         return result;
     }
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->vi.ptr.p_double[i] = state->mtv.ptr.p_double[i]/state->alphai;
+    for (i = 0; i <= state->n - 1; i++) {
+        state->vi.ptr.p_double[i] = state->mtv.ptr.p_double[i] / state->alphai;
         state->omegai.ptr.p_double[i] = state->vi.ptr.p_double[i];
     }
     state->phibari = state->betai;
     state->rhobari = state->alphai;
-    for(i=0; i<=state->n-1; i++)
-    {
+    for (i = 0; i <= state->n - 1; i++) {
         state->d.ptr.p_double[i] = (double)(0);
     }
     state->dnorm = (double)(0);
-    
+
     /*
      * Steps I=1, 2, ...
      */
 lbl_15:
-    if( ae_false )
-    {
+    if (ae_false) {
         goto lbl_16;
     }
-    
+
     /*
      * At I-th step State.RepIterationsCount=I.
      */
-    state->repiterationscount = state->repiterationscount+1;
-    
+    state->repiterationscount = state->repiterationscount + 1;
+
     /*
      * Bidiagonalization part:
      *     beta[i+1]*u[i+1]  = A_mod*v[i]-alpha[i]*u[i]
      *     alpha[i+1]*v[i+1] = A_mod'*u[i+1] - beta[i+1]*v[i]
-     *     
+     *
      * NOTE:  beta[i+1]=0 or alpha[i+1]=0 will lead to successful termination
      *        in the end of the current iteration. In this case u/v are zero.
      * NOTE2: algorithm won't fail on zero alpha or beta (there will be no
      *        division by zero because it will be stopped BEFORE division
      *        occurs). However, near-zero alpha and beta won't stop algorithm
-     *        and, although no division by zero will happen, orthogonality 
+     *        and, although no division by zero will happen, orthogonality
      *        in U and V will be lost.
      */
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->vi.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->vi.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    state->repnmv = state->repnmv + 1;
     linlsqr_clearrfields(state, _state);
     state->needmv = ae_true;
     state->rstate.stage = 4;
     goto lbl_rcomm;
 lbl_4:
     state->needmv = ae_false;
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->mv.ptr.p_double[state->m+i] = state->lambdai*state->vi.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->mv.ptr.p_double[state->m + i] =
+            state->lambdai * state->vi.ptr.p_double[i];
     }
     state->betaip1 = (double)(0);
-    for(i=0; i<=summn-1; i++)
-    {
-        state->uip1.ptr.p_double[i] = state->mv.ptr.p_double[i]-state->alphai*state->ui.ptr.p_double[i];
-        state->betaip1 = state->betaip1+state->uip1.ptr.p_double[i]*state->uip1.ptr.p_double[i];
+    for (i = 0; i <= summn - 1; i++) {
+        state->uip1.ptr.p_double[i] = state->mv.ptr.p_double[i] -
+                                      state->alphai * state->ui.ptr.p_double[i];
+        state->betaip1 = state->betaip1 + state->uip1.ptr.p_double[i] *
+                                              state->uip1.ptr.p_double[i];
     }
-    if( ae_fp_neq(state->betaip1,(double)(0)) )
-    {
+    if (ae_fp_neq(state->betaip1, (double)(0))) {
         state->betaip1 = ae_sqrt(state->betaip1, _state);
-        for(i=0; i<=summn-1; i++)
-        {
-            state->uip1.ptr.p_double[i] = state->uip1.ptr.p_double[i]/state->betaip1;
+        for (i = 0; i <= summn - 1; i++) {
+            state->uip1.ptr.p_double[i] =
+                state->uip1.ptr.p_double[i] / state->betaip1;
         }
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->uip1.ptr.p_double[0], 1, ae_v_len(0,state->m-1));
-    state->repnmv = state->repnmv+1;
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->uip1.ptr.p_double[0], 1,
+              ae_v_len(0, state->m - 1));
+    state->repnmv = state->repnmv + 1;
     linlsqr_clearrfields(state, _state);
     state->needmtv = ae_true;
     state->rstate.stage = 5;
     goto lbl_rcomm;
 lbl_5:
     state->needmtv = ae_false;
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->mtv.ptr.p_double[i] = state->mtv.ptr.p_double[i]+state->lambdai*state->uip1.ptr.p_double[state->m+i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->mtv.ptr.p_double[i] =
+            state->mtv.ptr.p_double[i] +
+            state->lambdai * state->uip1.ptr.p_double[state->m + i];
     }
     state->alphaip1 = (double)(0);
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->vip1.ptr.p_double[i] = state->mtv.ptr.p_double[i]-state->betaip1*state->vi.ptr.p_double[i];
-        state->alphaip1 = state->alphaip1+state->vip1.ptr.p_double[i]*state->vip1.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->vip1.ptr.p_double[i] =
+            state->mtv.ptr.p_double[i] -
+            state->betaip1 * state->vi.ptr.p_double[i];
+        state->alphaip1 = state->alphaip1 + state->vip1.ptr.p_double[i] *
+                                                state->vip1.ptr.p_double[i];
     }
-    if( ae_fp_neq(state->alphaip1,(double)(0)) )
-    {
+    if (ae_fp_neq(state->alphaip1, (double)(0))) {
         state->alphaip1 = ae_sqrt(state->alphaip1, _state);
-        for(i=0; i<=state->n-1; i++)
-        {
-            state->vip1.ptr.p_double[i] = state->vip1.ptr.p_double[i]/state->alphaip1;
+        for (i = 0; i <= state->n - 1; i++) {
+            state->vip1.ptr.p_double[i] =
+                state->vip1.ptr.p_double[i] / state->alphaip1;
         }
     }
-    
+
     /*
      * Build next orthogonal transformation
      */
     state->rhoi = safepythag2(state->rhobari, state->betaip1, _state);
-    state->ci = state->rhobari/state->rhoi;
-    state->si = state->betaip1/state->rhoi;
-    state->theta = state->si*state->alphaip1;
-    state->rhobarip1 = -state->ci*state->alphaip1;
-    state->phii = state->ci*state->phibari;
-    state->phibarip1 = state->si*state->phibari;
-    
+    state->ci = state->rhobari / state->rhoi;
+    state->si = state->betaip1 / state->rhoi;
+    state->theta = state->si * state->alphaip1;
+    state->rhobarip1 = -state->ci * state->alphaip1;
+    state->phii = state->ci * state->phibari;
+    state->phibarip1 = state->si * state->phibari;
+
     /*
      * Update .RNorm
      *
@@ -15560,36 +15118,40 @@ lbl_5:
      * slightly in some rare, but possible cases. This property is
      * undesirable, so we prefer to guard against R increase.
      */
-    state->r2 = ae_minreal(state->r2, state->phibarip1*state->phibarip1, _state);
-    
+    state->r2 =
+        ae_minreal(state->r2, state->phibarip1 * state->phibarip1, _state);
+
     /*
      * Update d and DNorm, check condition-related stopping criteria
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->d.ptr.p_double[i] = 1/state->rhoi*(state->vi.ptr.p_double[i]-state->theta*state->d.ptr.p_double[i]);
-        state->dnorm = state->dnorm+state->d.ptr.p_double[i]*state->d.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->d.ptr.p_double[i] = 1 / state->rhoi *
+                                   (state->vi.ptr.p_double[i] -
+                                    state->theta * state->d.ptr.p_double[i]);
+        state->dnorm =
+            state->dnorm + state->d.ptr.p_double[i] * state->d.ptr.p_double[i];
     }
-    if( ae_fp_greater_eq(ae_sqrt(state->dnorm, _state)*state->anorm,state->epsc) )
-    {
+    if (ae_fp_greater_eq(ae_sqrt(state->dnorm, _state) * state->anorm,
+                         state->epsc)) {
         state->running = ae_false;
         state->repterminationtype = 7;
         result = ae_false;
         return result;
     }
-    
+
     /*
      * Update x, output report
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->rx.ptr.p_double[i] = state->rx.ptr.p_double[i]+state->phii/state->rhoi*state->omegai.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->rx.ptr.p_double[i] =
+            state->rx.ptr.p_double[i] +
+            state->phii / state->rhoi * state->omegai.ptr.p_double[i];
     }
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_17;
     }
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     linlsqr_clearrfields(state, _state);
     state->xupdated = ae_true;
     state->rstate.stage = 6;
@@ -15597,16 +15159,14 @@ lbl_5:
 lbl_6:
     state->xupdated = ae_false;
 lbl_17:
-    
+
     /*
      * Check stopping criteria
      * 1. achieved required number of iterations;
      * 2. ||Rk||<=EpsB*||B||;
      * 3. ||A^T*Rk||/(||A||*||Rk||)<=EpsA;
      */
-    if( state->maxits>0&&state->repiterationscount>=state->maxits )
-    {
-        
+    if (state->maxits > 0 && state->repiterationscount >= state->maxits) {
         /*
          * Achieved required number of iterations
          */
@@ -15615,9 +15175,7 @@ lbl_17:
         result = ae_false;
         return result;
     }
-    if( ae_fp_less_eq(state->phibarip1,state->epsb*bnorm) )
-    {
-        
+    if (ae_fp_less_eq(state->phibarip1, state->epsb * bnorm)) {
         /*
          * ||Rk||<=EpsB*||B||, here ||Rk||=PhiBar
          */
@@ -15626,20 +15184,19 @@ lbl_17:
         result = ae_false;
         return result;
     }
-    if( ae_fp_less_eq(state->alphaip1*ae_fabs(state->ci, _state)/state->anorm,state->epsa) )
-    {
-        
+    if (ae_fp_less_eq(
+            state->alphaip1 * ae_fabs(state->ci, _state) / state->anorm,
+            state->epsa)) {
         /*
-         * ||A^T*Rk||/(||A||*||Rk||)<=EpsA, here ||A^T*Rk||=PhiBar*Alpha[i+1]*|.C|
+         * ||A^T*Rk||/(||A||*||Rk||)<=EpsA, here
+         * ||A^T*Rk||=PhiBar*Alpha[i+1]*|.C|
          */
         state->running = ae_false;
         state->repterminationtype = 4;
         result = ae_false;
         return result;
     }
-    if( state->userterminationneeded )
-    {
-        
+    if (state->userterminationneeded) {
         /*
          * User requested termination
          */
@@ -15648,15 +15205,16 @@ lbl_17:
         result = ae_false;
         return result;
     }
-    
+
     /*
      * Update omega
      */
-    for(i=0; i<=state->n-1; i++)
-    {
-        state->omegaip1.ptr.p_double[i] = state->vip1.ptr.p_double[i]-state->theta/state->rhoi*state->omegai.ptr.p_double[i];
+    for (i = 0; i <= state->n - 1; i++) {
+        state->omegaip1.ptr.p_double[i] =
+            state->vip1.ptr.p_double[i] -
+            state->theta / state->rhoi * state->omegai.ptr.p_double[i];
     }
-    
+
     /*
      * Prepare for the next iteration - rename variables:
      * u[i]   := u[i+1]
@@ -15664,9 +15222,12 @@ lbl_17:
      * rho[i] := rho[i+1]
      * ...
      */
-    ae_v_move(&state->ui.ptr.p_double[0], 1, &state->uip1.ptr.p_double[0], 1, ae_v_len(0,summn-1));
-    ae_v_move(&state->vi.ptr.p_double[0], 1, &state->vip1.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    ae_v_move(&state->omegai.ptr.p_double[0], 1, &state->omegaip1.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&state->ui.ptr.p_double[0], 1, &state->uip1.ptr.p_double[0], 1,
+              ae_v_len(0, summn - 1));
+    ae_v_move(&state->vi.ptr.p_double[0], 1, &state->vip1.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    ae_v_move(&state->omegai.ptr.p_double[0], 1,
+              &state->omegaip1.ptr.p_double[0], 1, ae_v_len(0, state->n - 1));
     state->alphai = state->alphaip1;
     state->betai = state->betaip1;
     state->phibari = state->phibarip1;
@@ -15675,7 +15236,7 @@ lbl_17:
 lbl_16:
     result = ae_false;
     return result;
-    
+
     /*
      * Saving state
      */
@@ -15687,13 +15248,12 @@ lbl_rcomm:
     return result;
 }
 
-
 /*************************************************************************
 Procedure for solution of A*x=b with sparse A.
 
 INPUT PARAMETERS:
     State   -   algorithm state
-    A       -   sparse M*N matrix in the CRS format (you MUST contvert  it 
+    A       -   sparse M*N matrix in the CRS format (you MUST contvert  it
                 to CRS format  by  calling  SparseConvertToCRS()  function
                 BEFORE you pass it to this function).
     B       -   right part, array[M]
@@ -15701,7 +15261,7 @@ INPUT PARAMETERS:
 RESULT:
     This function returns no result.
     You can get solution by calling LinCGResults()
-    
+
 NOTE: this function uses lightweight preconditioning -  multiplication  by
       inverse of diag(A). If you want, you can turn preconditioning off by
       calling LinLSQRSetPrecUnit(). However, preconditioning cost is   low
@@ -15711,11 +15271,8 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsolvesparse(linlsqrstate* state,
-     sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_state *_state)
-{
+void linlsqrsolvesparse(linlsqrstate *state, sparsematrix *a,
+                        /* Real    */ ae_vector *b, ae_state *_state) {
     ae_int_t n;
     ae_int_t i;
     ae_int_t j;
@@ -15723,96 +15280,85 @@ void linlsqrsolvesparse(linlsqrstate* state,
     ae_int_t t1;
     double v;
 
-
     n = state->n;
-    ae_assert(!state->running, "LinLSQRSolveSparse: you can not call this function when LinLSQRIteration is running", _state);
-    ae_assert(b->cnt>=state->m, "LinLSQRSolveSparse: Length(B)<M", _state);
-    ae_assert(isfinitevector(b, state->m, _state), "LinLSQRSolveSparse: B contains infinite or NaN values", _state);
-    
+    ae_assert(!state->running,
+              "LinLSQRSolveSparse: you can not call this function when "
+              "LinLSQRIteration is running",
+              _state);
+    ae_assert(b->cnt >= state->m, "LinLSQRSolveSparse: Length(B)<M", _state);
+    ae_assert(isfinitevector(b, state->m, _state),
+              "LinLSQRSolveSparse: B contains infinite or NaN values", _state);
+
     /*
      * Allocate temporaries
      */
     rvectorsetlengthatleast(&state->tmpd, n, _state);
     rvectorsetlengthatleast(&state->tmpx, n, _state);
-    
+
     /*
      * Compute diagonal scaling matrix D
      */
-    if( state->prectype==0 )
-    {
-        
+    if (state->prectype == 0) {
         /*
          * Default preconditioner - inverse of column norms
          */
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             state->tmpd.ptr.p_double[i] = (double)(0);
         }
         t0 = 0;
         t1 = 0;
-        while(sparseenumerate(a, &t0, &t1, &i, &j, &v, _state))
-        {
-            state->tmpd.ptr.p_double[j] = state->tmpd.ptr.p_double[j]+ae_sqr(v, _state);
+        while (sparseenumerate(a, &t0, &t1, &i, &j, &v, _state)) {
+            state->tmpd.ptr.p_double[j] =
+                state->tmpd.ptr.p_double[j] + ae_sqr(v, _state);
         }
-        for(i=0; i<=n-1; i++)
-        {
-            if( ae_fp_greater(state->tmpd.ptr.p_double[i],(double)(0)) )
-            {
-                state->tmpd.ptr.p_double[i] = 1/ae_sqrt(state->tmpd.ptr.p_double[i], _state);
-            }
-            else
-            {
+        for (i = 0; i <= n - 1; i++) {
+            if (ae_fp_greater(state->tmpd.ptr.p_double[i], (double)(0))) {
+                state->tmpd.ptr.p_double[i] =
+                    1 / ae_sqrt(state->tmpd.ptr.p_double[i], _state);
+            } else {
                 state->tmpd.ptr.p_double[i] = (double)(1);
             }
         }
-    }
-    else
-    {
-        
+    } else {
         /*
          * No diagonal scaling
          */
-        for(i=0; i<=n-1; i++)
-        {
+        for (i = 0; i <= n - 1; i++) {
             state->tmpd.ptr.p_double[i] = (double)(1);
         }
     }
-    
+
     /*
      * Solve.
      *
-     * Instead of solving A*x=b we solve preconditioned system (A*D)*(inv(D)*x)=b.
-     * Transformed A is not calculated explicitly, we just modify multiplication
-     * by A or A'. After solution we modify State.RX so it will store untransformed
-     * variables
+     * Instead of solving A*x=b we solve preconditioned system
+     * (A*D)*(inv(D)*x)=b. Transformed A is not calculated explicitly, we just
+     * modify multiplication by A or A'. After solution we modify State.RX so it
+     * will store untransformed variables
      */
     linlsqrsetb(state, b, _state);
     linlsqrrestart(state, _state);
-    while(linlsqriteration(state, _state))
-    {
-        if( state->needmv )
-        {
-            for(i=0; i<=n-1; i++)
-            {
-                state->tmpx.ptr.p_double[i] = state->tmpd.ptr.p_double[i]*state->x.ptr.p_double[i];
+    while (linlsqriteration(state, _state)) {
+        if (state->needmv) {
+            for (i = 0; i <= n - 1; i++) {
+                state->tmpx.ptr.p_double[i] =
+                    state->tmpd.ptr.p_double[i] * state->x.ptr.p_double[i];
             }
             sparsemv(a, &state->tmpx, &state->mv, _state);
         }
-        if( state->needmtv )
-        {
+        if (state->needmtv) {
             sparsemtv(a, &state->x, &state->mtv, _state);
-            for(i=0; i<=n-1; i++)
-            {
-                state->mtv.ptr.p_double[i] = state->tmpd.ptr.p_double[i]*state->mtv.ptr.p_double[i];
+            for (i = 0; i <= n - 1; i++) {
+                state->mtv.ptr.p_double[i] =
+                    state->tmpd.ptr.p_double[i] * state->mtv.ptr.p_double[i];
             }
         }
     }
-    for(i=0; i<=n-1; i++)
-    {
-        state->rx.ptr.p_double[i] = state->tmpd.ptr.p_double[i]*state->rx.ptr.p_double[i];
+    for (i = 0; i <= n - 1; i++) {
+        state->rx.ptr.p_double[i] =
+            state->tmpd.ptr.p_double[i] * state->rx.ptr.p_double[i];
     }
 }
-
 
 /*************************************************************************
 This function sets stopping criteria.
@@ -15828,36 +15374,32 @@ OUTPUT PARAMETERS:
 
 NOTE: if EpsA,EpsB,EpsC and MaxIts are zero then these variables will
 be setted as default values.
-    
+
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetcond(linlsqrstate* state,
-     double epsa,
-     double epsb,
-     ae_int_t maxits,
-     ae_state *_state)
-{
-
-
-    ae_assert(!state->running, "LinLSQRSetCond: you can not call this function when LinLSQRIteration is running", _state);
-    ae_assert(ae_isfinite(epsa, _state)&&ae_fp_greater_eq(epsa,(double)(0)), "LinLSQRSetCond: EpsA is negative, INF or NAN", _state);
-    ae_assert(ae_isfinite(epsb, _state)&&ae_fp_greater_eq(epsb,(double)(0)), "LinLSQRSetCond: EpsB is negative, INF or NAN", _state);
-    ae_assert(maxits>=0, "LinLSQRSetCond: MaxIts is negative", _state);
-    if( (ae_fp_eq(epsa,(double)(0))&&ae_fp_eq(epsb,(double)(0)))&&maxits==0 )
-    {
+void linlsqrsetcond(linlsqrstate *state, double epsa, double epsb,
+                    ae_int_t maxits, ae_state *_state) {
+    ae_assert(!state->running,
+              "LinLSQRSetCond: you can not call this function when "
+              "LinLSQRIteration is running",
+              _state);
+    ae_assert(ae_isfinite(epsa, _state) && ae_fp_greater_eq(epsa, (double)(0)),
+              "LinLSQRSetCond: EpsA is negative, INF or NAN", _state);
+    ae_assert(ae_isfinite(epsb, _state) && ae_fp_greater_eq(epsb, (double)(0)),
+              "LinLSQRSetCond: EpsB is negative, INF or NAN", _state);
+    ae_assert(maxits >= 0, "LinLSQRSetCond: MaxIts is negative", _state);
+    if ((ae_fp_eq(epsa, (double)(0)) && ae_fp_eq(epsb, (double)(0))) &&
+        maxits == 0) {
         state->epsa = linlsqr_atol;
         state->epsb = linlsqr_btol;
         state->maxits = state->n;
-    }
-    else
-    {
+    } else {
         state->epsa = epsa;
         state->epsb = epsb;
         state->maxits = maxits;
     }
 }
-
 
 /*************************************************************************
 LSQR solver: results.
@@ -15881,30 +15423,29 @@ OUTPUT PARAMETERS:
                             linlsqrrequesttermination()
                 * Rep.IterationsCount contains iterations count
                 * NMV countains number of matrix-vector calculations
-                
+
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrresults(linlsqrstate* state,
-     /* Real    */ ae_vector* x,
-     linlsqrreport* rep,
-     ae_state *_state)
-{
-
+void linlsqrresults(linlsqrstate *state,
+                    /* Real    */ ae_vector *x, linlsqrreport *rep,
+                    ae_state *_state) {
     ae_vector_clear(x);
     _linlsqrreport_clear(rep);
 
-    ae_assert(!state->running, "LinLSQRResult: you can not call this function when LinLSQRIteration is running", _state);
-    if( x->cnt<state->n )
-    {
+    ae_assert(!state->running,
+              "LinLSQRResult: you can not call this function when "
+              "LinLSQRIteration is running",
+              _state);
+    if (x->cnt < state->n) {
         ae_vector_set_length(x, state->n, _state);
     }
-    ae_v_move(&x->ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &state->rx.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     rep->iterationscount = state->repiterationscount;
     rep->nmv = state->repnmv;
     rep->terminationtype = state->repterminationtype;
 }
-
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -15919,15 +15460,9 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetxrep(linlsqrstate* state,
-     ae_bool needxrep,
-     ae_state *_state)
-{
-
-
+void linlsqrsetxrep(linlsqrstate *state, ae_bool needxrep, ae_state *_state) {
     state->xrep = needxrep;
 }
-
 
 /*************************************************************************
 This function restarts LinLSQRIteration
@@ -15935,17 +15470,13 @@ This function restarts LinLSQRIteration
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrrestart(linlsqrstate* state, ae_state *_state)
-{
-
-
-    ae_vector_set_length(&state->rstate.ia, 1+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 0+1, _state);
+void linlsqrrestart(linlsqrstate *state, ae_state *_state) {
+    ae_vector_set_length(&state->rstate.ia, 1 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 0 + 1, _state);
     state->rstate.stage = -1;
     linlsqr_clearrfields(state, _state);
     state->repiterationscount = 0;
 }
-
 
 /*************************************************************************
 This function is used to peek into LSQR solver and get  current  iteration
@@ -15960,15 +15491,12 @@ RESULT:
   -- ALGLIB --
      Copyright 21.05.2018 by Bochkanov Sergey
 *************************************************************************/
-ae_int_t linlsqrpeekiterationscount(linlsqrstate* s, ae_state *_state)
-{
+ae_int_t linlsqrpeekiterationscount(linlsqrstate *s, ae_state *_state) {
     ae_int_t result;
-
 
     result = s->repiterationscount;
     return result;
 }
-
 
 /*************************************************************************
 This subroutine submits request for termination of the running solver.  It
@@ -15986,7 +15514,7 @@ INPUT PARAMETERS:
 
 NOTE: calling this function on solver which is NOT running  will  have  no
       effect.
-      
+
 NOTE: multiple calls to this function are possible. First call is counted,
       subsequent calls are silently ignored.
 
@@ -15997,21 +15525,14 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 08.10.2014 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrrequesttermination(linlsqrstate* state, ae_state *_state)
-{
-
-
+void linlsqrrequesttermination(linlsqrstate *state, ae_state *_state) {
     state->userterminationneeded = ae_true;
 }
-
 
 /*************************************************************************
 Clears request fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void linlsqr_clearrfields(linlsqrstate* state, ae_state *_state)
-{
-
-
+static void linlsqr_clearrfields(linlsqrstate *state, ae_state *_state) {
     state->xupdated = ae_false;
     state->needmv = ae_false;
     state->needmtv = ae_false;
@@ -16020,11 +15541,9 @@ static void linlsqr_clearrfields(linlsqrstate* state, ae_state *_state)
     state->needprec = ae_false;
 }
 
-
-void _linlsqrstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    linlsqrstate *p = (linlsqrstate*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrstate_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    linlsqrstate *p = (linlsqrstate *)_p;
+    ae_touch_ptr((void *)p);
     _normestimatorstate_init(&p->nes, _state, make_automatic);
     ae_vector_init(&p->rx, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->b, 0, DT_REAL, _state, make_automatic);
@@ -16043,11 +15562,10 @@ void _linlsqrstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
     _rcommstate_init(&p->rstate, _state, make_automatic);
 }
 
-
-void _linlsqrstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    linlsqrstate *dst = (linlsqrstate*)_dst;
-    linlsqrstate *src = (linlsqrstate*)_src;
+void _linlsqrstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                             ae_bool make_automatic) {
+    linlsqrstate *dst = (linlsqrstate *)_dst;
+    linlsqrstate *src = (linlsqrstate *)_src;
     _normestimatorstate_init_copy(&dst->nes, &src->nes, _state, make_automatic);
     ae_vector_init_copy(&dst->rx, &src->rx, _state, make_automatic);
     ae_vector_init_copy(&dst->b, &src->b, _state, make_automatic);
@@ -16103,11 +15621,9 @@ void _linlsqrstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool m
     _rcommstate_init_copy(&dst->rstate, &src->rstate, _state, make_automatic);
 }
 
-
-void _linlsqrstate_clear(void* _p)
-{
-    linlsqrstate *p = (linlsqrstate*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrstate_clear(void *_p) {
+    linlsqrstate *p = (linlsqrstate *)_p;
+    ae_touch_ptr((void *)p);
     _normestimatorstate_clear(&p->nes);
     ae_vector_clear(&p->rx);
     ae_vector_clear(&p->b);
@@ -16126,11 +15642,9 @@ void _linlsqrstate_clear(void* _p)
     _rcommstate_clear(&p->rstate);
 }
 
-
-void _linlsqrstate_destroy(void* _p)
-{
-    linlsqrstate *p = (linlsqrstate*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrstate_destroy(void *_p) {
+    linlsqrstate *p = (linlsqrstate *)_p;
+    ae_touch_ptr((void *)p);
     _normestimatorstate_destroy(&p->nes);
     ae_vector_destroy(&p->rx);
     ae_vector_destroy(&p->b);
@@ -16149,41 +15663,32 @@ void _linlsqrstate_destroy(void* _p)
     _rcommstate_destroy(&p->rstate);
 }
 
-
-void _linlsqrreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    linlsqrreport *p = (linlsqrreport*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrreport_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    linlsqrreport *p = (linlsqrreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _linlsqrreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    linlsqrreport *dst = (linlsqrreport*)_dst;
-    linlsqrreport *src = (linlsqrreport*)_src;
+void _linlsqrreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                              ae_bool make_automatic) {
+    linlsqrreport *dst = (linlsqrreport *)_dst;
+    linlsqrreport *src = (linlsqrreport *)_src;
     dst->iterationscount = src->iterationscount;
     dst->nmv = src->nmv;
     dst->terminationtype = src->terminationtype;
 }
 
-
-void _linlsqrreport_clear(void* _p)
-{
-    linlsqrreport *p = (linlsqrreport*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrreport_clear(void *_p) {
+    linlsqrreport *p = (linlsqrreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _linlsqrreport_destroy(void* _p)
-{
-    linlsqrreport *p = (linlsqrreport*)_p;
-    ae_touch_ptr((void*)p);
+void _linlsqrreport_destroy(void *_p) {
+    linlsqrreport *p = (linlsqrreport *)_p;
+    ae_touch_ptr((void *)p);
 }
-
 
 #endif
 #if defined(AE_COMPILE_NLEQ) || !defined(AE_PARTIAL_BUILD)
-
 
 /*************************************************************************
                 LEVENBERG-MARQUARDT-LIKE NONLINEAR SOLVER
@@ -16255,20 +15760,17 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqcreatelm(ae_int_t n,
-     ae_int_t m,
-     /* Real    */ ae_vector* x,
-     nleqstate* state,
-     ae_state *_state)
-{
-
+void nleqcreatelm(ae_int_t n, ae_int_t m,
+                  /* Real    */ ae_vector *x, nleqstate *state,
+                  ae_state *_state) {
     _nleqstate_clear(state);
 
-    ae_assert(n>=1, "NLEQCreateLM: N<1!", _state);
-    ae_assert(m>=1, "NLEQCreateLM: M<1!", _state);
-    ae_assert(x->cnt>=n, "NLEQCreateLM: Length(X)<N!", _state);
-    ae_assert(isfinitevector(x, n, _state), "NLEQCreateLM: X contains infinite or NaN values!", _state);
-    
+    ae_assert(n >= 1, "NLEQCreateLM: N<1!", _state);
+    ae_assert(m >= 1, "NLEQCreateLM: M<1!", _state);
+    ae_assert(x->cnt >= n, "NLEQCreateLM: Length(X)<N!", _state);
+    ae_assert(isfinitevector(x, n, _state),
+              "NLEQCreateLM: X contains infinite or NaN values!", _state);
+
     /*
      * Initialize
      */
@@ -16285,7 +15787,6 @@ void nleqcreatelm(ae_int_t n,
     ae_vector_set_length(&state->candstep, n, _state);
     nleqrestartfrom(state, x, _state);
 }
-
 
 /*************************************************************************
 This function sets stopping conditions for the nonlinear solver
@@ -16306,24 +15807,19 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetcond(nleqstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state)
-{
-
-
-    ae_assert(ae_isfinite(epsf, _state), "NLEQSetCond: EpsF is not finite number!", _state);
-    ae_assert(ae_fp_greater_eq(epsf,(double)(0)), "NLEQSetCond: negative EpsF!", _state);
-    ae_assert(maxits>=0, "NLEQSetCond: negative MaxIts!", _state);
-    if( ae_fp_eq(epsf,(double)(0))&&maxits==0 )
-    {
+void nleqsetcond(nleqstate *state, double epsf, ae_int_t maxits,
+                 ae_state *_state) {
+    ae_assert(ae_isfinite(epsf, _state),
+              "NLEQSetCond: EpsF is not finite number!", _state);
+    ae_assert(ae_fp_greater_eq(epsf, (double)(0)),
+              "NLEQSetCond: negative EpsF!", _state);
+    ae_assert(maxits >= 0, "NLEQSetCond: negative MaxIts!", _state);
+    if (ae_fp_eq(epsf, (double)(0)) && maxits == 0) {
         epsf = 1.0E-6;
     }
     state->epsf = epsf;
     state->maxits = maxits;
 }
-
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -16338,13 +15834,9 @@ provided to NLEQSolve().
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetxrep(nleqstate* state, ae_bool needxrep, ae_state *_state)
-{
-
-
+void nleqsetxrep(nleqstate *state, ae_bool needxrep, ae_state *_state) {
     state->xrep = needxrep;
 }
-
 
 /*************************************************************************
 This function sets maximum step length
@@ -16363,23 +15855,20 @@ function value at the x+stp*d.
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetstpmax(nleqstate* state, double stpmax, ae_state *_state)
-{
-
-
-    ae_assert(ae_isfinite(stpmax, _state), "NLEQSetStpMax: StpMax is not finite!", _state);
-    ae_assert(ae_fp_greater_eq(stpmax,(double)(0)), "NLEQSetStpMax: StpMax<0!", _state);
+void nleqsetstpmax(nleqstate *state, double stpmax, ae_state *_state) {
+    ae_assert(ae_isfinite(stpmax, _state),
+              "NLEQSetStpMax: StpMax is not finite!", _state);
+    ae_assert(ae_fp_greater_eq(stpmax, (double)(0)), "NLEQSetStpMax: StpMax<0!",
+              _state);
     state->stpmax = stpmax;
 }
-
 
 /*************************************************************************
 
   -- ALGLIB --
      Copyright 20.03.2009 by Bochkanov Sergey
 *************************************************************************/
-ae_bool nleqiteration(nleqstate* state, ae_state *_state)
-{
+ae_bool nleqiteration(nleqstate *state, ae_state *_state) {
     ae_int_t n;
     ae_int_t m;
     ae_int_t i;
@@ -16392,8 +15881,6 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
     ae_bool b;
     ae_bool result;
 
-
-    
     /*
      * Reverse communication preparations
      * I know it looks ugly, but it works the same way
@@ -16404,8 +15891,7 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
      *   generation - on first subroutine call
      * * values from previous call - on subsequent calls
      */
-    if( state->rstate.stage>=0 )
-    {
+    if (state->rstate.stage >= 0) {
         n = state->rstate.ia.ptr.p_int[0];
         m = state->rstate.ia.ptr.p_int[1];
         i = state->rstate.ia.ptr.p_int[2];
@@ -16416,9 +15902,7 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
         rho = state->rstate.ra.ptr.p_double[3];
         mu = state->rstate.ra.ptr.p_double[4];
         stepnorm = state->rstate.ra.ptr.p_double[5];
-    }
-    else
-    {
+    } else {
         n = 359;
         m = -58;
         i = -919;
@@ -16430,31 +15914,26 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
         mu = 809;
         stepnorm = 205;
     }
-    if( state->rstate.stage==0 )
-    {
+    if (state->rstate.stage == 0) {
         goto lbl_0;
     }
-    if( state->rstate.stage==1 )
-    {
+    if (state->rstate.stage == 1) {
         goto lbl_1;
     }
-    if( state->rstate.stage==2 )
-    {
+    if (state->rstate.stage == 2) {
         goto lbl_2;
     }
-    if( state->rstate.stage==3 )
-    {
+    if (state->rstate.stage == 3) {
         goto lbl_3;
     }
-    if( state->rstate.stage==4 )
-    {
+    if (state->rstate.stage == 4) {
         goto lbl_4;
     }
-    
+
     /*
      * Routine body
      */
-    
+
     /*
      * Prepare
      */
@@ -16464,7 +15943,7 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
     state->repiterationscount = 0;
     state->repnfunc = 0;
     state->repnjac = 0;
-    
+
     /*
      * Calculate F/G, initialize algorithm
      */
@@ -16474,15 +15953,15 @@ ae_bool nleqiteration(nleqstate* state, ae_state *_state)
     goto lbl_rcomm;
 lbl_0:
     state->needf = ae_false;
-    state->repnfunc = state->repnfunc+1;
-    ae_v_move(&state->xbase.ptr.p_double[0], 1, &state->x.ptr.p_double[0], 1, ae_v_len(0,n-1));
+    state->repnfunc = state->repnfunc + 1;
+    ae_v_move(&state->xbase.ptr.p_double[0], 1, &state->x.ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     state->fbase = state->f;
     state->fprev = ae_maxrealnumber;
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_5;
     }
-    
+
     /*
      * progress report
      */
@@ -16493,13 +15972,12 @@ lbl_0:
 lbl_1:
     state->xupdated = ae_false;
 lbl_5:
-    if( ae_fp_less_eq(state->f,ae_sqr(state->epsf, _state)) )
-    {
+    if (ae_fp_less_eq(state->f, ae_sqr(state->epsf, _state))) {
         state->repterminationtype = 1;
         result = ae_false;
         return result;
     }
-    
+
     /*
      * Main cycle
      */
@@ -16508,11 +15986,10 @@ lbl_5:
     lambdav = 0.001;
     rho = (double)(1);
 lbl_7:
-    if( ae_false )
-    {
+    if (ae_false) {
         goto lbl_8;
     }
-    
+
     /*
      * Get Jacobian;
      * before we get to this point we already have State.XBase filled
@@ -16521,25 +15998,26 @@ lbl_7:
      */
     nleq_clearrequestfields(state, _state);
     state->needfij = ae_true;
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     state->rstate.stage = 2;
     goto lbl_rcomm;
 lbl_2:
     state->needfij = ae_false;
-    state->repnfunc = state->repnfunc+1;
-    state->repnjac = state->repnjac+1;
-    rmatrixmv(n, m, &state->j, 0, 0, 1, &state->fi, 0, &state->rightpart, 0, _state);
-    ae_v_muld(&state->rightpart.ptr.p_double[0], 1, ae_v_len(0,n-1), -1);
-    
+    state->repnfunc = state->repnfunc + 1;
+    state->repnjac = state->repnjac + 1;
+    rmatrixmv(n, m, &state->j, 0, 0, 1, &state->fi, 0, &state->rightpart, 0,
+              _state);
+    ae_v_muld(&state->rightpart.ptr.p_double[0], 1, ae_v_len(0, n - 1), -1);
+
     /*
      * Inner cycle: find good lambda
      */
 lbl_9:
-    if( ae_false )
-    {
+    if (ae_false) {
         goto lbl_10;
     }
-    
+
     /*
      * Solve (J^T*J + (Lambda+Mu)*I)*y = J^T*F
      * to get step d=-y where:
@@ -16547,30 +16025,27 @@ lbl_9:
      * * Lambda   - is additional Levenberg-Marquardt parameter
      *              for better convergence when far away from minimum
      */
-    for(i=0; i<=n-1; i++)
-    {
+    for (i = 0; i <= n - 1; i++) {
         state->candstep.ptr.p_double[i] = (double)(0);
     }
-    fblssolvecgx(&state->j, m, n, lambdav, &state->rightpart, &state->candstep, &state->cgbuf, _state);
-    
+    fblssolvecgx(&state->j, m, n, lambdav, &state->rightpart, &state->candstep,
+                 &state->cgbuf, _state);
+
     /*
      * Normalize step (it must be no more than StpMax)
      */
     stepnorm = (double)(0);
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_neq(state->candstep.ptr.p_double[i],(double)(0)) )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_neq(state->candstep.ptr.p_double[i], (double)(0))) {
             stepnorm = (double)(1);
             break;
         }
     }
     linminnormalized(&state->candstep, &stepnorm, n, _state);
-    if( ae_fp_neq(state->stpmax,(double)(0)) )
-    {
+    if (ae_fp_neq(state->stpmax, (double)(0))) {
         stepnorm = ae_minreal(stepnorm, state->stpmax, _state);
     }
-    
+
     /*
      * Test new step - is it good enough?
      * * if not, Lambda is increased and we try again.
@@ -16580,25 +16055,24 @@ lbl_9:
      * * step is so small that x+step==x (in floating point arithmetics)
      * * lambda is so large
      */
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,n-1));
-    ae_v_addd(&state->x.ptr.p_double[0], 1, &state->candstep.ptr.p_double[0], 1, ae_v_len(0,n-1), stepnorm);
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
+    ae_v_addd(&state->x.ptr.p_double[0], 1, &state->candstep.ptr.p_double[0], 1,
+              ae_v_len(0, n - 1), stepnorm);
     b = ae_true;
-    for(i=0; i<=n-1; i++)
-    {
-        if( ae_fp_neq(state->x.ptr.p_double[i],state->xbase.ptr.p_double[i]) )
-        {
+    for (i = 0; i <= n - 1; i++) {
+        if (ae_fp_neq(state->x.ptr.p_double[i], state->xbase.ptr.p_double[i])) {
             b = ae_false;
             break;
         }
     }
-    if( b )
-    {
-        
+    if (b) {
         /*
          * Step is too small, force zero step and break
          */
         stepnorm = (double)(0);
-        ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,n-1));
+        ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0],
+                  1, ae_v_len(0, n - 1));
         state->f = state->fbase;
         goto lbl_10;
     }
@@ -16608,77 +16082,72 @@ lbl_9:
     goto lbl_rcomm;
 lbl_3:
     state->needf = ae_false;
-    state->repnfunc = state->repnfunc+1;
-    if( ae_fp_less(state->f,state->fbase) )
-    {
-        
+    state->repnfunc = state->repnfunc + 1;
+    if (ae_fp_less(state->f, state->fbase)) {
         /*
          * function value decreased, move on
          */
         nleq_decreaselambda(&lambdav, &rho, lambdadown, _state);
         goto lbl_10;
     }
-    if( !nleq_increaselambda(&lambdav, &rho, lambdaup, _state) )
-    {
-        
+    if (!nleq_increaselambda(&lambdav, &rho, lambdaup, _state)) {
         /*
          * Lambda is too large (near overflow), force zero step and break
          */
         stepnorm = (double)(0);
-        ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,n-1));
+        ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0],
+                  1, ae_v_len(0, n - 1));
         state->f = state->fbase;
         goto lbl_10;
     }
     goto lbl_9;
 lbl_10:
-    
+
     /*
      * Accept step:
      * * new position
      * * new function value
      */
     state->fbase = state->f;
-    ae_v_addd(&state->xbase.ptr.p_double[0], 1, &state->candstep.ptr.p_double[0], 1, ae_v_len(0,n-1), stepnorm);
-    state->repiterationscount = state->repiterationscount+1;
-    
+    ae_v_addd(&state->xbase.ptr.p_double[0], 1,
+              &state->candstep.ptr.p_double[0], 1, ae_v_len(0, n - 1),
+              stepnorm);
+    state->repiterationscount = state->repiterationscount + 1;
+
     /*
      * Report new iteration
      */
-    if( !state->xrep )
-    {
+    if (!state->xrep) {
         goto lbl_11;
     }
     nleq_clearrequestfields(state, _state);
     state->xupdated = ae_true;
     state->f = state->fbase;
-    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,n-1));
+    ae_v_move(&state->x.ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1,
+              ae_v_len(0, n - 1));
     state->rstate.stage = 4;
     goto lbl_rcomm;
 lbl_4:
     state->xupdated = ae_false;
 lbl_11:
-    
+
     /*
      * Test stopping conditions on F, step (zero/non-zero) and MaxIts;
      * If one of the conditions is met, RepTerminationType is changed.
      */
-    if( ae_fp_less_eq(ae_sqrt(state->f, _state),state->epsf) )
-    {
+    if (ae_fp_less_eq(ae_sqrt(state->f, _state), state->epsf)) {
         state->repterminationtype = 1;
     }
-    if( ae_fp_eq(stepnorm,(double)(0))&&state->repterminationtype==0 )
-    {
+    if (ae_fp_eq(stepnorm, (double)(0)) && state->repterminationtype == 0) {
         state->repterminationtype = -4;
     }
-    if( state->repiterationscount>=state->maxits&&state->maxits>0 )
-    {
+    if (state->repiterationscount >= state->maxits && state->maxits > 0) {
         state->repterminationtype = 5;
     }
-    if( state->repterminationtype!=0 )
-    {
+    if (state->repterminationtype != 0) {
         goto lbl_8;
     }
-    
+
     /*
      * Now, iteration is finally over
      */
@@ -16686,7 +16155,7 @@ lbl_11:
 lbl_8:
     result = ae_false;
     return result;
-    
+
     /*
      * Saving state
      */
@@ -16704,7 +16173,6 @@ lbl_rcomm:
     state->rstate.ra.ptr.p_double[5] = stepnorm;
     return result;
 }
-
 
 /*************************************************************************
 NLEQ solver results
@@ -16731,18 +16199,14 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresults(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     nleqreport* rep,
-     ae_state *_state)
-{
-
+void nleqresults(nleqstate *state,
+                 /* Real    */ ae_vector *x, nleqreport *rep,
+                 ae_state *_state) {
     ae_vector_clear(x);
     _nleqreport_clear(rep);
 
     nleqresultsbuf(state, x, rep, _state);
 }
-
 
 /*************************************************************************
 NLEQ solver results
@@ -16755,24 +16219,19 @@ where array reallocation penalty is too large to be ignored.
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresultsbuf(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     nleqreport* rep,
-     ae_state *_state)
-{
-
-
-    if( x->cnt<state->n )
-    {
+void nleqresultsbuf(nleqstate *state,
+                    /* Real    */ ae_vector *x, nleqreport *rep,
+                    ae_state *_state) {
+    if (x->cnt < state->n) {
         ae_vector_set_length(x, state->n, _state);
     }
-    ae_v_move(&x->ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1, ae_v_len(0,state->n-1));
+    ae_v_move(&x->ptr.p_double[0], 1, &state->xbase.ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
     rep->iterationscount = state->repiterationscount;
     rep->nfunc = state->repnfunc;
     rep->njac = state->repnjac;
     rep->terminationtype = state->repterminationtype;
 }
-
 
 /*************************************************************************
 This  subroutine  restarts  CG  algorithm from new point. All optimization
@@ -16791,97 +16250,74 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.07.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqrestartfrom(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state)
-{
-
-
-    ae_assert(x->cnt>=state->n, "NLEQRestartFrom: Length(X)<N!", _state);
-    ae_assert(isfinitevector(x, state->n, _state), "NLEQRestartFrom: X contains infinite or NaN values!", _state);
-    ae_v_move(&state->x.ptr.p_double[0], 1, &x->ptr.p_double[0], 1, ae_v_len(0,state->n-1));
-    ae_vector_set_length(&state->rstate.ia, 2+1, _state);
-    ae_vector_set_length(&state->rstate.ba, 0+1, _state);
-    ae_vector_set_length(&state->rstate.ra, 5+1, _state);
+void nleqrestartfrom(nleqstate *state,
+                     /* Real    */ ae_vector *x, ae_state *_state) {
+    ae_assert(x->cnt >= state->n, "NLEQRestartFrom: Length(X)<N!", _state);
+    ae_assert(isfinitevector(x, state->n, _state),
+              "NLEQRestartFrom: X contains infinite or NaN values!", _state);
+    ae_v_move(&state->x.ptr.p_double[0], 1, &x->ptr.p_double[0], 1,
+              ae_v_len(0, state->n - 1));
+    ae_vector_set_length(&state->rstate.ia, 2 + 1, _state);
+    ae_vector_set_length(&state->rstate.ba, 0 + 1, _state);
+    ae_vector_set_length(&state->rstate.ra, 5 + 1, _state);
     state->rstate.stage = -1;
     nleq_clearrequestfields(state, _state);
 }
 
-
 /*************************************************************************
 Clears request fileds (to be sure that we don't forgot to clear something)
 *************************************************************************/
-static void nleq_clearrequestfields(nleqstate* state, ae_state *_state)
-{
-
-
+static void nleq_clearrequestfields(nleqstate *state, ae_state *_state) {
     state->needf = ae_false;
     state->needfij = ae_false;
     state->xupdated = ae_false;
 }
 
-
 /*************************************************************************
 Increases lambda, returns False when there is a danger of overflow
 *************************************************************************/
-static ae_bool nleq_increaselambda(double* lambdav,
-     double* nu,
-     double lambdaup,
-     ae_state *_state)
-{
+static ae_bool nleq_increaselambda(double *lambdav, double *nu, double lambdaup,
+                                   ae_state *_state) {
     double lnlambda;
     double lnnu;
     double lnlambdaup;
     double lnmax;
     ae_bool result;
 
-
     result = ae_false;
     lnlambda = ae_log(*lambdav, _state);
     lnlambdaup = ae_log(lambdaup, _state);
     lnnu = ae_log(*nu, _state);
-    lnmax = 0.5*ae_log(ae_maxrealnumber, _state);
-    if( ae_fp_greater(lnlambda+lnlambdaup+lnnu,lnmax) )
-    {
+    lnmax = 0.5 * ae_log(ae_maxrealnumber, _state);
+    if (ae_fp_greater(lnlambda + lnlambdaup + lnnu, lnmax)) {
         return result;
     }
-    if( ae_fp_greater(lnnu+ae_log((double)(2), _state),lnmax) )
-    {
+    if (ae_fp_greater(lnnu + ae_log((double)(2), _state), lnmax)) {
         return result;
     }
-    *lambdav = *lambdav*lambdaup*(*nu);
-    *nu = *nu*2;
+    *lambdav = *lambdav * lambdaup * (*nu);
+    *nu = *nu * 2;
     result = ae_true;
     return result;
 }
 
-
 /*************************************************************************
 Decreases lambda, but leaves it unchanged when there is danger of underflow.
 *************************************************************************/
-static void nleq_decreaselambda(double* lambdav,
-     double* nu,
-     double lambdadown,
-     ae_state *_state)
-{
-
-
+static void nleq_decreaselambda(double *lambdav, double *nu, double lambdadown,
+                                ae_state *_state) {
     *nu = (double)(1);
-    if( ae_fp_less(ae_log(*lambdav, _state)+ae_log(lambdadown, _state),ae_log(ae_minrealnumber, _state)) )
-    {
+    if (ae_fp_less(ae_log(*lambdav, _state) + ae_log(lambdadown, _state),
+                   ae_log(ae_minrealnumber, _state))) {
         *lambdav = ae_minrealnumber;
-    }
-    else
-    {
-        *lambdav = *lambdav*lambdadown;
+    } else {
+        *lambdav = *lambdav * lambdadown;
     }
 }
 
-
-void _nleqstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    nleqstate *p = (nleqstate*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqstate_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    nleqstate *p = (nleqstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_init(&p->x, 0, DT_REAL, _state, make_automatic);
     ae_vector_init(&p->fi, 0, DT_REAL, _state, make_automatic);
     ae_matrix_init(&p->j, 0, 0, DT_REAL, _state, make_automatic);
@@ -16892,11 +16328,10 @@ void _nleqstate_init(void* _p, ae_state *_state, ae_bool make_automatic)
     ae_vector_init(&p->cgbuf, 0, DT_REAL, _state, make_automatic);
 }
 
-
-void _nleqstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    nleqstate *dst = (nleqstate*)_dst;
-    nleqstate *src = (nleqstate*)_src;
+void _nleqstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                          ae_bool make_automatic) {
+    nleqstate *dst = (nleqstate *)_dst;
+    nleqstate *src = (nleqstate *)_src;
     dst->n = src->n;
     dst->m = src->m;
     dst->epsf = src->epsf;
@@ -16919,15 +16354,14 @@ void _nleqstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make
     dst->fbase = src->fbase;
     dst->fprev = src->fprev;
     ae_vector_init_copy(&dst->candstep, &src->candstep, _state, make_automatic);
-    ae_vector_init_copy(&dst->rightpart, &src->rightpart, _state, make_automatic);
+    ae_vector_init_copy(&dst->rightpart, &src->rightpart, _state,
+                        make_automatic);
     ae_vector_init_copy(&dst->cgbuf, &src->cgbuf, _state, make_automatic);
 }
 
-
-void _nleqstate_clear(void* _p)
-{
-    nleqstate *p = (nleqstate*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqstate_clear(void *_p) {
+    nleqstate *p = (nleqstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_clear(&p->x);
     ae_vector_clear(&p->fi);
     ae_matrix_clear(&p->j);
@@ -16938,11 +16372,9 @@ void _nleqstate_clear(void* _p)
     ae_vector_clear(&p->cgbuf);
 }
 
-
-void _nleqstate_destroy(void* _p)
-{
-    nleqstate *p = (nleqstate*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqstate_destroy(void *_p) {
+    nleqstate *p = (nleqstate *)_p;
+    ae_touch_ptr((void *)p);
     ae_vector_destroy(&p->x);
     ae_vector_destroy(&p->fi);
     ae_matrix_destroy(&p->j);
@@ -16953,40 +16385,31 @@ void _nleqstate_destroy(void* _p)
     ae_vector_destroy(&p->cgbuf);
 }
 
-
-void _nleqreport_init(void* _p, ae_state *_state, ae_bool make_automatic)
-{
-    nleqreport *p = (nleqreport*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqreport_init(void *_p, ae_state *_state, ae_bool make_automatic) {
+    nleqreport *p = (nleqreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _nleqreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic)
-{
-    nleqreport *dst = (nleqreport*)_dst;
-    nleqreport *src = (nleqreport*)_src;
+void _nleqreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                           ae_bool make_automatic) {
+    nleqreport *dst = (nleqreport *)_dst;
+    nleqreport *src = (nleqreport *)_src;
     dst->iterationscount = src->iterationscount;
     dst->nfunc = src->nfunc;
     dst->njac = src->njac;
     dst->terminationtype = src->terminationtype;
 }
 
-
-void _nleqreport_clear(void* _p)
-{
-    nleqreport *p = (nleqreport*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqreport_clear(void *_p) {
+    nleqreport *p = (nleqreport *)_p;
+    ae_touch_ptr((void *)p);
 }
 
-
-void _nleqreport_destroy(void* _p)
-{
-    nleqreport *p = (nleqreport*)_p;
-    ae_touch_ptr((void*)p);
+void _nleqreport_destroy(void *_p) {
+    nleqreport *p = (nleqreport *)_p;
+    ae_touch_ptr((void *)p);
 }
-
 
 #endif
 
-}
-
+}  // namespace alglib_impl

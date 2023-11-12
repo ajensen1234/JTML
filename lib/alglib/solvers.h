@@ -5,7 +5,7 @@ Copyright (c) Sergey Bochkanov (ALGLIB project).
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the 
+the Free Software Foundation (www.fsf.org); either version 2 of the
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -19,9 +19,9 @@ http://www.fsf.org/licensing/licenses
 *************************************************************************/
 #ifndef _solvers_pkg_h
 #define _solvers_pkg_h
-#include "ap.h"
 #include "alglibinternal.h"
 #include "alglibmisc.h"
+#include "ap.h"
 #include "linalg.h"
 
 /////////////////////////////////////////////////////////////////////////
@@ -29,22 +29,18 @@ http://www.fsf.org/licensing/licenses
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     double maxerr;
 } polynomialsolverreport;
 #endif
 #if defined(AE_COMPILE_DIRECTDENSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     double r1;
     double rinf;
 } densesolverreport;
-typedef struct
-{
+typedef struct {
     double r2;
     ae_matrix cx;
     ae_int_t n;
@@ -52,8 +48,7 @@ typedef struct
 } densesolverlsreport;
 #endif
 #if defined(AE_COMPILE_DIRECTSPARSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     ae_int_t terminationtype;
     ae_int_t nmv;
     ae_int_t iterationscount;
@@ -61,8 +56,7 @@ typedef struct
 } sparsesolverreport;
 #endif
 #if defined(AE_COMPILE_ITERATIVESPARSE) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     ae_int_t n;
     ae_vector x0;
     double epsf;
@@ -89,8 +83,7 @@ typedef struct
 } sparsesolverstate;
 #endif
 #if defined(AE_COMPILE_LINCG) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     ae_vector rx;
     ae_vector b;
     ae_int_t n;
@@ -128,8 +121,7 @@ typedef struct
     ae_vector tmpd;
     rcommstate rstate;
 } lincgstate;
-typedef struct
-{
+typedef struct {
     ae_int_t iterationscount;
     ae_int_t nmv;
     ae_int_t terminationtype;
@@ -137,8 +129,7 @@ typedef struct
 } lincgreport;
 #endif
 #if defined(AE_COMPILE_LINLSQR) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     normestimatorstate nes;
     ae_vector rx;
     ae_vector b;
@@ -193,16 +184,14 @@ typedef struct
     ae_vector tmpx;
     rcommstate rstate;
 } linlsqrstate;
-typedef struct
-{
+typedef struct {
     ae_int_t iterationscount;
     ae_int_t nmv;
     ae_int_t terminationtype;
 } linlsqrreport;
 #endif
 #if defined(AE_COMPILE_NLEQ) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     ae_int_t n;
     ae_int_t m;
     double epsf;
@@ -228,8 +217,7 @@ typedef struct
     ae_vector rightpart;
     ae_vector cgbuf;
 } nleqstate;
-typedef struct
-{
+typedef struct {
     ae_int_t iterationscount;
     ae_int_t nfunc;
     ae_int_t njac;
@@ -237,41 +225,39 @@ typedef struct
 } nleqreport;
 #endif
 
-}
+}  // namespace alglib_impl
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS C++ INTERFACE
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib
-{
+namespace alglib {
 
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
 /*************************************************************************
 
 *************************************************************************/
-class _polynomialsolverreport_owner
-{
-public:
+class _polynomialsolverreport_owner {
+   public:
     _polynomialsolverreport_owner();
     _polynomialsolverreport_owner(const _polynomialsolverreport_owner &rhs);
-    _polynomialsolverreport_owner& operator=(const _polynomialsolverreport_owner &rhs);
+    _polynomialsolverreport_owner &operator=(
+        const _polynomialsolverreport_owner &rhs);
     virtual ~_polynomialsolverreport_owner();
-    alglib_impl::polynomialsolverreport* c_ptr();
-    alglib_impl::polynomialsolverreport* c_ptr() const;
-protected:
+    alglib_impl::polynomialsolverreport *c_ptr();
+    alglib_impl::polynomialsolverreport *c_ptr() const;
+
+   protected:
     alglib_impl::polynomialsolverreport *p_struct;
 };
-class polynomialsolverreport : public _polynomialsolverreport_owner
-{
-public:
+class polynomialsolverreport : public _polynomialsolverreport_owner {
+   public:
     polynomialsolverreport();
     polynomialsolverreport(const polynomialsolverreport &rhs);
-    polynomialsolverreport& operator=(const polynomialsolverreport &rhs);
+    polynomialsolverreport &operator=(const polynomialsolverreport &rhs);
     virtual ~polynomialsolverreport();
     double &maxerr;
-
 };
 #endif
 
@@ -279,58 +265,54 @@ public:
 /*************************************************************************
 
 *************************************************************************/
-class _densesolverreport_owner
-{
-public:
+class _densesolverreport_owner {
+   public:
     _densesolverreport_owner();
     _densesolverreport_owner(const _densesolverreport_owner &rhs);
-    _densesolverreport_owner& operator=(const _densesolverreport_owner &rhs);
+    _densesolverreport_owner &operator=(const _densesolverreport_owner &rhs);
     virtual ~_densesolverreport_owner();
-    alglib_impl::densesolverreport* c_ptr();
-    alglib_impl::densesolverreport* c_ptr() const;
-protected:
+    alglib_impl::densesolverreport *c_ptr();
+    alglib_impl::densesolverreport *c_ptr() const;
+
+   protected:
     alglib_impl::densesolverreport *p_struct;
 };
-class densesolverreport : public _densesolverreport_owner
-{
-public:
+class densesolverreport : public _densesolverreport_owner {
+   public:
     densesolverreport();
     densesolverreport(const densesolverreport &rhs);
-    densesolverreport& operator=(const densesolverreport &rhs);
+    densesolverreport &operator=(const densesolverreport &rhs);
     virtual ~densesolverreport();
     double &r1;
     double &rinf;
-
 };
-
 
 /*************************************************************************
 
 *************************************************************************/
-class _densesolverlsreport_owner
-{
-public:
+class _densesolverlsreport_owner {
+   public:
     _densesolverlsreport_owner();
     _densesolverlsreport_owner(const _densesolverlsreport_owner &rhs);
-    _densesolverlsreport_owner& operator=(const _densesolverlsreport_owner &rhs);
+    _densesolverlsreport_owner &operator=(
+        const _densesolverlsreport_owner &rhs);
     virtual ~_densesolverlsreport_owner();
-    alglib_impl::densesolverlsreport* c_ptr();
-    alglib_impl::densesolverlsreport* c_ptr() const;
-protected:
+    alglib_impl::densesolverlsreport *c_ptr();
+    alglib_impl::densesolverlsreport *c_ptr() const;
+
+   protected:
     alglib_impl::densesolverlsreport *p_struct;
 };
-class densesolverlsreport : public _densesolverlsreport_owner
-{
-public:
+class densesolverlsreport : public _densesolverlsreport_owner {
+   public:
     densesolverlsreport();
     densesolverlsreport(const densesolverlsreport &rhs);
-    densesolverlsreport& operator=(const densesolverlsreport &rhs);
+    densesolverlsreport &operator=(const densesolverlsreport &rhs);
     virtual ~densesolverlsreport();
     double &r2;
     real_2d_array cx;
     ae_int_t &n;
     ae_int_t &k;
-
 };
 #endif
 
@@ -347,30 +329,28 @@ Following fields can be accessed by users:
 * IterationsCount - inner iterations count (0 for direct solvers)
 * R2 - squared residual
 *************************************************************************/
-class _sparsesolverreport_owner
-{
-public:
+class _sparsesolverreport_owner {
+   public:
     _sparsesolverreport_owner();
     _sparsesolverreport_owner(const _sparsesolverreport_owner &rhs);
-    _sparsesolverreport_owner& operator=(const _sparsesolverreport_owner &rhs);
+    _sparsesolverreport_owner &operator=(const _sparsesolverreport_owner &rhs);
     virtual ~_sparsesolverreport_owner();
-    alglib_impl::sparsesolverreport* c_ptr();
-    alglib_impl::sparsesolverreport* c_ptr() const;
-protected:
+    alglib_impl::sparsesolverreport *c_ptr();
+    alglib_impl::sparsesolverreport *c_ptr() const;
+
+   protected:
     alglib_impl::sparsesolverreport *p_struct;
 };
-class sparsesolverreport : public _sparsesolverreport_owner
-{
-public:
+class sparsesolverreport : public _sparsesolverreport_owner {
+   public:
     sparsesolverreport();
     sparsesolverreport(const sparsesolverreport &rhs);
-    sparsesolverreport& operator=(const sparsesolverreport &rhs);
+    sparsesolverreport &operator=(const sparsesolverreport &rhs);
     virtual ~sparsesolverreport();
     ae_int_t &terminationtype;
     ae_int_t &nmv;
     ae_int_t &iterationscount;
     double &r2;
-
 };
 #endif
 
@@ -381,26 +361,24 @@ This object stores state of the sparse linear solver object.
 You should use ALGLIB functions to work with this object.
 Never try to access its fields directly!
 *************************************************************************/
-class _sparsesolverstate_owner
-{
-public:
+class _sparsesolverstate_owner {
+   public:
     _sparsesolverstate_owner();
     _sparsesolverstate_owner(const _sparsesolverstate_owner &rhs);
-    _sparsesolverstate_owner& operator=(const _sparsesolverstate_owner &rhs);
+    _sparsesolverstate_owner &operator=(const _sparsesolverstate_owner &rhs);
     virtual ~_sparsesolverstate_owner();
-    alglib_impl::sparsesolverstate* c_ptr();
-    alglib_impl::sparsesolverstate* c_ptr() const;
-protected:
+    alglib_impl::sparsesolverstate *c_ptr();
+    alglib_impl::sparsesolverstate *c_ptr() const;
+
+   protected:
     alglib_impl::sparsesolverstate *p_struct;
 };
-class sparsesolverstate : public _sparsesolverstate_owner
-{
-public:
+class sparsesolverstate : public _sparsesolverstate_owner {
+   public:
     sparsesolverstate();
     sparsesolverstate(const sparsesolverstate &rhs);
-    sparsesolverstate& operator=(const sparsesolverstate &rhs);
+    sparsesolverstate &operator=(const sparsesolverstate &rhs);
     virtual ~sparsesolverstate();
-
 };
 #endif
 
@@ -411,56 +389,51 @@ This object stores state of the linear CG method.
 You should use ALGLIB functions to work with this object.
 Never try to access its fields directly!
 *************************************************************************/
-class _lincgstate_owner
-{
-public:
+class _lincgstate_owner {
+   public:
     _lincgstate_owner();
     _lincgstate_owner(const _lincgstate_owner &rhs);
-    _lincgstate_owner& operator=(const _lincgstate_owner &rhs);
+    _lincgstate_owner &operator=(const _lincgstate_owner &rhs);
     virtual ~_lincgstate_owner();
-    alglib_impl::lincgstate* c_ptr();
-    alglib_impl::lincgstate* c_ptr() const;
-protected:
+    alglib_impl::lincgstate *c_ptr();
+    alglib_impl::lincgstate *c_ptr() const;
+
+   protected:
     alglib_impl::lincgstate *p_struct;
 };
-class lincgstate : public _lincgstate_owner
-{
-public:
+class lincgstate : public _lincgstate_owner {
+   public:
     lincgstate();
     lincgstate(const lincgstate &rhs);
-    lincgstate& operator=(const lincgstate &rhs);
+    lincgstate &operator=(const lincgstate &rhs);
     virtual ~lincgstate();
-
 };
-
 
 /*************************************************************************
 
 *************************************************************************/
-class _lincgreport_owner
-{
-public:
+class _lincgreport_owner {
+   public:
     _lincgreport_owner();
     _lincgreport_owner(const _lincgreport_owner &rhs);
-    _lincgreport_owner& operator=(const _lincgreport_owner &rhs);
+    _lincgreport_owner &operator=(const _lincgreport_owner &rhs);
     virtual ~_lincgreport_owner();
-    alglib_impl::lincgreport* c_ptr();
-    alglib_impl::lincgreport* c_ptr() const;
-protected:
+    alglib_impl::lincgreport *c_ptr();
+    alglib_impl::lincgreport *c_ptr() const;
+
+   protected:
     alglib_impl::lincgreport *p_struct;
 };
-class lincgreport : public _lincgreport_owner
-{
-public:
+class lincgreport : public _lincgreport_owner {
+   public:
     lincgreport();
     lincgreport(const lincgreport &rhs);
-    lincgreport& operator=(const lincgreport &rhs);
+    lincgreport &operator=(const lincgreport &rhs);
     virtual ~lincgreport();
     ae_int_t &iterationscount;
     ae_int_t &nmv;
     ae_int_t &terminationtype;
     double &r2;
-
 };
 #endif
 
@@ -470,55 +443,50 @@ This object stores state of the LinLSQR method.
 
 You should use ALGLIB functions to work with this object.
 *************************************************************************/
-class _linlsqrstate_owner
-{
-public:
+class _linlsqrstate_owner {
+   public:
     _linlsqrstate_owner();
     _linlsqrstate_owner(const _linlsqrstate_owner &rhs);
-    _linlsqrstate_owner& operator=(const _linlsqrstate_owner &rhs);
+    _linlsqrstate_owner &operator=(const _linlsqrstate_owner &rhs);
     virtual ~_linlsqrstate_owner();
-    alglib_impl::linlsqrstate* c_ptr();
-    alglib_impl::linlsqrstate* c_ptr() const;
-protected:
+    alglib_impl::linlsqrstate *c_ptr();
+    alglib_impl::linlsqrstate *c_ptr() const;
+
+   protected:
     alglib_impl::linlsqrstate *p_struct;
 };
-class linlsqrstate : public _linlsqrstate_owner
-{
-public:
+class linlsqrstate : public _linlsqrstate_owner {
+   public:
     linlsqrstate();
     linlsqrstate(const linlsqrstate &rhs);
-    linlsqrstate& operator=(const linlsqrstate &rhs);
+    linlsqrstate &operator=(const linlsqrstate &rhs);
     virtual ~linlsqrstate();
-
 };
-
 
 /*************************************************************************
 
 *************************************************************************/
-class _linlsqrreport_owner
-{
-public:
+class _linlsqrreport_owner {
+   public:
     _linlsqrreport_owner();
     _linlsqrreport_owner(const _linlsqrreport_owner &rhs);
-    _linlsqrreport_owner& operator=(const _linlsqrreport_owner &rhs);
+    _linlsqrreport_owner &operator=(const _linlsqrreport_owner &rhs);
     virtual ~_linlsqrreport_owner();
-    alglib_impl::linlsqrreport* c_ptr();
-    alglib_impl::linlsqrreport* c_ptr() const;
-protected:
+    alglib_impl::linlsqrreport *c_ptr();
+    alglib_impl::linlsqrreport *c_ptr() const;
+
+   protected:
     alglib_impl::linlsqrreport *p_struct;
 };
-class linlsqrreport : public _linlsqrreport_owner
-{
-public:
+class linlsqrreport : public _linlsqrreport_owner {
+   public:
     linlsqrreport();
     linlsqrreport(const linlsqrreport &rhs);
-    linlsqrreport& operator=(const linlsqrreport &rhs);
+    linlsqrreport &operator=(const linlsqrreport &rhs);
     virtual ~linlsqrreport();
     ae_int_t &iterationscount;
     ae_int_t &nmv;
     ae_int_t &terminationtype;
-
 };
 #endif
 
@@ -526,24 +494,23 @@ public:
 /*************************************************************************
 
 *************************************************************************/
-class _nleqstate_owner
-{
-public:
+class _nleqstate_owner {
+   public:
     _nleqstate_owner();
     _nleqstate_owner(const _nleqstate_owner &rhs);
-    _nleqstate_owner& operator=(const _nleqstate_owner &rhs);
+    _nleqstate_owner &operator=(const _nleqstate_owner &rhs);
     virtual ~_nleqstate_owner();
-    alglib_impl::nleqstate* c_ptr();
-    alglib_impl::nleqstate* c_ptr() const;
-protected:
+    alglib_impl::nleqstate *c_ptr();
+    alglib_impl::nleqstate *c_ptr() const;
+
+   protected:
     alglib_impl::nleqstate *p_struct;
 };
-class nleqstate : public _nleqstate_owner
-{
-public:
+class nleqstate : public _nleqstate_owner {
+   public:
     nleqstate();
     nleqstate(const nleqstate &rhs);
-    nleqstate& operator=(const nleqstate &rhs);
+    nleqstate &operator=(const nleqstate &rhs);
     virtual ~nleqstate();
     ae_bool &needf;
     ae_bool &needfij;
@@ -552,37 +519,33 @@ public:
     real_1d_array fi;
     real_2d_array j;
     real_1d_array x;
-
 };
-
 
 /*************************************************************************
 
 *************************************************************************/
-class _nleqreport_owner
-{
-public:
+class _nleqreport_owner {
+   public:
     _nleqreport_owner();
     _nleqreport_owner(const _nleqreport_owner &rhs);
-    _nleqreport_owner& operator=(const _nleqreport_owner &rhs);
+    _nleqreport_owner &operator=(const _nleqreport_owner &rhs);
     virtual ~_nleqreport_owner();
-    alglib_impl::nleqreport* c_ptr();
-    alglib_impl::nleqreport* c_ptr() const;
-protected:
+    alglib_impl::nleqreport *c_ptr();
+    alglib_impl::nleqreport *c_ptr() const;
+
+   protected:
     alglib_impl::nleqreport *p_struct;
 };
-class nleqreport : public _nleqreport_owner
-{
-public:
+class nleqreport : public _nleqreport_owner {
+   public:
     nleqreport();
     nleqreport(const nleqreport &rhs);
-    nleqreport& operator=(const nleqreport &rhs);
+    nleqreport &operator=(const nleqreport &rhs);
     virtual ~nleqreport();
     ae_int_t &iterationscount;
     ae_int_t &nfunc;
     ae_int_t &njac;
     ae_int_t &terminationtype;
-
 };
 #endif
 
@@ -627,7 +590,9 @@ NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
   -- ALGLIB --
      Copyright 24.02.2014 by Bochkanov Sergey
 *************************************************************************/
-void polynomialsolve(const real_1d_array &a, const ae_int_t n, complex_1d_array &x, polynomialsolverreport &rep, const xparams _xparams = alglib::xdefault);
+void polynomialsolve(const real_1d_array &a, const ae_int_t n,
+                     complex_1d_array &x, polynomialsolverreport &rep,
+                     const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_DIRECTDENSESOLVERS) || !defined(AE_PARTIAL_BUILD)
@@ -703,8 +668,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolve(const real_2d_array &a, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixsolve(const real_2d_array &a, const ae_int_t n,
+                  const real_1d_array &b, ae_int_t &info,
+                  densesolverreport &rep, real_1d_array &x,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -763,8 +730,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const real_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void rmatrixsolvefast(const real_2d_array &a, const ae_int_t n,
+                      const real_1d_array &b, ae_int_t &info,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -848,8 +816,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvem(const real_2d_array &a, const ae_int_t n, const real_2d_array &b, const ae_int_t m, const bool rfs, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixsolvem(const real_2d_array &a, const ae_int_t n,
+                   const real_2d_array &b, const ae_int_t m, const bool rfs,
+                   ae_int_t &info, densesolverreport &rep, real_2d_array &x,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -915,8 +885,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void rmatrixsolvemfast(const real_2d_array &a, const ae_int_t n,
+                       const real_2d_array &b, const ae_int_t m, ae_int_t &info,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -972,8 +943,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolve(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixlusolve(const real_2d_array &lua, const integer_1d_array &p,
+                    const ae_int_t n, const real_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, real_1d_array &x,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -1007,8 +980,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvefast(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void rmatrixlusolvefast(const real_2d_array &lua, const integer_1d_array &p,
+                        const ae_int_t n, const real_1d_array &b,
+                        ae_int_t &info,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -1090,8 +1065,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvem(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixlusolvem(const real_2d_array &lua, const integer_1d_array &p,
+                     const ae_int_t n, const real_2d_array &b, const ae_int_t m,
+                     ae_int_t &info, densesolverreport &rep, real_2d_array &x,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -1150,8 +1127,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixlusolvemfast(const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void rmatrixlusolvemfast(const real_2d_array &lua, const integer_1d_array &p,
+                         const ae_int_t n, const real_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -1189,8 +1168,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolve(const real_2d_array &a, const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixmixedsolve(const real_2d_array &a, const real_2d_array &lua,
+                       const integer_1d_array &p, const ae_int_t n,
+                       const real_1d_array &b, ae_int_t &info,
+                       densesolverreport &rep, real_1d_array &x,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -1228,8 +1210,12 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixmixedsolvem(const real_2d_array &a, const real_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void rmatrixmixedsolvem(const real_2d_array &a, const real_2d_array &lua,
+                        const integer_1d_array &p, const ae_int_t n,
+                        const real_2d_array &b, const ae_int_t m,
+                        ae_int_t &info, densesolverreport &rep,
+                        real_2d_array &x,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
@@ -1311,8 +1297,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, const bool rfs, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixsolvem(const complex_2d_array &a, const ae_int_t n,
+                   const complex_2d_array &b, const ae_int_t m, const bool rfs,
+                   ae_int_t &info, densesolverreport &rep, complex_2d_array &x,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense solver for A*X=B with N*N  complex  matrix  A,  N*M  complex
@@ -1367,8 +1355,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 16.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void cmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n,
+                       const complex_2d_array &b, const ae_int_t m,
+                       ae_int_t &info,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
@@ -1441,8 +1431,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolve(const complex_2d_array &a, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixsolve(const complex_2d_array &a, const ae_int_t n,
+                  const complex_1d_array &b, ae_int_t &info,
+                  densesolverreport &rep, complex_1d_array &x,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense solver for A*x=B with N*N complex matrix A and  N*1  complex
@@ -1494,8 +1486,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void cmatrixsolvefast(const complex_2d_array &a, const ae_int_t n,
+                      const complex_1d_array &b, ae_int_t &info,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
@@ -1572,8 +1565,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvem(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixlusolvem(const complex_2d_array &lua, const integer_1d_array &p,
+                     const ae_int_t n, const complex_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     complex_2d_array &x,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N complex A given by its  LU  decomposition,
@@ -1628,8 +1624,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvemfast(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void cmatrixlusolvemfast(const complex_2d_array &lua, const integer_1d_array &p,
+                         const ae_int_t n, const complex_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense linear solver for A*x=b with complex N*N A  given  by its LU
@@ -1683,8 +1681,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolve(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixlusolve(const complex_2d_array &lua, const integer_1d_array &p,
+                    const ae_int_t n, const complex_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, complex_1d_array &x,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Complex dense linear solver for A*x=b with N*N complex A given by  its  LU
@@ -1721,8 +1721,10 @@ NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixlusolvefast(const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void cmatrixlusolvefast(const complex_2d_array &lua, const integer_1d_array &p,
+                        const ae_int_t n, const complex_1d_array &b,
+                        ae_int_t &info,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver. Same as RMatrixMixedSolveM(), but for complex matrices.
@@ -1757,8 +1759,12 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolvem(const complex_2d_array &a, const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixmixedsolvem(const complex_2d_array &a, const complex_2d_array &lua,
+                        const integer_1d_array &p, const ae_int_t n,
+                        const complex_2d_array &b, const ae_int_t m,
+                        ae_int_t &info, densesolverreport &rep,
+                        complex_2d_array &x,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver. Same as RMatrixMixedSolve(), but for complex matrices.
@@ -1792,8 +1798,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void cmatrixmixedsolve(const complex_2d_array &a, const complex_2d_array &lua, const integer_1d_array &p, const ae_int_t n, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void cmatrixmixedsolve(const complex_2d_array &a, const complex_2d_array &lua,
+                       const integer_1d_array &p, const ae_int_t n,
+                       const complex_1d_array &b, ae_int_t &info,
+                       densesolverreport &rep, complex_1d_array &x,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
@@ -1872,8 +1881,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvem(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixsolvem(const real_2d_array &a, const ae_int_t n,
+                     const bool isupper, const real_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     real_2d_array &x,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A,  and
@@ -1927,8 +1939,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvemfast(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixsolvemfast(const real_2d_array &a, const ae_int_t n,
+                         const bool isupper, const real_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
@@ -2007,8 +2021,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolve(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixsolve(const real_2d_array &a, const ae_int_t n,
+                    const bool isupper, const real_1d_array &b, ae_int_t &info,
+                    densesolverreport &rep, real_1d_array &x,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense linear solver for A*x=b with N*N real  symmetric  positive  definite
@@ -2062,8 +2078,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixsolvefast(const real_2d_array &a, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixsolvefast(const real_2d_array &a, const ae_int_t n,
+                        const bool isupper, const real_1d_array &b,
+                        ae_int_t &info,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A given
@@ -2122,8 +2140,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvem(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, real_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixcholeskysolvem(const real_2d_array &cha, const ae_int_t n,
+                             const bool isupper, const real_2d_array &b,
+                             const ae_int_t m, ae_int_t &info,
+                             densesolverreport &rep, real_2d_array &x,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N symmetric positive definite matrix A given
@@ -2157,8 +2178,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvemfast(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixcholeskysolvemfast(const real_2d_array &cha, const ae_int_t n,
+                                 const bool isupper, const real_2d_array &b,
+                                 const ae_int_t m, ae_int_t &info,
+                                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b with N*N symmetric positive definite matrix A given
@@ -2214,8 +2237,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolve(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, densesolverreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixcholeskysolve(const real_2d_array &cha, const ae_int_t n,
+                            const bool isupper, const real_1d_array &b,
+                            ae_int_t &info, densesolverreport &rep,
+                            real_1d_array &x,
+                            const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b with N*N symmetric positive definite matrix A given
@@ -2247,8 +2273,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void spdmatrixcholeskysolvefast(const real_2d_array &cha, const ae_int_t n, const bool isupper, const real_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void spdmatrixcholeskysolvefast(const real_2d_array &cha, const ae_int_t n,
+                                const bool isupper, const real_1d_array &b,
+                                ae_int_t &info,
+                                const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
@@ -2320,8 +2348,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvem(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixsolvem(const complex_2d_array &a, const ae_int_t n,
+                     const bool isupper, const complex_2d_array &b,
+                     const ae_int_t m, ae_int_t &info, densesolverreport &rep,
+                     complex_2d_array &x,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B, with N*N Hermitian positive definite matrix A  and
@@ -2376,8 +2407,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixsolvemfast(const complex_2d_array &a, const ae_int_t n,
+                         const bool isupper, const complex_2d_array &b,
+                         const ae_int_t m, ae_int_t &info,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
@@ -2449,8 +2482,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolve(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixsolve(const complex_2d_array &a, const ae_int_t n,
+                    const bool isupper, const complex_1d_array &b,
+                    ae_int_t &info, densesolverreport &rep, complex_1d_array &x,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b, with N*N Hermitian positive definite matrix A, and
@@ -2506,8 +2541,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 17.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixsolvefast(const complex_2d_array &a, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixsolvefast(const complex_2d_array &a, const ae_int_t n,
+                        const bool isupper, const complex_1d_array &b,
+                        ae_int_t &info,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
@@ -2567,8 +2604,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvem(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, densesolverreport &rep, complex_2d_array &x, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixcholeskysolvem(const complex_2d_array &cha, const ae_int_t n,
+                             const bool isupper, const complex_2d_array &b,
+                             const ae_int_t m, ae_int_t &info,
+                             densesolverreport &rep, complex_2d_array &x,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*X=B with N*N Hermitian positive definite matrix A given
@@ -2601,8 +2641,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvemfast(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_2d_array &b, const ae_int_t m, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixcholeskysolvemfast(const complex_2d_array &cha, const ae_int_t n,
+                                 const bool isupper, const complex_2d_array &b,
+                                 const ae_int_t m, ae_int_t &info,
+                                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
@@ -2658,8 +2700,11 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 27.01.2010 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolve(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, densesolverreport &rep, complex_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixcholeskysolve(const complex_2d_array &cha, const ae_int_t n,
+                            const bool isupper, const complex_1d_array &b,
+                            ae_int_t &info, densesolverreport &rep,
+                            complex_1d_array &x,
+                            const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver for A*x=b with N*N Hermitian positive definite matrix A given
@@ -2691,8 +2736,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 18.03.2015 by Bochkanov Sergey
 *************************************************************************/
-void hpdmatrixcholeskysolvefast(const complex_2d_array &cha, const ae_int_t n, const bool isupper, const complex_1d_array &b, ae_int_t &info, const xparams _xparams = alglib::xdefault);
-
+void hpdmatrixcholeskysolvefast(const complex_2d_array &cha, const ae_int_t n,
+                                const bool isupper, const complex_1d_array &b,
+                                ae_int_t &info,
+                                const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Dense solver.
@@ -2763,7 +2810,11 @@ Subroutine sets following fields of the Rep structure:
   -- ALGLIB --
      Copyright 24.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void rmatrixsolvels(const real_2d_array &a, const ae_int_t nrows, const ae_int_t ncols, const real_1d_array &b, const double threshold, ae_int_t &info, densesolverlsreport &rep, real_1d_array &x, const xparams _xparams = alglib::xdefault);
+void rmatrixsolvels(const real_2d_array &a, const ae_int_t nrows,
+                    const ae_int_t ncols, const real_1d_array &b,
+                    const double threshold, ae_int_t &info,
+                    densesolverlsreport &rep, real_1d_array &x,
+                    const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_DIRECTSPARSESOLVERS) || !defined(AE_PARTIAL_BUILD)
@@ -2792,8 +2843,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolvesks(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsespdsolvesks(const sparsematrix &a, const bool isupper,
+                       const real_1d_array &b, real_1d_array &x,
+                       sparsesolverreport &rep,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -2820,8 +2873,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdsolve(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsespdsolve(const sparsematrix &a, const bool isupper,
+                    const real_1d_array &b, real_1d_array &x,
+                    sparsesolverreport &rep,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
@@ -2848,8 +2903,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsespdcholeskysolve(const sparsematrix &a, const bool isupper, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsespdcholeskysolve(const sparsematrix &a, const bool isupper,
+                            const real_1d_array &b, real_1d_array &x,
+                            sparsesolverreport &rep,
+                            const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
@@ -2874,8 +2931,9 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolve(const sparsematrix &a, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolve(const sparsematrix &a, const real_1d_array &b,
+                 real_1d_array &x, sparsesolverreport &rep,
+                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
@@ -2903,7 +2961,10 @@ OUTPUT PARAMETERS
   -- ALGLIB --
      Copyright 26.12.2017 by Bochkanov Sergey
 *************************************************************************/
-void sparselusolve(const sparsematrix &a, const integer_1d_array &p, const integer_1d_array &q, const real_1d_array &b, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
+void sparselusolve(const sparsematrix &a, const integer_1d_array &p,
+                   const integer_1d_array &q, const real_1d_array &b,
+                   real_1d_array &x, sparsesolverreport &rep,
+                   const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_ITERATIVESPARSE) || !defined(AE_PARTIAL_BUILD)
@@ -2964,8 +3025,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvesymmetricgmres(const sparsematrix &a, const bool isupper, const real_1d_array &b, const ae_int_t k, const double epsf, const ae_int_t maxits, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolvesymmetricgmres(const sparsematrix &a, const bool isupper,
+                               const real_1d_array &b, const ae_int_t k,
+                               const double epsf, const ae_int_t maxits,
+                               real_1d_array &x, sparsesolverreport &rep,
+                               const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Solving sparse linear system A*x=b using GMRES(k) method.
@@ -3016,8 +3080,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvegmres(const sparsematrix &a, const real_1d_array &b, const ae_int_t k, const double epsf, const ae_int_t maxits, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolvegmres(const sparsematrix &a, const real_1d_array &b,
+                      const ae_int_t k, const double epsf,
+                      const ae_int_t maxits, real_1d_array &x,
+                      sparsesolverreport &rep,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function initializes sparse linear iterative solver object.
@@ -3081,8 +3148,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolvercreate(const ae_int_t n, sparsesolverstate &state, const xparams _xparams = alglib::xdefault);
-
+void sparsesolvercreate(const ae_int_t n, sparsesolverstate &state,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets the solver algorithm to GMRES(k).
@@ -3105,8 +3172,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetalgogmres(const sparsesolverstate &state, const ae_int_t k, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversetalgogmres(const sparsesolverstate &state, const ae_int_t k,
+                              const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets starting point.
@@ -3122,8 +3189,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetstartingpoint(const sparsesolverstate &state, const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversetstartingpoint(const sparsesolverstate &state,
+                                  const real_1d_array &x,
+                                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets stopping criteria.
@@ -3144,8 +3212,9 @@ value.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetcond(const sparsesolverstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversetcond(const sparsesolverstate &state, const double epsf,
+                         const ae_int_t maxits,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Procedure for  the  solution of A*x=b with sparse symmetric A given by its
@@ -3182,8 +3251,10 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolvesymmetric(const sparsesolverstate &state, const sparsematrix &a, const bool isupper, const real_1d_array &b, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversolvesymmetric(const sparsesolverstate &state,
+                                const sparsematrix &a, const bool isupper,
+                                const real_1d_array &b,
+                                const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Procedure for the solution of A*x=b with sparse nonsymmetric A
@@ -3212,8 +3283,9 @@ RESULT:
   -- ALGLIB --
      Copyright 25.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversolve(const sparsesolverstate &state, const sparsematrix &a, const real_1d_array &b, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversolve(const sparsesolverstate &state, const sparsematrix &a,
+                       const real_1d_array &b,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Sparse solver results.
@@ -3246,8 +3318,9 @@ s
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverresults(const sparsesolverstate &state, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolverresults(const sparsesolverstate &state, real_1d_array &x,
+                         sparsesolverreport &rep,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function turns on/off reporting during out-of-core processing.
@@ -3273,8 +3346,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolversetxrep(const sparsesolverstate &state, const bool needxrep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolversetxrep(const sparsesolverstate &state, const bool needxrep,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function initiates out-of-core mode of the sparse solver.  It  should
@@ -3296,8 +3369,9 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstart(const sparsesolverstate &state, const real_1d_array &b, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocstart(const sparsesolverstate &state,
+                          const real_1d_array &b,
+                          const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function performs iterative solution of  the  linear  system  in  the
@@ -3316,8 +3390,8 @@ related functions of this subspackage in a loop like one given below:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-bool sparsesolverooccontinue(const sparsesolverstate &state, const xparams _xparams = alglib::xdefault);
-
+bool sparsesolverooccontinue(const sparsesolverstate &state,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used to retrieve information  about  out-of-core  request
@@ -3355,8 +3429,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestinfo(const sparsesolverstate &state, ae_int_t &requesttype, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocgetrequestinfo(const sparsesolverstate &state,
+                                   ae_int_t &requesttype,
+                                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used  to  retrieve  vector  associated  with  out-of-core
@@ -3390,8 +3465,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata(const sparsesolverstate &state, real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocgetrequestdata(const sparsesolverstate &state,
+                                   real_1d_array &x,
+                                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used to retrieve scalar value associated with out-of-core
@@ -3409,8 +3485,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocgetrequestdata1(const sparsesolverstate &state, double &v, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocgetrequestdata1(const sparsesolverstate &state, double &v,
+                                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used to send user reply to out-of-core  request  sent  by
@@ -3436,8 +3512,9 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocsendresult(const sparsesolverstate &state, const real_1d_array &ax, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocsendresult(const sparsesolverstate &state,
+                               const real_1d_array &ax,
+                               const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  function  finalizes out-of-core mode of the linear solver. It should
@@ -3479,8 +3556,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 24.09.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolveroocstop(const sparsesolverstate &state, real_1d_array &x, sparsesolverreport &rep, const xparams _xparams = alglib::xdefault);
-
+void sparsesolveroocstop(const sparsesolverstate &state, real_1d_array &x,
+                         sparsesolverreport &rep,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This subroutine submits request for termination of the running solver.  It
@@ -3508,7 +3586,8 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 01.10.2021 by Bochkanov Sergey
 *************************************************************************/
-void sparsesolverrequesttermination(const sparsesolverstate &state, const xparams _xparams = alglib::xdefault);
+void sparsesolverrequesttermination(const sparsesolverstate &state,
+                                    const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_LINCG) || !defined(AE_PARTIAL_BUILD)
@@ -3538,8 +3617,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgcreate(const ae_int_t n, lincgstate &state, const xparams _xparams = alglib::xdefault);
-
+void lincgcreate(const ae_int_t n, lincgstate &state,
+                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets starting point.
@@ -3554,8 +3633,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetstartingpoint(const lincgstate &state, const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+void lincgsetstartingpoint(const lincgstate &state, const real_1d_array &x,
+                           const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -3569,8 +3648,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecunit(const lincgstate &state, const xparams _xparams = alglib::xdefault);
-
+void lincgsetprecunit(const lincgstate &state,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -3583,8 +3662,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetprecdiag(const lincgstate &state, const xparams _xparams = alglib::xdefault);
-
+void lincgsetprecdiag(const lincgstate &state,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets stopping criteria.
@@ -3605,8 +3684,9 @@ value.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetcond(const lincgstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams = alglib::xdefault);
-
+void lincgsetcond(const lincgstate &state, const double epsf,
+                  const ae_int_t maxits,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Procedure for solution of A*x=b with sparse A.
@@ -3635,8 +3715,9 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsolvesparse(const lincgstate &state, const sparsematrix &a, const bool isupper, const real_1d_array &b, const xparams _xparams = alglib::xdefault);
-
+void lincgsolvesparse(const lincgstate &state, const sparsematrix &a,
+                      const bool isupper, const real_1d_array &b,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 CG-solver: results.
@@ -3664,8 +3745,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgresults(const lincgstate &state, real_1d_array &x, lincgreport &rep, const xparams _xparams = alglib::xdefault);
-
+void lincgresults(const lincgstate &state, real_1d_array &x, lincgreport &rep,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets restart frequency. By default, algorithm  is  restarted
@@ -3674,8 +3755,8 @@ after N subsequent iterations.
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrestartfreq(const lincgstate &state, const ae_int_t srf, const xparams _xparams = alglib::xdefault);
-
+void lincgsetrestartfreq(const lincgstate &state, const ae_int_t srf,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets frequency of residual recalculations.
@@ -3695,8 +3776,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetrupdatefreq(const lincgstate &state, const ae_int_t freq, const xparams _xparams = alglib::xdefault);
-
+void lincgsetrupdatefreq(const lincgstate &state, const ae_int_t freq,
+                         const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -3711,7 +3792,8 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 14.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void lincgsetxrep(const lincgstate &state, const bool needxrep, const xparams _xparams = alglib::xdefault);
+void lincgsetxrep(const lincgstate &state, const bool needxrep,
+                  const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_LINLSQR) || !defined(AE_PARTIAL_BUILD)
@@ -3743,8 +3825,8 @@ NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreate(const ae_int_t m, const ae_int_t n, linlsqrstate &state, const xparams _xparams = alglib::xdefault);
-
+void linlsqrcreate(const ae_int_t m, const ae_int_t n, linlsqrstate &state,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function initializes linear LSQR Solver.  It  provides  exactly  same
@@ -3761,8 +3843,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 14.11.2018 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrcreatebuf(const ae_int_t m, const ae_int_t n, const linlsqrstate &state, const xparams _xparams = alglib::xdefault);
-
+void linlsqrcreatebuf(const ae_int_t m, const ae_int_t n,
+                      const linlsqrstate &state,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
@@ -3776,8 +3859,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecunit(const linlsqrstate &state, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsetprecunit(const linlsqrstate &state,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
@@ -3790,8 +3873,8 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 19.11.2012 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetprecdiag(const linlsqrstate &state, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsetprecdiag(const linlsqrstate &state,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets optional Tikhonov regularization coefficient.
@@ -3806,8 +3889,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetlambdai(const linlsqrstate &state, const double lambdai, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsetlambdai(const linlsqrstate &state, const double lambdai,
+                       const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Procedure for solution of A*x=b with sparse A.
@@ -3832,8 +3915,9 @@ NOTE: this function uses lightweight preconditioning -  multiplication  by
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsolvesparse(const linlsqrstate &state, const sparsematrix &a, const real_1d_array &b, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsolvesparse(const linlsqrstate &state, const sparsematrix &a,
+                        const real_1d_array &b,
+                        const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets stopping criteria.
@@ -3853,8 +3937,9 @@ be setted as default values.
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetcond(const linlsqrstate &state, const double epsa, const double epsb, const ae_int_t maxits, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsetcond(const linlsqrstate &state, const double epsa,
+                    const double epsb, const ae_int_t maxits,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 LSQR solver: results.
@@ -3882,8 +3967,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrresults(const linlsqrstate &state, real_1d_array &x, linlsqrreport &rep, const xparams _xparams = alglib::xdefault);
-
+void linlsqrresults(const linlsqrstate &state, real_1d_array &x,
+                    linlsqrreport &rep,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -3898,8 +3984,8 @@ provided to MinCGOptimize().
   -- ALGLIB --
      Copyright 30.11.2011 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrsetxrep(const linlsqrstate &state, const bool needxrep, const xparams _xparams = alglib::xdefault);
-
+void linlsqrsetxrep(const linlsqrstate &state, const bool needxrep,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used to peek into LSQR solver and get  current  iteration
@@ -3914,8 +4000,8 @@ RESULT:
   -- ALGLIB --
      Copyright 21.05.2018 by Bochkanov Sergey
 *************************************************************************/
-ae_int_t linlsqrpeekiterationscount(const linlsqrstate &s, const xparams _xparams = alglib::xdefault);
-
+ae_int_t linlsqrpeekiterationscount(const linlsqrstate &s,
+                                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This subroutine submits request for termination of the running solver.  It
@@ -3944,7 +4030,8 @@ NOTE: solver clears termination flag on its start, it means that  if  some
   -- ALGLIB --
      Copyright 08.10.2014 by Bochkanov Sergey
 *************************************************************************/
-void linlsqrrequesttermination(const linlsqrstate &state, const xparams _xparams = alglib::xdefault);
+void linlsqrrequesttermination(const linlsqrstate &state,
+                               const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_NLEQ) || !defined(AE_PARTIAL_BUILD)
@@ -4018,9 +4105,10 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqcreatelm(const ae_int_t n, const ae_int_t m, const real_1d_array &x, nleqstate &state, const xparams _xparams = alglib::xdefault);
-void nleqcreatelm(const ae_int_t m, const real_1d_array &x, nleqstate &state, const xparams _xparams = alglib::xdefault);
-
+void nleqcreatelm(const ae_int_t n, const ae_int_t m, const real_1d_array &x,
+                  nleqstate &state, const xparams _xparams = alglib::xdefault);
+void nleqcreatelm(const ae_int_t m, const real_1d_array &x, nleqstate &state,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets stopping conditions for the nonlinear solver
@@ -4041,8 +4129,9 @@ NOTES:
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetcond(const nleqstate &state, const double epsf, const ae_int_t maxits, const xparams _xparams = alglib::xdefault);
-
+void nleqsetcond(const nleqstate &state, const double epsf,
+                 const ae_int_t maxits,
+                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function turns on/off reporting.
@@ -4057,8 +4146,8 @@ provided to NLEQSolve().
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetxrep(const nleqstate &state, const bool needxrep, const xparams _xparams = alglib::xdefault);
-
+void nleqsetxrep(const nleqstate &state, const bool needxrep,
+                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function sets maximum step length
@@ -4077,16 +4166,16 @@ function value at the x+stp*d.
   -- ALGLIB --
      Copyright 20.08.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqsetstpmax(const nleqstate &state, const double stpmax, const xparams _xparams = alglib::xdefault);
-
+void nleqsetstpmax(const nleqstate &state, const double stpmax,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function provides reverse communication interface
 Reverse communication interface is not documented or recommended to use.
 See below for functions which provide better documented API
 *************************************************************************/
-bool nleqiteration(const nleqstate &state, const xparams _xparams = alglib::xdefault);
-
+bool nleqiteration(const nleqstate &state,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This family of functions is used to launcn iterations of nonlinear solver
@@ -4108,12 +4197,12 @@ These functions accept following parameters:
 
 *************************************************************************/
 void nleqsolve(nleqstate &state,
-    void (*func)(const real_1d_array &x, double &func, void *ptr),
-    void  (*jac)(const real_1d_array &x, real_1d_array &fi, real_2d_array &jac, void *ptr),
-    void  (*rep)(const real_1d_array &x, double func, void *ptr) = NULL,
-    void *ptr = NULL,
-    const xparams _xparams = alglib::xdefault);
-
+               void (*func)(const real_1d_array &x, double &func, void *ptr),
+               void (*jac)(const real_1d_array &x, real_1d_array &fi,
+                           real_2d_array &jac, void *ptr),
+               void (*rep)(const real_1d_array &x, double func,
+                           void *ptr) = NULL,
+               void *ptr = NULL, const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 NLEQ solver results
@@ -4140,8 +4229,8 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresults(const nleqstate &state, real_1d_array &x, nleqreport &rep, const xparams _xparams = alglib::xdefault);
-
+void nleqresults(const nleqstate &state, real_1d_array &x, nleqreport &rep,
+                 const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 NLEQ solver results
@@ -4154,8 +4243,8 @@ where array reallocation penalty is too large to be ignored.
   -- ALGLIB --
      Copyright 20.08.2009 by Bochkanov Sergey
 *************************************************************************/
-void nleqresultsbuf(const nleqstate &state, real_1d_array &x, nleqreport &rep, const xparams _xparams = alglib::xdefault);
-
+void nleqresultsbuf(const nleqstate &state, real_1d_array &x, nleqreport &rep,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This  subroutine  restarts  CG  algorithm from new point. All optimization
@@ -4174,552 +4263,373 @@ INPUT PARAMETERS:
   -- ALGLIB --
      Copyright 30.07.2010 by Bochkanov Sergey
 *************************************************************************/
-void nleqrestartfrom(const nleqstate &state, const real_1d_array &x, const xparams _xparams = alglib::xdefault);
+void nleqrestartfrom(const nleqstate &state, const real_1d_array &x,
+                     const xparams _xparams = alglib::xdefault);
 #endif
-}
+}  // namespace alglib
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_POLYNOMIALSOLVER) || !defined(AE_PARTIAL_BUILD)
-void polynomialsolve(/* Real    */ ae_vector* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* x,
-     polynomialsolverreport* rep,
-     ae_state *_state);
-void _polynomialsolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _polynomialsolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _polynomialsolverreport_clear(void* _p);
-void _polynomialsolverreport_destroy(void* _p);
+void polynomialsolve(/* Real    */ ae_vector *a, ae_int_t n,
+                     /* Complex */ ae_vector *x, polynomialsolverreport *rep,
+                     ae_state *_state);
+void _polynomialsolverreport_init(void *_p, ae_state *_state,
+                                  ae_bool make_automatic);
+void _polynomialsolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                       ae_bool make_automatic);
+void _polynomialsolverreport_clear(void *_p);
+void _polynomialsolverreport_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_DIRECTDENSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-void rmatrixsolve(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void rmatrixsolvefast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void rmatrixsolvem(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_bool rfs,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-void rmatrixsolvemfast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void rmatrixlusolve(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void rmatrixlusolvefast(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void rmatrixlusolvem(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-void rmatrixlusolvemfast(/* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void rmatrixmixedsolve(/* Real    */ ae_matrix* a,
-     /* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void rmatrixmixedsolvem(/* Real    */ ae_matrix* a,
-     /* Real    */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-void cmatrixsolvem(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_bool rfs,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-void cmatrixsolvemfast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void cmatrixsolve(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state);
-void cmatrixsolvefast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void cmatrixlusolvem(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-void cmatrixlusolvemfast(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void cmatrixlusolve(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state);
-void cmatrixlusolvefast(/* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void cmatrixmixedsolvem(/* Complex */ ae_matrix* a,
-     /* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-void cmatrixmixedsolve(/* Complex */ ae_matrix* a,
-     /* Complex */ ae_matrix* lua,
-     /* Integer */ ae_vector* p,
-     ae_int_t n,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state);
-void spdmatrixsolvem(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-void spdmatrixsolvemfast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void spdmatrixsolve(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void spdmatrixsolvefast(/* Real    */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void spdmatrixcholeskysolvem(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_matrix* x,
-     ae_state *_state);
-void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void spdmatrixcholeskysolve(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void spdmatrixcholeskysolvefast(/* Real    */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void hpdmatrixsolvem(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-void hpdmatrixsolvemfast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void hpdmatrixsolve(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state);
-void hpdmatrixsolvefast(/* Complex */ ae_matrix* a,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void hpdmatrixcholeskysolvem(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_matrix* x,
-     ae_state *_state);
-void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_matrix* b,
-     ae_int_t m,
-     ae_int_t* info,
-     ae_state *_state);
-void hpdmatrixcholeskysolve(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     densesolverreport* rep,
-     /* Complex */ ae_vector* x,
-     ae_state *_state);
-void hpdmatrixcholeskysolvefast(/* Complex */ ae_matrix* cha,
-     ae_int_t n,
-     ae_bool isupper,
-     /* Complex */ ae_vector* b,
-     ae_int_t* info,
-     ae_state *_state);
-void rmatrixsolvels(/* Real    */ ae_matrix* a,
-     ae_int_t nrows,
-     ae_int_t ncols,
-     /* Real    */ ae_vector* b,
-     double threshold,
-     ae_int_t* info,
-     densesolverlsreport* rep,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void _densesolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _densesolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _densesolverreport_clear(void* _p);
-void _densesolverreport_destroy(void* _p);
-void _densesolverlsreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _densesolverlsreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _densesolverlsreport_clear(void* _p);
-void _densesolverlsreport_destroy(void* _p);
+void rmatrixsolve(/* Real    */ ae_matrix *a, ae_int_t n,
+                  /* Real    */ ae_vector *b, ae_int_t *info,
+                  densesolverreport *rep,
+                  /* Real    */ ae_vector *x, ae_state *_state);
+void rmatrixsolvefast(/* Real    */ ae_matrix *a, ae_int_t n,
+                      /* Real    */ ae_vector *b, ae_int_t *info,
+                      ae_state *_state);
+void rmatrixsolvem(/* Real    */ ae_matrix *a, ae_int_t n,
+                   /* Real    */ ae_matrix *b, ae_int_t m, ae_bool rfs,
+                   ae_int_t *info, densesolverreport *rep,
+                   /* Real    */ ae_matrix *x, ae_state *_state);
+void rmatrixsolvemfast(/* Real    */ ae_matrix *a, ae_int_t n,
+                       /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                       ae_state *_state);
+void rmatrixlusolve(/* Real    */ ae_matrix *lua,
+                    /* Integer */ ae_vector *p, ae_int_t n,
+                    /* Real    */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state);
+void rmatrixlusolvefast(/* Real    */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Real    */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state);
+void rmatrixlusolvem(/* Real    */ ae_matrix *lua,
+                     /* Integer */ ae_vector *p, ae_int_t n,
+                     /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Real    */ ae_matrix *x, ae_state *_state);
+void rmatrixlusolvemfast(/* Real    */ ae_matrix *lua,
+                         /* Integer */ ae_vector *p, ae_int_t n,
+                         /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state);
+void rmatrixmixedsolve(/* Real    */ ae_matrix *a,
+                       /* Real    */ ae_matrix *lua,
+                       /* Integer */ ae_vector *p, ae_int_t n,
+                       /* Real    */ ae_vector *b, ae_int_t *info,
+                       densesolverreport *rep,
+                       /* Real    */ ae_vector *x, ae_state *_state);
+void rmatrixmixedsolvem(/* Real    */ ae_matrix *a,
+                        /* Real    */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                        densesolverreport *rep,
+                        /* Real    */ ae_matrix *x, ae_state *_state);
+void cmatrixsolvem(/* Complex */ ae_matrix *a, ae_int_t n,
+                   /* Complex */ ae_matrix *b, ae_int_t m, ae_bool rfs,
+                   ae_int_t *info, densesolverreport *rep,
+                   /* Complex */ ae_matrix *x, ae_state *_state);
+void cmatrixsolvemfast(/* Complex */ ae_matrix *a, ae_int_t n,
+                       /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                       ae_state *_state);
+void cmatrixsolve(/* Complex */ ae_matrix *a, ae_int_t n,
+                  /* Complex */ ae_vector *b, ae_int_t *info,
+                  densesolverreport *rep,
+                  /* Complex */ ae_vector *x, ae_state *_state);
+void cmatrixsolvefast(/* Complex */ ae_matrix *a, ae_int_t n,
+                      /* Complex */ ae_vector *b, ae_int_t *info,
+                      ae_state *_state);
+void cmatrixlusolvem(/* Complex */ ae_matrix *lua,
+                     /* Integer */ ae_vector *p, ae_int_t n,
+                     /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Complex */ ae_matrix *x, ae_state *_state);
+void cmatrixlusolvemfast(/* Complex */ ae_matrix *lua,
+                         /* Integer */ ae_vector *p, ae_int_t n,
+                         /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state);
+void cmatrixlusolve(/* Complex */ ae_matrix *lua,
+                    /* Integer */ ae_vector *p, ae_int_t n,
+                    /* Complex */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Complex */ ae_vector *x, ae_state *_state);
+void cmatrixlusolvefast(/* Complex */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Complex */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state);
+void cmatrixmixedsolvem(/* Complex */ ae_matrix *a,
+                        /* Complex */ ae_matrix *lua,
+                        /* Integer */ ae_vector *p, ae_int_t n,
+                        /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                        densesolverreport *rep,
+                        /* Complex */ ae_matrix *x, ae_state *_state);
+void cmatrixmixedsolve(/* Complex */ ae_matrix *a,
+                       /* Complex */ ae_matrix *lua,
+                       /* Integer */ ae_vector *p, ae_int_t n,
+                       /* Complex */ ae_vector *b, ae_int_t *info,
+                       densesolverreport *rep,
+                       /* Complex */ ae_vector *x, ae_state *_state);
+void spdmatrixsolvem(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                     /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Real    */ ae_matrix *x, ae_state *_state);
+void spdmatrixsolvemfast(/* Real    */ ae_matrix *a, ae_int_t n,
+                         ae_bool isupper,
+                         /* Real    */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state);
+void spdmatrixsolve(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                    /* Real    */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state);
+void spdmatrixsolvefast(/* Real    */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                        /* Real    */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state);
+void spdmatrixcholeskysolvem(/* Real    */ ae_matrix *cha, ae_int_t n,
+                             ae_bool isupper,
+                             /* Real    */ ae_matrix *b, ae_int_t m,
+                             ae_int_t *info, densesolverreport *rep,
+                             /* Real    */ ae_matrix *x, ae_state *_state);
+void spdmatrixcholeskysolvemfast(/* Real    */ ae_matrix *cha, ae_int_t n,
+                                 ae_bool isupper,
+                                 /* Real    */ ae_matrix *b, ae_int_t m,
+                                 ae_int_t *info, ae_state *_state);
+void spdmatrixcholeskysolve(/* Real    */ ae_matrix *cha, ae_int_t n,
+                            ae_bool isupper,
+                            /* Real    */ ae_vector *b, ae_int_t *info,
+                            densesolverreport *rep,
+                            /* Real    */ ae_vector *x, ae_state *_state);
+void spdmatrixcholeskysolvefast(/* Real    */ ae_matrix *cha, ae_int_t n,
+                                ae_bool isupper,
+                                /* Real    */ ae_vector *b, ae_int_t *info,
+                                ae_state *_state);
+void hpdmatrixsolvem(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                     /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                     densesolverreport *rep,
+                     /* Complex */ ae_matrix *x, ae_state *_state);
+void hpdmatrixsolvemfast(/* Complex */ ae_matrix *a, ae_int_t n,
+                         ae_bool isupper,
+                         /* Complex */ ae_matrix *b, ae_int_t m, ae_int_t *info,
+                         ae_state *_state);
+void hpdmatrixsolve(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                    /* Complex */ ae_vector *b, ae_int_t *info,
+                    densesolverreport *rep,
+                    /* Complex */ ae_vector *x, ae_state *_state);
+void hpdmatrixsolvefast(/* Complex */ ae_matrix *a, ae_int_t n, ae_bool isupper,
+                        /* Complex */ ae_vector *b, ae_int_t *info,
+                        ae_state *_state);
+void hpdmatrixcholeskysolvem(/* Complex */ ae_matrix *cha, ae_int_t n,
+                             ae_bool isupper,
+                             /* Complex */ ae_matrix *b, ae_int_t m,
+                             ae_int_t *info, densesolverreport *rep,
+                             /* Complex */ ae_matrix *x, ae_state *_state);
+void hpdmatrixcholeskysolvemfast(/* Complex */ ae_matrix *cha, ae_int_t n,
+                                 ae_bool isupper,
+                                 /* Complex */ ae_matrix *b, ae_int_t m,
+                                 ae_int_t *info, ae_state *_state);
+void hpdmatrixcholeskysolve(/* Complex */ ae_matrix *cha, ae_int_t n,
+                            ae_bool isupper,
+                            /* Complex */ ae_vector *b, ae_int_t *info,
+                            densesolverreport *rep,
+                            /* Complex */ ae_vector *x, ae_state *_state);
+void hpdmatrixcholeskysolvefast(/* Complex */ ae_matrix *cha, ae_int_t n,
+                                ae_bool isupper,
+                                /* Complex */ ae_vector *b, ae_int_t *info,
+                                ae_state *_state);
+void rmatrixsolvels(/* Real    */ ae_matrix *a, ae_int_t nrows, ae_int_t ncols,
+                    /* Real    */ ae_vector *b, double threshold,
+                    ae_int_t *info, densesolverlsreport *rep,
+                    /* Real    */ ae_vector *x, ae_state *_state);
+void _densesolverreport_init(void *_p, ae_state *_state,
+                             ae_bool make_automatic);
+void _densesolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                  ae_bool make_automatic);
+void _densesolverreport_clear(void *_p);
+void _densesolverreport_destroy(void *_p);
+void _densesolverlsreport_init(void *_p, ae_state *_state,
+                               ae_bool make_automatic);
+void _densesolverlsreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                    ae_bool make_automatic);
+void _densesolverlsreport_clear(void *_p);
+void _densesolverlsreport_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_DIRECTSPARSESOLVERS) || !defined(AE_PARTIAL_BUILD)
-void sparsespdsolvesks(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsespdsolve(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsespdcholeskysolve(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsesolve(sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparselusolve(sparsematrix* a,
-     /* Integer */ ae_vector* p,
-     /* Integer */ ae_vector* q,
-     /* Real    */ ae_vector* b,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void initsparsesolverreport(sparsesolverreport* rep, ae_state *_state);
-void _sparsesolverreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _sparsesolverreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _sparsesolverreport_clear(void* _p);
-void _sparsesolverreport_destroy(void* _p);
+void sparsespdsolvesks(sparsematrix *a, ae_bool isupper,
+                       /* Real    */ ae_vector *b,
+                       /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                       ae_state *_state);
+void sparsespdsolve(sparsematrix *a, ae_bool isupper,
+                    /* Real    */ ae_vector *b,
+                    /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                    ae_state *_state);
+void sparsespdcholeskysolve(sparsematrix *a, ae_bool isupper,
+                            /* Real    */ ae_vector *b,
+                            /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                            ae_state *_state);
+void sparsesolve(sparsematrix *a,
+                 /* Real    */ ae_vector *b,
+                 /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                 ae_state *_state);
+void sparselusolve(sparsematrix *a,
+                   /* Integer */ ae_vector *p,
+                   /* Integer */ ae_vector *q,
+                   /* Real    */ ae_vector *b,
+                   /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                   ae_state *_state);
+void initsparsesolverreport(sparsesolverreport *rep, ae_state *_state);
+void _sparsesolverreport_init(void *_p, ae_state *_state,
+                              ae_bool make_automatic);
+void _sparsesolverreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                                   ae_bool make_automatic);
+void _sparsesolverreport_clear(void *_p);
+void _sparsesolverreport_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_ITERATIVESPARSE) || !defined(AE_PARTIAL_BUILD)
-void sparsesolvesymmetricgmres(sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_int_t k,
-     double epsf,
-     ae_int_t maxits,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsesolvegmres(sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_int_t k,
-     double epsf,
-     ae_int_t maxits,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsesolvercreate(ae_int_t n,
-     sparsesolverstate* state,
-     ae_state *_state);
-void sparsesolversetalgogmres(sparsesolverstate* state,
-     ae_int_t k,
-     ae_state *_state);
-void sparsesolversetstartingpoint(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void sparsesolversetcond(sparsesolverstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state);
-void sparsesolversolvesymmetric(sparsesolverstate* state,
-     sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void sparsesolversolve(sparsesolverstate* state,
-     sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void sparsesolverresults(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsesolversetxrep(sparsesolverstate* state,
-     ae_bool needxrep,
-     ae_state *_state);
-void sparsesolveroocstart(sparsesolverstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-ae_bool sparsesolverooccontinue(sparsesolverstate* state,
-     ae_state *_state);
-void sparsesolveroocgetrequestinfo(sparsesolverstate* state,
-     ae_int_t* requesttype,
-     ae_state *_state);
-void sparsesolveroocgetrequestdata(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void sparsesolveroocgetrequestdata1(sparsesolverstate* state,
-     double* v,
-     ae_state *_state);
-void sparsesolveroocsendresult(sparsesolverstate* state,
-     /* Real    */ ae_vector* ax,
-     ae_state *_state);
-void sparsesolveroocstop(sparsesolverstate* state,
-     /* Real    */ ae_vector* x,
-     sparsesolverreport* rep,
-     ae_state *_state);
-void sparsesolverrequesttermination(sparsesolverstate* state,
-     ae_state *_state);
-void _sparsesolverstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _sparsesolverstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _sparsesolverstate_clear(void* _p);
-void _sparsesolverstate_destroy(void* _p);
+void sparsesolvesymmetricgmres(sparsematrix *a, ae_bool isupper,
+                               /* Real    */ ae_vector *b, ae_int_t k,
+                               double epsf, ae_int_t maxits,
+                               /* Real    */ ae_vector *x,
+                               sparsesolverreport *rep, ae_state *_state);
+void sparsesolvegmres(sparsematrix *a,
+                      /* Real    */ ae_vector *b, ae_int_t k, double epsf,
+                      ae_int_t maxits,
+                      /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                      ae_state *_state);
+void sparsesolvercreate(ae_int_t n, sparsesolverstate *state, ae_state *_state);
+void sparsesolversetalgogmres(sparsesolverstate *state, ae_int_t k,
+                              ae_state *_state);
+void sparsesolversetstartingpoint(sparsesolverstate *state,
+                                  /* Real    */ ae_vector *x, ae_state *_state);
+void sparsesolversetcond(sparsesolverstate *state, double epsf, ae_int_t maxits,
+                         ae_state *_state);
+void sparsesolversolvesymmetric(sparsesolverstate *state, sparsematrix *a,
+                                ae_bool isupper,
+                                /* Real    */ ae_vector *b, ae_state *_state);
+void sparsesolversolve(sparsesolverstate *state, sparsematrix *a,
+                       /* Real    */ ae_vector *b, ae_state *_state);
+void sparsesolverresults(sparsesolverstate *state,
+                         /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                         ae_state *_state);
+void sparsesolversetxrep(sparsesolverstate *state, ae_bool needxrep,
+                         ae_state *_state);
+void sparsesolveroocstart(sparsesolverstate *state,
+                          /* Real    */ ae_vector *b, ae_state *_state);
+ae_bool sparsesolverooccontinue(sparsesolverstate *state, ae_state *_state);
+void sparsesolveroocgetrequestinfo(sparsesolverstate *state,
+                                   ae_int_t *requesttype, ae_state *_state);
+void sparsesolveroocgetrequestdata(sparsesolverstate *state,
+                                   /* Real    */ ae_vector *x,
+                                   ae_state *_state);
+void sparsesolveroocgetrequestdata1(sparsesolverstate *state, double *v,
+                                    ae_state *_state);
+void sparsesolveroocsendresult(sparsesolverstate *state,
+                               /* Real    */ ae_vector *ax, ae_state *_state);
+void sparsesolveroocstop(sparsesolverstate *state,
+                         /* Real    */ ae_vector *x, sparsesolverreport *rep,
+                         ae_state *_state);
+void sparsesolverrequesttermination(sparsesolverstate *state, ae_state *_state);
+void _sparsesolverstate_init(void *_p, ae_state *_state,
+                             ae_bool make_automatic);
+void _sparsesolverstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                                  ae_bool make_automatic);
+void _sparsesolverstate_clear(void *_p);
+void _sparsesolverstate_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_LINCG) || !defined(AE_PARTIAL_BUILD)
-void lincgcreate(ae_int_t n, lincgstate* state, ae_state *_state);
-void lincgsetstartingpoint(lincgstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void lincgsetb(lincgstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void lincgsetprecunit(lincgstate* state, ae_state *_state);
-void lincgsetprecdiag(lincgstate* state, ae_state *_state);
-void lincgsetcond(lincgstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state);
-ae_bool lincgiteration(lincgstate* state, ae_state *_state);
-void lincgsolvesparse(lincgstate* state,
-     sparsematrix* a,
-     ae_bool isupper,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void lincgresults(lincgstate* state,
-     /* Real    */ ae_vector* x,
-     lincgreport* rep,
-     ae_state *_state);
-void lincgsetrestartfreq(lincgstate* state,
-     ae_int_t srf,
-     ae_state *_state);
-void lincgsetrupdatefreq(lincgstate* state,
-     ae_int_t freq,
-     ae_state *_state);
-void lincgsetxrep(lincgstate* state, ae_bool needxrep, ae_state *_state);
-void lincgrestart(lincgstate* state, ae_state *_state);
-void _lincgstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _lincgstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _lincgstate_clear(void* _p);
-void _lincgstate_destroy(void* _p);
-void _lincgreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _lincgreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _lincgreport_clear(void* _p);
-void _lincgreport_destroy(void* _p);
+void lincgcreate(ae_int_t n, lincgstate *state, ae_state *_state);
+void lincgsetstartingpoint(lincgstate *state,
+                           /* Real    */ ae_vector *x, ae_state *_state);
+void lincgsetb(lincgstate *state,
+               /* Real    */ ae_vector *b, ae_state *_state);
+void lincgsetprecunit(lincgstate *state, ae_state *_state);
+void lincgsetprecdiag(lincgstate *state, ae_state *_state);
+void lincgsetcond(lincgstate *state, double epsf, ae_int_t maxits,
+                  ae_state *_state);
+ae_bool lincgiteration(lincgstate *state, ae_state *_state);
+void lincgsolvesparse(lincgstate *state, sparsematrix *a, ae_bool isupper,
+                      /* Real    */ ae_vector *b, ae_state *_state);
+void lincgresults(lincgstate *state,
+                  /* Real    */ ae_vector *x, lincgreport *rep,
+                  ae_state *_state);
+void lincgsetrestartfreq(lincgstate *state, ae_int_t srf, ae_state *_state);
+void lincgsetrupdatefreq(lincgstate *state, ae_int_t freq, ae_state *_state);
+void lincgsetxrep(lincgstate *state, ae_bool needxrep, ae_state *_state);
+void lincgrestart(lincgstate *state, ae_state *_state);
+void _lincgstate_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _lincgstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                           ae_bool make_automatic);
+void _lincgstate_clear(void *_p);
+void _lincgstate_destroy(void *_p);
+void _lincgreport_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _lincgreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                            ae_bool make_automatic);
+void _lincgreport_clear(void *_p);
+void _lincgreport_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_LINLSQR) || !defined(AE_PARTIAL_BUILD)
-void linlsqrcreate(ae_int_t m,
-     ae_int_t n,
-     linlsqrstate* state,
-     ae_state *_state);
-void linlsqrcreatebuf(ae_int_t m,
-     ae_int_t n,
-     linlsqrstate* state,
-     ae_state *_state);
-void linlsqrsetb(linlsqrstate* state,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void linlsqrsetprecunit(linlsqrstate* state, ae_state *_state);
-void linlsqrsetprecdiag(linlsqrstate* state, ae_state *_state);
-void linlsqrsetlambdai(linlsqrstate* state,
-     double lambdai,
-     ae_state *_state);
-ae_bool linlsqriteration(linlsqrstate* state, ae_state *_state);
-void linlsqrsolvesparse(linlsqrstate* state,
-     sparsematrix* a,
-     /* Real    */ ae_vector* b,
-     ae_state *_state);
-void linlsqrsetcond(linlsqrstate* state,
-     double epsa,
-     double epsb,
-     ae_int_t maxits,
-     ae_state *_state);
-void linlsqrresults(linlsqrstate* state,
-     /* Real    */ ae_vector* x,
-     linlsqrreport* rep,
-     ae_state *_state);
-void linlsqrsetxrep(linlsqrstate* state,
-     ae_bool needxrep,
-     ae_state *_state);
-void linlsqrrestart(linlsqrstate* state, ae_state *_state);
-ae_int_t linlsqrpeekiterationscount(linlsqrstate* s, ae_state *_state);
-void linlsqrrequesttermination(linlsqrstate* state, ae_state *_state);
-void _linlsqrstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _linlsqrstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _linlsqrstate_clear(void* _p);
-void _linlsqrstate_destroy(void* _p);
-void _linlsqrreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _linlsqrreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _linlsqrreport_clear(void* _p);
-void _linlsqrreport_destroy(void* _p);
+void linlsqrcreate(ae_int_t m, ae_int_t n, linlsqrstate *state,
+                   ae_state *_state);
+void linlsqrcreatebuf(ae_int_t m, ae_int_t n, linlsqrstate *state,
+                      ae_state *_state);
+void linlsqrsetb(linlsqrstate *state,
+                 /* Real    */ ae_vector *b, ae_state *_state);
+void linlsqrsetprecunit(linlsqrstate *state, ae_state *_state);
+void linlsqrsetprecdiag(linlsqrstate *state, ae_state *_state);
+void linlsqrsetlambdai(linlsqrstate *state, double lambdai, ae_state *_state);
+ae_bool linlsqriteration(linlsqrstate *state, ae_state *_state);
+void linlsqrsolvesparse(linlsqrstate *state, sparsematrix *a,
+                        /* Real    */ ae_vector *b, ae_state *_state);
+void linlsqrsetcond(linlsqrstate *state, double epsa, double epsb,
+                    ae_int_t maxits, ae_state *_state);
+void linlsqrresults(linlsqrstate *state,
+                    /* Real    */ ae_vector *x, linlsqrreport *rep,
+                    ae_state *_state);
+void linlsqrsetxrep(linlsqrstate *state, ae_bool needxrep, ae_state *_state);
+void linlsqrrestart(linlsqrstate *state, ae_state *_state);
+ae_int_t linlsqrpeekiterationscount(linlsqrstate *s, ae_state *_state);
+void linlsqrrequesttermination(linlsqrstate *state, ae_state *_state);
+void _linlsqrstate_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _linlsqrstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                             ae_bool make_automatic);
+void _linlsqrstate_clear(void *_p);
+void _linlsqrstate_destroy(void *_p);
+void _linlsqrreport_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _linlsqrreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                              ae_bool make_automatic);
+void _linlsqrreport_clear(void *_p);
+void _linlsqrreport_destroy(void *_p);
 #endif
 #if defined(AE_COMPILE_NLEQ) || !defined(AE_PARTIAL_BUILD)
-void nleqcreatelm(ae_int_t n,
-     ae_int_t m,
-     /* Real    */ ae_vector* x,
-     nleqstate* state,
-     ae_state *_state);
-void nleqsetcond(nleqstate* state,
-     double epsf,
-     ae_int_t maxits,
-     ae_state *_state);
-void nleqsetxrep(nleqstate* state, ae_bool needxrep, ae_state *_state);
-void nleqsetstpmax(nleqstate* state, double stpmax, ae_state *_state);
-ae_bool nleqiteration(nleqstate* state, ae_state *_state);
-void nleqresults(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     nleqreport* rep,
-     ae_state *_state);
-void nleqresultsbuf(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     nleqreport* rep,
-     ae_state *_state);
-void nleqrestartfrom(nleqstate* state,
-     /* Real    */ ae_vector* x,
-     ae_state *_state);
-void _nleqstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _nleqstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _nleqstate_clear(void* _p);
-void _nleqstate_destroy(void* _p);
-void _nleqreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _nleqreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _nleqreport_clear(void* _p);
-void _nleqreport_destroy(void* _p);
+void nleqcreatelm(ae_int_t n, ae_int_t m,
+                  /* Real    */ ae_vector *x, nleqstate *state,
+                  ae_state *_state);
+void nleqsetcond(nleqstate *state, double epsf, ae_int_t maxits,
+                 ae_state *_state);
+void nleqsetxrep(nleqstate *state, ae_bool needxrep, ae_state *_state);
+void nleqsetstpmax(nleqstate *state, double stpmax, ae_state *_state);
+ae_bool nleqiteration(nleqstate *state, ae_state *_state);
+void nleqresults(nleqstate *state,
+                 /* Real    */ ae_vector *x, nleqreport *rep, ae_state *_state);
+void nleqresultsbuf(nleqstate *state,
+                    /* Real    */ ae_vector *x, nleqreport *rep,
+                    ae_state *_state);
+void nleqrestartfrom(nleqstate *state,
+                     /* Real    */ ae_vector *x, ae_state *_state);
+void _nleqstate_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _nleqstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                          ae_bool make_automatic);
+void _nleqstate_clear(void *_p);
+void _nleqstate_destroy(void *_p);
+void _nleqreport_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _nleqreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                           ae_bool make_automatic);
+void _nleqreport_clear(void *_p);
+void _nleqreport_destroy(void *_p);
 #endif
 
-}
+}  // namespace alglib_impl
 #endif
-

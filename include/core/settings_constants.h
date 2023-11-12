@@ -16,18 +16,18 @@ const int VER_LAST_NUM = 0;
 
 /*Variables*/
 /*Trunk*/
-const Point6D TRUNK_RANGE = Point6D(35,35,35,35,35,35);
+const Point6D TRUNK_RANGE = Point6D(35, 35, 35, 35, 35, 35);
 const int TRUNK_BUDGET = 20000;
 const int TRUNK_DILATION = 6;
 
 /*BrancheS*/
-const Point6D BRANCH_RANGE = Point6D(15,15,25,25,25,25);
+const Point6D BRANCH_RANGE = Point6D(15, 15, 25, 25, 25, 25);
 const int BRANCH_BUDGET = 5000;
 const int NUMBER_BRANCHES = 2;
 const int BRANCH_DILATION_DECREASE = 2;
 
 /*Z- SeaRCH*/
-const Point6D Z_SEARCH_RANGE = Point6D(3,3,15,3,3,3);
+const Point6D Z_SEARCH_RANGE = Point6D(3, 3, 15, 3, 3, 3);
 const int Z_SEARCH_BUDGET = 5000;
 const int Z_SEARCH_DILATION = 1;
 
