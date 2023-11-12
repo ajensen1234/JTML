@@ -110,7 +110,8 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
         std::cout << "Size: " << ctr.size() << std::endl;
     }
     std::cout << "Before creatuing curvature pointer" << std::endl;
-    float *curvature = new float[contour->back().size()];
+    int N = contour->back().size();
+    float *curvature = new float[N];
     std::cout << "Before calculating curvature values" << std::endl;
     calculate_curvature_along_contour(contour->back(), curvature);
     for (int idx = 0; idx < contour->back().size(); idx++) {
@@ -119,16 +120,24 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
     std::cout << "Before calculating curvature mean" << std::endl;
 
     float curv_mean = calculate_mean(curvature, contour->back().size());
-    std::cout << "Mean: " << curv_mean << std::endl;
-    std::cout << "Before caluculating stdev" << std::endl;
     float curv_std = calculate_std(curvature, contour->back().size());
-    std::cout << "Curv STDev" << curv_std << std::endl;
-
     float alpha = 1.5;  // How many standard deviations we care about
     float curv_threshold = curv_mean + alpha * curv_std;
     // bool *curv_thresh_array = new bool[contour[0].size()];
+    std::cout << array_at_idx(curvature, N - 1, N) << std::endl;
+    std::cout << array_at_idx(curvature, -2, N) << std::endl;
+    float *smoothed_curvature = new float[N];
+    int kern_size = 5;
+    double sigma = 1;
+
+    gaussian_convolution(curvature, N, sigma, smoothed_curvature);
+
+    for (int idx = 0; idx < N; idx++) {
+        std::cout << smoothed_curvature[idx] << std::endl;
+    }
     delete (contour);
     delete (curvature);
+    delete (smoothed_curvature);
     // delete (curv_thresh_array);
     return;
 };
@@ -155,4 +164,61 @@ void draw_contours(std::vector<std::vector<cv::Point_<int>>> *contour) {
     cv::drawContours(dst, *contour, 0, 255);
     cv::imwrite("contour.png", dst);
     return;
+}
+
+float array_at_idx(float *arr, int idx, int N) {
+    if (idx < 0) {
+        return arr[N + idx];
+    } else if (idx >= N) {
+        return arr[idx - N];
+    } else {
+        return arr[idx];
+    }
+}
+
+float dot(float arr1[], float arr2[], int N) {
+    float sum = 0;
+    // std::cout << "Inside dot product vals: " << arr1[0] << ", " << arr1[1]
+    //           << std::endl;
+    // std::cout << "Inside dot product vals: " << arr2[0] << ", " << arr2[1]
+    //           << std::endl;
+
+    for (int i = 0; i < N; i++) {
+        // std::cout << "Inside dot fot " << arr1[i] * arr2[i] << std::endl;
+        sum += arr1[i] * arr2[i];
+    }
+    // std::cout << "Dot prod sum: " << sum << std::endl;
+    return sum;
+}
+
+void gaussian_convolution(float *arr, int N, float sigma, float *result) {
+    auto gaussianKernel = [sigma](double x) {
+        float coefficient = 1.0 / (std::sqrt(2.0 * M_PI) * sigma);
+        float exponent = -0.5 * (x * x) / (sigma * sigma);
+        return coefficient * std::exp(exponent);
+    };
+    // creating the kernel
+    float kernel[9] = {
+        gaussianKernel(-4), gaussianKernel(-3), gaussianKernel(-2),
+        gaussianKernel(-1), gaussianKernel(0),  gaussianKernel(1),
+        gaussianKernel(2),  gaussianKernel(3),  gaussianKernel(4)};
+
+    for (int i = 0; i < N; i++) {
+        float arr_subset[9] = {
+            array_at_idx(arr, i - 4, N), array_at_idx(arr, i - 3, N),
+            array_at_idx(arr, i - 2, N), array_at_idx(arr, i - 1, N),
+            array_at_idx(arr, i, N),     array_at_idx(arr, i + 1, N),
+            array_at_idx(arr, i + 2, N), array_at_idx(arr, i + 3, N),
+            array_at_idx(arr, i + 4, N),
+        };
+        result[i] = dot(arr_subset, kernel, 9) / arr_sum(kernel, 9);
+    }
+}
+
+float arr_sum(float arr[], int N) {
+    float res = 0;
+    for (int i = 0; i < N; i++) {
+        res += arr[i];
+    }
+    return res;
 }

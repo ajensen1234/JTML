@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/core/types.hpp>
@@ -33,3 +34,7 @@ void pick_three_points(std::vector<cv::Point_<int>> contour_points, int idx,
 float calculate_mean(float* vals, int len);
 float calculate_std(float* vals, int len);
 void draw_contours(std::vector<std::vector<cv::Point_<int>>>* contour);
+float array_at_idx(float* arr, int idx, int N);
+float dot(float arr1[], float arr2[], int N);
+void gaussian_convolution(float* arr, int N, float sigma, float* result);
+float arr_sum(float arr[], int N);
