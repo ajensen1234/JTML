@@ -21,7 +21,6 @@ void extract_contour_points(cv::Mat input_edge_image,
                             std::vector<std::vector<cv::Point>>* contour);
 void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
                                        float* curvature);
-void determine_regions_of_high_curvature();
 void generate_curvature_heatmaps(cv::Mat input_image);
 
 float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
@@ -41,3 +40,5 @@ float arr_sum(float arr[], int N);
 void calculate_derivative(float* arr, float* der, int del_x, int N);
 std::vector<int> positive_inflection_points(float* arr, float* der, int N,
                                             float threshold);
+
+cv::Mat heatmap_at_point(int x, int y, int height, int width);

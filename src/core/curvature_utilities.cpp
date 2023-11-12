@@ -1,4 +1,5 @@
 #include <core/curvature_utilities.h>
+#include <opencv2/core/hal/interface.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/cvstd.hpp>
@@ -41,7 +42,6 @@ void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
     // length as the contourkj
     return;
 };
-void determine_regions_of_high_curvature() { return; };
 
 float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
                        cv::Point_<int> p2) {
@@ -156,6 +156,26 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
         std::cout << contour->back()[pt].x << ", " << contour->back()[pt].y
                   << std::endl;
     }
+    // testing heatmap function
+    int test_idx = key_curvature_points[0];
+    cv::Point test_pt = contour->back()[test_idx];
+    cv::Mat flipped_single_heatmap =
+        heatmap_at_point(test_pt.x, test_pt.y, 1024, 1024);
+    cv::Mat single_heatmap = cv::Mat(1024, 1024, CV_8UC1);
+    cv::flip(flipped_single_heatmap, single_heatmap, 0);
+    cv::imwrite("test_curv_heatmap.png", single_heatmap);
+
+    int heatmap_idx = 0;
+    for (auto pt_idx : key_curvature_points) {
+        cv::Point hm_point = contour->back()[pt_idx];
+        cv::Mat flipped_single_hm =
+            heatmap_at_point(hm_point.x, hm_point.y, 1024, 1024);
+        cv::Mat single_hm = cv::Mat(1024, 1024, CV_8UC1);
+        cv::flip(flipped_single_hm, single_hm, 0);
+        std::string fname = "hm" + std::to_string(heatmap_idx) + ".png";
+        cv::imwrite(fname, single_hm);
+        heatmap_idx++;
+    }
     delete (contour);
     delete (curvature_derivative);
     delete (curvature);
@@ -265,4 +285,20 @@ std::vector<int> positive_inflection_points(float *arr, float *der, int N,
         }
     }
     return infl_pts;
+}
+
+cv::Mat heatmap_at_point(int x, int y, int height, int width) {
+    cv::Point loc = cv::Point(x, y);
+    std::cout << "Location of heatmap: " << loc << std::endl;
+    cv::Mat single_dot = cv::Mat(height, width, CV_8UC1, cv::Scalar(255));
+    single_dot.at<uchar>(y, x) = 0;
+    int val = single_dot.at<uchar>(y, x);
+    int offset_val = single_dot.at<uchar>(y - 1, x - 1);
+    std::cout << "Testing mat value: " << val << ",  offset: " << offset_val
+              << std::endl;
+    cv::imwrite("single_dot_image.png", single_dot);
+    // now create the distance transform to that single point
+    cv::Mat heatmap = cv::Mat(height, width, CV_8UC1);
+    cv::distanceTransform(single_dot, heatmap, cv::DIST_L1, 5, CV_8UC1);
+    return heatmap;
 }
