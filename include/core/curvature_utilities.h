@@ -38,3 +38,6 @@ float array_at_idx(float* arr, int idx, int N);
 float dot(float arr1[], float arr2[], int N);
 void gaussian_convolution(float* arr, int N, float sigma, float* result);
 float arr_sum(float arr[], int N);
+void calculate_derivative(float* arr, float* der, int del_x, int N);
+std::vector<int> positive_inflection_points(float* arr, float* der, int N,
+                                            float threshold);

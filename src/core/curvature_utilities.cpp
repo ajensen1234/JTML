@@ -124,18 +124,40 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
     float alpha = 1.5;  // How many standard deviations we care about
     float curv_threshold = curv_mean + alpha * curv_std;
     // bool *curv_thresh_array = new bool[contour[0].size()];
-    std::cout << array_at_idx(curvature, N - 1, N) << std::endl;
-    std::cout << array_at_idx(curvature, -2, N) << std::endl;
     float *smoothed_curvature = new float[N];
     int kern_size = 5;
-    double sigma = 1;
+    double sigma = 2;
 
     gaussian_convolution(curvature, N, sigma, smoothed_curvature);
 
     for (int idx = 0; idx < N; idx++) {
         std::cout << smoothed_curvature[idx] << std::endl;
     }
+
+    std::cout << "=======BEFORE CALUCLATING DERIVATIVE ======" << std::endl;
+    float *curvature_derivative = new float[N];
+
+    calculate_derivative(smoothed_curvature, curvature_derivative, 1, N);
+
+    for (int idx = 0; idx < N; idx++) {
+        std::cout << curvature_derivative[idx] << std::endl;
+    }
+    std::cout << "-----------------CONTOUR--------------" << std::endl;
+    for (auto pt : contour->back()) {
+        std::cout << pt.x << ", " << pt.y << std::endl;
+    }
+
+    std::vector<int> key_curvature_points = positive_inflection_points(
+        smoothed_curvature, curvature_derivative, N, curv_threshold);
+    std::cout << "+++++++++ KEY CURVATURE POINTS++++++++++" << std::endl;
+    std::cout << "Curvature Threshold: " << curv_threshold << std::endl;
+    for (auto pt : key_curvature_points) {
+        std::cout << pt << std::endl;
+        std::cout << contour->back()[pt].x << ", " << contour->back()[pt].y
+                  << std::endl;
+    }
     delete (contour);
+    delete (curvature_derivative);
     delete (curvature);
     delete (smoothed_curvature);
     // delete (curv_thresh_array);
@@ -221,4 +243,26 @@ float arr_sum(float arr[], int N) {
         res += arr[i];
     }
     return res;
+}
+void calculate_derivative(float *arr, float *der, int del_x, int N) {
+    // This is basically the first thing that you learn in calc 1.
+    // For the input point, we are looking del_x in front and behind it
+    // Then determining the discrete derivative.
+
+    for (int i = 0; i < N; i++) {
+        der[i] =
+            array_at_idx(arr, i + del_x, N) - array_at_idx(arr, i - del_x, N);
+    }
+}
+std::vector<int> positive_inflection_points(float *arr, float *der, int N,
+                                            float threshold) {
+    std::vector<int> infl_pts;
+    for (int i = 0; i < N; i++) {
+        bool infl =
+            (array_at_idx(der, i - 1, N) > 0) && (array_at_idx(der, i, N) < 0);
+        if ((infl) && (array_at_idx(arr, i, N) > threshold)) {
+            infl_pts.push_back(i);
+        }
+    }
+    return infl_pts;
 }
