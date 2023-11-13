@@ -166,16 +166,10 @@ float array_at_idx(float *arr, int idx, int N) {
 
 float dot(float arr1[], float arr2[], int N) {
     float sum = 0;
-    // std::cout << "Inside dot product vals: " << arr1[0] << ", " << arr1[1]
-    //           << std::endl;
-    // std::cout << "Inside dot product vals: " << arr2[0] << ", " << arr2[1]
-    //           << std::endl;
 
     for (int i = 0; i < N; i++) {
-        // std::cout << "Inside dot fot " << arr1[i] * arr2[i] << std::endl;
         sum += arr1[i] * arr2[i];
     }
-    // std::cout << "Dot prod sum: " << sum << std::endl;
     return sum;
 }
 
