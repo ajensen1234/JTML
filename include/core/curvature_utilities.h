@@ -21,7 +21,7 @@ void extract_contour_points(cv::Mat input_edge_image,
                             std::vector<std::vector<cv::Point>>* contour);
 void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
                                        float* curvature);
-void generate_curvature_heatmaps(cv::Mat input_image);
+std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image);
 
 float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
                        cv::Point_<int> p2);

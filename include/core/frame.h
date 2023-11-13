@@ -18,6 +18,8 @@ The Frame class stores:
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "core/curvature_utilities.h"
+
 class Frame {
    public:
     Frame(std::string file_location, int aperture, int low_threshold,
@@ -55,6 +57,10 @@ class Frame {
     int GetHighThreshold();
     int GetLowThreshold();
 
+    /*Curvature Heatmap Getter and Setter*/
+    void setCurvatureHeatmaps();
+    std::vector<cv::Mat> getCurvatureHeatmaps();
+
    private:
     /*Original Matrix*/
     cv::Mat original_image_;
@@ -65,6 +71,7 @@ class Frame {
     /*Inverted Matrix  (Store in Inverted)*/
     cv::Mat inverted_image_;
     cv::Mat distance_map_;
+    std::vector<cv::Mat> curvature_heatmaps_;
     /*Constants*/
     int aperture_;
     int low_threshold_;

@@ -16,24 +16,14 @@ void extract_contour_points(cv::Mat input_edge_image,
 };
 void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
                                        float *curvature) {
-    std::cout << "Before creating pointers to three poitns " << std::endl;
     cv::Point_<int> *p1 = new cv::Point_<int>;
     cv::Point_<int> *p2 = new cv::Point_<int>;
-    std::cout << "Null ptr: " << *p1 << std::endl;
     int dist = 18;
-    std::cout << "before curvature for loop" << std::endl;
     for (int idx = 0; idx < contour.size(); idx++) {
-        std::cout << "Before defining value of the reference points"
-                  << std::endl;
-        std::cout << "Reference point values: " << contour[idx].x << ", "
-                  << contour[idx].y << std::endl;
         cv::Point ref_pt = contour[idx];
         // Pick the three points along the contour that we will use to create
         // the triangle and calculate curvature
-        std::cout << "before pick 3 points" << std::endl;
         pick_three_points(contour, idx, dist, p1, ref_pt, p2);
-        std::cout << "Before setting curvature value based on menger curvature"
-                  << std::endl;
         curvature[idx] = (menger_curvature(*p1, ref_pt, *p2));
     }
     delete (p1);
@@ -51,8 +41,6 @@ float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
     float norm1 = cv::norm(vec1);
     float norm2 = cv::norm(vec2);
     float norm3 = cv::norm(vec3);
-    std::cout << "Norms: " << norm1 << ", " << norm2 << ", " << norm3
-              << std::endl;
     float inv_radius = 4 * cv::abs(vec1[0] * vec2[1] - vec1[1] * vec2[0]) /
                        (norm1 * norm2 * norm3);
     return inv_radius;
@@ -61,17 +49,10 @@ float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
 void pick_three_points(std::vector<cv::Point_<int>> contour_points, int idx,
                        int dist, cv::Point_<int> *p1, cv::Point_<int> ref_pt,
                        cv::Point_<int> *p2) {
-    std::cout << "Before determining contour length" << std::endl;
     int contour_length = contour_points.size();
     // First, we make sure that the starting point doesn't get shoved behind the
     // vector
-    std::cout << "Before setting p1/2 values" << std::endl;
-    std::cout << "Pointer address: " << &p1 << std ::endl;
-    std::cout << "Pointer Value(p1): " << p1 << std::endl;
-    std::cout << "Pointer Value(*p1): " << *p1 << std::endl;
     if (idx < dist) {
-        std::cout << "If idx<dist" << std::endl;
-        std::cout << contour_points[contour_length - (dist - idx)] << std::endl;
         *p1 = contour_points[contour_length - (dist - idx)];
         *p2 = contour_points[idx + dist];
     } else if ((contour_length - idx) < dist) {
@@ -84,7 +65,7 @@ void pick_three_points(std::vector<cv::Point_<int>> contour_points, int idx,
     return;
 };
 
-void generate_curvature_heatmaps(cv::Mat input_image) {
+std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     // std::vector<cv::Mat> &heatmaps) {
     /*
     ** This is the primary function that will call all of the other
@@ -104,20 +85,9 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
         new std::vector<std::vector<cv::Point_<int>>>;
     extract_contour_points(input_image, contour);
     draw_contours(contour);
-    std::cout << "Contour Hierarchy Size: " << contour->size() << std::endl;
-    std::cout << "Largest Contour at :" << contour->back().size() << std::endl;
-    for (auto ctr : *contour) {
-        std::cout << "Size: " << ctr.size() << std::endl;
-    }
-    std::cout << "Before creatuing curvature pointer" << std::endl;
     int N = contour->back().size();
     float *curvature = new float[N];
-    std::cout << "Before calculating curvature values" << std::endl;
     calculate_curvature_along_contour(contour->back(), curvature);
-    for (int idx = 0; idx < contour->back().size(); idx++) {
-        std::cout << curvature[idx] << std::endl;
-    }
-    std::cout << "Before calculating curvature mean" << std::endl;
 
     float curv_mean = calculate_mean(curvature, contour->back().size());
     float curv_std = calculate_std(curvature, contour->back().size());
@@ -130,47 +100,23 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
 
     gaussian_convolution(curvature, N, sigma, smoothed_curvature);
 
-    for (int idx = 0; idx < N; idx++) {
-        std::cout << smoothed_curvature[idx] << std::endl;
-    }
-
-    std::cout << "=======BEFORE CALUCLATING DERIVATIVE ======" << std::endl;
     float *curvature_derivative = new float[N];
 
     calculate_derivative(smoothed_curvature, curvature_derivative, 1, N);
 
-    for (int idx = 0; idx < N; idx++) {
-        std::cout << curvature_derivative[idx] << std::endl;
-    }
-    std::cout << "-----------------CONTOUR--------------" << std::endl;
-    for (auto pt : contour->back()) {
-        std::cout << pt.x << ", " << pt.y << std::endl;
-    }
-
     std::vector<int> key_curvature_points = positive_inflection_points(
         smoothed_curvature, curvature_derivative, N, curv_threshold);
-    std::cout << "+++++++++ KEY CURVATURE POINTS++++++++++" << std::endl;
-    std::cout << "Curvature Threshold: " << curv_threshold << std::endl;
-    for (auto pt : key_curvature_points) {
-        std::cout << pt << std::endl;
-        std::cout << contour->back()[pt].x << ", " << contour->back()[pt].y
-                  << std::endl;
-    }
-    // testing heatmap function
-    int test_idx = key_curvature_points[0];
-    cv::Point test_pt = contour->back()[test_idx];
-    cv::Mat flipped_single_heatmap =
-        heatmap_at_point(test_pt.x, test_pt.y, 1024, 1024);
-    cv::Mat single_heatmap = cv::Mat(1024, 1024, CV_8UC1);
-    cv::flip(flipped_single_heatmap, single_heatmap, 0);
-    cv::imwrite("test_curv_heatmap.png", single_heatmap);
-
+    // Grab size of the input image
+    int W = input_image.cols, H = input_image.rows;
+    // Creating storage for the vector of heatmaps
+    std::vector<cv::Mat> heatmaps;
     int heatmap_idx = 0;
     for (auto pt_idx : key_curvature_points) {
         cv::Point hm_point = contour->back()[pt_idx];
         cv::Mat flipped_single_hm =
-            heatmap_at_point(hm_point.x, hm_point.y, 1024, 1024);
-        cv::Mat single_hm = cv::Mat(1024, 1024, CV_8UC1);
+            heatmap_at_point(hm_point.x, hm_point.y, H, W);
+        heatmaps.push_back(heatmap_at_point(hm_point.x, hm_point.y, H, W));
+        cv::Mat single_hm = cv::Mat(H, W, CV_8UC1);
         cv::flip(flipped_single_hm, single_hm, 0);
         std::string fname = "hm" + std::to_string(heatmap_idx) + ".png";
         cv::imwrite(fname, single_hm);
@@ -181,7 +127,7 @@ void generate_curvature_heatmaps(cv::Mat input_image) {
     delete (curvature);
     delete (smoothed_curvature);
     // delete (curv_thresh_array);
-    return;
+    return heatmaps;
 };
 
 float calculate_mean(float *vals, int len) {
@@ -288,15 +234,8 @@ std::vector<int> positive_inflection_points(float *arr, float *der, int N,
 }
 
 cv::Mat heatmap_at_point(int x, int y, int height, int width) {
-    cv::Point loc = cv::Point(x, y);
-    std::cout << "Location of heatmap: " << loc << std::endl;
     cv::Mat single_dot = cv::Mat(height, width, CV_8UC1, cv::Scalar(255));
     single_dot.at<uchar>(y, x) = 0;
-    int val = single_dot.at<uchar>(y, x);
-    int offset_val = single_dot.at<uchar>(y - 1, x - 1);
-    std::cout << "Testing mat value: " << val << ",  offset: " << offset_val
-              << std::endl;
-    cv::imwrite("single_dot_image.png", single_dot);
     // now create the distance transform to that single point
     cv::Mat heatmap = cv::Mat(height, width, CV_8UC1);
     cv::distanceTransform(single_dot, heatmap, cv::DIST_L1, 5, CV_8UC1);

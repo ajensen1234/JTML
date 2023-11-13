@@ -98,3 +98,10 @@ void Frame::SetDistanceMap() {
 int Frame::GetAperture() { return aperture_; };
 int Frame::GetHighThreshold() { return high_threshold_; };
 int Frame::GetLowThreshold() { return low_threshold_; };
+
+std::vector<cv::Mat> Frame::getCurvatureHeatmaps() {
+    return curvature_heatmaps_;
+};
+void Frame::setCurvatureHeatmaps() {
+    curvature_heatmaps_ = generate_curvature_heatmaps(inverted_image_);
+};
