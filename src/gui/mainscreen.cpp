@@ -314,21 +314,21 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*Preprocessor Width*/
     /*Find Width of Buttons*/
     int preprocessor_button_width =
-        font_metrics.width(ui.preprocessor_box->title());
+        font_metrics.horizontalAdvance(ui.preprocessor_box->title());
     if (preprocessor_button_width <
-        font_metrics.width(ui.load_calibration_button->text())) {
+        font_metrics.horizontalAdvance(ui.load_calibration_button->text())) {
         preprocessor_button_width =
-            font_metrics.width(ui.load_calibration_button->text());
+            font_metrics.horizontalAdvance(ui.load_calibration_button->text());
     }
     if (preprocessor_button_width <
-        font_metrics.width(ui.load_image_button->text())) {
+        font_metrics.horizontalAdvance(ui.load_image_button->text())) {
         preprocessor_button_width =
-            font_metrics.width(ui.load_image_button->text());
+            font_metrics.horizontalAdvance(ui.load_image_button->text());
     }
     if (preprocessor_button_width <
-        font_metrics.width(ui.load_model_button->text())) {
+        font_metrics.horizontalAdvance(ui.load_model_button->text())) {
         preprocessor_button_width =
-            font_metrics.width(ui.load_model_button->text());
+            font_metrics.horizontalAdvance(ui.load_model_button->text());
     }
     /*Augment with Padding to find width of group_box*/
     preprocessor_button_width += INSIDE_BUTTON_PADDING_X;
@@ -336,26 +336,27 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
         preprocessor_button_width + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
 
     /*Optimization Directives Width*/
-    int optimizer_button_width = font_metrics.width(ui.optimize_button->text());
+    int optimizer_button_width =
+        font_metrics.horizontalAdvance(ui.optimize_button->text());
     if (optimizer_button_width <
-        font_metrics.width(ui.optimize_all_button->text())) {
+        font_metrics.horizontalAdvance(ui.optimize_all_button->text())) {
         optimizer_button_width =
-            font_metrics.width(ui.optimize_all_button->text());
+            font_metrics.horizontalAdvance(ui.optimize_all_button->text());
     }
     if (optimizer_button_width <
-        font_metrics.width(ui.optimize_each_button->text())) {
+        font_metrics.horizontalAdvance(ui.optimize_each_button->text())) {
         optimizer_button_width =
-            font_metrics.width(ui.optimize_each_button->text());
+            font_metrics.horizontalAdvance(ui.optimize_each_button->text());
     }
     if (optimizer_button_width <
-        font_metrics.width(ui.optimize_from_button->text())) {
+        font_metrics.horizontalAdvance(ui.optimize_from_button->text())) {
         optimizer_button_width =
-            font_metrics.width(ui.optimize_from_button->text());
+            font_metrics.horizontalAdvance(ui.optimize_from_button->text());
     }
     /*Augment with padding to find width of group box*/
     optimizer_button_width += INSIDE_BUTTON_PADDING_X;
     int optimization_group_box_width =
-        font_metrics.width(ui.optimization_box->title());
+        font_metrics.horizontalAdvance(ui.optimization_box->title());
     if (optimization_group_box_width < 2 * optimizer_button_width +
                                            BUTTON_TO_BUTTON_PADDING_X +
                                            2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
@@ -366,26 +367,26 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     /*image View Width*/
     int image_view_button_width =
-        font_metrics.width(ui.original_image_radio_button->text());
-    if (image_view_button_width <
-        font_metrics.width(ui.inverted_image_radio_button->text())) {
-        image_view_button_width =
-            font_metrics.width(ui.inverted_image_radio_button->text());
+        font_metrics.horizontalAdvance(ui.original_image_radio_button->text());
+    if (image_view_button_width < font_metrics.horizontalAdvance(
+                                      ui.inverted_image_radio_button->text())) {
+        image_view_button_width = font_metrics.horizontalAdvance(
+            ui.inverted_image_radio_button->text());
     }
     if (image_view_button_width <
-        font_metrics.width(ui.edges_image_radio_button->text())) {
+        font_metrics.horizontalAdvance(ui.edges_image_radio_button->text())) {
         image_view_button_width =
-            font_metrics.width(ui.edges_image_radio_button->text());
+            font_metrics.horizontalAdvance(ui.edges_image_radio_button->text());
     }
-    if (image_view_button_width <
-        font_metrics.width(ui.dilation_image_radio_button->text())) {
-        image_view_button_width =
-            font_metrics.width(ui.dilation_image_radio_button->text());
+    if (image_view_button_width < font_metrics.horizontalAdvance(
+                                      ui.dilation_image_radio_button->text())) {
+        image_view_button_width = font_metrics.horizontalAdvance(
+            ui.dilation_image_radio_button->text());
     }
     /*Augment with Padding to find width of group_box*/
     image_view_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
     int image_view_group_box_width =
-        font_metrics.width(ui.image_view_box->title());
+        font_metrics.horizontalAdvance(ui.image_view_box->title());
     if (image_view_group_box_width < 2 * image_view_button_width +
                                          BUTTON_TO_BUTTON_PADDING_X +
                                          2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
@@ -396,17 +397,17 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     /*image Selection Width*/
     int image_selection_button_width =
-        font_metrics.width(ui.camera_A_radio_button->text());
+        font_metrics.horizontalAdvance(ui.camera_A_radio_button->text());
     if (image_selection_button_width <
-        font_metrics.width(ui.camera_B_radio_button->text())) {
+        font_metrics.horizontalAdvance(ui.camera_B_radio_button->text())) {
         image_selection_button_width =
-            font_metrics.width(ui.camera_B_radio_button->text());
+            font_metrics.horizontalAdvance(ui.camera_B_radio_button->text());
     }
 
     /*Augment with Padding to find width of group_box*/
     image_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
     int image_selection_group_box_width =
-        font_metrics.width(ui.image_selection_box->title());
+        font_metrics.horizontalAdvance(ui.image_selection_box->title());
     if (image_selection_group_box_width <
         2 * image_selection_button_width + BUTTON_TO_BUTTON_PADDING_X +
             2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
@@ -568,28 +569,33 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     /*Dilation Box Width*/
     int right_button_bigger =
-        font_metrics.width(ui.apply_all_edge_button->text());
+        font_metrics.horizontalAdvance(ui.apply_all_edge_button->text());
 
     /*Edge Detection Box Width*/
-    int edge_detection_box = font_metrics.width(ui.edge_detection_box->title());
+    int edge_detection_box =
+        font_metrics.horizontalAdvance(ui.edge_detection_box->title());
     int x_padding = LABEL_TO_SPIN_BOX_PADDING_X +
-                    INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.width("888");
+                    INSIDE_RADIO_BUTTON_PADDING_X +
+                    font_metrics.horizontalAdvance("888");
     if (edge_detection_box <
-        font_metrics.width(ui.aperture_label->text()) + x_padding) {
-        edge_detection_box = font_metrics.width(ui.aperture_label->text()) +
-                             x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+        font_metrics.horizontalAdvance(ui.aperture_label->text()) + x_padding) {
+        edge_detection_box =
+            font_metrics.horizontalAdvance(ui.aperture_label->text()) +
+            x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
     }
     if (edge_detection_box <
-        font_metrics.width(ui.low_threshold_label->text()) + x_padding) {
+        font_metrics.horizontalAdvance(ui.low_threshold_label->text()) +
+            x_padding) {
         edge_detection_box =
-            font_metrics.width(ui.low_threshold_label->text()) + x_padding +
-            SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+            font_metrics.horizontalAdvance(ui.low_threshold_label->text()) +
+            x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
     }
     if (edge_detection_box <
-        font_metrics.width(ui.high_threshold_label->text()) + x_padding) {
+        font_metrics.horizontalAdvance(ui.high_threshold_label->text()) +
+            x_padding) {
         edge_detection_box =
-            font_metrics.width(ui.high_threshold_label->text()) + x_padding +
-            SPIN_BOX_TO_GROUP_BOX_PADDING_X;
+            font_metrics.horizontalAdvance(ui.high_threshold_label->text()) +
+            x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
     }
     if (edge_detection_box < 2 * right_button_bigger +
                                  BUTTON_TO_BUTTON_PADDING_X +
@@ -602,26 +608,28 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     /*model View Width*/
     int model_view_button_width =
-        font_metrics.width(ui.original_model_radio_button->text());
+        font_metrics.horizontalAdvance(ui.original_model_radio_button->text());
     if (model_view_button_width <
-        font_metrics.width(ui.solid_model_radio_button->text())) {
+        font_metrics.horizontalAdvance(ui.solid_model_radio_button->text())) {
         model_view_button_width =
-            font_metrics.width(ui.solid_model_radio_button->text());
+            font_metrics.horizontalAdvance(ui.solid_model_radio_button->text());
     }
     if (model_view_button_width <
-        font_metrics.width(ui.transparent_model_radio_button->text())) {
-        model_view_button_width =
-            font_metrics.width(ui.transparent_model_radio_button->text());
+        font_metrics.horizontalAdvance(
+            ui.transparent_model_radio_button->text())) {
+        model_view_button_width = font_metrics.horizontalAdvance(
+            ui.transparent_model_radio_button->text());
     }
     if (model_view_button_width <
-        font_metrics.width(ui.wireframe_model_radio_button->text())) {
-        model_view_button_width =
-            font_metrics.width(ui.wireframe_model_radio_button->text());
+        font_metrics.horizontalAdvance(
+            ui.wireframe_model_radio_button->text())) {
+        model_view_button_width = font_metrics.horizontalAdvance(
+            ui.wireframe_model_radio_button->text());
     }
     /*Augment with Padding to find width of group_box*/
     model_view_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
     int model_view_group_box_width =
-        font_metrics.width(ui.model_view_box->title());
+        font_metrics.horizontalAdvance(ui.model_view_box->title());
     if (model_view_group_box_width < 2 * model_view_button_width +
                                          BUTTON_TO_BUTTON_PADDING_X +
                                          2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
@@ -632,16 +640,17 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     /*model Selection Width*/
     int model_selection_button_width =
-        font_metrics.width(ui.single_model_radio_button->text());
+        font_metrics.horizontalAdvance(ui.single_model_radio_button->text());
     if (model_selection_button_width <
-        font_metrics.width(ui.multiple_model_radio_button->text())) {
-        model_selection_button_width =
-            font_metrics.width(ui.multiple_model_radio_button->text());
+        font_metrics.horizontalAdvance(
+            ui.multiple_model_radio_button->text())) {
+        model_selection_button_width = font_metrics.horizontalAdvance(
+            ui.multiple_model_radio_button->text());
     }
     /*Augment with Padding to find width of group_box*/
     model_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
     int model_selection_group_box_width =
-        font_metrics.width(ui.model_selection_box->title());
+        font_metrics.horizontalAdvance(ui.model_selection_box->title());
     int model_box_pad = 2 * model_selection_button_width +
                         BUTTON_TO_BUTTON_PADDING_X +
                         2 * GROUP_BOX_TO_BUTTON_PADDING_X;
@@ -671,34 +680,34 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     ui.aperture_spin_box->setGeometry(
         QRect(right_column_width -
                   (SPIN_BOX_TO_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                   font_metrics.width("888")),
+                   font_metrics.horizontalAdvance("888")),
               GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y,
-              INSIDE_SPIN_BOX_PADDING_X + font_metrics.width("888"),
+              INSIDE_SPIN_BOX_PADDING_X + font_metrics.horizontalAdvance("888"),
               text_height + INSIDE_SPIN_BOX_PADDING_Y));
     ui.aperture_label->setGeometry(QRect(
         right_column_width -
-            (font_metrics.width(ui.aperture_label->text()) +
+            (font_metrics.horizontalAdvance(ui.aperture_label->text()) +
              LABEL_TO_SPIN_BOX_PADDING_X + SPIN_BOX_TO_GROUP_BOX_PADDING_X +
-             INSIDE_SPIN_BOX_PADDING_X + font_metrics.width("888")),
+             INSIDE_SPIN_BOX_PADDING_X + font_metrics.horizontalAdvance("888")),
         GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y,
-        font_metrics.width(ui.aperture_label->text()),
+        font_metrics.horizontalAdvance(ui.aperture_label->text()),
         text_height + INSIDE_SPIN_BOX_PADDING_Y));
 
     ui.low_threshold_label->setGeometry(QRect(
         right_column_width -
-            (font_metrics.width(ui.low_threshold_label->text()) +
+            (font_metrics.horizontalAdvance(ui.low_threshold_label->text()) +
              LABEL_TO_SPIN_BOX_PADDING_X + SPIN_BOX_TO_GROUP_BOX_PADDING_X +
-             INSIDE_SPIN_BOX_PADDING_X + font_metrics.width("888")),
+             INSIDE_SPIN_BOX_PADDING_X + font_metrics.horizontalAdvance("888")),
         ui.aperture_label->geometry().bottom() + SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-        font_metrics.width(ui.low_threshold_label->text()),
+        font_metrics.horizontalAdvance(ui.low_threshold_label->text()),
         text_height + INSIDE_SPIN_BOX_PADDING_Y));
 
     ui.low_threshold_value->setGeometry(QRect(
         3 + right_column_width -
             (SPIN_BOX_TO_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-             font_metrics.width("888")),
+             font_metrics.horizontalAdvance("888")),
         ui.aperture_label->geometry().bottom() + SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-        font_metrics.width(ui.low_threshold_label->text()),
+        font_metrics.horizontalAdvance(ui.low_threshold_label->text()),
         text_height + INSIDE_SPIN_BOX_PADDING_Y));
 
     ui.low_threshold_slider->setGeometry(
@@ -712,21 +721,21 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
 
     ui.high_threshold_label->setGeometry(QRect(
         3 + right_column_width -
-            (font_metrics.width(ui.high_threshold_label->text()) +
+            (font_metrics.horizontalAdvance(ui.high_threshold_label->text()) +
              LABEL_TO_SPIN_BOX_PADDING_X + SPIN_BOX_TO_GROUP_BOX_PADDING_X +
-             INSIDE_SPIN_BOX_PADDING_X + font_metrics.width("888")),
+             INSIDE_SPIN_BOX_PADDING_X + font_metrics.horizontalAdvance("888")),
         ui.low_threshold_slider->geometry().bottom() +
             SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-        font_metrics.width(ui.high_threshold_label->text()),
+        font_metrics.horizontalAdvance(ui.high_threshold_label->text()),
         text_height + INSIDE_SPIN_BOX_PADDING_Y));
 
     ui.high_threshold_value->setGeometry(
         QRect(right_column_width -
                   (SPIN_BOX_TO_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                   font_metrics.width("888")),
+                   font_metrics.horizontalAdvance("888")),
               ui.low_threshold_slider->geometry().bottom() +
                   SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-              font_metrics.width(ui.high_threshold_label->text()),
+              font_metrics.horizontalAdvance(ui.high_threshold_label->text()),
               text_height + INSIDE_SPIN_BOX_PADDING_Y));
 
     ui.high_threshold_slider->setGeometry(

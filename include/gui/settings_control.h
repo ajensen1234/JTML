@@ -16,7 +16,8 @@ class SettingsControl : public QDialog {
     Q_OBJECT
 
    public:
-    SettingsControl(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    SettingsControl(QWidget* parent = 0,
+                    Qt::WindowFlags flags = Qt::WindowFlags());
     ~SettingsControl() override;
 
     /*Load Optimizer Settings from Main Window*/

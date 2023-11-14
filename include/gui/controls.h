@@ -6,6 +6,7 @@
 #include <qgraphicsscene.h>
 #include <qgraphicsview.h>
 #include <qimage.h>
+#include <qnamespace.h>
 #include <qscrollbar.h>
 
 #include <QGraphicsPixmapItem>
@@ -17,7 +18,7 @@ class Controls : public QDialog {
     Q_OBJECT
 
    public:
-    Controls(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    Controls(QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
     ~Controls() override;
 
    private:

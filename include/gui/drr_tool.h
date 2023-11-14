@@ -32,7 +32,7 @@ class DRRTool : public QDialog {
 
    public:
     DRRTool(Model model, CameraCalibration calibration, double model_z_plane,
-            QWidget* parent = 0, Qt::WindowFlags flags = 0);
+            QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
     ~DRRTool() override;
 
     /*Draw DRR*/
