@@ -114,7 +114,6 @@ void Frame::setCurvatureHeatmaps() {
     curvature_heatmaps_ = generate_curvature_heatmaps(inverted_image_);
     int H = height_, W = width_;
     std::vector<std::vector<uchar>> vector_heatmap_char_tmp;
-    << std::endl;
     for (int i = 0; i < curvature_heatmaps_.size(); i++) {
         vector_heatmap_char_tmp.push_back(
             std::vector<uchar>(curvature_heatmaps_[i].data,
@@ -123,7 +122,6 @@ void Frame::setCurvatureHeatmaps() {
                                        curvature_heatmaps_[i].elemSize()));
     }
     curvature_heatmap_chars_ = Frame::flattenVector(vector_heatmap_char_tmp);
-    if
 };
 
 std::vector<uchar> Frame::flattenVector(

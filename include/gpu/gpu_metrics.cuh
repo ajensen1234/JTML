@@ -70,6 +70,8 @@ namespace gpu_cost_function {
 
         JTML_DLL double DistanceMapMetric(GPUImage* projected_image, GPUFrame* distance_map, int dilation);
 
+        JTML_DLL double CurvatureHeatmapMetric();
+
 
 	private:
 		/*Integer for Pinned Memory if Metric Counts Pixels on GPU (as in dilation metric)
@@ -108,6 +110,10 @@ namespace gpu_cost_function {
         // Distance map count total (with GPU counterpart)
         int* distance_map_score_;
         int* dev_distance_map_score_;
+
+        // Curvature heatmap score (going to be min distance)
+        int* curvature_hausdorf_score_;
+        int* dev_curvature_hausdorf_score_;
 	};
 }
 #endif /*GPU_METRICS_H*/
