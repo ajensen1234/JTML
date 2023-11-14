@@ -1130,7 +1130,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
         QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
+            in.readAll().split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
         if (InputList.size() == 0) {
             QMessageBox::critical(this, "Error!", "Invalid Pose File!",
                                   QMessageBox::Ok);
@@ -1139,7 +1139,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
         }
         if (inputFileInfo.suffix() == "jtp") {
             QStringList LineList =
-                InputList[0].split(QRegExp("[,]"), QString::SkipEmptyParts);
+                InputList[0].split(QRegExp("[,]"), Qt::SkipEmptyParts);
             if (LineList.size() >= 6) {
                 LineList[0].replace(" ", "");
                 if (LineList[0] == "NOT_OPTIMIZED") {
@@ -1179,7 +1179,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
         } else {
             if (InputList[0] == "JTA_EULER_POSE") {
                 QStringList LineList =
-                    InputList[2].split(QRegExp("[,]"), QString::SkipEmptyParts);
+                    InputList[2].split(QRegExp("[,]"), Qt::SkipEmptyParts);
                 if (LineList.size() >= 6) {
                     LineList[0].replace(" ", "");
                     if (LineList[0] == "NOT_OPTIMIZED") {
@@ -1353,7 +1353,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
         QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
+            in.readAll().split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
         if (InputList.size() == 0) {
             QMessageBox::critical(this, "Error!", "Invalid Kinematics File!",
                                   QMessageBox::Ok);
@@ -1366,7 +1366,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
                             (i - 2) < ui.image_list_widget->count();
                  i++) {
                 QStringList LineList =
-                    InputList[i].split(QRegExp("[,]"), QString::SkipEmptyParts);
+                    InputList[i].split(QRegExp("[,]"), Qt::SkipEmptyParts);
                 if (LineList.size() >= 6) {
                     LineList[0].replace(" ", "");
                     if (LineList[0] != "NOT_OPTIMIZED") {
@@ -2345,8 +2345,8 @@ void MainScreen::on_load_calibration_button_clicked() {
     QFile inputFile(calibration_file_extension);
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
-        QStringList InputList = in.readAll().split(QRegExp("[\r\n]|,|\t| "),
-                                                   QString::SkipEmptyParts);
+        QStringList InputList =
+            in.readAll().split(QRegExp("[\r\n]|,|\t| "), Qt::SkipEmptyParts);
 
         /*Valid Code for Monoplane*/
         if (InputList[0] == "JT_INTCALIB" || InputList[0] == "JTA_INTCALIB") {
