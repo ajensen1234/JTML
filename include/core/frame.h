@@ -59,7 +59,10 @@ class Frame {
 
     /*Curvature Heatmap Getter and Setter*/
     void setCurvatureHeatmaps();
-    std::vector<cv::Mat> getCurvatureHeatmaps();
+    std::vector<uchar> getCurvatureHeatmaps();
+
+    std::vector<uchar> flattenVector(
+        const std::vector<std::vector<uchar>>& vecOfVecs);
 
    private:
     /*Original Matrix*/
@@ -72,6 +75,8 @@ class Frame {
     cv::Mat inverted_image_;
     cv::Mat distance_map_;
     std::vector<cv::Mat> curvature_heatmaps_;
+    std::vector<uchar> curvature_heatmap_chars_;
+    int num_curvature_keypoints_;
     /*Constants*/
     int aperture_;
     int low_threshold_;

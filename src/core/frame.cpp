@@ -2,6 +2,7 @@
 #include "core/frame.h"
 
 #include <opencv2/core/hal/interface.h>
+#include <thrust/host_vector.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
@@ -99,9 +100,37 @@ int Frame::GetAperture() { return aperture_; };
 int Frame::GetHighThreshold() { return high_threshold_; };
 int Frame::GetLowThreshold() { return low_threshold_; };
 
-std::vector<cv::Mat> Frame::getCurvatureHeatmaps() {
-    return curvature_heatmaps_;
+std::vector<uchar> Frame::getCurvatureHeatmaps() {
+    int H = height_, W = width_;
+    std::vector<std::vector<uchar>> heatmap_chars_;
+    for (int i = 0; i < curvature_heatmaps_.size(); i++) {
+        heatmap_chars_[i].push_back(*curvature_heatmaps_[i].data);
+    }
+    std::vector<uchar> curv_heatmap_chars_ =
+        Frame::flattenVector(heatmap_chars_);
+    return curv_heatmap_chars_;
 };
 void Frame::setCurvatureHeatmaps() {
     curvature_heatmaps_ = generate_curvature_heatmaps(inverted_image_);
+    int H = height_, W = width_;
+    std::vector<std::vector<uchar>> vector_heatmap_char_tmp;
+    << std::endl;
+    for (int i = 0; i < curvature_heatmaps_.size(); i++) {
+        vector_heatmap_char_tmp.push_back(
+            std::vector<uchar>(curvature_heatmaps_[i].data,
+                               curvature_heatmaps_[i].data +
+                                   curvature_heatmaps_[i].total() *
+                                       curvature_heatmaps_[i].elemSize()));
+    }
+    curvature_heatmap_chars_ = Frame::flattenVector(vector_heatmap_char_tmp);
+    if
+};
+
+std::vector<uchar> Frame::flattenVector(
+    const std::vector<std::vector<uchar>>& vecOfVecs) {
+    std::vector<uchar> flattened;
+    for (const auto& innerVec : vecOfVecs) {
+        flattened.insert(flattened.end(), innerVec.begin(), innerVec.end());
+    }
+    return flattened;
 };

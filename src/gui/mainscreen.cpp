@@ -1657,7 +1657,7 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location,
         loaded_frames[i].SetDilatedImage(dilation_val);
         loaded_frames[i].SetDistanceMap();
         loaded_frames[i].setCurvatureHeatmaps();
-        // generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
+        //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
         if (calibrated_for_biplane_viewport_) {
             cv::Mat unpadded_biplane =
                 segment_image(loaded_frames_B[i].GetOriginalImage(),
