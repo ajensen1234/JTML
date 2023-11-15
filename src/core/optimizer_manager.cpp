@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 
+#include "gpu_heatmaps.cuh"
 #include "gpu_model.cuh"
 #include "pose_matrix.h"
 
@@ -606,6 +607,21 @@ bool OptimizerManager::Initialize(
         } else {
             delete distance_map;
             error_message = "Error uploading distance map to GPU!";
+            succesfull_initialization_ = false;
+            return succesfull_initialization_;
+        }
+    }
+    for (int i = 0; i < frames_A_.size(); i++) {
+        auto heatmap =
+            new GPUHeatmap(width, height, cuda_device_id,
+                           frames_A_[i].GetNumCurvatureKeypoints(),
+                           frames_A_[i].getCurvatureHeatmaps().data());
+        if (heatmap->IsInitializedCorrectly()) {
+            std::cout << "Uploaded Distance Map Correctly!" << std::endl;
+            delete heatmap;
+        } else {
+            delete heatmap;
+            error_message = "Error uploading heatmap to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }

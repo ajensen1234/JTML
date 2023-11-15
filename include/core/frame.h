@@ -63,6 +63,7 @@ class Frame {
 
     std::vector<uchar> flattenVector(
         const std::vector<std::vector<uchar>>& vecOfVecs);
+    int GetNumCurvatureKeypoints();
 
    private:
     /*Original Matrix*/

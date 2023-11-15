@@ -4,6 +4,7 @@
 /*Font Manipulation*/
 #include <qfontmetrics.h>
 
+#include <QScreen>
 #include <opencv2/highgui.hpp>
 
 /*Settings Constants*/
@@ -18,6 +19,7 @@
 
 /*Settings*/
 #include <qdesktopwidget.h>
+#include <qguiapplication.h>
 #include <qsettings.h>
 
 /*File Processing*/
@@ -211,7 +213,14 @@ MainScreen::MainScreen(QWidget *parent) : QMainWindow(parent) {
     ArrangeMainScreenLayout(application_font);
 
     /*Maximize*/
-    QRect rec = QApplication::desktop()->availableGeometry();
+    // QRect rec = QApplication::desktop()->availableGeometry();
+    // QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec;
+
+    if (!QGuiApplication::screens().isEmpty()) {
+        QScreen *primaryScreen = QGuiApplication::primaryScreen();
+        rec = primaryScreen->availableGeometry();
+    }
     if (MINIMUM_WIDTH <= rec.width() && MINIMUM_HEIGHT <= rec.height()) {
         showMaximized();
     }
@@ -252,8 +261,8 @@ MainScreen::MainScreen(QWidget *parent) : QMainWindow(parent) {
     key_press_vtk->initialize_MainScreen(this);
     key_press_vtk->initialize_viewer(vw);
     camera_style_interactor = vtkSmartPointer<CameraInteractorStyle>::New();
-    // vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New(); /*Alternate
-    // Angled Interactor*/
+    // vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+    // /*Alternate Angled Interactor*/
     /*Text Actor Property*/
     actor_text->GetTextProperty()->SetFontSize(16);
     actor_text->GetTextProperty()->SetFontFamilyToCourier();
@@ -301,8 +310,8 @@ MainScreen::~MainScreen() {
 
 /*Arrange Main Screen*/
 void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
-    /*Resize Buttons based on Font Size In Order to be Compatible with High DPI
-     * Monitors*/
+    /*Resize Buttons based on Font Size In Order to be Compatible with High
+     * DPI Monitors*/
     QFontMetrics font_metrics(application_font);
 
     /*Adjust for Title Height*/
@@ -537,8 +546,9 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*(total_box_height < this->height()) ? image_selection_box_height =
        this->height() - (GROUP_BOX_TO_GROUP_BOX_Y +
        ui.image_view_box->geometry(). bottomLeft().y() +
-       APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y +
-       ui.menuBar-> height()) : this->setMinimumHeight(total_box_height);*/
+       APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y
+       + ui.menuBar-> height()) :
+       this->setMinimumHeight(total_box_height);*/
 
     ui.image_selection_box->setGeometry(
         QRect(APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X,
@@ -952,13 +962,14 @@ void MainScreen::resizeEvent(QResizeEvent *event) {
     // QPoint(ui.gridLayout_3->geometry().left() +
     // (ui.gridLayout_3->geometry().width() / 2) -
     // ((qvtk_widget_starting_height_
-    // + total_expansion) / 2), ui.pose_progress->geometry().bottom()); QRect
-    // r_main = QRect(p_main, QSize(qvtk_widget_starting_height_ +
+    // + total_expansion) / 2), ui.pose_progress->geometry().bottom());
+    // QRect r_main = QRect(p_main, QSize(qvtk_widget_starting_height_ +
     // total_expansion, qvtk_widget_starting_height_ + total_expansion));
 
     // QPoint p_cpv = QPoint(ui.Right->geometry().left(),
     // ui.Right->geometry().top()); QRect r_cpv = QRect(p_cpv,
-    // QSize(ui.qvtk_cpv->geometry().width(), ui.qvtk_cpv->geometry().width()));
+    // QSize(ui.qvtk_cpv->geometry().width(),
+    // ui.qvtk_cpv->geometry().width()));
 
     // /*Expand QVTK Widgets*/
     // ui.qvtk_widget->setGeometry(r_main);
@@ -1070,9 +1081,9 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
     QFile file(SavePoseExtension);
     if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
         QTextStream stream(&file);
-        stream
-            << "JTA_EULER_KINEMATICS\nX_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_ROT\t\tX_"
-               "ROT\t\tY_ROT\n";
+        stream << "JTA_EULER_KINEMATICS\nX_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_"
+                  "ROT\t\tX_"
+                  "ROT\t\tY_ROT\n";
         /*Get Pose to Save*/
         for (int i = 0; i < ui.image_list_widget->count(); i++) {
             Point6D saved_pose = model_locations_.GetPose(i, selected[0].row());
@@ -1132,7 +1143,8 @@ void MainScreen::on_actionLoad_Pose_triggered() {
     // Load File Dialog
     QString LoadPoseExtension = QFileDialog::getOpenFileName(
         this, tr("Load Pose"), ".",
-        tr("JTA Pose File (*.jtap);; JointTrack Pose File (*.jtp);; Pose File "
+        tr("JTA Pose File (*.jtap);; JointTrack Pose File (*.jtp);; Pose "
+           "File "
            "(*.txt);;"));
     QFile inputFile(LoadPoseExtension);
     QFileInfo inputFileInfo(inputFile);
@@ -1572,8 +1584,8 @@ void MainScreen::on_actionAbout_JointTrack_Auto_triggered() {
 
 void MainScreen::on_actionSegment_FemHR_triggered() {
     /*Deserialize the ScriptModule from a file using torch::jit::load().
-    NOTE: Because this is a traced model, it can only be used with a batch size
-    of 1. To work around this, one must convert to Torch Script via
+    NOTE: Because this is a traced model, it can only be used with a batch
+    size of 1. To work around this, one must convert to Torch Script via
     Annotation.*/
 
     QString pt_model_location = QFileDialog::getOpenFileName(
@@ -1586,8 +1598,8 @@ void MainScreen::on_actionSegment_FemHR_triggered() {
 
 void MainScreen::on_actionSegment_TibHR_triggered() {
     /*Deserialize the ScriptModule from a file using torch::jit::load().
-    NOTE: Because this is a traced model, it can only be used with a batch size
-    of 1. To work around this, one must convert to Torch Script via
+    NOTE: Because this is a traced model, it can only be used with a batch
+    size of 1. To work around this, one must convert to Torch Script via
     Annotation.*/
 
     QString pt_model_location = QFileDialog::getOpenFileName(
@@ -1649,7 +1661,8 @@ void MainScreen::segmentHelperFunction(std::string pt_model_location,
     ui.qvtk_cpv->update();
     ui.qvtk_cpv->renderWindow()->Render();
 
-    /*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted Image*/
+    /*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted
+     * Image*/
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
@@ -1705,10 +1718,10 @@ void MainScreen::on_actionReset_Remove_All_Segmentation_triggered() {
 void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     // Must be in Single Selection Mode to Load Pose
     if (ui.multiple_model_radio_button->isChecked()) {
-        QMessageBox::critical(
-            this, "Error!",
-            "Must Be in Single Model Selection Mode to Estimate Kinematics!",
-            QMessageBox::Ok);
+        QMessageBox::critical(this, "Error!",
+                              "Must Be in Single Model Selection Mode to "
+                              "Estimate Kinematics!",
+                              QMessageBox::Ok);
         return;
     }
 
@@ -1783,14 +1796,15 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         this, tr("Load Trained Femoral Pose Regression Architecture"), ".",
         tr("Torch File (*.pt)"));
     // std::shared_ptr<torch::jit::Module>
-    // model(torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
+    // model(torch::jit::load(pt_model_location.toStdString(),
+    // torch::kCUDA));
     torch::jit::Module module(
         torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
     torch::jit::Module *model = &module;
     if (model == nullptr) {
-        // QMessageBox::critical(this, "Error!", QString::fromStdString("Cannot
-        // load PyTorch Torch Script model at: " + pt_model_location),
-        // QMessageBox::Ok);
+        // QMessageBox::critical(this, "Error!",
+        // QString::fromStdString("Cannot load PyTorch Torch Script model
+        // at: " + pt_model_location), QMessageBox::Ok);
         QMessageBox::critical(
             this, "Error!",
             QString("Cannot load PyTorch Torch Script model at: " +
@@ -1799,9 +1813,9 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         return;
     }
 
-    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z (From
-    Area), then X,Y. After this, convert to non (0,0) centered orientation.
-    Finally, update */
+    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z
+    (From Area), then X,Y. After this, convert to non (0,0) centered
+    orientation. Finally, update */
     ui.pose_progress->setValue(65);
     ui.pose_label->setText("Estimating femoral implant poses...");
     ui.qvtk_widget->update();
@@ -1866,8 +1880,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         double sum_seg = sum(sum(output_mat_seg))[0] / 255.0;
         double sum_proj = sum(sum(output_mat))[0] / 255.0;
         double z;
-        /* Creating A check to ensure that the z translation is not greater than
-         * the principal distance */
+        /* Creating A check to ensure that the z translation is not greater
+         * than the principal distance */
         if (sum_proj / sum_seg > 1) {
             z = -calibration_file_.camera_A_principal_.principal_distance_;
         } else {
@@ -1954,7 +1968,8 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         ya = ya * 180.0 / pi;
         za = za * 180.0 / pi;
         /*
-                        QMessageBox::critical(this, "Error!", QString::number(x)
+                        QMessageBox::critical(this, "Error!",
+           QString::number(x)
            +
            ", " + QString::number(y) + ", " + QString::number(z) + ", " +
                                 QString::number(xa) + ", " +
@@ -2013,11 +2028,11 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     // Must be in Single Selection Mode to Load Pose
     if (ui.multiple_model_radio_button->isChecked()) {
-        QMessageBox::critical(
-            this, "Error!",
-            "Must Be in Single Model Selection Mode to Estimate Kinematics!",
+        QMessageBox::critical(this, "Error!",
+                              "Must Be in Single Model Selection Mode to "
+                              "Estimate Kinematics!",
 
-            QMessageBox::Ok);
+                              QMessageBox::Ok);
         return;
     }
 
@@ -2085,15 +2100,16 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     ui.qvtk_cpv->renderWindow()->Render();
 
     /*Load JIT Model*/
-    /* Removing the below code to allow for the user to select the model they
-     * wish to use*/
+    /* Removing the below code to allow for the user to select the model
+     * they wish to use*/
     /*std::string pt_model_location =
      * "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLimaTib1024_08012019_HRProcessed_Tib_08022019_1_TORCH_SCRIPT.pt";*/
     QString pt_model_location = QFileDialog::getOpenFileName(
         this, tr("Load Trained Tibial Pose Estimation Architecture"), ".",
         tr("Torch File (*.pt)"));
     // std::shared_ptr<torch::jit::Module>
-    // model(torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
+    // model(torch::jit::load(pt_model_location.toStdString(),
+    // torch::kCUDA));
     torch::jit::Module module(
         torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
     torch::jit::Module *model = &module;
@@ -2107,9 +2123,9 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
         return;
     }
 
-    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z (From
-    Area), then X,Y. After this, convert to non (0,0) centered orientation.
-    Finally, update */
+    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z
+    (From Area), then X,Y. After this, convert to non (0,0) centered
+    orientation. Finally, update */
     ui.pose_progress->setValue(65);
     ui.pose_label->setText("Estimating tibial implant poses...");
     ui.qvtk_widget->update();
@@ -2386,8 +2402,8 @@ void MainScreen::on_load_calibration_button_clicked() {
             interactor_calibration = calibration_file_;
             Calibration *cal_pointer_ = &calibration_file_;
 
-            // interactor_calibration.camera_A_principal_.principal_distance_ -
-            // should return 1198
+            // interactor_calibration.camera_A_principal_.principal_distance_
+            // - should return 1198
             interactor_camera_B = false;
         }
         /*Valid Code for Biplane*/
@@ -2410,8 +2426,8 @@ void MainScreen::on_load_calibration_button_clicked() {
             calibrated_for_biplane_viewport_ = true;
             /*Calibrate for Main View (A) and alternate view (B).
             Read in (x,y,z) displacement vector from origin (where A is) to
-            origin of camera B. Read in othroogonal axis matrix for camera B (A
-            is taken to be standard basis vectors)*/
+            origin of camera B. Read in othroogonal axis matrix for camera B
+            (A is taken to be standard basis vectors)*/
             CameraCalibration principal_calibration_file_A(
                 InputList[1].toDouble(), -1 * InputList[2].toDouble(),
                 -1 * InputList[3].toDouble(), InputList[4].toDouble());
@@ -2471,8 +2487,8 @@ void MainScreen::on_load_calibration_button_clicked() {
         /*Disable Biplane*/
         ui.camera_B_radio_button->setDisabled(true);
 
-        /*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE USE
-         * BUTTON*/
+        /*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE
+         * USE BUTTON*/
         if (ui.image_list_widget->currentIndex().row() >= 0) {
             /*Upload Image Data to Screen, Shift Image Location to Center In
              * Middle of Screen and Adjust View Angle*/
@@ -2529,8 +2545,8 @@ void MainScreen::on_load_calibration_button_clicked() {
 
 /*Load Image Button*/
 void MainScreen::on_load_image_button_clicked() {
-    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation Values
-     * for Viewing Purposes*/
+    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation
+     * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
         trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
@@ -2599,8 +2615,8 @@ void MainScreen::on_load_image_button_clicked() {
         // this->vw->set_loaded_frames(loaded_frames);
 
     } else if (calibrated_for_biplane_viewport_) {
-        // Load TIFF images for Camera A and Camera B - Must Be Same Amount or
-        // Error and None Will Load!
+        // Load TIFF images for Camera A and Camera B - Must Be Same Amount
+        // or Error and None Will Load!
         QStringList TiffFileExtensionsCamera_A = QFileDialog::getOpenFileNames(
             this, tr("Load Image(s) for Camera A"), ".",
             tr("Image File(s) (*.tif *.tiff)"));
@@ -2746,8 +2762,8 @@ void MainScreen::on_load_model_button_clicked() {
     // loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
     // CADModelNames[i].toStdString(), "BLANK"));
     vw->load_models(CADFileExtensions,
-                    CADModelNames);  // Need to change this logic so it only has
-                                     // the new files
+                    CADModelNames);  // Need to change this logic so it only
+                                     // has the new files
     coronal_vw->load_models(CADFileExtensions, CADModelNames);
     for (int i = 0; i < CADFileExtensions.size(); i++) {
         loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
@@ -2770,8 +2786,8 @@ void MainScreen::on_load_model_button_clicked() {
         ui.model_list_widget->addItem(CADModelNames[i]);
     }
 
-    /*Load Blank Poses for Available Frames (and Default Blank Poses even if no
-     * frames for viewing without frame)*/
+    /*Load Blank Poses for Available Frames (and Default Blank Poses even if
+     * no frames for viewing without frame)*/
     for (int i = 0; i < CADFileExtensions.size(); i++) {
         // model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_,
         //` calibration_file_.camera_A_principal_.pixel_pitch_);
@@ -2804,7 +2820,8 @@ void MainScreen::on_load_model_button_clicked() {
 /*Biplane View Button (Camera A,Camera B*/
 /*Biplane View A OR Monoplane*/
 void MainScreen::on_camera_A_radio_button_clicked() {
-    /*Interactor Boolean For Text Display (Convert to Camera A Coordinates)*/
+    /*Interactor Boolean For Text Display (Convert to Camera A
+     * Coordinates)*/
     interactor_camera_B = false;
 
     /*Load Models Selected Indices*/
@@ -2829,8 +2846,8 @@ void MainScreen::on_camera_A_radio_button_clicked() {
                     Point6D last_pose(position_curr[0], position_curr[1],
                                       position_curr[2], orientation_curr[0],
                                       orientation_curr[1], orientation_curr[2]);
-                    /*Camera A View, Save in Camera A coordinates by converting
-                     * camera B*/
+                    /*Camera A View, Save in Camera A coordinates by
+                     * converting camera B*/
                     model_locations_.SavePose(
                         previous_frame_index_, selected[r].row(),
                         calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
@@ -2943,7 +2960,8 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 
 /*Biplane View B*/
 void MainScreen::on_camera_B_radio_button_clicked() {
-    /*Interactor Boolean For Text Display (Convert to Camera A Coordinates)*/
+    /*Interactor Boolean For Text Display (Convert to Camera A
+     * Coordinates)*/
     interactor_camera_B = true;
 
     /*Load Models Selected Indices*/
@@ -3022,8 +3040,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
         if (selected.size() != 0 && !currently_optimizing_) {
             /*Save Last Pair Pose*/
             for (int r = 0; r < selected.size(); r++) {
-                /*Convert To relative Camera B Pose as storage is done in camera
-                 * A coordinates and rotations*/
+                /*Convert To relative Camera B Pose as storage is done in
+                 * camera A coordinates and rotations*/
                 Point6D loaded_pose = model_locations_.GetPose(
                     ui.image_list_widget->currentIndex().row(),
                     selected[r].row());
@@ -3133,8 +3151,8 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 
     update_image_list_widget();
 
-    /*Upload Image Data to Screen, Shift Image Location to Center In Middle of
-     * Screen and Adjust View Angle*/
+    /*Upload Image Data to Screen, Shift Image Location to Center In Middle
+     * of Screen and Adjust View Angle*/
     if (ui.camera_A_radio_button->isChecked()) {
         vw->place_image_actors_according_to_calibration(
             calibration_file_,
@@ -3249,8 +3267,8 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
             }
         } else {
             /*Else, Camera B View*/
-            /*Convert To relative Camera B Pose as storage is done in camera A
-             * coordinates and rotations*/
+            /*Convert To relative Camera B Pose as storage is done in camera
+             * A coordinates and rotations*/
             Point6D loaded_pose = model_locations_.GetPose(
                 ui.image_list_widget->currentIndex().row(), selected[i].row());
             Point6D relative_B_pose =
@@ -3336,7 +3354,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
             "QListView::item{background-color: rgb("
             ");}"  // Leaving it blank sets unselected items to share the
                    // background color of JTML
-            "QListView::item:selected{background-color: rgb(250, 70, 22);}");
+            "QListView::item:selected{background-color: rgb(250, 70, "
+            "22);}");
 
         // If first selected item, make the model orange. Otherwise, make it
         // blue.
@@ -3396,8 +3415,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
             }
         } else {
             /*Else, Camera B View*/
-            /*Convert To relative Camera B Pose as storage is done in camera A
-             * coordinates and rotations*/
+            /*Convert To relative Camera B Pose as storage is done in camera
+             * A coordinates and rotations*/
             Point6D loaded_pose = model_locations_.GetPose(
                 ui.image_list_widget->currentIndex().row(), selected[i].row());
             Point6D relative_B_pose =
@@ -3736,8 +3755,8 @@ void MainScreen::keyPressEvent(QKeyEvent *event) {
                     loaded_pose.za);
             } else {
                 /*Else, Camera B View*/
-                /*Convert To relative Camera B Pose as storage is done in camera
-                 * A coordinates and rotations*/
+                /*Convert To relative Camera B Pose as storage is done in
+                 * camera A coordinates and rotations*/
                 Point6D loaded_pose = model_locations_.GetPose(
                     ui.image_list_widget->currentIndex().row(),
                     selected[i].row());
@@ -4036,8 +4055,8 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
 };
 /*Apply All Edges*/
 void MainScreen::on_apply_all_edge_button_clicked() {
-    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation Values
-     * for Viewing Purposes*/
+    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation
+     * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
         trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
@@ -4146,8 +4165,8 @@ void MainScreen::DisableAll() {
 }
 
 void MainScreen::EnableAll() {
-    /*Only Re-enable load calibration if for some reason neither are clibrated
-     * (don't know how this would ever happen)...*/
+    /*Only Re-enable load calibration if for some reason neither are
+     * clibrated (don't know how this would ever happen)...*/
     if (calibrated_for_monoplane_viewport_ == false &&
         calibrated_for_biplane_viewport_ == false) {
         ui.load_calibration_button->setEnabled(true);
@@ -4172,7 +4191,8 @@ void MainScreen::EnableAll() {
 }
 
 /*NON GUI FUNCTIONS*/
-/*Save Last Pose (Do this when optimizing or when chaninging the list widgets*/
+/*Save Last Pose (Do this when optimizing or when chaninging the list
+ * widgets*/
 void MainScreen::SaveLastPose() {
     /*Save Last Pair Pose*/
     if (previous_model_indices_.size() > 0 && previous_frame_index_ != -1) {
@@ -4224,8 +4244,8 @@ void MainScreen::LaunchOptimizer(QString directive) {
         return;
     }
 
-    /*Check Frame List by Model List and Guess Matrix Dimensions are the Same
-     * Size*/
+    /*Check Frame List by Model List and Guess Matrix Dimensions are the
+     * Same Size*/
     if (model_locations_.GetFrameCount() != loaded_frames.size() ||
         model_locations_.GetModelCount() != loaded_models.size()) {
         QMessageBox::critical(
@@ -4403,8 +4423,8 @@ void MainScreen::onOptimizedFrame(double x, double y, double z, double xa,
         /*Display Finished*/
         QMessageBox::critical(this, "Error!", "Model index out of bounds!",
                               QMessageBox::Ok);
-        /*Program Will Crash after this message but that is fine, this should
-         * never ever occurr...*/
+        /*Program Will Crash after this message but that is fine, this
+         * should never ever occurr...*/
     }
 
     /*Save Indices*/
@@ -4561,7 +4581,8 @@ void MainScreen::onUpdateDilationBackground() {
     }
 }
 
-/*Function to load settings from registry and also check if First Time Loading*/
+/*Function to load settings from registry and also check if First Time
+ * Loading*/
 void MainScreen::LoadSettingsBetweenSessions() {
     /*Check if Loaded Before*/
     QString Version = "Version" + QString::number(VER_FIRST_NUM) +
@@ -4583,8 +4604,8 @@ void MainScreen::LoadSettingsBetweenSessions() {
         QStringList cost_function_settings_keys = setting.allKeys();
         for (int i = 0; i < cost_function_settings_keys.size(); i++) {
             /*If 2 codes, should be the STAGE and ACTIVE_CF.
-            If 4 codes, should be the STAGE, Cost Function Name, Parameter Name,
-            Parameter Type*/
+            If 4 codes, should be the STAGE, Cost Function Name, Parameter
+            Name, Parameter Type*/
             QStringList key_codes = cost_function_settings_keys[i].split("@");
             if (key_codes.size() == 2 && key_codes[1] == "ACTIVE_CF") {
                 if (key_codes[0] == "TRUNK") {
@@ -4769,8 +4790,8 @@ void MainScreen::LoadSettingsBetweenSessions() {
                 ++gpu_device_count;
             }
         }
-        /*If no Cuda Compatitble Devices with Compute Capability Greater Than 5,
-         * Exit*/
+        /*If no Cuda Compatitble Devices with Compute Capability Greater
+         * Than 5, Exit*/
         if (gpu_device_count == 0) {
             if (device_count == 0) {
                 QMessageBox::critical(
@@ -4809,8 +4830,8 @@ void MainScreen::LoadSettingsBetweenSessions() {
         branch_manager_ = jta_cost_function::CostFunctionManager(Stage::Branch);
         leaf_manager_ = jta_cost_function::CostFunctionManager(Stage::Leaf);
 
-        /*Change the Default Settings of Dilation for branch and leaf to 4 and 1
-         * respectively*/
+        /*Change the Default Settings of Dilation for branch and leaf to 4
+         * and 1 respectively*/
         branch_manager_.getCostFunctionClass("DIRECT_DILATION")
             ->setIntParameterValue("Dilation", 4);
         leaf_manager_.getCostFunctionClass("DIRECT_DILATION")
@@ -4824,8 +4845,8 @@ void MainScreen::LoadSettingsBetweenSessions() {
 
         /*Save Cost Function Settings*/
         setting.beginGroup("CostFunctionSettings");
-        /*Cost Function Managers (Save All Values for Parameters and Active Cost
-         * Function*/
+        /*Cost Function Managers (Save All Values for Parameters and Active
+         * Cost Function*/
         /*Trunk*/
         setting.setValue(
             "TRUNK@ACTIVE_CF",
@@ -5013,8 +5034,8 @@ void MainScreen::LoadSettingsBetweenSessions() {
     }
 }
 
-/*Function to Save Settings from Optimizer Control Window to both Registry and
- * Optimizer Settings Class*/
+/*Function to Save Settings from Optimizer Control Window to both Registry
+ * and Optimizer Settings Class*/
 /*On Optimizer Control Windows Save Setting*/
 void MainScreen::onSaveSettings(
     OptimizerSettings opt_settings,
@@ -5204,8 +5225,8 @@ void MainScreen::onSaveSettings(
 Parameter, else saves all the Dilation Images for Each Frame as the Dilation
 Constant*/
 void MainScreen::UpdateDilationFrames() {
-    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation Values
-     * for Viewing Purposes*/
+    /*If TRUNK is Has Integer Parameter called Dilation, Update Dilation
+     * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
         trunk_manager_.getActiveCostFunctionClass()->getIntParameters();

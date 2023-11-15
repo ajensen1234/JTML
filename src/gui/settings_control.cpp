@@ -44,14 +44,14 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
     /*Get Size of Radio Button Widths*/
     int stage_radio_button_widths =
         INSIDE_RADIO_BUTTON_PADDING_X +
-        std::max(
-            std::max(font_metrics.width("Trunk"), font_metrics.width("Branch")),
-            font_metrics.width("Leaf"));
+        std::max(std::max(font_metrics.horizontalAdvance("Trunk"),
+                          font_metrics.horizontalAdvance("Branch")),
+                 font_metrics.horizontalAdvance("Leaf"));
     /*Check if Horizontal Spacing is Big Enough for Title*/
     int safety_padding_x = 0;
     if (3 * stage_radio_button_widths + 2 * GROUP_BOX_TO_RADIO_BUTTON_X +
             2 * BUTTON_TO_BUTTON_PADDING_X >
-        1.25 * font_metrics.width(
+        1.25 * font_metrics.horizontalAdvance(
                    ui.optimization_search_stage_groupBox->title())) {
         ui.trunk_radioButton->setGeometry(QRect(
             GROUP_BOX_TO_RADIO_BUTTON_X,
@@ -72,7 +72,7 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
             font_metrics.height() + INSIDE_RADIO_BUTTON_PADDING_Y));
     } else {
         safety_padding_x =
-            (1.25 * font_metrics.width(
+            (1.25 * font_metrics.horizontalAdvance(
                         ui.optimization_search_stage_groupBox->title()) -
              (3 * stage_radio_button_widths + 2 * GROUP_BOX_TO_RADIO_BUTTON_X +
               2 * BUTTON_TO_BUTTON_PADDING_X)) /
@@ -105,120 +105,120 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
                   GROUP_BOX_TO_RADIO_BUTTON_PADDING_Y));
 
     /*Set Up Dimensions for Range Group Box*/
-    ui.range_groupBox->setGeometry(
-        QRect(GROUP_BOX_TO_SMALL_GROUP_BOX_X,
-              group_box_to_top_button_y + font_metrics.height() +
-                  2 * SMALL_GROUP_BOX_PADDING_Y + 7,
-              font_metrics.width(ui.x_translation_label->text()) +
-                  font_metrics.width(ui.x_rotation_label->text()) +
-                  LABEL_TO_SPIN_BOX_PADDING_X * 2 +
-                  SPIN_BOX_TO_LABEL_PADDING_X + SMALL_GROUP_BOX_PADDING_X * 2 +
-                  INSIDE_SPIN_BOX_PADDING_X * 2 + 2 * font_metrics.width("XXX"),
-              group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y * 2 +
-                  font_metrics.height() * 3 + 3 * INSIDE_SPIN_BOX_PADDING_Y +
-                  2 * SPIN_BOX_TO_SPIN_BOX_PADDING_Y));
+    ui.range_groupBox->setGeometry(QRect(
+        GROUP_BOX_TO_SMALL_GROUP_BOX_X,
+        group_box_to_top_button_y + font_metrics.height() +
+            2 * SMALL_GROUP_BOX_PADDING_Y + 7,
+        font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
+            font_metrics.horizontalAdvance(ui.x_rotation_label->text()) +
+            LABEL_TO_SPIN_BOX_PADDING_X * 2 + SPIN_BOX_TO_LABEL_PADDING_X +
+            SMALL_GROUP_BOX_PADDING_X * 2 + INSIDE_SPIN_BOX_PADDING_X * 2 +
+            2 * font_metrics.horizontalAdvance("XXX"),
+        group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y * 2 +
+            font_metrics.height() * 3 + 3 * INSIDE_SPIN_BOX_PADDING_Y +
+            2 * SPIN_BOX_TO_SPIN_BOX_PADDING_Y));
     ui.x_translation_label->setGeometry(
         QRect(SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
-              font_metrics.width(ui.x_translation_label->text()),
+              font_metrics.horizontalAdvance(ui.x_translation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.y_translation_label->setGeometry(
         QRect(SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                   SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-              font_metrics.width(ui.y_translation_label->text()),
+              font_metrics.horizontalAdvance(ui.y_translation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.z_translation_label->setGeometry(
         QRect(SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                        SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
-              font_metrics.width(ui.z_translation_label->text()),
+              font_metrics.horizontalAdvance(ui.z_translation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.x_rotation_label->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + LABEL_TO_SPIN_BOX_PADDING_X +
-                  SMALL_GROUP_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
-              font_metrics.width(ui.x_rotation_label->text()),
+              font_metrics.horizontalAdvance(ui.x_rotation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.y_rotation_label->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + LABEL_TO_SPIN_BOX_PADDING_X +
-                  SMALL_GROUP_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                   SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-              font_metrics.width(ui.y_rotation_label->text()),
+              font_metrics.horizontalAdvance(ui.y_rotation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.z_rotation_label->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + LABEL_TO_SPIN_BOX_PADDING_X +
-                  SMALL_GROUP_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                        SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
-              font_metrics.width(ui.z_rotation_label->text()),
+              font_metrics.horizontalAdvance(ui.z_rotation_label->text()),
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.x_translation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.y_translation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                   SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.z_translation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                        SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.x_rotation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X +
-                  font_metrics.width(ui.x_rotation_label->text()) +
+                  font_metrics.horizontalAdvance(ui.x_rotation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + SPIN_BOX_TO_LABEL_PADDING_X +
-                  LABEL_TO_SPIN_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  SPIN_BOX_TO_LABEL_PADDING_X + LABEL_TO_SPIN_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.y_rotation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X +
-                  font_metrics.width(ui.x_rotation_label->text()) +
+                  font_metrics.horizontalAdvance(ui.x_rotation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + SPIN_BOX_TO_LABEL_PADDING_X +
-                  LABEL_TO_SPIN_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  SPIN_BOX_TO_LABEL_PADDING_X + LABEL_TO_SPIN_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                   SPIN_BOX_TO_SPIN_BOX_PADDING_Y,
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.z_rotation_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.x_translation_label->text()) +
+        QRect(font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
                   LABEL_TO_SPIN_BOX_PADDING_X +
-                  font_metrics.width(ui.x_rotation_label->text()) +
+                  font_metrics.horizontalAdvance(ui.x_rotation_label->text()) +
                   SMALL_GROUP_BOX_PADDING_X + INSIDE_SPIN_BOX_PADDING_X +
-                  font_metrics.width("XXX") + SPIN_BOX_TO_LABEL_PADDING_X +
-                  LABEL_TO_SPIN_BOX_PADDING_X,
+                  font_metrics.horizontalAdvance("XXX") +
+                  SPIN_BOX_TO_LABEL_PADDING_X + LABEL_TO_SPIN_BOX_PADDING_X,
               group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
                   2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                        SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
 
     /*Set the Y Positioning and Size of Everything in the General Options Left
@@ -226,38 +226,38 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
     ui.stage_enabled_checkBox->setGeometry(QRect(
         0, GROUP_BOX_TO_RADIO_BUTTON_PADDING_Y + (font_metrics.height() / 2),
         INSIDE_RADIO_BUTTON_PADDING_X +
-            font_metrics.width(ui.stage_enabled_checkBox->text()),
+            font_metrics.horizontalAdvance(ui.stage_enabled_checkBox->text()),
         font_metrics.height() + INSIDE_RADIO_BUTTON_PADDING_Y));
     ui.stage_budget_label->setGeometry(QRect(
         0, ui.stage_enabled_checkBox->geometry().bottom() + CHECKBOX_TO_LABEL_Y,
-        font_metrics.width(ui.stage_budget_label->text()),
+        font_metrics.horizontalAdvance(ui.stage_budget_label->text()),
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
-    ui.budget_spinBox->setGeometry(
-        QRect(font_metrics.width(ui.stage_budget_label->text()) +
-                  LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
-              ui.stage_budget_label->geometry().top(),
-              font_metrics.width("XXXXXXX") + INSIDE_SPIN_BOX_PADDING_X,
-              font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
+    ui.budget_spinBox->setGeometry(QRect(
+        font_metrics.horizontalAdvance(ui.stage_budget_label->text()) +
+            LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
+        ui.stage_budget_label->geometry().top(),
+        font_metrics.horizontalAdvance("XXXXXXX") + INSIDE_SPIN_BOX_PADDING_X,
+        font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.range_groupBox->setGeometry(
         QRect(GROUP_BOX_TO_SMALL_GROUP_BOX_X,
               ui.stage_budget_label->geometry().bottom() +
                   GROUP_BOX_TO_LABEL_PADDING_Y,
               ui.range_groupBox->geometry().width(),
               ui.range_groupBox->geometry().height()));
-    ui.branch_total_count_label->setGeometry(
-        QRect((ui.range_groupBox->geometry().width() -
-               (font_metrics.width(ui.branch_total_count_label->text()) +
-                LABEL_TO_SPIN_BOX_PADDING_X + font_metrics.width("XXX") +
-                INSIDE_SPIN_BOX_PADDING_X)) /
-                  2,
-              group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
-              font_metrics.width(ui.branch_total_count_label->text()),
-              font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
+    ui.branch_total_count_label->setGeometry(QRect(
+        (ui.range_groupBox->geometry().width() -
+         (font_metrics.horizontalAdvance(ui.branch_total_count_label->text()) +
+          LABEL_TO_SPIN_BOX_PADDING_X + font_metrics.horizontalAdvance("XXX") +
+          INSIDE_SPIN_BOX_PADDING_X)) /
+            2,
+        group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y,
+        font_metrics.horizontalAdvance(ui.branch_total_count_label->text()),
+        font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.branch_count_spinBox->setGeometry(
         QRect(ui.branch_total_count_label->geometry().right() +
                   LABEL_TO_SPIN_BOX_PADDING_X,
               ui.branch_total_count_label->geometry().top(),
-              font_metrics.width("XXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.stage_specific_groupBox->setGeometry(
         QRect(GROUP_BOX_TO_SMALL_GROUP_BOX_X,
@@ -305,24 +305,29 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
     /*Right Column*/
     ui.double_parameter_spinBox->setGeometry(
         QRect((ui.cost_function_groupBox->geometry().width() -
-               (font_metrics.width("XXXXXXXXXX") + INSIDE_SPIN_BOX_PADDING_X)) /
+               (font_metrics.horizontalAdvance("XXXXXXXXXX") +
+                INSIDE_SPIN_BOX_PADDING_X)) /
                   2,
               group_box_to_top_button_y + GROUP_BOX_TO_LABEL_PADDING_Y,
-              font_metrics.width("XXXXXXXXXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXXXXXXXXX") +
+                  INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     ui.int_parameter_spinBox->setGeometry(
         QRect((ui.cost_function_groupBox->geometry().width() -
-               (font_metrics.width("XXXXXXXXXX") + INSIDE_SPIN_BOX_PADDING_X)) /
+               (font_metrics.horizontalAdvance("XXXXXXXXXX") +
+                INSIDE_SPIN_BOX_PADDING_X)) /
                   2,
               group_box_to_top_button_y + GROUP_BOX_TO_LABEL_PADDING_Y,
-              font_metrics.width("XXXXXXXXXX") + INSIDE_SPIN_BOX_PADDING_X,
+              font_metrics.horizontalAdvance("XXXXXXXXXX") +
+                  INSIDE_SPIN_BOX_PADDING_X,
               font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     /*T/F Radio Button width*/
     int true_false_radiobutton_width =
         INSIDE_RADIO_BUTTON_PADDING_X +
-        std::max(
-            font_metrics.width(ui.bool_parameter_true_radioButton->text()),
-            font_metrics.width(ui.bool_parameter_false_radioButton->text()));
+        std::max(font_metrics.horizontalAdvance(
+                     ui.bool_parameter_true_radioButton->text()),
+                 font_metrics.horizontalAdvance(
+                     ui.bool_parameter_false_radioButton->text()));
     ui.bool_parameter_true_radioButton->setGeometry(QRect(
         (ui.cost_function_groupBox->geometry().width() -
          (2 * true_false_radiobutton_width + BUTTON_TO_BUTTON_PADDING_X)) /
@@ -382,9 +387,10 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags)
     /*Set Geometry of Bottom Three Buttons*/
     int opt_settings_button_width =
         INSIDE_BUTTON_PADDING_X +
-        std::max(std::max(font_metrics.width(ui.save_button->text()),
-                          font_metrics.width(ui.reset_button->text())),
-                 font_metrics.width(ui.cancel_button->text()));
+        std::max(
+            std::max(font_metrics.horizontalAdvance(ui.save_button->text()),
+                     font_metrics.horizontalAdvance(ui.reset_button->text())),
+            font_metrics.horizontalAdvance(ui.cancel_button->text()));
     ui.save_button->setGeometry(QRect(
         1 + ((ui.general_options_groupBox->geometry().right() +
               APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X) -

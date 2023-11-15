@@ -6,6 +6,7 @@
 /*Custom CUDA Headers*/
 #include <gpu_dilated_frame.cuh>
 #include <gpu_edge_frame.cuh>
+#include <gpu_heatmaps.cuh>
 #include <gpu_intensity_frame.cuh>
 #include <gpu_metrics.cuh>
 #include <gpu_model.cuh>
