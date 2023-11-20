@@ -617,8 +617,7 @@ bool OptimizerManager::Initialize(
                            frames_A_[i].GetNumCurvatureKeypoints(),
                            frames_A_[i].getCurvatureHeatmaps().data());
         if (heatmap->IsInitializedCorrectly()) {
-            std::cout << "Uploaded Distance Map Correctly!" << std::endl;
-            delete heatmap;
+            gpu_heatmaps_.push_back(heatmap);
         } else {
             delete heatmap;
             error_message = "Error uploading heatmap to GPU!";
@@ -736,9 +735,9 @@ bool OptimizerManager::Initialize(
         &gpu_dilated_frames_leaf_B_, &gpu_intensity_frames_leaf_B_,
         gpu_principal_model_, &gpu_non_principal_models_, gpu_metrics_,
         &pose_storage_, calibration_.biplane_calibration);
-    trunk_manager_.UploadDistanceMap(&gpu_distance_maps_);
-    branch_manager_.UploadDistanceMap(&gpu_distance_maps_);
-    leaf_manager_.UploadDistanceMap(&gpu_distance_maps_);
+    trunk_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
+    branch_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
+    leaf_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
 
     return succesfull_initialization_;
 };

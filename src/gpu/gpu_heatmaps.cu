@@ -16,6 +16,7 @@ namespace gpu_cost_function{
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess){
             heatmap_on_gpu_ = false;
+            return;
         }
         else {
             width_ = width;
@@ -45,6 +46,9 @@ namespace gpu_cost_function{
             }
             initialized_correctly_ = true;
             heatmap_on_gpu_ = true;
+
+            // Initialize the pointer to the heatmap metric values
+
             return;
         }
 

@@ -26,6 +26,7 @@ add_library(jtml_gpu SHARED
         ${HEADER_DIR}/fast_implant_dilation_metric.cuh
         gpu_heatmaps.cu
         ${HEADER_DIR}/gpu_heatmaps.cuh
+        curvature_hausdorf_metric.cu
         ${HEADER_FILES})
 
 
