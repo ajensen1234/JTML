@@ -11,7 +11,7 @@
 #include "gpu/gpu_edge_frame.cuh"
 #include "gpu/gpu_intensity_frame.cuh"
 #include "gpu/gpu_dilated_frame.cuh"
-
+#include "gpu/gpu_heatmaps.cuh"
 /*Pose Matrix Class*/
 #include "pose_matrix.h"
 #include "core/preprocessor-defs.h"
@@ -70,7 +70,9 @@ namespace gpu_cost_function {
 
         JTML_DLL double DistanceMapMetric(GPUImage* projected_image, GPUFrame* distance_map, int dilation);
 
-        JTML_DLL double CurvatureHeatmapMetric();
+        JTML_DLL double CurvatureHeatmapMetric(GPUImage* projected_image, GPUHeatmap* gpu_heatmap);
+
+        JTML_DLL void AllocateCurvatureHausdorfScore(int num_keypoints);
 
 
 	private:

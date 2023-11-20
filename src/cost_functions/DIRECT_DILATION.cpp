@@ -36,6 +36,9 @@ bool CostFunctionManager::initializeDIRECT_DILATION(
     this->getActiveCostFunctionClass()->getIntParameterValue(
         "Dilation", DIRECT_DILATION_current_dilation_parameter);
 
+    gpu_metrics_->AllocateCurvatureHausdorfScore(
+        gpu_heatmaps_->at(current_frame_index_)->GetNumKeypoints());
+
     /*Return if success or not*/
     return (cudaStatus == cudaSuccess);
 }
