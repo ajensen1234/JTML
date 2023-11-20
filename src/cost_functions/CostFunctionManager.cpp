@@ -125,8 +125,12 @@ void CostFunctionManager::UploadData(
 };
 
 void CostFunctionManager::UploadDistanceMap(
-    std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps) {
+    std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps,
+    std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps
+
+) {
     gpu_distance_maps_ = gpu_distance_maps;
+    gpu_heatmaps_ = gpu_heatmaps;
 };
 
 /*Set Active Cost Function*/

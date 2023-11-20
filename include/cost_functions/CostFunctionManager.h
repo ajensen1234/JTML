@@ -9,14 +9,15 @@
 #include "gpu/gpu_dilated_frame.cuh"
 #include "gpu/gpu_edge_frame.cuh"
 #include "gpu/gpu_frame.cuh"
+#include "gpu/gpu_heatmaps.cuh"
 #include "gpu/gpu_image.cuh"
 #include "gpu/gpu_intensity_frame.cuh"
 #include "gpu/gpu_metrics.cuh"
 #include "gpu/gpu_model.cuh"
 #include "gpu/render_engine.cuh"
-
 /*Stage Enum*/
 #include "Stage.h"
+#include "gpu_heatmaps.cuh"
 
 /*Standard Library*/
 #include <ATen/ops/div_native.h>
@@ -95,7 +96,8 @@ class CostFunctionManager {
         bool biplane_mode);
 
     JTML_DLL void UploadDistanceMap(
-        std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps);
+        std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps,
+        std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps);
 
     /******************************************************************************/
     /***************************PUBLIC DLL FUNCTIONS END
@@ -154,6 +156,7 @@ class CostFunctionManager {
         *gpu_intensity_frames_B_;
 
     std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps_;
+    std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps_;
 
     /*Pointer to Vector of principal GPU Model Pointer*/
     gpu_cost_function::GPUModel *gpu_principal_model_;
