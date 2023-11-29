@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -12,15 +13,18 @@ int main() {
         "fem_label_grid_Actiyas_000000000001.tif",
         cv::IMREAD_GRAYSCALE);
 
-    cv::Mat binary_image2 = cv::imread(
-        "/media/ajensen123@ad.ufl.edu/Andrew's External "
-        "SSD/Data/JTML_ALL_DATA/Ghent/"
-        "fem_label_grid_Ghent_000000000000.tif",
-        cv::IMREAD_GRAYSCALE);
-    std::vector<double> iartd = calculateIARTD(binary_image);
-    // std::vector<double> iartd2 = calculateIARTD(binary_image2);
-    for (int i = 0; i < iartd.size(); i++) {
-        std::cout << iartd[i] << std::endl;
+    int num_runs = 500;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < num_runs; i++) {
+        std::vector<double> iartd = calculateIARTD(binary_image);
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << "Average time taken by Angular Radial Transform (" << num_runs
+              << " runs): " << duration.count() / num_runs << " milliseconds"
+              << std::endl;  // std::vector<double> iartd2 =
+                             // calculateIARTD(binary_image2);
+
     return 0;
 }
