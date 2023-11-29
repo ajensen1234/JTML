@@ -48,7 +48,65 @@ __global__ void reset_vars(double* dev_fnp_re, double* dev_fnp_imag) {
     dev_fnp_re[0] = 0;
     dev_fnp_imag[0] = 0;
 }
-art::art(int height, int width, int gpu_device, unsigned char* host_image) {
+
+__global__ void raw_image_moments_kernel(double* img_moments, int height,
+                                         int width, unsigned char* image) {
+    int x = (blockIdx.x * blockDim.x) + threadIdx.x;
+    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+    int orig_loc = x + width * y;
+
+    if (x < width && y < height) {
+        // M_00
+        atomicAdd(&img_moments[0], image[orig_loc]);
+
+        // M01
+        atomicAdd(&img_moments[1], image[orig_loc] * y);
+
+        // M10
+        atomicAdd(&img_moments[2], image[orig_loc] * x);
+
+        // M11
+        atomicAdd(&img_moments[3], image[orig_loc] * x * y);
+
+        // M02
+        atomicAdd(&img_moments[4], image[orig_loc] * y * y);
+
+        // M20
+        atomicAdd(&img_moments[5], image[orig_loc] * x * x);
+
+        // M12
+        atomicAdd(&img_moments[6], image[orig_loc] * x * y * y);
+
+        // M21
+        atomicAdd(&img_moments[7], image[orig_loc] * x * x * y);
+
+        // M22
+        atomicAdd(&img_moments[8], image[orig_loc] * x * x * y * y);
+
+        // M03
+        atomicAdd(&img_moments[9], image[orig_loc] * y * y * y);
+
+        // M30
+        atomicAdd(&img_moments[10], image[orig_loc] * x * x * x);
+    }
+}
+
+__global__ void clear_img_moments(double* hu) {
+    hu[0] = 0;
+    hu[1] = 0;
+    hu[2] = 0;
+    hu[3] = 0;
+    hu[4] = 0;
+    hu[5] = 0;
+    hu[6] = 0;
+    hu[7] = 0;
+    hu[8] = 0;
+    hu[9] = 0;
+    hu[10] = 0;
+}
+
+img_desc::img_desc(int height, int width, int gpu_device,
+                   unsigned char* host_image) {
     // We start with the assumption that things go according the plan
     init_ = true;
     height_ = height;
@@ -80,9 +138,19 @@ art::art(int height, int width, int gpu_device, unsigned char* host_image) {
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
+
+    cudaHostAlloc((void**)&raw_img_moments_, 11 * sizeof(double),
+                  cudaHostAllocDefault);
+    if (cudaGetLastError() != cudaSuccess) {
+        init_ = false;
+    }
+    cudaMalloc((void**)&dev_raw_img_moments_, 11 * sizeof(double));
+    if (cudaGetLastError() != cudaSuccess) {
+        init_ = false;
+    }
 };
 
-art::~art() {
+img_desc::~img_desc() {
     cudaFree(dev_image);
     cudaFree(dev_Fnp_imag);
     cudaFree(dev_Fnp_re);
@@ -90,14 +158,14 @@ art::~art() {
     cudaFreeHost(Fnp_imag);
 };
 // Our "good to go" function that tells us if everything went according to plan
-bool art::good_to_go() { return init_; }
+bool img_desc::good_to_go() { return init_; }
 
 // Our function that actually calls the kernel
 // TODO: We will need to update this to accept the dev_image from some of our
 // projections, eventually
 // That will also include some bounding box stuff (which should actually speed
 // things up considerably)
-std::complex<double> art::art_n_p(int n, int p) {
+std::complex<double> img_desc::art_n_p(int n, int p) {
     // Standard defintion for creating our work groups
     auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
                          ceil(static_cast<double>(height_) / sqrt(256)));
@@ -117,3 +185,96 @@ std::complex<double> art::art_n_p(int n, int p) {
     std::complex<double> fnp(Fnp_re[0], Fnp_imag[0]);
     return fnp;
 };
+int img_desc::height() { return height_; };
+int img_desc::width() { return width_; };
+
+std::vector<double> img_desc::hu_moments() {
+    auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
+                         ceil(static_cast<double>(height_) / sqrt(256)));
+    auto block_grid = dim3(16, 16);
+
+    clear_img_moments<<<1, 1>>>(dev_raw_img_moments_);
+    raw_image_moments_kernel<<<dim_grid, block_grid>>>(
+        dev_raw_img_moments_, height_, width_, dev_image);
+
+    // copy raw image moments back to host
+    cudaMemcpy(raw_img_moments_, dev_raw_img_moments_, 11 * sizeof(double),
+               cudaMemcpyDeviceToHost);
+
+    // Here, we use those moments to calculate the values of the kernel;
+    // Storing values as variables to make life a LOT easier
+
+    double m00 = raw_img_moments_[0];
+    double m01 = raw_img_moments_[1];
+    double m10 = raw_img_moments_[2];
+    double m11 = raw_img_moments_[3];
+    double m02 = raw_img_moments_[4];
+    double m20 = raw_img_moments_[5];
+    double m12 = raw_img_moments_[6];
+    double m21 = raw_img_moments_[7];
+    double m22 = raw_img_moments_[8];
+    double m03 = raw_img_moments_[9];
+    double m30 = raw_img_moments_[10];
+
+    double xbar = m10 / m00;
+    double ybar = m01 / m00;
+    double mu[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    double eta[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+
+    mu[0][0] = m00;
+    mu[0][1] = 0;
+    mu[1][0] = 0;
+    mu[1][1] = m11 - xbar * m01;
+    mu[2][0] = m20 - xbar * m10;
+    mu[0][2] = m02 - ybar * m01;
+    mu[2][1] = m21 - 2 * xbar * m11 - ybar * m20 + 2 * xbar * xbar * m01;
+    mu[1][2] = m12 - 2 * ybar * m11 - xbar * m02 + 2 * ybar * ybar * m10;
+    mu[3][0] = m30 - 3 * xbar * m20 + 2 * xbar * xbar * m10;
+    mu[0][3] = m03 - 3 * ybar * m02 + 2 * ybar * ybar * m01;
+
+    // Now onto the hu moments
+    // (aka moment invariants)
+    // First we calculate the eta invariants
+    for (int i = 0; i <= 3; i++) {
+        for (int j = 0; j <= 3; j++) {
+            eta[i][j] = mu[i][j] / (pow(mu[0][0], (1 + ((i + j) / 2))));
+        }
+    }
+
+    // Hu moments dun dun dunnnnn
+    // (vector index is off by 1 because of zero-based indexing)
+    std::vector<double> hu(8);
+    hu[0] = eta[2][0] + eta[0][2];
+
+    hu[1] = pow((eta[2][0] - eta[0][2]), 2) + 4 * pow(eta[1][1], 2);
+
+    hu[2] =
+        pow(eta[3][0] - 3 * eta[1][2], 2) + pow(3 * eta[2][1] - eta[0][3], 2);
+
+    hu[3] = pow(eta[3][0] + eta[1][2], 2) + pow(eta[2][1] + eta[0][3], 2);
+
+    hu[4] =
+        (eta[3][0] - 3 * eta[1][2]) * (eta[3][0] + eta[1][2]) *
+            (pow(eta[3][0] + eta[1][2], 2) -
+             3 * pow(eta[2][1] + eta[0][3], 2)) +
+        (3 * eta[2][1] - eta[0][3]) * (eta[2][1] + eta[0][3]) *
+            (3 * pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2));
+
+    hu[5] =
+        (eta[1][2] - eta[0][3]) *
+            (pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2)) +
+        (eta[2][1] + eta[0][3]) *
+            (3 * pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2));
+
+    hu[6] = (eta[2][0] - eta[0][2]) * (pow(eta[3][0] + eta[1][2], 2) -
+                                       pow(eta[2][1] + eta[0][3], 2)) +
+            4 * eta[1][1] * (eta[3][0] + eta[1][2]) * (eta[2][1] + eta[0][3]);
+
+    hu[7] =
+        (3 * eta[2][1] - eta[0][3]) * (eta[3][0] + eta[1][2]) *
+            (pow(eta[3][0] + eta[1][2], 2) -
+             3 * pow(eta[2][1] + eta[0][3], 2)) -
+        (eta[3][0] - 3 * eta[1][2]) * (eta[2][1] + eta[0][3]) *
+            (3 * pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2));
+    return hu;
+}

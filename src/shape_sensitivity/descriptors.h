@@ -6,6 +6,6 @@
 
 #include "art.cuh"
 
-std::vector<double> calculateIARTD(cv::Mat binary_image);
+std::vector<double> calculateIARTD(img_desc* img_desc_gpu);
 
 #endif  // DESCRIPTORS_H_

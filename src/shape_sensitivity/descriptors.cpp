@@ -1,6 +1,6 @@
 #include "descriptors.h"
 
-std::vector<double> calculateIARTD(cv::Mat binary_image) {
+std::vector<double> calculateIARTD(img_desc* img_desc_gpu) {
     /**
      * This is a function to calculate the Invariant Angular Radtial Transform
      Descriptor.
@@ -14,19 +14,21 @@ std::vector<double> calculateIARTD(cv::Mat binary_image) {
         8;  // Setting max values for the number of "rings" and "angles"
     const int MAX_N = 3;
     double phase_n_1[MAX_N + 1];  // Creating array for phase correction term
-                                  // (Eqs 15, 16)
+    // (Eqs 15, 16)
+    int H = img_desc_gpu->height();
+    int W = img_desc_gpu->width();
     std::vector<double> iartd(2 * (MAX_N + 1) * (MAX_P + 1));
     std::vector<double> iartd_gpu(2 * (MAX_N + 1) * (MAX_P));
-    int H = binary_image.rows;
-    int W = binary_image.cols;
-    auto art_gpu = new art(H, W, 0, binary_image.data);
+    // int H = binary_image.rows;
+    // int W = binary_image.cols;
+    // auto img_desc_gpu = new img_desc(H, W, 0, binary_image.data);
 
     auto idx = [](int n, int p) -> int {
         return (n * MAX_P + p - 1) * 2;
     };  // Lambda for easy indexing
     for (int n = 0; n <= MAX_N; n++) {
         for (int p = 0; p <= MAX_P; p++) {
-            std::complex<double> fnp = art_gpu->art_n_p(n, p);
+            std::complex<double> fnp = img_desc_gpu->art_n_p(n, p);
             if (p > 1) {
                 iartd[idx(n, p)] = abs(fnp) / (double)(H * W);
                 iartd[idx(n, p) + 1] = arg(fnp) / (double)(H * W);
@@ -48,6 +50,6 @@ std::vector<double> calculateIARTD(cv::Mat binary_image) {
             iartd[idx(n, p) + 1] -= phase_n_1[n];
         }
     }
-    delete (art_gpu);
+    // delete (img_desc_gpu);
     return iartd;
 };
