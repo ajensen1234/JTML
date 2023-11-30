@@ -15,21 +15,26 @@ int main() {
         std::cerr << "Error Opening results files" << std::endl;
         return 0;
     }
-    // Creating a hea
+    // Creating a pointer do our CUDA class for image descriptors
     auto img_desc_gpu = new img_desc(1024, 1024, 0);
-
+    // filepath to stl model
     auto mod_fp = std::string(
         "/media/ajensen123@ad.ufl.edu/Andrew's External "
         "SSD/Data/Datasets_TSA/Nagoya_Organized/Patient_M01/Session_1/"
         "Movement_1/hum.stl");
 
     auto mod_name = std::string("hum");
+
+    // CPU version of our model
     auto primary_model_ = Model(mod_fp, mod_name, mod_name);
     int width = 1024;
     int height = 1024;
     int cuda_device_id = 0;
+    //(weird old calibration params)
     auto cam_cal = CameraCalibration(1000, 0, 0, 0.32);
     auto calibration_ = Calibration(cam_cal);
+
+    // GPU version of the model
     auto gpu_principal_model_ = new gpu_cost_function::GPUModel(
         primary_model_.model_name_, true, width, height, cuda_device_id, true,
         &primary_model_.triangle_vertices_[0],
@@ -42,12 +47,15 @@ int main() {
     } else {
         std::cout << "GPU Initialized correctly!" << std::endl;
     }
+    // Setting the rotation ranges for x and y
     float x_rot_range = 30;
     float y_rot_range = 30;
     float step = 2;
+    // Total number of instances for outputting progress bar
     int tot =
         (((2 * x_rot_range) / step) + 1) * (((2 * y_rot_range) / step) + 1);
 
+    // vectors for holding outputs from algorithm
     std::vector<double> iartd, hu;
     int iter = 0;
 
@@ -56,10 +64,12 @@ int main() {
         for (int yr = -1 * y_rot_range; yr <= y_rot_range; yr += step) {
             gpu_principal_model_->RenderPrimaryCamera(
                 gpu_cost_function::Pose(0, 0, -850, xr, yr, 0));
-
+            // Calculating angular radial transform moments
             iartd = calculateIARTD(
                 img_desc_gpu,
-                gpu_principal_model_->GetPrimaryCameraRenderedImagePointer());
+                gpu_principal_model_->GetPrimaryCameraRenderedImage());
+
+            // Populating csv file with results
             iartd_file << xr << "," << yr << ",";
             for (auto val : iartd) {
                 iartd_file << val << ",";
@@ -67,7 +77,7 @@ int main() {
             iartd_file << std::endl;
 
             hu = img_desc_gpu->hu_moments(
-                gpu_principal_model_->GetPrimaryCameraRenderedImagePointer());
+                gpu_principal_model_->GetPrimaryCameraRenderedImage());
             hu_file << xr << "," << yr << ",";
             for (auto val : hu) {
                 hu_file << val << ",";

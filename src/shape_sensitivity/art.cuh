@@ -8,15 +8,18 @@
 #include <iostream>
 #include <vector>
 
+#include "gpu/gpu_image.cuh"
+
 class img_desc {
    public:
     img_desc(int height, int width, int gpu_device);
     ~img_desc();
     bool good_to_go();
 
-    std::complex<double> art_n_p(int n, int p, unsigned char* dev_image);
+    std::complex<double> art_n_p(int n, int p,
+                                 gpu_cost_function::GPUImage* dev_image);
 
-    std::vector<double> hu_moments(unsigned char* dev_image);
+    std::vector<double> hu_moments(gpu_cost_function::GPUImage* dev_image);
     int height();
     int width();
 

@@ -50,9 +50,14 @@ __global__ void reset_vars(double* dev_fnp_re, double* dev_fnp_imag) {
 }
 
 __global__ void raw_image_moments_kernel(double* img_moments, int height,
-                                         int width, unsigned char* image) {
-    int x = (blockIdx.x * blockDim.x) + threadIdx.x;
-    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+                                         int width, unsigned char* image,
+                                         int left_x, int bottom_y) {
+    int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
+    int thread_y = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+    int x = thread_x + left_x;
+    int y = thread_y + bottom_y;
+
     int orig_loc = x + width * y;
 
     if (x < width && y < height) {
@@ -145,6 +150,8 @@ img_desc::~img_desc() {
     cudaFree(dev_Fnp_re);
     cudaFreeHost(Fnp_re);
     cudaFreeHost(Fnp_imag);
+    cudaFreeHost(raw_img_moments_);
+    cudaFree(dev_raw_img_moments_);
 };
 // Our "good to go" function that tells us if everything went according to plan
 bool img_desc::good_to_go() { return init_; }
@@ -154,7 +161,8 @@ bool img_desc::good_to_go() { return init_; }
 // projections, eventually
 // That will also include some bounding box stuff (which should actually speed
 // things up considerably)
-std::complex<double> img_desc::art_n_p(int n, int p, unsigned char* dev_image) {
+std::complex<double> img_desc::art_n_p(int n, int p,
+                                       gpu_cost_function::GPUImage* dev_image) {
     // Standard defintion for creating our work groups
     auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
                          ceil(static_cast<double>(height_) / sqrt(256)));
@@ -163,7 +171,8 @@ std::complex<double> img_desc::art_n_p(int n, int p, unsigned char* dev_image) {
     // Reset the variables that we are storing
     reset_vars<<<1, 1>>>(dev_Fnp_re, dev_Fnp_imag);
     // Run the kernel
-    art_np_kernel<<<dim_grid, block_grid>>>(height_, width_, n, p, dev_image,
+    art_np_kernel<<<dim_grid, block_grid>>>(height_, width_, n, p,
+                                            dev_image->GetDeviceImagePointer(),
                                             dev_Fnp_re, dev_Fnp_imag);
 
     // Copying everything back to host (CPU)
@@ -177,14 +186,30 @@ std::complex<double> img_desc::art_n_p(int n, int p, unsigned char* dev_image) {
 int img_desc::height() { return height_; };
 int img_desc::width() { return width_; };
 
-std::vector<double> img_desc::hu_moments(unsigned char* dev_image) {
-    auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
-                         ceil(static_cast<double>(height_) / sqrt(256)));
-    auto block_grid = dim3(16, 16);
+std::vector<double> img_desc::hu_moments(
+    gpu_cost_function::GPUImage* dev_image) {
+    const int threads_per_block = 256;
+    int* bounding_box = dev_image->GetBoundingBox();
+    int left_x = max(bounding_box[0], 0);
+    int bottom_y = max(bounding_box[1], 0);
+    int right_x = min(bounding_box[2], width_ - 1);
+    int top_y = min(bounding_box[3], height_ - 1);
+    int diff_cropped_width = right_x - left_x - 1;
+    int diff_cropped_height = top_y - bottom_y + 1;
+
+    dim3 dim_grid_bounding_box =
+        dim3(ceil(static_cast<double>(diff_cropped_width) /
+                  sqrt(static_cast<double>(threads_per_block))),
+             ceil(static_cast<double>(diff_cropped_height) /
+                  sqrt(static_cast<double>(threads_per_block))));
+
+    dim3 dim_block = dim3(ceil(sqrt(static_cast<double>(threads_per_block))),
+                          ceil(sqrt(static_cast<double>(threads_per_block))));
 
     clear_img_moments<<<1, 1>>>(dev_raw_img_moments_);
-    raw_image_moments_kernel<<<dim_grid, block_grid>>>(
-        dev_raw_img_moments_, height_, width_, dev_image);
+    raw_image_moments_kernel<<<dim_grid_bounding_box, dim_block>>>(
+        dev_raw_img_moments_, height_, width_,
+        dev_image->GetDeviceImagePointer(), left_x, bottom_y);
 
     // copy raw image moments back to host
     cudaMemcpy(raw_img_moments_, dev_raw_img_moments_, 11 * sizeof(double),

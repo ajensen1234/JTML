@@ -1,7 +1,7 @@
 #include "descriptors.h"
 
 std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
-                                   unsigned char* dev_image) {
+                                   gpu_cost_function::GPUImage* dev_image) {
     /**
      * This is a function to calculate the Invariant Angular Radtial Transform
      Descriptor.
