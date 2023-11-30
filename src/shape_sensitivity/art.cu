@@ -2,43 +2,44 @@
 
 __global__ void art_np_kernel(int height, int width, int n, int p,
                               unsigned char* image, double* dev_fnp_re,
-                              double* dev_fnp_imag) {
+                              double* dev_fnp_imag, int left_x, int bottom_y) {
     // thread values
-    int x = (blockIdx.x * blockDim.x) + threadIdx.x;
-    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+    int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
+    int thread_y = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+    int x = thread_x + left_x;
+    int y = thread_y + bottom_y;
+
     int orig_loc = x + width * y;
 
-    if (x < width - 1) {
-        if (y < height - 1) {
-            // Define some vectors that will be used to construct rho in polar
-            // coords
-            double x_vec = x - width / 2;
-            double y_vec = y - height / 2;
-            // We normalize rho to have a diameter equal to the width of the
-            // image
-            //  This prevents the corners from having some of the "basis"
-            //  functions, but this is the way that the paper presents it
-            double rho = sqrt(x_vec * x_vec + y_vec * y_vec) / (width / 2);
+    if (x < width && y < height) {
+        // Define some vectors that will be used to construct rho in polar
+        // coords
+        double x_vec = x - width / 2;
+        double y_vec = y - height / 2;
+        // We normalize rho to have a diameter equal to the width of the
+        // image
+        //  This prevents the corners from having some of the "basis"
+        //  functions, but this is the way that the paper presents it
+        double rho = sqrt(x_vec * x_vec + y_vec * y_vec) / (width / 2);
 
-            // Theta in polar coords based on where we are in the image
-            double theta = atan2(y_vec, x_vec);
-            // We Are only looking at a normalized rho of 1
-            // This is part of the integration
-            if (rho <= 1) {
-                // This is the R-cos functon that is used to derive some of the
-                // angular invariance (Eq 7)
-                double R = (n == 0) ? 1.0 : 2.0 * cos(3.1415928 * n * rho);
-                // This is defining A, which gives rotation invariance (Eq 6)
-                thrust::complex<double> A =
-                    (1 / (2 * 3.1415928)) *
-                    exp(thrust::complex<double>(0.0, p * theta));
-                // This is defining the integration over the whole image, and
-                // constructiong the full value of F_np (Eq 4)
-                thrust::complex<double> fnp_complex =
-                    image[orig_loc] * A * R * rho;
-                atomicAdd(&dev_fnp_re[0], fnp_complex.real());
-                atomicAdd(&dev_fnp_imag[0], fnp_complex.imag());
-            }
+        // Theta in polar coords based on where we are in the image
+        double theta = atan2(y_vec, x_vec);
+        // We Are only looking at a normalized rho of 1
+        // This is part of the integration
+        if (rho <= 1) {
+            // This is the R-cos functon that is used to derive some of the
+            // angular invariance (Eq 7)
+            double R = (n == 0) ? 1.0 : 2.0 * cos(3.1415928 * n * rho);
+            // This is defining A, which gives rotation invariance (Eq 6)
+            thrust::complex<double> A =
+                (1 / (2 * 3.1415928)) *
+                exp(thrust::complex<double>(0.0, p * theta));
+            // This is defining the integration over the whole image, and
+            // constructiong the full value of F_np (Eq 4)
+            thrust::complex<double> fnp_complex = image[orig_loc] * A * R * rho;
+            atomicAdd(&dev_fnp_re[0], fnp_complex.real());
+            atomicAdd(&dev_fnp_imag[0], fnp_complex.imag());
         }
     }
 }
@@ -164,16 +165,30 @@ bool img_desc::good_to_go() { return init_; }
 std::complex<double> img_desc::art_n_p(int n, int p,
                                        gpu_cost_function::GPUImage* dev_image) {
     // Standard defintion for creating our work groups
-    auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
-                         ceil(static_cast<double>(height_) / sqrt(256)));
-    auto block_grid = dim3(16, 16);
+    const int threads_per_block = 256;
+    int* bounding_box = dev_image->GetBoundingBox();
+    int left_x = max(bounding_box[0], 0);
+    int bottom_y = max(bounding_box[1], 0);
+    int right_x = min(bounding_box[2], width_ - 1);
+    int top_y = min(bounding_box[3], height_ - 1);
+    int diff_cropped_width = right_x - left_x - 1;
+    int diff_cropped_height = top_y - bottom_y + 1;
+
+    dim3 dim_grid_bounding_box =
+        dim3(ceil(static_cast<double>(diff_cropped_width) /
+                  sqrt(static_cast<double>(threads_per_block))),
+             ceil(static_cast<double>(diff_cropped_height) /
+                  sqrt(static_cast<double>(threads_per_block))));
+
+    dim3 dim_block = dim3(ceil(sqrt(static_cast<double>(threads_per_block))),
+                          ceil(sqrt(static_cast<double>(threads_per_block))));
 
     // Reset the variables that we are storing
     reset_vars<<<1, 1>>>(dev_Fnp_re, dev_Fnp_imag);
     // Run the kernel
-    art_np_kernel<<<dim_grid, block_grid>>>(height_, width_, n, p,
-                                            dev_image->GetDeviceImagePointer(),
-                                            dev_Fnp_re, dev_Fnp_imag);
+    art_np_kernel<<<dim_grid_bounding_box, dim_block>>>(
+        height_, width_, n, p, dev_image->GetDeviceImagePointer(), dev_Fnp_re,
+        dev_Fnp_imag, left_x, bottom_y);
 
     // Copying everything back to host (CPU)
     cudaMemcpy(Fnp_re, dev_Fnp_re, sizeof(double), cudaMemcpyDeviceToHost);
