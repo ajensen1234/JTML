@@ -1,6 +1,7 @@
 #include "descriptors.h"
 
-std::vector<double> calculateIARTD(img_desc* img_desc_gpu) {
+std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
+                                   unsigned char* dev_image) {
     /**
      * This is a function to calculate the Invariant Angular Radtial Transform
      Descriptor.
@@ -28,7 +29,7 @@ std::vector<double> calculateIARTD(img_desc* img_desc_gpu) {
     };  // Lambda for easy indexing
     for (int n = 0; n <= MAX_N; n++) {
         for (int p = 0; p <= MAX_P; p++) {
-            std::complex<double> fnp = img_desc_gpu->art_n_p(n, p);
+            std::complex<double> fnp = img_desc_gpu->art_n_p(n, p, dev_image);
             if (p > 1) {
                 iartd[idx(n, p)] = abs(fnp) / (double)(H * W);
                 iartd[idx(n, p) + 1] = arg(fnp) / (double)(H * W);

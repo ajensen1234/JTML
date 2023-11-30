@@ -1,44 +1,93 @@
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <sstream>
 
+#include "core/calibration.h"
+#include "core/model.h"
 #include "descriptors.h"
-// #include "gpu/gpu_frame.cuh"
-// #include "gpu/gpu_metrics.cuh"
-// #include "gpu/gpu_model.cuh"
+#include "gpu/gpu_model.cuh"
 int main() {
-    cv::Mat binary_image = cv::imread(
+    std::ofstream iartd_file("iartd.csv");
+    std::ofstream hu_file("hu_moments.csv");
+    if (!iartd_file.is_open() || !hu_file.is_open()) {
+        std::cerr << "Error Opening results files" << std::endl;
+        return 0;
+    }
+    // Creating a hea
+    auto img_desc_gpu = new img_desc(1024, 1024, 0);
+
+    auto mod_fp = std::string(
         "/media/ajensen123@ad.ufl.edu/Andrew's External "
-        "SSD/Data/JTML_ALL_DATA/Actiyas/"
-        "fem_label_grid_Actiyas_000000000001.tif",
-        cv::IMREAD_GRAYSCALE);
+        "SSD/Data/Datasets_TSA/Nagoya_Organized/Patient_M01/Session_1/"
+        "Movement_1/hum.stl");
 
-    auto img_desc_gpu = new img_desc(binary_image.rows, binary_image.cols, 0,
-                                     binary_image.data);
+    auto mod_name = std::string("hum");
+    auto primary_model_ = Model(mod_fp, mod_name, mod_name);
+    int width = 1024;
+    int height = 1024;
+    int cuda_device_id = 0;
+    auto cam_cal = CameraCalibration(1000, 0, 0, 0.32);
+    auto calibration_ = Calibration(cam_cal);
+    auto gpu_principal_model_ = new gpu_cost_function::GPUModel(
+        primary_model_.model_name_, true, width, height, cuda_device_id, true,
+        &primary_model_.triangle_vertices_[0],
+        &primary_model_.triangle_normals_[0],
+        primary_model_.triangle_vertices_.size() / 9,
+        calibration_.camera_A_principal_);
+    if (!gpu_principal_model_->IsInitializedCorrectly()) {
+        delete gpu_principal_model_;
+        gpu_principal_model_ = 0;
+    } else {
+        std::cout << "GPU Initialized correctly!" << std::endl;
+    }
+    float x_rot_range = 30;
+    float y_rot_range = 30;
+    float step = 2;
+    int tot =
+        (((2 * x_rot_range) / step) + 1) * (((2 * y_rot_range) / step) + 1);
 
-    int num_runs = 250;
+    std::vector<double> iartd, hu;
+    int iter = 0;
+
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < num_runs; i++) {
-        std::vector<double> iartd = calculateIARTD(img_desc_gpu);
+    for (int xr = -1 * x_rot_range; xr <= x_rot_range; xr += step) {
+        for (int yr = -1 * y_rot_range; yr <= y_rot_range; yr += step) {
+            gpu_principal_model_->RenderPrimaryCamera(
+                gpu_cost_function::Pose(0, 0, -850, xr, yr, 0));
+
+            iartd = calculateIARTD(
+                img_desc_gpu,
+                gpu_principal_model_->GetPrimaryCameraRenderedImagePointer());
+            iartd_file << xr << "," << yr << ",";
+            for (auto val : iartd) {
+                iartd_file << val << ",";
+            }
+            iartd_file << std::endl;
+
+            hu = img_desc_gpu->hu_moments(
+                gpu_principal_model_->GetPrimaryCameraRenderedImagePointer());
+            hu_file << xr << "," << yr << ",";
+            for (auto val : hu) {
+                hu_file << val << ",";
+            }
+            hu_file << std::endl;
+            iter++;
+            std::cout << iter << "/" << tot << std::endl;
+        }
     }
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    std::cout << "Average time taken by Angular Radial Transform (" << num_runs
-              << " runs): " << duration.count() / num_runs << " milliseconds"
-              << std::endl;  // std::vector<double> iartd2 =
-                             // calculateIARTD(binary_image2);
-    auto start2 = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < num_runs; i++) {
-        std::vector<double> hu = img_desc_gpu->hu_moments();
-    }
-    auto stop2 = std::chrono::high_resolution_clock::now();
-    auto duration2 =
-        std::chrono::duration_cast<std::chrono::milliseconds>(stop2 - start2);
-    std::cout << "Average time taken by Hu Moments (" << num_runs
-              << " runs): " << duration2.count() / num_runs << " milliseconds"
-              << std::endl;  // std::vector<double> iartd2 =
+    auto end = std::chrono::high_resolution_clock::now();
+    auto dur =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    iartd_file.close();
+    hu_file.close();
+
+    std::cout << dur.count() << "ms elapsed for " << iter << " iterations"
+              << std::endl;
 
     delete (img_desc_gpu);
+    delete (gpu_principal_model_);
     return 0;
 }

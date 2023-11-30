@@ -105,8 +105,7 @@ __global__ void clear_img_moments(double* hu) {
     hu[10] = 0;
 }
 
-img_desc::img_desc(int height, int width, int gpu_device,
-                   unsigned char* host_image) {
+img_desc::img_desc(int height, int width, int gpu_device) {
     // We start with the assumption that things go according the plan
     init_ = true;
     height_ = height;
@@ -129,15 +128,6 @@ img_desc::img_desc(int height, int width, int gpu_device,
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
-    cudaMalloc((void**)&dev_image, width * height * sizeof(unsigned char));
-    if (cudaGetLastError() != cudaSuccess) {
-        init_ = false;
-    }
-    cudaMemcpy(dev_image, host_image, width * height * sizeof(unsigned char),
-               cudaMemcpyHostToDevice);
-    if (cudaGetLastError() != cudaSuccess) {
-        init_ = false;
-    }
 
     cudaHostAlloc((void**)&raw_img_moments_, 11 * sizeof(double),
                   cudaHostAllocDefault);
@@ -151,7 +141,6 @@ img_desc::img_desc(int height, int width, int gpu_device,
 };
 
 img_desc::~img_desc() {
-    cudaFree(dev_image);
     cudaFree(dev_Fnp_imag);
     cudaFree(dev_Fnp_re);
     cudaFreeHost(Fnp_re);
@@ -165,7 +154,7 @@ bool img_desc::good_to_go() { return init_; }
 // projections, eventually
 // That will also include some bounding box stuff (which should actually speed
 // things up considerably)
-std::complex<double> img_desc::art_n_p(int n, int p) {
+std::complex<double> img_desc::art_n_p(int n, int p, unsigned char* dev_image) {
     // Standard defintion for creating our work groups
     auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
                          ceil(static_cast<double>(height_) / sqrt(256)));
@@ -188,7 +177,7 @@ std::complex<double> img_desc::art_n_p(int n, int p) {
 int img_desc::height() { return height_; };
 int img_desc::width() { return width_; };
 
-std::vector<double> img_desc::hu_moments() {
+std::vector<double> img_desc::hu_moments(unsigned char* dev_image) {
     auto dim_grid = dim3(ceil(static_cast<double>(width_) / sqrt(256)),
                          ceil(static_cast<double>(height_) / sqrt(256)));
     auto block_grid = dim3(16, 16);

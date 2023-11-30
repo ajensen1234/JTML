@@ -10,13 +10,13 @@
 
 class img_desc {
    public:
-    img_desc(int height, int width, int gpu_device, unsigned char* host_image);
+    img_desc(int height, int width, int gpu_device);
     ~img_desc();
     bool good_to_go();
 
-    std::complex<double> art_n_p(int n, int p);
+    std::complex<double> art_n_p(int n, int p, unsigned char* dev_image);
 
-    std::vector<double> hu_moments();
+    std::vector<double> hu_moments(unsigned char* dev_image);
     int height();
     int width();
 
@@ -25,7 +25,6 @@ class img_desc {
     double* dev_Fnp_imag;
     double* Fnp_re;
     double* Fnp_imag;
-    unsigned char* dev_image;
     double* dev_raw_img_moments_;
     double* raw_img_moments_;
     int width_;

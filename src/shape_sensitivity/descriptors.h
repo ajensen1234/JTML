@@ -6,6 +6,7 @@
 
 #include "art.cuh"
 
-std::vector<double> calculateIARTD(img_desc* img_desc_gpu);
+std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
+                                   unsigned char* dev_image);
 
 #endif  // DESCRIPTORS_H_
