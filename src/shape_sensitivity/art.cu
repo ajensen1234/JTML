@@ -1,8 +1,8 @@
 #include "art.cuh"
 
 __global__ void art_np_kernel(int height, int width, int n, int p,
-                              unsigned char* image, double* dev_fnp_re,
-                              double* dev_fnp_imag, int left_x, int bottom_y) {
+                              unsigned char* image, float* dev_fnp_re,
+                              float* dev_fnp_imag, int left_x, int bottom_y) {
     // thread values
     int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
     int thread_y = (blockIdx.y * blockDim.y) + threadIdx.y;
@@ -15,42 +15,42 @@ __global__ void art_np_kernel(int height, int width, int n, int p,
     if (x < width && y < height) {
         // Define some vectors that will be used to construct rho in polar
         // coords
-        double x_vec = x - width / 2;
-        double y_vec = y - height / 2;
+        float x_vec = x - width / 2;
+        float y_vec = y - height / 2;
         // We normalize rho to have a diameter equal to the width of the
         // image
         //  This prevents the corners from having some of the "basis"
         //  functions, but this is the way that the paper presents it
-        double rho = sqrt(x_vec * x_vec + y_vec * y_vec) / (width / 2);
+        float rho = sqrtf(x_vec * x_vec + y_vec * y_vec) / (width / 2);
 
         // Theta in polar coords based on where we are in the image
-        double theta = atan2(y_vec, x_vec);
+        float theta = atan2f(y_vec, x_vec);
         // We Are only looking at a normalized rho of 1
         // This is part of the integration
         if (rho <= 1) {
             // This is the R-cos functon that is used to derive some of the
             // angular invariance (Eq 7)
-            double R = (n == 0) ? 1.0 : 2.0 * cos(3.1415928 * n * rho);
+            float R = (n == 0) ? 1.0 : 2.0 * cosf(3.1415928 * n * rho);
             // This is defining A, which gives rotation invariance (Eq 6)
-            thrust::complex<double> A =
+            thrust::complex<float> A =
                 (1 / (2 * 3.1415928)) *
-                exp(thrust::complex<double>(0.0, p * theta));
+                exp(thrust::complex<float>(0.0, p * theta));
             // This is defining the integration over the whole image, and
             // constructiong the full value of F_np (Eq 4)
-            thrust::complex<double> fnp_complex = image[orig_loc] * A * R * rho;
+            thrust::complex<float> fnp_complex = image[orig_loc] * A * R * rho;
             atomicAdd(&dev_fnp_re[0], fnp_complex.real());
             atomicAdd(&dev_fnp_imag[0], fnp_complex.imag());
         }
     }
 }
 
-__global__ void reset_vars(double* dev_fnp_re, double* dev_fnp_imag) {
+__global__ void reset_vars(float* dev_fnp_re, float* dev_fnp_imag) {
     // Resetting the values of the kernels on the GPU
     dev_fnp_re[0] = 0;
     dev_fnp_imag[0] = 0;
 }
 
-__global__ void raw_image_moments_kernel(double* img_moments, int height,
+__global__ void raw_image_moments_kernel(float* img_moments, int height,
                                          int width, unsigned char* image,
                                          int left_x, int bottom_y) {
     int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -97,7 +97,7 @@ __global__ void raw_image_moments_kernel(double* img_moments, int height,
     }
 }
 
-__global__ void clear_img_moments(double* hu) {
+__global__ void clear_img_moments(float* hu) {
     hu[0] = 0;
     hu[1] = 0;
     hu[2] = 0;
@@ -118,29 +118,29 @@ img_desc::img_desc(int height, int width, int gpu_device) {
     width_ = width;
 
     // Allocating all of the memory that we have onto the GPU and CPU
-    cudaHostAlloc((void**)&Fnp_re, sizeof(double), cudaHostAllocDefault);
+    cudaHostAlloc((void**)&Fnp_re, sizeof(float), cudaHostAllocDefault);
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
-    cudaHostAlloc((void**)&Fnp_imag, sizeof(double), cudaHostAllocDefault);
+    cudaHostAlloc((void**)&Fnp_imag, sizeof(float), cudaHostAllocDefault);
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
-    cudaMalloc((void**)&dev_Fnp_imag, sizeof(double));
+    cudaMalloc((void**)&dev_Fnp_imag, sizeof(float));
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
-    cudaMalloc((void**)&dev_Fnp_re, sizeof(double));
+    cudaMalloc((void**)&dev_Fnp_re, sizeof(float));
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
 
-    cudaHostAlloc((void**)&raw_img_moments_, 11 * sizeof(double),
+    cudaHostAlloc((void**)&raw_img_moments_, 11 * sizeof(float),
                   cudaHostAllocDefault);
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
-    cudaMalloc((void**)&dev_raw_img_moments_, 11 * sizeof(double));
+    cudaMalloc((void**)&dev_raw_img_moments_, 11 * sizeof(float));
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
@@ -162,8 +162,8 @@ bool img_desc::good_to_go() { return init_; }
 // projections, eventually
 // That will also include some bounding box stuff (which should actually speed
 // things up considerably)
-std::complex<double> img_desc::art_n_p(int n, int p,
-                                       gpu_cost_function::GPUImage* dev_image) {
+std::complex<float> img_desc::art_n_p(int n, int p,
+                                      gpu_cost_function::GPUImage* dev_image) {
     // Standard defintion for creating our work groups
     const int threads_per_block = 256;
     int* bounding_box = dev_image->GetBoundingBox();
@@ -175,13 +175,13 @@ std::complex<double> img_desc::art_n_p(int n, int p,
     int diff_cropped_height = top_y - bottom_y + 1;
 
     dim3 dim_grid_bounding_box =
-        dim3(ceil(static_cast<double>(diff_cropped_width) /
-                  sqrt(static_cast<double>(threads_per_block))),
-             ceil(static_cast<double>(diff_cropped_height) /
-                  sqrt(static_cast<double>(threads_per_block))));
+        dim3(ceil(static_cast<float>(diff_cropped_width) /
+                  sqrt(static_cast<float>(threads_per_block))),
+             ceil(static_cast<float>(diff_cropped_height) /
+                  sqrt(static_cast<float>(threads_per_block))));
 
-    dim3 dim_block = dim3(ceil(sqrt(static_cast<double>(threads_per_block))),
-                          ceil(sqrt(static_cast<double>(threads_per_block))));
+    dim3 dim_block = dim3(ceil(sqrt(static_cast<float>(threads_per_block))),
+                          ceil(sqrt(static_cast<float>(threads_per_block))));
 
     // Reset the variables that we are storing
     reset_vars<<<1, 1>>>(dev_Fnp_re, dev_Fnp_imag);
@@ -191,17 +191,17 @@ std::complex<double> img_desc::art_n_p(int n, int p,
         dev_Fnp_imag, left_x, bottom_y);
 
     // Copying everything back to host (CPU)
-    cudaMemcpy(Fnp_re, dev_Fnp_re, sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(Fnp_imag, dev_Fnp_imag, sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(Fnp_re, dev_Fnp_re, sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(Fnp_imag, dev_Fnp_imag, sizeof(float), cudaMemcpyDeviceToHost);
 
     // Returning the value of the complex function that we have calculated.
-    std::complex<double> fnp(Fnp_re[0], Fnp_imag[0]);
+    std::complex<float> fnp(Fnp_re[0], Fnp_imag[0]);
     return fnp;
 };
 int img_desc::height() { return height_; };
 int img_desc::width() { return width_; };
 
-std::vector<double> img_desc::hu_moments(
+std::vector<float> img_desc::hu_moments(
     gpu_cost_function::GPUImage* dev_image) {
     const int threads_per_block = 256;
     int* bounding_box = dev_image->GetBoundingBox();
@@ -213,13 +213,13 @@ std::vector<double> img_desc::hu_moments(
     int diff_cropped_height = top_y - bottom_y + 1;
 
     dim3 dim_grid_bounding_box =
-        dim3(ceil(static_cast<double>(diff_cropped_width) /
-                  sqrt(static_cast<double>(threads_per_block))),
-             ceil(static_cast<double>(diff_cropped_height) /
-                  sqrt(static_cast<double>(threads_per_block))));
+        dim3(ceil(static_cast<float>(diff_cropped_width) /
+                  sqrt(static_cast<float>(threads_per_block))),
+             ceil(static_cast<float>(diff_cropped_height) /
+                  sqrt(static_cast<float>(threads_per_block))));
 
-    dim3 dim_block = dim3(ceil(sqrt(static_cast<double>(threads_per_block))),
-                          ceil(sqrt(static_cast<double>(threads_per_block))));
+    dim3 dim_block = dim3(ceil(sqrt(static_cast<float>(threads_per_block))),
+                          ceil(sqrt(static_cast<float>(threads_per_block))));
 
     clear_img_moments<<<1, 1>>>(dev_raw_img_moments_);
     raw_image_moments_kernel<<<dim_grid_bounding_box, dim_block>>>(
@@ -227,28 +227,28 @@ std::vector<double> img_desc::hu_moments(
         dev_image->GetDeviceImagePointer(), left_x, bottom_y);
 
     // copy raw image moments back to host
-    cudaMemcpy(raw_img_moments_, dev_raw_img_moments_, 11 * sizeof(double),
+    cudaMemcpy(raw_img_moments_, dev_raw_img_moments_, 11 * sizeof(float),
                cudaMemcpyDeviceToHost);
 
     // Here, we use those moments to calculate the values of the kernel;
     // Storing values as variables to make life a LOT easier
 
-    double m00 = raw_img_moments_[0];
-    double m01 = raw_img_moments_[1];
-    double m10 = raw_img_moments_[2];
-    double m11 = raw_img_moments_[3];
-    double m02 = raw_img_moments_[4];
-    double m20 = raw_img_moments_[5];
-    double m12 = raw_img_moments_[6];
-    double m21 = raw_img_moments_[7];
-    double m22 = raw_img_moments_[8];
-    double m03 = raw_img_moments_[9];
-    double m30 = raw_img_moments_[10];
+    float m00 = raw_img_moments_[0];
+    float m01 = raw_img_moments_[1];
+    float m10 = raw_img_moments_[2];
+    float m11 = raw_img_moments_[3];
+    float m02 = raw_img_moments_[4];
+    float m20 = raw_img_moments_[5];
+    float m12 = raw_img_moments_[6];
+    float m21 = raw_img_moments_[7];
+    float m22 = raw_img_moments_[8];
+    float m03 = raw_img_moments_[9];
+    float m30 = raw_img_moments_[10];
 
-    double xbar = m10 / m00;
-    double ybar = m01 / m00;
-    double mu[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
-    double eta[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    float xbar = m10 / m00;
+    float ybar = m01 / m00;
+    float mu[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    float eta[4][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 
     mu[0][0] = m00;
     mu[0][1] = 0;
@@ -272,7 +272,7 @@ std::vector<double> img_desc::hu_moments(
 
     // Hu moments dun dun dunnnnn
     // (vector index is off by 1 because of zero-based indexing)
-    std::vector<double> hu(8);
+    std::vector<float> hu(8);
     hu[0] = eta[2][0] + eta[0][2];
 
     hu[1] = pow((eta[2][0] - eta[0][2]), 2) + 4 * pow(eta[1][1], 2);

@@ -1,7 +1,7 @@
 #include "descriptors.h"
 
-std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
-                                   gpu_cost_function::GPUImage* dev_image) {
+std::vector<float> calculateIARTD(img_desc* img_desc_gpu,
+                                  gpu_cost_function::GPUImage* dev_image) {
     /**
      * This is a function to calculate the Invariant Angular Radtial Transform
      Descriptor.
@@ -14,12 +14,12 @@ std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
     const int MAX_P =
         8;  // Setting max values for the number of "rings" and "angles"
     const int MAX_N = 3;
-    double phase_n_1[MAX_N + 1];  // Creating array for phase correction term
+    float phase_n_1[MAX_N + 1];  // Creating array for phase correction term
     // (Eqs 15, 16)
     int H = img_desc_gpu->height();
     int W = img_desc_gpu->width();
-    std::vector<double> iartd(2 * (MAX_N + 1) * (MAX_P + 1));
-    std::vector<double> iartd_gpu(2 * (MAX_N + 1) * (MAX_P));
+    std::vector<float> iartd(2 * (MAX_N + 1) * (MAX_P + 1));
+    std::vector<float> iartd_gpu(2 * (MAX_N + 1) * (MAX_P));
     // int H = binary_image.rows;
     // int W = binary_image.cols;
     // auto img_desc_gpu = new img_desc(H, W, 0, binary_image.data);
@@ -29,10 +29,10 @@ std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
     };  // Lambda for easy indexing
     for (int n = 0; n <= MAX_N; n++) {
         for (int p = 0; p <= MAX_P; p++) {
-            std::complex<double> fnp = img_desc_gpu->art_n_p(n, p, dev_image);
+            std::complex<float> fnp = img_desc_gpu->art_n_p(n, p, dev_image);
             if (p > 1) {
-                iartd[idx(n, p)] = abs(fnp) / (double)(H * W);
-                iartd[idx(n, p) + 1] = arg(fnp) / (double)(H * W);
+                iartd[idx(n, p)] = abs(fnp) / (float)(H * W);
+                iartd[idx(n, p) + 1] = arg(fnp) / (float)(H * W);
 
             } else if (p == 1) {
                 // But, we want to keep values at p=1 for the normalization
@@ -44,9 +44,9 @@ std::vector<double> calculateIARTD(img_desc* img_desc_gpu,
     // Phase Correction using values from p = 1 (Eq 15, 16)
     for (int n = 0; n <= MAX_N; n++) {
         for (int p = 2; p <= MAX_P; p++) {
-            std::complex<double> fnp_prime =
-                std::complex<double>(iartd[idx(n, p)], iartd[idx(n, p) + 1]) *
-                exp(std::complex<double>(0.0, -p * phase_n_1[n]));
+            std::complex<float> fnp_prime =
+                std::complex<float>(iartd[idx(n, p)], iartd[idx(n, p) + 1]) *
+                exp(std::complex<float>(0.0, -p * phase_n_1[n]));
             iartd[idx(n, p)] = abs(fnp_prime);
             iartd[idx(n, p) + 1] -= phase_n_1[n];
         }

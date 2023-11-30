@@ -16,6 +16,8 @@ int main() {
         return 0;
     }
     // Creating a pointer do our CUDA class for image descriptors
+    bool speed_test = true;
+    int speed_test_iter = 500;
     auto img_desc_gpu = new img_desc(1024, 1024, 0);
     // filepath to stl model
     auto mod_fp = std::string(
@@ -56,7 +58,7 @@ int main() {
         (((2 * x_rot_range) / step) + 1) * (((2 * y_rot_range) / step) + 1);
 
     // vectors for holding outputs from algorithm
-    std::vector<double> iartd, hu;
+    std::vector<float> iartd, hu;
     int iter = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -97,6 +99,35 @@ int main() {
     std::cout << dur.count() << "ms elapsed for " << iter << " iterations"
               << std::endl;
 
+    if (speed_test) {
+        std::vector<float> iartd_test, hu_test;
+
+        auto iartd_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < speed_test_iter; i++) {
+            iartd_test = calculateIARTD(
+                img_desc_gpu,
+                gpu_principal_model_->GetPrimaryCameraRenderedImage());
+        }
+        auto iartd_end = std::chrono::high_resolution_clock::now();
+
+        auto hu_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < speed_test_iter; i++) {
+            hu_test = img_desc_gpu->hu_moments(
+                gpu_principal_model_->GetPrimaryCameraRenderedImage());
+        }
+        auto hu_end = std::chrono::high_resolution_clock::now();
+
+        auto iartd_dur = std::chrono::duration_cast<std::chrono::microseconds>(
+            iartd_end - iartd_start);
+        auto hu_dur = std::chrono::duration_cast<std::chrono::microseconds>(
+            hu_end - hu_start);
+
+        std::cout << "IARTD Average Time: "
+                  << iartd_dur.count() / speed_test_iter << "microseconds"
+                  << std::endl;
+        std::cout << "Hu Average Time: " << hu_dur.count() / speed_test_iter
+                  << "microseconds" << std::endl;
+    }
     delete (img_desc_gpu);
     delete (gpu_principal_model_);
     return 0;

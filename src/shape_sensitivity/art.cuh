@@ -16,20 +16,20 @@ class img_desc {
     ~img_desc();
     bool good_to_go();
 
-    std::complex<double> art_n_p(int n, int p,
-                                 gpu_cost_function::GPUImage* dev_image);
+    std::complex<float> art_n_p(int n, int p,
+                                gpu_cost_function::GPUImage* dev_image);
 
-    std::vector<double> hu_moments(gpu_cost_function::GPUImage* dev_image);
+    std::vector<float> hu_moments(gpu_cost_function::GPUImage* dev_image);
     int height();
     int width();
 
    private:
-    double* dev_Fnp_re;
-    double* dev_Fnp_imag;
-    double* Fnp_re;
-    double* Fnp_imag;
-    double* dev_raw_img_moments_;
-    double* raw_img_moments_;
+    float* dev_Fnp_re;
+    float* dev_Fnp_imag;
+    float* Fnp_re;
+    float* Fnp_imag;
+    float* dev_raw_img_moments_;
+    float* raw_img_moments_;
     int width_;
     int height_;
     bool init_;
