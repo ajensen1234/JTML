@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/gpu)
 file(GLOB HEADER_FILES ${HEADER_DIR}/*.cuh ${HEADER_DIR}/*.h)
 

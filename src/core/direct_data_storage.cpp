@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 /*Implementation of Data Storage class for Direct*/
 #include "core/direct_data_storage.h"
 

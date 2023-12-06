@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 #include <nfd/nfd_library.h>
 
 nfd_library::nfd_library(Calibration cal_file,GPUModel &gpu_model,int x_range,int y_range,float x_inc,float y_inc) {

@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var dir_edba712953b9ae4f08ee2a6440447f6b =
 [
     [ "CostFunction.h", "_cost_function_8h_source.html", null ],

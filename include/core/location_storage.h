@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 /*Location Storage Class is a Matrix for Different Model Poses for Each of the Different Loaded Images (Or Image Pairs if Optimized*/
 #ifndef LOCATION_STORAGE_H
 #define LOCATION_STORAGE_H

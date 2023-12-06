@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var dir_3d69f64eaf81436fe2b22361382717e5 =
 [
     [ "ambiguous_pose_processing.h", "ambiguous__pose__processing_8h.html", "ambiguous__pose__processing_8h" ],

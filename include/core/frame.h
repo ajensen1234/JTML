@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 /*Header for Frame Class:
 The Frame class stores:
 1. Width and Height information for an x-ray image

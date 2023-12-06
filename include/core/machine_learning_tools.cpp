@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 #include "machine_learning_tools.h"
 
 cv::Mat segment_image(const cv::Mat& orig_image, bool black_sil_used, torch::jit::Module* model, 

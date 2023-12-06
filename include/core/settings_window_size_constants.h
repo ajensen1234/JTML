@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 /*Constants for resizing the spacings on the main screen*/
 
 #ifndef SETTINGS_WINDOW_SIZE_CONSTANTS_H
