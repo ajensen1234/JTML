@@ -9,8 +9,9 @@
 #include "descriptors.h"
 #include "gpu/gpu_model.cuh"
 int main() {
-    std::ofstream iartd_file("iartd.csv");
-    std::ofstream hu_file("hu_moments.csv");
+    auto mod_name = std::string("tib");
+    std::ofstream iartd_file("iartd-" + mod_name + ".csv");
+    std::ofstream hu_file("hu_moments-" + mod_name + ".csv");
     if (!iartd_file.is_open() || !hu_file.is_open()) {
         std::cerr << "Error Opening results files" << std::endl;
         return 0;
@@ -22,10 +23,8 @@ int main() {
     // filepath to stl model
     auto mod_fp = std::string(
         "/media/ajensen123@ad.ufl.edu/Andrew's External "
-        "SSD/Data/Datasets_TSA/Nagoya_Organized/Patient_M01/Session_1/"
-        "Movement_1/hum.stl");
-
-    auto mod_name = std::string("hum");
+        "SSD/Data/Datasets_FemCleaned/Lima/Lima_Organized_Updated/Patient "
+        "77-06-HL/Session_1/Kneel_1/KR_left_8_tib.stl");
 
     // CPU version of our model
     auto primary_model_ = Model(mod_fp, mod_name, mod_name);
@@ -52,41 +51,46 @@ int main() {
     // Setting the rotation ranges for x and y
     float x_rot_range = 30;
     float y_rot_range = 30;
+    float z_rot_range = 30;
     float step = 2;
+    float z_step = 2;
     // Total number of instances for outputting progress bar
-    int tot =
-        (((2 * x_rot_range) / step) + 1) * (((2 * y_rot_range) / step) + 1);
+    int tot = (((2 * x_rot_range) / step) + 1) *
+              (((2 * y_rot_range) / step) + 1) *
+              (((2 * z_rot_range) / z_step) + 1);
 
     // vectors for holding outputs from algorithm
     std::vector<float> iartd, hu;
     int iter = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int xr = -1 * x_rot_range; xr <= x_rot_range; xr += step) {
-        for (int yr = -1 * y_rot_range; yr <= y_rot_range; yr += step) {
-            gpu_principal_model_->RenderPrimaryCamera(
-                gpu_cost_function::Pose(0, 0, -850, xr, yr, 0));
-            // Calculating angular radial transform moments
-            iartd = calculateIARTD(
-                img_desc_gpu,
-                gpu_principal_model_->GetPrimaryCameraRenderedImage());
+    for (int zr = -1 * z_rot_range; zr <= z_rot_range; zr += z_step) {
+        for (int xr = -1 * x_rot_range; xr <= x_rot_range; xr += step) {
+            for (int yr = -1 * y_rot_range; yr <= y_rot_range; yr += step) {
+                gpu_principal_model_->RenderPrimaryCamera(
+                    gpu_cost_function::Pose(0, 0, -850, xr, yr, zr));
+                // Calculating angular radial transform moments
+                iartd = calculateIARTD(
+                    img_desc_gpu,
+                    gpu_principal_model_->GetPrimaryCameraRenderedImage());
 
-            // Populating csv file with results
-            iartd_file << xr << "," << yr << ",";
-            for (auto val : iartd) {
-                iartd_file << val << ",";
-            }
-            iartd_file << std::endl;
+                // Populating csv file with results
+                iartd_file << xr << "," << yr << "," << zr << ",";
+                for (auto val : iartd) {
+                    iartd_file << val << ",";
+                }
+                iartd_file << std::endl;
 
-            hu = img_desc_gpu->hu_moments(
-                gpu_principal_model_->GetPrimaryCameraRenderedImage());
-            hu_file << xr << "," << yr << ",";
-            for (auto val : hu) {
-                hu_file << val << ",";
+                hu = img_desc_gpu->hu_moments(
+                    gpu_principal_model_->GetPrimaryCameraRenderedImage());
+                hu_file << xr << "," << yr << "," << zr << ",";
+                for (auto val : hu) {
+                    hu_file << val << ",";
+                }
+                hu_file << std::endl;
+                iter++;
+                std::cout << iter << "/" << tot << std::endl;
             }
-            hu_file << std::endl;
-            iter++;
-            std::cout << iter << "/" << tot << std::endl;
         }
     }
     auto end = std::chrono::high_resolution_clock::now();
