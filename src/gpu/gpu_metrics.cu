@@ -83,6 +83,8 @@ namespace gpu_cost_function {
 
 	};
 
+
+
 	GPUMetrics::~GPUMetrics() {
 		/*Free CUDA*/
 		cudaFree(dev_pixel_score_);
@@ -90,6 +92,7 @@ namespace gpu_cost_function {
 		cudaFree(dev_union_score_);
         cudaFree(dev_edge_pixels_count_);
         cudaFree(dev_distance_map_score_);
+        cudaFree(dev_curvature_hausdorf_score_);
 
 		/*Free Host*/
 		cudaFreeHost(pixel_score_);
@@ -97,7 +100,21 @@ namespace gpu_cost_function {
 		cudaFreeHost(union_score_);
         cudaFreeHost(distance_map_score_);
         cudaFreeHost(edge_pixels_count_);
+        cudaFreeHost(curvature_hausdorf_score_);
 	};
+
+    void GPUMetrics::AllocateCurvatureHausdorfScore(int num_keypoints){
+        cudaMalloc((void**)&dev_curvature_hausdorf_score_, num_keypoints * sizeof(int));
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+
+        cudaHostAlloc((void**)&curvature_hausdorf_score_, num_keypoints * sizeof(int), cudaHostAllocDefault);
+		if (cudaGetLastError() != cudaSuccess){
+			initialized_correctly_ = false;
+        }
+
+    };
 
 	/*Reset White Pixel Count*/
 	__global__ void ComputeSumWhitePixels__ResetWhitePixelScoreKernel(int* dev_white_pix_count_) {

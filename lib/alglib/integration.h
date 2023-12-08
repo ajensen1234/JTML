@@ -5,7 +5,7 @@ Copyright (c) Sergey Bochkanov (ALGLIB project).
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the 
+the Free Software Foundation (www.fsf.org); either version 2 of the
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -19,9 +19,9 @@ http://www.fsf.org/licensing/licenses
 *************************************************************************/
 #ifndef _integration_pkg_h
 #define _integration_pkg_h
-#include "ap.h"
 #include "alglibinternal.h"
 #include "alglibmisc.h"
+#include "ap.h"
 #include "linalg.h"
 #include "specialfunctions.h"
 
@@ -30,21 +30,18 @@ http://www.fsf.org/licensing/licenses
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_GQ) || !defined(AE_PARTIAL_BUILD)
 #endif
 #if defined(AE_COMPILE_GKQ) || !defined(AE_PARTIAL_BUILD)
 #endif
 #if defined(AE_COMPILE_AUTOGK) || !defined(AE_PARTIAL_BUILD)
-typedef struct
-{
+typedef struct {
     ae_int_t terminationtype;
     ae_int_t nfev;
     ae_int_t nintervals;
 } autogkreport;
-typedef struct
-{
+typedef struct {
     double a;
     double b;
     double eps;
@@ -66,8 +63,7 @@ typedef struct
     ae_int_t n;
     rcommstate rstate;
 } autogkinternalstate;
-typedef struct
-{
+typedef struct {
     double a;
     double b;
     double alpha;
@@ -88,15 +84,14 @@ typedef struct
 } autogkstate;
 #endif
 
-}
+}  // namespace alglib_impl
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS C++ INTERFACE
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib
-{
+namespace alglib {
 
 #if defined(AE_COMPILE_GQ) || !defined(AE_PARTIAL_BUILD)
 
@@ -118,31 +113,28 @@ Integration report:
 * Rep.NIntervals contains number of intervals [a,b]
   was partitioned into.
 *************************************************************************/
-class _autogkreport_owner
-{
-public:
+class _autogkreport_owner {
+   public:
     _autogkreport_owner();
     _autogkreport_owner(const _autogkreport_owner &rhs);
-    _autogkreport_owner& operator=(const _autogkreport_owner &rhs);
+    _autogkreport_owner &operator=(const _autogkreport_owner &rhs);
     virtual ~_autogkreport_owner();
-    alglib_impl::autogkreport* c_ptr();
-    alglib_impl::autogkreport* c_ptr() const;
-protected:
+    alglib_impl::autogkreport *c_ptr();
+    alglib_impl::autogkreport *c_ptr() const;
+
+   protected:
     alglib_impl::autogkreport *p_struct;
 };
-class autogkreport : public _autogkreport_owner
-{
-public:
+class autogkreport : public _autogkreport_owner {
+   public:
     autogkreport();
     autogkreport(const autogkreport &rhs);
-    autogkreport& operator=(const autogkreport &rhs);
+    autogkreport &operator=(const autogkreport &rhs);
     virtual ~autogkreport();
     ae_int_t &terminationtype;
     ae_int_t &nfev;
     ae_int_t &nintervals;
-
 };
-
 
 /*************************************************************************
 This structure stores state of the integration algorithm.
@@ -153,31 +145,29 @@ use. You should use ALGLIB functions to work with this class:
 * autogkintegrate() to begin integration
 * autogkresults() to get results
 *************************************************************************/
-class _autogkstate_owner
-{
-public:
+class _autogkstate_owner {
+   public:
     _autogkstate_owner();
     _autogkstate_owner(const _autogkstate_owner &rhs);
-    _autogkstate_owner& operator=(const _autogkstate_owner &rhs);
+    _autogkstate_owner &operator=(const _autogkstate_owner &rhs);
     virtual ~_autogkstate_owner();
-    alglib_impl::autogkstate* c_ptr();
-    alglib_impl::autogkstate* c_ptr() const;
-protected:
+    alglib_impl::autogkstate *c_ptr();
+    alglib_impl::autogkstate *c_ptr() const;
+
+   protected:
     alglib_impl::autogkstate *p_struct;
 };
-class autogkstate : public _autogkstate_owner
-{
-public:
+class autogkstate : public _autogkstate_owner {
+   public:
     autogkstate();
     autogkstate(const autogkstate &rhs);
-    autogkstate& operator=(const autogkstate &rhs);
+    autogkstate &operator=(const autogkstate &rhs);
     virtual ~autogkstate();
     ae_bool &needf;
     double &x;
     double &xminusa;
     double &bminusx;
     double &f;
-
 };
 #endif
 
@@ -218,8 +208,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 2005-2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgeneraterec(const real_1d_array &alpha, const real_1d_array &beta, const double mu0, const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgeneraterec(const real_1d_array &alpha, const real_1d_array &beta,
+                   const double mu0, const ae_int_t n, ae_int_t &info,
+                   real_1d_array &x, real_1d_array &w,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Computation of nodes and weights for a Gauss-Lobatto quadrature formula
@@ -260,8 +252,12 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 2005-2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategausslobattorec(const real_1d_array &alpha, const real_1d_array &beta, const double mu0, const double a, const double b, const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgenerategausslobattorec(const real_1d_array &alpha,
+                               const real_1d_array &beta, const double mu0,
+                               const double a, const double b, const ae_int_t n,
+                               ae_int_t &info, real_1d_array &x,
+                               real_1d_array &w,
+                               const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Computation of nodes and weights for a Gauss-Radau quadrature formula
@@ -302,8 +298,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 2005-2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategaussradaurec(const real_1d_array &alpha, const real_1d_array &beta, const double mu0, const double a, const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgenerategaussradaurec(const real_1d_array &alpha,
+                             const real_1d_array &beta, const double mu0,
+                             const double a, const ae_int_t n, ae_int_t &info,
+                             real_1d_array &x, real_1d_array &w,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns nodes/weights for Gauss-Legendre quadrature on [-1,1] with N
@@ -329,8 +328,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategausslegendre(const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgenerategausslegendre(const ae_int_t n, ae_int_t &info, real_1d_array &x,
+                             real_1d_array &w,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns  nodes/weights  for  Gauss-Jacobi quadrature on [-1,1] with weight
@@ -359,8 +359,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategaussjacobi(const ae_int_t n, const double alpha, const double beta, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgenerategaussjacobi(const ae_int_t n, const double alpha,
+                           const double beta, ae_int_t &info, real_1d_array &x,
+                           real_1d_array &w,
+                           const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns  nodes/weights  for  Gauss-Laguerre  quadrature  on  [0,+inf) with
@@ -388,8 +390,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategausslaguerre(const ae_int_t n, const double alpha, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
-
+void gqgenerategausslaguerre(const ae_int_t n, const double alpha,
+                             ae_int_t &info, real_1d_array &x, real_1d_array &w,
+                             const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns  nodes/weights  for  Gauss-Hermite  quadrature on (-inf,+inf) with
@@ -414,7 +417,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gqgenerategausshermite(const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &w, const xparams _xparams = alglib::xdefault);
+void gqgenerategausshermite(const ae_int_t n, ae_int_t &info, real_1d_array &x,
+                            real_1d_array &w,
+                            const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_GKQ) || !defined(AE_PARTIAL_BUILD)
@@ -464,8 +469,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 08.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gkqgeneraterec(const real_1d_array &alpha, const real_1d_array &beta, const double mu0, const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &wkronrod, real_1d_array &wgauss, const xparams _xparams = alglib::xdefault);
-
+void gkqgeneraterec(const real_1d_array &alpha, const real_1d_array &beta,
+                    const double mu0, const ae_int_t n, ae_int_t &info,
+                    real_1d_array &x, real_1d_array &wkronrod,
+                    real_1d_array &wgauss,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns   Gauss   and   Gauss-Kronrod   nodes/weights  for  Gauss-Legendre
@@ -496,8 +504,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gkqgenerategausslegendre(const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &wkronrod, real_1d_array &wgauss, const xparams _xparams = alglib::xdefault);
-
+void gkqgenerategausslegendre(const ae_int_t n, ae_int_t &info,
+                              real_1d_array &x, real_1d_array &wkronrod,
+                              real_1d_array &wgauss,
+                              const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns   Gauss   and   Gauss-Kronrod   nodes/weights   for   Gauss-Jacobi
@@ -535,8 +545,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gkqgenerategaussjacobi(const ae_int_t n, const double alpha, const double beta, ae_int_t &info, real_1d_array &x, real_1d_array &wkronrod, real_1d_array &wgauss, const xparams _xparams = alglib::xdefault);
-
+void gkqgenerategaussjacobi(const ae_int_t n, const double alpha,
+                            const double beta, ae_int_t &info, real_1d_array &x,
+                            real_1d_array &wkronrod, real_1d_array &wgauss,
+                            const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns Gauss and Gauss-Kronrod nodes for quadrature with N points.
@@ -564,8 +576,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gkqlegendrecalc(const ae_int_t n, ae_int_t &info, real_1d_array &x, real_1d_array &wkronrod, real_1d_array &wgauss, const xparams _xparams = alglib::xdefault);
-
+void gkqlegendrecalc(const ae_int_t n, ae_int_t &info, real_1d_array &x,
+                     real_1d_array &wkronrod, real_1d_array &wgauss,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Returns Gauss and Gauss-Kronrod nodes for quadrature with N  points  using
@@ -589,7 +602,9 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 12.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void gkqlegendretbl(const ae_int_t n, real_1d_array &x, real_1d_array &wkronrod, real_1d_array &wgauss, double &eps, const xparams _xparams = alglib::xdefault);
+void gkqlegendretbl(const ae_int_t n, real_1d_array &x, real_1d_array &wkronrod,
+                    real_1d_array &wgauss, double &eps,
+                    const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_AUTOGK) || !defined(AE_PARTIAL_BUILD)
@@ -619,8 +634,8 @@ SEE ALSO
   -- ALGLIB --
      Copyright 06.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void autogksmooth(const double a, const double b, autogkstate &state, const xparams _xparams = alglib::xdefault);
-
+void autogksmooth(const double a, const double b, autogkstate &state,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Integration of a smooth function F(x) on a finite interval [a,b].
@@ -645,8 +660,9 @@ SEE ALSO
   -- ALGLIB --
      Copyright 06.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void autogksmoothw(const double a, const double b, const double xwidth, autogkstate &state, const xparams _xparams = alglib::xdefault);
-
+void autogksmoothw(const double a, const double b, const double xwidth,
+                   autogkstate &state,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Integration on a finite interval [A,B].
@@ -680,16 +696,17 @@ SEE ALSO
   -- ALGLIB --
      Copyright 06.05.2009 by Bochkanov Sergey
 *************************************************************************/
-void autogksingular(const double a, const double b, const double alpha, const double beta, autogkstate &state, const xparams _xparams = alglib::xdefault);
-
+void autogksingular(const double a, const double b, const double alpha,
+                    const double beta, autogkstate &state,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function provides reverse communication interface
 Reverse communication interface is not documented or recommended to use.
 See below for functions which provide better documented API
 *************************************************************************/
-bool autogkiteration(const autogkstate &state, const xparams _xparams = alglib::xdefault);
-
+bool autogkiteration(const autogkstate &state,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function is used to launcn iterations of the 1-dimensional integrator
@@ -704,9 +721,10 @@ It accepts following parameters:
 
 *************************************************************************/
 void autogkintegrate(autogkstate &state,
-    void (*func)(double x, double xminusa, double bminusx, double &y, void *ptr),
-    void *ptr = NULL, const xparams _xparams = alglib::xdefault);
-
+                     void (*func)(double x, double xminusa, double bminusx,
+                                  double &y, void *ptr),
+                     void *ptr = NULL,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Adaptive integration results
@@ -723,141 +741,100 @@ Output parameters:
   -- ALGLIB --
      Copyright 14.11.2007 by Bochkanov Sergey
 *************************************************************************/
-void autogkresults(const autogkstate &state, double &v, autogkreport &rep, const xparams _xparams = alglib::xdefault);
+void autogkresults(const autogkstate &state, double &v, autogkreport &rep,
+                   const xparams _xparams = alglib::xdefault);
 #endif
-}
+}  // namespace alglib
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_GQ) || !defined(AE_PARTIAL_BUILD)
-void gqgeneraterec(/* Real    */ ae_vector* alpha,
-     /* Real    */ ae_vector* beta,
-     double mu0,
-     ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategausslobattorec(/* Real    */ ae_vector* alpha,
-     /* Real    */ ae_vector* beta,
-     double mu0,
-     double a,
-     double b,
-     ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategaussradaurec(/* Real    */ ae_vector* alpha,
-     /* Real    */ ae_vector* beta,
-     double mu0,
-     double a,
-     ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategausslegendre(ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategaussjacobi(ae_int_t n,
-     double alpha,
-     double beta,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategausslaguerre(ae_int_t n,
-     double alpha,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
-void gqgenerategausshermite(ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* w,
-     ae_state *_state);
+void gqgeneraterec(/* Real    */ ae_vector *alpha,
+                   /* Real    */ ae_vector *beta, double mu0, ae_int_t n,
+                   ae_int_t *info,
+                   /* Real    */ ae_vector *x,
+                   /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategausslobattorec(/* Real    */ ae_vector *alpha,
+                               /* Real    */ ae_vector *beta, double mu0,
+                               double a, double b, ae_int_t n, ae_int_t *info,
+                               /* Real    */ ae_vector *x,
+                               /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategaussradaurec(/* Real    */ ae_vector *alpha,
+                             /* Real    */ ae_vector *beta, double mu0,
+                             double a, ae_int_t n, ae_int_t *info,
+                             /* Real    */ ae_vector *x,
+                             /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategausslegendre(ae_int_t n, ae_int_t *info,
+                             /* Real    */ ae_vector *x,
+                             /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategaussjacobi(ae_int_t n, double alpha, double beta,
+                           ae_int_t *info,
+                           /* Real    */ ae_vector *x,
+                           /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategausslaguerre(ae_int_t n, double alpha, ae_int_t *info,
+                             /* Real    */ ae_vector *x,
+                             /* Real    */ ae_vector *w, ae_state *_state);
+void gqgenerategausshermite(ae_int_t n, ae_int_t *info,
+                            /* Real    */ ae_vector *x,
+                            /* Real    */ ae_vector *w, ae_state *_state);
 #endif
 #if defined(AE_COMPILE_GKQ) || !defined(AE_PARTIAL_BUILD)
-void gkqgeneraterec(/* Real    */ ae_vector* alpha,
-     /* Real    */ ae_vector* beta,
-     double mu0,
-     ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* wkronrod,
-     /* Real    */ ae_vector* wgauss,
-     ae_state *_state);
-void gkqgenerategausslegendre(ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* wkronrod,
-     /* Real    */ ae_vector* wgauss,
-     ae_state *_state);
-void gkqgenerategaussjacobi(ae_int_t n,
-     double alpha,
-     double beta,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* wkronrod,
-     /* Real    */ ae_vector* wgauss,
-     ae_state *_state);
-void gkqlegendrecalc(ae_int_t n,
-     ae_int_t* info,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* wkronrod,
-     /* Real    */ ae_vector* wgauss,
-     ae_state *_state);
+void gkqgeneraterec(/* Real    */ ae_vector *alpha,
+                    /* Real    */ ae_vector *beta, double mu0, ae_int_t n,
+                    ae_int_t *info,
+                    /* Real    */ ae_vector *x,
+                    /* Real    */ ae_vector *wkronrod,
+                    /* Real    */ ae_vector *wgauss, ae_state *_state);
+void gkqgenerategausslegendre(ae_int_t n, ae_int_t *info,
+                              /* Real    */ ae_vector *x,
+                              /* Real    */ ae_vector *wkronrod,
+                              /* Real    */ ae_vector *wgauss,
+                              ae_state *_state);
+void gkqgenerategaussjacobi(ae_int_t n, double alpha, double beta,
+                            ae_int_t *info,
+                            /* Real    */ ae_vector *x,
+                            /* Real    */ ae_vector *wkronrod,
+                            /* Real    */ ae_vector *wgauss, ae_state *_state);
+void gkqlegendrecalc(ae_int_t n, ae_int_t *info,
+                     /* Real    */ ae_vector *x,
+                     /* Real    */ ae_vector *wkronrod,
+                     /* Real    */ ae_vector *wgauss, ae_state *_state);
 void gkqlegendretbl(ae_int_t n,
-     /* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* wkronrod,
-     /* Real    */ ae_vector* wgauss,
-     double* eps,
-     ae_state *_state);
+                    /* Real    */ ae_vector *x,
+                    /* Real    */ ae_vector *wkronrod,
+                    /* Real    */ ae_vector *wgauss, double *eps,
+                    ae_state *_state);
 #endif
 #if defined(AE_COMPILE_AUTOGK) || !defined(AE_PARTIAL_BUILD)
-void autogksmooth(double a,
-     double b,
-     autogkstate* state,
-     ae_state *_state);
-void autogksmoothw(double a,
-     double b,
-     double xwidth,
-     autogkstate* state,
-     ae_state *_state);
-void autogksingular(double a,
-     double b,
-     double alpha,
-     double beta,
-     autogkstate* state,
-     ae_state *_state);
-ae_bool autogkiteration(autogkstate* state, ae_state *_state);
-void autogkresults(autogkstate* state,
-     double* v,
-     autogkreport* rep,
-     ae_state *_state);
-void _autogkreport_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _autogkreport_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _autogkreport_clear(void* _p);
-void _autogkreport_destroy(void* _p);
-void _autogkinternalstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _autogkinternalstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _autogkinternalstate_clear(void* _p);
-void _autogkinternalstate_destroy(void* _p);
-void _autogkstate_init(void* _p, ae_state *_state, ae_bool make_automatic);
-void _autogkstate_init_copy(void* _dst, void* _src, ae_state *_state, ae_bool make_automatic);
-void _autogkstate_clear(void* _p);
-void _autogkstate_destroy(void* _p);
+void autogksmooth(double a, double b, autogkstate *state, ae_state *_state);
+void autogksmoothw(double a, double b, double xwidth, autogkstate *state,
+                   ae_state *_state);
+void autogksingular(double a, double b, double alpha, double beta,
+                    autogkstate *state, ae_state *_state);
+ae_bool autogkiteration(autogkstate *state, ae_state *_state);
+void autogkresults(autogkstate *state, double *v, autogkreport *rep,
+                   ae_state *_state);
+void _autogkreport_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _autogkreport_init_copy(void *_dst, void *_src, ae_state *_state,
+                             ae_bool make_automatic);
+void _autogkreport_clear(void *_p);
+void _autogkreport_destroy(void *_p);
+void _autogkinternalstate_init(void *_p, ae_state *_state,
+                               ae_bool make_automatic);
+void _autogkinternalstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                                    ae_bool make_automatic);
+void _autogkinternalstate_clear(void *_p);
+void _autogkinternalstate_destroy(void *_p);
+void _autogkstate_init(void *_p, ae_state *_state, ae_bool make_automatic);
+void _autogkstate_init_copy(void *_dst, void *_src, ae_state *_state,
+                            ae_bool make_automatic);
+void _autogkstate_clear(void *_p);
+void _autogkstate_destroy(void *_p);
 #endif
 
-}
+}  // namespace alglib_impl
 #endif
-

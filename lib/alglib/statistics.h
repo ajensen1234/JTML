@@ -5,7 +5,7 @@ Copyright (c) Sergey Bochkanov (ALGLIB project).
 >>> SOURCE LICENSE >>>
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation (www.fsf.org); either version 2 of the 
+the Free Software Foundation (www.fsf.org); either version 2 of the
 License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -19,19 +19,18 @@ http://www.fsf.org/licensing/licenses
 *************************************************************************/
 #ifndef _statistics_pkg_h
 #define _statistics_pkg_h
-#include "ap.h"
 #include "alglibinternal.h"
+#include "alglibmisc.h"
+#include "ap.h"
 #include "linalg.h"
 #include "specialfunctions.h"
-#include "alglibmisc.h"
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (DATATYPES)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_BASESTAT) || !defined(AE_PARTIAL_BUILD)
 #endif
 #if defined(AE_COMPILE_CORRELATIONTESTS) || !defined(AE_PARTIAL_BUILD)
@@ -49,15 +48,14 @@ namespace alglib_impl
 #if defined(AE_COMPILE_STUDENTTTESTS) || !defined(AE_PARTIAL_BUILD)
 #endif
 
-}
+}  // namespace alglib_impl
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS C++ INTERFACE
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib
-{
+namespace alglib {
 
 #if defined(AE_COMPILE_BASESTAT) || !defined(AE_PARTIAL_BUILD)
 
@@ -112,9 +110,12 @@ NOTE: variance is calculated by dividing sum of squares by N-1, not N.
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void samplemoments(const real_1d_array &x, const ae_int_t n, double &mean, double &variance, double &skewness, double &kurtosis, const xparams _xparams = alglib::xdefault);
-void samplemoments(const real_1d_array &x, double &mean, double &variance, double &skewness, double &kurtosis, const xparams _xparams = alglib::xdefault);
-
+void samplemoments(const real_1d_array &x, const ae_int_t n, double &mean,
+                   double &variance, double &skewness, double &kurtosis,
+                   const xparams _xparams = alglib::xdefault);
+void samplemoments(const real_1d_array &x, double &mean, double &variance,
+                   double &skewness, double &kurtosis,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Calculation of the mean.
@@ -134,9 +135,10 @@ and stored at 'Mean' variable.
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-double samplemean(const real_1d_array &x, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double samplemean(const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+double samplemean(const real_1d_array &x, const ae_int_t n,
+                  const xparams _xparams = alglib::xdefault);
+double samplemean(const real_1d_array &x,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Calculation of the variance.
@@ -156,9 +158,10 @@ and stored at 'Variance' variable.
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-double samplevariance(const real_1d_array &x, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double samplevariance(const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+double samplevariance(const real_1d_array &x, const ae_int_t n,
+                      const xparams _xparams = alglib::xdefault);
+double samplevariance(const real_1d_array &x,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Calculation of the skewness.
@@ -178,9 +181,10 @@ and stored at 'Skewness' variable.
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-double sampleskewness(const real_1d_array &x, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double sampleskewness(const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+double sampleskewness(const real_1d_array &x, const ae_int_t n,
+                      const xparams _xparams = alglib::xdefault);
+double sampleskewness(const real_1d_array &x,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Calculation of the kurtosis.
@@ -200,9 +204,10 @@ and stored at 'Kurtosis' variable.
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-double samplekurtosis(const real_1d_array &x, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double samplekurtosis(const real_1d_array &x, const xparams _xparams = alglib::xdefault);
-
+double samplekurtosis(const real_1d_array &x, const ae_int_t n,
+                      const xparams _xparams = alglib::xdefault);
+double samplekurtosis(const real_1d_array &x,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 ADev
@@ -219,9 +224,10 @@ Output parameters:
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void sampleadev(const real_1d_array &x, const ae_int_t n, double &adev, const xparams _xparams = alglib::xdefault);
-void sampleadev(const real_1d_array &x, double &adev, const xparams _xparams = alglib::xdefault);
-
+void sampleadev(const real_1d_array &x, const ae_int_t n, double &adev,
+                const xparams _xparams = alglib::xdefault);
+void sampleadev(const real_1d_array &x, double &adev,
+                const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Median calculation.
@@ -238,9 +244,10 @@ Output parameters:
   -- ALGLIB --
      Copyright 06.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void samplemedian(const real_1d_array &x, const ae_int_t n, double &median, const xparams _xparams = alglib::xdefault);
-void samplemedian(const real_1d_array &x, double &median, const xparams _xparams = alglib::xdefault);
-
+void samplemedian(const real_1d_array &x, const ae_int_t n, double &median,
+                  const xparams _xparams = alglib::xdefault);
+void samplemedian(const real_1d_array &x, double &median,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Percentile calculation.
@@ -258,9 +265,10 @@ Output parameters:
   -- ALGLIB --
      Copyright 01.03.2008 by Bochkanov Sergey
 *************************************************************************/
-void samplepercentile(const real_1d_array &x, const ae_int_t n, const double p, double &v, const xparams _xparams = alglib::xdefault);
-void samplepercentile(const real_1d_array &x, const double p, double &v, const xparams _xparams = alglib::xdefault);
-
+void samplepercentile(const real_1d_array &x, const ae_int_t n, const double p,
+                      double &v, const xparams _xparams = alglib::xdefault);
+void samplepercentile(const real_1d_array &x, const double p, double &v,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 2-sample covariance
@@ -278,9 +286,10 @@ Result:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-double cov2(const real_1d_array &x, const real_1d_array &y, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double cov2(const real_1d_array &x, const real_1d_array &y, const xparams _xparams = alglib::xdefault);
-
+double cov2(const real_1d_array &x, const real_1d_array &y, const ae_int_t n,
+            const xparams _xparams = alglib::xdefault);
+double cov2(const real_1d_array &x, const real_1d_array &y,
+            const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Pearson product-moment correlation coefficient
@@ -299,9 +308,11 @@ Result:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-double pearsoncorr2(const real_1d_array &x, const real_1d_array &y, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double pearsoncorr2(const real_1d_array &x, const real_1d_array &y, const xparams _xparams = alglib::xdefault);
-
+double pearsoncorr2(const real_1d_array &x, const real_1d_array &y,
+                    const ae_int_t n,
+                    const xparams _xparams = alglib::xdefault);
+double pearsoncorr2(const real_1d_array &x, const real_1d_array &y,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Spearman's rank correlation coefficient
@@ -320,9 +331,11 @@ Result:
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-double spearmancorr2(const real_1d_array &x, const real_1d_array &y, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-double spearmancorr2(const real_1d_array &x, const real_1d_array &y, const xparams _xparams = alglib::xdefault);
-
+double spearmancorr2(const real_1d_array &x, const real_1d_array &y,
+                     const ae_int_t n,
+                     const xparams _xparams = alglib::xdefault);
+double spearmancorr2(const real_1d_array &x, const real_1d_array &y,
+                     const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Covariance matrix
@@ -357,9 +370,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void covm(const real_2d_array &x, const ae_int_t n, const ae_int_t m, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void covm(const real_2d_array &x, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void covm(const real_2d_array &x, const ae_int_t n, const ae_int_t m,
+          real_2d_array &c, const xparams _xparams = alglib::xdefault);
+void covm(const real_2d_array &x, real_2d_array &c,
+          const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Pearson product-moment correlation matrix
@@ -394,9 +408,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void pearsoncorrm(const real_2d_array &x, const ae_int_t n, const ae_int_t m, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void pearsoncorrm(const real_2d_array &x, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void pearsoncorrm(const real_2d_array &x, const ae_int_t n, const ae_int_t m,
+                  real_2d_array &c, const xparams _xparams = alglib::xdefault);
+void pearsoncorrm(const real_2d_array &x, real_2d_array &c,
+                  const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Spearman's rank correlation matrix
@@ -431,9 +446,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void spearmancorrm(const real_2d_array &x, const ae_int_t n, const ae_int_t m, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void spearmancorrm(const real_2d_array &x, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void spearmancorrm(const real_2d_array &x, const ae_int_t n, const ae_int_t m,
+                   real_2d_array &c, const xparams _xparams = alglib::xdefault);
+void spearmancorrm(const real_2d_array &x, real_2d_array &c,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Cross-covariance matrix
@@ -474,9 +490,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void covm2(const real_2d_array &x, const real_2d_array &y, const ae_int_t n, const ae_int_t m1, const ae_int_t m2, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void covm2(const real_2d_array &x, const real_2d_array &y, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void covm2(const real_2d_array &x, const real_2d_array &y, const ae_int_t n,
+           const ae_int_t m1, const ae_int_t m2, real_2d_array &c,
+           const xparams _xparams = alglib::xdefault);
+void covm2(const real_2d_array &x, const real_2d_array &y, real_2d_array &c,
+           const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Pearson product-moment cross-correlation matrix
@@ -517,9 +535,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void pearsoncorrm2(const real_2d_array &x, const real_2d_array &y, const ae_int_t n, const ae_int_t m1, const ae_int_t m2, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void pearsoncorrm2(const real_2d_array &x, const real_2d_array &y, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void pearsoncorrm2(const real_2d_array &x, const real_2d_array &y,
+                   const ae_int_t n, const ae_int_t m1, const ae_int_t m2,
+                   real_2d_array &c, const xparams _xparams = alglib::xdefault);
+void pearsoncorrm2(const real_2d_array &x, const real_2d_array &y,
+                   real_2d_array &c, const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Spearman's rank cross-correlation matrix
@@ -560,9 +580,13 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 28.10.2010 by Bochkanov Sergey
 *************************************************************************/
-void spearmancorrm2(const real_2d_array &x, const real_2d_array &y, const ae_int_t n, const ae_int_t m1, const ae_int_t m2, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-void spearmancorrm2(const real_2d_array &x, const real_2d_array &y, real_2d_array &c, const xparams _xparams = alglib::xdefault);
-
+void spearmancorrm2(const real_2d_array &x, const real_2d_array &y,
+                    const ae_int_t n, const ae_int_t m1, const ae_int_t m2,
+                    real_2d_array &c,
+                    const xparams _xparams = alglib::xdefault);
+void spearmancorrm2(const real_2d_array &x, const real_2d_array &y,
+                    real_2d_array &c,
+                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 This function replaces data in XY by their ranks:
@@ -595,9 +619,10 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.04.2013 by Bochkanov Sergey
 *************************************************************************/
-void rankdata(const real_2d_array &xy, const ae_int_t npoints, const ae_int_t nfeatures, const xparams _xparams = alglib::xdefault);
+void rankdata(const real_2d_array &xy, const ae_int_t npoints,
+              const ae_int_t nfeatures,
+              const xparams _xparams = alglib::xdefault);
 void rankdata(real_2d_array &xy, const xparams _xparams = alglib::xdefault);
-
 
 /*************************************************************************
 This function replaces data in XY by their CENTERED ranks:
@@ -632,9 +657,11 @@ OUTPUT PARAMETERS:
   -- ALGLIB --
      Copyright 18.04.2013 by Bochkanov Sergey
 *************************************************************************/
-void rankdatacentered(const real_2d_array &xy, const ae_int_t npoints, const ae_int_t nfeatures, const xparams _xparams = alglib::xdefault);
-void rankdatacentered(real_2d_array &xy, const xparams _xparams = alglib::xdefault);
-
+void rankdatacentered(const real_2d_array &xy, const ae_int_t npoints,
+                      const ae_int_t nfeatures,
+                      const xparams _xparams = alglib::xdefault);
+void rankdatacentered(real_2d_array &xy,
+                      const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Obsolete function, we recommend to use PearsonCorr2().
@@ -642,8 +669,9 @@ Obsolete function, we recommend to use PearsonCorr2().
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-double pearsoncorrelation(const real_1d_array &x, const real_1d_array &y, const ae_int_t n, const xparams _xparams = alglib::xdefault);
-
+double pearsoncorrelation(const real_1d_array &x, const real_1d_array &y,
+                          const ae_int_t n,
+                          const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Obsolete function, we recommend to use SpearmanCorr2().
@@ -651,7 +679,9 @@ Obsolete function, we recommend to use SpearmanCorr2().
     -- ALGLIB --
     Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-double spearmanrankcorrelation(const real_1d_array &x, const real_1d_array &y, const ae_int_t n, const xparams _xparams = alglib::xdefault);
+double spearmanrankcorrelation(const real_1d_array &x, const real_1d_array &y,
+                               const ae_int_t n,
+                               const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_CORRELATIONTESTS) || !defined(AE_PARTIAL_BUILD)
@@ -691,8 +721,10 @@ Output parameters:
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-void pearsoncorrelationsignificance(const double r, const ae_int_t n, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
-
+void pearsoncorrelationsignificance(const double r, const ae_int_t n,
+                                    double &bothtails, double &lefttail,
+                                    double &righttail,
+                                    const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Spearman's rank correlation coefficient significance test
@@ -732,7 +764,9 @@ Output parameters:
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-void spearmanrankcorrelationsignificance(const double r, const ae_int_t n, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void spearmanrankcorrelationsignificance(
+    const double r, const ae_int_t n, double &bothtails, double &lefttail,
+    double &righttail, const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_JARQUEBERA) || !defined(AE_PARTIAL_BUILD)
@@ -766,7 +800,8 @@ from table values.
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-void jarqueberatest(const real_1d_array &x, const ae_int_t n, double &p, const xparams _xparams = alglib::xdefault);
+void jarqueberatest(const real_1d_array &x, const ae_int_t n, double &p,
+                    const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_VARIANCETESTS) || !defined(AE_PARTIAL_BUILD)
@@ -806,8 +841,9 @@ Output parameters:
   -- ALGLIB --
      Copyright 19.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void ftest(const real_1d_array &x, const ae_int_t n, const real_1d_array &y, const ae_int_t m, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
-
+void ftest(const real_1d_array &x, const ae_int_t n, const real_1d_array &y,
+           const ae_int_t m, double &bothtails, double &lefttail,
+           double &righttail, const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 One-sample chi-square test
@@ -843,7 +879,10 @@ Output parameters:
   -- ALGLIB --
      Copyright 19.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void onesamplevariancetest(const real_1d_array &x, const ae_int_t n, const double variance, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void onesamplevariancetest(const real_1d_array &x, const ae_int_t n,
+                           const double variance, double &bothtails,
+                           double &lefttail, double &righttail,
+                           const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_WSR) || !defined(AE_PARTIAL_BUILD)
@@ -896,7 +935,10 @@ the significance level outlies this interval, the test returns 0.0001.
   -- ALGLIB --
      Copyright 08.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void wilcoxonsignedranktest(const real_1d_array &x, const ae_int_t n, const double e, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void wilcoxonsignedranktest(const real_1d_array &x, const ae_int_t n,
+                            const double e, double &bothtails, double &lefttail,
+                            double &righttail,
+                            const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_MANNWHITNEYU) || !defined(AE_PARTIAL_BUILD)
@@ -968,7 +1010,10 @@ NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
   -- ALGLIB --
      Copyright 09.04.2007 by Bochkanov Sergey
 *************************************************************************/
-void mannwhitneyutest(const real_1d_array &x, const ae_int_t n, const real_1d_array &y, const ae_int_t m, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void mannwhitneyutest(const real_1d_array &x, const ae_int_t n,
+                      const real_1d_array &y, const ae_int_t m,
+                      double &bothtails, double &lefttail, double &righttail,
+                      const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_STEST) || !defined(AE_PARTIAL_BUILD)
@@ -1012,7 +1057,10 @@ approximation is used, so significance levels have about 15 exact digits.
   -- ALGLIB --
      Copyright 08.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void onesamplesigntest(const real_1d_array &x, const ae_int_t n, const double median, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void onesamplesigntest(const real_1d_array &x, const ae_int_t n,
+                       const double median, double &bothtails, double &lefttail,
+                       double &righttail,
+                       const xparams _xparams = alglib::xdefault);
 #endif
 
 #if defined(AE_COMPILE_STUDENTTTESTS) || !defined(AE_PARTIAL_BUILD)
@@ -1058,8 +1106,9 @@ NOTE: this function correctly handles degenerate cases:
   -- ALGLIB --
      Copyright 08.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void studentttest1(const real_1d_array &x, const ae_int_t n, const double mean, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
-
+void studentttest1(const real_1d_array &x, const ae_int_t n, const double mean,
+                   double &bothtails, double &lefttail, double &righttail,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Two-sample pooled test
@@ -1102,8 +1151,10 @@ NOTE: this function correctly handles degenerate cases:
   -- ALGLIB --
      Copyright 18.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void studentttest2(const real_1d_array &x, const ae_int_t n, const real_1d_array &y, const ae_int_t m, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
-
+void studentttest2(const real_1d_array &x, const ae_int_t n,
+                   const real_1d_array &y, const ae_int_t m, double &bothtails,
+                   double &lefttail, double &righttail,
+                   const xparams _xparams = alglib::xdefault);
 
 /*************************************************************************
 Two-sample unpooled test
@@ -1148,212 +1199,120 @@ NOTE: this function correctly handles degenerate cases:
   -- ALGLIB --
      Copyright 18.09.2006 by Bochkanov Sergey
 *************************************************************************/
-void unequalvariancettest(const real_1d_array &x, const ae_int_t n, const real_1d_array &y, const ae_int_t m, double &bothtails, double &lefttail, double &righttail, const xparams _xparams = alglib::xdefault);
+void unequalvariancettest(const real_1d_array &x, const ae_int_t n,
+                          const real_1d_array &y, const ae_int_t m,
+                          double &bothtails, double &lefttail,
+                          double &righttail,
+                          const xparams _xparams = alglib::xdefault);
 #endif
-}
+}  // namespace alglib
 
 /////////////////////////////////////////////////////////////////////////
 //
 // THIS SECTION CONTAINS COMPUTATIONAL CORE DECLARATIONS (FUNCTIONS)
 //
 /////////////////////////////////////////////////////////////////////////
-namespace alglib_impl
-{
+namespace alglib_impl {
 #if defined(AE_COMPILE_BASESTAT) || !defined(AE_PARTIAL_BUILD)
-void samplemoments(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double* mean,
-     double* variance,
-     double* skewness,
-     double* kurtosis,
-     ae_state *_state);
-double samplemean(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     ae_state *_state);
-double samplevariance(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     ae_state *_state);
-double sampleskewness(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     ae_state *_state);
-double samplekurtosis(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     ae_state *_state);
-void sampleadev(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double* adev,
-     ae_state *_state);
-void samplemedian(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double* median,
-     ae_state *_state);
-void samplepercentile(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double p,
-     double* v,
-     ae_state *_state);
-double cov2(/* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* y,
-     ae_int_t n,
-     ae_state *_state);
-double pearsoncorr2(/* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* y,
-     ae_int_t n,
-     ae_state *_state);
-double spearmancorr2(/* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* y,
-     ae_int_t n,
-     ae_state *_state);
-void covm(/* Real    */ ae_matrix* x,
-     ae_int_t n,
-     ae_int_t m,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void pearsoncorrm(/* Real    */ ae_matrix* x,
-     ae_int_t n,
-     ae_int_t m,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void spearmancorrm(/* Real    */ ae_matrix* x,
-     ae_int_t n,
-     ae_int_t m,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void covm2(/* Real    */ ae_matrix* x,
-     /* Real    */ ae_matrix* y,
-     ae_int_t n,
-     ae_int_t m1,
-     ae_int_t m2,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void pearsoncorrm2(/* Real    */ ae_matrix* x,
-     /* Real    */ ae_matrix* y,
-     ae_int_t n,
-     ae_int_t m1,
-     ae_int_t m2,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void spearmancorrm2(/* Real    */ ae_matrix* x,
-     /* Real    */ ae_matrix* y,
-     ae_int_t n,
-     ae_int_t m1,
-     ae_int_t m2,
-     /* Real    */ ae_matrix* c,
-     ae_state *_state);
-void rankdata(/* Real    */ ae_matrix* xy,
-     ae_int_t npoints,
-     ae_int_t nfeatures,
-     ae_state *_state);
-ae_bool _trypexec_rankdata(/* Real    */ ae_matrix* xy,
-    ae_int_t npoints,
-    ae_int_t nfeatures, ae_state *_state);
-void rankdatacentered(/* Real    */ ae_matrix* xy,
-     ae_int_t npoints,
-     ae_int_t nfeatures,
-     ae_state *_state);
-ae_bool _trypexec_rankdatacentered(/* Real    */ ae_matrix* xy,
-    ae_int_t npoints,
-    ae_int_t nfeatures, ae_state *_state);
-double pearsoncorrelation(/* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* y,
-     ae_int_t n,
-     ae_state *_state);
-double spearmanrankcorrelation(/* Real    */ ae_vector* x,
-     /* Real    */ ae_vector* y,
-     ae_int_t n,
-     ae_state *_state);
+void samplemoments(/* Real    */ ae_vector *x, ae_int_t n, double *mean,
+                   double *variance, double *skewness, double *kurtosis,
+                   ae_state *_state);
+double samplemean(/* Real    */ ae_vector *x, ae_int_t n, ae_state *_state);
+double samplevariance(/* Real    */ ae_vector *x, ae_int_t n, ae_state *_state);
+double sampleskewness(/* Real    */ ae_vector *x, ae_int_t n, ae_state *_state);
+double samplekurtosis(/* Real    */ ae_vector *x, ae_int_t n, ae_state *_state);
+void sampleadev(/* Real    */ ae_vector *x, ae_int_t n, double *adev,
+                ae_state *_state);
+void samplemedian(/* Real    */ ae_vector *x, ae_int_t n, double *median,
+                  ae_state *_state);
+void samplepercentile(/* Real    */ ae_vector *x, ae_int_t n, double p,
+                      double *v, ae_state *_state);
+double cov2(/* Real    */ ae_vector *x,
+            /* Real    */ ae_vector *y, ae_int_t n, ae_state *_state);
+double pearsoncorr2(/* Real    */ ae_vector *x,
+                    /* Real    */ ae_vector *y, ae_int_t n, ae_state *_state);
+double spearmancorr2(/* Real    */ ae_vector *x,
+                     /* Real    */ ae_vector *y, ae_int_t n, ae_state *_state);
+void covm(/* Real    */ ae_matrix *x, ae_int_t n, ae_int_t m,
+          /* Real    */ ae_matrix *c, ae_state *_state);
+void pearsoncorrm(/* Real    */ ae_matrix *x, ae_int_t n, ae_int_t m,
+                  /* Real    */ ae_matrix *c, ae_state *_state);
+void spearmancorrm(/* Real    */ ae_matrix *x, ae_int_t n, ae_int_t m,
+                   /* Real    */ ae_matrix *c, ae_state *_state);
+void covm2(/* Real    */ ae_matrix *x,
+           /* Real    */ ae_matrix *y, ae_int_t n, ae_int_t m1, ae_int_t m2,
+           /* Real    */ ae_matrix *c, ae_state *_state);
+void pearsoncorrm2(/* Real    */ ae_matrix *x,
+                   /* Real    */ ae_matrix *y, ae_int_t n, ae_int_t m1,
+                   ae_int_t m2,
+                   /* Real    */ ae_matrix *c, ae_state *_state);
+void spearmancorrm2(/* Real    */ ae_matrix *x,
+                    /* Real    */ ae_matrix *y, ae_int_t n, ae_int_t m1,
+                    ae_int_t m2,
+                    /* Real    */ ae_matrix *c, ae_state *_state);
+void rankdata(/* Real    */ ae_matrix *xy, ae_int_t npoints, ae_int_t nfeatures,
+              ae_state *_state);
+ae_bool _trypexec_rankdata(/* Real    */ ae_matrix *xy, ae_int_t npoints,
+                           ae_int_t nfeatures, ae_state *_state);
+void rankdatacentered(/* Real    */ ae_matrix *xy, ae_int_t npoints,
+                      ae_int_t nfeatures, ae_state *_state);
+ae_bool _trypexec_rankdatacentered(/* Real    */ ae_matrix *xy,
+                                   ae_int_t npoints, ae_int_t nfeatures,
+                                   ae_state *_state);
+double pearsoncorrelation(/* Real    */ ae_vector *x,
+                          /* Real    */ ae_vector *y, ae_int_t n,
+                          ae_state *_state);
+double spearmanrankcorrelation(/* Real    */ ae_vector *x,
+                               /* Real    */ ae_vector *y, ae_int_t n,
+                               ae_state *_state);
 #endif
 #if defined(AE_COMPILE_CORRELATIONTESTS) || !defined(AE_PARTIAL_BUILD)
-void pearsoncorrelationsignificance(double r,
-     ae_int_t n,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
-void spearmanrankcorrelationsignificance(double r,
-     ae_int_t n,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void pearsoncorrelationsignificance(double r, ae_int_t n, double *bothtails,
+                                    double *lefttail, double *righttail,
+                                    ae_state *_state);
+void spearmanrankcorrelationsignificance(double r, ae_int_t n,
+                                         double *bothtails, double *lefttail,
+                                         double *righttail, ae_state *_state);
 #endif
 #if defined(AE_COMPILE_JARQUEBERA) || !defined(AE_PARTIAL_BUILD)
-void jarqueberatest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double* p,
-     ae_state *_state);
+void jarqueberatest(/* Real    */ ae_vector *x, ae_int_t n, double *p,
+                    ae_state *_state);
 #endif
 #if defined(AE_COMPILE_VARIANCETESTS) || !defined(AE_PARTIAL_BUILD)
-void ftest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     /* Real    */ ae_vector* y,
-     ae_int_t m,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
-void onesamplevariancetest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double variance,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void ftest(/* Real    */ ae_vector *x, ae_int_t n,
+           /* Real    */ ae_vector *y, ae_int_t m, double *bothtails,
+           double *lefttail, double *righttail, ae_state *_state);
+void onesamplevariancetest(/* Real    */ ae_vector *x, ae_int_t n,
+                           double variance, double *bothtails, double *lefttail,
+                           double *righttail, ae_state *_state);
 #endif
 #if defined(AE_COMPILE_WSR) || !defined(AE_PARTIAL_BUILD)
-void wilcoxonsignedranktest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double e,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void wilcoxonsignedranktest(/* Real    */ ae_vector *x, ae_int_t n, double e,
+                            double *bothtails, double *lefttail,
+                            double *righttail, ae_state *_state);
 #endif
 #if defined(AE_COMPILE_MANNWHITNEYU) || !defined(AE_PARTIAL_BUILD)
-void mannwhitneyutest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     /* Real    */ ae_vector* y,
-     ae_int_t m,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void mannwhitneyutest(/* Real    */ ae_vector *x, ae_int_t n,
+                      /* Real    */ ae_vector *y, ae_int_t m, double *bothtails,
+                      double *lefttail, double *righttail, ae_state *_state);
 #endif
 #if defined(AE_COMPILE_STEST) || !defined(AE_PARTIAL_BUILD)
-void onesamplesigntest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double median,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void onesamplesigntest(/* Real    */ ae_vector *x, ae_int_t n, double median,
+                       double *bothtails, double *lefttail, double *righttail,
+                       ae_state *_state);
 #endif
 #if defined(AE_COMPILE_STUDENTTTESTS) || !defined(AE_PARTIAL_BUILD)
-void studentttest1(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     double mean,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
-void studentttest2(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     /* Real    */ ae_vector* y,
-     ae_int_t m,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
-void unequalvariancettest(/* Real    */ ae_vector* x,
-     ae_int_t n,
-     /* Real    */ ae_vector* y,
-     ae_int_t m,
-     double* bothtails,
-     double* lefttail,
-     double* righttail,
-     ae_state *_state);
+void studentttest1(/* Real    */ ae_vector *x, ae_int_t n, double mean,
+                   double *bothtails, double *lefttail, double *righttail,
+                   ae_state *_state);
+void studentttest2(/* Real    */ ae_vector *x, ae_int_t n,
+                   /* Real    */ ae_vector *y, ae_int_t m, double *bothtails,
+                   double *lefttail, double *righttail, ae_state *_state);
+void unequalvariancettest(/* Real    */ ae_vector *x, ae_int_t n,
+                          /* Real    */ ae_vector *y, ae_int_t m,
+                          double *bothtails, double *lefttail,
+                          double *righttail, ae_state *_state);
 #endif
 
-}
+}  // namespace alglib_impl
 #endif
-
