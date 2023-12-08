@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)

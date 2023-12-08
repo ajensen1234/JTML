@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 #include "core/sym_trap_functions.h"
 
 using namespace std;

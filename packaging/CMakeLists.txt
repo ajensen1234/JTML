@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 set(CPACK_PACKAGE_NAME JointTrackMachineLearning)
 set(CPACK_PACKAGE_VENDOR "Gary J Miller Orthopaedic Biomechanics Laboratory")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An autonomous solution to extracting joint kinematics from fluoroscopic images.")

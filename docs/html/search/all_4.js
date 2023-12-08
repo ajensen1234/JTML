@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var searchData=
 [
   ['hyperbox6d_0',['HyperBox6D',['../struct_hyper_box6_d.html',1,'']]],

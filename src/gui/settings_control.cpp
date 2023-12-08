@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 /*Settings Control Window*/
 #include "gui/settings_control.h"
 

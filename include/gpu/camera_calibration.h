@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 #ifndef CAMERA_CALIBRATION_H
 #define CAMERA_CALIBRATION_H
 

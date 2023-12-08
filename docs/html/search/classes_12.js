@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var searchData=
 [
   ['rbfcalcbuffer_0',['rbfcalcbuffer',['../classalglib_1_1rbfcalcbuffer.html',1,'alglib::rbfcalcbuffer'],['../structalglib__impl_1_1rbfcalcbuffer.html',1,'alglib_impl::rbfcalcbuffer']]],

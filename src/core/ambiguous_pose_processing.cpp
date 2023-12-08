@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 #include "core/ambiguous_pose_processing.h"
 
 Point6D tibial_pose_selector(Point6D& femur_pose, Point6D& tibia_pose) {
