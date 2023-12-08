@@ -1,9 +1,6 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-﻿# CMakeList.txt : CMake project for Study2Grid-Cmake, include source and define
-# project specific logic here.
-#
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
