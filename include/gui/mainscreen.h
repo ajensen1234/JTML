@@ -24,8 +24,6 @@
 /*Key Event*/
 #include <QKeyEvent>
 
-#include "nfd/nfd.h"
-
 /*Direct Data Structures*/
 #include "core/curvature_utilities.h"
 #include "core/data_structures_6D.h"
@@ -80,7 +78,6 @@
 /*machine_learning_tools*/
 #include "core/machine_learning_tools.h"
 #include "gui/viewer.h"
-#include "nfd/nfd.h"
 
 /**
  * @brief The MainScreen object that inherits the QMainWindow object type. This
@@ -341,7 +338,7 @@ class MainScreen : public QMainWindow {
 
     void on_actionEstimate_Tibial_Implant_s_triggered();
 
-    void on_actionNFD_Pose_Estimate_triggered();
+    // void on_actionNFD_Pose_Estimate_triggered();
 
     void on_actionCopy_Next_Pose_triggered();
 
