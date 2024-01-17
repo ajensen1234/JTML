@@ -4,6 +4,8 @@ add_executable(shape-sensitivity
   "descriptors.cpp"
   "art.cu"
   "art.cuh"
+  "matrix_vector_utils.cpp"
+  "matrix_vector_utils.h"
 )
 
 
