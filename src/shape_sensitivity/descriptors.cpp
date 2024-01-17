@@ -19,10 +19,6 @@ std::vector<float> calculateIARTD(img_desc* img_desc_gpu,
     int H = img_desc_gpu->height();
     int W = img_desc_gpu->width();
     std::vector<float> iartd(2 * (MAX_N + 1) * (MAX_P + 1));
-    std::vector<float> iartd_gpu(2 * (MAX_N + 1) * (MAX_P));
-    // int H = binary_image.rows;
-    // int W = binary_image.cols;
-    // auto img_desc_gpu = new img_desc(H, W, 0, binary_image.data);
 
     auto idx = [](int n, int p) -> int {
         return (n * MAX_P + p - 1) * 2;
