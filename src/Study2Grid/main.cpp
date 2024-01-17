@@ -81,6 +81,7 @@ int main() {
     /*HOME FILE DIRECTORY*/
 
     // string home_dir =
+<<<<<<< HEAD
     //     "/media/ajensen123@ad.ufl.edu/Andrew's External "
     //     "SSD/Data/Datasets_FemCleaned/Lima/Lima_Organized_Updated";
 
@@ -94,6 +95,19 @@ int main() {
     // string write_grids_dir =
     //     "/home/ajensen123@ad.ufl.edu/Documents/Lima_Grids/";
     /*study Name*/
+=======
+    // "/media/ajensen123@ad.ufl.edu/Andrew's External "
+    //     "SSD/Data/Datasets_FemCleaned/Lima/Lima_Organized_Updated";
+
+    string home_dir = "/home/ajensen123@ad.ufl.edu/repo/jtml-TSA/Nagoya/";
+
+    // Write File Directory
+    string write_grids_dir = "/home/ajensen123@ad.ufl.edu/repo/jtml-TSA/imgs/";
+
+    // string write_grids_dir =
+    //     "/home/ajensen123@ad.ufl.edu/Documents/Lima_Grids/";
+    /*Study Name*/
+>>>>>>> d48d61ba09dbe44836e6dd294328032fd729abc0
     string study_name = "Nagoya_Updated";
 
     /*GPU Device Chosen*/
