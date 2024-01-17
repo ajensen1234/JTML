@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 add_executable(vtk-tester
     vtk_tester.cpp
     "../../src/gui/viewer.cpp" 

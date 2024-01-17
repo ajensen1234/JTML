@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 # Install script for directory: /home/nicholasverdugo/JTA-CMake/src/gpu
 
 # Set the install prefix

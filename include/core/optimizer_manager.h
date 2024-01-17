@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 /*Manages Optimization in a Seperate QT Thread*/
 
 #ifndef OPTIMIZER_MANAGER_H

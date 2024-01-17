@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 cmake_minimum_required(VERSION 3.19)
 project(Joint-Track-Machine-Learning
         LANGUAGES CXX CUDA)
@@ -40,7 +43,7 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 # Adding Subdirectories
 add_subdirectory(src)
 #add_subdirectory(test)
-add_subdirectory(lib)
+#add_subdirectory(lib)
 add_subdirectory(packaging)
 
 #enable_testing()

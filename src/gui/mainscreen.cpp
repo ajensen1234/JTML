@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 /*Main Screen Header*/
 #include "gui/mainscreen.h"
 
@@ -2308,24 +2311,25 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     ui.pose_label->setVisible(false);
 }
 
-void MainScreen::on_actionNFD_Pose_Estimate_triggered() {
-    JTML_NFD nfd_obj;
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (selected.size() == 0 || previous_frame_index_ < 0 ||
-        ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
-        ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
-        ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
-        QMessageBox::critical(this, "Error!", "Select Frame and Model First!",
-                              QMessageBox::Ok);
-        return;
-    }
-    QString error_mess;
-    nfd_obj.Initialize(calibration_file_, loaded_models, loaded_frames,
-                       selected, ui.image_list_widget->currentIndex().row(),
-                       error_mess);
-    nfd_obj.Run();
-}
+// void MainScreen::on_actionNFD_Pose_Estimate_triggered() {
+//     JTML_NFD nfd_obj;
+//     QModelIndexList selected =
+//         ui.model_list_widget->selectionModel()->selectedRows();
+//     if (selected.size() == 0 || previous_frame_index_ < 0 ||
+//         ui.image_list_widget->currentIndex().row() != previous_frame_index_
+//         || ui.image_list_widget->currentIndex().row() >= loaded_frames.size()
+//         || ui.model_list_widget->currentIndex().row() >=
+//         loaded_models.size()) { QMessageBox::critical(this, "Error!", "Select
+//         Frame and Model First!",
+//                               QMessageBox::Ok);
+//         return;
+//     }
+//     QString error_mess;
+//     nfd_obj.Initialize(calibration_file_, loaded_models, loaded_frames,
+//                        selected, ui.image_list_widget->currentIndex().row(),
+//                        error_mess);
+//     nfd_obj.Run();
+// }
 
 /*Viewing Controls*/
 void MainScreen::on_actionControls_triggered() {

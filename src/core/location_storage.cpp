@@ -1,3 +1,6 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
 /*Location Storage*/
 #include "core/location_storage.h"
 

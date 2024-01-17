@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var searchData=
 [
   ['on_5factionestimate_5ftibial_5fimplant_5fs_5ftriggered_0',['on_actionEstimate_Tibial_Implant_s_triggered',['../class_main_screen.html#a0bfc0663046bcdc1e51a50e4c1a49e02',1,'MainScreen']]],

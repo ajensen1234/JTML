@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 var dir_a7cfaa47baa6c085790d1eb26cdffca8 =
 [
     [ "camera_calibration.h", "camera__calibration_8h_source.html", null ],

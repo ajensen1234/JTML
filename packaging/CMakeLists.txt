@@ -1,3 +1,6 @@
+# Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+# SPDX-License-Identifier: AGPL-3.0
+
 set(CPACK_PACKAGE_NAME JointTrackMachineLearning)
 set(CPACK_PACKAGE_VENDOR "Gary J Miller Orthopaedic Biomechanics Laboratory")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An autonomous solution to extracting joint kinematics from fluoroscopic images.")
@@ -36,7 +39,7 @@ elseif(UNIX)  # Assumes Linux for simplicity
     # Additional Linux-specific installations
     install(DIRECTORY ${networks_dir} DESTINATION share/${CPACK_PACKAGE_NAME})
     install(DIRECTORY ${platforms_dir} DESTINATION share/${CPACK_PACKAGE_NAME})
-    install(TARGETS jtml_gpu jtml_core JTA_Cost_Functions jtml_nfd
+    install(TARGETS jtml_gpu jtml_core JTA_Cost_Functions
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin)

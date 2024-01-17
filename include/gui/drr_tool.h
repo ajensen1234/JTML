@@ -1,3 +1,8 @@
+/*
+ * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+ * SPDX-License-Identifier: AGPL-3.0
+ */
+
 #ifndef DRR_TOOL_H
 #define DRR_TOOL_H
 
