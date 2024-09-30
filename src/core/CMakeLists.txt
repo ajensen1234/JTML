@@ -12,7 +12,7 @@ file(GLOB HEADER_FILES ${HEADER_DIR}/*.h)
 add_library(jtml_core STATIC
 	data_structures_6D.cpp
 	direct_data_storage.cpp
-	frame.cpp
+	frame.cu
 	location_storage.cpp
 	model.cpp
 	optimizer_manager.cpp
@@ -31,7 +31,7 @@ target_link_libraries(jtml_core ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(jtml_core ${TORCH_LIBRARIES})
 target_link_libraries(jtml_core ${VTK_LIBRARIES})
 target_link_libraries(jtml_core ${OpenCV_LIBRARIES})
-target_link_libraries(jtml_core ${cuda_LIBRARIES})
+target_link_libraries(jtml_core ${CUDA_LIBRARIES})
 
 
 # Linking In House LIbs and Directories

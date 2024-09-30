@@ -44,7 +44,11 @@ target_include_directories(jtml_gpu PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTOR
 target_include_directories(jtml_gpu PUBLIC ${HEADER_DIR})
 if (MSVC)
         target_link_libraries(jtml_gpu curand.lib)
+elseif(LINUX)
+        message("TEST")
+        target_link_libraries(jtml_gpu /usr/local/cuda/lib64/libcurand.so)
 endif()
+
 get_target_property(TARGET_LIBRARIES jtml_gpu LINK_LIBRARIES)
 set_property(TARGET jtml_gpu PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
 

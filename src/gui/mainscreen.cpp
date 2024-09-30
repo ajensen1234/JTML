@@ -2578,7 +2578,8 @@ void MainScreen::on_load_image_button_clicked() {
     if (calibrated_for_monoplane_viewport_) {
         // Load TIFF images
         QStringList TiffFileExtensions = QFileDialog::getOpenFileNames(
-            this, tr("Load Image(s)"), ".", tr("Image File(s) (*.tif *.tiff)"));
+            this, tr("Load Image(s)"), ".",
+            tr("Image File(s) (*.tif *.tiff *.png)"));
         for (int i = 0; i < TiffFileExtensions.size(); i++) {
             auto new_frame = Frame(
                 TiffFileExtensions[i].toStdString(),
