@@ -29,6 +29,7 @@ add_library(jtml_gpu SHARED
         gpu_heatmaps.cu
         ${HEADER_DIR}/gpu_heatmaps.cuh
         curvature_hausdorf_metric.cu
+        ${HEADER_DIR}/launch_config.cuh
         ${HEADER_FILES})
 
 set_target_properties(jtml_gpu PROPERTIES 

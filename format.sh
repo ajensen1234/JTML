@@ -46,6 +46,8 @@ FILES=$(find ./src ./include -type f \( \
     -name "*.cpp" -o \
     -name "*.hpp" -o \
     -name "*.h" -o \
+    -name "*.cu" -o \
+    -name "*.cuh" -o \
     -name "*.cc" -o \
     -name "*.cxx" \
     \) -not -path "*/build/*" \
