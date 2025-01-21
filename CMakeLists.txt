@@ -88,9 +88,10 @@ ExternalProject_Add(vtk_external
     GIT_TAG v9.3.0
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        -DCMAKE_PREFIX_PATH=$ENV{CONDA_PREFIX}
         -DVTK_GROUP_ENABLE_Qt=YES
         -DVTK_MODULE_ENABLE_VTK_GUISupportQt=YES
-        -DQt5_DIR=${Qt5_DIR}
+        -DQt5_DIR=$ENV{CONDA_PREFIX}/lib/cmake/Qt5
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DVTK_MODULE_ENABLE_VTK_RenderingCore=YES
         -DVTK_MODULE_ENABLE_VTK_RenderingOpenGL2=YES
@@ -104,6 +105,8 @@ ExternalProject_Add(vtk_external
         -DVTK_MODULE_ENABLE_VTK_InteractionStyle=YES
         -DVTK_USE_X=OFF
         -DVTK_USE_SDL2=ON
+        -DVTK_OPENGL_HAS_OSMESA=OFF
+        -DVTK_OPENGL_HAS_EGL=OFF
     BUILD_ALWAYS ON
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
@@ -112,12 +115,13 @@ ExternalProject_Add(vtk_external
 )
 # Create imported target for VTK after external project install
 ExternalProject_Get_Property(vtk_external INSTALL_DIR)
-set(VTK_DIR "${INSTALL_DIR}/lib/cmake/vtk-9.3")
+set(VTK_DIR "${INSTALL_DIR}/lib64/cmake/vtk-9.3")
 set(VTK_LIB_DIR "${INSTALL_DIR}/lib64/")
 list(APPEND CMAKE_PREFIX_PATH "${INSTALL_DIR}")
 find_package(VTK REQUIRED)
 
-# Add an interface target to link VTK
+
+
 
 #=============================
 # Output Directories

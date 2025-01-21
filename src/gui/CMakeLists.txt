@@ -58,6 +58,7 @@ target_include_directories(${PROJECT_NAME}
     ${CUDA_INCLUDE_DIRS}
 )
 add_dependencies(${PROJECT_NAME} vtk_external)
+
 #=============================
 # Platform-Specific Definitions
 #=============================

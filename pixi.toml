@@ -18,7 +18,6 @@ ninja = "*"
 nvtx = "*"
 
 # Display dependencies
-mesa-libgl-devel-cos7-x86_64 = "*"  # For OpenGL support
 xorg-libx11 = "*"
 xorg-libxt = "*"
 xorg-libxext = "*"
@@ -50,6 +49,18 @@ cuda = "12.4"
 [system-requirements]
 cuda = "12.4"
 
+[tasks.configure-vtk]
+cmd = ["cmake",
+    "-B .build",
+    "-t vtk_external"
+]
+[tasks.build-vtk]
+cmd = ["cmake",
+    "--build",
+    ".build",
+    "-t",
+    "vtk_external"
+]
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
@@ -72,6 +83,7 @@ cmd = ["cmake",
 ]
 inputs = ["CMakeLists.txt"]
 outputs = [".build/CMakeFiles/"]
+depends-on = ["build-vtk"]
 
 [tasks.build]
 # Build task that depends on configure
