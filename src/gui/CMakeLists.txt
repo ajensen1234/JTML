@@ -48,6 +48,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 # Include Directories
+
+add_dependencies(${PROJECT_NAME} vtk_external)
+
 target_include_directories(${PROJECT_NAME}
     PRIVATE
     ${PROJECT_SOURCE_DIR}/include
@@ -57,7 +60,6 @@ target_include_directories(${PROJECT_NAME}
     ${EIGEN3_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
 )
-add_dependencies(${PROJECT_NAME} vtk_external)
 
 #=============================
 # Platform-Specific Definitions

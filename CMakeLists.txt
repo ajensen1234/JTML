@@ -82,8 +82,9 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 include(ExternalProject)
 
 # Define VTK build
+set(VTK_EXTERNAL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk")
 ExternalProject_Add(vtk_external
-    PREFIX "${CMAKE_BINARY_DIR}/external/vtk"
+    PREFIX ${VTK_EXTERNAL_PREFIX}
     GIT_REPOSITORY https://github.com/Kitware/VTK.git
     GIT_TAG v9.3.0
     CMAKE_ARGS
@@ -107,7 +108,7 @@ ExternalProject_Add(vtk_external
         -DVTK_USE_SDL2=ON
         -DVTK_OPENGL_HAS_OSMESA=OFF
         -DVTK_OPENGL_HAS_EGL=OFF
-    BUILD_ALWAYS ON
+    BUILD_ALWAYS OFF
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
     LOG_BUILD ON
@@ -115,10 +116,22 @@ ExternalProject_Add(vtk_external
 )
 # Create imported target for VTK after external project install
 ExternalProject_Get_Property(vtk_external INSTALL_DIR)
-set(VTK_DIR "${INSTALL_DIR}/lib64/cmake/vtk-9.3")
+set(VTK_DIR "${INSTALL_DIR}/lib64/cmake/vtk-9.3/")
 set(VTK_LIB_DIR "${INSTALL_DIR}/lib64/")
 list(APPEND CMAKE_PREFIX_PATH "${INSTALL_DIR}")
-find_package(VTK REQUIRED)
+message(STATUS "VTK LIB DIR: ${VTK_LIB_DIR}")
+
+add_library(VTK::External INTERFACE IMPORTED GLOBAL)
+set_target_properties(VTK::External PROPERTIES
+    IMPORTED_LOCATION "${INSTALL_DIR}/lib64"
+    INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include/vtk-9.3"
+)
+add_dependencies(VTK::External vtk_external)
+find_package(VTK REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
+
+
+
+
 
 
 
