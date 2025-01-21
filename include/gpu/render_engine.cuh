@@ -26,19 +26,29 @@
 namespace gpu_cost_function {
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
-    JTML_DLL Pose(float x_location, float y_location, float z_location,
-                  float x_angle, float y_angle, float z_angle);
+    JTML_DLL Pose(
+        float x_location,
+        float y_location,
+        float z_location,
+        float x_angle,
+        float y_angle,
+        float z_angle);
     JTML_DLL Pose();
     float x_location_, y_location_, z_location_, x_angle_, y_angle_, z_angle_;
 };
 
 /*Rotation Matrix structure to store ZXY Rotation Matrix*/
 struct RotationMatrix {
-    JTML_DLL RotationMatrix(float rotation_00, float rotation_01,
-                            float rotation_02, float rotation_10,
-                            float rotation_11, float rotation_12,
-                            float rotation_20, float rotation_21,
-                            float rotation_22);
+    JTML_DLL RotationMatrix(
+        float rotation_00,
+        float rotation_01,
+        float rotation_02,
+        float rotation_10,
+        float rotation_11,
+        float rotation_12,
+        float rotation_20,
+        float rotation_21,
+        float rotation_22);
     JTML_DLL RotationMatrix();
     float rotation_00_, rotation_01_, rotation_02_, rotation_10_, rotation_11_,
         rotation_12_, rotation_20_, rotation_21_, rotation_22_;
@@ -46,12 +56,17 @@ struct RotationMatrix {
 
 /*CUDA Based Rendering Engine for Model Silhouette*/
 class RenderEngine {
-   public:
+public:
     /*Constructor & Destructor*/
-    JTML_DLL RenderEngine(int width, int height, int device,
-                          bool use_backface_culling, float *triangles,
-                          float *normals, int triangle_count,
-                          CameraCalibration camera_calibration);
+    JTML_DLL RenderEngine(
+        int width,
+        int height,
+        int device,
+        bool use_backface_culling,
+        float* triangles,
+        float* normals,
+        int triangle_count,
+        CameraCalibration camera_calibration);
     JTML_DLL RenderEngine();
     JTML_DLL ~RenderEngine();
 
@@ -81,12 +96,12 @@ class RenderEngine {
     JTML_DLL cudaError_t RenderDRR(float lower_bound, float upper_bound);
 
     /*Get Pointer to Rendererd GPU Image*/
-    JTML_DLL GPUImage *GetRenderOutput();
+    JTML_DLL GPUImage* GetRenderOutput();
 
     /*Is the Render Engine properly initialized?*/
     JTML_DLL bool IsInitializedCorrectly();
 
-   private:
+private:
     /*Host (CPU) Variables*/
 
     /*X-ray size with dilation padding on each of the four borders*/
@@ -117,25 +132,25 @@ class RenderEngine {
     float fx_, fy_, cx_, cy_;
 
     /*Fragment Fill (Number of Fragments to Test for Fill)*/
-    int *fragment_fill_;
+    int* fragment_fill_;
 
     /*Device (GPU) Variables*/
 
     /*Pointer to Container for the Image and Bounding Box (See GPU Image
      * Class)*/
-    GPUImage *renderer_output_;
+    GPUImage* renderer_output_;
 
     /*Device Pointer to Array (Same Size as Image) of Floats that represent
     values used to compute DRR Each value is the amount of z translation a line
     from the origin to a pixel spends inside a model. To compute the line
     integral, simply take the value, divide by the principal distance and then
     myltiply by the norm of the 3D pixel location (in world coordinates)*/
-    float *dev_z_line_values_;
+    float* dev_z_line_values_;
 
     /*Device pointer to array of the transformed (rotated and translated) world
     vertices for the triangles only at the z values. This is used in the DRR
     render method and has length equal to 3 * the # of triangles.*/
-    float *dev_transf_vertex_zs_;
+    float* dev_transf_vertex_zs_;
 
     /*Device pointer to array of booleans indicating if a line to any point in
     transformed triangle is tangent (orthogonal to the normal). This is computed
@@ -145,7 +160,7 @@ class RenderEngine {
     simply to this transformed triangle and doesn't actually enter the model.
     This array has size equal to the # of triangles. TRUE if tangent, else
     FALSE*/
-    bool *dev_tangent_triangle_;
+    bool* dev_tangent_triangle_;
 
     /*The triangle coordinates in millimeters loaded from the STL file.
     Each triangle is represented as a 9-tuple in the following order: x_1, y_1,
@@ -153,13 +168,13 @@ class RenderEngine {
     2: (x_2, y_2, z_2) Vertex 3: (x_3, y_3, z_3) Therefore the size of this
     array is 9 * triangle_count. Note we are using a right-hand coordinate
     system.*/
-    float *dev_triangles_;
+    float* dev_triangles_;
 
     /*The triangle normals in millimeters loaded from the STL file.
     Each triangle has a 3-tuple normal: N_x, N_y, N_z.
     Therefore the size of this array is 3 * triangle_count.
     */
-    float *dev_normals_;
+    float* dev_normals_;
 
     /*True if the triangle is facing away from the camera (and thus we don't
     render it by making the fragment size = 1 (of course this really hsould be 0
@@ -167,7 +182,7 @@ class RenderEngine {
     tested by check that the dotproduct between the normal and the first
     triangle index is < 0. The size of this array is triangle_count.
     */
-    bool *dev_backface_;
+    bool* dev_backface_;
 
     /*The projected triangle coordinates in pixels.
     Each triangle is represented as a 6-tuple in the following order x_1', y_1',
@@ -177,32 +192,32 @@ class RenderEngine {
     Note pixel coordinates are zero based at the bottom-left corner, and placed
     using the calibration parameters. For more details see
     https://en.wikipedia.org/wiki/Pinhole_camera_model (7/7/2016).*/
-    float *dev_projected_triangles_;
+    float* dev_projected_triangles_;
 
     /*Snapped projected triangle coordinates to nearest integer,
     Same format as dev_screen_triangles. */
-    int *dev_projected_triangles_snapped_;
+    int* dev_projected_triangles_snapped_;
 
     /*Bounding boxes on screen in pixels for each triangle.
     Each bounding box is represented as a 4-tuple in the follwing order LX, BY,
     RX, TY where LX: left-most x BY: bottom y RX: right-most x TY: top y
     Therefore the size of this array is 4 * triangle_count.
     Again note that we are using 0-based coordinates for the pixels.*/
-    int *dev_bounding_box_triangles_;
+    int* dev_bounding_box_triangles_;
 
     /*The size (number of pixels) in the bounding boxes for each triangle.
     The size of this array is simply the triangle_count.*/
-    int *dev_bounding_box_triangles_sizes_;
+    int* dev_bounding_box_triangles_sizes_;
 
     /*The exclusive (0-based) prefix sum of the
     dev_bounding_box_triangles_sizes_. This is clearly also of size
     triangle_count.*/
-    int *dev_bounding_box_triangles_sizes_prefix_;
+    int* dev_bounding_box_triangles_sizes_prefix_;
 
     /*Device version of bounding box and fragment fill. For more details see the
      * host versions*/
-    int *dev_bounding_box_;
-    int *dev_fragment_fill_;
+    int* dev_bounding_box_;
+    int* dev_fragment_fill_;
 
     /*The container for the stride prefixes (every 256th of the fragment count)
     Could potentially overflow (highly unlikely) so need to do an error check.
@@ -210,15 +225,15 @@ class RenderEngine {
     enough for 2.56 billion fragments). CUDA will allow about 500 billion
     fragments to be processed so that won't fail first (though also needs error
     check). */
-    int *dev_stride_prefixes_;
+    int* dev_stride_prefixes_;
 
     /*CUB Variables*/
-    void *dev_cub_storage_;
+    void* dev_cub_storage_;
     size_t cub_storage_bytes_;
 
     /*CUDA API Initialization (Allocation, etc.) Must return cudaSuccess to
      * proceed to Render, else initialization marked as failure.*/
-    cudaError_t InitializeCUDA(float *triangles, float *normals, int device);
+    cudaError_t InitializeCUDA(float* triangles, float* normals, int device);
 
     /*Free CUDA*/
     void FreeCuda();
@@ -232,5 +247,5 @@ class RenderEngine {
     dim3 dim_grid_bounding_box_;
     dim3 dim_grid_fill_;
 };
-}  // namespace gpu_cost_function
+} // namespace gpu_cost_function
 #endif /* RENDER_ENGINE_H */

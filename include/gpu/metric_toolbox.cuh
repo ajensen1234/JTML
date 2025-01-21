@@ -1,23 +1,23 @@
-//#ifndef METRIC_TOOLBOX_H
-//#define METRIC_TOOLBOX_H
+// #ifndef METRIC_TOOLBOX_H
+// #define METRIC_TOOLBOX_H
 //
 ///*Cuda*/
-//#include "cuda_runtime.h"
-//#include "device_launch_parameters.h"
+// #include "cuda_runtime.h"
+// #include "device_launch_parameters.h"
 //
 ///*Base Class*/
-//#include "registration_metric.cuh"
+// #include "registration_metric.cuh"
 //
 ///*Launch Parameters*/
-//#include "cuda_launch_parameters.h"
+// #include "cuda_launch_parameters.h"
 //
 ///*CUDA Custom Registration Namespace (Compiling as DLL)*/
-//namespace gpu_cost_function {
+// namespace gpu_cost_function {
 //
-//	/*Collection of the standard metrics available in JTA. The dilation metric from direct-jta is the standard algorithm
-//	Also included are a L1 intensity metric,  and the Mahfouz metric*/
-//	class MetricToolbox : public RegistrationMetric {
-//	public:
+//	/*Collection of the standard metrics available in JTA. The dilation
+//metric from direct-jta is the standard algorithm 	Also included are a L1
+//intensity metric,  and the Mahfouz metric*/ 	class MetricToolbox : public
+//RegistrationMetric { 	public:
 //		/*Constructor & Destructor*/
 //		JTML_DLL MetricToolbox(int width, int height);
 //		JTML_DLL MetricToolbox();
@@ -49,6 +49,6 @@
 //
 //	};
 //
-//}
+// }
 //
-//#endif /* METRIC_TOOLBOX_H */
+// #endif /* METRIC_TOOLBOX_H */

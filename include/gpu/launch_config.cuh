@@ -27,23 +27,23 @@ public:
         const unsigned int TARGET_THREADS = 256;
         unsigned int block_dim = static_cast<unsigned int>(
             std::floor(std::sqrt(static_cast<double>(TARGET_THREADS))));
-        
+
         // This will give us 16x16 = 256 threads per block
         config.block_size = dim3(block_dim, block_dim);
 
         // Calculate grid size based on triangle count and block size
-        unsigned int grid_dim = static_cast<unsigned int>(std::ceil(
-            std::sqrt(static_cast<double>(triangle_count) / 
-                     static_cast<double>(block_dim * block_dim))));
+        unsigned int grid_dim = static_cast<unsigned int>(std::ceil(std::sqrt(
+            static_cast<double>(triangle_count) /
+            static_cast<double>(block_dim * block_dim))));
 
         config.grid_size = dim3(grid_dim, grid_dim);
 
         // Calculate occupancy
-        unsigned int blocks_per_sm = 
-            (props.maxThreadsPerMultiProcessor + TARGET_THREADS - 1) / 
+        unsigned int blocks_per_sm =
+            (props.maxThreadsPerMultiProcessor + TARGET_THREADS - 1) /
             TARGET_THREADS;
-            
-        config.occupancy = 
+
+        config.occupancy =
             static_cast<float>(TARGET_THREADS * blocks_per_sm) /
             static_cast<float>(props.maxThreadsPerMultiProcessor);
 

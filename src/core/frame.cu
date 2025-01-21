@@ -16,8 +16,12 @@
 #include "core/curvature_utilities.h"
 
 /*Constructor*/
-Frame::Frame(std::string file_location, int aperture, int low_threshold,
-             int high_threshold, int dilation) {
+Frame::Frame(
+    std::string file_location,
+    int aperture,
+    int low_threshold,
+    int high_threshold,
+    int dilation) {
     /*Save File Location*/
     file_location_ = file_location;
 
@@ -45,35 +49,53 @@ Frame::Frame(std::string file_location, int aperture, int low_threshold,
     dilation_ = dilation;
 };
 /*Recalculate Edge Detected Image*/
-void Frame::SetEdgeImage(int aperture, int low_threshold, int high_threshold,
-                         bool use_reverse) {
+void Frame::SetEdgeImage(
+    int aperture, int low_threshold, int high_threshold, bool use_reverse) {
     aperture_ = aperture;
     low_threshold_ = low_threshold;
     high_threshold_ = high_threshold;
     if (!use_reverse)
-        Canny(original_image_, edge_image_, low_threshold, high_threshold,
-              aperture);
+        Canny(
+            original_image_,
+            edge_image_,
+            low_threshold,
+            high_threshold,
+            aperture);
     else
-        Canny(inverted_image_, edge_image_, low_threshold, high_threshold,
-              aperture);
+        Canny(
+            inverted_image_,
+            edge_image_,
+            low_threshold,
+            high_threshold,
+            aperture);
 }
 /*Recalculate Dilated Image*/
 void Frame::SetDilatedImage(int dilation) {
     dilation_ = dilation;
-    dilate(edge_image_, dilation_image_, cv::Mat(), cv::Point(-1, -1),
-           dilation_);
+    dilate(
+        edge_image_, dilation_image_, cv::Mat(), cv::Point(-1, -1), dilation_);
 }
 
 /*Return Original Image*/
-cv::Mat Frame::GetOriginalImage() { return original_image_; }
+cv::Mat Frame::GetOriginalImage() {
+    return original_image_;
+}
 /*Return Edge Detected Image*/
-cv::Mat Frame::GetEdgeImage() { return edge_image_; }
+cv::Mat Frame::GetEdgeImage() {
+    return edge_image_;
+}
 /*Return Dilated Edge Detected Image*/
-cv::Mat Frame::GetDilationImage() { return dilation_image_; }
+cv::Mat Frame::GetDilationImage() {
+    return dilation_image_;
+}
 /*Return Inverted Intensity Image*/
-cv::Mat Frame::GetInvertedImage() { return inverted_image_; }
+cv::Mat Frame::GetInvertedImage() {
+    return inverted_image_;
+}
 
-cv::Mat Frame::GetDistanceMap() { return distance_map_; }
+cv::Mat Frame::GetDistanceMap() {
+    return distance_map_;
+}
 
 /*Reset From Original (Resets Inverted/Segmented, Edge, Dilation from Original,
 Useful if Trying to Reset from Segmentation)*/
@@ -100,9 +122,15 @@ void Frame::SetDistanceMap() {
 }
 
 /*Get Canny Parameters*/
-int Frame::GetAperture() { return aperture_; };
-int Frame::GetHighThreshold() { return high_threshold_; };
-int Frame::GetLowThreshold() { return low_threshold_; };
+int Frame::GetAperture() {
+    return aperture_;
+};
+int Frame::GetHighThreshold() {
+    return high_threshold_;
+};
+int Frame::GetLowThreshold() {
+    return low_threshold_;
+};
 
 std::vector<uchar> Frame::getCurvatureHeatmaps() {
     return curvature_heatmap_chars_;
@@ -113,17 +141,17 @@ void Frame::setCurvatureHeatmaps() {
     num_curvature_keypoints_ = curvature_heatmaps_.size();
     std::vector<std::vector<uchar>> vector_heatmap_char_tmp;
     for (int i = 0; i < num_curvature_keypoints_; i++) {
-        vector_heatmap_char_tmp.push_back(
-            std::vector<uchar>(curvature_heatmaps_[i].data,
-                               curvature_heatmaps_[i].data +
-                                   curvature_heatmaps_[i].total() *
-                                       curvature_heatmaps_[i].elemSize()));
+        vector_heatmap_char_tmp.push_back(std::vector<uchar>(
+            curvature_heatmaps_[i].data,
+            curvature_heatmaps_[i].data +
+                curvature_heatmaps_[i].total() *
+                    curvature_heatmaps_[i].elemSize()));
     }
     curvature_heatmap_chars_ = Frame::flattenVector(vector_heatmap_char_tmp);
 };
 
-std::vector<uchar> Frame::flattenVector(
-    const std::vector<std::vector<uchar>>& vecOfVecs) {
+std::vector<uchar>
+Frame::flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) {
     std::vector<uchar> flattened;
     for (const auto& innerVec : vecOfVecs) {
         flattened.insert(flattened.end(), innerVec.begin(), innerVec.end());
@@ -131,4 +159,6 @@ std::vector<uchar> Frame::flattenVector(
 
     return flattened;
 };
-int Frame::GetNumCurvatureKeypoints() { return num_curvature_keypoints_; }
+int Frame::GetNumCurvatureKeypoints() {
+    return num_curvature_keypoints_;
+}
