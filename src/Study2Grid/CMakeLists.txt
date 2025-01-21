@@ -1,7 +1,7 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.26)
 
 # Add source to this project's executable.
 add_executable (Study2Grid-Cmake 
@@ -25,7 +25,7 @@ set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
 
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
-find_package(CUDA REQUIRED)
+enable_language(CUDA)
 find_package(OpenCV REQUIRED)
 
 target_link_libraries(Study2Grid-Cmake ${REQUIRED_LIBS_QUALIFIED})

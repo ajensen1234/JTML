@@ -31,3 +31,7 @@ Makefile
 example_studies/KCL
 .cache
 check
+
+# pixi environments
+.pixi
+*.egg-info

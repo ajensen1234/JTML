@@ -1,0 +1,104 @@
+[project]
+name = "joint-track-machine-learning"
+version = "0.1.0"
+description = "Joint Track Machine Learning Project"
+authors = ["Your Name <your.email@example.com>"]
+channels = ["https://prefix.dev/conda-forge", "https://prefix.dev/nvidia"]
+platforms = ["linux-64"]
+
+[dependencies]
+# Core dependencies
+opencv = "*"
+pytorch-gpu = ">=2"
+cuda-version = "12.4"
+cuda = "12.4"
+qt = "5.*"
+eigen = "*"
+ninja = "*"
+nvtx = "*"
+
+# Display dependencies
+mesa-libgl-devel-cos7-x86_64 = "*"  # For OpenGL support
+xorg-libx11 = "*"
+xorg-libxt = "*"
+xorg-libxext = "*"
+curl = ">=8.11.1,<9"
+libcurl = ">=8.11.1,<9"
+cmake = ">=3.31.4,<4"
+wget = ">=1.21.4,<2"
+tar = ">=1.34,<2"
+ccache = "*"
+gcc = "*"
+sdl2 = ">=2.30.7,<3"
+libopengl = ">=1.7.0,<2"
+glew = ">=2.1.0,<3"
+libegl-devel = ">=1.7.0,<2"
+libgles-devel = ">=1.7.0,<2"
+libopengl-devel = ">=1.7.0,<2"
+
+[feature.build.dependencies]
+cmake = ">=3.31.4,<4"
+ninja = "*"
+gcc = "*"
+cxx-compiler = "*"
+pkg-config = "*"
+cuda = "12.4"
+
+# Development dependencies
+[feature.dev.dependencies]
+
+[system-requirements]
+cuda = "12.4"
+
+[tasks.configure]
+# Configure CMake with Ninja generator
+cmd = ["cmake",
+    "-GNinja",
+    "-S.", 
+    "-B.build",
+    "-DCMAKE_PREFIX_PATH=$CONDA_PREFIX",
+    "-DCMAKE_IGNORE_PATH=$HOME/.nix-profile/:/nix/:/usr/local/cuda/lib64:/usr/lib64:/usr/lib",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_CUDA_COMPILER=$CONDA_PREFIX/bin/nvcc",
+    "-DCUDA_TOOLKIT_ROOT_DIR=$CONDA_PREFIX",
+    "-DCUDA_SDK_ROOT_DIR=$CONDA_PREFIX",
+    "-DCUDA_CUDA_LIB=$CONDA_PREFIX/lib/stubs/libcuda.so",
+    "-DCUDA_NVRTC_LIB=$CONDA_PREFIX/lib/libnvrtc.so",
+    "-DTorch_DIR=$CONDA_PREFIX/lib/cmake/Torch",
+    "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
+    "-DLIBNVTOOLSEXT=$CONDA_PREFIX/lib/libnvToolsExt.so.1",
+    "-DQt5_DIR=$CONDA_PREFIX/lib/cmake/Qt5",
+    "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX"
+]
+inputs = ["CMakeLists.txt"]
+outputs = [".build/CMakeFiles/"]
+
+[tasks.build]
+# Build task that depends on configure
+cmd = ["cmake", "--build", ".build"]
+depends-on = ["configure"]
+inputs = ["CMakeLists.txt", "src/*"]
+outputs = [".build/bin/joint-track-machine-learning"]
+
+[tasks.run]
+# Run task that depends on build
+cmd = ".build/bin/joint-track-machine-learning"
+depends-on = ["build"]
+env = {"GDK_BACKEND" = "wayland,x11","QT_QPA_PLATFORM" = "wayland;xcb","LD_LIBRARY_PATH" = "$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"}
+#set(USE_CUDNN 1)
+
+[tasks.check-display]
+cmd = """
+    echo "DISPLAY=$DISPLAY"
+    echo "WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
+    echo "XDG_SESSION_TYPE=$XDG_SESSION_TYPE"
+    echo "GDK_BACKEND=$GDK_BACKEND"
+    echo "QT_QPA_PLATFORM=$QT_QPA_PLATFORM"
+"""
+
+[environments]
+build = ["build"]
+dev = ["build", "dev"]
+
+[activation]
+scripts = ["setup.sh"]

@@ -4,7 +4,6 @@
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/gpu)
 file(GLOB HEADER_FILES ${HEADER_DIR}/*.cuh ${HEADER_DIR}/*.h)
 
-
 add_library(jtml_gpu SHARED
         dilate_edge_detected_image.cu
         edge_detect_rendered_implant_model.cu
@@ -32,24 +31,24 @@ add_library(jtml_gpu SHARED
         curvature_hausdorf_metric.cu
         ${HEADER_FILES})
 
+set_target_properties(jtml_gpu PROPERTIES 
+    CUDA_SEPARABLE_COMPILATION ON
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "$ENV{CONDA_PREFIX}/lib"
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+)
 
+target_link_libraries(jtml_gpu 
+    PUBLIC 
+        ${OpenCV_LIBRARIES}
+        CUDA::cublas
+        CUDA::cudart
+        CUDA::curand
+)
 
-set_target_properties(jtml_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-#target_link_libraries(jtml_gpu ${VTK_LIBRARIES})
-target_link_libraries(jtml_gpu ${OpenCV_LIBRARIES})
-target_link_libraries(jtml_gpu ${CUDA_CUBLAS_LIBRARIES})
-target_link_libraries(jtml_gpu ${CUDA_LIBRARIES})
-
-target_include_directories(jtml_gpu PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-target_include_directories(jtml_gpu PUBLIC ${HEADER_DIR})
-if (MSVC)
-        target_link_libraries(jtml_gpu curand.lib)
-elseif(LINUX)
-        message("TEST")
-        target_link_libraries(jtml_gpu /usr/local/cuda/lib64/libcurand.so)
-endif()
-
-get_target_property(TARGET_LIBRARIES jtml_gpu LINK_LIBRARIES)
-set_property(TARGET jtml_gpu PROPERTY LINK_LIBRARIES ${TARGET_LIBRARIES})
-
-target_include_directories(jtml_gpu PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(jtml_gpu 
+    PUBLIC 
+        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+        ${HEADER_DIR}
+        ${PROJECT_SOURCE_DIR}/include
+)

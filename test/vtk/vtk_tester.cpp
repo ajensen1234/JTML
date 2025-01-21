@@ -1,14 +1,6 @@
-<<<<<<< HEAD
 // Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 // SPDX-License-Identifier: AGPL-3.0
 
-#include "gui/viewer.h"
-#include "core/calibration.h"
-#include "core/model.h"
-#include "gpu/camera_calibration.h"
-#include "core/frame.h"
-=======
->>>>>>> shape-sensitivity-study
 #include <string.h>
 #include <vtkAutoInit.h>
 #include <vtkNew.h>
