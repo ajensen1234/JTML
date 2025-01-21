@@ -110,8 +110,8 @@
 #define __gnu_linux__ 1
 #define __INT16_MAX__ 0x7fff
 #define __FLT64_MIN_EXP__ (-1021)
-#define vtkRenderingCore_AUTOINIT_INCLUDE         \
-    "/home/nicholasverdugo/JTA-CMake/CMakeFiles/" \
+#define vtkRenderingCore_AUTOINIT_INCLUDE                                      \
+    "/home/nicholasverdugo/JTA-CMake/CMakeFiles/"                              \
     "vtkModuleAutoInit_be7301261a49b13d6a9b1d9e110eacd8.h"
 #define __FLT64X_MIN_10_EXP__ (-4931)
 #define __LDBL_HAS_QUIET_NAN__ 1

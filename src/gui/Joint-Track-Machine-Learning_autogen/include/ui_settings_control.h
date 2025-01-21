@@ -30,45 +30,45 @@
 QT_BEGIN_NAMESPACE
 
 class Ui_settings_control {
-   public:
-    QPushButton *save_button;
-    QPushButton *reset_button;
-    QGroupBox *general_options_groupBox;
-    QGroupBox *range_groupBox;
-    QLabel *x_translation_label;
-    QLabel *y_translation_label;
-    QLabel *z_translation_label;
-    QLabel *x_rotation_label;
-    QLabel *y_rotation_label;
-    QLabel *z_rotation_label;
-    QSpinBox *x_translation_spinBox;
-    QSpinBox *y_translation_spinBox;
-    QSpinBox *z_translation_spinBox;
-    QSpinBox *x_rotation_spinBox;
-    QSpinBox *y_rotation_spinBox;
-    QSpinBox *z_rotation_spinBox;
-    QLabel *stage_budget_label;
-    QSpinBox *budget_spinBox;
-    QCheckBox *stage_enabled_checkBox;
-    QGroupBox *stage_specific_groupBox;
-    QSpinBox *branch_count_spinBox;
-    QLabel *branch_total_count_label;
-    QGroupBox *cost_function_groupBox;
-    QListWidget *cost_function_listWidget;
-    QGroupBox *cost_function_parameters_groupBox;
-    QListWidget *cost_function_parameters_listWidget;
-    QGroupBox *parameter_value_groupBox;
-    QDoubleSpinBox *double_parameter_spinBox;
-    QRadioButton *bool_parameter_true_radioButton;
-    QRadioButton *bool_parameter_false_radioButton;
-    QSpinBox *int_parameter_spinBox;
-    QGroupBox *optimization_search_stage_groupBox;
-    QRadioButton *trunk_radioButton;
-    QRadioButton *branch_radioButton;
-    QRadioButton *leaf_radioButton;
-    QPushButton *cancel_button;
+public:
+    QPushButton* save_button;
+    QPushButton* reset_button;
+    QGroupBox* general_options_groupBox;
+    QGroupBox* range_groupBox;
+    QLabel* x_translation_label;
+    QLabel* y_translation_label;
+    QLabel* z_translation_label;
+    QLabel* x_rotation_label;
+    QLabel* y_rotation_label;
+    QLabel* z_rotation_label;
+    QSpinBox* x_translation_spinBox;
+    QSpinBox* y_translation_spinBox;
+    QSpinBox* z_translation_spinBox;
+    QSpinBox* x_rotation_spinBox;
+    QSpinBox* y_rotation_spinBox;
+    QSpinBox* z_rotation_spinBox;
+    QLabel* stage_budget_label;
+    QSpinBox* budget_spinBox;
+    QCheckBox* stage_enabled_checkBox;
+    QGroupBox* stage_specific_groupBox;
+    QSpinBox* branch_count_spinBox;
+    QLabel* branch_total_count_label;
+    QGroupBox* cost_function_groupBox;
+    QListWidget* cost_function_listWidget;
+    QGroupBox* cost_function_parameters_groupBox;
+    QListWidget* cost_function_parameters_listWidget;
+    QGroupBox* parameter_value_groupBox;
+    QDoubleSpinBox* double_parameter_spinBox;
+    QRadioButton* bool_parameter_true_radioButton;
+    QRadioButton* bool_parameter_false_radioButton;
+    QSpinBox* int_parameter_spinBox;
+    QGroupBox* optimization_search_stage_groupBox;
+    QRadioButton* trunk_radioButton;
+    QRadioButton* branch_radioButton;
+    QRadioButton* leaf_radioButton;
+    QPushButton* cancel_button;
 
-    void setupUi(QDialog *settings_control) {
+    void setupUi(QDialog* settings_control) {
         if (settings_control->objectName().isEmpty())
             settings_control->setObjectName(
                 QString::fromUtf8("settings_control"));
@@ -76,7 +76,9 @@ class Ui_settings_control {
         QIcon icon;
         icon.addFile(
             QString::fromUtf8(":/Desktop_Icon/Resources/jta_dime_icon.png"),
-            QSize(), QIcon::Normal, QIcon::Off);
+            QSize(),
+            QIcon::Normal,
+            QIcon::Off);
         settings_control->setWindowIcon(icon);
         settings_control->setStyleSheet(QString::fromUtf8(
             "/*\n"
@@ -620,9 +622,9 @@ class Ui_settings_control {
         retranslateUi(settings_control);
 
         QMetaObject::connectSlotsByName(settings_control);
-    }  // setupUi
+    } // setupUi
 
-    void retranslateUi(QDialog *settings_control) {
+    void retranslateUi(QDialog* settings_control) {
         settings_control->setWindowTitle(QCoreApplication::translate(
             "settings_control", "Optimizer Settings", nullptr));
         save_button->setText(
@@ -664,8 +666,8 @@ class Ui_settings_control {
         bool_parameter_false_radioButton->setText(
             QCoreApplication::translate("settings_control", "False", nullptr));
         optimization_search_stage_groupBox->setTitle(
-            QCoreApplication::translate("settings_control",
-                                        "OPTIMIZATION SEARCH STAGE", nullptr));
+            QCoreApplication::translate(
+                "settings_control", "OPTIMIZATION SEARCH STAGE", nullptr));
         trunk_radioButton->setText(
             QCoreApplication::translate("settings_control", "Trunk", nullptr));
         branch_radioButton->setText(
@@ -674,13 +676,13 @@ class Ui_settings_control {
             QCoreApplication::translate("settings_control", "Leaf", nullptr));
         cancel_button->setText(
             QCoreApplication::translate("settings_control", "Cancel", nullptr));
-    }  // retranslateUi
+    } // retranslateUi
 };
 
 namespace Ui {
 class settings_control : public Ui_settings_control {};
-}  // namespace Ui
+} // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif  // UI_SETTINGS_CONTROL_H
+#endif // UI_SETTINGS_CONTROL_H

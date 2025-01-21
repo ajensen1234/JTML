@@ -44,7 +44,12 @@ int main() {
 
     // GPU version of the model
     auto gpu_principal_model_ = new gpu_cost_function::GPUModel(
-        primary_model_.model_name_, true, width, height, cuda_device_id, true,
+        primary_model_.model_name_,
+        true,
+        width,
+        height,
+        cuda_device_id,
+        true,
         &primary_model_.triangle_vertices_[0],
         &primary_model_.triangle_normals_[0],
         primary_model_.triangle_vertices_.size() / 9,

@@ -7,7 +7,7 @@
 #define CALIBRATION_H
 
 /*Includes*/
-#include "camera_calibration.h"  //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
+#include "camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
 
 /*Vec 3*/
 #include "data_structures_6D.h"
@@ -31,8 +31,16 @@ struct Vect_3 {
 
 /*3 by 3 Matrix*/
 struct Matrix_3_3 {
-    Matrix_3_3(float A_11, float A_12, float A_13, float A_21, float A_22,
-               float A_23, float A_31, float A_32, float A_33) {
+    Matrix_3_3(
+        float A_11,
+        float A_12,
+        float A_13,
+        float A_21,
+        float A_22,
+        float A_23,
+        float A_31,
+        float A_32,
+        float A_33) {
         A_11_ = A_11;
         A_12_ = A_12;
         A_13_ = A_13;
@@ -67,15 +75,15 @@ struct Matrix_3_3 {
 
     /*Perform Transpose*/
     Matrix_3_3 tranpose() {
-        return Matrix_3_3(A_11_, A_21_, A_31_, A_12_, A_22_, A_32_, A_13_,
-                          A_23_, A_33_);
+        return Matrix_3_3(
+            A_11_, A_21_, A_31_, A_12_, A_22_, A_32_, A_13_, A_23_, A_33_);
     };
 };
 
 struct Calibration {
     /* Constructors for Monoplane and Biplane*/
-    Calibration(CameraCalibration monoplane_principal,
-                std::string type = "UF") {
+    Calibration(
+        CameraCalibration monoplane_principal, std::string type = "UF") {
         biplane_calibration = false;
         camera_A_principal_ = monoplane_principal;
         type_ = type;
@@ -87,16 +95,20 @@ struct Calibration {
      * @param origin_B
      * @param axes_B
      */
-    Calibration(CameraCalibration biplane_A_principal,
-                CameraCalibration biplane_B_principal, Vect_3 origin_B,
-                Matrix_3_3 axes_B) {
+    Calibration(
+        CameraCalibration biplane_A_principal,
+        CameraCalibration biplane_B_principal,
+        Vect_3 origin_B,
+        Matrix_3_3 axes_B) {
         biplane_calibration = true;
         camera_A_principal_ = biplane_A_principal;
         camera_B_principal_ = biplane_B_principal;
         origin_B_ = origin_B;
         axes_B_ = axes_B;
     };
-    Calibration() { biplane_calibration = false; };
+    Calibration() {
+        biplane_calibration = false;
+    };
 
     /*Calibrated For Biplane?*/
     bool biplane_calibration;
@@ -129,11 +141,12 @@ struct Calibration {
             X.A_31_ * Y.A_13_ + X.A_32_ * Y.A_23_ + X.A_33_ * Y.A_33_);
     };
     Vect_3 multiplication_mat_vec(Matrix_3_3 X, Vect_3 u) {
-        return Vect_3(X.A_11_ * u.v_1_ + X.A_12_ * u.v_2_ + X.A_13_ * u.v_3_,
+        return Vect_3(
+            X.A_11_ * u.v_1_ + X.A_12_ * u.v_2_ + X.A_13_ * u.v_3_,
 
-                      X.A_21_ * u.v_1_ + X.A_22_ * u.v_2_ + X.A_23_ * u.v_3_,
+            X.A_21_ * u.v_1_ + X.A_22_ * u.v_2_ + X.A_23_ * u.v_3_,
 
-                      X.A_31_ * u.v_1_ + X.A_32_ * u.v_2_ + X.A_33_ * u.v_3_);
+            X.A_31_ * u.v_1_ + X.A_32_ * u.v_2_ + X.A_33_ * u.v_3_);
     };
 
     /*Camera A Pose to Camera B Pose*/
@@ -142,8 +155,10 @@ struct Calibration {
             /*Deal with Location*/
             Vect_3 location_B = multiplication_mat_vec(
                 axes_B_.tranpose(),
-                Vect_3(poseA.x - origin_B_.v_1_, poseA.y - origin_B_.v_2_,
-                       poseA.z - origin_B_.v_3_));
+                Vect_3(
+                    poseA.x - origin_B_.v_1_,
+                    poseA.y - origin_B_.v_2_,
+                    poseA.z - origin_B_.v_3_));
 
             /*Deal with Orientation*/
             /*Construct ROtation Matrices for A: Rz, Rx, Ry
@@ -155,12 +170,36 @@ struct Calibration {
             float theta_x_A = poseA.xa * (PI / 180.0);
             float theta_y_A = poseA.ya * (PI / 180.0);
             float theta_z_A = poseA.za * (PI / 180.0);
-            Matrix_3_3 R_x(1, 0, 0, 0, cos(theta_x_A), -1 * sin(theta_x_A), 0,
-                           sin(theta_x_A), cos(theta_x_A));
-            Matrix_3_3 R_y(cos(theta_y_A), 0, sin(theta_y_A), 0, 1, 0,
-                           -1 * sin(theta_y_A), 0, cos(theta_y_A));
-            Matrix_3_3 R_z(cos(theta_z_A), -1 * sin(theta_z_A), 0,
-                           sin(theta_z_A), cos(theta_z_A), 0, 0, 0, 1);
+            Matrix_3_3 R_x(
+                1,
+                0,
+                0,
+                0,
+                cos(theta_x_A),
+                -1 * sin(theta_x_A),
+                0,
+                sin(theta_x_A),
+                cos(theta_x_A));
+            Matrix_3_3 R_y(
+                cos(theta_y_A),
+                0,
+                sin(theta_y_A),
+                0,
+                1,
+                0,
+                -1 * sin(theta_y_A),
+                0,
+                cos(theta_y_A));
+            Matrix_3_3 R_z(
+                cos(theta_z_A),
+                -1 * sin(theta_z_A),
+                0,
+                sin(theta_z_A),
+                cos(theta_z_A),
+                0,
+                0,
+                0,
+                1);
             Matrix_3_3 R =
                 multiplication_mat_mat(R_z, multiplication_mat_mat(R_x, R_y));
             Matrix_3_3 R_B = multiplication_mat_mat(axes_B_.tranpose(), R);
@@ -185,11 +224,15 @@ struct Calibration {
             }
 
             /*Return New Pose*/
-            return Point6D(location_B.v_1_, location_B.v_2_, location_B.v_3_,
-                           theta_x_B * (180.0 / PI), theta_y_B * (180.0 / PI),
-                           theta_z_B * (180.0 / PI));
+            return Point6D(
+                location_B.v_1_,
+                location_B.v_2_,
+                location_B.v_3_,
+                theta_x_B * (180.0 / PI),
+                theta_y_B * (180.0 / PI),
+                theta_z_B * (180.0 / PI));
         } else
-            return poseA;  // Just return the same.
+            return poseA; // Just return the same.
     };
 
     /*Camera B Pose to Camera A Pose*/
@@ -198,9 +241,10 @@ struct Calibration {
             /*Deal with Location*/
             Vect_3 location_B = multiplication_mat_vec(
                 axes_B_, Vect_3(poseA.x, poseA.y, poseA.z));
-            location_B = Vect_3(location_B.v_1_ + origin_B_.v_1_,
-                                location_B.v_2_ + origin_B_.v_2_,
-                                location_B.v_3_ + origin_B_.v_3_);
+            location_B = Vect_3(
+                location_B.v_1_ + origin_B_.v_1_,
+                location_B.v_2_ + origin_B_.v_2_,
+                location_B.v_3_ + origin_B_.v_3_);
 
             /*Deal with Orientation*/
             /*Construct ROtation Matrices for B: Rz, Rx, Ry
@@ -212,12 +256,36 @@ struct Calibration {
             float theta_x_A = poseA.xa * (PI / 180.0);
             float theta_y_A = poseA.ya * (PI / 180.0);
             float theta_z_A = poseA.za * (PI / 180.0);
-            Matrix_3_3 R_x(1, 0, 0, 0, cos(theta_x_A), -1 * sin(theta_x_A), 0,
-                           sin(theta_x_A), cos(theta_x_A));
-            Matrix_3_3 R_y(cos(theta_y_A), 0, sin(theta_y_A), 0, 1, 0,
-                           -1 * sin(theta_y_A), 0, cos(theta_y_A));
-            Matrix_3_3 R_z(cos(theta_z_A), -1 * sin(theta_z_A), 0,
-                           sin(theta_z_A), cos(theta_z_A), 0, 0, 0, 1);
+            Matrix_3_3 R_x(
+                1,
+                0,
+                0,
+                0,
+                cos(theta_x_A),
+                -1 * sin(theta_x_A),
+                0,
+                sin(theta_x_A),
+                cos(theta_x_A));
+            Matrix_3_3 R_y(
+                cos(theta_y_A),
+                0,
+                sin(theta_y_A),
+                0,
+                1,
+                0,
+                -1 * sin(theta_y_A),
+                0,
+                cos(theta_y_A));
+            Matrix_3_3 R_z(
+                cos(theta_z_A),
+                -1 * sin(theta_z_A),
+                0,
+                sin(theta_z_A),
+                cos(theta_z_A),
+                0,
+                0,
+                0,
+                1);
             Matrix_3_3 R =
                 multiplication_mat_mat(R_z, multiplication_mat_mat(R_x, R_y));
             Matrix_3_3 R_B = multiplication_mat_mat(axes_B_, R);
@@ -242,11 +310,15 @@ struct Calibration {
             }
 
             /*Return New Pose*/
-            return Point6D(location_B.v_1_, location_B.v_2_, location_B.v_3_,
-                           theta_x_B * (180.0 / PI), theta_y_B * (180.0 / PI),
-                           theta_z_B * (180.0 / PI));
+            return Point6D(
+                location_B.v_1_,
+                location_B.v_2_,
+                location_B.v_3_,
+                theta_x_B * (180.0 / PI),
+                theta_y_B * (180.0 / PI),
+                theta_z_B * (180.0 / PI));
         } else
-            return poseA;  // Just return the same.
+            return poseA; // Just return the same.
     };
 };
 #endif /* CALIBRATION_H */

@@ -34,6 +34,7 @@ glew = ">=2.1.0,<3"
 libegl-devel = ">=1.7.0,<2"
 libgles-devel = ">=1.7.0,<2"
 libopengl-devel = ">=1.7.0,<2"
+clang-tools = ">=19.1.2,<20"
 
 [feature.build.dependencies]
 cmake = ">=3.31.4,<4"
@@ -75,7 +76,8 @@ cmd = ["cmake",
     "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
     "-DLIBNVTOOLSEXT=$CONDA_PREFIX/lib/libnvToolsExt.so.1",
     "-DQt5_DIR=$CONDA_PREFIX/lib/cmake/Qt5",
-    "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX"
+    "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
 ]
 inputs = ["CMakeLists.txt"]
 outputs = [".build/CMakeFiles/"]
@@ -102,6 +104,14 @@ cmd = """
     echo "GDK_BACKEND=$GDK_BACKEND"
     echo "QT_QPA_PLATFORM=$QT_QPA_PLATFORM"
 """
+
+[tasks.format]
+cmd = ["bash", "format.sh"]
+depends-on = ["configure"]
+
+[tasks.tidy]
+cmd = ["bash", "tidy.sh", "--path", ".build"]
+depends-on = ["configure"]
 
 [environments]
 build = ["build"]

@@ -11,7 +11,7 @@
 
 namespace jta_cost_function {
 bool CostFunctionManager::initializeDIRECT_DILATION(
-    std::string &error_message) {
+    std::string& error_message) {
     /*Any cost function stage initialization proceedings go here.
     This is called when the optimizer begins a new stage.
     Must return whether or not the initialization was successful.
@@ -45,7 +45,7 @@ bool CostFunctionManager::initializeDIRECT_DILATION(
     /*Return if success or not*/
     return (cudaStatus == cudaSuccess);
 }
-bool CostFunctionManager::destructDIRECT_DILATION(std::string &error_message) {
+bool CostFunctionManager::destructDIRECT_DILATION(std::string& error_message) {
     /*Any cost function stage initialization proceedings that involve
     creating new variables should be destructed here.
     This is called when the optimizer ends a stage.
@@ -105,4 +105,4 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
 
     return metric_score;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

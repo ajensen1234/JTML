@@ -60,8 +60,8 @@ struct Study {
     vector<string> stl_types_;
     vector<string> stl_basenames_;
     vector<bool>
-        stl_basenames_have_kp_;  // Same order as stl_types/basenames, states
-                                 // whether that basename has a kp file or not.
-                                 // If key_points_ == false, these are all
-                                 // automatically false.
+        stl_basenames_have_kp_; // Same order as stl_types/basenames, states
+                                // whether that basename has a kp file or not.
+                                // If key_points_ == false, these are all
+                                // automatically false.
 };

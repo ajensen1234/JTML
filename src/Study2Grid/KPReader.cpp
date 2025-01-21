@@ -13,7 +13,7 @@
 
 using namespace basic_la;
 
-bool readKP(const QString &path, std::vector<XYZPoint> &kp_storage) {
+bool readKP(const QString& path, std::vector<XYZPoint>& kp_storage) {
     /*Clear Storage*/
     kp_storage.clear();
     /* New Method Uses IO Stream to Account for the different types of Keypoints
@@ -28,7 +28,7 @@ bool readKP(const QString &path, std::vector<XYZPoint> &kp_storage) {
     kp_file.open(newpath, ios::in);
 
     if (kp_file.is_open()) {
-        std::string line;  // creating string to read lines to
+        std::string line; // creating string to read lines to
         double kp[3];
         // todo: figure out a good way to save memory here - i think it might be
         // clogging things up
@@ -45,7 +45,7 @@ bool readKP(const QString &path, std::vector<XYZPoint> &kp_storage) {
             /*Populate the Keypoint storage object*/
             kp_storage.push_back(XYZPoint(kp[0], kp[1], kp[2]));
         }
-        kp_file.close();  // close the file
+        kp_file.close(); // close the file
         return true;
     }
 }
@@ -64,27 +64,31 @@ bool readKP(const QString &path, std::vector<XYZPoint> &kp_storage) {
 //			if (line_index == 0) {
 //				if (line.simplified() != "BEGIN_KP") {
 //					std::cout << "\nError: No proper header
-//in .kp file: " + path.toStdString(); 					return false;
+// in .kp file: " + path.toStdString();
+// return false;
 //				}
 //			}
 //			else {
 //				if (line.simplified() == "END_KP")
 //					return true;
 //				QStringList name_and_location =
-//line.simplified().split(":"); // split at colon 				if (name_and_location.size()
-//!= 2) { 					std::cout << "\nError: Incorrect size when split along colon character
-//.kp file: " + path.toStdString(); 					return false;
+// line.simplified().split(":"); // split at colon if (name_and_location.size()
+//!= 2) { 					std::cout << "\nError: Incorrect
+//!size when split along colon character
+//.kp file: " + path.toStdString(); 					return
+//false;
 //				}
 //				QStringList location =
-//name_and_location[1].split(","); 				if (location.size() != 3) { 					location =
-//name_and_location[1].simplified().split(" "); 					if (location.size() != 3) {
-//						std::cout << "\nError: There are
-//not three scalars representing a point in the .kp file: " +
-//path.toStdString(); 						return false;
+// name_and_location[1].split(","); 				if
+// (location.size() != 3) { 					location =
+// name_and_location[1].simplified().split(" ");
+// if (location.size() != 3) { 						std::cout << "\nError: There are not three
+// scalars representing a point in the .kp file: " + path.toStdString();
+// return false;
 //					}
 //				}
 //				kp_storage.push_back(XYZPoint(location[0].simplified().toFloat(),
-//location[1].simplified().toFloat(), location[2].simplified().toFloat()));
+// location[1].simplified().toFloat(), location[2].simplified().toFloat()));
 //			}
 //			line_index++;
 //		}
@@ -92,6 +96,6 @@ bool readKP(const QString &path, std::vector<XYZPoint> &kp_storage) {
 //	}
 //	else {
 //		std::cout << "\nError: Cannot open .kp file: " +
-//path.toStdString(); 		return false;
+// path.toStdString(); 		return false;
 //	}
 //}

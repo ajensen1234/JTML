@@ -6,8 +6,8 @@
 
 /*Add New Model to JTA-GPU So Initialize ALl Loaded Frames with
 Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0)*/
-void LocationStorage::LoadNewModel(double principal_distance,
-                                   double pixel_pitch) {
+void LocationStorage::LoadNewModel(
+    double principal_distance, double pixel_pitch) {
     for (int i = 0; i < location_storage_matrix_.size(); i++) {
         location_storage_matrix_[i].push_back(
             Point6D(0, 0, -.25 * principal_distance / pixel_pitch, 0, 0, 0));
@@ -53,8 +53,8 @@ Point6D LocationStorage::GetPose(int frame_index, int model_index) {
 }
 
 /*Store a Pose to Matrix*/
-void LocationStorage::SavePose(int frame_index, int model_index,
-                               Point6D model_pose) {
+void LocationStorage::SavePose(
+    int frame_index, int model_index, Point6D model_pose) {
     /*check in range*/
     if (frame_index >= 0 && frame_index < location_storage_matrix_.size()) {
         if (model_index >= 0 &&

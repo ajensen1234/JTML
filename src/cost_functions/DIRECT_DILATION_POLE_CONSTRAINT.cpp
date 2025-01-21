@@ -103,8 +103,8 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_POLE_CONSTRAINT() {
 
     /*Parameter*/
     double pole_weight;
-    this->getActiveCostFunctionClass()->getDoubleParameterValue("PoleWeight",
-                                                                pole_weight);
+    this->getActiveCostFunctionClass()->getDoubleParameterValue(
+        "PoleWeight", pole_weight);
 
     /*Direct Dilation begin */
     /*Render*/
@@ -121,4 +121,4 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_POLE_CONSTRAINT() {
 
     return metric_score + pole_weight * shortest_distance;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

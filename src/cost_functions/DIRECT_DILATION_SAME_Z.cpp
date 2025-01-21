@@ -112,13 +112,14 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_SAME_Z() {
 
         metric_score +=
             DIRECT_DILATION_SAME_Z_current_z_weight_parameter *
-            std::abs(gpu_principal_model_->GetCurrentSecondaryCameraPose()
-                         .z_location_ -
-                     (*gpu_non_principal_models_)[0]
-                         ->GetCurrentSecondaryCameraPose()
-                         .z_location_);
+            std::abs(
+                gpu_principal_model_->GetCurrentSecondaryCameraPose()
+                    .z_location_ -
+                (*gpu_non_principal_models_)[0]
+                    ->GetCurrentSecondaryCameraPose()
+                    .z_location_);
     }
 
     return metric_score;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

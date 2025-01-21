@@ -14,22 +14,28 @@
 #include "gpu_model.cuh"
 #include "pose_matrix.h"
 
-OptimizerManager::OptimizerManager(QObject *parent) : QObject(parent) {
+OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
     // this->sym_trap_obj = nullptr;
 }
 
 /*Initialize*/
 bool OptimizerManager::Initialize(
-    QThread &optimizer_thread, Calibration calibration_file,
+    QThread& optimizer_thread,
+    Calibration calibration_file,
     std::vector<Frame> camera_A_frame_list,
-    std::vector<Frame> camera_B_frame_list, unsigned int current_frame_index,
-    std::vector<Model> model_list, QModelIndexList selected_models,
-    unsigned int primary_model_index, LocationStorage pose_matrix,
+    std::vector<Frame> camera_B_frame_list,
+    unsigned int current_frame_index,
+    std::vector<Model> model_list,
+    QModelIndexList selected_models,
+    unsigned int primary_model_index,
+    LocationStorage pose_matrix,
     OptimizerSettings opt_settings,
     jta_cost_function::CostFunctionManager trunk_manager,
     jta_cost_function::CostFunctionManager branch_manager,
-    jta_cost_function::CostFunctionManager leaf_manager, QString opt_directive,
-    QString &error_message, int iter_count) {
+    jta_cost_function::CostFunctionManager leaf_manager,
+    QString opt_directive,
+    QString& error_message,
+    int iter_count) {
     /*Success?*/
     succesfull_initialization_ = true;
 
@@ -43,8 +49,11 @@ bool OptimizerManager::Initialize(
     /*Destructor Connections*/
     connect(this, SIGNAL(finished()), &optimizer_thread, SLOT(quit()));
     connect(this, SIGNAL(finished()), this, SLOT(deleteLater()));
-    connect(&optimizer_thread, SIGNAL(finished()), &optimizer_thread,
-            SLOT(deleteLater()));
+    connect(
+        &optimizer_thread,
+        SIGNAL(finished()),
+        &optimizer_thread,
+        SLOT(deleteLater()));
 
     /*Store Calibration File Locally*/
     calibration_ = calibration_file;
@@ -61,9 +70,8 @@ bool OptimizerManager::Initialize(
     frames_B_ = camera_B_frame_list;
     if (calibration_.biplane_calibration &&
         frames_A_.size() != frames_B_.size()) {
-        error_message =
-            "Biplane mode enabled, but each camera has a different "
-            "number of frames!";
+        error_message = "Biplane mode enabled, but each camera has a different "
+                        "number of frames!";
         succesfull_initialization_ = false;
         return succesfull_initialization_;
     }
@@ -107,19 +115,26 @@ bool OptimizerManager::Initialize(
         std::vector<Pose> poses_each_frame_for_given_model;
         for (int j = 0; j < pose_matrix.GetFrameCount(); j++) {
             Point6D temp_p6d = pose_matrix.GetPose(j, index_for_model);
-            auto temp_pose = Pose(temp_p6d.x, temp_p6d.y, temp_p6d.z,
-                                  temp_p6d.xa, temp_p6d.ya, temp_p6d.za);
+            auto temp_pose = Pose(
+                temp_p6d.x,
+                temp_p6d.y,
+                temp_p6d.z,
+                temp_p6d.xa,
+                temp_p6d.ya,
+                temp_p6d.za);
             poses_each_frame_for_given_model.push_back(temp_pose);
         }
         /*If i ==0, principal model*/
         if (i == 0) {
-            pose_storage_.AddModel(poses_each_frame_for_given_model,
-                                   all_models_[index_for_model].model_name_,
-                                   true);
+            pose_storage_.AddModel(
+                poses_each_frame_for_given_model,
+                all_models_[index_for_model].model_name_,
+                true);
         } else {
-            pose_storage_.AddModel(poses_each_frame_for_given_model,
-                                   all_models_[index_for_model].model_name_,
-                                   false);
+            pose_storage_.AddModel(
+                poses_each_frame_for_given_model,
+                all_models_[index_for_model].model_name_,
+                false);
         }
     }
 
@@ -338,8 +353,12 @@ bool OptimizerManager::Initialize(
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
         auto intensity_frame = new GPUIntensityFrame(
-            width, height, cuda_device_id, frames_A_[i].GetOriginalImage().data,
-            trunk_dark_silhouette_val_, frames_A_[i].GetInvertedImage().data);
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetOriginalImage().data,
+            trunk_dark_silhouette_val_,
+            frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
             gpu_intensity_frames_trunk_A_.push_back(intensity_frame);
         } else {
@@ -352,11 +371,13 @@ bool OptimizerManager::Initialize(
     /*Camera B*/
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
-            auto intensity_frame =
-                new GPUIntensityFrame(width, height, cuda_device_id,
-                                      frames_B_[i].GetOriginalImage().data,
-                                      trunk_dark_silhouette_val_,
-                                      frames_B_[i].GetInvertedImage().data);
+            auto intensity_frame = new GPUIntensityFrame(
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetOriginalImage().data,
+                trunk_dark_silhouette_val_,
+                frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
                 gpu_intensity_frames_trunk_B_.push_back(intensity_frame);
             } else {
@@ -371,8 +392,12 @@ bool OptimizerManager::Initialize(
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
         auto intensity_frame = new GPUIntensityFrame(
-            width, height, cuda_device_id, frames_A_[i].GetOriginalImage().data,
-            branch_dark_silhouette_val_, frames_A_[i].GetInvertedImage().data);
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetOriginalImage().data,
+            branch_dark_silhouette_val_,
+            frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
             gpu_intensity_frames_branch_A_.push_back(intensity_frame);
         } else {
@@ -385,11 +410,13 @@ bool OptimizerManager::Initialize(
     /*Camera B*/
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
-            auto intensity_frame =
-                new GPUIntensityFrame(width, height, cuda_device_id,
-                                      frames_B_[i].GetOriginalImage().data,
-                                      branch_dark_silhouette_val_,
-                                      frames_B_[i].GetInvertedImage().data);
+            auto intensity_frame = new GPUIntensityFrame(
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetOriginalImage().data,
+                branch_dark_silhouette_val_,
+                frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
                 gpu_intensity_frames_branch_B_.push_back(intensity_frame);
             } else {
@@ -404,8 +431,12 @@ bool OptimizerManager::Initialize(
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
         auto intensity_frame = new GPUIntensityFrame(
-            width, height, cuda_device_id, frames_A_[i].GetOriginalImage().data,
-            leaf_dark_silhouette_val_, frames_A_[i].GetInvertedImage().data);
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetOriginalImage().data,
+            leaf_dark_silhouette_val_,
+            frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
             gpu_intensity_frames_leaf_A_.push_back(intensity_frame);
         } else {
@@ -419,8 +450,11 @@ bool OptimizerManager::Initialize(
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
             auto intensity_frame = new GPUIntensityFrame(
-                width, height, cuda_device_id,
-                frames_B_[i].GetOriginalImage().data, leaf_dark_silhouette_val_,
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetOriginalImage().data,
+                leaf_dark_silhouette_val_,
                 frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
                 gpu_intensity_frames_leaf_B_.push_back(intensity_frame);
@@ -439,13 +473,19 @@ bool OptimizerManager::Initialize(
     /*Camera A*/
     /*Update Dilation Images to Leaf Mode*/
     for (int i = 0; i < frames_A_.size(); i++) {
-        dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(),
-               cv::Mat(), cv::Point(-1, -1),
-               leaf_dilation_val_); /*Reset Dilation In That Image*/
+        dilate(
+            frames_A_[i].GetEdgeImage(),
+            frames_A_[i].GetDilationImage(),
+            cv::Mat(),
+            cv::Point(-1, -1),
+            leaf_dilation_val_); /*Reset Dilation In That Image*/
     }
     for (int i = 0; i < frames_A_.size(); i++) {
         auto dilated_frame = new GPUDilatedFrame(
-            width, height, cuda_device_id, frames_A_[i].GetDilationImage().data,
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetDilationImage().data,
             leaf_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
             gpu_dilated_frames_leaf_A_.push_back(dilated_frame);
@@ -459,16 +499,22 @@ bool OptimizerManager::Initialize(
     /*Camera B*/
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
-            dilate(frames_B_[i].GetEdgeImage(), frames_B_[i].GetDilationImage(),
-                   cv::Mat(), cv::Point(-1, -1),
-                   leaf_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_B_[i].GetEdgeImage(),
+                frames_B_[i].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                leaf_dilation_val_); /*Reset Dilation In That Image*/
         }
     }
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
             auto dilated_frame = new GPUDilatedFrame(
-                width, height, cuda_device_id,
-                frames_B_[i].GetDilationImage().data, leaf_dilation_val_);
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetDilationImage().data,
+                leaf_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
                 gpu_dilated_frames_leaf_B_.push_back(dilated_frame);
             } else {
@@ -482,13 +528,19 @@ bool OptimizerManager::Initialize(
     /*Branch*/
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
-        dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(),
-               cv::Mat(), cv::Point(-1, -1),
-               branch_dilation_val_); /*Reset Dilation In That Image*/
+        dilate(
+            frames_A_[i].GetEdgeImage(),
+            frames_A_[i].GetDilationImage(),
+            cv::Mat(),
+            cv::Point(-1, -1),
+            branch_dilation_val_); /*Reset Dilation In That Image*/
     }
     for (int i = 0; i < frames_A_.size(); i++) {
         auto dilated_frame = new GPUDilatedFrame(
-            width, height, cuda_device_id, frames_A_[i].GetDilationImage().data,
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetDilationImage().data,
             branch_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
             gpu_dilated_frames_branch_A_.push_back(dilated_frame);
@@ -502,16 +554,22 @@ bool OptimizerManager::Initialize(
     /*Camera B*/
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
-            dilate(frames_B_[i].GetEdgeImage(), frames_B_[i].GetDilationImage(),
-                   cv::Mat(), cv::Point(-1, -1),
-                   branch_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_B_[i].GetEdgeImage(),
+                frames_B_[i].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                branch_dilation_val_); /*Reset Dilation In That Image*/
         }
     }
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
             auto dilated_frame = new GPUDilatedFrame(
-                width, height, cuda_device_id,
-                frames_B_[i].GetDilationImage().data, branch_dilation_val_);
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetDilationImage().data,
+                branch_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
                 gpu_dilated_frames_branch_B_.push_back(dilated_frame);
             } else {
@@ -525,13 +583,19 @@ bool OptimizerManager::Initialize(
     /*Trunk*/
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
-        dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(),
-               cv::Mat(), cv::Point(-1, -1),
-               trunk_dilation_val_); /*Reset Dilation In That Image*/
+        dilate(
+            frames_A_[i].GetEdgeImage(),
+            frames_A_[i].GetDilationImage(),
+            cv::Mat(),
+            cv::Point(-1, -1),
+            trunk_dilation_val_); /*Reset Dilation In That Image*/
     }
     for (int i = 0; i < frames_A_.size(); i++) {
         auto dilated_frame = new GPUDilatedFrame(
-            width, height, cuda_device_id, frames_A_[i].GetDilationImage().data,
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetDilationImage().data,
             trunk_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
             gpu_dilated_frames_trunk_A_.push_back(dilated_frame);
@@ -545,16 +609,22 @@ bool OptimizerManager::Initialize(
     /*Camera B*/
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
-            dilate(frames_B_[i].GetEdgeImage(), frames_B_[i].GetDilationImage(),
-                   cv::Mat(), cv::Point(-1, -1),
-                   trunk_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_B_[i].GetEdgeImage(),
+                frames_B_[i].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                trunk_dilation_val_); /*Reset Dilation In That Image*/
         }
     }
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
             auto dilated_frame = new GPUDilatedFrame(
-                width, height, cuda_device_id,
-                frames_B_[i].GetDilationImage().data, trunk_dilation_val_);
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetDilationImage().data,
+                trunk_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
                 gpu_dilated_frames_trunk_B_.push_back(dilated_frame);
             } else {
@@ -570,8 +640,12 @@ bool OptimizerManager::Initialize(
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
         auto edge_frame = new GPUEdgeFrame(
-            width, height, cuda_device_id, frames_A_[i].GetEdgeImage().data,
-            frames_A_[i].GetHighThreshold(), frames_A_[i].GetLowThreshold(),
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetEdgeImage().data,
+            frames_A_[i].GetHighThreshold(),
+            frames_A_[i].GetLowThreshold(),
             frames_A_[i].GetAperture());
         if (edge_frame->IsInitializedCorrectly()) {
             gpu_edge_frames_A_.push_back(edge_frame);
@@ -586,8 +660,12 @@ bool OptimizerManager::Initialize(
     if (calibration_.biplane_calibration) {
         for (int i = 0; i < frames_B_.size(); i++) {
             auto edge_frame = new GPUEdgeFrame(
-                width, height, cuda_device_id, frames_B_[i].GetEdgeImage().data,
-                frames_B_[i].GetHighThreshold(), frames_B_[i].GetLowThreshold(),
+                width,
+                height,
+                cuda_device_id,
+                frames_B_[i].GetEdgeImage().data,
+                frames_B_[i].GetHighThreshold(),
+                frames_B_[i].GetLowThreshold(),
                 frames_B_[i].GetAperture());
             if (edge_frame->IsInitializedCorrectly()) {
                 gpu_edge_frames_B_.push_back(edge_frame);
@@ -602,8 +680,8 @@ bool OptimizerManager::Initialize(
 
     /*Upload distance maps*/
     for (int i = 0; i < frames_A_.size(); i++) {
-        auto distance_map = new GPUFrame(width, height, cuda_device_id,
-                                         frames_A_[i].GetDistanceMap().data);
+        auto distance_map = new GPUFrame(
+            width, height, cuda_device_id, frames_A_[i].GetDistanceMap().data);
         if (distance_map->IsInitializedCorrectly()) {
             gpu_distance_maps_.push_back(distance_map);
 
@@ -615,10 +693,12 @@ bool OptimizerManager::Initialize(
         }
     }
     for (int i = 0; i < frames_A_.size(); i++) {
-        auto heatmap =
-            new GPUHeatmap(width, height, cuda_device_id,
-                           frames_A_[i].GetNumCurvatureKeypoints(),
-                           frames_A_[i].getCurvatureHeatmaps().data());
+        auto heatmap = new GPUHeatmap(
+            width,
+            height,
+            cuda_device_id,
+            frames_A_[i].GetNumCurvatureKeypoints(),
+            frames_A_[i].getCurvatureHeatmaps().data());
         if (heatmap->IsInitializedCorrectly()) {
             gpu_heatmaps_.push_back(heatmap);
         } else {
@@ -634,8 +714,13 @@ bool OptimizerManager::Initialize(
     if (!calibration_.biplane_calibration) {
         /*Principal Model*/
         gpu_principal_model_ = new GPUModel(
-            primary_model_.model_name_, true, width, height, cuda_device_id,
-            true, &primary_model_.triangle_vertices_[0],
+            primary_model_.model_name_,
+            true,
+            width,
+            height,
+            cuda_device_id,
+            true,
+            &primary_model_.triangle_vertices_[0],
             &primary_model_.triangle_normals_[0],
             primary_model_.triangle_vertices_.size() / 9,
             calibration_.camera_A_principal_);
@@ -650,8 +735,12 @@ bool OptimizerManager::Initialize(
         /*Non-principal models*/
         for (int i = 1; i < selected_model_list_.size(); i++) {
             auto gpu_non_principal_model = new GPUModel(
-                all_models_[selected_model_list_[i].row()].model_name_, true,
-                width, height, cuda_device_id, true,
+                all_models_[selected_model_list_[i].row()].model_name_,
+                true,
+                width,
+                height,
+                cuda_device_id,
+                true,
                 &all_models_[selected_model_list_[i].row()]
                      .triangle_vertices_[0],
                 &all_models_[selected_model_list_[i].row()]
@@ -674,11 +763,19 @@ bool OptimizerManager::Initialize(
     else {
         /*Principal Model*/
         gpu_principal_model_ = new GPUModel(
-            primary_model_.model_name_, true, width, height, cuda_device_id,
-            cuda_device_id, true, true, &primary_model_.triangle_vertices_[0],
+            primary_model_.model_name_,
+            true,
+            width,
+            height,
+            cuda_device_id,
+            cuda_device_id,
+            true,
+            true,
+            &primary_model_.triangle_vertices_[0],
             &primary_model_.triangle_normals_[0],
             primary_model_.triangle_vertices_.size() / 9,
-            calibration_.camera_A_principal_, calibration_.camera_B_principal_);
+            calibration_.camera_A_principal_,
+            calibration_.camera_B_principal_);
         if (!gpu_principal_model_->IsInitializedCorrectly()) {
             delete gpu_principal_model_;
             gpu_principal_model_ = 0;
@@ -689,8 +786,14 @@ bool OptimizerManager::Initialize(
         /*Non-principal models*/
         for (int i = 1; i < selected_model_list_.size(); i++) {
             auto gpu_non_principal_model = new GPUModel(
-                all_models_[selected_model_list_[i].row()].model_name_, true,
-                width, height, cuda_device_id, cuda_device_id, true, true,
+                all_models_[selected_model_list_[i].row()].model_name_,
+                true,
+                width,
+                height,
+                cuda_device_id,
+                cuda_device_id,
+                true,
+                true,
                 &all_models_[selected_model_list_[i].row()]
                      .triangle_vertices_[0],
                 &all_models_[selected_model_list_[i].row()]
@@ -721,23 +824,41 @@ bool OptimizerManager::Initialize(
 
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
-        &gpu_edge_frames_A_, &gpu_dilated_frames_trunk_A_,
-        &gpu_intensity_frames_trunk_A_, &gpu_edge_frames_B_,
-        &gpu_dilated_frames_trunk_B_, &gpu_intensity_frames_trunk_B_,
-        gpu_principal_model_, &gpu_non_principal_models_, gpu_metrics_,
-        &pose_storage_, calibration_.biplane_calibration);
+        &gpu_edge_frames_A_,
+        &gpu_dilated_frames_trunk_A_,
+        &gpu_intensity_frames_trunk_A_,
+        &gpu_edge_frames_B_,
+        &gpu_dilated_frames_trunk_B_,
+        &gpu_intensity_frames_trunk_B_,
+        gpu_principal_model_,
+        &gpu_non_principal_models_,
+        gpu_metrics_,
+        &pose_storage_,
+        calibration_.biplane_calibration);
     branch_manager_.UploadData(
-        &gpu_edge_frames_A_, &gpu_dilated_frames_branch_A_,
-        &gpu_intensity_frames_branch_A_, &gpu_edge_frames_B_,
-        &gpu_dilated_frames_branch_B_, &gpu_intensity_frames_branch_B_,
-        gpu_principal_model_, &gpu_non_principal_models_, gpu_metrics_,
-        &pose_storage_, calibration_.biplane_calibration);
+        &gpu_edge_frames_A_,
+        &gpu_dilated_frames_branch_A_,
+        &gpu_intensity_frames_branch_A_,
+        &gpu_edge_frames_B_,
+        &gpu_dilated_frames_branch_B_,
+        &gpu_intensity_frames_branch_B_,
+        gpu_principal_model_,
+        &gpu_non_principal_models_,
+        gpu_metrics_,
+        &pose_storage_,
+        calibration_.biplane_calibration);
     leaf_manager_.UploadData(
-        &gpu_edge_frames_A_, &gpu_dilated_frames_leaf_A_,
-        &gpu_intensity_frames_leaf_A_, &gpu_edge_frames_B_,
-        &gpu_dilated_frames_leaf_B_, &gpu_intensity_frames_leaf_B_,
-        gpu_principal_model_, &gpu_non_principal_models_, gpu_metrics_,
-        &pose_storage_, calibration_.biplane_calibration);
+        &gpu_edge_frames_A_,
+        &gpu_dilated_frames_leaf_A_,
+        &gpu_intensity_frames_leaf_A_,
+        &gpu_edge_frames_B_,
+        &gpu_dilated_frames_leaf_B_,
+        &gpu_intensity_frames_leaf_B_,
+        gpu_principal_model_,
+        &gpu_non_principal_models_,
+        gpu_metrics_,
+        &pose_storage_,
+        calibration_.biplane_calibration);
     trunk_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
     branch_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
     leaf_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
@@ -764,17 +885,22 @@ void OptimizerManager::Optimize() {
     if (!succesfull_initialization_) {
         /*Restore Dilation OpenCV Images*/
         for (int i = 0; i < frames_A_.size(); i++) {
-            dilate(frames_A_[i].GetEdgeImage(), frames_A_[i].GetDilationImage(),
-                   cv::Mat(), cv::Point(-1, -1),
-                   trunk_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_A_[i].GetEdgeImage(),
+                frames_A_[i].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                trunk_dilation_val_); /*Reset Dilation In That Image*/
         }
         /*Camera B*/
         if (calibration_.biplane_calibration) {
             for (int i = 0; i < frames_B_.size(); i++) {
-                dilate(frames_B_[i].GetEdgeImage(),
-                       frames_B_[i].GetDilationImage(), cv::Mat(),
-                       cv::Point(-1, -1),
-                       trunk_dilation_val_); /*Reset Dilation In That Image*/
+                dilate(
+                    frames_B_[i].GetEdgeImage(),
+                    frames_B_[i].GetDilationImage(),
+                    cv::Mat(),
+                    cv::Point(-1, -1),
+                    trunk_dilation_val_); /*Reset Dilation In That Image*/
             }
         }
 
@@ -796,9 +922,12 @@ void OptimizerManager::Optimize() {
                 Pose starting_pose;
                 pose_storage_.GetModelPose(frame_index, &starting_pose);
                 SetStartingPoint(Point6D(
-                    starting_pose.x_location_, starting_pose.y_location_,
-                    starting_pose.z_location_, starting_pose.x_angle_,
-                    starting_pose.y_angle_, starting_pose.z_angle_));
+                    starting_pose.x_location_,
+                    starting_pose.y_location_,
+                    starting_pose.z_location_,
+                    starting_pose.x_angle_,
+                    starting_pose.y_angle_,
+                    starting_pose.z_angle_));
             } else {
                 SetStartingPoint(current_optimum_location_);
             }
@@ -812,7 +941,8 @@ void OptimizerManager::Optimize() {
                 if (pose_storage_.GetModelPose(
                         gpu_non_principal_models_[non_prin_model_ind]
                             ->GetModelName(),
-                        frame_index, &temp_primary_pose)) {
+                        frame_index,
+                        &temp_primary_pose)) {
                     gpu_non_principal_models_[non_prin_model_ind]
                         ->SetCurrentPrimaryCameraPose(temp_primary_pose);
                 } else {
@@ -830,16 +960,20 @@ void OptimizerManager::Optimize() {
                         temp_primary_pose.x_location_,
                         temp_primary_pose.y_location_,
                         temp_primary_pose.z_location_,
-                        temp_primary_pose.x_angle_, temp_primary_pose.y_angle_,
+                        temp_primary_pose.x_angle_,
+                        temp_primary_pose.y_angle_,
                         temp_primary_pose.z_angle_);
                     Point6D temp_secondary_point =
                         calibration_.convert_Pose_A_to_Pose_B(
                             temp_primary_point);
                     gpu_non_principal_models_[non_prin_model_ind]
                         ->SetCurrentSecondaryCameraPose(Pose(
-                            temp_secondary_point.x, temp_secondary_point.y,
-                            temp_secondary_point.z, temp_secondary_point.xa,
-                            temp_secondary_point.ya, temp_secondary_point.za));
+                            temp_secondary_point.x,
+                            temp_secondary_point.y,
+                            temp_secondary_point.z,
+                            temp_secondary_point.xa,
+                            temp_secondary_point.ya,
+                            temp_secondary_point.za));
                 }
             }
 
@@ -876,15 +1010,19 @@ void OptimizerManager::Optimize() {
 
             /*Make Sure Dilation Image is Showing Trunk Value (Should be
              * Unnecessary)*/
-            dilate(frames_A_[frame_index].GetEdgeImage(),
-                   frames_A_[frame_index].GetDilationImage(), cv::Mat(),
-                   cv::Point(-1, -1),
-                   trunk_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_A_[frame_index].GetEdgeImage(),
+                frames_A_[frame_index].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                trunk_dilation_val_); /*Reset Dilation In That Image*/
             if (calibration_.biplane_calibration) {
-                dilate(frames_B_[frame_index].GetEdgeImage(),
-                       frames_B_[frame_index].GetDilationImage(), cv::Mat(),
-                       cv::Point(-1, -1),
-                       trunk_dilation_val_); /*Reset Dilation In That Image*/
+                dilate(
+                    frames_B_[frame_index].GetEdgeImage(),
+                    frames_B_[frame_index].GetDilationImage(),
+                    cv::Mat(),
+                    cv::Point(-1, -1),
+                    trunk_dilation_val_); /*Reset Dilation In That Image*/
             }
             emit UpdateDilationBackground();
 
@@ -919,7 +1057,8 @@ void OptimizerManager::Optimize() {
                             static_cast<double>(clock() - start_clock_) /
                                 static_cast<double>(cost_function_calls_),
                             static_cast<int>(cost_function_calls_),
-                            current_optimum_value_, primary_model_index_);
+                            current_optimum_value_,
+                            primary_model_index_);
                         update_screen_clock_ = clock();
                     }
                 }
@@ -943,14 +1082,17 @@ void OptimizerManager::Optimize() {
                 }
 
                 /*Make Sure Dilation Image is Showing Branch Value */
-                dilate(frames_A_[frame_index].GetEdgeImage(),
-                       frames_A_[frame_index].GetDilationImage(), cv::Mat(),
-                       cv::Point(-1, -1),
-                       branch_dilation_val_); /*Reset Dilation In That Image*/
+                dilate(
+                    frames_A_[frame_index].GetEdgeImage(),
+                    frames_A_[frame_index].GetDilationImage(),
+                    cv::Mat(),
+                    cv::Point(-1, -1),
+                    branch_dilation_val_); /*Reset Dilation In That Image*/
                 if (calibration_.biplane_calibration) {
                     dilate(
                         frames_B_[frame_index].GetEdgeImage(),
-                        frames_B_[frame_index].GetDilationImage(), cv::Mat(),
+                        frames_B_[frame_index].GetDilationImage(),
+                        cv::Mat(),
                         cv::Point(-1, -1),
                         branch_dilation_val_); /*Reset Dilation In That Image*/
                 }
@@ -1014,7 +1156,8 @@ void OptimizerManager::Optimize() {
                             static_cast<double>(clock() - start_clock_) /
                                 static_cast<double>(cost_function_calls_),
                             static_cast<int>(cost_function_calls_),
-                            current_optimum_value_, primary_model_index_);
+                            current_optimum_value_,
+                            primary_model_index_);
                         update_screen_clock_ = clock();
                     }
                 }
@@ -1032,15 +1175,19 @@ void OptimizerManager::Optimize() {
                 error_occurrred_ = true;
             }
             /*Make Sure Dilation Image is Showing Leaf Value */
-            dilate(frames_A_[frame_index].GetEdgeImage(),
-                   frames_A_[frame_index].GetDilationImage(), cv::Mat(),
-                   cv::Point(-1, -1),
-                   leaf_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_A_[frame_index].GetEdgeImage(),
+                frames_A_[frame_index].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                leaf_dilation_val_); /*Reset Dilation In That Image*/
             if (calibration_.biplane_calibration) {
-                dilate(frames_B_[frame_index].GetEdgeImage(),
-                       frames_B_[frame_index].GetDilationImage(), cv::Mat(),
-                       cv::Point(-1, -1),
-                       leaf_dilation_val_); /*Reset Dilation In That Image*/
+                dilate(
+                    frames_B_[frame_index].GetEdgeImage(),
+                    frames_B_[frame_index].GetDilationImage(),
+                    cv::Mat(),
+                    cv::Point(-1, -1),
+                    leaf_dilation_val_); /*Reset Dilation In That Image*/
             }
             emit UpdateDilationBackground();
         }
@@ -1100,7 +1247,8 @@ void OptimizerManager::Optimize() {
                         static_cast<double>(clock() - start_clock_) /
                             static_cast<double>(cost_function_calls_),
                         static_cast<int>(cost_function_calls_),
-                        current_optimum_value_, primary_model_index_);
+                        current_optimum_value_,
+                        primary_model_index_);
                     update_screen_clock_ = clock();
                 }
             }
@@ -1121,15 +1269,19 @@ void OptimizerManager::Optimize() {
 
         /*Update Comparison Image in Dilation Metric and Dilation Metric
          * Dilation Level to Original*/
-        dilate(frames_A_[frame_index].GetEdgeImage(),
-               frames_A_[frame_index].GetDilationImage(), cv::Mat(),
-               cv::Point(-1, -1),
-               trunk_dilation_val_); /*Reset Dilation In That Image*/
+        dilate(
+            frames_A_[frame_index].GetEdgeImage(),
+            frames_A_[frame_index].GetDilationImage(),
+            cv::Mat(),
+            cv::Point(-1, -1),
+            trunk_dilation_val_); /*Reset Dilation In That Image*/
         if (calibration_.biplane_calibration) {
-            dilate(frames_B_[frame_index].GetEdgeImage(),
-                   frames_B_[frame_index].GetDilationImage(), cv::Mat(),
-                   cv::Point(-1, -1),
-                   trunk_dilation_val_); /*Reset Dilation In That Image*/
+            dilate(
+                frames_B_[frame_index].GetEdgeImage(),
+                frames_B_[frame_index].GetDilationImage(),
+                cv::Mat(),
+                cv::Point(-1, -1),
+                trunk_dilation_val_); /*Reset Dilation In That Image*/
         }
         emit UpdateDilationBackground();
 
@@ -1137,10 +1289,15 @@ void OptimizerManager::Optimize() {
         if (error_occurrred_ || frame_index == end_frame_index_)
             progress_next_frame_ = false;
         emit OptimizedFrame(
-            current_optimum_location_.x, current_optimum_location_.y,
-            current_optimum_location_.z, current_optimum_location_.xa,
-            current_optimum_location_.ya, current_optimum_location_.za,
-            progress_next_frame_, primary_model_index_, error_occurrred_,
+            current_optimum_location_.x,
+            current_optimum_location_.y,
+            current_optimum_location_.z,
+            current_optimum_location_.xa,
+            current_optimum_location_.ya,
+            current_optimum_location_.za,
+            progress_next_frame_,
+            primary_model_index_,
+            error_occurrred_,
             optimization_directive_);
 
         if (sym_trap_call) {
@@ -1148,17 +1305,22 @@ void OptimizerManager::Optimize() {
             return;
         }
 
-        emit UpdateDisplay(static_cast<double>(clock() - start_clock_) /
-                               static_cast<double>(cost_function_calls_),
-                           static_cast<int>(cost_function_calls_),
-                           current_optimum_value_, primary_model_index_);
+        emit UpdateDisplay(
+            static_cast<double>(clock() - start_clock_) /
+                static_cast<double>(cost_function_calls_),
+            static_cast<int>(cost_function_calls_),
+            current_optimum_value_,
+            primary_model_index_);
         update_screen_clock_ = clock();
 
         /*Update Pose Storage*/
-        auto current_opt_pose =
-            Pose(current_optimum_location_.x, current_optimum_location_.y,
-                 current_optimum_location_.z, current_optimum_location_.xa,
-                 current_optimum_location_.ya, current_optimum_location_.za);
+        auto current_opt_pose = Pose(
+            current_optimum_location_.x,
+            current_optimum_location_.y,
+            current_optimum_location_.z,
+            current_optimum_location_.xa,
+            current_optimum_location_.ya,
+            current_optimum_location_.za);
         pose_storage_.UpdatePrincipalModelPose(frame_index, current_opt_pose);
 
         /*If Error Occurred or Not Progressing Breank (Which Ends)*/
@@ -1183,7 +1345,7 @@ void OptimizerManager::CalculateSymTrap() {
 
     // Get number of iterations from sym_trap spin box
     // int iter_val = sym_trap_obj->getIterCount() * 3;
-    int iter_val = 60;  // iter_count * 3;
+    int iter_val = 60; // iter_count * 3;
     std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
 
     // Get pose list from sym trap
@@ -1194,12 +1356,16 @@ void OptimizerManager::CalculateSymTrap() {
     int progress_val = 0;
     // Calculate cost function at each pose
     for (int i = 0; i < iter_val; i++) {
-        emit onUpdateOrientationSymTrap(pose_list.at(i).x, pose_list.at(i).y,
-                                        pose_list.at(i).z, pose_list.at(i).xa,
-                                        pose_list.at(i).ya, pose_list.at(i).za);
+        emit onUpdateOrientationSymTrap(
+            pose_list.at(i).x,
+            pose_list.at(i).y,
+            pose_list.at(i).z,
+            pose_list.at(i).xa,
+            pose_list.at(i).ya,
+            pose_list.at(i).za);
         std::this_thread::sleep_for(std::chrono::milliseconds(5000 / iter_val));
         double myCost =
-            EvaluateCostFunctionAtPoint(pose_list.at(i), 2);  // Use leaf
+            EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
         Costs.push_back(myCost);
         std::cout << i + 1 << ": " << myCost << " @ rotation ("
                   << pose_list.at(i).xa << " " << pose_list.at(i).ya << " "
@@ -1211,8 +1377,8 @@ void OptimizerManager::CalculateSymTrap() {
     }
 
     // set model back to intial pose
-    emit onUpdateOrientationSymTrap(pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa,
-                                    pose_6D.ya, pose_6D.za);
+    emit onUpdateOrientationSymTrap(
+        pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
 
     // Csv of position and cost value (xangle,yangle,zangle,cost value \n)
     std::ofstream myfile;
@@ -1252,15 +1418,15 @@ double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
 
     double result = 0;
     switch (stage) {
-        case Trunk:
-            result = trunk_manager_.callActiveCostFunction();
-            break;
-        case Branch:
-            result = branch_manager_.callActiveCostFunction();
-            break;
-        case Leaf:
-            result = leaf_manager_.callActiveCostFunction();
-            break;
+    case Trunk:
+        result = trunk_manager_.callActiveCostFunction();
+        break;
+    case Branch:
+        result = branch_manager_.callActiveCostFunction();
+        break;
+    case Leaf:
+        result = leaf_manager_.callActiveCostFunction();
+        break;
     }
     // cost_function_calls_++;
     emit CostFuncAtPoint(result);
@@ -1272,31 +1438,39 @@ double OptimizerManager::EvaluateCostFunction(Point6D point) {
     /*Get Actual Pose from Normalized Version and Send to Cost Function
      * Manager*/
     Point6D denormalized_point = DenormalizeFromCenter(point);
-    Pose pose(denormalized_point.x, denormalized_point.y, denormalized_point.z,
-              denormalized_point.xa, denormalized_point.ya,
-              denormalized_point.za);
+    Pose pose(
+        denormalized_point.x,
+        denormalized_point.y,
+        denormalized_point.z,
+        denormalized_point.xa,
+        denormalized_point.ya,
+        denormalized_point.za);
     gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
     if (calibration_.biplane_calibration) {
         Point6D denormalized_point_B =
             calibration_.convert_Pose_A_to_Pose_B(denormalized_point);
-        Pose pose_B(denormalized_point_B.x, denormalized_point_B.y,
-                    denormalized_point_B.z, denormalized_point_B.xa,
-                    denormalized_point_B.ya, denormalized_point_B.za);
+        Pose pose_B(
+            denormalized_point_B.x,
+            denormalized_point_B.y,
+            denormalized_point_B.z,
+            denormalized_point_B.xa,
+            denormalized_point_B.ya,
+            denormalized_point_B.za);
         gpu_principal_model_->SetCurrentSecondaryCameraPose(pose_B);
     }
 
     /*Compute Cost Function Value*/
     double result = 0;
     switch (search_stage_flag_) {
-        case Trunk:
-            result = trunk_manager_.callActiveCostFunction();
-            break;
-        case Branch:
-            result = branch_manager_.callActiveCostFunction();
-            break;
-        case Leaf:
-            result = leaf_manager_.callActiveCostFunction();
-            break;
+    case Trunk:
+        result = trunk_manager_.callActiveCostFunction();
+        break;
+    case Branch:
+        result = branch_manager_.callActiveCostFunction();
+        break;
+    case Leaf:
+        result = leaf_manager_.callActiveCostFunction();
+        break;
     }
     cost_function_calls_++;
 
@@ -1306,9 +1480,12 @@ double OptimizerManager::EvaluateCostFunction(Point6D point) {
         current_optimum_value_ = result;
         current_optimum_location_ = denormalized_point;
         emit UpdateOptimum(
-            current_optimum_location_.x, current_optimum_location_.y,
-            current_optimum_location_.z, current_optimum_location_.xa,
-            current_optimum_location_.ya, current_optimum_location_.za,
+            current_optimum_location_.x,
+            current_optimum_location_.y,
+            current_optimum_location_.z,
+            current_optimum_location_.xa,
+            current_optimum_location_.ya,
+            current_optimum_location_.za,
             primary_model_index_);
     }
 
@@ -1445,24 +1622,30 @@ void OptimizerManager::TrisectPotentiallyOptimal() {
 
 Point6D OptimizerManager::DenormalizeRange(Point6D unit_point) {
     return Point6D(
-        unit_point.x * range_.x * 2.0, unit_point.y * range_.y * 2.0,
-        unit_point.z * range_.z * 2.0, unit_point.xa * range_.xa * 2.0,
-        unit_point.ya * range_.ya * 2.0, unit_point.za * range_.za * 2.0);
+        unit_point.x * range_.x * 2.0,
+        unit_point.y * range_.y * 2.0,
+        unit_point.z * range_.z * 2.0,
+        unit_point.xa * range_.xa * 2.0,
+        unit_point.ya * range_.ya * 2.0,
+        unit_point.za * range_.za * 2.0);
 }
 
 Point6D OptimizerManager::DenormalizeFromCenter(Point6D unit_point) {
-    return Point6D(starting_point_.x + (unit_point.x - 0.5) * 2 * range_.x,
-                   starting_point_.y + (unit_point.y - 0.5) * 2 * range_.y,
-                   starting_point_.z + (unit_point.z - 0.5) * 2 * range_.z,
-                   starting_point_.xa + (unit_point.xa - 0.5) * 2 * range_.xa,
-                   starting_point_.ya + (unit_point.ya - 0.5) * 2 * range_.ya,
-                   starting_point_.za + (unit_point.za - 0.5) * 2 * range_.za);
+    return Point6D(
+        starting_point_.x + (unit_point.x - 0.5) * 2 * range_.x,
+        starting_point_.y + (unit_point.y - 0.5) * 2 * range_.y,
+        starting_point_.z + (unit_point.z - 0.5) * 2 * range_.z,
+        starting_point_.xa + (unit_point.xa - 0.5) * 2 * range_.xa,
+        starting_point_.ya + (unit_point.ya - 0.5) * 2 * range_.ya,
+        starting_point_.za + (unit_point.za - 0.5) * 2 * range_.za);
 }
 
-void OptimizerManager::onStopOptimizer() { error_occurrred_ = true; }
+void OptimizerManager::onStopOptimizer() {
+    error_occurrred_ = true;
+}
 
-void OptimizerManager::create_image_indices(std::vector<int> &img_indices,
-                                            int start, int end) {
+void OptimizerManager::create_image_indices(
+    std::vector<int>& img_indices, int start, int end) {
     if (start < end) {
         for (int i = start; i <= end; i++) {
             img_indices.push_back(i);

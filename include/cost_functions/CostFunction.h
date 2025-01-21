@@ -16,7 +16,7 @@
 namespace jta_cost_function {
 
 class CostFunction {
-   public:
+public:
     /*Constructor*/
     JTML_DLL CostFunction();
     JTML_DLL CostFunction(std::string cost_function_name);
@@ -28,17 +28,17 @@ class CostFunction {
     JTML_DLL void addParameter(Parameter<bool> new_parameter);
 
     /*Set Parameter Values (Bool for Success)*/
-    JTML_DLL bool setDoubleParameterValue(std::string parameter_name,
-                                          double value);
+    JTML_DLL bool
+    setDoubleParameterValue(std::string parameter_name, double value);
     JTML_DLL bool setIntParameterValue(std::string parameter_name, int value);
     JTML_DLL bool setBoolParameterValue(std::string parameter_name, bool value);
 
     /*Get Parameter Values (Bool for Success)*/
-    JTML_DLL bool getDoubleParameterValue(std::string parameter_name,
-                                          double &value);
-    JTML_DLL bool getIntParameterValue(std::string parameter_name, int &value);
-    JTML_DLL bool getBoolParameterValue(std::string parameter_name,
-                                        bool &value);
+    JTML_DLL bool
+    getDoubleParameterValue(std::string parameter_name, double& value);
+    JTML_DLL bool getIntParameterValue(std::string parameter_name, int& value);
+    JTML_DLL bool
+    getBoolParameterValue(std::string parameter_name, bool& value);
 
     /*Get Parameters by Type Groups*/
     JTML_DLL std::vector<Parameter<double>> getDoubleParameters();
@@ -49,7 +49,7 @@ class CostFunction {
     JTML_DLL std::string getCostFunctionName();
     JTML_DLL void setCostFunctionName(std::string cost_function_name);
 
-   private:
+private:
     /*Containers for Parameters*/
     std::vector<Parameter<double>> double_parameters_;
     std::vector<Parameter<int>> int_parameters_;
@@ -58,4 +58,4 @@ class CostFunction {
     /*Cost Function Name*/
     std::string cost_function_name_;
 };
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

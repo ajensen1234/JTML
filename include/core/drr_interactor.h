@@ -24,20 +24,22 @@
 #include "gui/drr_tool.h"
 
 /*DRR Globals*/
-bool middleDownDRR = false;     // Is CM button down?
-bool leftDownDRR = false;       // Is LM button down?
-bool rightDownDRR = false;      // Is RM button down
-int rightDownDRRY = 0;          // Y Pixel when RM Clicked
-double rightDownDRRModelZ = 0;  // Model's Z Translation when RM Clicked
+bool middleDownDRR = false;    // Is CM button down?
+bool leftDownDRR = false;      // Is LM button down?
+bool rightDownDRR = false;     // Is RM button down
+int rightDownDRRY = 0;         // Y Pixel when RM Clicked
+double rightDownDRRModelZ = 0; // Model's Z Translation when RM Clicked
 
 class DRRInteractorStyle : public vtkInteractorStyleTrackballActor {
-   public:
+public:
     static DRRInteractorStyle* New();
     vtkTypeMacro(DRRInteractorStyle, vtkInteractorStyleTrackballActor);
 
     /*Pointer to Main Window*/
     DRRTool* drrtool_;
-    void initialize_DRRTool(DRRTool* drrtool) { drrtool_ = drrtool; }
+    void initialize_DRRTool(DRRTool* drrtool) {
+        drrtool_ = drrtool;
+    }
 
     // Picked Function
     bool ActivePick() {
@@ -214,7 +216,8 @@ class DRRInteractorStyle : public vtkInteractorStyleTrackballActor {
             if (!leftDownDRR && !middleDownDRR) {
                 double* Position = actor->GetPosition();
                 actor->SetPosition(
-                    Position[0], Position[1],
+                    Position[0],
+                    Position[1],
                     QCursor::pos().y() - rightDownDRRY + rightDownDRRModelZ);
             }
             this->Interactor->GetRenderWindow()->Render();

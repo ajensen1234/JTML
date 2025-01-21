@@ -4,8 +4,8 @@
 #include "gui/controls.h"
 
 // Controls JTA Popup CPP
-Controls::Controls(QWidget* parent, Qt::WindowFlags flags)
-    : QDialog(parent, flags) {
+Controls::Controls(QWidget* parent, Qt::WindowFlags flags) :
+    QDialog(parent, flags) {
     ui.setupUi(this);
     setFixedSize(520, 500);
 

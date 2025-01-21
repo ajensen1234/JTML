@@ -27,27 +27,27 @@
 QT_BEGIN_NAMESPACE
 
 class Ui_drrTool {
-   public:
-    QLabel *drr_image_label;
-    QGroupBox *maxThreshGroupBox;
-    QDoubleSpinBox *minUpperSpinBox;
-    QDoubleSpinBox *minLowerSpinBox;
-    QLabel *minLowerPrefix;
-    QLabel *minUpperPrefix;
-    QLabel *minValuePrefix;
-    QLabel *minValue;
-    QSlider *minSlider;
-    QGroupBox *maxThreshGroupBox_2;
-    QDoubleSpinBox *maxUpperSpinBox;
-    QDoubleSpinBox *maxLowerSpinBox;
-    QLabel *maxLowerPrefix;
-    QLabel *maxUpperPrefix;
-    QLabel *maxValuePrefix;
-    QLabel *maxValue;
-    QSlider *maxSlider;
-    QVTKOpenGLNativeWidget *qvtkWidget;
+public:
+    QLabel* drr_image_label;
+    QGroupBox* maxThreshGroupBox;
+    QDoubleSpinBox* minUpperSpinBox;
+    QDoubleSpinBox* minLowerSpinBox;
+    QLabel* minLowerPrefix;
+    QLabel* minUpperPrefix;
+    QLabel* minValuePrefix;
+    QLabel* minValue;
+    QSlider* minSlider;
+    QGroupBox* maxThreshGroupBox_2;
+    QDoubleSpinBox* maxUpperSpinBox;
+    QDoubleSpinBox* maxLowerSpinBox;
+    QLabel* maxLowerPrefix;
+    QLabel* maxUpperPrefix;
+    QLabel* maxValuePrefix;
+    QLabel* maxValue;
+    QSlider* maxSlider;
+    QVTKOpenGLNativeWidget* qvtkWidget;
 
-    void setupUi(QDialog *drrTool) {
+    void setupUi(QDialog* drrTool) {
         if (drrTool->objectName().isEmpty())
             drrTool->setObjectName(QString::fromUtf8("drrTool"));
         drrTool->resize(1411, 966);
@@ -497,9 +497,9 @@ class Ui_drrTool {
         retranslateUi(drrTool);
 
         QMetaObject::connectSlotsByName(drrTool);
-    }  // setupUi
+    } // setupUi
 
-    void retranslateUi(QDialog *drrTool) {
+    void retranslateUi(QDialog* drrTool) {
         drrTool->setWindowTitle(
             QCoreApplication::translate("drrTool", "Dialog", nullptr));
         drr_image_label->setText(QString());
@@ -523,13 +523,13 @@ class Ui_drrTool {
             "drrTool", "Maximum Threshold Value:", nullptr));
         maxValue->setText(
             QCoreApplication::translate("drrTool", "VALUE", nullptr));
-    }  // retranslateUi
+    } // retranslateUi
 };
 
 namespace Ui {
 class drrTool : public Ui_drrTool {};
-}  // namespace Ui
+} // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif  // UI_DRR_TOOL_H
+#endif // UI_DRR_TOOL_H

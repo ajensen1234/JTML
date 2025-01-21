@@ -21,6 +21,9 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/cairo-1.18.0-h3faef2a_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/ccache-4.10.1-h065aff2_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cccl-2.3.1-h6103f9b_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-tools-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.4-h74e3db0_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
@@ -131,6 +134,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/libcap-2.71-h39aace5_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcblas-3.9.0-26_linux64_openblas.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp15-15.0.7-default_h127d8a8_5.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp19.1-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang13-19.1.2-default_h9c6a7e4_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-12.4.2.65-hd3aeb46_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-dev-12.4.2.65-hd3aeb46_0.conda
@@ -367,6 +371,9 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/cairo-1.18.0-h3faef2a_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/ccache-4.10.1-h065aff2_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cccl-2.3.1-h6103f9b_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-tools-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.4-h74e3db0_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
@@ -477,6 +484,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/libcap-2.71-h39aace5_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcblas-3.9.0-26_linux64_openblas.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp15-15.0.7-default_h127d8a8_5.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp19.1-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang13-19.1.2-default_h9c6a7e4_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-12.4.2.65-hd3aeb46_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-dev-12.4.2.65-hd3aeb46_0.conda
@@ -712,6 +720,9 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/cairo-1.18.0-h3faef2a_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/ccache-4.10.1-h065aff2_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cccl-2.3.1-h6103f9b_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-format-19.1.2-default_hb5137d0_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/clang-tools-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.4-h74e3db0_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
@@ -822,6 +833,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/libcap-2.71-h39aace5_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcblas-3.9.0-26_linux64_openblas.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp15-15.0.7-default_h127d8a8_5.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp19.1-19.1.2-default_hb5137d0_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libclang13-19.1.2-default_h9c6a7e4_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-12.4.2.65-hd3aeb46_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/libcublas-dev-12.4.2.65-hd3aeb46_0.conda
@@ -1192,6 +1204,51 @@ packages:
   license: Apache-2.0 AND BSD-3-Clause AND BSD-2-Clause AND BSL-1.0 AND NCSA AND MIT AND LicenseRef-NVIDIA-Software-License
   size: 1301085
   timestamp: 1708067661709
+- conda: https://prefix.dev/conda-forge/linux-64/clang-format-19.1.2-default_hb5137d0_1.conda
+  sha256: 79981e50479256bb20f0afab21c2e6164a4509b5b1fbc98d96d574fb5eb3343e
+  md5: c0e2690e55d039c9540cfde8565cf420
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - clang-format-19 19.1.2 default_hb5137d0_1
+  - libclang-cpp19.1 >=19.1.2,<19.2.0a0
+  - libgcc >=13
+  - libllvm19 >=19.1.2,<19.2.0a0
+  - libstdcxx >=13
+  license: Apache-2.0 WITH LLVM-exception
+  license_family: Apache
+  size: 23813
+  timestamp: 1729290901858
+- conda: https://prefix.dev/conda-forge/linux-64/clang-format-19-19.1.2-default_hb5137d0_1.conda
+  sha256: 18cc2df13e22b49408e709487c646fa6861459a0c91187d601314dc737389358
+  md5: e11bb63ee0ef1f7fa72ecda28795c11d
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libclang-cpp19.1 >=19.1.2,<19.2.0a0
+  - libgcc >=13
+  - libllvm19 >=19.1.2,<19.2.0a0
+  - libstdcxx >=13
+  license: Apache-2.0 WITH LLVM-exception
+  license_family: Apache
+  size: 67217
+  timestamp: 1729290855106
+- conda: https://prefix.dev/conda-forge/linux-64/clang-tools-19.1.2-default_hb5137d0_1.conda
+  sha256: 99558ee9d4590f43961e4a62beab5d14ad831c9380ba02676d926ec6e9b6a1ba
+  md5: c3f25488fc56ae211ed44deaf2835023
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - clang-format 19.1.2 default_hb5137d0_1
+  - libclang-cpp19.1 >=19.1.2,<19.2.0a0
+  - libclang13 >=19.1.2
+  - libgcc >=13
+  - libllvm19 >=19.1.2,<19.2.0a0
+  - libstdcxx >=13
+  - libxml2 >=2.12.7,<3.0a0
+  constrains:
+  - clangdev 19.1.2
+  license: Apache-2.0 WITH LLVM-exception
+  license_family: Apache
+  size: 21290620
+  timestamp: 1729290949989
 - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.4-h74e3db0_0.conda
   sha256: 40c180f7c0b31e600c5b700447fd611bbb2e376a84334fdd9add515b5c6c69cd
   md5: 70e2087725b107e0d098574f17899c25
@@ -2492,6 +2549,18 @@ packages:
   license_family: Apache
   size: 17206402
   timestamp: 1711063711931
+- conda: https://prefix.dev/conda-forge/linux-64/libclang-cpp19.1-19.1.2-default_hb5137d0_1.conda
+  sha256: 2638abec6f79942a9176b30b2ea70bd47967e873d3d120822cbab38ab4895c14
+  md5: 7e574c7499bc41f92537634a23fed79a
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=13
+  - libllvm19 >=19.1.2,<19.2.0a0
+  - libstdcxx >=13
+  license: Apache-2.0 WITH LLVM-exception
+  license_family: Apache
+  size: 20533631
+  timestamp: 1729290507675
 - conda: https://prefix.dev/conda-forge/linux-64/libclang13-19.1.2-default_h9c6a7e4_1.conda
   sha256: 8a38fb764bf65cc18f03006db6aeb345d390102182db2e46fd3f452a1b2dcfcc
   md5: cb5c5ff12b37aded00d9aaa7b9a86a78

@@ -68,10 +68,10 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     One must return this value as a double.*/
     gpu_cost_function::Pose p =
         gpu_principal_model_
-            ->GetCurrentPrimaryCameraPose();  // this is the pose to the tibia
+            ->GetCurrentPrimaryCameraPose(); // this is the pose to the tibia
     gpu_cost_function::Pose np =
         (*gpu_non_principal_models_)[0]
-            ->GetCurrentPrimaryCameraPose();  // this is the pose to the femur
+            ->GetCurrentPrimaryCameraPose(); // this is the pose to the femur
 
     /*Create shorthand variables for trig vals*/
     float czp = cos(p.z_angle_ * 3.14159265358979323846f / 180.0f);
@@ -101,12 +101,24 @@ double CostFunctionManager::costFunctionsym_trap_function() {
                                            {0.0f,0.0f,0.0f,1.0f} }; */
 
     float x2tib[4][4];
-    create_312_transform(x2tib, p.z_location_, p.y_location_, p.z_location_,
-                         p.z_angle_, p.x_angle_, p.y_angle_);
+    create_312_transform(
+        x2tib,
+        p.z_location_,
+        p.y_location_,
+        p.z_location_,
+        p.z_angle_,
+        p.x_angle_,
+        p.y_angle_);
 
     float x2fem[4][4];
-    create_312_transform(x2fem, np.x_location_, np.y_location_, np.z_location_,
-                         np.z_angle_, np.x_angle_, np.y_angle_);
+    create_312_transform(
+        x2fem,
+        np.x_location_,
+        np.y_location_,
+        np.z_location_,
+        np.z_angle_,
+        np.x_angle_,
+        np.y_angle_);
 
     float fem2x[4][4];
     invert_transformation(fem2x, x2fem);
@@ -152,15 +164,15 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     /*Parameter*/
     double pole_weight;
     double vv_weight;
-    this->getActiveCostFunctionClass()->getDoubleParameterValue("PoleWeight",
-                                                                pole_weight);
-    this->getActiveCostFunctionClass()->getDoubleParameterValue("VVWeight",
-                                                                vv_weight);
+    this->getActiveCostFunctionClass()->getDoubleParameterValue(
+        "PoleWeight", pole_weight);
+    this->getActiveCostFunctionClass()->getDoubleParameterValue(
+        "VVWeight", vv_weight);
 
     /*Direct Dilation begin */
     /*Render*/
     gpu_principal_model_->RenderPrimaryCamera(
-        p);  // direct dilation of the tibia
+        p); // direct dilation of the tibia
 
     /*(DIFFERENT FROM JTA PAPER) Dilate rendered image to same dilation as
      * comparison image*/
@@ -174,4 +186,4 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     return metric_score + (pole_weight * shortest_distance) +
            (vv_weight * vv_cost);
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

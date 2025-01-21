@@ -39,124 +39,124 @@
 QT_BEGIN_NAMESPACE
 
 class Ui_MainScreenClass {
-   public:
-    QAction *actionOptions;
-    QAction *actionOptions_2;
-    QAction *actionLoad_Pose;
-    QAction *actionLoad_Kinematics;
-    QAction *actionSave_Pose;
-    QAction *actionSave_Kinematics;
-    QAction *actionQuit;
-    QAction *actionRegion_Selection;
-    QAction *actionCenter_Placement;
-    QAction *actionParallel_Tuner;
-    QAction *actionStop_Optimizer;
-    QAction *actionOptimizer_Settings;
-    QAction *actionAbout_JointTrack_Auto;
-    QAction *actionControls;
-    QAction *actionReset_View;
-    QAction *actionModel_Interaction_Mode;
-    QAction *actionCamera_Interaction_Mode;
-    QAction *actionReset_Normal_Up;
-    QAction *actionDRR_Settings;
-    QAction *actionBlack_Implant_Silhouettes_in_Original_Image_s;
-    QAction *actionWhite_Implant_Silhouettes_in_Original_Image_s;
-    QAction *actionReset_Remove_All_Segmentation;
-    QAction *actionCustom_Segmentation;
-    QAction *actionSegment_FemHR;
-    QAction *actionSegment_TibHR;
-    QAction *actionEstimate_Femoral_Implant_s;
-    QAction *actionEstimate_Tibial_Implant_s;
-    QAction *actionCopy_Next_Pose;
-    QAction *actionCopy_Previous_Pose;
-    QAction *actionLaunch_Tool;
-    QAction *actionOptimize_Backward;
-    QAction *actionNFD_Pose_Estimate;
-    QAction *actionAmbiguous_Pose_Processing;
-    QAction *actionOpen_Viewer_Window;
-    QAction *actionCoronal_Plane_Viewer;
-    QWidget *centralWidget;
-    QVBoxLayout *verticalLayout_4;
-    QHBoxLayout *horizontalLayout_8;
-    QVBoxLayout *Left;
-    QGroupBox *preprocessor_box;
-    QVBoxLayout *verticalLayout_11;
-    QVBoxLayout *verticalLayout_5;
-    QPushButton *load_calibration_button;
-    QPushButton *load_image_button;
-    QPushButton *load_model_button;
-    QGroupBox *optimization_box;
-    QVBoxLayout *verticalLayout_8;
-    QGridLayout *gridLayout;
-    QPushButton *optimize_button;
-    QPushButton *optimize_all_button;
-    QPushButton *optimize_each_button;
-    QPushButton *optimize_from_button;
-    QGroupBox *image_view_box;
-    QVBoxLayout *verticalLayout_10;
-    QGridLayout *gridLayout_2;
-    QRadioButton *original_image_radio_button;
-    QRadioButton *inverted_image_radio_button;
-    QRadioButton *edges_image_radio_button;
-    QRadioButton *dilation_image_radio_button;
-    QGroupBox *image_selection_box;
-    QVBoxLayout *verticalLayout_9;
-    QVBoxLayout *verticalLayout_6;
-    QHBoxLayout *horizontalLayout_7;
-    QRadioButton *camera_A_radio_button;
-    QRadioButton *camera_B_radio_button;
-    QListWidget *image_list_widget;
-    QGridLayout *gridLayout_3;
-    QHBoxLayout *horizontalLayout_3;
-    QProgressBar *pose_progress;
-    QLabel *pose_label;
-    QVTKOpenGLNativeWidget *qvtk_widget;
-    QVBoxLayout *Right;
-    QVTKOpenGLNativeWidget *qvtk_cpv;
-    QGroupBox *edge_detection_box;
-    QVBoxLayout *verticalLayout_13;
-    QVBoxLayout *verticalLayout_3;
-    QHBoxLayout *horizontalLayout_4;
-    QLabel *aperture_label;
-    QSpinBox *aperture_spin_box;
-    QHBoxLayout *horizontalLayout_5;
-    QLabel *low_threshold_label;
-    QLabel *low_threshold_value;
-    QSlider *low_threshold_slider;
-    QHBoxLayout *horizontalLayout_6;
-    QLabel *high_threshold_label;
-    QLabel *high_threshold_value;
-    QSlider *high_threshold_slider;
-    QPushButton *apply_all_edge_button;
-    QPushButton *reset_edge_button;
-    QGroupBox *model_view_box;
-    QVBoxLayout *verticalLayout_15;
-    QHBoxLayout *horizontalLayout_2;
-    QVBoxLayout *verticalLayout_12;
-    QRadioButton *original_model_radio_button;
-    QRadioButton *transparent_model_radio_button;
-    QVBoxLayout *verticalLayout_2;
-    QRadioButton *solid_model_radio_button;
-    QRadioButton *wireframe_model_radio_button;
-    QGroupBox *model_selection_box;
-    QVBoxLayout *verticalLayout_14;
-    QVBoxLayout *verticalLayout;
-    QHBoxLayout *horizontalLayout;
-    QRadioButton *single_model_radio_button;
-    QRadioButton *multiple_model_radio_button;
-    QListWidget *model_list_widget;
-    QMenuBar *menuBar;
-    QMenu *menuFile;
-    QMenu *menuOptions;
-    QMenu *menuOptimizer;
-    QMenu *menuHelp;
-    QMenu *menuVIEW;
-    QMenu *menuSegment;
-    QMenu *menuPOSE_ESTIMATE;
-    QMenu *menuSYMMETRY_TRAP_ANALYSIS;
-    QMenu *menuOPTIMZER;
+public:
+    QAction* actionOptions;
+    QAction* actionOptions_2;
+    QAction* actionLoad_Pose;
+    QAction* actionLoad_Kinematics;
+    QAction* actionSave_Pose;
+    QAction* actionSave_Kinematics;
+    QAction* actionQuit;
+    QAction* actionRegion_Selection;
+    QAction* actionCenter_Placement;
+    QAction* actionParallel_Tuner;
+    QAction* actionStop_Optimizer;
+    QAction* actionOptimizer_Settings;
+    QAction* actionAbout_JointTrack_Auto;
+    QAction* actionControls;
+    QAction* actionReset_View;
+    QAction* actionModel_Interaction_Mode;
+    QAction* actionCamera_Interaction_Mode;
+    QAction* actionReset_Normal_Up;
+    QAction* actionDRR_Settings;
+    QAction* actionBlack_Implant_Silhouettes_in_Original_Image_s;
+    QAction* actionWhite_Implant_Silhouettes_in_Original_Image_s;
+    QAction* actionReset_Remove_All_Segmentation;
+    QAction* actionCustom_Segmentation;
+    QAction* actionSegment_FemHR;
+    QAction* actionSegment_TibHR;
+    QAction* actionEstimate_Femoral_Implant_s;
+    QAction* actionEstimate_Tibial_Implant_s;
+    QAction* actionCopy_Next_Pose;
+    QAction* actionCopy_Previous_Pose;
+    QAction* actionLaunch_Tool;
+    QAction* actionOptimize_Backward;
+    QAction* actionNFD_Pose_Estimate;
+    QAction* actionAmbiguous_Pose_Processing;
+    QAction* actionOpen_Viewer_Window;
+    QAction* actionCoronal_Plane_Viewer;
+    QWidget* centralWidget;
+    QVBoxLayout* verticalLayout_4;
+    QHBoxLayout* horizontalLayout_8;
+    QVBoxLayout* Left;
+    QGroupBox* preprocessor_box;
+    QVBoxLayout* verticalLayout_11;
+    QVBoxLayout* verticalLayout_5;
+    QPushButton* load_calibration_button;
+    QPushButton* load_image_button;
+    QPushButton* load_model_button;
+    QGroupBox* optimization_box;
+    QVBoxLayout* verticalLayout_8;
+    QGridLayout* gridLayout;
+    QPushButton* optimize_button;
+    QPushButton* optimize_all_button;
+    QPushButton* optimize_each_button;
+    QPushButton* optimize_from_button;
+    QGroupBox* image_view_box;
+    QVBoxLayout* verticalLayout_10;
+    QGridLayout* gridLayout_2;
+    QRadioButton* original_image_radio_button;
+    QRadioButton* inverted_image_radio_button;
+    QRadioButton* edges_image_radio_button;
+    QRadioButton* dilation_image_radio_button;
+    QGroupBox* image_selection_box;
+    QVBoxLayout* verticalLayout_9;
+    QVBoxLayout* verticalLayout_6;
+    QHBoxLayout* horizontalLayout_7;
+    QRadioButton* camera_A_radio_button;
+    QRadioButton* camera_B_radio_button;
+    QListWidget* image_list_widget;
+    QGridLayout* gridLayout_3;
+    QHBoxLayout* horizontalLayout_3;
+    QProgressBar* pose_progress;
+    QLabel* pose_label;
+    QVTKOpenGLNativeWidget* qvtk_widget;
+    QVBoxLayout* Right;
+    QVTKOpenGLNativeWidget* qvtk_cpv;
+    QGroupBox* edge_detection_box;
+    QVBoxLayout* verticalLayout_13;
+    QVBoxLayout* verticalLayout_3;
+    QHBoxLayout* horizontalLayout_4;
+    QLabel* aperture_label;
+    QSpinBox* aperture_spin_box;
+    QHBoxLayout* horizontalLayout_5;
+    QLabel* low_threshold_label;
+    QLabel* low_threshold_value;
+    QSlider* low_threshold_slider;
+    QHBoxLayout* horizontalLayout_6;
+    QLabel* high_threshold_label;
+    QLabel* high_threshold_value;
+    QSlider* high_threshold_slider;
+    QPushButton* apply_all_edge_button;
+    QPushButton* reset_edge_button;
+    QGroupBox* model_view_box;
+    QVBoxLayout* verticalLayout_15;
+    QHBoxLayout* horizontalLayout_2;
+    QVBoxLayout* verticalLayout_12;
+    QRadioButton* original_model_radio_button;
+    QRadioButton* transparent_model_radio_button;
+    QVBoxLayout* verticalLayout_2;
+    QRadioButton* solid_model_radio_button;
+    QRadioButton* wireframe_model_radio_button;
+    QGroupBox* model_selection_box;
+    QVBoxLayout* verticalLayout_14;
+    QVBoxLayout* verticalLayout;
+    QHBoxLayout* horizontalLayout;
+    QRadioButton* single_model_radio_button;
+    QRadioButton* multiple_model_radio_button;
+    QListWidget* model_list_widget;
+    QMenuBar* menuBar;
+    QMenu* menuFile;
+    QMenu* menuOptions;
+    QMenu* menuOptimizer;
+    QMenu* menuHelp;
+    QMenu* menuVIEW;
+    QMenu* menuSegment;
+    QMenu* menuPOSE_ESTIMATE;
+    QMenu* menuSYMMETRY_TRAP_ANALYSIS;
+    QMenu* menuOPTIMZER;
 
-    void setupUi(QMainWindow *MainScreenClass) {
+    void setupUi(QMainWindow* MainScreenClass) {
         if (MainScreenClass->objectName().isEmpty())
             MainScreenClass->setObjectName(
                 QString::fromUtf8("MainScreenClass"));
@@ -170,7 +170,9 @@ class Ui_MainScreenClass {
         QIcon icon;
         icon.addFile(
             QString::fromUtf8(":/Desktop_Icon/Resources/jta_dime_icon.png"),
-            QSize(), QIcon::Normal, QIcon::Off);
+            QSize(),
+            QIcon::Normal,
+            QIcon::Off);
         MainScreenClass->setWindowIcon(icon);
         MainScreenClass->setAutoFillBackground(false);
         MainScreenClass->setStyleSheet(QString::fromUtf8(
@@ -1079,8 +1081,8 @@ class Ui_MainScreenClass {
         load_calibration_button = new QPushButton(preprocessor_box);
         load_calibration_button->setObjectName(
             QString::fromUtf8("load_calibration_button"));
-        QSizePolicy sizePolicy2(QSizePolicy::Minimum,
-                                QSizePolicy::MinimumExpanding);
+        QSizePolicy sizePolicy2(
+            QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
         sizePolicy2.setHorizontalStretch(0);
         sizePolicy2.setVerticalStretch(0);
         sizePolicy2.setHeightForWidth(
@@ -1991,8 +1993,8 @@ class Ui_MainScreenClass {
         image_selection_box = new QGroupBox(centralWidget);
         image_selection_box->setObjectName(
             QString::fromUtf8("image_selection_box"));
-        QSizePolicy sizePolicy4(QSizePolicy::Preferred,
-                                QSizePolicy::MinimumExpanding);
+        QSizePolicy sizePolicy4(
+            QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
         sizePolicy4.setHorizontalStretch(0);
         sizePolicy4.setVerticalStretch(0);
         sizePolicy4.setHeightForWidth(
@@ -2429,8 +2431,8 @@ class Ui_MainScreenClass {
             QString::fromUtf8("horizontalLayout_3"));
         pose_progress = new QProgressBar(centralWidget);
         pose_progress->setObjectName(QString::fromUtf8("pose_progress"));
-        QSizePolicy sizePolicy6(QSizePolicy::MinimumExpanding,
-                                QSizePolicy::Fixed);
+        QSizePolicy sizePolicy6(
+            QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
         sizePolicy6.setHorizontalStretch(0);
         sizePolicy6.setVerticalStretch(0);
         sizePolicy6.setHeightForWidth(
@@ -2543,8 +2545,8 @@ class Ui_MainScreenClass {
         Right->setObjectName(QString::fromUtf8("Right"));
         qvtk_cpv = new QVTKOpenGLNativeWidget(centralWidget);
         qvtk_cpv->setObjectName(QString::fromUtf8("qvtk_cpv"));
-        QSizePolicy sizePolicy9(QSizePolicy::MinimumExpanding,
-                                QSizePolicy::MinimumExpanding);
+        QSizePolicy sizePolicy9(
+            QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
         sizePolicy9.setHorizontalStretch(1);
         sizePolicy9.setVerticalStretch(1);
         sizePolicy9.setHeightForWidth(
@@ -2929,8 +2931,8 @@ class Ui_MainScreenClass {
             "    height: 5px;\n"
             "	background: #2158AA;\n"
             "}"));
-        edge_detection_box->setAlignment(Qt::AlignRight | Qt::AlignTrailing |
-                                         Qt::AlignVCenter);
+        edge_detection_box->setAlignment(
+            Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
         verticalLayout_13 = new QVBoxLayout(edge_detection_box);
         verticalLayout_13->setSpacing(6);
         verticalLayout_13->setContentsMargins(11, 11, 11, 11);
@@ -3421,8 +3423,8 @@ class Ui_MainScreenClass {
             "    height: 5px;\n"
             "	background: #2158AA;\n"
             "}"));
-        model_view_box->setAlignment(Qt::AlignRight | Qt::AlignTrailing |
-                                     Qt::AlignVCenter);
+        model_view_box->setAlignment(
+            Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
         verticalLayout_15 = new QVBoxLayout(model_view_box);
         verticalLayout_15->setSpacing(6);
         verticalLayout_15->setContentsMargins(11, 11, 11, 11);
@@ -3857,8 +3859,8 @@ class Ui_MainScreenClass {
             "    height: 5px;\n"
             "	background: #2158AA;\n"
             "}"));
-        model_selection_box->setAlignment(Qt::AlignRight | Qt::AlignTrailing |
-                                          Qt::AlignVCenter);
+        model_selection_box->setAlignment(
+            Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
         verticalLayout_14 = new QVBoxLayout(model_selection_box);
         verticalLayout_14->setSpacing(6);
         verticalLayout_14->setContentsMargins(11, 11, 11, 11);
@@ -4006,13 +4008,13 @@ class Ui_MainScreenClass {
         menuOPTIMZER->addAction(actionOptimize_Backward);
 
         retranslateUi(MainScreenClass);
-        QObject::connect(actionQuit, SIGNAL(triggered()), MainScreenClass,
-                         SLOT(close()));
+        QObject::connect(
+            actionQuit, SIGNAL(triggered()), MainScreenClass, SLOT(close()));
 
         QMetaObject::connectSlotsByName(MainScreenClass);
-    }  // setupUi
+    } // setupUi
 
-    void retranslateUi(QMainWindow *MainScreenClass) {
+    void retranslateUi(QMainWindow* MainScreenClass) {
         MainScreenClass->setWindowTitle(QCoreApplication::translate(
             "MainScreenClass", "JointTrack Machine Learning", nullptr));
         actionOptions->setText(
@@ -4056,18 +4058,21 @@ class Ui_MainScreenClass {
         actionBlack_Implant_Silhouettes_in_Original_Image_s->setText(
             QCoreApplication::translate(
                 "MainScreenClass",
-                "Black Implant Silhouettes in Original Image(s)", nullptr));
+                "Black Implant Silhouettes in Original Image(s)",
+                nullptr));
         actionWhite_Implant_Silhouettes_in_Original_Image_s->setText(
             QCoreApplication::translate(
                 "MainScreenClass",
-                "White Implant Silhouettes in Original Image(s)", nullptr));
+                "White Implant Silhouettes in Original Image(s)",
+                nullptr));
         actionReset_Remove_All_Segmentation->setText(
             QCoreApplication::translate(
                 "MainScreenClass", "Reset/Remove All Segmentation", nullptr));
         actionCustom_Segmentation->setText(QCoreApplication::translate(
             "MainScreenClass", "Custom Segmentation", nullptr));
         actionSegment_FemHR->setText(QCoreApplication::translate(
-            "MainScreenClass", "Segment Femoral Implant(s) in High Resolution",
+            "MainScreenClass",
+            "Segment Femoral Implant(s) in High Resolution",
             nullptr));
         actionSegment_TibHR->setText(QCoreApplication::translate(
             "MainScreenClass", "Segment Images", nullptr));
@@ -4125,8 +4130,8 @@ class Ui_MainScreenClass {
             "MainScreenClass", "Camera A", nullptr));
         camera_B_radio_button->setText(QCoreApplication::translate(
             "MainScreenClass", "Camera B", nullptr));
-        pose_label->setText(QCoreApplication::translate("MainScreenClass",
-                                                        "TextLabel", nullptr));
+        pose_label->setText(QCoreApplication::translate(
+            "MainScreenClass", "TextLabel", nullptr));
         edge_detection_box->setTitle(QCoreApplication::translate(
             "MainScreenClass", "EDGE DETECTION", nullptr));
         aperture_label->setText(QCoreApplication::translate(
@@ -4177,13 +4182,13 @@ class Ui_MainScreenClass {
             "MainScreenClass", "SYMMETRY TRAP ANALYSIS", nullptr));
         menuOPTIMZER->setTitle(QCoreApplication::translate(
             "MainScreenClass", "OPTIMZER", nullptr));
-    }  // retranslateUi
+    } // retranslateUi
 };
 
 namespace Ui {
 class MainScreenClass : public Ui_MainScreenClass {};
-}  // namespace Ui
+} // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif  // UI_MAINSCREEN_H
+#endif // UI_MAINSCREEN_H

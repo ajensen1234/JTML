@@ -89,19 +89,20 @@ CostFunctionManager::CostFunctionManager() {
     /*Biplane Mode*/
     biplane_mode_ = false;
 };
-CostFunctionManager::~CostFunctionManager(){};
+CostFunctionManager::~CostFunctionManager() {};
 
 /*Upload Data (Images,Poses etc.)*/
 void CostFunctionManager::UploadData(
-    std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_A,
-    std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_A,
-    std::vector<gpu_cost_function::GPUIntensityFrame *> *gpu_intensity_frames_A,
-    std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_B,
-    std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_B,
-    std::vector<gpu_cost_function::GPUIntensityFrame *> *gpu_intensity_frames_B,
-    gpu_cost_function::GPUModel *gpu_principal_model,
-    std::vector<gpu_cost_function::GPUModel *> *gpu_non_principal_models,
-    gpu_cost_function::GPUMetrics *gpu_metrics, PoseMatrix *pose_storage,
+    std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
+    std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_A,
+    std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_A,
+    std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_B,
+    std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_B,
+    std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_B,
+    gpu_cost_function::GPUModel* gpu_principal_model,
+    std::vector<gpu_cost_function::GPUModel*>* gpu_non_principal_models,
+    gpu_cost_function::GPUMetrics* gpu_metrics,
+    PoseMatrix* pose_storage,
     bool biplane_mode) {
     /*Storage for Data (images, poses ,etc.) set to null*/
     /*Pointer to Vector of GPU Frame Pointers*/
@@ -128,8 +129,8 @@ void CostFunctionManager::UploadData(
 };
 
 void CostFunctionManager::UploadDistanceMap(
-    std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps,
-    std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps
+    std::vector<gpu_cost_function::GPUFrame*>* gpu_distance_maps,
+    std::vector<gpu_cost_function::GPUHeatmap*>* gpu_heatmaps
 
 ) {
     gpu_distance_maps_ = gpu_distance_maps;
@@ -234,7 +235,7 @@ std::string CostFunctionManager::getActiveCostFunction() {
 }
 
 /*Return Active Cost Function Class*/
-CostFunction *CostFunctionManager::getActiveCostFunctionClass() {
+CostFunction* CostFunctionManager::getActiveCostFunctionClass() {
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
             active_cost_function_) {
@@ -247,8 +248,8 @@ CostFunction *CostFunctionManager::getActiveCostFunctionClass() {
 };
 
 /*Return Cost Function Class*/
-CostFunction *CostFunctionManager::getCostFunctionClass(
-    std::string cost_function_name) {
+CostFunction*
+CostFunctionManager::getCostFunctionClass(std::string cost_function_name) {
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
             cost_function_name) {
@@ -293,7 +294,7 @@ double CostFunctionManager::callActiveCostFunction() {
 };
 /*Call Stage Initializer for Active Cost Function*/
 bool CostFunctionManager::InitializeActiveCostFunction(
-    std::string &error_message) {
+    std::string& error_message) {
     if (active_cost_function_ == "DIRECT_DILATION") {
         return initializeDIRECT_DILATION(error_message);
     } else if (active_cost_function_ == "DIRECT_MAHFOUZ") {
@@ -316,7 +317,7 @@ bool CostFunctionManager::InitializeActiveCostFunction(
 };
 /*Call Stage Destructor for Active Cost Function*/
 bool CostFunctionManager::DestructActiveCostFunction(
-    std::string &error_message) {
+    std::string& error_message) {
     if (active_cost_function_ == "DIRECT_DILATION") {
         return destructDIRECT_DILATION(error_message);
     } else if (active_cost_function_ == "DIRECT_MAHFOUZ") {
@@ -426,7 +427,7 @@ void CostFunctionManager::listCostFunctions() {
 /******************************************************************************/
 /*************************DO NOT EDIT FUNCTIONS ABOVE *************************/
 /******************************************************************************/
-}  // namespace jta_cost_function
+} // namespace jta_cost_function
 
 /******************************************************************************/
 /******************************************************************************/

@@ -26,10 +26,14 @@ The Frame class stores:
 #include "core/curvature_utilities.h"
 
 class Frame {
-   public:
-    Frame(std::string file_location, int aperture, int low_threshold,
-          int high_threshold, int dilation);
-    ~Frame(){};
+public:
+    Frame(
+        std::string file_location,
+        int aperture,
+        int low_threshold,
+        int high_threshold,
+        int dilation);
+    ~Frame() {};
 
     /*Get Set Methods for Main Variables*/
     /*Return Original Image*/
@@ -51,8 +55,11 @@ class Frame {
     void ResetFromOriginal();
 
     /*Recalculate Edge Detected Image*/
-    void SetEdgeImage(int aperture, int low_threshold, int high_threshold,
-                      bool use_reverse = false);
+    void SetEdgeImage(
+        int aperture,
+        int low_threshold,
+        int high_threshold,
+        bool use_reverse = false);
     /*Recalculate Dilated Image*/
     void SetDilatedImage(int dilation);
     void SetDistanceMap();
@@ -66,11 +73,11 @@ class Frame {
     void setCurvatureHeatmaps();
     std::vector<uchar> getCurvatureHeatmaps();
 
-    std::vector<uchar> flattenVector(
-        const std::vector<std::vector<uchar>>& vecOfVecs);
+    std::vector<uchar>
+    flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs);
     int GetNumCurvatureKeypoints();
 
-   private:
+private:
     /*Original Matrix*/
     cv::Mat original_image_;
     /*Edge Detected Matrix*/

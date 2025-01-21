@@ -1,0 +1,14 @@
+---
+Checks: >
+  llvm-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-braces-around-statements,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -*avoid-c-arrays,
+  -*pro-bounds-pointer-arithmetic
+UseColor: true
+FormatStyle: file

@@ -30,15 +30,15 @@ Calibration interactor_calibration;
 // Speed of Movement
 double speed = 1;
 bool information = true;
-bool interactor_camera_B = false;  // Are we in Camera B?
-bool middleDown = false;           // Is CM button down?
-bool leftDown = false;             // Is LM button down?
-bool rightDown = false;            // Is RM button down
-int rightDownY = 0;                // Y Pixel when RM Clicked
-double rightDownModelZ = 0;        // Model's Z Translation when RM Clicked
+bool interactor_camera_B = false; // Are we in Camera B?
+bool middleDown = false;          // Is CM button down?
+bool leftDown = false;            // Is LM button down?
+bool rightDown = false;           // Is RM button down
+int rightDownY = 0;               // Y Pixel when RM Clicked
+double rightDownModelZ = 0;       // Model's Z Translation when RM Clicked
 
 class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
-   public:
+public:
     static KeyPressInteractorStyle* New();
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballActor);
 
@@ -46,9 +46,13 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
     MainScreen* ms_;
     std::shared_ptr<Viewer> viewer_ = nullptr;
 
-    void initialize_MainScreen(MainScreen* ms) { ms_ = ms; }
+    void initialize_MainScreen(MainScreen* ms) {
+        ms_ = ms;
+    }
 
-    void initialize_viewer(std::shared_ptr<Viewer> viewer) { viewer_ = viewer; }
+    void initialize_viewer(std::shared_ptr<Viewer> viewer) {
+        viewer_ = viewer;
+    }
 
     // Picked Function
     bool ActivePick() {
@@ -149,14 +153,14 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
         else if (rwi->GetControlKey()) {
             // Handle an arrow key
             if (key == "Up") {
-                actor->SetPosition(Position[0], Position[1],
-                                   Position[2] + speed);
+                actor->SetPosition(
+                    Position[0], Position[1], Position[2] + speed);
                 this->Interactor->GetRenderWindow()->Render();
             }
             // Handle an arrow key
             if (key == "Down") {
-                actor->SetPosition(Position[0], Position[1],
-                                   Position[2] - speed);
+                actor->SetPosition(
+                    Position[0], Position[1], Position[2] - speed);
                 this->Interactor->GetRenderWindow()->Render();
             }
 
@@ -194,28 +198,28 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 
             // Handle an arrow key
             if (key == "Up") {
-                actor->SetPosition(Position[0], Position[1] + speed,
-                                   Position[2]);
+                actor->SetPosition(
+                    Position[0], Position[1] + speed, Position[2]);
                 this->Interactor->GetRenderWindow()->Render();
             }
             // Handle an arrow key
             if (key == "Down") {
-                actor->SetPosition(Position[0], Position[1] - speed,
-                                   Position[2]);
+                actor->SetPosition(
+                    Position[0], Position[1] - speed, Position[2]);
                 this->Interactor->GetRenderWindow()->Render();
             }
 
             // Handle an arrow key
             if (key == "Left") {
-                actor->SetPosition(Position[0] - speed, Position[1],
-                                   Position[2]);
+                actor->SetPosition(
+                    Position[0] - speed, Position[1], Position[2]);
                 this->Interactor->GetRenderWindow()->Render();
             }
 
             // Handle an arrow key
             if (key == "Right") {
-                actor->SetPosition(Position[0] + speed, Position[1],
-                                   Position[2]);
+                actor->SetPosition(
+                    Position[0] + speed, Position[1], Position[2]);
                 this->Interactor->GetRenderWindow()->Render();
             }
 
@@ -269,9 +273,12 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 
             } else {
                 auto current_position_B = Point6D(
-                    actor->GetPosition()[0], actor->GetPosition()[1],
-                    actor->GetPosition()[2], actor->GetOrientation()[0],
-                    actor->GetOrientation()[1], actor->GetOrientation()[2]);
+                    actor->GetPosition()[0],
+                    actor->GetPosition()[1],
+                    actor->GetPosition()[2],
+                    actor->GetOrientation()[0],
+                    actor->GetOrientation()[1],
+                    actor->GetOrientation()[2]);
                 Point6D current_position_A =
                     interactor_calibration.convert_Pose_B_to_Pose_A(
                         current_position_B);
@@ -379,9 +386,12 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 
             } else {
                 auto current_position_B = Point6D(
-                    actor->GetPosition()[0], actor->GetPosition()[1],
-                    actor->GetPosition()[2], actor->GetOrientation()[0],
-                    actor->GetOrientation()[1], actor->GetOrientation()[2]);
+                    actor->GetPosition()[0],
+                    actor->GetPosition()[1],
+                    actor->GetPosition()[2],
+                    actor->GetOrientation()[0],
+                    actor->GetOrientation()[1],
+                    actor->GetOrientation()[2]);
                 Point6D current_position_A =
                     interactor_calibration.convert_Pose_B_to_Pose_A(
                         current_position_B);
@@ -444,7 +454,8 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
             if (!leftDown && !middleDown) {
                 double* Position = actor->GetPosition();
                 actor->SetPosition(
-                    Position[0], Position[1],
+                    Position[0],
+                    Position[1],
                     QCursor::pos().y() - rightDownY + rightDownModelZ);
             }
 
@@ -480,9 +491,12 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 
                 } else {
                     auto current_position_B = Point6D(
-                        actor->GetPosition()[0], actor->GetPosition()[1],
-                        actor->GetPosition()[2], actor->GetOrientation()[0],
-                        actor->GetOrientation()[1], actor->GetOrientation()[2]);
+                        actor->GetPosition()[0],
+                        actor->GetPosition()[1],
+                        actor->GetPosition()[2],
+                        actor->GetOrientation()[0],
+                        actor->GetOrientation()[1],
+                        actor->GetOrientation()[2]);
                     Point6D current_position_A =
                         interactor_calibration.convert_Pose_B_to_Pose_A(
                             current_position_B);
@@ -531,7 +545,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 vtkStandardNewMacro(KeyPressInteractorStyle);
 
 class CameraInteractorStyle : public vtkInteractorStyleTrackballCamera {
-   public:
+public:
     static CameraInteractorStyle* New();
     vtkTypeMacro(CameraInteractorStyle, vtkInteractorStyleTrackballCamera);
 

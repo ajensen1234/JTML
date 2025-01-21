@@ -36,6 +36,6 @@ with several resources (stored on the GPU) and functions
 
         */
 class CostFunctionToolboxGPU {}
-}  // namespace gpu_cost_function
+} // namespace gpu_cost_function
 
 #endif /* GPU_TOOLBOX_H */

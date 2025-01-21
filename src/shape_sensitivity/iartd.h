@@ -4,7 +4,7 @@
 
 #include <vector>
 class IARTD {
-   public:
+public:
     IARTD(int MAX_N, int MAX_P);
     std::vector<double> feature_vector(int n, int p);
     double phase_at(int n, int p);

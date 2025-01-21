@@ -9,15 +9,15 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-void extract_contour_points(cv::Mat input_edge_image,
-                            std::vector<std::vector<cv::Point>> *contour) {
-    cv::findContours(input_edge_image, *contour, cv::RETR_EXTERNAL,
-                     cv::CHAIN_APPROX_NONE);
+void extract_contour_points(
+    cv::Mat input_edge_image, std::vector<std::vector<cv::Point>>* contour) {
+    cv::findContours(
+        input_edge_image, *contour, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 };
-void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
-                                       float *curvature) {
-    cv::Point_<int> *p1 = new cv::Point_<int>;
-    cv::Point_<int> *p2 = new cv::Point_<int>;
+void calculate_curvature_along_contour(
+    std::vector<cv::Point_<int>> contour, float* curvature) {
+    cv::Point_<int>* p1 = new cv::Point_<int>;
+    cv::Point_<int>* p2 = new cv::Point_<int>;
     int dist = 18;
     for (int idx = 0; idx < contour.size(); idx++) {
         cv::Point ref_pt = contour[idx];
@@ -33,8 +33,8 @@ void calculate_curvature_along_contour(std::vector<cv::Point_<int>> contour,
     return;
 };
 
-float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
-                       cv::Point_<int> p2) {
+float menger_curvature(
+    cv::Point_<int> p1, cv::Point_<int> ref_pt, cv::Point_<int> p2) {
     cv::Vec<int, 2> vec1 = cv::Vec<int, 2>(p1.x - ref_pt.x, p1.y - ref_pt.y);
     cv::Vec<int, 2> vec2 = cv::Vec<int, 2>(p2.x - ref_pt.x, p2.y - ref_pt.y);
     cv::Vec<int, 2> vec3 = cv::Vec<int, 2>(p2.x - p1.x, p2.y - p1.y);
@@ -46,9 +46,13 @@ float menger_curvature(cv::Point_<int> p1, cv::Point_<int> ref_pt,
     return inv_radius;
 };
 
-void pick_three_points(std::vector<cv::Point_<int>> contour_points, int idx,
-                       int dist, cv::Point_<int> *p1, cv::Point_<int> ref_pt,
-                       cv::Point_<int> *p2) {
+void pick_three_points(
+    std::vector<cv::Point_<int>> contour_points,
+    int idx,
+    int dist,
+    cv::Point_<int>* p1,
+    cv::Point_<int> ref_pt,
+    cv::Point_<int>* p2) {
     int contour_length = contour_points.size();
     // First, we make sure that the starting point doesn't get shoved behind the
     // vector
@@ -81,26 +85,26 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     */
 
     // Contour placeholder
-    std::vector<std::vector<cv::Point_<int>>> *contour =
+    std::vector<std::vector<cv::Point_<int>>>* contour =
         new std::vector<std::vector<cv::Point_<int>>>;
     extract_contour_points(input_image, contour);
     draw_contours(contour);
     int N = contour->back().size();
-    float *curvature = new float[N];
+    float* curvature = new float[N];
     calculate_curvature_along_contour(contour->back(), curvature);
 
     float curv_mean = calculate_mean(curvature, contour->back().size());
     float curv_std = calculate_std(curvature, contour->back().size());
-    float alpha = 1.5;  // How many standard deviations we care about
+    float alpha = 1.5; // How many standard deviations we care about
     float curv_threshold = curv_mean + alpha * curv_std;
     // bool *curv_thresh_array = new bool[contour[0].size()];
-    float *smoothed_curvature = new float[N];
+    float* smoothed_curvature = new float[N];
     int kern_size = 5;
     double sigma = 2;
 
     gaussian_convolution(curvature, N, sigma, smoothed_curvature);
 
-    float *curvature_derivative = new float[N];
+    float* curvature_derivative = new float[N];
 
     calculate_derivative(smoothed_curvature, curvature_derivative, 1, N);
 
@@ -130,14 +134,14 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     return heatmaps;
 };
 
-float calculate_mean(float *vals, int len) {
+float calculate_mean(float* vals, int len) {
     float sum = 0.0;
     for (int i = 0; i < len; i++) {
         sum += vals[i];
     }
     return sum / len;
 }
-float calculate_std(float *vals, int len) {
+float calculate_std(float* vals, int len) {
     float mean = calculate_mean(vals, len);
     float stdev = 0.0;
     for (int i = 0; i < len; i++) {
@@ -146,7 +150,7 @@ float calculate_std(float *vals, int len) {
     return sqrt(stdev / len);
 }
 
-void draw_contours(std::vector<std::vector<cv::Point_<int>>> *contour) {
+void draw_contours(std::vector<std::vector<cv::Point_<int>>>* contour) {
     // create a source image to hold the contour
     cv::Mat dst = cv::Mat(1024, 1024, CV_8UC1);
     cv::drawContours(dst, *contour, 0, 255);
@@ -154,7 +158,7 @@ void draw_contours(std::vector<std::vector<cv::Point_<int>>> *contour) {
     return;
 }
 
-float array_at_idx(float *arr, int idx, int N) {
+float array_at_idx(float* arr, int idx, int N) {
     if (idx < 0) {
         return arr[N + idx];
     } else if (idx >= N) {
@@ -173,7 +177,7 @@ float dot(float arr1[], float arr2[], int N) {
     return sum;
 }
 
-void gaussian_convolution(float *arr, int N, float sigma, float *result) {
+void gaussian_convolution(float* arr, int N, float sigma, float* result) {
     auto gaussianKernel = [sigma](double x) {
         float coefficient = 1.0 / (std::sqrt(2.0 * M_PI) * sigma);
         float exponent = -0.5 * (x * x) / (sigma * sigma);
@@ -181,16 +185,26 @@ void gaussian_convolution(float *arr, int N, float sigma, float *result) {
     };
     // creating the kernel
     float kernel[9] = {
-        gaussianKernel(-4), gaussianKernel(-3), gaussianKernel(-2),
-        gaussianKernel(-1), gaussianKernel(0),  gaussianKernel(1),
-        gaussianKernel(2),  gaussianKernel(3),  gaussianKernel(4)};
+        gaussianKernel(-4),
+        gaussianKernel(-3),
+        gaussianKernel(-2),
+        gaussianKernel(-1),
+        gaussianKernel(0),
+        gaussianKernel(1),
+        gaussianKernel(2),
+        gaussianKernel(3),
+        gaussianKernel(4)};
 
     for (int i = 0; i < N; i++) {
         float arr_subset[9] = {
-            array_at_idx(arr, i - 4, N), array_at_idx(arr, i - 3, N),
-            array_at_idx(arr, i - 2, N), array_at_idx(arr, i - 1, N),
-            array_at_idx(arr, i, N),     array_at_idx(arr, i + 1, N),
-            array_at_idx(arr, i + 2, N), array_at_idx(arr, i + 3, N),
+            array_at_idx(arr, i - 4, N),
+            array_at_idx(arr, i - 3, N),
+            array_at_idx(arr, i - 2, N),
+            array_at_idx(arr, i - 1, N),
+            array_at_idx(arr, i, N),
+            array_at_idx(arr, i + 1, N),
+            array_at_idx(arr, i + 2, N),
+            array_at_idx(arr, i + 3, N),
             array_at_idx(arr, i + 4, N),
         };
         result[i] = dot(arr_subset, kernel, 9) / arr_sum(kernel, 9);
@@ -204,7 +218,7 @@ float arr_sum(float arr[], int N) {
     }
     return res;
 }
-void calculate_derivative(float *arr, float *der, int del_x, int N) {
+void calculate_derivative(float* arr, float* der, int del_x, int N) {
     // This is basically the first thing that you learn in calc 1.
     // For the input point, we are looking del_x in front and behind it
     // Then determining the discrete derivative.
@@ -214,8 +228,8 @@ void calculate_derivative(float *arr, float *der, int del_x, int N) {
             array_at_idx(arr, i + del_x, N) - array_at_idx(arr, i - del_x, N);
     }
 }
-std::vector<int> positive_inflection_points(float *arr, float *der, int N,
-                                            float threshold) {
+std::vector<int>
+positive_inflection_points(float* arr, float* der, int N, float threshold) {
     std::vector<int> infl_pts;
     for (int i = 0; i < N; i++) {
         bool infl =
