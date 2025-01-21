@@ -42,10 +42,10 @@ Point6D::Point6D(gpu_cost_function::Pose p) {
 
 double Point6D::GetDistanceFrom(Point6D otherPoint) {
     return std::sqrt(
-        (otherPoint.x - x) * (otherPoint.x - x) +
-        (otherPoint.y - y) * (otherPoint.y - y) +
-        (otherPoint.z - z) * (otherPoint.z - z) +
-        (otherPoint.xa - xa) * (otherPoint.xa - xa) +
+        ((otherPoint.x - x) * (otherPoint.x - x)) +
+        ((otherPoint.y - y) * (otherPoint.y - y)) +
+        ((otherPoint.z - z) * (otherPoint.z - z)) +
+        ((otherPoint.xa - xa) * (otherPoint.xa - xa)) +
         (otherPoint.ya - ya) * (otherPoint.ya - ya) +
         (otherPoint.za - za) * (otherPoint.za - za));
 }

@@ -50,6 +50,9 @@ FILES=$(find ./src ./include -type f \( \
     -name "*.cxx" \
     \) -not -path "*/build/*" \
     -not -path "*/cmake-build*/*" \
+    -not -path "*/_deps/*" \
+    -not -path "*/.pixi/*" \
+    -not -path "*_autogen/*" \
     2>/dev/null || true)
 
 if [ -z "$FILES" ]; then

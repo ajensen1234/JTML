@@ -82,15 +82,28 @@ fi
 if [ ! -f "${BUILD_PATH}/compile_commands.json" ]; then
     echo -e "${RED}Error: compile_commands.json not found in ${BUILD_PATH}!${NC}"
     echo "Run CMake with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON first"
+    echo "Current directory: $(pwd)"
     exit 1
 fi
 
-# Find files
-FILES=$(find ./src -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.cc" -o -name "*.cxx" \) \
-    -not -path "*/build/*" -not -path "*/cmake-build*/*")
+# Find files in both src and include directories
+FILES=$(find ./src ./include -type f \( \
+    -name "*.cpp" -o \
+    -name "*.hpp" -o \
+    -name "*.h" -o \
+    -name "*.cc" -o \
+    -name "*.cxx" \
+    \) -not -path "*/build/*" \
+    -not -path "*/cmake-build*/*" \
+    -not -path "*/_deps/*" \
+    -not -path "*/.pixi/*" \
+    -not -path "*_autogen/*" \
+    2>/dev/null || true)
 
 if [ -z "$FILES" ]; then
     echo -e "${RED}No files found to analyze!${NC}"
+    echo "Make sure you're running this script from the project root directory"
+    echo "Current directory: $(pwd)"
     exit 1
 fi
 
@@ -103,6 +116,7 @@ fi
 # Count files
 FILE_COUNT=$(echo "$FILES" | wc -l)
 echo "Found $FILE_COUNT files to analyze"
+echo "Using compilation database from: ${BUILD_PATH}/compile_commands.json"
 
 # Run clang-tidy
 echo "Running clang-tidy..."

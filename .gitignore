@@ -36,3 +36,4 @@ check
 .pixi
 *.egg-info
 /_deps/
+/compile_commands.json

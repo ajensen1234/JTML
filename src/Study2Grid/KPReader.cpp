@@ -74,17 +74,17 @@ bool readKP(const QString& path, std::vector<XYZPoint>& kp_storage) {
 //				QStringList name_and_location =
 // line.simplified().split(":"); // split at colon if (name_and_location.size()
 //!= 2) { 					std::cout << "\nError: Incorrect
-//!size when split along colon character
+//! size when split along colon character
 //.kp file: " + path.toStdString(); 					return
-//false;
+// false;
 //				}
 //				QStringList location =
 // name_and_location[1].split(","); 				if
 // (location.size() != 3) { 					location =
 // name_and_location[1].simplified().split(" ");
-// if (location.size() != 3) { 						std::cout << "\nError: There are not three
-// scalars representing a point in the .kp file: " + path.toStdString();
-// return false;
+// if (location.size() != 3) {
+// std::cout << "\nError: There are not three scalars representing a point in
+// the .kp file: " + path.toStdString(); return false;
 //					}
 //				}
 //				kp_storage.push_back(XYZPoint(location[0].simplified().toFloat(),
