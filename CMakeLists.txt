@@ -129,13 +129,6 @@ set_target_properties(VTK::External PROPERTIES
 add_dependencies(VTK::External vtk_external)
 find_package(VTK REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
 
-
-
-
-
-
-
-
 #=============================
 # Output Directories
 #=============================
