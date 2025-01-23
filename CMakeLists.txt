@@ -80,11 +80,12 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 
 
 # VTK setup - assuming VTK was built using the separate build script
-set(VTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk/lib64/cmake/vtk-9.3" CACHE PATH "Path to VTK CMake files")
-if(NOT EXISTS ${VTK_DIR})
-    message(FATAL_ERROR "VTK not found. Please run the VTK build script first.\n"
-                       "Expected VTK build directory: ${VTK_DIR}")
-endif()
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/build/")
+# set(VTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3")
+# if(NOT EXISTS ${VTK_DIR})
+#     message(FATAL_ERROR "VTK not found. Please run the VTK build script first.\n"
+#                        "Expected VTK build directory: ${VTK_DIR}")
+# endif()
 find_package(VTK 9.3 REQUIRED COMPONENTS
     GUISupportQt
     RenderingCore
