@@ -80,13 +80,16 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 
 
 # VTK setup - assuming VTK was built using the separate build script
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
-set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
-# set(VTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3")
-# if(NOT EXISTS ${VTK_DIR})
-#     message(FATAL_ERROR "VTK not found. Please run the VTK build script first.\n"
-#                        "Expected VTK build directory: ${VTK_DIR}")
-# endif()
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
+    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
+    set(VTK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/")
+else()
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3/")
+    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3/")
+    set(VTK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/")
+endif()
+
 find_package(VTK 9.3 REQUIRED COMPONENTS
     GUISupportQt
     RenderingCore
@@ -99,7 +102,6 @@ find_package(VTK 9.3 REQUIRED COMPONENTS
     RenderingAnnotation
     InteractionStyle
 )
-set(VTK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/")
 #=============================
 # Output Directories
 #=============================
