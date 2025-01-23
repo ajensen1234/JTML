@@ -25,7 +25,6 @@ add_library(jtml_core STATIC
 	curvature_utilities.cpp
 	${HEADER_FILES}
 )
-add_dependencies(jtml_core vtk_external)
 # Linking Necessary Libraries
 target_link_libraries(jtml_core ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(jtml_core ${TORCH_LIBRARIES})

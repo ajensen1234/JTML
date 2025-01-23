@@ -49,7 +49,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Include Directories
 
-add_dependencies(${PROJECT_NAME} vtk_external)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE

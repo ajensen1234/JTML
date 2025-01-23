@@ -51,13 +51,7 @@ cuda = "12.4"
 cuda = "12.4"
 
 [tasks.build-vtk]
-cmd = ["cmake",
-    "--build",
-    ".build",
-    "-t",
-    "vtk_external"
-]
-depends-on = ["configure"]
+cmd = ["./vtk_installer.sh"]
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
@@ -80,6 +74,7 @@ cmd = ["cmake",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
 ]
 inputs = ["CMakeLists.txt"]
+depends-on = ["build-vtk"]
 outputs = [".build/CMakeFiles/"]
 
 [tasks.build]

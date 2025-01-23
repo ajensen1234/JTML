@@ -79,56 +79,25 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
 
 
-include(ExternalProject)
-
-# Define VTK build
-set(VTK_EXTERNAL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk")
-ExternalProject_Add(vtk_external
-    PREFIX ${VTK_EXTERNAL_PREFIX}
-    GIT_REPOSITORY https://github.com/Kitware/VTK.git
-    GIT_TAG v9.3.0
-    CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        -DCMAKE_PREFIX_PATH=$ENV{CONDA_PREFIX}
-        -DVTK_GROUP_ENABLE_Qt=YES
-        -DVTK_MODULE_ENABLE_VTK_GUISupportQt=YES
-        -DQt5_DIR=$ENV{CONDA_PREFIX}/lib/cmake/Qt5
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DVTK_MODULE_ENABLE_VTK_RenderingCore=YES
-        -DVTK_MODULE_ENABLE_VTK_RenderingOpenGL2=YES
-        -DVTK_MODULE_ENABLE_VTK_IOCore=YES
-        -DVTK_MODULE_ENABLE_VTK_IOImage=YES
-        -DVTK_MODULE_ENABLE_VTK_IOGeometry=YES
-        -DVTK_MODULE_ENABLE_VTK_GUISupportQt=YES
-        -DVTK_MODULE_ENABLE_VTK_ChartsCore=YES
-        -DVTK_MODULE_ENABLE_VTK_ViewsContext2D=YES
-        -DVTK_MODULE_ENABLE_VTK_RenderingAnnotation=YES
-        -DVTK_MODULE_ENABLE_VTK_InteractionStyle=YES
-        -DVTK_USE_X=OFF
-        -DVTK_USE_SDL2=ON
-        -DVTK_OPENGL_HAS_OSMESA=OFF
-        -DVTK_OPENGL_HAS_EGL=OFF
-    BUILD_ALWAYS OFF
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-    LOG_INSTALL ON
+# VTK setup - assuming VTK was built using the separate build script
+set(VTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk/lib64/cmake/vtk-9.3" CACHE PATH "Path to VTK CMake files")
+if(NOT EXISTS ${VTK_DIR})
+    message(FATAL_ERROR "VTK not found. Please run the VTK build script first.\n"
+                       "Expected VTK build directory: ${VTK_DIR}")
+endif()
+find_package(VTK 9.3 REQUIRED COMPONENTS
+    GUISupportQt
+    RenderingCore
+    RenderingOpenGL2
+    IOCore
+    IOImage
+    IOGeometry
+    ChartsCore
+    ViewsContext2D
+    RenderingAnnotation
+    InteractionStyle
 )
-# Create imported target for VTK after external project install
-ExternalProject_Get_Property(vtk_external INSTALL_DIR)
-set(VTK_DIR "${INSTALL_DIR}/lib64/cmake/vtk-9.3/")
-set(VTK_LIB_DIR "${INSTALL_DIR}/lib64/")
-list(APPEND CMAKE_PREFIX_PATH "${INSTALL_DIR}")
-message(STATUS "VTK LIB DIR: ${VTK_LIB_DIR}")
-
-add_library(VTK::External INTERFACE IMPORTED GLOBAL)
-set_target_properties(VTK::External PROPERTIES
-    IMPORTED_LOCATION "${INSTALL_DIR}/lib64"
-    INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include/vtk-9.3"
-)
-add_dependencies(VTK::External vtk_external)
-find_package(VTK REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
-
+set(VTK_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/_deps/vtk/install/lib64")
 #=============================
 # Output Directories
 #=============================
