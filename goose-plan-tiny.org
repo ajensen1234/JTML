@@ -1,0 +1,13 @@
+#+title: Goose Plan Tiny
+
+* 1. Code Organization and Cleanup
+- [ ] Organize duplicate implementations:
+  - [ ] Review all .cpp/.cu files for duplicates
+  - [ ] Create shared utilities where needed
+  - [ ] Document shared component usage
+- [ ] Review full codebase structure
+  - [ ] Identify duplicate code patterns
+  - [ ] Map dependencies between components
+  - [ ] Document critical code paths
+- [ ] Refactor duplicated functionality and code
+- [ ] Organize code into more modular file structure if necessary

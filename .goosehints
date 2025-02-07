@@ -1,0 +1,46 @@
+This is a C++/CUDA project for medical imaging and pose optimization with the following key components:
+
+- Core library (libjtml_core.a): Handles basic data structures, optimization, and machine learning
+- GPU library (libjtml_gpu.so): CUDA-based implementations for image processing and DRR rendering
+- Cost Functions library (libJTA_Cost_Functions.so): Various optimization metrics and constraints
+- Qt-based GUI: Main interface with visualization tools
+
+Build Environment:
+- Managed via pixi.toml for dependencies
+- CMake-based build system
+- CUDA toolkit and Qt6 dependencies
+- C++17 standard
+
+Key Areas:
+- Optimization algorithms: DIRECT/Dividing rectangles implementation
+- CUDA kernels: DRR rendering, image processing, metrics
+- Cost functions: Different optimization strategies and constraints
+
+Code Style Guidelines:
+- Use camelCase for method names
+- Use PascalCase for class names
+- Maintain consistent 4-space indentation
+- Group related functions together
+- Document complex CUDA kernels and optimization algorithms
+
+Critical Files:
+- src/core/*: Core optimization algorithms
+- src/gpu/*.cu: CUDA kernel implementations
+- src/cost_functions/*: Optimization metrics
+
+Important Directories:
+- src/core: Core algorithms and data structures
+- src/gpu: CUDA implementations
+- src/gui: Qt-based interface
+- src/cost_functions: Optimization metrics
+- include/*: Header files matching source structure
+
+Testing Requirements:
+- Any new CUDA kernel should have CPU validation
+- GUI changes should maintain existing workflow
+- Optimization changes need convergence verification
+
+Please confirm before:
+- Modifying optimization algorithms
+- Changing CUDA kernel implementations
+- Making structural changes to core components

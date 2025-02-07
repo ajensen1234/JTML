@@ -1,0 +1,71 @@
+--- optimizer_manager.cpp.orig	2024-01-17 15:08:14.000000000 -0500
++++ optimizer_manager.cpp	2024-01-17 15:08:14.000000000 -0500
+@@ -738,14 +738,14 @@
+             true,
+             width,
+             height,
+             cuda_device_id,
+             true,
+-            &primary_model_.triangle_vertices_[0],
+-            &primary_model_.triangle_normals_[0],
+-            primary_model_.triangle_vertices_.size() / 9,
++            primary_model_.getVerticesData(),
++            primary_model_.getNormalsData(),
++            primary_model_.getVertexCount() / 9,
+             calibration_.camera_A_principal_);
+ 
+         if (!gpu_principal_model_->IsInitializedCorrectly()) {
+             delete gpu_principal_model_;
+             gpu_principal_model_ = 0;
+             error_message = "Error uploading principal model to GPU!";
+@@ -760,14 +760,14 @@
+                 true,
+                 width,
+                 height,
+                 cuda_device_id,
+                 true,
+-                &all_models_[selected_model_list_[i].row()].triangle_vertices_[0],
+-                &all_models_[selected_model_list_[i].row()].triangle_normals_[0],
+-                all_models_[selected_model_list_[i].row()].triangle_vertices_.size() / 9,
++                all_models_[selected_model_list_[i].row()].getVerticesData(),
++                all_models_[selected_model_list_[i].row()].getNormalsData(),
++                all_models_[selected_model_list_[i].row()].getVertexCount() / 9,
+                 calibration_.camera_A_principal_);
+             if (gpu_non_principal_model->IsInitializedCorrectly()) {
+                 gpu_non_principal_models_.push_back(gpu_non_principal_model);
+             } else {
+                 delete gpu_non_principal_model;
+                 error_message = "Error uploading non-principal model to GPU!";
+@@ -785,14 +785,14 @@
+             cuda_device_id,
+             true,
+             true,
+-            &primary_model_.triangle_vertices_[0],
+-            &primary_model_.triangle_normals_[0],
+-            primary_model_.triangle_vertices_.size() / 9,
++            primary_model_.getVerticesData(),
++            primary_model_.getNormalsData(),
++            primary_model_.getVertexCount() / 9,
+             calibration_.camera_A_principal_,
+             calibration_.camera_B_principal_);
+         if (!gpu_principal_model_->IsInitializedCorrectly()) {
+             delete gpu_principal_model_;
+             gpu_principal_model_ = 0;
+             error_message = "Error uploading principal model to GPU!";
+@@ -809,14 +809,14 @@
+                 cuda_device_id,
+                 true,
+                 true,
+-                &all_models_[selected_model_list_[i].row()].triangle_vertices_[0],
+-                &all_models_[selected_model_list_[i].row()].triangle_normals_[0],
+-                all_models_[selected_model_list_[i].row()].triangle_vertices_.size() / 9,
++                all_models_[selected_model_list_[i].row()].getVerticesData(),
++                all_models_[selected_model_list_[i].row()].getNormalsData(),
++                all_models_[selected_model_list_[i].row()].getVertexCount() / 9,
+                 calibration_.camera_A_principal_,
+                 calibration_.camera_B_principal_);
+             if (gpu_non_principal_model->IsInitializedCorrectly()) {
+                 gpu_non_principal_models_.push_back(gpu_non_principal_model);
+             } else {
+                 delete gpu_non_principal_model;
+                 error_message = "Error uploading non-principal model to GPU!";

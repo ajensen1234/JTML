@@ -1,0 +1,10 @@
+            primary_model_.model_name_,
+            true,
+            width,
+            height,
+            cuda_device_id,
+            true,
+            primary_model_.getVerticesData(),
+            primary_model_.getNormalsData(),
+            primary_model_.getVertexCount() / 9,
+            calibration_.camera_A_principal_);

@@ -75,14 +75,14 @@ cmd = ["cmake",
 ]
 inputs = ["CMakeLists.txt"]
 depends-on = ["build-vtk"]
-outputs = [".build/CMakeFiles/"]
+#outputs = [".build/CMakeFiles/"]
 
 [tasks.build]
 # Build task that depends on configure
 cmd = ["cmake", "--build", ".build"]
 depends-on = ["configure", "build-vtk"]
-inputs = ["CMakeLists.txt", "src/*"]
-outputs = [".build/bin/joint-track-machine-learning"]
+#inputs = ["CMakeLists.txt", "src/*"]
+#outputs = [".build/bin/joint-track-machine-learning"]
 
 [tasks.run]
 # Run task that depends on build

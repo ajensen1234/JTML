@@ -1,47 +1,56 @@
-/*
- * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
- * SPDX-License-Identifier: AGPL-3.0
- */
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
 
-/*Header for Model Class Includes:
- */
+#pragma once
 
-/*Standard*/
 #include <string>
 #include <vector>
-
-/*VTK*/
-#include <vtkSTLReader.h>
 #include <vtkSmartPointer.h>
+#include <vtkSTLReader.h>
 
-/*Custom STL Reader*/
-#include "stl_reader.h"
-
-#ifndef MODEL_H
-    #define MODEL_H
-
-/*AS OF VERSION 3.3.1 SHOULD BE ABLE TO LOAD BOTH BINARY AND ASCII STL FILES*/
+/**
+ * @brief Class representing a 3D model loaded from an STL file
+ * 
+ * Handles loading and storing of 3D model data, including vertices and normals.
+ * Provides access to both raw geometry data and VTK-based representations.
+ */
 class Model {
 public:
-    Model(
-        std::string file_location,
-        std::string model_name,
-        std::string model_type);
-    Model() {};
-    std::string file_location_;                // Store File Location for Model
-    vtkSmartPointer<vtkSTLReader> cad_reader_; // Stores CAD model
-    std::vector<float> triangle_vertices_;     // Vector of Triangle Vertices
-    std::vector<float> triangle_normals_;      // Vector of Triangle Normals
-    /*Model Name: taken from prefix of file name. If duplicates a (x) is added*/
-    std::string model_name_;
-    /*Model Type: could be femur or implant or bone or type of bone, anything
-     * really...*/
-    std::string model_type_;
-    /*Bool indicating initialized correctly*/
-    bool initialized_correctly_;
+    /**
+     * @brief Construct a new Model object
+     * 
+     * @param file_location Path to the STL file
+     * @param model_name Name to identify the model
+     * @param model_type Type classification of the model
+     */
+    Model(std::string file_location = "", std::string model_name = "", std::string model_type = "");
+
+    // Public member variables for access to model properties
+    std::string file_location_;  ///< Path to the STL file
+    std::string model_name_;     ///< Name identifier for the model
+    std::string model_type_;     ///< Type classification of the model
+    bool initialized_correctly_; ///< Whether the model loaded successfully
+
+    // Getters for geometry data
+    const std::vector<float>& getVertices() const { return triangle_vertices_; }
+    const std::vector<float>& getNormals() const { return triangle_normals_; }
+    float* getVerticesData() { return triangle_vertices_.data(); }
+    float* getNormalsData() { return triangle_normals_.data(); }
+    size_t getVertexCount() const { return triangle_vertices_.size(); }
+    size_t getNormalCount() const { return triangle_normals_.size(); }
+    
+    // VTK access
+    vtkSmartPointer<vtkSTLReader> getReader() const { return cad_reader_; }
 
 private:
-    stl_reader::STL_STATUS LoadVerticesAndNormals();
-};
+    /**
+     * @brief Load vertices and normals from the STL file
+     * 
+     * @return true if loading was successful, false otherwise
+     */
+    bool LoadVerticesAndNormals();
 
-#endif /* MODEL_H */
+    std::vector<float> triangle_vertices_;  ///< Raw vertex data (x,y,z triplets)
+    std::vector<float> triangle_normals_;   ///< Raw normal data (x,y,z triplets)
+    vtkSmartPointer<vtkSTLReader> cad_reader_;  ///< VTK STL reader instance
+};

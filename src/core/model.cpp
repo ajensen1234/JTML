@@ -1,36 +1,33 @@
 // Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 // SPDX-License-Identifier: AGPL-3.0
 
-/*Model Header*/
 #include "core/model.h"
+#include "core/io/STLReader.h"
 
-/*Standard*/
 #include <sstream>
 
 using namespace std;
 
-Model::Model(
-    std::string file_location, std::string model_name, std::string model_type) {
-    /*Set Public File Location string*/
+Model::Model(std::string file_location, std::string model_name, std::string model_type) {
+    // Set Public File Location string
     file_location_ = file_location;
     model_name_ = model_name;
     model_type_ = model_type;
 
-    /*Load STL File to CADReader*/
+    // Load STL File to CADReader
     cad_reader_ = vtkSmartPointer<vtkSTLReader>::New();
     cad_reader_->SetFileName(file_location.c_str());
 
-    /*Load Vertices and Normals*/
-    if (LoadVerticesAndNormals() == stl_reader::STL_INVALID) {
-        initialized_correctly_ = false;
-    } else {
-        initialized_correctly_ = true;
-    }
+    // Load Vertices and Normals
+    initialized_correctly_ = LoadVerticesAndNormals();
 }
 
-stl_reader::STL_STATUS Model::LoadVerticesAndNormals() {
-    return stl_reader::readAnySTL(
-        QString::fromStdString(file_location_),
-        triangle_vertices_,
-        triangle_normals_);
+bool Model::LoadVerticesAndNormals() {
+    std::vector<float> vertices, normals;
+    bool success = jtml::io::STLReader::read(QString::fromStdString(file_location_), vertices, normals);
+    if (success) {
+        triangle_vertices_ = std::move(vertices);
+        triangle_normals_ = std::move(normals);
+    }
+    return success;
 }
