@@ -72,6 +72,10 @@ cmake "$SOURCE_DIR" \
     -DVTK_MODULE_ENABLE_VTK_InteractionStyle=YES \
     -DVTK_USE_X=OFF \
     -DVTK_USE_SDL2=ON \
+    -DVTK_GROUP_ENABLE_Qt6=NO \
+    -DVTK_USE_QT6=OFF \
+    -DVTK_QT_VERSION=5 \
+    -DQt6_DIR="" \
     -DVTK_OPENGL_HAS_OSMESA=OFF \
     -DVTK_OPENGL_HAS_EGL=OFF \
     -G Ninja

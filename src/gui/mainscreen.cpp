@@ -2631,6 +2631,7 @@ void MainScreen::on_load_calibration_button_clicked() {
             interactor_camera_B = false;
         }
         /*Valid Code for Biplane*/
+        /*NOT WORKING, BUT GOOD STARTING PLACE*/
         else if (InputList[0] == "JTA_INTCALIB_BIPLANE") {
             /*Convert and Do PIX MM Error CHECK*/
             /*Error Check*/
@@ -2687,7 +2688,9 @@ void MainScreen::on_load_calibration_button_clicked() {
             /*Update Interactor Calibration For Converting Text in Camera B
              * View*/
             interactor_calibration = calibration_file_;
-        } else if (InputList[0] == "image") {
+        } else if (InputList[0] == "image") { // Would need a way to distinguish
+                                              // Denver single plane from
+                                              // biplane
             CameraCalibration denver_calibration_A(
                 InputList[6].toDouble(),
                 InputList[7].toDouble(),
@@ -2715,7 +2718,8 @@ void MainScreen::on_load_calibration_button_clicked() {
     /*Monoplane (Left Viewport)*/
     vw->load_renderers_into_render_window(calibration_file_);
     coronal_vw->load_renderers_into_render_window(calibration_file_);
-    if (calibrated_for_monoplane_viewport_) {
+    if (calibrated_for_monoplane_viewport_) { // I loaded a single-plane
+                                              // calibration
         vw->setup_camera_calibration(calibration_file_);
         coronal_vw->setup_camera_calibration(calibration_file_);
         coronal_vw->setup_camera_coronal_plane();
@@ -2754,8 +2758,10 @@ void MainScreen::on_load_calibration_button_clicked() {
         ui.actionCamera_Interaction_Mode->setDisabled(false);
     }
     /*Biplane Calibration*/
+    /*BROKEN BIPLANE HISTORIC IMPLEMENTATION*/
     else if (calibrated_for_biplane_viewport_) {
         /*Set Up Calibration for Camera A to Home QVTKWidget*/
+        /*THe code below was replaced by viewer.h/.cpp functionality*/
         renderer->GetActiveCamera()->SetFocalPoint(
             0,
             0,
