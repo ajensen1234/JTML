@@ -441,11 +441,17 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
     calculate_and_set_viewing_angle_from_calibration(h, fy);
     calculate_and_set_camera_aspect_from_calibration(fx, fy);
     scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
-    scene_camera_->SetViewUp(0, -1, 0);
+    
+    if (cal.type_ == "Denver") {
+        scene_camera_->SetViewUp(0, -1, 0); // Denver uses y-down convention
+    } else {
+        scene_camera_->SetViewUp(0, 1, 0);
+    }
 }
 
 void Viewer::calculate_and_set_window_center_from_calibration(
     const int w, const int h, const float cx, const float cy) {
+    // For Denver calibration, we need to account for the camera matrix format
     this->wcx = -(2 * cx - w) / w;
     this->wcy = (2 * cy - h) / h;
 

@@ -8,6 +8,7 @@
 
 /*Includes*/
 #include "camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
+#include <cmath>
 
 /*Vec 3*/
 #include "data_structures_6D.h"
@@ -74,10 +75,78 @@ struct Matrix_3_3 {
     float A_33_;
 
     /*Perform Transpose*/
-    Matrix_3_3 tranpose() {
+    Matrix_3_3 tranpose() const {
         return Matrix_3_3(
             A_11_, A_21_, A_31_, A_12_, A_22_, A_32_, A_13_, A_23_, A_33_);
     };
+
+    /*Matrix inverse for 3x3*/
+    Matrix_3_3 inverse() const {
+        float det = A_11_ * (A_22_ * A_33_ - A_23_ * A_32_) -
+                    A_12_ * (A_21_ * A_33_ - A_23_ * A_31_) +
+                    A_13_ * (A_21_ * A_32_ - A_22_ * A_31_);
+        
+        float invdet = 1 / det;
+        
+        return Matrix_3_3(
+            (A_22_ * A_33_ - A_23_ * A_32_) * invdet,
+            (A_13_ * A_32_ - A_12_ * A_33_) * invdet,
+            (A_12_ * A_23_ - A_13_ * A_22_) * invdet,
+            (A_23_ * A_31_ - A_21_ * A_33_) * invdet,
+            (A_11_ * A_33_ - A_13_ * A_31_) * invdet,
+            (A_13_ * A_21_ - A_11_ * A_23_) * invdet,
+            (A_21_ * A_32_ - A_22_ * A_31_) * invdet,
+            (A_12_ * A_31_ - A_11_ * A_32_) * invdet,
+            (A_11_ * A_22_ - A_12_ * A_21_) * invdet
+        );
+    }
+
+    // Matrix multiplication operator
+    Matrix_3_3 operator*(const Matrix_3_3& other) const {
+        return Matrix_3_3(
+            A_11_ * other.A_11_ + A_12_ * other.A_21_ + A_13_ * other.A_31_,
+            A_11_ * other.A_12_ + A_12_ * other.A_22_ + A_13_ * other.A_32_,
+            A_11_ * other.A_13_ + A_12_ * other.A_23_ + A_13_ * other.A_33_,
+
+            A_21_ * other.A_11_ + A_22_ * other.A_21_ + A_23_ * other.A_31_,
+            A_21_ * other.A_12_ + A_22_ * other.A_22_ + A_23_ * other.A_32_,
+            A_21_ * other.A_13_ + A_22_ * other.A_23_ + A_23_ * other.A_33_,
+
+            A_31_ * other.A_11_ + A_32_ * other.A_21_ + A_33_ * other.A_31_,
+            A_31_ * other.A_12_ + A_32_ * other.A_22_ + A_33_ * other.A_32_,
+            A_31_ * other.A_13_ + A_32_ * other.A_23_ + A_33_ * other.A_33_);
+    }
+
+    // Vector multiplication operator
+    Vect_3 operator*(const Vect_3& v) const {
+        return Vect_3(
+            A_11_ * v.v_1_ + A_12_ * v.v_2_ + A_13_ * v.v_3_,
+            A_21_ * v.v_1_ + A_22_ * v.v_2_ + A_23_ * v.v_3_,
+            A_31_ * v.v_1_ + A_32_ * v.v_2_ + A_33_ * v.v_3_
+        );
+    }
+};
+
+/*Denver Camera Calibration Structure*/
+struct DenverCameraCalibration {
+    DenverCameraCalibration() {
+        width = height = 0;
+        fx = fy = cx = cy = 0.0;
+    }
+    
+    // Image properties
+    int width;
+    int height;
+    
+    // Camera intrinsics
+    double fx;  // Focal length x
+    double fy;  // Focal length y
+    double cx;  // Principal point x
+    double cy;  // Principal point y
+    
+    // Extrinsics 
+    Matrix_3_3 rotation;    // 3x3 rotation matrix
+    Vect_3 translation;     // 3D translation vector
 };
 
 struct Calibration {
@@ -88,12 +157,13 @@ struct Calibration {
         camera_A_principal_ = monoplane_principal;
         type_ = type;
     };
+    
     /**
-     * @brief
-     * @param biplane_A_principal
-     * @param biplane_B_principal
-     * @param origin_B
-     * @param axes_B
+     * @brief Constructor for UF style biplane calibration
+     * @param biplane_A_principal Camera A calibration
+     * @param biplane_B_principal Camera B calibration
+     * @param origin_B Origin of Camera B relative to A
+     * @param axes_B Rotation matrix for Camera B
      */
     Calibration(
         CameraCalibration biplane_A_principal,
@@ -105,7 +175,48 @@ struct Calibration {
         camera_B_principal_ = biplane_B_principal;
         origin_B_ = origin_B;
         axes_B_ = axes_B;
+        type_ = "UF";
     };
+
+    /**
+     * @brief Constructor for Denver style biplane calibration
+     * @param cam1 First camera calibration
+     * @param cam2 Second camera calibration 
+     */
+    Calibration(const DenverCameraCalibration& cam1, 
+                const DenverCameraCalibration& cam2) {
+        biplane_calibration = true;
+        type_ = "Denver";
+        
+        // Convert camera 1 (reference camera)
+        camera_A_principal_ = CameraCalibration(
+            cam1.fx,    // principal_distance
+            cam1.cx,    // principal_x 
+            cam1.cy,    // principal_y
+            1.0         // pixel_pitch (normalized)
+        );
+        
+        // Convert camera 2 
+        camera_B_principal_ = CameraCalibration(
+            cam2.fx,
+            cam2.cx,
+            cam2.cy,
+            1.0
+        );
+        
+        // Calculate relative transformation between cameras
+        Matrix_3_3 R1_inv = cam1.rotation.inverse();
+        axes_B_ = cam2.rotation * R1_inv;  // Relative rotation
+        
+        // T2 - R2*R1^-1*T1 gives translation from cam1 to cam2  
+        Vect_3 T1(cam1.translation.v_1_, cam1.translation.v_2_, cam1.translation.v_3_);
+        origin_B_ = Vect_3(
+            cam2.translation.v_1_ - (axes_B_ * T1).v_1_,
+            cam2.translation.v_2_ - (axes_B_ * T1).v_2_, 
+            cam2.translation.v_3_ - (axes_B_ * T1).v_3_
+        );
+    }
+    
     Calibration() {
         biplane_calibration = false;
     };
@@ -125,40 +236,15 @@ struct Calibration {
     Matrix_3_3 axes_B_; /*Orthogonal Coordinate System of B where A is assumed
                            to have standard unit system*/
 
-    /*Perform Multiplication*/
-    Matrix_3_3 multiplication_mat_mat(Matrix_3_3 X, Matrix_3_3 Y) {
-        return Matrix_3_3(
-            X.A_11_ * Y.A_11_ + X.A_12_ * Y.A_21_ + X.A_13_ * Y.A_31_,
-            X.A_11_ * Y.A_12_ + X.A_12_ * Y.A_22_ + X.A_13_ * Y.A_32_,
-            X.A_11_ * Y.A_13_ + X.A_12_ * Y.A_23_ + X.A_13_ * Y.A_33_,
-
-            X.A_21_ * Y.A_11_ + X.A_22_ * Y.A_21_ + X.A_23_ * Y.A_31_,
-            X.A_21_ * Y.A_12_ + X.A_22_ * Y.A_22_ + X.A_23_ * Y.A_32_,
-            X.A_21_ * Y.A_13_ + X.A_22_ * Y.A_23_ + X.A_23_ * Y.A_33_,
-
-            X.A_31_ * Y.A_11_ + X.A_32_ * Y.A_21_ + X.A_33_ * Y.A_31_,
-            X.A_31_ * Y.A_12_ + X.A_32_ * Y.A_22_ + X.A_33_ * Y.A_32_,
-            X.A_31_ * Y.A_13_ + X.A_32_ * Y.A_23_ + X.A_33_ * Y.A_33_);
-    };
-    Vect_3 multiplication_mat_vec(Matrix_3_3 X, Vect_3 u) {
-        return Vect_3(
-            X.A_11_ * u.v_1_ + X.A_12_ * u.v_2_ + X.A_13_ * u.v_3_,
-
-            X.A_21_ * u.v_1_ + X.A_22_ * u.v_2_ + X.A_23_ * u.v_3_,
-
-            X.A_31_ * u.v_1_ + X.A_32_ * u.v_2_ + X.A_33_ * u.v_3_);
-    };
-
     /*Camera A Pose to Camera B Pose*/
     Point6D convert_Pose_A_to_Pose_B(Point6D poseA) {
         if (biplane_calibration) {
             /*Deal with Location*/
-            Vect_3 location_B = multiplication_mat_vec(
-                axes_B_.tranpose(),
+            Vect_3 location_B = axes_B_.tranpose() * 
                 Vect_3(
                     poseA.x - origin_B_.v_1_,
                     poseA.y - origin_B_.v_2_,
-                    poseA.z - origin_B_.v_3_));
+                    poseA.z - origin_B_.v_3_);
 
             /*Deal with Orientation*/
             /*Construct ROtation Matrices for A: Rz, Rx, Ry
@@ -200,9 +286,8 @@ struct Calibration {
                 0,
                 0,
                 1);
-            Matrix_3_3 R =
-                multiplication_mat_mat(R_z, multiplication_mat_mat(R_x, R_y));
-            Matrix_3_3 R_B = multiplication_mat_mat(axes_B_.tranpose(), R);
+            Matrix_3_3 R = R_z * (R_x * R_y);
+            Matrix_3_3 R_B = axes_B_.tranpose() * R;
 
             /*Algorithm To Recover Z - X - Y Euler Angles*/
             float theta_x_B, theta_y_B, theta_z_B;
@@ -239,8 +324,7 @@ struct Calibration {
     Point6D convert_Pose_B_to_Pose_A(Point6D poseA) {
         if (biplane_calibration) {
             /*Deal with Location*/
-            Vect_3 location_B = multiplication_mat_vec(
-                axes_B_, Vect_3(poseA.x, poseA.y, poseA.z));
+            Vect_3 location_B = axes_B_ * Vect_3(poseA.x, poseA.y, poseA.z);
             location_B = Vect_3(
                 location_B.v_1_ + origin_B_.v_1_,
                 location_B.v_2_ + origin_B_.v_2_,
@@ -286,9 +370,8 @@ struct Calibration {
                 0,
                 0,
                 1);
-            Matrix_3_3 R =
-                multiplication_mat_mat(R_z, multiplication_mat_mat(R_x, R_y));
-            Matrix_3_3 R_B = multiplication_mat_mat(axes_B_, R);
+            Matrix_3_3 R = R_z * (R_x * R_y);
+            Matrix_3_3 R_B = axes_B_ * R;
 
             /*Algorithm To Recover Z - X - Y Euler Angles*/
             float theta_x_B, theta_y_B, theta_z_B;

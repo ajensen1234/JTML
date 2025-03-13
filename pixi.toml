@@ -52,6 +52,7 @@ cuda = "12.4"
 
 [tasks.build-vtk]
 cmd = ["./vtk_installer.sh"]
+outputs = ["_deps/vtk/build/"]
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
