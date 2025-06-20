@@ -52,6 +52,7 @@ cuda = "12.4"
 
 [tasks.build-vtk]
 cmd = ["./vtk_installer.sh"]
+outputs = ["./_deps/vtk/build/CMakeCache.txt"]
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
@@ -73,16 +74,14 @@ cmd = ["cmake",
     "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
 ]
-inputs = ["CMakeLists.txt"]
+#inputs = ["CMakeLists.txt"]
 depends-on = ["build-vtk"]
-outputs = [".build/CMakeFiles/"]
 
 [tasks.build]
 # Build task that depends on configure
 cmd = ["cmake", "--build", ".build"]
 depends-on = ["configure", "build-vtk"]
-inputs = ["CMakeLists.txt", "src/*"]
-outputs = [".build/bin/joint-track-machine-learning"]
+#inputs = ["CMakeLists.txt", "src/*"]
 
 [tasks.run]
 # Run task that depends on build
