@@ -51,7 +51,9 @@
 #include "core/STLReader.h"
 
 /* PyTorch 1.0 CPP Torch Script*/
+#include <c10/cuda/CUDACachingAllocator.h>
 #include <c10/cuda/CUDAMacros.h>
+#include <torch/cuda.h> // For torch::cuda::empty_cache()
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -1773,10 +1775,16 @@ void MainScreen::segmentHelperFunction(
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        std::cerr << "DEBUG (mainscreen): Calling segment_image for frame " << i << std::endl;
-        std::cerr << "DEBUG (mainscreen): black_sil_used: " << black_sil_used << std::endl;
-        std::cerr << "DEBUG (mainscreen): input_width: " << input_width << ", input_height: " << input_height << std::endl;
-        std::cerr << "DEBUG (mainscreen): loaded_frames[" << i << "].GetOriginalImage() dimensions: " << loaded_frames[i].GetOriginalImage().cols << "x" << loaded_frames[i].GetOriginalImage().rows << std::endl;
+        std::cerr << "DEBUG (mainscreen): Calling segment_image for frame " << i
+                  << std::endl;
+        std::cerr << "DEBUG (mainscreen): black_sil_used: " << black_sil_used
+                  << std::endl;
+        std::cerr << "DEBUG (mainscreen): input_width: " << input_width
+                  << ", input_height: " << input_height << std::endl;
+        std::cerr << "DEBUG (mainscreen): loaded_frames[" << i
+                  << "].GetOriginalImage() dimensions: "
+                  << loaded_frames[i].GetOriginalImage().cols << "x"
+                  << loaded_frames[i].GetOriginalImage().rows << std::endl;
         cv::Mat unpadded = segment_image(
             loaded_frames[i].GetOriginalImage(),
             black_sil_used,
@@ -1784,6 +1792,11 @@ void MainScreen::segmentHelperFunction(
             input_width,
             input_height);
         unpadded.copyTo(loaded_frames[i].GetInvertedImage());
+        // Explicitly clear CUDA cache to free up GPU memory after processing
+        // each image. This is particularly helpful for GPUs with limited VRAM,
+        // like the RTX 4070, to prevent out-of-memory errors during sequential
+        // image processing.
+        c10::cuda::CUDACachingAllocator::emptyCache();
         int dilation_val = 0;
         trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
             "Dilation", dilation_val);
@@ -1797,10 +1810,18 @@ void MainScreen::segmentHelperFunction(
         loaded_frames[i].setCurvatureHeatmaps();
         //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
         if (calibrated_for_biplane_viewport_) {
-            std::cerr << "DEBUG (mainscreen): Calling segment_image for biplane frame " << i << std::endl;
-            std::cerr << "DEBUG (mainscreen): black_sil_used: " << black_sil_used << std::endl;
-            std::cerr << "DEBUG (mainscreen): input_width: " << input_width << ", input_height: " << input_height << std::endl;
-            std::cerr << "DEBUG (mainscreen): loaded_frames_B[" << i << "].GetOriginalImage() dimensions: " << loaded_frames_B[i].GetOriginalImage().cols << "x" << loaded_frames_B[i].GetOriginalImage().rows << std::endl;
+            std::cerr << "DEBUG (mainscreen): Calling segment_image for "
+                         "biplane frame "
+                      << i << std::endl;
+            std::cerr << "DEBUG (mainscreen): black_sil_used: "
+                      << black_sil_used << std::endl;
+            std::cerr << "DEBUG (mainscreen): input_width: " << input_width
+                      << ", input_height: " << input_height << std::endl;
+            std::cerr << "DEBUG (mainscreen): loaded_frames_B[" << i
+                      << "].GetOriginalImage() dimensions: "
+                      << loaded_frames_B[i].GetOriginalImage().cols << "x"
+                      << loaded_frames_B[i].GetOriginalImage().rows
+                      << std::endl;
             cv::Mat unpadded_biplane = segment_image(
                 loaded_frames_B[i].GetOriginalImage(),
                 black_sil_used,
@@ -1808,6 +1829,11 @@ void MainScreen::segmentHelperFunction(
                 input_width,
                 input_height);
             unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
+            // Explicitly clear CUDA cache to free up GPU memory after
+            // processing each biplane image. This is particularly helpful for
+            // GPUs with limited VRAM, like the RTX 4070, to prevent
+            // out-of-memory errors during sequential image processing.
+            c10::cuda::CUDACachingAllocator::emptyCache();
             loaded_frames_B[i].SetEdgeImage(
                 ui.aperture_spin_box->value(),
                 ui.low_threshold_slider->value(),
@@ -1960,9 +1986,10 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     ui.qvtk_cpv->update();
     ui.qvtk_cpv->renderWindow()->Render();
     auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(torch::zeros(
-        {1, 1, input_height, input_width},
-        device(torch::kCUDA).dtype(torch::kByte)));
+    torch::Tensor gpu_byte_placeholder(
+        torch::zeros(
+            {1, 1, input_height, input_width},
+            device(torch::kCUDA).dtype(torch::kByte)));
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
         cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
         cv::Mat padded;
@@ -2321,9 +2348,10 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     ui.qvtk_cpv->update();
     ui.qvtk_cpv->renderWindow()->Render();
     auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(torch::zeros(
-        {1, 1, input_height, input_width},
-        device(torch::kCUDA).dtype(torch::kByte)));
+    torch::Tensor gpu_byte_placeholder(
+        torch::zeros(
+            {1, 1, input_height, input_width},
+            device(torch::kCUDA).dtype(torch::kByte)));
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
         cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
         cv::Mat padded;
@@ -2948,12 +2976,14 @@ void MainScreen::on_load_image_button_clicked() {
             // Populate Frame List Widget
             ui.image_list_widget->addItem(
                 "A: " +
-                QFileInfo(QString::fromStdString(
-                              TiffFileExtensionsCamera_A[i].toStdString()))
+                QFileInfo(
+                    QString::fromStdString(
+                        TiffFileExtensionsCamera_A[i].toStdString()))
                     .baseName() +
                 "\nB: " +
-                QFileInfo(QString::fromStdString(
-                              TiffFileExtensionsCamera_B[i].toStdString()))
+                QFileInfo(
+                    QString::fromStdString(
+                        TiffFileExtensionsCamera_B[i].toStdString()))
                     .baseName());
             /*Add Blank Model Locations for Loaded Models*/
             model_locations_.LoadNewFrame();
@@ -3188,29 +3218,35 @@ void MainScreen::on_camera_A_radio_button_clicked() {
                 /*Text Actor if On*/
                 if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
                     std::string infoText = "Location: <";
-                    infoText += std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetPosition()[0])) +
+                    infoText += std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetPosition()[0])) +
                                 "," +
-                                std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetPosition()[1])) +
+                                std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetPosition()[1])) +
                                 "," +
-                                std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetPosition()[2])) +
+                                std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetPosition()[2])) +
                                 ">\nOrientation: <" +
-                                std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetOrientation()[0])) +
+                                std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetOrientation()[0])) +
                                 "," +
-                                std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetOrientation()[1])) +
+                                std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetOrientation()[1])) +
                                 "," +
-                                std::to_string(static_cast<long double>(
-                                    model_actor_list[selected[r].row()]
-                                        ->GetOrientation()[2])) +
+                                std::to_string(
+                                    static_cast<long double>(
+                                        model_actor_list[selected[r].row()]
+                                            ->GetOrientation()[2])) +
                                 ">";
                     actor_text->SetInput(infoText.c_str());
                 }
@@ -3855,28 +3891,36 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
         /*Text Actor if On */
         if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
             std::string infoText = "Location: <";
-            infoText +=
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]->GetPosition()[0])) +
-                "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]->GetPosition()[1])) +
-                "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]->GetPosition()[2])) +
-                ">\nOrientation: <" +
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]
-                        ->GetOrientation()[0])) +
-                "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]
-                        ->GetOrientation()[1])) +
-                "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list[index_new_principal]
-                        ->GetOrientation()[2])) +
-                ">";
+            infoText += std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetPosition()[0])) +
+                        "," +
+                        std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetPosition()[1])) +
+                        "," +
+                        std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetPosition()[2])) +
+                        ">\nOrientation: <" +
+                        std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetOrientation()[0])) +
+                        "," +
+                        std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetOrientation()[1])) +
+                        "," +
+                        std::to_string(
+                            static_cast<long double>(
+                                model_actor_list[index_new_principal]
+                                    ->GetOrientation()[2])) +
+                        ">";
             actor_text->SetInput(infoText.c_str());
             actor_text->GetTextProperty()->SetColor(
                 model_actor_list[index_new_principal]
