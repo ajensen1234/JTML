@@ -1,0 +1,1 @@
+Task_34 - Controls: CONVERTED - No raw pointers found for conversion. Qt-managed pointers are not converted.

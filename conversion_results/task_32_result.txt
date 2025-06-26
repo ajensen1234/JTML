@@ -1,0 +1,1 @@
+Task_32 - CudaFreeHostDeleter: SKIPPED - Stateless functor/utility class with no members to convert.

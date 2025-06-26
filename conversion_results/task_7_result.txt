@@ -1,0 +1,1 @@
+Task_7 - Model: CONVERTED - Class already uses VTK smart pointers; no raw pointers found for conversion.

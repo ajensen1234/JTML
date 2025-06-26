@@ -1,0 +1,1 @@
+Task_13 - CostFunction: CONVERTED - No raw pointers found for conversion.

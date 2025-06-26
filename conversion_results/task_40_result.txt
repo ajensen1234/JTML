@@ -1,0 +1,1 @@
+Task_40 - MainScreen: CONVERTED - Class already extensively uses smart pointers; no raw pointers found for conversion. Qt-managed and VTK smart pointers are not converted.

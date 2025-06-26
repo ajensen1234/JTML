@@ -1,0 +1,1 @@
+Task_35 - DRRTool: CONVERTED - No raw pointers found for conversion. `host_image_` is a raw pointer and assumed to remain raw due to lack of allocation/deallocation context. Qt-managed and VTK smart pointers are not converted.

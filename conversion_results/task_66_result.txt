@@ -1,0 +1,3 @@
+Task: img_desc
+Status: READY
+Files: None None ./src/shape_sensitivity/art.cuh None

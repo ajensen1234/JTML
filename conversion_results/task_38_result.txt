@@ -1,0 +1,1 @@
+Task_38 - SettingsControl: CONVERTED - Class already uses smart pointers; no raw pointers found for conversion. Qt-managed pointers are not converted.

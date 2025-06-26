@@ -1,0 +1,122 @@
+./src/gpu/curvature_hausdorf_metric.cu:46:    int* bounding_box = projected_image.GetBoundingBox();
+./src/gpu/dilate_edge_detected_image.cu:89:    int* bounding_box = edge_detected_image.GetBoundingBox();
+./src/gpu/distance_map_metric.cu:70:    int* bounding_box = projected_image.GetBoundingBox();
+./src/gpu/edge_detect_rendered_implant_model.cu:116:    int* bounding_box = rendered_model_image.GetBoundingBox();
+./src/gpu/fast_implant_dilation_metric.cu:163:    int* bounding_box = rendered_image.GetBoundingBox();
+./src/gpu/gpu_image_functions.cu:205:        // char* x = dev_images[dev_imag_ind];
+./src/gpu/gpu_image_functions.cu:320:transformed linearly to the bounds specified in the arguments. This new image is
+./src/gpu/gpu_image_functions.cu:349:    int* dev_max = 0;
+./src/gpu/gpu_image_functions.cu:350:    int* dev_min = 0;
+./src/gpu/implant_mahfouz_metric.cu:257:    int* bounding_box = rendered_image.GetBoundingBox();
+./src/gpu/iou.cu:57:    int* bounding_box_A = image_A.GetBoundingBox();
+./src/gpu/iou.cu:58:    int* bounding_box_B = image_B.GetBoundingBox();
+./src/gpu/l_1_1_matrix_diff_norm.cu:52:    int* bounding_box_A = image_A.GetBoundingBox();
+./src/gpu/l_1_1_matrix_diff_norm.cu:53:    int* bounding_box_B = image_B.GetBoundingBox();
+./src/gpu/metric_toolbox.cu:43://(zero based, width by height sized)*/ 		int correspondingPixelXToThread =
+./src/gpu/metric_toolbox.cu:50://on top and/or right.*/ 		if (correspondingPixelXToThread <= sub_right_x +
+./src/gpu/metric_toolbox.cu:112://* k; 						pixel = dev_image[location]; 						if (pixel == WHITE_PIXEL || pixel ==
+./src/gpu/metric_toolbox.cu:188://all 4 sides, so 14 x 14). */ 		dim_block_image_processing_ = dim3(
+./src/gpu/metric_toolbox.cu:204://of the sub image. */ 		dim_grid_image_processing_ = dim3( 			ceil((double)(2.0 *
+./src/gpu/metric_toolbox.cu:215://sub image nut with no dilation padding at edges. */ 		int diff_kernel_left_x =
+./src/gpu/metric_toolbox.cu:243://similar normalizing constant used in old JTA*/ 		metric_score_ = 0.001 *
+./src/gpu/metric_toolbox.cu:288://* k; 						pixel = dev_image[location]; 						distance_L2 = sqrt((float)k*k + j * j);
+./src/gpu/metric_toolbox.cu:454://sub image nut with no dilation padding at edges. */ 		int diff_kernel_left_x =
+./src/gpu/metric_toolbox.cu:513://all 4 sides, so 14 x 14). */ 		dim_block_image_processing_ = dim3(
+./src/gpu/metric_toolbox.cu:529://of the sub image. */ 		dim_grid_image_processing_ = dim3( 			ceil((double)(2.0 *
+./src/gpu/metric_toolbox.cu:539://sub image nut with no dilation padding at edges. */ 		diff_kernel_left_x =
+./src/gpu/registration_metric.cu:28://a good error check*/ 		dilation_comparison_white_pix_count_ = 0;
+./src/gpu/registration_metric.cu:104://render engine*/ 		dev_image_ = dev_image;
+./src/gpu/registration_metric.cu:158://Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
+./src/gpu/registration_metric.cu:163://Device.*/ 		dilation_comparison_pixel_sum_ = 0;
+./src/gpu/registration_metric.cu:177://Pixel Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( 			ceil(sqrt(
+./src/gpu/registration_metric.cu:253://Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
+./src/gpu/registration_metric.cu:258://Device.*/ 		dilation_comparison_pixel_sum_ = 0;
+./src/gpu/registration_metric.cu:268://Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( 			ceil(sqrt(
+./src/gpu/registration_metric.cu:325://		unsigned char* host_image = (unsigned
+./src/gpu/registration_metric.cu:331://host_image); /*Reverse before flip*/ 		cv::Mat output_mat = cv::Mat(width_,
+./src/gpu/render_drr_engine.cu:64:        /*Transform normal and compute dot product with vertex. Backface if >=
+./src/gpu/render_drr_engine.cu:106:        dev_projected_triangles[(2 * i)] = sX;
+./src/gpu/render_drr_engine.cu:107:        dev_projected_triangles[(2 * i) + 1] = sY;
+./src/gpu/render_drr_engine.cu:109:        /*Store Nearest Pixel of Projected Triangles (Round >= X.5 up to X + 1
+./src/gpu/render_drr_engine.cu:111:        dev_projected_triangles_snapped[(2 * i)] =
+./src/gpu/render_drr_engine.cu:113:        dev_projected_triangles_snapped[(2 * i) + 1] =
+./src/gpu/render_drr_engine.cu:557:    int* bounding_box = renderer_output_->GetBoundingBox();
+./src/gpu/render_engine.cu:201:    int* temp_fragment_fill = nullptr;
+./src/gpu/render_engine.cu:202:    if (cudaHostAlloc((void**)&temp_fragment_fill, 1 * sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/render_engine.cu:210:    float* temp_dev_z_line_values = nullptr;
+./src/gpu/render_engine.cu:211:    if (cudaMalloc((void**)&temp_dev_z_line_values, width_ * height_ * sizeof(float)) == cudaSuccess) {
+./src/gpu/render_engine.cu:218:    float* temp_dev_triangles = nullptr;
+./src/gpu/render_engine.cu:219:    if (cudaMalloc((void**)&temp_dev_triangles, triangle_count_ * 9 * sizeof(float)) == cudaSuccess) {
+./src/gpu/render_engine.cu:226:    float* temp_dev_normals = nullptr;
+./src/gpu/render_engine.cu:227:    if (cudaMalloc((void**)&temp_dev_normals, triangle_count_ * 3 * sizeof(float)) == cudaSuccess) {
+./src/gpu/render_engine.cu:234:    bool* temp_dev_backface = nullptr;
+./src/gpu/render_engine.cu:235:    if (cudaMalloc((void**)&temp_dev_backface, triangle_count_ * sizeof(bool)) == cudaSuccess) {
+./src/gpu/render_engine.cu:242:    float* temp_dev_transf_vertex_zs = nullptr;
+./src/gpu/render_engine.cu:243:    if (cudaMalloc((void**)&temp_dev_transf_vertex_zs, triangle_count_ * 3 * sizeof(float)) == cudaSuccess) {
+./src/gpu/render_engine.cu:250:    bool* temp_dev_tangent_triangle = nullptr;
+./src/gpu/render_engine.cu:251:    if (cudaMalloc((void**)&temp_dev_tangent_triangle, triangle_count_ * sizeof(bool)) == cudaSuccess) {
+./src/gpu/render_engine.cu:258:    float* temp_dev_projected_triangles = nullptr;
+./src/gpu/render_engine.cu:259:    if (cudaMalloc((void**)&temp_dev_projected_triangles, triangle_count_ * 6 * sizeof(float)) == cudaSuccess) {
+./src/gpu/render_engine.cu:266:    int* temp_dev_projected_triangles_snapped = nullptr;
+./src/gpu/render_engine.cu:267:    if (cudaMalloc((void**)&temp_dev_projected_triangles_snapped, triangle_count_ * 6 * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:274:    int* temp_dev_bounding_box_triangles = nullptr;
+./src/gpu/render_engine.cu:275:    if (cudaMalloc((void**)&temp_dev_bounding_box_triangles, triangle_count_ * 4 * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:282:    int* temp_dev_bounding_box_triangles_sizes = nullptr;
+./src/gpu/render_engine.cu:283:    if (cudaMalloc((void**)&temp_dev_bounding_box_triangles_sizes, triangle_count_ * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:290:    int* temp_dev_bounding_box_triangles_sizes_prefix = nullptr;
+./src/gpu/render_engine.cu:291:    if (cudaMalloc((void**)&temp_dev_bounding_box_triangles_sizes_prefix, triangle_count_ * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:298:    int* temp_dev_bounding_box = nullptr;
+./src/gpu/render_engine.cu:299:    if (cudaMalloc((void**)&temp_dev_bounding_box, 4 * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:306:    int* temp_dev_fragment_fill = nullptr;
+./src/gpu/render_engine.cu:307:    if (cudaMalloc((void**)&temp_dev_fragment_fill, 1 * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:314:    int* temp_dev_stride_prefixes = nullptr;
+./src/gpu/render_engine.cu:315:    if (cudaMalloc((void**)&temp_dev_stride_prefixes, maximum_stride_size * sizeof(int)) == cudaSuccess) {
+./src/gpu/render_engine.cu:348:    void* temp_dev_cub_storage = nullptr;
+./src/gpu/render_engine.cu:397:    /* R*v = RzRxRy*v */
+./src/gpu/render_engine.cu:468:        /*Transform normal and compute dot product with vertex. Backface if >=
+./src/gpu/render_engine.cu:505:        dev_projected_triangles[(2 * i)] = sX;
+./src/gpu/render_engine.cu:506:        dev_projected_triangles[(2 * i) + 1] = sY;
+./src/gpu/render_engine.cu:508:        /*Store Nearest Pixel of Projected Triangles (Round >= X.5 up to X + 1
+./src/gpu/render_engine.cu:510:        dev_projected_triangles_snapped[(2 * i)] =
+./src/gpu/render_engine.cu:512:        dev_projected_triangles_snapped[(2 * i) + 1] =
+./src/gpu/render_engine.cu:726:                        dev_image[(pyPixel)*width + pxPixel] = 255;
+./src/gpu/render_engine.cu:736:                        dev_image[(pyPixel)*width + pxPixel] = 255;
+./src/gpu/gpu_image.cu:100:    if (cudaStatus != cudaSuccess || width_ * height_ == 0) {
+./src/gpu/gpu_metrics.cu:20:    int* temp_pixel_score = nullptr;
+./src/gpu/gpu_metrics.cu:21:    if (cudaHostAlloc((void**)&temp_pixel_score, sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:28:    int* temp_intersection_score = nullptr;
+./src/gpu/gpu_metrics.cu:29:    if (cudaHostAlloc((void**)&temp_intersection_score, sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:36:    int* temp_union_score = nullptr;
+./src/gpu/gpu_metrics.cu:37:    if (cudaHostAlloc((void**)&temp_union_score, sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:44:    int* temp_dev_pixel_score = nullptr;
+./src/gpu/gpu_metrics.cu:45:    if (cudaMalloc((void**)&temp_dev_pixel_score, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:52:    int* temp_dev_intersection_score = nullptr;
+./src/gpu/gpu_metrics.cu:53:    if (cudaMalloc((void**)&temp_dev_intersection_score, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:60:    int* temp_dev_union_score = nullptr;
+./src/gpu/gpu_metrics.cu:61:    if (cudaMalloc((void**)&temp_dev_union_score, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:68:    int* temp_dev_white_pix_count = nullptr;
+./src/gpu/gpu_metrics.cu:69:    if (cudaMalloc((void**)&temp_dev_white_pix_count, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:85:    int* temp_distance_map_score = nullptr;
+./src/gpu/gpu_metrics.cu:86:    if (cudaHostAlloc((void**)&temp_distance_map_score, sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:92:    int* temp_dev_distance_map_score = nullptr;
+./src/gpu/gpu_metrics.cu:93:    if (cudaMalloc((void**)&temp_dev_distance_map_score, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:99:    int* temp_dev_edge_pixels_count = nullptr;
+./src/gpu/gpu_metrics.cu:100:    if (cudaMalloc((void**)&temp_dev_edge_pixels_count, sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:106:    int* temp_edge_pixels_count = nullptr;
+./src/gpu/gpu_metrics.cu:107:    if (cudaHostAlloc((void**)&temp_edge_pixels_count, sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:119:    int* temp_dev_curvature_hausdorf_score = nullptr;
+./src/gpu/gpu_metrics.cu:120:    if (cudaMalloc((void**)&temp_dev_curvature_hausdorf_score, num_keypoints * sizeof(int)) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:126:    int* temp_curvature_hausdorf_score = nullptr;
+./src/gpu/gpu_metrics.cu:127:    if (cudaHostAlloc((void**)&temp_curvature_hausdorf_score, num_keypoints * sizeof(int), cudaHostAllocDefault) == cudaSuccess) {
+./src/gpu/gpu_metrics.cu:185:    *error = cudaGetLastError();
+./src/shape_sensitivity/art.cu:151:    if (cudaMalloc(&temp_dev_raw_img_moments_, 11 * sizeof(float)) != cudaSuccess) {
+./src/shape_sensitivity/art.cu:154:    if (cudaHostAlloc(&temp_raw_img_moments_, 11 * sizeof(float), cudaHostAllocDefault) != cudaSuccess) {
+./src/shape_sensitivity/art.cu:183:    int* bounding_box = dev_image->GetBoundingBox();
+./src/shape_sensitivity/art.cu:235:    int* bounding_box = dev_image->GetBoundingBox();
+./src/shape_sensitivity/art.cuh:13:#include "gpu/cuda_deleters.cuh"
+./include/gpu/gpu_image_functions.cuh:45:linearly. This new image is returned in the original image. Bool return value
+./include/gpu/gpu_metrics.cuh:7:#include "gpu/cuda_deleters.cuh" // Include the new common header
+./include/gpu/render_engine.cuh:8:#include "gpu/cuda_deleters.cuh" // Include the new common header
+./include/gpu/render_engine.cuh:97:    using (uchar)(255*(value-lower_bound)/(upper_bound-lower_bound)). Note: 0 <=
+./include/gpu/cuda_deleters.cuh:7:// Custom deleter for cudaFree
+./include/gpu/cuda_deleters.cuh:17:// Custom deleter for cudaFreeHost

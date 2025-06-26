@@ -1,0 +1,1 @@
+Task_21 - GPUIntensityFrame: CONVERTED - Class already uses smart pointers; no raw pointers found for conversion.

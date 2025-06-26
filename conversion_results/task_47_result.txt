@@ -1,0 +1,1 @@
+Task_47 - path_leaf_string_jts: SKIPPED - Stateless functor/utility class with no members to convert.

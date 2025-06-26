@@ -1,0 +1,3 @@
+Task: settings_control
+Status: READY
+Files: ./src/gui/Joint-Track-Machine-Learning_autogen/include/ui_settings_control.h None None None

@@ -1,0 +1,3 @@
+Task: qt_meta_stringdata_MainScreen_t
+Status: READY
+Files: None ./src/gui/Joint-Track-Machine-Learning_autogen/E6BMKNPBVR/moc_mainscreen.cpp None None

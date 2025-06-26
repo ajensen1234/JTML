@@ -1,0 +1,1 @@
+Task_2 - Point6D: CONVERTED - No raw pointers found for conversion.

@@ -67,9 +67,6 @@ cv::Mat segment_image(
         processed_tensor.data_ptr(),
         input_height * input_width * sizeof(unsigned char),
         cudaMemcpyDeviceToHost);
-    << input_height * input_width * sizeof(unsigned char) << " bytes."
-    << std::endl;
-    << padded.cols << "x" << padded.rows << std::endl;
 
     cv::resize(padded, padded, cv::Size(padded_width, padded_height));
     cv::Mat unpadded =

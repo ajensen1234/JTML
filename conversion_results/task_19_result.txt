@@ -1,0 +1,1 @@
+Task_19 - GPUHeatmap: CONVERTED - No raw pointers found for conversion. `dev_heatmap_` is a device pointer and assumed to remain raw due to lack of allocation/deallocation context.

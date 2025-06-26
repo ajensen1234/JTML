@@ -1,0 +1,1 @@
+Task_6 - LocationStorage: CONVERTED - No raw pointers found for conversion.

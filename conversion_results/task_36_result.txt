@@ -1,0 +1,1 @@
+Task_36 - KeyPressInteractorStyle: CONVERTED - No raw pointers found for conversion. `ms_` is a non-owning pointer, and `viewer_` is already a shared_ptr.

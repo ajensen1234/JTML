@@ -1,0 +1,1 @@
+Task_8 - Vect_3: CONVERTED - No raw pointers found for conversion.

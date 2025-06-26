@@ -1,0 +1,3 @@
+Task: ImageInfo
+Status: READY
+Files: ./src/Study2Grid/ImageInfo.h None None None

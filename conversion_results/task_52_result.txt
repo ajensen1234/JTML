@@ -1,0 +1,1 @@
+Task_52 - qt_meta_stringdata_OptimizerManager_t: SKIPPED - autogen file.

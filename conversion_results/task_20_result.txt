@@ -1,0 +1,1 @@
+Task_20 - GPUImage: CONVERTED - No raw pointers found for conversion. `dev_image_` (device pointer) and `bounding_box_` (host pointer) assumed to remain raw due to lack of allocation/deallocation context.

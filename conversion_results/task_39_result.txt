@@ -1,0 +1,1 @@
+Task_39 - Viewer: CONVERTED - Class already extensively uses VTK smart pointers and shared_ptr; no raw pointers found for conversion.

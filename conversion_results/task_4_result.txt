@@ -1,0 +1,1 @@
+Task_4 - DirectDataStorage: CONVERTED - Class already uses smart pointers; no further conversion needed.

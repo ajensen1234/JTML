@@ -1,0 +1,1 @@
+Task_12 - OptimizerManager: CONVERTED - Class already uses smart pointers; no further conversion needed.

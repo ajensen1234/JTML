@@ -1,0 +1,3 @@
+Task: cudaDeviceProp
+Status: READY
+Files: None ./src/gui/mainscreen.cpp None None
