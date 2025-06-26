@@ -20,11 +20,6 @@ cv::Mat segment_image(
         (255 * black_sil_used) + ((1 - 2 * black_sil_used) * orig_image);
     cv::Mat padded;
 
-    std::cerr << "DEBUG: orig_image dimensions: " << orig_image.cols << "x"
-              << orig_image.rows << std::endl;
-    std::cerr << "DEBUG: input_width: " << input_width
-              << ", input_height: " << input_height << std::endl;
-
     /*Pad the image to a square based on the larger dimension*/
     if (correct_inversion.cols > correct_inversion.rows) {
         padded.create(
@@ -44,12 +39,6 @@ cv::Mat segment_image(
     // const unsigned int padded_width = padded.cols;
     // const unsigned int padded_height = padded.rows;
 
-    std::cerr << "DEBUG: Padded dimensions (before setTo): " << padded.cols
-              << "x" << padded.rows << std::endl;
-
-    std::cerr << "DEBUG: Padded dimensions (before setTo): " << padded.cols
-              << "x" << padded.rows << std::endl;
-
     padded.setTo(cv::Scalar::all(0));
 
     /*Copy things over to the GPU for the forward pass*/
@@ -61,31 +50,26 @@ cv::Mat segment_image(
         padded.data,
         input_height * input_width * sizeof(unsigned char),
         cudaMemcpyHostToDevice);
-    std::cerr << "DEBUG: cudaMemcpyHostToDevice - copied "
-              << input_height * input_width * sizeof(unsigned char) << " bytes."
-              << std::endl;
 
     /*Define the machine learning inputs*/
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(
         gpu_byte_placeholder.to(torch::dtype(torch::kFloat)).flip({2}));
-    std::cerr << "DEBUG: gpu_byte_placeholder tensor size after flip: "
-              << gpu_byte_placeholder.sizes() << std::endl;
 
     /*Forward Pass and bring it back to host*/
+    torch::Tensor output_tensor = model->forward(inputs).toTensor();
+
+    torch::Tensor processed_tensor =
+        (255 * (output_tensor > 0)).to(torch::dtype(torch::kByte)).flip({2});
+
     cudaMemcpy(
         padded.data,
-        (255 * (model->forward(inputs).toTensor() > 0))
-            .to(torch::dtype(torch::kByte))
-            .flip({2})
-            .data_ptr(),
+        processed_tensor.data_ptr(),
         input_height * input_width * sizeof(unsigned char),
         cudaMemcpyDeviceToHost);
-    std::cerr << "DEBUG: cudaMemcpyDeviceToHost - copied "
-              << input_height * input_width * sizeof(unsigned char) << " bytes."
-              << std::endl;
-    std::cerr << "DEBUG: Padded dimensions (after cudaMemcpyDeviceToHost): "
-              << padded.cols << "x" << padded.rows << std::endl;
+    << input_height * input_width * sizeof(unsigned char) << " bytes."
+    << std::endl;
+    << padded.cols << "x" << padded.rows << std::endl;
 
     cv::resize(padded, padded, cv::Size(padded_width, padded_height));
     cv::Mat unpadded =

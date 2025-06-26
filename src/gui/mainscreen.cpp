@@ -1775,16 +1775,6 @@ void MainScreen::segmentHelperFunction(
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        std::cerr << "DEBUG (mainscreen): Calling segment_image for frame " << i
-                  << std::endl;
-        std::cerr << "DEBUG (mainscreen): black_sil_used: " << black_sil_used
-                  << std::endl;
-        std::cerr << "DEBUG (mainscreen): input_width: " << input_width
-                  << ", input_height: " << input_height << std::endl;
-        std::cerr << "DEBUG (mainscreen): loaded_frames[" << i
-                  << "].GetOriginalImage() dimensions: "
-                  << loaded_frames[i].GetOriginalImage().cols << "x"
-                  << loaded_frames[i].GetOriginalImage().rows << std::endl;
         cv::Mat unpadded = segment_image(
             loaded_frames[i].GetOriginalImage(),
             black_sil_used,
@@ -1810,18 +1800,6 @@ void MainScreen::segmentHelperFunction(
         loaded_frames[i].setCurvatureHeatmaps();
         //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
         if (calibrated_for_biplane_viewport_) {
-            std::cerr << "DEBUG (mainscreen): Calling segment_image for "
-                         "biplane frame "
-                      << i << std::endl;
-            std::cerr << "DEBUG (mainscreen): black_sil_used: "
-                      << black_sil_used << std::endl;
-            std::cerr << "DEBUG (mainscreen): input_width: " << input_width
-                      << ", input_height: " << input_height << std::endl;
-            std::cerr << "DEBUG (mainscreen): loaded_frames_B[" << i
-                      << "].GetOriginalImage() dimensions: "
-                      << loaded_frames_B[i].GetOriginalImage().cols << "x"
-                      << loaded_frames_B[i].GetOriginalImage().rows
-                      << std::endl;
             cv::Mat unpadded_biplane = segment_image(
                 loaded_frames_B[i].GetOriginalImage(),
                 black_sil_used,

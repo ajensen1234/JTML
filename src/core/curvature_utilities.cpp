@@ -84,10 +84,22 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     ** 5) Saves these curvature heatmaps for use in the cost function
     */
 
+    // Ensure the input image is binary (0 or 255)
+    cv::Mat binary_input_image;
+    cv::threshold(input_image, binary_input_image, 127, 255, cv::THRESH_BINARY);
+
     // Contour placeholder
     std::vector<std::vector<cv::Point_<int>>>* contour =
         new std::vector<std::vector<cv::Point_<int>>>;
-    extract_contour_points(input_image, contour);
+    extract_contour_points(binary_input_image, contour); // Use the binarized image
+
+    // Handle case where no contours are found
+    if (contour->empty() || contour->back().empty()) {
+        std::cerr << "DEBUG: No contours found in the image. Returning empty heatmaps." << std::endl;
+        delete contour;
+        return std::vector<cv::Mat>(); // Return empty vector of heatmaps
+    }
+
     draw_contours(contour);
     int N = contour->back().size();
     float* curvature = new float[N];
