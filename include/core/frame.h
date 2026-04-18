@@ -37,15 +37,15 @@ public:
 
     /*Get Set Methods for Main Variables*/
     /*Return Original Image*/
-    cv::Mat GetOriginalImage();
+    cv::Mat GetOriginalImage() const;
     /*Return Edge Detected Image*/
-    cv::Mat GetEdgeImage();
+    cv::Mat GetEdgeImage() const;
     /*Return Dilated Edge Detected Image*/
-    cv::Mat GetDilationImage();
+    cv::Mat GetDilationImage() const;
     /*Return Inverted Intensity Image*/
-    cv::Mat GetInvertedImage();
+    cv::Mat GetInvertedImage() const;
 
-    cv::Mat GetDistanceMap();
+    cv::Mat GetDistanceMap() const;
 
     /*Store Public String Location*/
     std::string file_location_;
@@ -65,17 +65,17 @@ public:
     void SetDistanceMap();
 
     /*Get Canny Parameters*/
-    int GetAperture();
-    int GetHighThreshold();
-    int GetLowThreshold();
+    int GetAperture() const;
+    int GetHighThreshold() const;
+    int GetLowThreshold() const;
 
     /*Curvature Heatmap Getter and Setter*/
     void setCurvatureHeatmaps();
-    std::vector<uchar> getCurvatureHeatmaps();
+    std::vector<uchar> getCurvatureHeatmaps() const;
 
     std::vector<uchar>
-    flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs);
-    int GetNumCurvatureKeypoints();
+    flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) const;
+    int GetNumCurvatureKeypoints() const;
 
 private:
     /*Original Matrix*/

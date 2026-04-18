@@ -41,6 +41,7 @@ Frame::Frame(
     SetDilatedImage(dilation);
     inverted_image_ = (255 - original_image_);
     SetDistanceMap();
+    setCurvatureHeatmaps();
 
     /*Store Constants*/
     aperture_ = aperture;
@@ -77,23 +78,23 @@ void Frame::SetDilatedImage(int dilation) {
 }
 
 /*Return Original Image*/
-cv::Mat Frame::GetOriginalImage() {
+cv::Mat Frame::GetOriginalImage() const {
     return original_image_;
 }
 /*Return Edge Detected Image*/
-cv::Mat Frame::GetEdgeImage() {
+cv::Mat Frame::GetEdgeImage() const {
     return edge_image_;
 }
 /*Return Dilated Edge Detected Image*/
-cv::Mat Frame::GetDilationImage() {
+cv::Mat Frame::GetDilationImage() const {
     return dilation_image_;
 }
 /*Return Inverted Intensity Image*/
-cv::Mat Frame::GetInvertedImage() {
+cv::Mat Frame::GetInvertedImage() const {
     return inverted_image_;
 }
 
-cv::Mat Frame::GetDistanceMap() {
+cv::Mat Frame::GetDistanceMap() const {
     return distance_map_;
 }
 
@@ -122,17 +123,17 @@ void Frame::SetDistanceMap() {
 }
 
 /*Get Canny Parameters*/
-int Frame::GetAperture() {
+int Frame::GetAperture() const {
     return aperture_;
 };
-int Frame::GetHighThreshold() {
+int Frame::GetHighThreshold() const {
     return high_threshold_;
 };
-int Frame::GetLowThreshold() {
+int Frame::GetLowThreshold() const {
     return low_threshold_;
 };
 
-std::vector<uchar> Frame::getCurvatureHeatmaps() {
+std::vector<uchar> Frame::getCurvatureHeatmaps() const {
     return curvature_heatmap_chars_;
 };
 void Frame::setCurvatureHeatmaps() {
@@ -151,7 +152,7 @@ void Frame::setCurvatureHeatmaps() {
 };
 
 std::vector<uchar>
-Frame::flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) {
+Frame::flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) const {
     std::vector<uchar> flattened;
     for (const auto& innerVec : vecOfVecs) {
         flattened.insert(flattened.end(), innerVec.begin(), innerVec.end());
@@ -159,6 +160,6 @@ Frame::flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) {
 
     return flattened;
 };
-int Frame::GetNumCurvatureKeypoints() {
+int Frame::GetNumCurvatureKeypoints() const {
     return num_curvature_keypoints_;
 }

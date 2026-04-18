@@ -5,6 +5,8 @@
 #include "core/preprocessor-defs.h"
 #include "gpu/gpu_frame.cuh"
 
+#include <memory>
+
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 /*Intensity GPU Frame Class*/
@@ -34,7 +36,7 @@ public:
 
 private:
     /*GPU Image for Inverted Intensity Image*/
-    GPUImage* gpu_inverted_image_;
+    std::unique_ptr<GPUImage> gpu_inverted_image_;
 
     /*Model Silhouette Black? (Or in Case or Alpha Value, Model Makes Image
      * Darker?)*/

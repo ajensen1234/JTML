@@ -49,7 +49,7 @@ double GPUMetrics::CurvatureHeatmapMetric(
     int* bounding_box = projected_image->GetBoundingBox();
 
     CUDA_CHECK_KERNEL(Reset_CurvatureHausdorfScore_Kernel<<<1, num_kp>>>(
-        dev_curvature_hausdorf_score_));
+        dev_curvature_hausdorf_score_.get()));
 
     int left_x = max(bounding_box[0], 0);
     int bottom_y = max(bounding_box[1], 0);

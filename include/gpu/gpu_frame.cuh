@@ -6,6 +6,8 @@
 #include "gpu/gpu_image.cuh"
 #include <string>
 
+#include <memory>
+
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 /*Class that holds GPU Images Representing a Frame - Very similar to GPU Image
@@ -52,7 +54,7 @@ public:
 
 private:
     /*GPU Image*/
-    GPUImage* gpu_image_;
+    std::unique_ptr<GPUImage> gpu_image_;
 
     /*Image Size*/
     int height_;

@@ -170,7 +170,7 @@ double GPUMetrics::FastImplantDilationMetric(
     int width = rendered_image->GetFrameWidth();
 
     /*Reset the Pixel Score*/
-    CUDA_CHECK_KERNEL(FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_.get()));
 
     /*Explanation of widths and heights
     IMAGE PROCESSING STAGE :
@@ -278,7 +278,7 @@ double GPUMetrics::FastImplantDilationMetric(
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
         comparison_frame->GetDeviceImagePointer(),
-        dev_pixel_score_,
+        dev_pixel_score_.get(),
         width,
         height,
         diff_kernel_left_x,
@@ -290,7 +290,7 @@ double GPUMetrics::FastImplantDilationMetric(
     ray) minus the number of pixels that are white in the comparison image and
     white in the dilated edge)*/
     CUDA_CHECK(cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
-    return -1 * pixel_score_[0];
+        pixel_score_.get(), dev_pixel_score_.get(), sizeof(int), cudaMemcpyDeviceToHost));
+    return -1 * *pixel_score_;
 };
 } // namespace gpu_cost_function

@@ -1,6 +1,9 @@
 /*GPU Image Functions Header*/
 #include "gpu/gpu_image_functions.cuh"
 
+/*CUDA Deleters*/
+#include "gpu/cuda_deleters.cuh"
+
 /*CUDA Error Checking*/
 #include "gpu/cuda_check.cuh"
 
@@ -349,32 +352,26 @@ bool ScaleGrayscaleToRange(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Create Device Pointer Container for Max and Min*/
-    int* dev_max = 0;
-    int* dev_min = 0;
-    CUDA_CHECK(cudaMalloc((void**)&dev_max, 1 * sizeof(int)));
-    CUDA_CHECK(cudaMalloc((void**)&dev_min, 1 * sizeof(int)));
+    auto dev_max = make_cuda_unique<int>(1);
+    auto dev_min = make_cuda_unique<int>(1);
     CUDA_CHECK_KERNEL(InitializeMaxMinKernel<<<1, 1>>>(
-        dev_max, dev_min)); // Sets dev_max = 0, dev_min = 255
+        dev_max.get(), dev_min.get())); // Sets dev_max = 0, dev_min = 255
 
     /*Kernels*/
     CUDA_CHECK_KERNEL(GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         grayscale_image->GetDeviceImagePointer(),
-        dev_max,
-        dev_min,
+        dev_max.get(),
+        dev_min.get(),
         width,
         height));
     CUDA_CHECK_KERNEL(ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         grayscale_image->GetDeviceImagePointer(),
-        dev_max,
-        dev_min,
+        dev_max.get(),
+        dev_min.get(),
         lower_bound,
         upper_bound,
         width,
         height));
-
-    /*Free Memory for dev-max/min*/
-    CUDA_CHECK(cudaFree(dev_max));
-    CUDA_CHECK(cudaFree(dev_min));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());

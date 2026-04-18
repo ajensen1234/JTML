@@ -71,8 +71,8 @@ double GPUMetrics::DistanceMapMetric(
     int width = projected_image->GetFrameWidth();
     int* bounding_box = projected_image->GetBoundingBox();
 
-    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_distance_map_score_));
-    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_));
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_distance_map_score_.get()));
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_.get()));
 
     int diff_kernel_left_x = max(bounding_box[0] - dilation, dilation);
     int diff_kernel_bottom_y = max(bounding_box[1] - dilation, dilation);
@@ -101,8 +101,8 @@ double GPUMetrics::DistanceMapMetric(
     CUDA_CHECK_KERNEL(DistanceMapMetric_Kernel<<<dim_grid_bounding_box, threads_per_block>>>(
         projected_image->GetDeviceImagePointer(),
         distance_map->GetDeviceImagePointer(),
-        dev_distance_map_score_,
-        dev_edge_pixels_count_,
+        dev_distance_map_score_.get(),
+        dev_edge_pixels_count_.get(),
         width,
         height,
         diff_kernel_left_x,
@@ -110,21 +110,21 @@ double GPUMetrics::DistanceMapMetric(
         diff_kernel_cropped_width));
 
     CUDA_CHECK(cudaMemcpy(
-        distance_map_score_,
-        dev_distance_map_score_,
+        distance_map_score_.get(),
+        dev_distance_map_score_.get(),
         sizeof(int),
         cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
-        edge_pixels_count_,
-        dev_edge_pixels_count_,
+        edge_pixels_count_.get(),
+        dev_edge_pixels_count_.get(),
         sizeof(int),
         cudaMemcpyDeviceToHost));
 
-    // std::cout << "Distance Map Total Score : " << distance_map_score_[0] <<
-    // std::endl; std::cout << "Number of Edge Pixels " << edge_pixels_count_[0]
+    // std::cout << "Distance Map Total Score : " << *distance_map_score_ <<
+    // std::endl; std::cout << "Number of Edge Pixels " << *edge_pixels_count_
     // << std::endl; std::cout << "Distance Metric Score :" << score <<
     // std::endl; std::cout << "==============================" << std::endl;
-    return distance_map_score_[0] /
-           (edge_pixels_count_[0] + 0.1); // adding a 0.1 to avoid singularities
+    return *distance_map_score_ /
+           (*edge_pixels_count_ + 0.1); // adding a 0.1 to avoid singularities
 }
 } /*end namespace gpu_cost_function*/

@@ -28,32 +28,17 @@ GPUHeatmap::GPUHeatmap(
         height_ = height;
         device_ = gpu_device;
         num_keypoints_ = num_keypoints;
-        dev_heatmap_ = 0;
 
-        CUDA_CHECK(cudaMalloc(
-            (void**)&dev_heatmap_,
-            width_ * height_ * num_keypoints_ * sizeof(unsigned char)));
+        dev_heatmap_ = make_cuda_unique<unsigned char>(
+            width_ * height_ * num_keypoints_);
 
-        cudaStatus = cudaGetLastError();
-        if (cudaStatus != cudaSuccess) {
-            heatmap_on_gpu_ = false;
-            CUDA_CHECK(cudaFree(dev_heatmap_));
-        } else {
-            heatmap_on_gpu_ = true;
-        }
+        heatmap_on_gpu_ = true;
 
         CUDA_CHECK(cudaMemcpy(
-            dev_heatmap_,
+            dev_heatmap_.get(),
             host_heatmaps,
             width_ * height_ * num_keypoints_ * sizeof(unsigned char),
             cudaMemcpyHostToDevice));
-        cudaStatus = cudaGetLastError();
-        if (cudaStatus != cudaSuccess) {
-            initialized_correctly_ = false;
-            heatmap_on_gpu_ = false;
-            CUDA_CHECK(cudaFree(dev_heatmap_));
-            return;
-        }
         initialized_correctly_ = true;
         heatmap_on_gpu_ = true;
 
@@ -62,11 +47,9 @@ GPUHeatmap::GPUHeatmap(
         return;
     }
 };
-GPUHeatmap::~GPUHeatmap() {
-    CUDA_CHECK(cudaFree(dev_heatmap_));
-};
+GPUHeatmap::~GPUHeatmap() = default;
 unsigned char* GPUHeatmap::GetDeviceHeatmapPointer() {
-    return dev_heatmap_;
+    return dev_heatmap_.get();
 };
 int GPUHeatmap::GetFrameWidth() {
     return width_;

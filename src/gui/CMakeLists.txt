@@ -18,11 +18,19 @@ set(RESOURCE_DIR ${PROJECT_SOURCE_DIR}/res)
 add_executable(${PROJECT_NAME}
     about.cpp
     controls.cpp
+    calibration_service.cpp
     drr_tool.cpp
+    image_loading_service.cpp
     main.cpp
     mainscreen.cpp
+    interactor.cpp
+    scene_controller.cpp
     settings_control.cpp
+    settings_service.cpp
     viewer.cpp
+    worker_orchestrator.cpp
+    segmentation_worker.cpp
+    estimation_worker.cpp
     ${HEADER_FILES}
     ${HEADER_DIR}/mainscreen.qrc
 )

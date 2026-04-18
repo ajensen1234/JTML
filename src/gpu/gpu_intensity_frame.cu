@@ -14,7 +14,7 @@ GPUIntensityFrame::GPUIntensityFrame(
     GPUFrame(width, height, gpu_device, host_intensity_image) {
     /*Upload Inverted Image*/
     gpu_inverted_image_ =
-        new GPUImage(width, height, gpu_device, host_inverted_image);
+        std::make_unique<GPUImage>(width, height, gpu_device, host_inverted_image);
 
     /*If Initialized Correctly*/
     if (this->IsInitializedCorrectly() &&
@@ -30,12 +30,10 @@ GPUIntensityFrame::GPUIntensityFrame() {
     dark_silhouette_ = false;
 };
 
-GPUIntensityFrame::~GPUIntensityFrame() {
-    delete gpu_inverted_image_;
-};
+GPUIntensityFrame::~GPUIntensityFrame() = default;
 
 /*Get pointer to the images on the GPU Images for the Intensity Image or if Dark
-Silhouette True returns a pointer to the Inverted Image*/
+ * Silhouette True returns a pointer to the Inverted Image*/
 unsigned char* GPUIntensityFrame::GetWhiteSilhouetteDeviceImagePointer() {
     if (dark_silhouette_) {
         return gpu_inverted_image_->GetDeviceImagePointer();
@@ -45,7 +43,7 @@ unsigned char* GPUIntensityFrame::GetWhiteSilhouetteDeviceImagePointer() {
 
 /*Get pointer to the  GPU Images for the Inverted Image*/
 GPUImage* GPUIntensityFrame::GetInvertedGPUImage() {
-    return gpu_inverted_image_;
+    return gpu_inverted_image_.get();
 };
 
 /*Set/Get Dark Silhohuette*/

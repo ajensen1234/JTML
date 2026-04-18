@@ -61,7 +61,7 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
 
     /*Reset the Pixel Score*/
     CUDA_CHECK_KERNEL(L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel<<<1, 1>>>(
-        dev_pixel_score_));
+        dev_pixel_score_.get()));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -91,7 +91,7 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
         threads_per_block>>>(
         image_A->GetDeviceImagePointer(),
         image_B->GetDeviceImagePointer(),
-        dev_pixel_score_,
+        dev_pixel_score_.get(),
         width,
         height,
         diff_kernel_left_x,
@@ -101,7 +101,7 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
     /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
     CUDA_CHECK(cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
-    return pixel_score_[0];
+        pixel_score_.get(), dev_pixel_score_.get(), sizeof(int), cudaMemcpyDeviceToHost));
+    return *pixel_score_;
 }
 } // namespace gpu_cost_function

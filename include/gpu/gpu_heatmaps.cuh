@@ -1,6 +1,8 @@
 #pragma once
 #include "core/preprocessor-defs.h"
 
+#include "gpu/cuda_deleters.cuh"
+
 namespace gpu_cost_function {
 class GPUHeatmap {
 public:
@@ -27,7 +29,7 @@ private:
     int num_keypoints_;
     bool initialized_correctly_;
     bool heatmap_on_gpu_;
-    unsigned char* dev_heatmap_;
+    unique_device_ptr<unsigned char> dev_heatmap_;
     int device_;
 };
 } // namespace gpu_cost_function

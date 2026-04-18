@@ -133,9 +133,9 @@ private:
     /*Render Engines*/
     /*Render Engine for primary camera (used in both monoplane and biplane
      * mode).*/
-    RenderEngine* primary_cam_render_engine_;
+    std::unique_ptr<RenderEngine> primary_cam_render_engine_;
     /*Render Engine for secondary camera (used solely in biplane mode).*/
-    RenderEngine* secondary_cam_render_engine_;
+    std::unique_ptr<RenderEngine> secondary_cam_render_engine_;
 
     /*Model name is the name (usually the company and a number) - this is the
     same as the text loaded to the model list on the home screen.*/

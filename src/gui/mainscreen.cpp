@@ -4,10 +4,15 @@
 /*Main Screen Header*/
 #include "gui/mainscreen.h"
 
+#include "gui/calibration_service.h"
+#include "gui/scene_controller.h"
+#include "gui/settings_service.h"
+
 /*Font Manipulation*/
 #include <qfontmetrics.h>
 
 #include <QScreen>
+#include <QSignalBlocker>
 #include <opencv2/highgui.hpp>
 
 /*Settings Constants*/
@@ -23,7 +28,6 @@
 /*Settings*/
 #include <qdesktopwidget.h>
 #include <qguiapplication.h>
-#include <qsettings.h>
 
 /*File Processing*/
 #include <qfiledialog.h>
@@ -63,6 +67,32 @@
 
 using namespace std;
 
+namespace {
+
+std::vector<int> ToRowVector(const QModelIndexList& model_indices) {
+    std::vector<int> rows;
+    rows.reserve(model_indices.size());
+    for (const QModelIndex& model_index : model_indices) {
+        rows.push_back(model_index.row());
+    }
+    return rows;
+}
+
+jta_gui::ModelOpacityMode ResolveModelOpacityMode(const Ui::MainScreenClass& ui) {
+    if (ui.solid_model_radio_button->isChecked()) {
+        return jta_gui::ModelOpacityMode::Solid;
+    }
+    if (ui.transparent_model_radio_button->isChecked()) {
+        return jta_gui::ModelOpacityMode::Transparent;
+    }
+    if (ui.wireframe_model_radio_button->isChecked()) {
+        return jta_gui::ModelOpacityMode::Wireframe;
+    }
+    return jta_gui::ModelOpacityMode::Original;
+}
+
+} // namespace
+
 /*Temporary Functions to Ease VTK Interaction and STL Loading*/
 /*Mat to VTK Function*/
 void MainScreen::matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output) {
@@ -98,18 +128,18 @@ double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
     //  now just set to height/2 + y_offset
     if (CameraA) {
         double y =
-            height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
-            abs(calibration_file_.camera_A_principal_.principal_y_);
+            height * session_.calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
+            abs(session_.calibration_file_.camera_A_principal_.principal_y_);
         return 180.0 / pi * 2.0 *
                atan2(
                    y,
-                   calibration_file_.camera_A_principal_.principal_distance_);
+                   session_.calibration_file_.camera_A_principal_.principal_distance_);
     }
     double y =
-        height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
-        abs(calibration_file_.camera_B_principal_.principal_y_);
+        height * session_.calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
+        abs(session_.calibration_file_.camera_B_principal_.principal_y_);
     return 180.0 / pi * 2.0 *
-           atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
+           atan2(y, session_.calibration_file_.camera_B_principal_.principal_distance_);
 }
 
 /*Constructor*/
@@ -124,6 +154,8 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     ui.high_threshold_slider->setMinimum(0);
     ui.low_threshold_slider->setMaximum(800);
     ui.high_threshold_slider->setMaximum(800);
+
+    settings_service_ = std::make_unique<jta_gui::SettingsService>();
 
     /*Load Settings (THIS MUST BE DONE FIRST)*/
     LoadSettingsBetweenSessions();
@@ -140,6 +172,8 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
 
     /*Set Up Settings Control Window*/
     settings_control = new SettingsControl(this);
+    image_loading_service_ = new jta_gui::ImageLoadingService(this);
+    worker_orchestrator_ = new jta_gui::WorkerOrchestrator(this);
     connect(
         settings_control,
         SIGNAL(SaveSettings(
@@ -154,6 +188,38 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
             jta_cost_function::CostFunctionManager,
             jta_cost_function::CostFunctionManager)),
         Qt::DirectConnection);
+    connect(
+        image_loading_service_,
+        &jta_gui::ImageLoadingService::error,
+        this,
+        [this](const QString& message) {
+            QMessageBox::critical(this, "Error!", message, QMessageBox::Ok);
+        });
+    connect(
+        worker_orchestrator_,
+        &jta_gui::WorkerOrchestrator::imageSegmented,
+        this,
+        &MainScreen::onImageSegmented);
+    connect(
+        worker_orchestrator_,
+        &jta_gui::WorkerOrchestrator::progressUpdated,
+        this,
+        &MainScreen::onSegmentationProgress);
+    connect(
+        worker_orchestrator_,
+        &jta_gui::WorkerOrchestrator::segmentationFinished,
+        this,
+        &MainScreen::onSegmentationFinished);
+    connect(
+        worker_orchestrator_,
+        &jta_gui::WorkerOrchestrator::poseEstimated,
+        this,
+        &MainScreen::onPoseEstimated);
+    connect(
+        worker_orchestrator_,
+        &jta_gui::WorkerOrchestrator::estimationFinished,
+        this,
+        &MainScreen::onEstimationFinished);
 
     /* SYM TRAP */
     // Setup Sym Trap Window Obj
@@ -236,7 +302,7 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     }
 
     /*INitialize Location Storage*/
-    model_locations_ = LocationStorage();
+    session_.model_locations_ = LocationStorage();
     vw->initialize_vtk_pointers();
     vw->initialize_vtk_mappers();
     vw->initialize_vtk_renderers();
@@ -248,8 +314,8 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     ui.model_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
 
     /*Have NOT Loaded Calibration Files Yet*/
-    calibrated_for_monoplane_viewport_ = false;
-    calibrated_for_biplane_viewport_ = false;
+    session_.calibrated_for_monoplane_viewport_ = false;
+    session_.calibrated_for_biplane_viewport_ = false;
 
     /*Index of Previously Selected Frame/Models*/
     previous_frame_index_ = -1;
@@ -289,6 +355,78 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     actor_image->SetMapper(image_mapper);
     vw->load_render_window(ui.qvtk_widget->renderWindow());
     coronal_vw->load_render_window(ui.qvtk_cpv->renderWindow());
+
+    scene_controller_ = std::make_unique<jta_gui::SceneController>(
+        *vw, *coronal_vw, session_, this);
+    connect(
+        scene_controller_.get(),
+        &jta_gui::SceneController::requestThresholdControlSync,
+        this,
+        [this](int aperture, int low_threshold, int high_threshold) {
+            ui.aperture_spin_box->setValue(aperture);
+            ui.low_threshold_slider->setValue(low_threshold);
+            ui.high_threshold_slider->setValue(high_threshold);
+        });
+    connect(
+        scene_controller_.get(),
+        &jta_gui::SceneController::requestCameraButtonSync,
+        this,
+        [this](bool disable_camera_a, bool disable_camera_b) {
+            ui.camera_A_radio_button->setDisabled(disable_camera_a);
+            ui.camera_B_radio_button->setDisabled(disable_camera_b);
+        });
+    connect(
+        scene_controller_.get(),
+        &jta_gui::SceneController::requestInteractorCameraMode,
+        this,
+        [](bool camera_b_mode) { interactor_camera_B = camera_b_mode; });
+    connect(
+        scene_controller_.get(),
+        &jta_gui::SceneController::requestPrincipalSelectionOrder,
+        this,
+        [this](const QVector<int>& reordered_indices) {
+            if (reordered_indices.isEmpty() ||
+                ui.model_list_widget->selectionModel() == nullptr) {
+                return;
+            }
+
+            QSignalBlocker blocker(ui.model_list_widget->selectionModel());
+            for (int row = 0; row < ui.model_list_widget->count(); ++row) {
+                ui.model_list_widget->item(row)->setSelected(false);
+            }
+
+            for (const int row : reordered_indices) {
+                if (row < 0 || row >= ui.model_list_widget->count()) {
+                    continue;
+                }
+                ui.model_list_widget->item(row)->setSelected(true);
+            }
+        });
+    connect(
+        scene_controller_.get(),
+        &jta_gui::SceneController::requestUiRefresh,
+        this,
+        [this]() {
+            ui.qvtk_widget->update();
+            ui.qvtk_widget->renderWindow()->Render();
+            ui.qvtk_cpv->update();
+            ui.qvtk_cpv->renderWindow()->Render();
+        });
+
+    calibration_service_ =
+        new jta_gui::CalibrationService(vw.get(), coronal_vw.get(), renderer, ui.image_list_widget, this);
+    connect(
+        calibration_service_,
+        &jta_gui::CalibrationService::calibrationLoaded,
+        this,
+        &MainScreen::onCalibrationLoaded);
+    connect(
+        calibration_service_,
+        &jta_gui::CalibrationService::error,
+        this,
+        [this](const QString& message) {
+            QMessageBox::critical(this, "Error!", message, QMessageBox::Ok);
+        });
     // vw->load_renderers_into_render_window();
     ui.qvtk_widget->renderWindow()->Render();
 
@@ -1040,7 +1178,7 @@ void MainScreen::on_actionSave_Pose_triggered() {
     SaveLastPose();
 
     /*Get Pose to Save*/
-    Point6D saved_pose = model_locations_.GetPose(
+    Point6D saved_pose = session_.model_locations_.GetPose(
         ui.image_list_widget->currentRow(), selected[0].row());
 
     // Open Save File Dialogue
@@ -1129,7 +1267,7 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
                   "ROT\t\tY_ROT\n";
         /*Get Pose to Save*/
         for (int i = 0; i < ui.image_list_widget->count(); i++) {
-            Point6D saved_pose = model_locations_.GetPose(i, selected[0].row());
+            Point6D saved_pose = session_.model_locations_.GetPose(i, selected[0].row());
 
             if (QString::number(saved_pose.x).length() < 7) {
                 stream << saved_pose.x << ",\t\t";
@@ -1222,7 +1360,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
                     LineList[4].toDouble(),
                     LineList[5].toDouble(),
                     LineList[3].toDouble());
-                model_locations_.SavePose(
+                session_.model_locations_.SavePose(
                     ui.image_list_widget->currentRow(),
                     selected[0].row(),
                     loaded_pose);
@@ -1275,7 +1413,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
                         LineList[4].toDouble(),
                         LineList[5].toDouble(),
                         LineList[3].toDouble());
-                    model_locations_.SavePose(
+                    session_.model_locations_.SavePose(
                         ui.image_list_widget->currentRow(),
                         selected[0].row(),
                         loaded_pose);
@@ -1332,9 +1470,9 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
             QMessageBox::Ok);
         return;
     }
-    Point6D prev_pose = model_locations_.GetPose(
+    Point6D prev_pose = session_.model_locations_.GetPose(
         ui.image_list_widget->currentRow() - 1, selected[0].row());
-    model_locations_.SavePose(
+    session_.model_locations_.SavePose(
         ui.image_list_widget->currentRow(),
         ui.model_list_widget->currentRow(),
         prev_pose);
@@ -1373,7 +1511,7 @@ Point6D MainScreen::copy_current_pose() {
             QMessageBox::Ok);
         return Point6D();
     }
-    Point6D pose = model_locations_.GetPose(
+    Point6D pose = session_.model_locations_.GetPose(
         ui.image_list_widget->currentRow(), selected[0].row());
     return pose;
 }
@@ -1400,9 +1538,9 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
             QMessageBox::Ok);
         return;
     }
-    Point6D next_pose = model_locations_.GetPose(
+    Point6D next_pose = session_.model_locations_.GetPose(
         ui.image_list_widget->currentRow() + 1, selected[0].row());
-    model_locations_.SavePose(
+    session_.model_locations_.SavePose(
         ui.image_list_widget->currentRow(),
         ui.model_list_widget->currentRow(),
         next_pose);
@@ -1483,7 +1621,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
                             LineList[4].toDouble(),
                             LineList[5].toDouble(),
                             LineList[3].toDouble());
-                        model_locations_.SavePose(
+                        session_.model_locations_.SavePose(
                             i - 2,
                             ui.model_list_widget->currentRow(),
                             loaded_pose);
@@ -1491,7 +1629,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
                 }
             }
             if (ui.image_list_widget->currentRow() >= 0) {
-                Point6D loaded_pose = model_locations_.GetPose(
+                Point6D loaded_pose = session_.model_locations_.GetPose(
                     ui.image_list_widget->currentRow(), selected[0].row());
                 vw->set_model_position_at_index(
                     selected[0].row(),
@@ -1553,18 +1691,18 @@ void MainScreen::on_actionReset_View_triggered() {
         renderer->GetActiveCamera()->SetFocalPoint(
             0,
             0,
-            -1 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
+            -1 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                session_.calibration_file_.camera_A_principal_.pixel_pitch_);
         renderer->GetActiveCamera()->SetClippingRange(
             .1,
-            2.0 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
-        if (loaded_frames.size() > 0) {
+            2.0 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                session_.calibration_file_.camera_A_principal_.pixel_pitch_);
+        if (session_.loaded_frames.size() > 0) {
             renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .GetOriginalImage()
                     .cols,
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .GetOriginalImage()
                     .rows,
                 true));
@@ -1582,18 +1720,18 @@ void MainScreen::on_actionReset_View_triggered() {
         renderer->GetActiveCamera()->SetFocalPoint(
             0,
             0,
-            -1 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
+            -1 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                session_.calibration_file_.camera_A_principal_.pixel_pitch_);
         renderer->GetActiveCamera()->SetClippingRange(
             .1,
-            2.0 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
-        if (loaded_frames.size() > 0) {
+            2.0 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                session_.calibration_file_.camera_A_principal_.pixel_pitch_);
+        if (session_.loaded_frames.size() > 0) {
             renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .GetOriginalImage()
                     .cols,
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .GetOriginalImage()
                     .rows,
                 true));
@@ -1607,8 +1745,8 @@ void MainScreen::on_actionReset_View_triggered() {
             renderer->GetActiveCamera()->SetFocalPoint(
                 0,
                 0,
-                -1 * calibration_file_.camera_A_principal_.principal_distance_ /
-                    calibration_file_.camera_A_principal_.pixel_pitch_);
+                -1 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                    session_.calibration_file_.camera_A_principal_.pixel_pitch_);
         }
         ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(
             camera_style_interactor);
@@ -1628,7 +1766,7 @@ void MainScreen::on_actionReset_Normal_Up_triggered() {
 }
 
 void MainScreen::on_actionModel_Interaction_Mode_triggered() {
-    if (loaded_models.size() == 0 || loaded_frames.size() == 0) {
+    if (session_.loaded_models.size() == 0 || session_.loaded_frames.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1647,7 +1785,7 @@ void MainScreen::on_actionModel_Interaction_Mode_triggered() {
 };
 
 void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
-    if (loaded_models.size() == 0 || loaded_frames.size() == 0) {
+    if (session_.loaded_models.size() == 0 || session_.loaded_frames.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1666,8 +1804,8 @@ void MainScreen::on_actionCamera_Interaction_Mode_triggered() {
         renderer->GetActiveCamera()->SetFocalPoint(
             0,
             0,
-            -1 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
+            -1 * session_.calibration_file_.camera_A_principal_.principal_distance_ /
+                session_.calibration_file_.camera_A_principal_.pixel_pitch_);
     }
     ui.qvtk_widget->renderWindow()->GetInteractor()->SetInteractorStyle(
         camera_style_interactor);
@@ -1746,97 +1884,78 @@ void MainScreen::segmentHelperFunction(
     std::string pt_model_location,
     unsigned int input_width,
     unsigned int input_height) {
-    torch::jit::Module module(
-        torch::jit::load(pt_model_location, torch::kCUDA));
-    torch::jit::Module* model = &module; // would this work as a pointer
+    int dilation_val = 0;
+    session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
+        "Dilation", dilation_val);
 
-    if (model == nullptr) {
-        QMessageBox::critical(
-            this,
-            "Error!",
-            QString::fromStdString(
-                "Cannot load PyTorch Torch Script model at: " +
-                pt_model_location),
-            QMessageBox::Ok);
-        return;
-    }
-    // Commented out the above to follow the general torchscript page for
-    // flagging an error
+    worker_orchestrator_->ConfigureSegmentation(
+        {.pt_model_location = std::move(pt_model_location),
+         .input_width = input_width,
+         .input_height = input_height,
+         .black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked(),
+         .dilation_val = dilation_val,
+         .aperture = ui.aperture_spin_box->value(),
+         .low_threshold = ui.low_threshold_slider->value(),
+         .high_threshold = ui.high_threshold_slider->value()});
 
-    ui.pose_progress->setValue(20);
-    ui.pose_label->setText("Segmenting images...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
+    ui.pose_progress->setValue(0);
+    ui.pose_progress->setVisible(true);
+    ui.pose_label->setText("Initializing PyTorch...");
+    ui.pose_label->setVisible(true);
 
-    /*Send Each Image to GPU Tensor, Segment Via Model, Replace Inverted
-     * Image*/
-    bool black_sil_used =
-        ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        cv::Mat unpadded = segment_image(
-            loaded_frames[i].GetOriginalImage(),
-            black_sil_used,
-            model,
-            input_width,
-            input_height);
-        unpadded.copyTo(loaded_frames[i].GetInvertedImage());
-        // Explicitly clear CUDA cache to free up GPU memory after processing
-        // each image. This is particularly helpful for GPUs with limited VRAM,
-        // like the RTX 4070, to prevent out-of-memory errors during sequential
-        // image processing.
-        c10::cuda::CUDACachingAllocator::emptyCache();
-        int dilation_val = 0;
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
-            "Dilation", dilation_val);
-        loaded_frames[i].SetEdgeImage(
+    worker_orchestrator_->StartSegmentation(session_);
+}
+
+void MainScreen::onImageSegmented(int index, cv::Mat segmented, bool isBiplane) {
+    int dilation_val = 0;
+    session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
+        "Dilation", dilation_val);
+
+    if (!isBiplane) {
+        segmented.copyTo(session_.loaded_frames[index].GetInvertedImage());
+        session_.loaded_frames[index].SetEdgeImage(
             ui.aperture_spin_box->value(),
             ui.low_threshold_slider->value(),
             ui.high_threshold_slider->value(),
             true);
-        loaded_frames[i].SetDilatedImage(dilation_val);
-        loaded_frames[i].SetDistanceMap();
-        loaded_frames[i].setCurvatureHeatmaps();
-        //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
-        if (calibrated_for_biplane_viewport_) {
-            cv::Mat unpadded_biplane = segment_image(
-                loaded_frames_B[i].GetOriginalImage(),
-                black_sil_used,
-                model,
-                input_width,
-                input_height);
-            unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
-            // Explicitly clear CUDA cache to free up GPU memory after
-            // processing each biplane image. This is particularly helpful for
-            // GPUs with limited VRAM, like the RTX 4070, to prevent
-            // out-of-memory errors during sequential image processing.
-            c10::cuda::CUDACachingAllocator::emptyCache();
-            loaded_frames_B[i].SetEdgeImage(
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                true);
-            loaded_frames_B[i].SetDilatedImage(dilation_val);
-        }
+        session_.loaded_frames[index].SetDilatedImage(dilation_val);
+        session_.loaded_frames[index].SetDistanceMap();
+        session_.loaded_frames[index].setCurvatureHeatmaps();
+    } else {
+        segmented.copyTo(session_.loaded_frames_B[index].GetInvertedImage());
+        session_.loaded_frames_B[index].SetEdgeImage(
+            ui.aperture_spin_box->value(),
+            ui.low_threshold_slider->value(),
+            ui.high_threshold_slider->value(),
+            true);
+        session_.loaded_frames_B[index].SetDilatedImage(dilation_val);
+    }
 
-        ui.pose_progress->setValue(
-            20 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
+    vw->render_scene();
+    coronal_vw->render_scene();
+}
+
+void MainScreen::onSegmentationProgress(int value, QString status) {
+    ui.pose_progress->setValue(value);
+    ui.pose_label->setText(status);
+}
+
+void MainScreen::onSegmentationFinished(bool success, QString errorMessage) {
+    if (!success) {
+        QMessageBox::critical(this, "Segmentation Error", errorMessage);
     }
 
     if (ui.image_list_widget->currentIndex().row() >= 0) {
         update_image_list_widget();
     }
+
+    ui.pose_progress->setVisible(false);
+    ui.pose_label->setVisible(false);
 }
 
 void MainScreen::on_actionReset_Remove_All_Segmentation_triggered() {
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        loaded_frames[i].ResetFromOriginal();
+        session_.loaded_frames[i].ResetFromOriginal();
     }
 
     if (ui.image_list_widget->currentIndex().row() >= 0) {
@@ -1857,713 +1976,69 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     }
 
     // Must load a model
-    if (loaded_models.size() < 1) {
+    if (session_.loaded_models.size() < 1) {
         QMessageBox::critical(
             this, "Error!", "Must load a model!", QMessageBox::Ok);
         return;
     }
 
     // Must have loaded image
-    if (loaded_frames.size() < 1) {
+    if (session_.loaded_frames.size() < 1) {
         QMessageBox::critical(
             this, "Error!", "Must load images!", QMessageBox::Ok);
         return;
     }
 
-    /*Pose Estimate Progress and Label Visible*/
-    ui.pose_progress->setValue(5);
-    ui.pose_progress->setVisible(true);
-    ui.pose_label->setText("Initializing high resolution segmentation...");
-    ui.pose_label->setVisible(true);
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-    qApp->processEvents();
-
-    /*Segment*/
-    this->on_actionSegment_FemHR_triggered();
-    unsigned int input_height = 1024;
-    unsigned int input_width = 1024;
-    unsigned int orig_height = loaded_frames[0].GetInvertedImage().rows;
-    unsigned int orig_width = loaded_frames[0].GetInvertedImage().cols;
-    auto host_image = static_cast<unsigned char*>(
-        malloc(input_width * input_height * sizeof(unsigned char)));
-    ui.pose_label->setText("Initializing STL model on GPU...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*STL Information*/
-    vector<vector<float>> triangle_information;
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    stl_reader_BIG::readAnySTL(
-        QString::fromStdString(loaded_models[selected[0].row()].file_location_),
-        triangle_information);
+    std::string stl_path = session_.loaded_models[selected[0].row()].file_location_;
 
-    /*GPU Models for the current Model*/
-    auto gpu_mod = new GPUModel(
-        "model",
-        true,
-        orig_height,
-        orig_width,
-        0,
-        false,
-        // switched cols and rows because the stored image is inverted?
-        &(triangle_information[0])[0],
-        &(triangle_information[1])[0],
-        triangle_information[0].size() / 9,
-        calibration_file_.camera_A_principal_);
-    // BACKFACE CULLING APPEARS TO BE GIVING ERRORS
-
-    ui.pose_progress->setValue(55);
-    ui.pose_label->setText("Initializing femoral implant pose estimation...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Load JIT Model*/
-    /*std::string pt_model_location =
-     * "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLima1024_07192019_HRProcessed_Fem_07232019_1_TORCH_SCRIPT.pt";
-     */
     QString pt_model_location = QFileDialog::getOpenFileName(
         this,
         tr("Load Trained Femoral Pose Regression Architecture"),
         ".",
         tr("Torch File (*.pt)"));
-    // std::shared_ptr<torch::jit::Module>
-    // model(torch::jit::load(pt_model_location.toStdString(),
-    // torch::kCUDA));
-    torch::jit::Module module(
-        torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
-    torch::jit::Module* model = &module;
-    if (model == nullptr) {
-        // QMessageBox::critical(this, "Error!",
-        // QString::fromStdString("Cannot load PyTorch Torch Script model
-        // at: " + pt_model_location), QMessageBox::Ok);
-        QMessageBox::critical(
-            this,
-            "Error!",
-            QString(
-                "Cannot load PyTorch Torch Script model at: " +
-                pt_model_location),
-            QMessageBox::Ok);
-        return;
-    }
 
-    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z
-    (From Area), then X,Y. After this, convert to non (0,0) centered
-    orientation. Finally, update */
-    ui.pose_progress->setValue(65);
-    ui.pose_label->setText("Estimating femoral implant poses...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-    auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(
-        torch::zeros(
-            {1, 1, input_height, input_width},
-            device(torch::kCUDA).dtype(torch::kByte)));
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-        cv::Mat padded;
-        if (orig_inverted.cols > orig_inverted.rows) {
-            padded.create(
-                orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-        } else {
-            padded.create(
-                orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-        }
-        unsigned int padded_width = padded.cols;
-        unsigned int padded_height = padded.rows;
-        padded.setTo(cv::Scalar::all(0));
-        orig_inverted.copyTo(
-            padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-        cv::resize(padded, padded, cv::Size(input_width, input_height));
+    if (pt_model_location.isEmpty()) return;
 
-        cudaMemcpy(
-            gpu_byte_placeholder.data_ptr(),
-            padded.data,
-            input_width * input_height * sizeof(unsigned char),
-            cudaMemcpyHostToDevice);
-        std::vector<torch::jit::IValue> inputs;
-        inputs.push_back(gpu_byte_placeholder.to(dtype(torch::kFloat))
-                             .flip({2})); // Must flip first
-        cudaMemcpy(
-            orientation,
-            model->forward(inputs)
-                .toTensor()
-                .to(dtype(torch::kFloat))
-                .data_ptr(),
-            3 * sizeof(float),
-            cudaMemcpyDeviceToHost);
-        /*Flip Segment*/
-        auto output_mat_seg =
-            cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-        flip(orig_inverted, output_mat_seg, 0);
+    worker_orchestrator_->ConfigureEstimation(
+        {.stl_path = std::move(stl_path),
+         .pt_model_location = pt_model_location.toStdString(),
+         .black_sil_used = ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked()});
 
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(Pose(
-            0,
-            0,
-            -calibration_file_.camera_A_principal_.principal_distance_,
-            orientation[1],
-            orientation[2],
-            orientation[0]));
-
-        /*Copy To Mat*/
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-
-        /*OpenCV Image Container/Write Function*/
-        auto projection_mat = cv::Mat(
-            orig_height,
-            orig_width,
-            CV_8UC1,
-            host_image); /*Reverse before flip*/
-        auto output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get Scale*/
-        double sum_seg = sum(sum(output_mat_seg))[0] / 255.0;
-        double sum_proj = sum(sum(output_mat))[0] / 255.0;
-        double z;
-        /* Creating A check to ensure that the z translation is not greater
-         * than the principal distance */
-        if (sum_proj / sum_seg > 1) {
-            z = -calibration_file_.camera_A_principal_.principal_distance_;
-        } else {
-            z = -calibration_file_.camera_A_principal_.principal_distance_ *
-                sqrt(sum_proj / sum_seg);
-        }
-
-        /*Reproject*/
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(
-            Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-        projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-        output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*cv::imwrite("C:/Users/pflood/Desktop/output_mat.png", output_mat);
-        cv::imwrite("C:/Users/pflood/Desktop/output_mat_seg.png",
-        output_mat_seg);*/
-
-        /*Get X and Y*/
-        cv::Mat proj64;
-        output_mat.convertTo(proj64, CV_64FC1);
-        cv::Mat seg64;
-        output_mat_seg.convertTo(seg64, CV_64FC1);
-        cv::Point2d x_y_point =
-            phaseCorrelate(proj64, seg64) *
-            (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-            calibration_file_.camera_A_principal_.principal_distance_;
-        double x = x_y_point.x;
-        double y = -1 * x_y_point.y;
-
-        // QMessageBox::critical(this, "Error!", QString::number(x) + ", " +
-        //	QString::number(y) + ", " +
-        //	QString::number(z) + ", " +
-        //	QString::number(orientation[1]) + ", " +
-        //	QString::number(orientation[2]) + ", " +
-        //	QString::number(orientation[0]), QMessageBox::Ok);
-
-        /*Convert from (0,0) Centered*/
-        float za_rad = orientation[0] * pi / 180.0;
-        float xa_rad = orientation[1] * pi / 180.0;
-        float ya_rad = orientation[2] * pi / 180.0;
-        float cz = cos(za_rad);
-        float sz = sin(za_rad);
-        float cx = cos(xa_rad);
-        float sx = sin(xa_rad);
-        float cy = cos(ya_rad);
-        float sy = sin(ya_rad);
-        Matrix_3_3 R_g(
-            cz * cy - sz * sx * sy,
-            -1.0 * sz * cx,
-            cz * sy + sz * cy * sx,
-            sz * cy + cz * sx * sy,
-            cz * cx,
-            sz * sy - cz * cy * sx,
-            -1.0 * cx * sy,
-            sx,
-            cx * cy);
-        float theta_x = std::atan(-1.0 * y / z);
-        float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-        Matrix_3_3 R_x(
-            1,
-            0,
-            0,
-            0,
-            cos(theta_x),
-            -sin(theta_x),
-            0,
-            sin(theta_x),
-            cos(theta_x));
-        Matrix_3_3 R_y(
-            cos(theta_y),
-            0,
-            sin(theta_y),
-            0,
-            1,
-            0,
-            -sin(theta_y),
-            0,
-            cos(theta_y));
-        Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(
-            R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-        /*Rot Mat To Eul ZXY*/
-        /*Algorithm To Recover Z - X - Y Euler Angles*/
-        float xa, ya, za;
-        if (R_orig.A_32_ < 1) {
-            if (R_orig.A_32_ > -1) {
-                xa = asin(R_orig.A_32_);
-                za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-                ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-            } else {
-                xa = -pi / 2.0;
-                za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-                ya = 0;
-            }
-        } else {
-            xa = pi / 2.0;
-            za = atan2(R_orig.A_13_, R_orig.A_11_);
-            ya = 0;
-        }
-
-        xa = xa * 180.0 / pi;
-        ya = ya * 180.0 / pi;
-        za = za * 180.0 / pi;
-        /*
-                        QMessageBox::critical(this, "Error!",
-           QString::number(x)
-           +
-           ", " + QString::number(y) + ", " + QString::number(z) + ", " +
-                                QString::number(xa) + ", " +
-                                QString::number(ya) + ", " +
-                                QString::number(za), QMessageBox::Ok);*/
-        /*Update Model Pose*/
-        model_locations_.SavePose(
-            i,
-            ui.model_list_widget->currentRow(),
-            Point6D(x, y, z, xa, ya, za));
-        ui.pose_progress->setValue(
-            65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
-        qApp->processEvents();
-    }
-
-    ui.pose_progress->setValue(98);
-    ui.pose_label->setText("Deleting old models...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Delete GPU Model*/
-    delete gpu_mod;
-
-    /*Free Array*/
-    free(host_image);
-
-    /*Update Model*/
-    Point6D loaded_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
-    model_actor_list[selected[0].row()]->SetPosition(
-        loaded_pose.x, loaded_pose.y, loaded_pose.z);
-    model_actor_list[selected[0].row()]->SetOrientation(
-        loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    ui.pose_progress->setValue(100);
-    ui.pose_label->setText("Finished!");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Pose Estimate Progress and Label Not Visible*/
-    ui.pose_progress->setVisible(false);
-    ui.pose_label->setVisible(false);
-}
-
-void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
-    // Must be in Single Selection Mode to Load Pose
-    if (ui.multiple_model_radio_button->isChecked()) {
-        QMessageBox::critical(
-            this,
-            "Error!",
-            "Must Be in Single Model Selection Mode to "
-            "Estimate Kinematics!",
-
-            QMessageBox::Ok);
-        return;
-    }
-
-    // Must load a model
-    if (loaded_models.size() < 1) {
-        QMessageBox::critical(
-            this, "Error!", "Must load a model!", QMessageBox::Ok);
-        return;
-    }
-
-    // Must have loaded image
-    if (loaded_frames.size() < 1) {
-        QMessageBox::critical(
-            this, "Error!", "Must load images!", QMessageBox::Ok);
-        return;
-    }
-
-    /*Pose Estimate Progress and Label Visible*/
-    ui.pose_progress->setValue(5);
+    ui.pose_progress->setValue(0);
     ui.pose_progress->setVisible(true);
-    ui.pose_label->setText("Initializing high resolution segmentation...");
+    ui.pose_label->setText("Initializing estimation...");
     ui.pose_label->setVisible(true);
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-    qApp->processEvents();
 
-    /*Segment*/
-    this->on_actionSegment_TibHR_triggered();
-    unsigned int input_height = 1024;
-    unsigned int input_width = 1024;
-    unsigned int orig_height = loaded_frames[0].GetInvertedImage().rows;
-    unsigned int orig_width = loaded_frames[0].GetInvertedImage().cols;
-    auto host_image = static_cast<unsigned char*>(
-        malloc(input_width * input_height * sizeof(unsigned char)));
-    ui.pose_label->setText("Initializing STL model on GPU...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*STL Information*/
-    vector<vector<float>> triangle_information;
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    stl_reader_BIG::readAnySTL(
-        QString::fromStdString(loaded_models[selected[0].row()].file_location_),
-        triangle_information);
-
-    /*GPU Models for the current Model*/
-    auto gpu_mod = new GPUModel(
-        "model",
-        true,
-        orig_height,
-        orig_width,
-        0,
-        false,
-        // switched cols and rows because the stored image is inverted?
-        &(triangle_information[0])[0],
-        &(triangle_information[1])[0],
-        triangle_information[0].size() / 9,
-        calibration_file_.camera_A_principal_);
-    // BACKFACE CULLING APPEARS TO BE GIVING ERRORS
-
-    ui.pose_progress->setValue(55);
-    ui.pose_label->setText("Initializing tibial implant pose estimation...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Load JIT Model*/
-    /* Removing the below code to allow for the user to select the model
-     * they wish to use*/
-    /*std::string pt_model_location =
-     * "C:/TorchScriptTrainedNetworks/HRNETPR_BS6_dataLimaTib1024_08012019_HRProcessed_Tib_08022019_1_TORCH_SCRIPT.pt";*/
-    QString pt_model_location = QFileDialog::getOpenFileName(
-        this,
-        tr("Load Trained Tibial Pose Estimation Architecture"),
-        ".",
-        tr("Torch File (*.pt)"));
-    // std::shared_ptr<torch::jit::Module>
-    // model(torch::jit::load(pt_model_location.toStdString(),
-    // torch::kCUDA));
-    torch::jit::Module module(
-        torch::jit::load(pt_model_location.toStdString(), torch::kCUDA));
-    torch::jit::Module* model = &module;
-    if (model == nullptr) {
-        QMessageBox::critical(
-            this,
-            "Error!",
-            QString::fromStdString(
-                "Cannot load PyTorch Torch Script model at: " +
-                pt_model_location.toStdString()),
-            QMessageBox::Ok);
-        return;
-    }
-
-    /*Send Each Segmented Image to GPU Tensor, Predict Orientation, Then Z
-    (From Area), then X,Y. After this, convert to non (0,0) centered
-    orientation. Finally, update */
-    ui.pose_progress->setValue(65);
-    ui.pose_label->setText("Estimating tibial implant poses...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-    auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(
-        torch::zeros(
-            {1, 1, input_height, input_width},
-            device(torch::kCUDA).dtype(torch::kByte)));
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-        cv::Mat padded;
-        if (orig_inverted.cols > orig_inverted.rows) {
-            padded.create(
-                orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-        } else {
-            padded.create(
-                orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-        }
-        unsigned int padded_width = padded.cols;
-        unsigned int padded_height = padded.rows;
-        padded.setTo(cv::Scalar::all(0));
-        orig_inverted.copyTo(
-            padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-        cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-        cudaMemcpy(
-            gpu_byte_placeholder.data_ptr(),
-            padded.data,
-            input_width * input_height * sizeof(unsigned char),
-            cudaMemcpyHostToDevice);
-        std::vector<torch::jit::IValue> inputs;
-        inputs.push_back(gpu_byte_placeholder.to(dtype(torch::kFloat))
-                             .flip({2})); // Must flip first
-        cudaMemcpy(
-            orientation,
-            model->forward(inputs)
-                .toTensor()
-                .to(dtype(torch::kFloat))
-                .data_ptr(),
-            3 * sizeof(float),
-            cudaMemcpyDeviceToHost);
-        /*Flip Segment*/
-        auto output_mat_seg =
-            cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-        flip(orig_inverted, output_mat_seg, 0);
-
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(Pose(
-            0,
-            0,
-            -calibration_file_.camera_A_principal_.principal_distance_,
-            orientation[1],
-            orientation[2],
-            orientation[0]));
-
-        /*Copy To Mat*/
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-
-        /*OpenCV Image Container/Write Function*/
-        auto projection_mat = cv::Mat(
-            orig_height,
-            orig_width,
-            CV_8UC1,
-            host_image); /*Reverse before flip*/
-        auto output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get Scale*/
-        double sum_seg = sum(sum(output_mat_seg))[0] / 255.0;
-        double sum_proj = sum(sum(output_mat))[0] / 255.0;
-        double z = -calibration_file_.camera_A_principal_.principal_distance_ *
-                   sqrt(sum_proj / sum_seg);
-        /*Reproject*/
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(
-            Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-        projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-        output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get X and Y*/
-        cv::Mat proj64;
-        output_mat.convertTo(proj64, CV_64FC1);
-        cv::Mat seg64;
-        output_mat_seg.convertTo(seg64, CV_64FC1);
-        cv::Point2d x_y_point =
-            phaseCorrelate(proj64, seg64) *
-            (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-            calibration_file_.camera_A_principal_.principal_distance_;
-        double x = x_y_point.x;
-        double y = -1 * x_y_point.y;
-
-        /*Convert from (0,0) Centered*/
-        float za_rad = orientation[0] * pi / 180.0;
-        float xa_rad = orientation[1] * pi / 180.0;
-        float ya_rad = orientation[2] * pi / 180.0;
-        float cz = cos(za_rad);
-        float sz = sin(za_rad);
-        float cx = cos(xa_rad);
-        float sx = sin(xa_rad);
-        float cy = cos(ya_rad);
-        float sy = sin(ya_rad);
-        Matrix_3_3 R_g(
-            cz * cy - sz * sx * sy,
-            -1.0 * sz * cx,
-            cz * sy + sz * cy * sx,
-            sz * cy + cz * sx * sy,
-            cz * cx,
-            sz * sy - cz * cy * sx,
-            -1.0 * cx * sy,
-            sx,
-            cx * cy);
-        float theta_x = std::atan(-1.0 * y / z);
-        float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-        Matrix_3_3 R_x(
-            1,
-            0,
-            0,
-            0,
-            cos(theta_x),
-            -sin(theta_x),
-            0,
-            sin(theta_x),
-            cos(theta_x));
-        Matrix_3_3 R_y(
-            cos(theta_y),
-            0,
-            sin(theta_y),
-            0,
-            1,
-            0,
-            -sin(theta_y),
-            0,
-            cos(theta_y));
-        Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(
-            R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-        /*Rot Mat To Eul ZXY*/
-        /*Algorithm To Recover Z - X - Y Euler Angles*/
-        float xa, ya, za;
-        if (R_orig.A_32_ < 1) {
-            if (R_orig.A_32_ > -1) {
-                xa = asin(R_orig.A_32_);
-                za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-                ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-            } else {
-                xa = -pi / 2.0;
-                za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-                ya = 0;
-            }
-        } else {
-            xa = pi / 2.0;
-            za = atan2(R_orig.A_13_, R_orig.A_11_);
-            ya = 0;
-        }
-
-        xa = xa * 180.0 / pi;
-        ya = ya * 180.0 / pi;
-        za = za * 180.0 / pi;
-
-        model_locations_.SavePose(
-            i,
-            ui.model_list_widget->currentRow(),
-            Point6D(x, y, z, xa, ya, za));
-        ui.pose_progress->setValue(
-            65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
-        qApp->processEvents();
-    }
-
-    ui.pose_progress->setValue(98);
-    ui.pose_label->setText("Deleting old models...");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Delete GPU Model*/
-    delete gpu_mod;
-
-    /*Free Array*/
-    free(host_image);
-
-    /*Update Model*/
-    Point6D loaded_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
-    model_actor_list[selected[0].row()]->SetPosition(
-        loaded_pose.x, loaded_pose.y, loaded_pose.z);
-    model_actor_list[selected[0].row()]->SetOrientation(
-        loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    ui.pose_progress->setValue(100);
-    ui.pose_label->setText("Finished!");
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*Pose Estimate Progress and Label Not Visible*/
-    ui.pose_progress->setVisible(false);
-    ui.pose_label->setVisible(false);
+    worker_orchestrator_->StartEstimation(session_);
 }
 
-// void MainScreen::on_actionNFD_Pose_Estimate_triggered() {
-//     JTML_NFD nfd_obj;
-//     QModelIndexList selected =
-//         ui.model_list_widget->selectionModel()->selectedRows();
-//     if (selected.size() == 0 || previous_frame_index_ < 0 ||
-//         ui.image_list_widget->currentIndex().row() != previous_frame_index_
-//         || ui.image_list_widget->currentIndex().row() >= loaded_frames.size()
-//         || ui.model_list_widget->currentIndex().row() >=
-//         loaded_models.size()) { QMessageBox::critical(this, "Error!", "Select
-//         Frame and Model First!",
-//                               QMessageBox::Ok);
-//         return;
-//     }
-//     QString error_mess;
-//     nfd_obj.Initialize(calibration_file_, loaded_models, loaded_frames,
-//                        selected, ui.image_list_widget->currentIndex().row(),
-//                        error_mess);
-//     nfd_obj.Run();
-// }
+void MainScreen::onPoseEstimated(int index, Point6D pose) {
+    session_.model_locations_.SavePose(
+        index, ui.model_list_widget->currentRow(), pose);
 
+    if (index == ui.image_list_widget->currentIndex().row()) {
+        vw->render_scene();
+        coronal_vw->render_scene();
+    }
+}
+
+void MainScreen::onEstimationFinished(bool success, QString errorMessage) {
+    if (!success) {
+        QMessageBox::critical(this, "Estimation Error", errorMessage);
+    }
+
+    ui.pose_progress->setVisible(false);
+    ui.pose_label->setVisible(false);
+
+    if (ui.image_list_widget->currentIndex().row() >= 0) {
+        update_image_list_widget();
+    }
+}
 /*Viewing Controls*/
 void MainScreen::on_actionControls_triggered() {
+
     // Open Viewing Window Controls Window
     Controls cntrls;
     cntrls.exec();
@@ -2573,7 +2048,7 @@ void MainScreen::on_actionControls_triggered() {
 void MainScreen::on_actionOptimizer_Settings_triggered() {
     /*Load the Optimizer Settings to the Window*/
     settings_control->LoadSettings(
-        trunk_manager_, branch_manager_, leaf_manager_, optimizer_settings_);
+        session_.trunk_manager_, session_.branch_manager_, session_.leaf_manager_, session_.optimizer_settings_);
 
     // Open Optimizer Settings Window
     settings_control->show();
@@ -2589,8 +2064,8 @@ void MainScreen::on_actionDRR_Settings_triggered() {
     if (selected.size() > 0) {
         /*Open DRR Window*/
         DRRTool drt(
-            loaded_models[selected[0].row()],
-            calibration_file_.camera_A_principal_,
+            session_.loaded_models[selected[0].row()],
+            session_.calibration_file_.camera_A_principal_,
             model_actor_list[selected[0].row()]->GetPosition()[2]);
         drt.exec();
     }
@@ -2599,145 +2074,14 @@ void MainScreen::on_actionDRR_Settings_triggered() {
 /*PREPROCESSOR BUTTONS*/
 /*Load Calibration Button*/
 void MainScreen::on_load_calibration_button_clicked() {
-    /*Open File Search Dialogue*/
-    QString calibration_file_extension = QFileDialog::getOpenFileName(
-        this, tr("Load Calibration"), ".", tr("Calibration File (*.txt)"));
+    calibration_service_->LoadCalibration(this, session_);
+}
 
-    QFile inputFile(calibration_file_extension);
-    if (inputFile.open(QIODevice::ReadOnly)) {
-        QTextStream in(&inputFile);
-        QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]|,|\t| "), Qt::SkipEmptyParts);
+void MainScreen::onCalibrationLoaded(Calibration calibration) {
+    Q_UNUSED(calibration);
 
-        /*Valid Code for Monoplane*/
-        if (InputList[0] == "JT_INTCALIB" || InputList[0] == "JTA_INTCALIB") {
-            /*Error Check*/
-            if (InputList[4].toDouble() == 0) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Pixel size (the last number in the calibration "
-                    "file) is specified as 0! This is impossible.",
-                    QMessageBox::Ok);
-                calibrated_for_monoplane_viewport_ = false;
-                calibrated_for_biplane_viewport_ = false;
-                inputFile.close();
-                return;
-            }
-
-            /*Initialize Calibration*/
-            calibrated_for_monoplane_viewport_ = true;
-            calibrated_for_biplane_viewport_ = false;
-            CameraCalibration principal_calibration_file(
-                InputList[1].toDouble(),
-                -1 * InputList[2].toDouble(),
-                // Negative For Offsets to make consistent with JointTrack
-                -1 * InputList[3].toDouble(),
-                InputList[4].toDouble());
-            float* prin_dist_ = &principal_calibration_file.principal_distance_;
-            calibration_file_ = Calibration(principal_calibration_file);
-            /*Update Interactor Calibration For Converting Text in Camera B
-             * View*/
-            interactor_calibration = calibration_file_;
-            Calibration* cal_pointer_ = &calibration_file_;
-
-            // interactor_calibration.camera_A_principal_.principal_distance_
-            // - should return 1198
-            interactor_camera_B = false;
-        }
-        /*Valid Code for Biplane*/
-        /*NOT WORKING, BUT GOOD STARTING PLACE*/
-        else if (InputList[0] == "JTA_INTCALIB_BIPLANE") {
-            /*Convert and Do PIX MM Error CHECK*/
-            /*Error Check*/
-            if (InputList[4].toDouble() == 0 || InputList[8].toDouble() == 0) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Pixel size (the last number in the calibration "
-                    "file) is specified as 0! This is impossible.",
-                    QMessageBox::Ok);
-                calibrated_for_monoplane_viewport_ = false;
-                calibrated_for_biplane_viewport_ = false;
-                inputFile.close();
-                return;
-            }
-            /*Initialize Calibrations*/
-            calibrated_for_monoplane_viewport_ = false;
-            calibrated_for_biplane_viewport_ = true;
-            /*Calibrate for Main View (A) and alternate view (B).
-            Read in (x,y,z) displacement vector from origin (where A is) to
-            origin of camera B. Read in othroogonal axis matrix for camera B
-            (A is taken to be standard basis vectors)*/
-            CameraCalibration principal_calibration_file_A(
-                InputList[1].toDouble(),
-                -1 * InputList[2].toDouble(),
-                -1 * InputList[3].toDouble(),
-                InputList[4].toDouble());
-            // Negatives to make consistent with JT
-            CameraCalibration principal_calibration_file_B(
-                InputList[5].toDouble(),
-                -1 * InputList[6].toDouble(),
-                -1 * InputList[7].toDouble(),
-                InputList[8].toDouble());
-            Vect_3 origin_B(
-                InputList[9].toDouble(),
-                InputList[10].toDouble(),
-                InputList[11].toDouble());
-            Matrix_3_3 orthogonal_axes_B(
-                InputList[12].toDouble(),
-                InputList[13].toDouble(),
-                InputList[14].toDouble(),
-                InputList[15].toDouble(),
-                InputList[16].toDouble(),
-                InputList[17].toDouble(),
-                InputList[18].toDouble(),
-                InputList[19].toDouble(),
-                InputList[20].toDouble());
-            calibration_file_ = Calibration(
-                principal_calibration_file_A,
-                principal_calibration_file_B,
-                origin_B,
-                orthogonal_axes_B);
-
-            /*Update Interactor Calibration For Converting Text in Camera B
-             * View*/
-            interactor_calibration = calibration_file_;
-        } else if (InputList[0] == "image") { // Would need a way to distinguish
-                                              // Denver single plane from
-                                              // biplane
-            CameraCalibration denver_calibration_A(
-                InputList[6].toDouble(),
-                InputList[7].toDouble(),
-                InputList[8].toDouble(),
-                InputList[10].toDouble(),
-                InputList[11].toDouble());
-
-            calibrated_for_monoplane_viewport_ = true;
-            calibrated_for_biplane_viewport_ = false;
-            calibration_file_ = Calibration(denver_calibration_A, "Denver");
-            inputFile.close();
-        }
-        /*Invalid Code*/
-        else {
-            QMessageBox::critical(
-                this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
-            calibrated_for_monoplane_viewport_ = false;
-            calibrated_for_biplane_viewport_ = false;
-            inputFile.close();
-            return;
-        }
-        inputFile.close();
-    }
-    /*Set Up QVTK Widget For Calibration*/
-    /*Monoplane (Left Viewport)*/
-    vw->load_renderers_into_render_window(calibration_file_);
-    coronal_vw->load_renderers_into_render_window(calibration_file_);
-    if (calibrated_for_monoplane_viewport_) { // I loaded a single-plane
-                                              // calibration
-        vw->setup_camera_calibration(calibration_file_);
-        coronal_vw->setup_camera_calibration(calibration_file_);
-        coronal_vw->setup_camera_coronal_plane();
+    if (session_.calibrated_for_monoplane_viewport_) { // I loaded a single-plane
+                                               // calibration
         /*Set Checked To Monoplane but disable from further clicking*/
         ui.camera_A_radio_button->setChecked(true);
         ui.camera_A_radio_button->setDisabled(true);
@@ -2747,23 +2091,6 @@ void MainScreen::on_load_calibration_button_clicked() {
 
         /*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE
          * USE BUTTON*/
-        if (ui.image_list_widget->currentIndex().row() >= 0) {
-            /*Upload Image Data to Screen, Shift Image Location to Center In
-             * Middle of Screen and Adjust View Angle*/
-            vw->place_image_actors_according_to_calibration(
-                calibration_file_,
-                loaded_frames[this->curr_frame()].GetOriginalImage().cols,
-                loaded_frames[this->curr_frame()].GetOriginalImage().rows);
-            renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .GetOriginalImage()
-                    .cols,
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .GetOriginalImage()
-                    .rows,
-                true));
-        }
-
         /*Disable Reloading Calibration File*/
         ui.load_calibration_button->setDisabled(true);
         /*Enable View Menu Until Calbration Loaded*/
@@ -2774,20 +2101,7 @@ void MainScreen::on_load_calibration_button_clicked() {
     }
     /*Biplane Calibration*/
     /*BROKEN BIPLANE HISTORIC IMPLEMENTATION*/
-    else if (calibrated_for_biplane_viewport_) {
-        /*Set Up Calibration for Camera A to Home QVTKWidget*/
-        /*THe code below was replaced by viewer.h/.cpp functionality*/
-        renderer->GetActiveCamera()->SetFocalPoint(
-            0,
-            0,
-            -1 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
-        renderer->GetActiveCamera()->SetPosition(0, 0, 0);
-        renderer->GetActiveCamera()->SetClippingRange(
-            .1,
-            2.0 * calibration_file_.camera_A_principal_.principal_distance_ /
-                calibration_file_.camera_A_principal_.pixel_pitch_);
-
+    else if (session_.calibrated_for_biplane_viewport_) {
         /*Set Checked To Biplane A (aka Monoplane) and Change Text Boxes*/
         ui.camera_A_radio_button->setChecked(true);
         ui.camera_A_radio_button->setEnabled(true);
@@ -2810,10 +2124,10 @@ void MainScreen::on_load_image_button_clicked() {
      * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+        session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
     for (int i = 0; i < active_int_params.size(); i++) {
         if (active_int_params[i].getParameterName() == "Dilation") {
-            dilation_val = (trunk_manager_.getActiveCostFunctionClass())
+            dilation_val = (session_.trunk_manager_.getActiveCostFunctionClass())
                                ->getIntParameters()
                                .at(i)
                                .getParameterValue();
@@ -2824,244 +2138,117 @@ void MainScreen::on_load_image_button_clicked() {
     }
 
     /*Check to See if Calibration Loaded*/
-    if (calibrated_for_monoplane_viewport_ == false &&
-        calibrated_for_biplane_viewport_ == false) {
+    if (session_.calibrated_for_monoplane_viewport_ == false &&
+        session_.calibrated_for_biplane_viewport_ == false) {
         QMessageBox::critical(
             this, "Error!", "Load Calibration First!", QMessageBox::Ok);
         return;
     }
 
     /*If MONOPLANE Only*/
-    if (calibrated_for_monoplane_viewport_) {
-        // Load TIFF images
-        QStringList TiffFileExtensions = QFileDialog::getOpenFileNames(
+    if (session_.calibrated_for_monoplane_viewport_) {
+        const QStringList tiff_file_extensions = QFileDialog::getOpenFileNames(
             this,
             tr("Load Image(s)"),
             ".",
             tr("Image File(s) (*.tif *.tiff *.png)"));
-        for (int i = 0; i < TiffFileExtensions.size(); i++) {
-            auto new_frame = Frame(
-                TiffFileExtensions[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            /*Check That All Frames Are The Same Size and Not Empty*/
-            int width = new_frame.GetEdgeImage().cols;
-            int height = new_frame.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames.size(); j++) {
-                if (width != loaded_frames[j].GetEdgeImage().cols ||
-                    height != loaded_frames[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop;
-                }
-            }
-            // Add to Loaded Frames
-            loaded_frames.push_back(new_frame);
-            // Populate Frame List Widget
-            ui.image_list_widget->addItem(
-                QFileInfo(
-                    QString::fromStdString(TiffFileExtensions[i].toStdString()))
-                    .baseName());
-            /*Add Blank Model Locations for Loaded Models*/
-            model_locations_.LoadNewFrame();
+        const auto result = image_loading_service_->LoadImages(
+            session_.loaded_frames,
+            session_.loaded_frames_B,
+            tiff_file_extensions,
+            {},
+            ui.aperture_spin_box->value(),
+            ui.low_threshold_slider->value(),
+            ui.high_threshold_slider->value(),
+            dilation_val);
+
+        for (int i = 0; i < result.loaded_count; ++i) {
+            session_.loaded_frames.push_back(result.frames_a[i]);
+            ui.image_list_widget->addItem(result.display_names[i]);
+            session_.model_locations_.LoadNewFrame();
         }
-        /*Exit Label*/
-    stop:;
-        vw->set_loaded_frames(loaded_frames);
+
+        vw->set_loaded_frames(session_.loaded_frames);
 
         // If No Loaded Frames, Default Select First
         if (ui.image_list_widget->currentRow() < 0 &&
-            loaded_frames.size() > 0) {
+            session_.loaded_frames.size() > 0) {
             ui.image_list_widget->setCurrentRow(0);
         }
 
-        // this->vw->set_loaded_frames(loaded_frames);
+        // this->vw->set_loaded_frames(session_.loaded_frames);
 
-    } else if (calibrated_for_biplane_viewport_) {
+    } else if (session_.calibrated_for_biplane_viewport_) {
         // Load TIFF images for Camera A and Camera B - Must Be Same Amount
         // or Error and None Will Load!
-        QStringList TiffFileExtensionsCamera_A = QFileDialog::getOpenFileNames(
+        const QStringList tiff_file_extensions_camera_a = QFileDialog::getOpenFileNames(
             this,
             tr("Load Image(s) for Camera A"),
             ".",
             tr("Image File(s) (*.tif *.tiff)"));
-        QStringList TiffFileExtensionsCamera_B = QFileDialog::getOpenFileNames(
+        const QStringList tiff_file_extensions_camera_b = QFileDialog::getOpenFileNames(
             this,
             tr("Load Image(s) for Camera B"),
             ".",
             tr("Image File(s) (*.tif *.tiff)"));
 
-        /*Check Same Amount of Loaded Images*/
-        if (TiffFileExtensionsCamera_A.size() !=
-            TiffFileExtensionsCamera_B.size()) {
-            QMessageBox::critical(
-                this,
-                "Error!",
-                "Please Load the Same Number of Images for Each Camera!",
-                QMessageBox::Ok);
-            return;
-        }
+        const auto result = image_loading_service_->LoadImages(
+            session_.loaded_frames,
+            session_.loaded_frames_B,
+            tiff_file_extensions_camera_a,
+            tiff_file_extensions_camera_b,
+            ui.aperture_spin_box->value(),
+            ui.low_threshold_slider->value(),
+            ui.high_threshold_slider->value(),
+            dilation_val);
 
-        for (int i = 0; i < TiffFileExtensionsCamera_A.size(); i++) {
-            auto new_frame_A = Frame(
-                TiffFileExtensionsCamera_A[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            auto new_frame_B = Frame(
-                TiffFileExtensionsCamera_B[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            /*Check That All Frames Are The Same Size and Not Empty*/
-            int width = new_frame_A.GetEdgeImage().cols;
-            int height = new_frame_A.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames.size(); j++) {
-                if (width != loaded_frames[j].GetEdgeImage().cols ||
-                    height != loaded_frames[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop_biplane;
-                }
-            }
-            width = new_frame_B.GetEdgeImage().cols;
-            height = new_frame_B.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames_B.size(); j++) {
-                if (width != loaded_frames_B[j].GetEdgeImage().cols ||
-                    height != loaded_frames_B[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop_biplane;
-                }
-            }
-
-            // Add to Loaded Frames
-            loaded_frames.push_back(new_frame_A);
-            loaded_frames_B.push_back(new_frame_B);
-            // Populate Frame List Widget
-            ui.image_list_widget->addItem(
-                "A: " +
-                QFileInfo(
-                    QString::fromStdString(
-                        TiffFileExtensionsCamera_A[i].toStdString()))
-                    .baseName() +
-                "\nB: " +
-                QFileInfo(
-                    QString::fromStdString(
-                        TiffFileExtensionsCamera_B[i].toStdString()))
-                    .baseName());
-            /*Add Blank Model Locations for Loaded Models*/
-            model_locations_.LoadNewFrame();
+        for (int i = 0; i < result.loaded_count; ++i) {
+            session_.loaded_frames.push_back(result.frames_a[i]);
+            session_.loaded_frames_B.push_back(result.frames_b[i]);
+            ui.image_list_widget->addItem(result.display_names[i]);
+            session_.model_locations_.LoadNewFrame();
         }
-        /*Exit Label*/
-    stop_biplane:;
 
         // If No Loaded Frames, Default Select First
         if (ui.image_list_widget->currentRow() < 0 &&
-            loaded_frames.size() > 0) {
+            session_.loaded_frames.size() > 0) {
             ui.image_list_widget->setCurrentRow(0);
         }
-        vw->set_loaded_frames(loaded_frames);
-        vw->set_loaded_frames_b(loaded_frames_B);
+        vw->set_loaded_frames(session_.loaded_frames);
+        vw->set_loaded_frames_b(session_.loaded_frames_B);
     }
 }
 
 /*Load Model Button*/
 void MainScreen::on_load_model_button_clicked() {
     /*Check to See if Calibration Loaded*/
-    if (calibrated_for_monoplane_viewport_ == false &&
-        calibrated_for_biplane_viewport_ == false) {
+    if (session_.calibrated_for_monoplane_viewport_ == false &&
+        session_.calibrated_for_biplane_viewport_ == false) {
         QMessageBox::critical(
             this, "Error!", "Load Calibration First!", QMessageBox::Ok);
         return;
     }
 
     // Load CAD Model
-    QStringList CADFileExtensions = QFileDialog::getOpenFileNames(
+    const QStringList cad_file_extensions = QFileDialog::getOpenFileNames(
         this, tr("Load Implant Model(s)"), ".", tr("CAD File(s) (*.stl)"));
 
-    /*For Each Cad File Extension Create Model Name*/
-    QStringList CADModelNames, OldCADModelNames, LoadedCADModelNames,
-        NewCADModelNames;
+    const auto result =
+        image_loading_service_->LoadModels(session_.loaded_models, cad_file_extensions);
 
-    /*Initialize List With All CAD Model Names*/
-    for (int i = 0; i < loaded_models.size(); i++) {
-        OldCADModelNames.push_back(
-            QString::fromStdString(loaded_models[i].model_name_));
+    vw->load_models(result.models);
+    coronal_vw->load_models(result.models);
+    for (int i = 0; i < result.models.size(); ++i) {
+        session_.loaded_models.push_back(result.models[i]);
+        session_.model_locations_.LoadNewModel(session_.calibration_file_);
     }
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        LoadedCADModelNames.push_back(
-            QFileInfo(
-                QString::fromStdString(CADFileExtensions[i].toStdString()))
-                .baseName());
-    }
-    /*Check to See if Loaded Names are Unique*/
-    for (int i = 0; i < LoadedCADModelNames.size(); i++) {
-        QString temp_model_name = LoadedCADModelNames[i];
-        int already_exists = 1;
-        /*Search To See If Name Already Exists*/
-        for (int j = 0; j < LoadedCADModelNames.size(); j++) {
-            if (LoadedCADModelNames[j] == temp_model_name && j != i) {
-                j = -1;
-                already_exists++;
-                temp_model_name = LoadedCADModelNames[i] + "(" +
-                                  QString::number(already_exists) + ")";
-            }
-        }
-        LoadedCADModelNames[i] = temp_model_name;
-    }
-
-    /*Check to See if Already Exists in Model List*/
-    for (int i = 0; i < LoadedCADModelNames.size(); i++) {
-        QString temp_model_name = LoadedCADModelNames[i];
-        int already_exists = 1;
-        /*Search To See If Name Already Exists*/
-        for (int j = 0; j < OldCADModelNames.size(); j++) {
-            if (OldCADModelNames[j] == temp_model_name) {
-                j = -1;
-                already_exists++;
-                temp_model_name = LoadedCADModelNames[i] + "(" +
-                                  QString::number(already_exists) + ")";
-            }
-        }
-        CADModelNames.push_back(temp_model_name); // adding models that are new
-        NewCADModelNames.push_back(temp_model_name);
-    }
-
-    // for (int i = 0; i < CADFileExtensions.size(); i++)
-    // loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
-    // CADModelNames[i].toStdString(), "BLANK"));
-    vw->load_models(
-        CADFileExtensions,
-        CADModelNames); // Need to change this logic so it only
-                        // has the new files
-    coronal_vw->load_models(CADFileExtensions, CADModelNames);
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        loaded_models.push_back(Model(
-            CADFileExtensions[i].toStdString(),
-            CADModelNames[i].toStdString(),
-            "BLANK"));
-    }
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        if (vw->are_models_loaded_incorrectly(i)) {
+    for (int i = 0; i < result.models.size(); ++i) {
+        if (!result.models[i].initialized_correctly_) {
             QMessageBox::warning(
                 this,
                 "Warning!",
-                "It is Possible that " + CADModelNames[i] + " (" +
-                    CADFileExtensions[i] + ") " +
+                "It is Possible that " + result.model_names[i] + " (" +
+                    cad_file_extensions[i] + ") " +
                     " is an invalid or corrupted STL file format. "
                     "Proceed with caution!",
                 QMessageBox::Ok);
@@ -3069,16 +2256,8 @@ void MainScreen::on_load_model_button_clicked() {
     }
 
     // Populate Model List Widget
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        ui.model_list_widget->addItem(CADModelNames[i]);
-    }
-
-    /*Load Blank Poses for Available Frames (and Default Blank Poses even if
-     * no frames for viewing without frame)*/
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        // model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_,
-        //` calibration_file_.camera_A_principal_.pixel_pitch_);
-        model_locations_.LoadNewModel(calibration_file_);
+    for (int i = 0; i < result.model_names.size(); ++i) {
+        ui.model_list_widget->addItem(result.model_names[i]);
     }
     vw->load_3d_models_into_actor_and_mapper_list();
     coronal_vw->load_3d_models_into_actor_and_mapper_list();
@@ -3087,346 +2266,80 @@ void MainScreen::on_load_model_button_clicked() {
     if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
         ui.model_list_widget->setCurrentRow(0);
     }
-    if (calibration_file_.type_ == "UF") {
+    if (!session_.loaded_frames.empty() && session_.calibration_file_.type_ == "UF") {
         vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
-            calibration_file_,
-            loaded_frames[0].GetOriginalImage().cols,
-            loaded_frames[0].GetOriginalImage().rows);
+            session_.calibration_file_,
+            session_.loaded_frames[0].GetOriginalImage().cols,
+            session_.loaded_frames[0].GetOriginalImage().rows);
         // coronal_vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
-        //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
-        //     loaded_frames[0].GetOriginalImage().rows);
-    } else if (calibration_file_.type_ == "Denver") {
+        //     session_.calibration_file_,
+        //     session_.loaded_frames[0].GetOriginalImage().cols,
+        //     session_.loaded_frames[0].GetOriginalImage().rows);
+    } else if (
+        !session_.loaded_frames.empty() &&
+        session_.calibration_file_.type_ == "Denver") {
         vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
-            calibration_file_,
-            loaded_frames[0].GetOriginalImage().cols,
-            loaded_frames[0].GetOriginalImage().rows);
+            session_.calibration_file_,
+            session_.loaded_frames[0].GetOriginalImage().cols,
+            session_.loaded_frames[0].GetOriginalImage().rows);
         // coronal_vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
-        //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
-        //     loaded_frames[0].GetOriginalImage().rows);
+        //     session_.calibration_file_,
+        //     session_.loaded_frames[0].GetOriginalImage().cols,
+        //     session_.loaded_frames[0].GetOriginalImage().rows);
     }
 }
 
 /*Biplane View Button (Camera A,Camera B*/
 /*Biplane View A OR Monoplane*/
 void MainScreen::on_camera_A_radio_button_clicked() {
-    /*Interactor Boolean For Text Display (Convert to Camera A
-     * Coordinates)*/
-    interactor_camera_B = false;
-
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-
-    /*Make Sure A Row is Selected*/
-    if (ui.image_list_widget->currentIndex().row() >= 0) {
-        /*Disable Checking if biplane and save pose*/
-        if (calibrated_for_biplane_viewport_) {
-            ui.camera_A_radio_button->setDisabled(true);
-            ui.camera_B_radio_button->setDisabled(false);
-
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                if (selected.size() != 0 && previous_frame_index_ != -1 &&
-                    !currently_optimizing_) {
-                    double* position_curr =
-                        model_actor_list[selected[r].row()]->GetPosition();
-                    double* orientation_curr =
-                        model_actor_list[selected[r].row()]->GetOrientation();
-                    Point6D last_pose(
-                        position_curr[0],
-                        position_curr[1],
-                        position_curr[2],
-                        orientation_curr[0],
-                        orientation_curr[1],
-                        orientation_curr[2]);
-                    /*Camera A View, Save in Camera A coordinates by
-                     * converting camera B*/
-                    model_locations_.SavePose(
-                        previous_frame_index_,
-                        selected[r].row(),
-                        calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
-                }
-            }
-        }
-
-        /*Update to that frame's canny values*/
-        ui.aperture_spin_box->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetAperture());
-        ui.low_threshold_slider->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetLowThreshold());
-        ui.high_threshold_slider->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetHighThreshold());
-
-        update_image_list_widget();
-
-        vw->place_image_actors_according_to_calibration(
-            calibration_file_,
-            loaded_frames[this->curr_frame()].GetOriginalImage().rows,
-            loaded_frames[this->curr_frame()].GetOriginalImage().cols);
-        coronal_vw->place_image_actors_according_to_calibration(
-            calibration_file_,
-            loaded_frames[this->curr_frame()].GetOriginalImage().rows,
-            loaded_frames[this->curr_frame()].GetOriginalImage().cols);
-        // renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer,
-        // loaded_frames[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
-        renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            true));
-
-        /*Set Model Pose if models are loaded*/
-        if (selected.size() != 0 && !currently_optimizing_) {
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                Point6D loaded_pose = model_locations_.GetPose(
-                    ui.image_list_widget->currentIndex().row(),
-                    selected[r].row());
-                model_actor_list[selected[r].row()]->SetPosition(
-                    loaded_pose.x, loaded_pose.y, loaded_pose.z);
-                model_actor_list[selected[r].row()]->SetOrientation(
-                    loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-
-                /*Text Actor if On*/
-                if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                    std::string infoText = "Location: <";
-                    infoText += std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[0])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[1])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[2])) +
-                                ">\nOrientation: <" +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[0])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[1])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[2])) +
-                                ">";
-                    actor_text->SetInput(infoText.c_str());
-                }
-            }
-        }
-        /*Allow For Updates on Screen if optimizing*/
-        if (currently_optimizing_ && calibrated_for_biplane_viewport_) {
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                auto current_pose = Point6D(
-                    model_actor_list[selected[r].row()]->GetPosition()[0],
-                    model_actor_list[selected[r].row()]->GetPosition()[1],
-                    model_actor_list[selected[r].row()]->GetPosition()[2],
-                    model_actor_list[selected[r].row()]->GetOrientation()[0],
-                    model_actor_list[selected[r].row()]->GetOrientation()[1],
-                    model_actor_list[selected[r].row()]->GetOrientation()[2]);
-                current_pose =
-                    calibration_file_.convert_Pose_B_to_Pose_A(current_pose);
-                model_actor_list[selected[r].row()]->SetPosition(
-                    current_pose.x, current_pose.y, current_pose.z);
-                model_actor_list[selected[r].row()]->SetOrientation(
-                    current_pose.xa, current_pose.ya, current_pose.za);
-            }
-        }
-
-        /*update qvtk widget*/
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
+    const int frame_index = ui.image_list_widget->currentIndex().row();
+    if (frame_index < 0) {
+        return;
     }
+
+    jta_gui::SelectionSyncState state;
+    state.frame_index = frame_index;
+    state.previous_frame_index = previous_frame_index_;
+    state.camera_a_selected = true;
+    state.currently_optimizing = currently_optimizing_;
+    state.calibrated_for_biplane_viewport =
+        session_.calibrated_for_biplane_viewport_;
+    state.actor_text_visible = actor_text->GetTextProperty()->GetOpacity() > 0.5;
+    state.opacity_mode = ResolveModelOpacityMode(ui);
+    state.selected_model_indices =
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows());
+
+    if (!scene_controller_->OnCameraASelected(state)) {
+        return;
+    }
+
+    update_image_list_widget();
 }
 
 /*Biplane View B*/
 void MainScreen::on_camera_B_radio_button_clicked() {
-    /*Interactor Boolean For Text Display (Convert to Camera A
-     * Coordinates)*/
-    interactor_camera_B = true;
-
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-
-    /*Make Sure A Row is Selected*/
-    if (ui.image_list_widget->currentIndex().row() >= 0) {
-        /*Disable Checking*/
-        ui.camera_B_radio_button->setDisabled(true);
-        ui.camera_A_radio_button->setDisabled(false);
-
-        /*Save Last Pair Pose*/
-        for (int r = 0; r < selected.size(); r++) {
-            if (selected.size() != 0 && previous_frame_index_ != -1 &&
-                !currently_optimizing_) {
-                double* position_curr =
-                    vw->get_model_position_at_index(selected[r].row());
-                double* orientation_curr =
-                    vw->get_model_orientation_at_index(selected[r].row());
-                Point6D last_pose(
-                    position_curr[0],
-                    position_curr[1],
-                    position_curr[2],
-                    orientation_curr[0],
-                    orientation_curr[1],
-                    orientation_curr[2]);
-                /*If Camera B View, Save in Camera A coordinates*/
-                model_locations_.SavePose(
-                    previous_frame_index_, selected[r].row(), last_pose);
-            }
-        }
-        /*Update to that frame's canny values*/
-        ui.aperture_spin_box->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetAperture());
-        ui.low_threshold_slider->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetLowThreshold());
-        ui.high_threshold_slider->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetHighThreshold());
-
-        update_image_list_widget();
-
-        vw->place_image_actors_according_to_calibration(
-            calibration_file_.camera_B_principal_,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols);
-        coronal_vw->place_image_actors_according_to_calibration(
-            calibration_file_.camera_B_principal_,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols);
-        renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            false));
-        coronal_renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            false));
-
-        /*Set Model Pose if models are loaded*/
-        if (selected.size() != 0 && !currently_optimizing_) {
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                /*Convert To relative Camera B Pose as storage is done in
-                 * camera A coordinates and rotations*/
-                Point6D loaded_pose = model_locations_.GetPose(
-                    ui.image_list_widget->currentIndex().row(),
-                    selected[r].row());
-                Point6D relative_B_pose =
-                    calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-                vw->set_model_position_at_index(
-                    selected[r].row(),
-                    relative_B_pose.x,
-                    relative_B_pose.y,
-                    relative_B_pose.z);
-                vw->set_model_orientation_at_index(
-                    selected[r].row(),
-                    relative_B_pose.xa,
-                    relative_B_pose.ya,
-                    relative_B_pose.za);
-                coronal_vw->set_model_position_at_index(
-                    selected[r].row(),
-                    relative_B_pose.x,
-                    relative_B_pose.y,
-                    relative_B_pose.z);
-                coronal_vw->set_model_orientation_at_index(
-                    selected[r].row(),
-                    relative_B_pose.xa,
-                    relative_B_pose.ya,
-                    relative_B_pose.za);
-
-                /*Text Actor if On*/
-                if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                    /*Display In Terms of Camera A*/
-                    vw->set_actor_text(
-                        vw->print_location_and_orientation_of_model_at_index(
-                            ui.image_list_widget->currentIndex().row()));
-                    std::string infoText = "Location: <";
-                }
-            }
-        }
-        /*Allow For Updates on Screen if optimizing*/
-        if (currently_optimizing_ && calibrated_for_biplane_viewport_) {
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                auto curr_pos =
-                    vw->get_model_position_at_index(selected[r].row());
-                auto curr_or =
-                    vw->get_model_orientation_at_index(selected[r].row());
-                auto current_pose = Point6D(
-                    curr_pos[0],
-                    curr_pos[1],
-                    curr_pos[2],
-                    curr_or[0],
-                    curr_or[1],
-                    curr_or[2]);
-                current_pose =
-                    calibration_file_.convert_Pose_A_to_Pose_B(current_pose);
-                vw->set_model_position_at_index(
-                    selected[r].row(),
-                    current_pose.x,
-                    current_pose.y,
-                    current_pose.z);
-                vw->set_model_orientation_at_index(
-                    selected[r].row(),
-                    current_pose.xa,
-                    current_pose.ya,
-                    current_pose.za);
-                coronal_vw->set_model_position_at_index(
-                    selected[r].row(),
-                    current_pose.x,
-                    current_pose.y,
-                    current_pose.z);
-                coronal_vw->set_model_orientation_at_index(
-                    selected[r].row(),
-                    current_pose.xa,
-                    current_pose.ya,
-                    current_pose.za);
-            }
-        }
-        /*update qvtk widget*/
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
+    const int frame_index = ui.image_list_widget->currentIndex().row();
+    if (frame_index < 0) {
+        return;
     }
+
+    jta_gui::SelectionSyncState state;
+    state.frame_index = frame_index;
+    state.previous_frame_index = previous_frame_index_;
+    state.camera_a_selected = false;
+    state.currently_optimizing = currently_optimizing_;
+    state.calibrated_for_biplane_viewport =
+        session_.calibrated_for_biplane_viewport_;
+    state.actor_text_visible = actor_text->GetTextProperty()->GetOpacity() > 0.5;
+    state.opacity_mode = ResolveModelOpacityMode(ui);
+    state.selected_model_indices =
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows());
+
+    if (!scene_controller_->OnCameraBSelected(state)) {
+        return;
+    }
+
+    update_image_list_widget();
 }
 
 /*List Widgets (Model and Frame)*/
@@ -3449,202 +2362,34 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
     /*Update Last Viewed Index as This One*/
     previous_frame_index_ = ui.image_list_widget->currentIndex().row();
 
-    /*Update to that frame's canny values*/
-    if (ui.camera_A_radio_button->isChecked()) {
-        ui.aperture_spin_box->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetAperture());
-        ui.low_threshold_slider->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetLowThreshold());
-        ui.high_threshold_slider->setValue(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetHighThreshold());
-    } else if (
-        ui.camera_B_radio_button->isChecked() &&
-        calibrated_for_biplane_viewport_) {
-        ui.aperture_spin_box->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetAperture());
-        ui.low_threshold_slider->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetLowThreshold());
-        ui.high_threshold_slider->setValue(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetHighThreshold());
+    const int frame_index = ui.image_list_widget->currentIndex().row();
+    if (frame_index < 0) {
+        return;
+    }
+
+    jta_gui::SelectionSyncState state;
+    state.frame_index = frame_index;
+    state.camera_a_selected = ui.camera_A_radio_button->isChecked();
+    state.currently_optimizing = currently_optimizing_;
+    state.calibrated_for_biplane_viewport =
+        session_.calibrated_for_biplane_viewport_;
+    state.actor_text_visible = actor_text->GetTextProperty()->GetOpacity() > 0.5;
+    state.opacity_mode = ResolveModelOpacityMode(ui);
+    state.selected_model_indices =
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows());
+
+    if (!scene_controller_->OnImageSelectionChanged(state)) {
+        return;
     }
 
     update_image_list_widget();
-
-    /*Upload Image Data to Screen, Shift Image Location to Center In Middle
-     * of Screen and Adjust View Angle*/
-    if (ui.camera_A_radio_button->isChecked()) {
-        vw->place_image_actors_according_to_calibration(
-            calibration_file_,
-            loaded_frames[this->curr_frame()].GetOriginalImage().rows,
-            loaded_frames[this->curr_frame()].GetOriginalImage().cols);
-        coronal_vw->place_image_actors_according_to_calibration(
-            calibration_file_,
-            loaded_frames[this->curr_frame()].GetOriginalImage().rows,
-            loaded_frames[this->curr_frame()].GetOriginalImage().cols);
-        renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            true));
-        coronal_renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            true));
-    } else {
-        actor_image->SetPosition(
-            -.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                        .GetOriginalImage()
-                        .cols +
-                calibration_file_.camera_B_principal_.principal_x_ /
-                    calibration_file_.camera_B_principal_.pixel_pitch_,
-            -.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                        .GetOriginalImage()
-                        .rows +
-                calibration_file_.camera_B_principal_.principal_y_ /
-                    calibration_file_.camera_B_principal_.pixel_pitch_,
-            -1 * calibration_file_.camera_B_principal_.principal_distance_ /
-                calibration_file_.camera_B_principal_.pixel_pitch_);
-        // renderer->GetActiveCamera()->SetViewAngle(setAngle(renderer,
-        // loaded_frames_B[ui.image_list_widget->currentIndex().row()].GetOriginalImage().rows));
-        renderer->GetActiveCamera()->SetViewAngle(CalculateViewingAngle(
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .cols,
-            loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                .GetOriginalImage()
-                .rows,
-            false));
-    }
-
-    /*Load Models to Screen*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    /*Hide Text if Nothing Selected*/
-    if (selected.size() == 0) {
-        actor_text->VisibilityOff();
-    } else {
-        actor_text->VisibilityOn();
-    }
-    /*Load Models*/
-    for (int i = 0; i < selected.size(); i++) {
-        /*Display Corresponding Radio Button view to main QVTK widget*/
-        /*Original Model*/
-        if (ui.original_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_original(selected[i].row());
-            coronal_vw->change_model_opacity_to_original(selected[i].row());
-        }
-        /*Solid Color Model*/
-        else if (ui.solid_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_solid(selected[i].row());
-            coronal_vw->change_model_opacity_to_solid(selected[i].row());
-        }
-        /*Transparent Model*/
-        else if (ui.transparent_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_transparent(selected[i].row());
-            coronal_vw->change_model_opacity_to_transparent(selected[i].row());
-        }
-        /*Wireframe Model*/
-        else if (ui.wireframe_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_wire_frame(selected[i].row());
-            coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
-        }
-
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
-
-        /*If Camera A View*/
-        if (ui.camera_A_radio_button->isChecked()) {
-            /*Set Model Pose*/
-            Point6D loaded_pose = model_locations_.GetPose(
-                ui.image_list_widget->currentIndex().row(), selected[i].row());
-            vw->set_model_position_at_index(
-                selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
-            vw->set_model_orientation_at_index(
-                selected[i].row(),
-                loaded_pose.xa,
-                loaded_pose.ya,
-                loaded_pose.za);
-            coronal_vw->set_model_position_at_index(
-                selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
-            coronal_vw->set_model_orientation_at_index(
-                selected[i].row(),
-                loaded_pose.xa,
-                loaded_pose.ya,
-                loaded_pose.za);
-            /*Text Actor if On*/
-            if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                vw->set_actor_text(
-                    vw->print_location_and_orientation_of_model_at_index(
-                        selected[i].row()));
-                vw->set_actor_text_color_to_model_color_at_index(
-                    selected[i].row());
-            }
-        } else {
-            /*Else, Camera B View*/
-            /*Convert To relative Camera B Pose as storage is done in camera
-             * A coordinates and rotations*/
-            Point6D loaded_pose = model_locations_.GetPose(
-                ui.image_list_widget->currentIndex().row(), selected[i].row());
-            Point6D relative_B_pose =
-                calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-            vw->set_model_position_at_index(
-                selected[i].row(),
-                relative_B_pose.x,
-                relative_B_pose.y,
-                relative_B_pose.z);
-            vw->set_model_orientation_at_index(
-                selected[i].row(),
-                relative_B_pose.xa,
-                relative_B_pose.ya,
-                relative_B_pose.za);
-            coronal_vw->set_model_position_at_index(
-                selected[i].row(),
-                relative_B_pose.x,
-                relative_B_pose.y,
-                relative_B_pose.z);
-            coronal_vw->set_model_orientation_at_index(
-                selected[i].row(),
-                relative_B_pose.xa,
-                relative_B_pose.ya,
-                relative_B_pose.za);
-
-            /*Text Actor if On*/
-            if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                vw->set_actor_text(
-                    vw->print_location_and_orientation_of_model_at_index(
-                        selected[i].row()));
-                vw->set_actor_text_color_to_model_color_at_index(
-                    selected[i].row());
-            }
-        }
-    }
-    /*update qvtk widget*/
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
 }
 
 QModelIndexList MainScreen::selected_model_indices() {
     return ui.model_list_widget->selectionModel()->selectedRows();
 }
 void MainScreen::remove_background_highlights_from_model_list_widget() {
-    for (int i = 0; i < loaded_models.size(); i++) {
+    for (int i = 0; i < session_.loaded_models.size(); i++) {
         ui.model_list_widget->item(i)->setBackground(Qt::transparent);
     }
 }
@@ -3665,277 +2410,58 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
     previous_model_indices_ =
         ui.model_list_widget->selectionModel()->selectedRows();
 
-    /*Load Models to Screen*/
-    vw->make_all_models_invisible();
-    coronal_vw->make_all_models_invisible();
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    /*Hide Text if Nothing Selected*/
+    /*Keep at least one selected row once model list has entries*/
     if (selected.size() == 0) {
-        actor_text->VisibilityOff();
         if (ui.model_list_widget->currentIndex().row() >= 0) {
             ui.model_list_widget
                 ->item(ui.model_list_widget->currentIndex().row())
                 ->setSelected(true);
             return;
         }
-    } else {
-        actor_text->VisibilityOn();
     }
 
-    /*Load Models and set their respective colors in the model list widget*/
-    for (int i = 0; i < selected.size(); i++) {
-        // Set a style sheet for selected items in the list widget, controls
-        // background colors for .stl model names
-        ui.model_list_widget->setStyleSheet(
-            "QListView::item{background-color: rgb("
-            ");}" // Leaving it blank sets unselected items to share the
-                  // background color of JTML
-            "QListView::item:selected{background-color: rgb(250, 70, "
-            "22);}");
+    // Set a style sheet for selected items in the list widget, controls
+    // background colors for .stl model names
+    ui.model_list_widget->setStyleSheet(
+        "QListView::item{background-color: rgb("
+        ");}" // Leaving it blank sets unselected items to share the
+              // background color of JTML
+        "QListView::item:selected{background-color: rgb(250, 70, "
+        "22);}");
 
-        // If first selected item, make the model orange. Otherwise, make it
-        // blue.
-        if (i == 0) {
-            vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
-            coronal_vw->set_3d_model_color(selected[i].row(), UF_ORANGE);
-        } else {
-            // vw->make_model_visible_and_pickable_at_index(i);
-            vw->set_3d_model_color(selected[i].row(), UF_BLUE);
-            coronal_vw->set_3d_model_color(selected[i].row(), UF_BLUE);
-        }
+    jta_gui::SelectionSyncState state;
+    state.frame_index = ui.image_list_widget->currentIndex().row();
+    state.camera_a_selected = ui.camera_A_radio_button->isChecked();
+    state.currently_optimizing = currently_optimizing_;
+    state.calibrated_for_biplane_viewport =
+        session_.calibrated_for_biplane_viewport_;
+    state.actor_text_visible = actor_text->GetTextProperty()->GetOpacity() > 0.5;
+    state.opacity_mode = ResolveModelOpacityMode(ui);
+    state.selected_model_indices = ToRowVector(selected);
 
-        if (ui.original_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_original(selected[i].row());
-            coronal_vw->change_model_opacity_to_original(selected[i].row());
-        } else if (ui.solid_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_solid(selected[i].row());
-            coronal_vw->change_model_opacity_to_solid(selected[i].row());
-        } else if (ui.transparent_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_transparent(selected[i].row());
-            coronal_vw->change_model_opacity_to_transparent(selected[i].row());
-        }
-        /*Wireframe Model*/
-        else if (ui.wireframe_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_wire_frame(selected[i].row());
-            coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
-        }
-
-        ui.qvtk_widget->update();
-        ui.qvtk_widget->renderWindow()->Render();
-        ui.qvtk_cpv->update();
-        ui.qvtk_cpv->renderWindow()->Render();
-
-        /*If Camera A View*/
-        if (ui.camera_A_radio_button->isChecked()) {
-            /*Set Model Pose*/
-            Point6D loaded_pose = model_locations_.GetPose(
-                ui.image_list_widget->currentIndex().row(), selected[i].row());
-            vw->set_model_position_at_index(
-                selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
-            vw->set_model_orientation_at_index(
-                selected[i].row(),
-                loaded_pose.xa,
-                loaded_pose.ya,
-                loaded_pose.za);
-            coronal_vw->set_model_position_at_index(
-                selected[i].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
-            coronal_vw->set_model_orientation_at_index(
-                selected[i].row(),
-                loaded_pose.xa,
-                loaded_pose.ya,
-                loaded_pose.za);
-
-            /*Text Actor if On */
-            if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                vw->set_actor_text(
-                    vw->print_location_and_orientation_of_model_at_index(
-                        selected[i].row()));
-                vw->set_actor_text_color_to_model_color_at_index(
-                    selected[i].row());
-            }
-        } else {
-            /*Else, Camera B View*/
-            /*Convert To relative Camera B Pose as storage is done in camera
-             * A coordinates and rotations*/
-            Point6D loaded_pose = model_locations_.GetPose(
-                ui.image_list_widget->currentIndex().row(), selected[i].row());
-            Point6D relative_B_pose =
-                calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-            vw->set_model_position_at_index(
-                selected[i].row(),
-                relative_B_pose.x,
-                relative_B_pose.y,
-                relative_B_pose.z);
-            vw->set_model_orientation_at_index(
-                selected[i].row(),
-                relative_B_pose.xa,
-                relative_B_pose.ya,
-                relative_B_pose.za);
-            coronal_vw->set_model_position_at_index(
-                selected[i].row(),
-                relative_B_pose.x,
-                relative_B_pose.y,
-                relative_B_pose.z);
-            coronal_vw->set_model_orientation_at_index(
-                selected[i].row(),
-                relative_B_pose.xa,
-                relative_B_pose.ya,
-                relative_B_pose.za);
-
-            /*Text Actor if On*/
-            if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-                vw->set_actor_text(
-                    vw->print_location_and_orientation_of_model_at_index(
-                        selected[i].row()));
-                vw->set_actor_text_color_to_model_color_at_index(
-                    selected[i].row());
-            }
-        }
-    }
-    /*Update qvtkWidget*/
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
+    scene_controller_->OnModelSelectionChanged(state);
 }
 
 /*Make Selected Actor Principal from VTK*/
 void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
-    /*Get Model Actor*/
-    int index_new_principal = -1;
-    for (int i = 0; vw->model_actor_list_size(); i++) {
-        if (vw->get_model_actor_at_index(i) == new_principal_actor) {
-            index_new_principal = i;
-            break;
-        }
-    }
-    if (index_new_principal == -1) {
-        QMessageBox::critical(
-            this,
-            "Error!",
-            "Couldn't find model index to make principal!",
-            QMessageBox::Ok);
+    jta_gui::SelectionSyncState state;
+    state.frame_index = ui.image_list_widget->currentIndex().row();
+    state.camera_a_selected = ui.camera_A_radio_button->isChecked();
+    state.actor_text_visible = actor_text->GetTextProperty()->GetOpacity() > 0.5;
+    state.opacity_mode = ResolveModelOpacityMode(ui);
+    state.selected_model_indices =
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows());
+
+    QString error_message;
+    if (scene_controller_->OnMakePrincipalActor(new_principal_actor, state, error_message)) {
         return;
     }
 
-    /*Get Selected Indices on Model List Widget*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    /*No Point Swapping if just one*/
-    if (selected.size() <= 1) {
-        return;
+    if (!error_message.isEmpty()) {
+        QMessageBox::critical(this, "Error!", error_message, QMessageBox::Ok);
     }
-
-    for (int i = 0; i < selected.size(); i++) {
-        if (selected[i].row() != index_new_principal) {
-            ui.model_list_widget->item(selected[i].row())->setSelected(false);
-        }
-    }
-    for (int i = 0; i < selected.size(); i++) {
-        if (selected[i].row() != index_new_principal) {
-            ui.model_list_widget->item(selected[i].row())->setSelected(true);
-        }
-    }
-    if (ui.original_model_radio_button->isChecked()) {
-        vw->change_model_opacity_to_original(index_new_principal);
-        coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
-    } else if (ui.solid_model_radio_button->isChecked()) {
-        vw->change_model_opacity_to_solid(index_new_principal);
-        coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
-    } else if (ui.transparent_model_radio_button->isChecked()) {
-        vw->change_model_opacity_to_transparent(index_new_principal);
-        coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
-    } else if (ui.wireframe_model_radio_button->isChecked()) {
-        vw->change_model_opacity_to_wire_frame(index_new_principal);
-        coronal_vw->change_model_opacity_to_wire_frame(index_new_principal);
-    }
-
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
-    ui.qvtk_cpv->update();
-    ui.qvtk_cpv->renderWindow()->Render();
-
-    /*If Camera A View*/
-    if (ui.camera_A_radio_button->isChecked()) {
-        /*Set Model Pose*/
-        Point6D loaded_pose = model_locations_.GetPose(
-            ui.image_list_widget->currentIndex().row(), index_new_principal);
-        model_actor_list[index_new_principal]->SetPosition(
-            loaded_pose.x, loaded_pose.y, loaded_pose.z);
-        model_actor_list[index_new_principal]->SetOrientation(
-            loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
-
-        /*Text Actor if On */
-        if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-            std::string infoText = "Location: <";
-            infoText += std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[0])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[1])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[2])) +
-                        ">\nOrientation: <" +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[0])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[1])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[2])) +
-                        ">";
-            actor_text->SetInput(infoText.c_str());
-            actor_text->GetTextProperty()->SetColor(
-                model_actor_list[index_new_principal]
-                    ->GetProperty()
-                    ->GetColor());
-        }
-    } else {
-        /*Else, Camera B View*/
-        /*Convert To relative Camera B Pose as storage is done in camera A
-         * coordinates and rotations*/
-        Point6D loaded_pose = model_locations_.GetPose(
-            ui.image_list_widget->currentIndex().row(), index_new_principal);
-        Point6D relative_B_pose =
-            calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
-        model_actor_list[index_new_principal]->SetPosition(
-            relative_B_pose.x, relative_B_pose.y, relative_B_pose.z);
-        model_actor_list[index_new_principal]->SetOrientation(
-            relative_B_pose.xa, relative_B_pose.ya, relative_B_pose.za);
-
-        /*Text Actor if On*/
-        if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
-            /*Display In Terms of Camera A*/
-            std::string infoText = "Location: <";
-            infoText +=
-                std::to_string(static_cast<long double>(loaded_pose.x)) + "," +
-                std::to_string(static_cast<long double>(loaded_pose.y)) + "," +
-                std::to_string(static_cast<long double>(loaded_pose.z)) +
-                ">\nOrientation: <" +
-                std::to_string(static_cast<long double>(loaded_pose.xa)) + "," +
-                std::to_string(static_cast<long double>(loaded_pose.ya)) + "," +
-                std::to_string(static_cast<long double>(loaded_pose.za)) + ">";
-            actor_text->SetInput(infoText.c_str());
-        }
-    }
-    /*Update qvtkWidget*/
-    ui.qvtk_widget->update();
-    ui.qvtk_widget->renderWindow()->Render();
 }
 
 /*Multiple Selection For Models Radio buttons*/
@@ -4005,72 +2531,43 @@ void MainScreen::on_dilation_image_radio_button_clicked() {
 }
 
 void MainScreen::on_original_model_radio_button_clicked() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    for (int i = 0; i < selected.size(); i++) {
-        if (ui.original_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_original(selected[i].row());
-            coronal_vw->change_model_opacity_to_original(selected[i].row());
-            ui.qvtk_widget->update();
-            ui.qvtk_widget->renderWindow()->Render();
-            ui.qvtk_cpv->update();
-            ui.qvtk_cpv->renderWindow()->Render();
-        }
+    if (!ui.original_model_radio_button->isChecked()) {
+        return;
     }
+
+    scene_controller_->SyncSelectedModelOpacity(
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows()),
+        jta_gui::ModelOpacityMode::Original);
 }
 
 void MainScreen::on_solid_model_radio_button_clicked() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    for (int i = 0; i < selected.size(); i++) {
-        if (ui.solid_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_solid(selected[i].row());
-            coronal_vw->change_model_opacity_to_solid(selected[i].row());
-            ui.qvtk_widget->update();
-            ui.qvtk_widget->renderWindow()->Render();
-            ui.qvtk_cpv->update();
-            ui.qvtk_cpv->renderWindow()->Render();
-        }
+    if (!ui.solid_model_radio_button->isChecked()) {
+        return;
     }
+
+    scene_controller_->SyncSelectedModelOpacity(
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows()),
+        jta_gui::ModelOpacityMode::Solid);
 }
 
 void MainScreen::on_transparent_model_radio_button_clicked() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    for (int i = 0; i < selected.size(); i++) {
-        if (ui.transparent_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_transparent(selected[i].row());
-            coronal_vw->change_model_opacity_to_transparent(selected[i].row());
-            ui.qvtk_widget->update();
-            ui.qvtk_widget->renderWindow()->Render();
-            ui.qvtk_cpv->update();
-            ui.qvtk_cpv->renderWindow()->Render();
-        }
+    if (!ui.transparent_model_radio_button->isChecked()) {
+        return;
     }
+
+    scene_controller_->SyncSelectedModelOpacity(
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows()),
+        jta_gui::ModelOpacityMode::Transparent);
 }
 
 void MainScreen::on_wireframe_model_radio_button_clicked() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    Model model = loaded_models[selected[0].row()];
-    int frame_idx =
-        ui.image_list_widget->selectionModel()->selectedRows()[0].row();
-    Point6D point6d = model_locations_.GetPose(frame_idx, selected[0].row());
-    Pose pose = Pose(
-        point6d.x, point6d.y, point6d.z, point6d.xa, point6d.ya, point6d.za);
-    Frame frame = loaded_frames[frame_idx];
-    std::cout << ui.qvtk_widget->width() << ", " << ui.qvtk_widget->height()
-              << std::endl;
-    for (int i = 0; i < selected.size(); i++) {
-        if (ui.wireframe_model_radio_button->isChecked()) {
-            vw->change_model_opacity_to_wire_frame(selected[i].row());
-            coronal_vw->change_model_opacity_to_wire_frame(selected[i].row());
-            ui.qvtk_widget->update();
-            ui.qvtk_widget->renderWindow()->Render();
-            ui.qvtk_cpv->update();
-            ui.qvtk_cpv->renderWindow()->Render();
-        }
+    if (!ui.wireframe_model_radio_button->isChecked()) {
+        return;
     }
+
+    scene_controller_->SyncSelectedModelOpacity(
+        ToRowVector(ui.model_list_widget->selectionModel()->selectedRows()),
+        jta_gui::ModelOpacityMode::Wireframe);
 }
 
 /*KeyPress Event*/
@@ -4103,7 +2600,7 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
         for (int i = 0; i < selected.size(); i++) {
             if (ui.camera_A_radio_button->isChecked()) {
                 /*Set Model Pose*/
-                Point6D loaded_pose = model_locations_.GetPose(
+                Point6D loaded_pose = session_.model_locations_.GetPose(
                     ui.image_list_widget->currentIndex().row(),
                     selected[i].row());
                 coronal_vw->set_model_position_at_index(
@@ -4120,11 +2617,11 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
                 /*Else, Camera B View*/
                 /*Convert To relative Camera B Pose as storage is done in
                  * camera A coordinates and rotations*/
-                Point6D loaded_pose = model_locations_.GetPose(
+                Point6D loaded_pose = session_.model_locations_.GetPose(
                     ui.image_list_widget->currentIndex().row(),
                     selected[i].row());
                 Point6D relative_B_pose =
-                    calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
+                    session_.calibration_file_.convert_Pose_A_to_Pose_B(loaded_pose);
                 coronal_vw->set_model_position_at_index(
                     selected[i].row(),
                     relative_B_pose.x,
@@ -4143,7 +2640,7 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
 }
 
 void MainScreen::VTKEscapeSignal() {
-    if (ui.actionStop_Optimizer->isEnabled()) {
+    if (currently_optimizing_ && ui.actionStop_Optimizer->isEnabled()) {
         emit StopOptimizer();
         QMessageBox::warning(
             this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
@@ -4153,23 +2650,23 @@ void MainScreen::VTKEscapeSignal() {
 /*Edge Detection Buttons*/
 void MainScreen::on_aperture_spin_box_valueChanged() {
     /*Make Sure Images Loaded First*/
-    if (loaded_frames.size() > 0) {
+    if (session_.loaded_frames.size() > 0) {
         /*Get High Value from Frame*/
         int low_val = LOW_THRESH;
         int high_val = HIGH_THRESH;
         if (ui.camera_A_radio_button->isChecked()) {
-            low_val = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            low_val = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                           .GetLowThreshold();
-            high_val = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            high_val = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                            .GetHighThreshold();
         } else if (
             ui.camera_B_radio_button->isChecked() &&
-            calibrated_for_biplane_viewport_) {
+            session_.calibrated_for_biplane_viewport_) {
             low_val =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetLowThreshold();
             high_val =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetHighThreshold();
         }
 
@@ -4177,10 +2674,10 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
          * Values for Viewing Purposes*/
         int dilation_val = 0;
         std::vector<jta_cost_function::Parameter<int>> active_int_params =
-            trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+            session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
         for (int i = 0; i < active_int_params.size(); i++) {
             if (active_int_params[i].getParameterName() == "Dilation") {
-                dilation_val = trunk_manager_.getActiveCostFunctionClass()
+                dilation_val = session_.trunk_manager_.getActiveCostFunctionClass()
                                    ->getIntParameters()
                                    .at(i)
                                    .getParameterValue();
@@ -4191,20 +2688,20 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
         }
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
-            ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
+            ui.image_list_widget->currentIndex().row() < session_.loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         ui.aperture_spin_box->value(), low_val, high_val);
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
-                calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.calibrated_for_biplane_viewport_) {
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         ui.aperture_spin_box->value(), low_val, high_val);
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             }
         }
@@ -4228,16 +2725,8 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
                 on_dilation_image_radio_button_clicked();
             }
         }
-        /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", ui.aperture_spin_box->value());
-        setting.setValue("LOW_THRESH", low_val);
-        setting.setValue("HIGH_THRESH", high_val);
-        setting.endGroup();
+        settings_service_->SaveEdgeDetectionSettings(
+            ui.aperture_spin_box->value(), low_val, high_val);
     }
 };
 
@@ -4247,23 +2736,23 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
         QString::number(ui.low_threshold_slider->value()));
 
     /*Make Sure Images Loaded First*/
-    if (loaded_frames.size() > 0) {
+    if (session_.loaded_frames.size() > 0) {
         /*Get High Value from Frame*/
         int aperture = APERTURE;
         int high_val = HIGH_THRESH;
         if (ui.camera_A_radio_button->isChecked()) {
-            aperture = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            aperture = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                            .GetAperture();
-            high_val = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            high_val = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                            .GetHighThreshold();
         } else if (
             ui.camera_B_radio_button->isChecked() &&
-            calibrated_for_biplane_viewport_) {
+            session_.calibrated_for_biplane_viewport_) {
             aperture =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetAperture();
             high_val =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetHighThreshold();
         }
 
@@ -4271,10 +2760,10 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
          * Values for Viewing Purposes*/
         int dilation_val = 0;
         std::vector<jta_cost_function::Parameter<int>> active_int_params =
-            trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+            session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
         for (int i = 0; i < active_int_params.size(); i++) {
             if (active_int_params[i].getParameterName() == "Dilation") {
-                dilation_val = trunk_manager_.getActiveCostFunctionClass()
+                dilation_val = session_.trunk_manager_.getActiveCostFunctionClass()
                                    ->getIntParameters()
                                    .at(i)
                                    .getParameterValue();
@@ -4285,20 +2774,20 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
         }
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
-            ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
+            ui.image_list_widget->currentIndex().row() < session_.loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         aperture, ui.low_threshold_slider->value(), high_val);
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
-                calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.calibrated_for_biplane_viewport_) {
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         aperture, ui.low_threshold_slider->value(), high_val);
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             }
         }
@@ -4321,16 +2810,8 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
                 on_dilation_image_radio_button_clicked();
             }
         }
-        /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", aperture);
-        setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-        setting.setValue("HIGH_THRESH", high_val);
-        setting.endGroup();
+        settings_service_->SaveEdgeDetectionSettings(
+            aperture, ui.low_threshold_slider->value(), high_val);
     }
 };
 
@@ -4340,23 +2821,23 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
         QString::number(ui.high_threshold_slider->value()));
 
     /*Make Sure Images Loaded First*/
-    if (loaded_frames.size() > 0) {
+    if (session_.loaded_frames.size() > 0) {
         /*Get Low Value from Frame*/
         int aperture = APERTURE;
         int low_val = LOW_THRESH;
         if (ui.camera_A_radio_button->isChecked()) {
-            aperture = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            aperture = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                            .GetAperture();
-            low_val = loaded_frames[ui.image_list_widget->currentIndex().row()]
+            low_val = session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                           .GetLowThreshold();
         } else if (
             ui.camera_B_radio_button->isChecked() &&
-            calibrated_for_biplane_viewport_) {
+            session_.calibrated_for_biplane_viewport_) {
             aperture =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetAperture();
             low_val =
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .GetLowThreshold();
         }
 
@@ -4364,10 +2845,10 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
          * Values for Viewing Purposes*/
         int dilation_val = 0;
         std::vector<jta_cost_function::Parameter<int>> active_int_params =
-            trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+            session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
         for (int i = 0; i < active_int_params.size(); i++) {
             if (active_int_params[i].getParameterName() == "Dilation") {
-                dilation_val = trunk_manager_.getActiveCostFunctionClass()
+                dilation_val = session_.trunk_manager_.getActiveCostFunctionClass()
                                    ->getIntParameters()
                                    .at(i)
                                    .getParameterValue();
@@ -4378,20 +2859,20 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
         }
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
-            ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
+            ui.image_list_widget->currentIndex().row() < session_.loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         aperture, low_val, ui.high_threshold_slider->value());
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
-                calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.calibrated_for_biplane_viewport_) {
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetEdgeImage(
                         aperture, low_val, ui.high_threshold_slider->value());
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+                session_.loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                     .SetDilatedImage(dilation_val);
             }
         }
@@ -4414,16 +2895,8 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
                 on_dilation_image_radio_button_clicked();
             }
         }
-        /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", aperture);
-        setting.setValue("LOW_THRESH", low_val);
-        setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-        setting.endGroup();
+        settings_service_->SaveEdgeDetectionSettings(
+            aperture, low_val, ui.high_threshold_slider->value());
     }
 };
 /*Apply All Edges*/
@@ -4432,10 +2905,10 @@ void MainScreen::on_apply_all_edge_button_clicked() {
      * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+        session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
     for (int i = 0; i < active_int_params.size(); i++) {
         if (active_int_params[i].getParameterName() == "Dilation") {
-            dilation_val = trunk_manager_.getActiveCostFunctionClass()
+            dilation_val = session_.trunk_manager_.getActiveCostFunctionClass()
                                ->getIntParameters()
                                .at(i)
                                .getParameterValue();
@@ -4446,20 +2919,20 @@ void MainScreen::on_apply_all_edge_button_clicked() {
     }
 
     /*Apply Edge Detect to All Images*/
-    for (int i = 0; i < loaded_frames.size(); i++) {
-        loaded_frames[i].SetEdgeImage(
+    for (int i = 0; i < session_.loaded_frames.size(); i++) {
+        session_.loaded_frames[i].SetEdgeImage(
             ui.aperture_spin_box->value(),
             ui.low_threshold_slider->value(),
             ui.high_threshold_slider->value());
-        loaded_frames[i].SetDilatedImage(dilation_val);
+        session_.loaded_frames[i].SetDilatedImage(dilation_val);
     }
-    if (calibrated_for_biplane_viewport_) {
-        for (int i = 0; i < loaded_frames_B.size(); i++) {
-            loaded_frames_B[i].SetEdgeImage(
+    if (session_.calibrated_for_biplane_viewport_) {
+        for (int i = 0; i < session_.loaded_frames_B.size(); i++) {
+            session_.loaded_frames_B[i].SetEdgeImage(
                 ui.aperture_spin_box->value(),
                 ui.low_threshold_slider->value(),
                 ui.high_threshold_slider->value());
-            loaded_frames_B[i].SetDilatedImage(dilation_val);
+            session_.loaded_frames_B[i].SetDilatedImage(dilation_val);
         }
     }
     /*   Update image based on selected radio button   */
@@ -4481,16 +2954,10 @@ void MainScreen::on_apply_all_edge_button_clicked() {
             on_dilation_image_radio_button_clicked();
         }
     }
-    /*Save To Optimizer Settings and Registry*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
-    setting.beginGroup("EdgeDetectionSettings");
-    setting.setValue("APERTURE", ui.aperture_spin_box->value());
-    setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-    setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-    setting.endGroup();
+    settings_service_->SaveEdgeDetectionSettings(
+        ui.aperture_spin_box->value(),
+        ui.low_threshold_slider->value(),
+        ui.high_threshold_slider->value());
 }
 
 /*Reset Edge Detection Values*/
@@ -4550,8 +3017,8 @@ void MainScreen::DisableAll() {
 void MainScreen::EnableAll() {
     /*Only Re-enable load calibration if for some reason neither are
      * clibrated (don't know how this would ever happen)...*/
-    if (calibrated_for_monoplane_viewport_ == false &&
-        calibrated_for_biplane_viewport_ == false) {
+    if (session_.calibrated_for_monoplane_viewport_ == false &&
+        session_.calibrated_for_biplane_viewport_ == false) {
         ui.load_calibration_button->setEnabled(true);
     }
     ui.load_image_button->setEnabled(true);
@@ -4571,6 +3038,7 @@ void MainScreen::EnableAll() {
     ui.high_threshold_slider->setEnabled(true);
     /*Reverse for Stop Optimizer*/
     ui.actionStop_Optimizer->setDisabled(true);
+    currently_optimizing_ = false;
 }
 
 /*NON GUI FUNCTIONS*/
@@ -4593,15 +3061,15 @@ void MainScreen::SaveLastPose() {
                 orientation_curr[2]);
             /*If Camera B View, Save in Camera A coordinates*/
             if (ui.camera_A_radio_button->isChecked()) {
-                model_locations_.SavePose(
+                session_.model_locations_.SavePose(
                     previous_frame_index_,
                     previous_model_indices_[i].row(),
                     last_pose);
             } else {
-                model_locations_.SavePose(
+                session_.model_locations_.SavePose(
                     previous_frame_index_,
                     previous_model_indices_[i].row(),
-                    calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
+                    session_.calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
             }
         }
     }
@@ -4611,6 +3079,9 @@ void MainScreen::SaveLastPose() {
 a new thread*/
 /*Launch Optimizer*/
 void MainScreen::LaunchOptimizer(QString directive) {
+    if (currently_optimizing_) {
+        return;
+    }
     /*Save Last Pair Pose*/
     SaveLastPose();
     int iter_count;
@@ -4626,8 +3097,8 @@ void MainScreen::LaunchOptimizer(QString directive) {
         ui.model_list_widget->selectionModel()->selectedRows();
     if (selected.size() == 0 || previous_frame_index_ < 0 ||
         ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
-        ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
-        ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
+        ui.image_list_widget->currentIndex().row() >= session_.loaded_frames.size() ||
+        ui.model_list_widget->currentIndex().row() >= session_.loaded_models.size()) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
@@ -4635,8 +3106,8 @@ void MainScreen::LaunchOptimizer(QString directive) {
 
     /*Check Frame List by Model List and Guess Matrix Dimensions are the
      * Same Size*/
-    if (model_locations_.GetFrameCount() != loaded_frames.size() ||
-        model_locations_.GetModelCount() != loaded_models.size()) {
+    if (session_.model_locations_.GetFrameCount() != session_.loaded_frames.size() ||
+        session_.model_locations_.GetModelCount() != session_.loaded_models.size()) {
         QMessageBox::critical(
             this,
             "Critical Error!",
@@ -4667,18 +3138,18 @@ void MainScreen::LaunchOptimizer(QString directive) {
     QString error_mess;
     bool initialized_correctly = optimizer_manager->Initialize(
         *optimizer_thread,
-        calibration_file_,
-        loaded_frames,
-        loaded_frames_B,
+        session_.calibration_file_,
+        session_.loaded_frames,
+        session_.loaded_frames_B,
         ui.image_list_widget->currentIndex().row(),
-        loaded_models,
+        session_.loaded_models,
         selected,
         selected[0].row(),
-        model_locations_,
-        optimizer_settings_,
-        trunk_manager_,
-        branch_manager_,
-        leaf_manager_,
+        session_.model_locations_,
+        session_.optimizer_settings_,
+        session_.trunk_manager_,
+        session_.branch_manager_,
+        session_.leaf_manager_,
         directive,
         error_mess,
         iter_count);
@@ -4775,7 +3246,7 @@ void MainScreen::LaunchOptimizer(QString directive) {
         35.0 / 255.0); // Set Orange;
     currently_optimizing_ = true;
     DisableAll();
-    display_optimizer_settings_ = optimizer_settings_;
+    display_optimizer_settings_ = session_.optimizer_settings_;
     optimizer_thread->start();
 }
 
@@ -4788,7 +3259,7 @@ void MainScreen::updateOrientationSymTrap_MS(
     Point6D new_orientation(x, y, z, xa, ya, za);
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    model_locations_.SavePose(
+    session_.model_locations_.SavePose(
         ui.image_list_widget->currentRow(),
         ui.model_list_widget->currentRow(),
         new_orientation);
@@ -4822,10 +3293,10 @@ void MainScreen::onUpdateOptimum(
     /*Update Blue's Location*/
     auto CurrentPose = Point6D(x, y, z, xa, ya, za);
     if (ui.camera_B_radio_button->isChecked()) {
-        CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
+        CurrentPose = session_.calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
     }
     if (primary_model_index <
-        loaded_models.size()) { // TODO: Find a better way to represent this
+        session_.loaded_models.size()) { // TODO: Find a better way to represent this
         vw->set_model_position_at_index(
             primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
         vw->set_model_orientation_at_index(
@@ -4862,10 +3333,10 @@ void MainScreen::onOptimizedFrame(
     /*Update Actor*/
     auto CurrentPose = Point6D(x, y, z, xa, ya, za);
     if (ui.camera_B_radio_button->isChecked()) {
-        CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
+        CurrentPose = session_.calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
     }
     if (primary_model_index <
-        loaded_models.size()) { // todo: Find a better way to get size of
+        session_.loaded_models.size()) { // todo: Find a better way to get size of
                                 // model_actor_list
         vw->set_model_position_at_index(
             primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
@@ -4899,13 +3370,13 @@ void MainScreen::onOptimizedFrame(
     if (optimizer_directive == "Backward") {
         if (move_next_frame && current_frame_index > 0) {
             ui.image_list_widget->setCurrentRow(current_frame_index - 1);
-            model_locations_.SavePose(
+            session_.model_locations_.SavePose(
                 current_frame_index,
                 primary_model_index,
                 Point6D(x, y, z, xa, ya, za));
         } else {
             /*Save Pose To Storage*/
-            model_locations_.SavePose(
+            session_.model_locations_.SavePose(
                 current_frame_index,
                 primary_model_index,
                 Point6D(x, y, z, xa, ya, za));
@@ -4929,13 +3400,13 @@ void MainScreen::onOptimizedFrame(
             /*Bring Up Next Frame*/
             ui.image_list_widget->setCurrentRow(current_frame_index + 1);
             /*Save Pose To Storage*/
-            model_locations_.SavePose(
+            session_.model_locations_.SavePose(
                 current_frame_index,
                 primary_model_index,
                 Point6D(x, y, z, xa, ya, za));
         } else {
             /*Save Pose To Storage*/
-            model_locations_.SavePose(
+            session_.model_locations_.SavePose(
                 current_frame_index,
                 primary_model_index,
                 Point6D(x, y, z, xa, ya, za));
@@ -5026,7 +3497,7 @@ void MainScreen::onUpdateDisplay(
         current_orientation[1],
         current_orientation[2]);
     if (ui.camera_B_radio_button->isChecked()) {
-        CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
+        CurrentPose = session_.calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
     }
 
     infoText +=
@@ -5071,469 +3542,59 @@ void MainScreen::onUpdateDilationBackground() {
 /*Function to load settings from registry and also check if First Time
  * Loading*/
 void MainScreen::LoadSettingsBetweenSessions() {
-    /*Check if Loaded Before*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
-    bool first_time_loading = false;
-    QStringList groupList = setting.childGroups();
-    if (groupList.size() == 0) {
-        first_time_loading = true;
+    settings_service_->LoadSettings(session_);
+
+    const auto edge_settings = settings_service_->GetEdgeDetectionSettings();
+    ui.aperture_spin_box->setValue(edge_settings.aperture);
+    ui.low_threshold_slider->setValue(edge_settings.low_threshold);
+    ui.high_threshold_slider->setValue(edge_settings.high_threshold);
+
+    if (!settings_service_->WasFirstTimeLoading()) {
+        return;
     }
 
-    /*Not First Time Loading*/
-    if (!first_time_loading) {
-        /*Save Cost Function Settings*/
-        setting.beginGroup("CostFunctionSettings");
-
-        /*Get list of all keys and split into terminology*/
-        QStringList cost_function_settings_keys = setting.allKeys();
-        for (int i = 0; i < cost_function_settings_keys.size(); i++) {
-            /*If 2 codes, should be the STAGE and ACTIVE_CF.
-            If 4 codes, should be the STAGE, Cost Function Name, Parameter
-            Name, Parameter Type*/
-            QStringList key_codes = cost_function_settings_keys[i].split("@");
-            if (key_codes.size() == 2 && key_codes[1] == "ACTIVE_CF") {
-                if (key_codes[0] == "TRUNK") {
-                    trunk_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
-                            .toString()
-                            .toStdString());
-                } else if (key_codes[0] == "BRANCH") {
-                    branch_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
-                            .toString()
-                            .toStdString());
-                } else if (key_codes[0] == "LEAF") {
-                    leaf_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
-                            .toString()
-                            .toStdString());
-                } else {
-                    QMessageBox::critical(
-                        this,
-                        "Error",
-                        "Error in key registry! Code A",
-                        QMessageBox::Ok);
-                }
-            } else if (key_codes.size() == 4) {
-                if (key_codes[0] == "TRUNK") {
-                    if (key_codes[3] == "DOUBLE") {
-                        trunk_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setDoubleParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toDouble());
-                    } else if (key_codes[3] == "INT") {
-                        trunk_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setIntParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toInt());
-                    } else if (key_codes[3] == "BOOL") {
-                        trunk_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setBoolParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toBool());
-                    } else {
-                        QMessageBox::critical(
-                            this,
-                            "Error",
-                            "Error in key registry! Code D",
-                            QMessageBox::Ok);
-                    }
-                } else if (key_codes[0] == "BRANCH") {
-                    if (key_codes[3] == "DOUBLE") {
-                        branch_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setDoubleParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toDouble());
-                    } else if (key_codes[3] == "INT") {
-                        branch_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setIntParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toInt());
-                    } else if (key_codes[3] == "BOOL") {
-                        branch_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setBoolParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toBool());
-                    } else {
-                        QMessageBox::critical(
-                            this,
-                            "Error",
-                            "Error in key registry! Code E",
-                            QMessageBox::Ok);
-                    }
-                } else if (key_codes[0] == "LEAF") {
-                    if (key_codes[3] == "DOUBLE") {
-                        leaf_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setDoubleParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toDouble());
-                    } else if (key_codes[3] == "INT") {
-                        leaf_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setIntParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toInt());
-                    } else if (key_codes[3] == "BOOL") {
-                        leaf_manager_
-                            .getCostFunctionClass(key_codes[1].toStdString())
-                            ->setBoolParameterValue(
-                                key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
-                                    .toBool());
-                    } else {
-                        QMessageBox::critical(
-                            this,
-                            "Error",
-                            "Error in key registry! Code F",
-                            QMessageBox::Ok);
-                    }
-                } else {
-                    QMessageBox::critical(
-                        this,
-                        "Error",
-                        "Error in key registry! Code B",
-                        QMessageBox::Ok);
-                }
-
-            } else {
-                QMessageBox::critical(
-                    this,
-                    "Error",
-                    "Error in key registry! Code C",
-                    QMessageBox::Ok);
-            }
+    /*Check CUDA Compatibility*/
+    int gpu_device_count = 0, device_count;
+    struct cudaDeviceProp properties;
+    cudaError_t cudaResultCode = cudaGetDeviceCount(&device_count);
+    if (cudaResultCode != cudaSuccess) {
+        device_count = 0;
+    }
+    /* Machines with no GPUs can still report one emulation device */
+    for (int device = 0; device < device_count; ++device) {
+        cudaGetDeviceProperties(&properties, device);
+        if (properties.major != 9999 &&
+            properties.major >= 5) /* 9999 means emulation only */
+        {
+            ++gpu_device_count;
         }
-        setting.endGroup();
-
-        /*Load Optimizer Settings*/
-        setting.beginGroup("OptimizerSettings");
-        /*Variables*/
-        /*Trunk*/
-        optimizer_settings_.trunk_range = Point6D(
-            setting.value("TRUNK@RANGE_X").toDouble(),
-            setting.value("TRUNK@RANGE_Y").toDouble(),
-            setting.value("TRUNK@RANGE_Z").toDouble(),
-            setting.value("TRUNK@RANGE_XA").toDouble(),
-            setting.value("TRUNK@RANGE_YA").toDouble(),
-            setting.value("TRUNK@RANGE_ZA").toDouble());
-        optimizer_settings_.trunk_budget =
-            setting.value("TRUNK@BUDGET").toInt();
-
-        /*Branch*/
-        optimizer_settings_.branch_range = Point6D(
-            setting.value("BRANCH@RANGE_X").toDouble(),
-            setting.value("BRANCH@RANGE_Y").toDouble(),
-            setting.value("BRANCH@RANGE_Z").toDouble(),
-            setting.value("BRANCH@RANGE_XA").toDouble(),
-            setting.value("BRANCH@RANGE_YA").toDouble(),
-            setting.value("BRANCH@RANGE_ZA").toDouble());
-        optimizer_settings_.number_branches =
-            setting.value("BRANCH@NUMBER_BRANCHES").toInt();
-        optimizer_settings_.enable_branch_ =
-            setting.value("BRANCH@ENABLE").toBool();
-        optimizer_settings_.branch_budget =
-            setting.value("BRANCH@BUDGET").toInt();
-
-        /*Leaf*/
-        optimizer_settings_.leaf_range = Point6D(
-            setting.value("LEAF@RANGE_X").toDouble(),
-            setting.value("LEAF@RANGE_Y").toDouble(),
-            setting.value("LEAF@RANGE_Z").toDouble(),
-            setting.value("LEAF@RANGE_XA").toDouble(),
-            setting.value("LEAF@RANGE_YA").toDouble(),
-            setting.value("LEAF@RANGE_ZA").toDouble());
-        optimizer_settings_.enable_leaf_ =
-            setting.value("LEAF@ENABLE").toBool();
-        optimizer_settings_.leaf_budget = setting.value("LEAF@BUDGET").toInt();
-        setting.endGroup();
-
-        /*Edge Detection Settings*/
-        setting.beginGroup("EdgeDetectionSettings");
-        ui.aperture_spin_box->setValue(setting.value("APERTURE").toInt());
-        ui.low_threshold_slider->setValue(setting.value("LOW_THRESH").toInt());
-        ui.high_threshold_slider->setValue(
-            setting.value("HIGH_THRESH").toInt());
-        setting.endGroup();
-    } else {
-        /*Check CUDA Compatibility*/
-        int gpu_device_count = 0, device_count;
-        struct cudaDeviceProp properties;
-        cudaError_t cudaResultCode = cudaGetDeviceCount(&device_count);
-        if (cudaResultCode != cudaSuccess) {
-            device_count = 0;
-        }
-        /* Machines with no GPUs can still report one emulation device */
-        for (int device = 0; device < device_count; ++device) {
-            cudaGetDeviceProperties(&properties, device);
-            if (properties.major != 9999 &&
-                properties.major >= 5) /* 9999 means emulation only */
-            {
-                ++gpu_device_count;
-            }
-        }
-        /*If no Cuda Compatitble Devices with Compute Capability Greater
-         * Than 5, Exit*/
-        if (gpu_device_count == 0) {
-            if (device_count == 0) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "No CUDA capable GPU detected! Optimizer will not run!",
-                    QMessageBox::Ok);
-            } else if (properties.major == 9999) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "GPU is emulation only! Optimizer will not run!",
-                    QMessageBox::Ok);
-            } else {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "GPU does not have high enough compute "
-                    "capability! Optimizer will "
-                    "not run!\nPlease upgrade to device with "
-                    "compute capability 5.0 or "
-                    "higher!",
-                    QMessageBox::Ok);
-            }
+    }
+    /*If no Cuda Compatitble Devices with Compute Capability Greater
+     * Than 5, Exit*/
+    if (gpu_device_count == 0) {
+        if (device_count == 0) {
+            QMessageBox::critical(
+                this,
+                "Error!",
+                "No CUDA capable GPU detected! Optimizer will not run!",
+                QMessageBox::Ok);
+        } else if (properties.major == 9999) {
+            QMessageBox::critical(
+                this,
+                "Error!",
+                "GPU is emulation only! Optimizer will not run!",
+                QMessageBox::Ok);
         } else {
-            /*First Time Loading Message Will Now Go Away By Marking in
-             * Registry*/
-            /*DEPRECATED BUT STILL IN THE CODE - WHATEVER*/
-            setting.beginGroup("FirstTime");
-            setting.setValue("JTAFirstTime", false);
-            setting.endGroup();
+            QMessageBox::critical(
+                this,
+                "Error!",
+                "GPU does not have high enough compute "
+                "capability! Optimizer will "
+                "not run!\nPlease upgrade to device with "
+                "compute capability 5.0 or "
+                "higher!",
+                QMessageBox::Ok);
         }
-
-        /*Save Default Settings*/
-        /*Default Optimizer Settings*/
-        optimizer_settings_ = OptimizerSettings();
-
-        /*Default 3 Cost Function Managers*/
-        trunk_manager_ = jta_cost_function::CostFunctionManager(Stage::Trunk);
-        branch_manager_ = jta_cost_function::CostFunctionManager(Stage::Branch);
-        leaf_manager_ = jta_cost_function::CostFunctionManager(Stage::Leaf);
-
-        /*Change the Default Settings of Dilation for branch and leaf to 4
-         * and 1 respectively*/
-        branch_manager_.getCostFunctionClass("DIRECT_DILATION")
-            ->setIntParameterValue("Dilation", 4);
-        leaf_manager_.getCostFunctionClass("DIRECT_DILATION")
-            ->setIntParameterValue("Dilation", 1);
-
-        /*Save to Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-
-        /*Save Cost Function Settings*/
-        setting.beginGroup("CostFunctionSettings");
-        /*Cost Function Managers (Save All Values for Parameters and Active
-         * Cost Function*/
-        /*Trunk*/
-        setting.setValue(
-            "TRUNK@ACTIVE_CF",
-            QString::fromStdString(trunk_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-            trunk_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < trunk_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                trunk_parameters_double =
-                    trunk_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < trunk_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_double[j].getParameterName() + "@" +
-                        trunk_parameters_double[j].getParameterType()),
-                    trunk_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>>
-                trunk_parameters_int =
-                    trunk_cost_functions[i].getIntParameters();
-            for (int j = 0; j < trunk_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_int[j].getParameterName() + "@" +
-                        trunk_parameters_int[j].getParameterType()),
-                    trunk_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                trunk_parameters_bool =
-                    trunk_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_bool[j].getParameterName() + "@" +
-                        trunk_parameters_bool[j].getParameterType()),
-                    trunk_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        /*Branch*/
-        setting.setValue(
-            "BRANCH@ACTIVE_CF",
-            QString::fromStdString(branch_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-            branch_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < branch_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                branch_parameters_double =
-                    branch_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < branch_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_double[j].getParameterName() + "@" +
-                        branch_parameters_double[j].getParameterType()),
-                    branch_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>>
-                branch_parameters_int =
-                    branch_cost_functions[i].getIntParameters();
-            for (int j = 0; j < branch_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_int[j].getParameterName() + "@" +
-                        branch_parameters_int[j].getParameterType()),
-                    branch_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                branch_parameters_bool =
-                    branch_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < branch_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_bool[j].getParameterName() + "@" +
-                        branch_parameters_bool[j].getParameterType()),
-                    branch_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        /*Leaf*/
-        setting.setValue(
-            "LEAF@ACTIVE_CF",
-            QString::fromStdString(leaf_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-            leaf_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < leaf_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                leaf_parameters_double =
-                    leaf_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < leaf_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_double[j].getParameterName() +
-                        "@" + leaf_parameters_double[j].getParameterType()),
-                    leaf_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
-                leaf_cost_functions[i].getIntParameters();
-            for (int j = 0; j < leaf_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_int[j].getParameterName() + "@" +
-                        leaf_parameters_int[j].getParameterType()),
-                    leaf_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                leaf_parameters_bool =
-                    leaf_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_bool[j].getParameterName() + "@" +
-                        leaf_parameters_bool[j].getParameterType()),
-                    leaf_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        setting.endGroup();
-
-        /*Save Optimizer Settings*/
-        setting.beginGroup("OptimizerSettings");
-        /*Variables*/
-        /*Trunk*/
-        setting.setValue("TRUNK@RANGE_X", optimizer_settings_.trunk_range.x);
-        setting.setValue("TRUNK@RANGE_Y", optimizer_settings_.trunk_range.y);
-        setting.setValue("TRUNK@RANGE_Z", optimizer_settings_.trunk_range.z);
-        setting.setValue("TRUNK@RANGE_XA", optimizer_settings_.trunk_range.xa);
-        setting.setValue("TRUNK@RANGE_YA", optimizer_settings_.trunk_range.ya);
-        setting.setValue("TRUNK@RANGE_ZA", optimizer_settings_.trunk_range.za);
-        setting.setValue("TRUNK@BUDGET", optimizer_settings_.trunk_budget);
-
-        /*Branch*/
-        setting.setValue("BRANCH@RANGE_X", optimizer_settings_.branch_range.x);
-        setting.setValue("BRANCH@RANGE_Y", optimizer_settings_.branch_range.y);
-        setting.setValue("BRANCH@RANGE_Z", optimizer_settings_.branch_range.z);
-        setting.setValue(
-            "BRANCH@RANGE_XA", optimizer_settings_.branch_range.xa);
-        setting.setValue(
-            "BRANCH@RANGE_YA", optimizer_settings_.branch_range.ya);
-        setting.setValue(
-            "BRANCH@RANGE_ZA", optimizer_settings_.branch_range.za);
-        setting.setValue(
-            "BRANCH@NUMBER_BRANCHES", optimizer_settings_.number_branches);
-        setting.setValue("BRANCH@ENABLE", optimizer_settings_.enable_branch_);
-        setting.setValue("BRANCH@BUDGET", optimizer_settings_.branch_budget);
-
-        /*Leaf*/
-        setting.setValue("LEAF@RANGE_X", optimizer_settings_.leaf_range.x);
-        setting.setValue("LEAF@RANGE_Y", optimizer_settings_.leaf_range.y);
-        setting.setValue("LEAF@RANGE_Z", optimizer_settings_.leaf_range.z);
-        setting.setValue("LEAF@RANGE_XA", optimizer_settings_.leaf_range.xa);
-        setting.setValue("LEAF@RANGE_YA", optimizer_settings_.leaf_range.ya);
-        setting.setValue("LEAF@RANGE_ZA", optimizer_settings_.leaf_range.za);
-        setting.setValue("LEAF@ENABLE", optimizer_settings_.enable_leaf_);
-        setting.setValue("LEAF@BUDGET", optimizer_settings_.leaf_budget);
-        setting.endGroup();
-
-        /*Edge Detection Settings*/
-        setting.beginGroup("EdgeDetectionSettings");
-        ui.aperture_spin_box->setValue(APERTURE);
-        ui.low_threshold_slider->setValue(LOW_THRESH);
-        ui.high_threshold_slider->setValue(HIGH_THRESH);
-        setting.endGroup();
-
-        /*Save*/
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", ui.aperture_spin_box->value());
-        setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-        setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-        setting.endGroup();
     }
 }
 
@@ -5546,179 +3607,18 @@ void MainScreen::onSaveSettings(
     jta_cost_function::CostFunctionManager branch_manager,
     jta_cost_function::CostFunctionManager leaf_manager) {
     /*Save to Optimizer Settings*/
-    optimizer_settings_ = opt_settings;
+    session_.optimizer_settings_ = opt_settings;
 
     /*Save 3 Cost Function Managers*/
-    trunk_manager_ = trunk_manager;
-    branch_manager_ = branch_manager;
-    leaf_manager_ = leaf_manager;
+    session_.trunk_manager_ = trunk_manager;
+    session_.branch_manager_ = branch_manager;
+    session_.leaf_manager_ = leaf_manager;
 
-    /*Save to Registry*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
-
-    /*Save Cost Function Settings*/
-    setting.beginGroup("CostFunctionSettings");
-    /*Cost Function Managers (Save All Values for Parameters and Active Cost
-     * Function*/
-    /*Trunk*/
-    setting.setValue(
-        "TRUNK@ACTIVE_CF",
-        QString::fromStdString(trunk_manager_.getActiveCostFunction()));
-    std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-        trunk_manager_.getAvailableCostFunctions();
-    for (int i = 0; i < trunk_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            trunk_parameters_double =
-                trunk_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < trunk_parameters_double.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_double[j].getParameterName() + "@" +
-                    trunk_parameters_double[j].getParameterType()),
-                trunk_parameters_double[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<int>> trunk_parameters_int =
-            trunk_cost_functions[i].getIntParameters();
-        for (int j = 0; j < trunk_parameters_int.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_int[j].getParameterName() + "@" +
-                    trunk_parameters_int[j].getParameterType()),
-                trunk_parameters_int[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<bool>> trunk_parameters_bool =
-            trunk_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_bool[j].getParameterName() + "@" +
-                    trunk_parameters_bool[j].getParameterType()),
-                trunk_parameters_bool[j].getParameterValue());
-        }
-    }
-
-    /*Branch*/
-    setting.setValue(
-        "BRANCH@ACTIVE_CF",
-        QString::fromStdString(branch_manager_.getActiveCostFunction()));
-    std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-        branch_manager_.getAvailableCostFunctions();
-    for (int i = 0; i < branch_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            branch_parameters_double =
-                branch_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < branch_parameters_double.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_double[j].getParameterName() + "@" +
-                    branch_parameters_double[j].getParameterType()),
-                branch_parameters_double[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<int>> branch_parameters_int =
-            branch_cost_functions[i].getIntParameters();
-        for (int j = 0; j < branch_parameters_int.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_int[j].getParameterName() + "@" +
-                    branch_parameters_int[j].getParameterType()),
-                branch_parameters_int[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<bool>> branch_parameters_bool =
-            branch_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < branch_parameters_bool.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_bool[j].getParameterName() + "@" +
-                    branch_parameters_bool[j].getParameterType()),
-                branch_parameters_bool[j].getParameterValue());
-        }
-    }
-
-    /*Leaf*/
-    setting.setValue(
-        "LEAF@ACTIVE_CF",
-        QString::fromStdString(leaf_manager_.getActiveCostFunction()));
-    std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-        leaf_manager_.getAvailableCostFunctions();
-    for (int i = 0; i < leaf_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            leaf_parameters_double =
-                leaf_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < leaf_parameters_double.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_double[j].getParameterName() + "@" +
-                    leaf_parameters_double[j].getParameterType()),
-                leaf_parameters_double[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
-            leaf_cost_functions[i].getIntParameters();
-        for (int j = 0; j < leaf_parameters_int.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_int[j].getParameterName() + "@" +
-                    leaf_parameters_int[j].getParameterType()),
-                leaf_parameters_int[j].getParameterValue());
-        }
-        std::vector<jta_cost_function::Parameter<bool>> leaf_parameters_bool =
-            leaf_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-            setting.setValue(
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_bool[j].getParameterName() + "@" +
-                    leaf_parameters_bool[j].getParameterType()),
-                leaf_parameters_bool[j].getParameterValue());
-        }
-    }
-
-    setting.endGroup();
-
-    /*Save Optimizer Settings*/
-    setting.beginGroup("OptimizerSettings");
-    /*Variables*/
-    /*Trunk*/
-    setting.setValue("TRUNK@RANGE_X", optimizer_settings_.trunk_range.x);
-    setting.setValue("TRUNK@RANGE_Y", optimizer_settings_.trunk_range.y);
-    setting.setValue("TRUNK@RANGE_Z", optimizer_settings_.trunk_range.z);
-    setting.setValue("TRUNK@RANGE_XA", optimizer_settings_.trunk_range.xa);
-    setting.setValue("TRUNK@RANGE_YA", optimizer_settings_.trunk_range.ya);
-    setting.setValue("TRUNK@RANGE_ZA", optimizer_settings_.trunk_range.za);
-    setting.setValue("TRUNK@BUDGET", optimizer_settings_.trunk_budget);
-
-    /*Branch*/
-    setting.setValue("BRANCH@RANGE_X", optimizer_settings_.branch_range.x);
-    setting.setValue("BRANCH@RANGE_Y", optimizer_settings_.branch_range.y);
-    setting.setValue("BRANCH@RANGE_Z", optimizer_settings_.branch_range.z);
-    setting.setValue("BRANCH@RANGE_XA", optimizer_settings_.branch_range.xa);
-    setting.setValue("BRANCH@RANGE_YA", optimizer_settings_.branch_range.ya);
-    setting.setValue("BRANCH@RANGE_ZA", optimizer_settings_.branch_range.za);
-    setting.setValue(
-        "BRANCH@NUMBER_BRANCHES", optimizer_settings_.number_branches);
-    setting.setValue("BRANCH@ENABLE", optimizer_settings_.enable_branch_);
-    setting.setValue("BRANCH@BUDGET", optimizer_settings_.branch_budget);
-
-    /*Leaf*/
-    setting.setValue("LEAF@RANGE_X", optimizer_settings_.leaf_range.x);
-    setting.setValue("LEAF@RANGE_Y", optimizer_settings_.leaf_range.y);
-    setting.setValue("LEAF@RANGE_Z", optimizer_settings_.leaf_range.z);
-    setting.setValue("LEAF@RANGE_XA", optimizer_settings_.leaf_range.xa);
-    setting.setValue("LEAF@RANGE_YA", optimizer_settings_.leaf_range.ya);
-    setting.setValue("LEAF@RANGE_ZA", optimizer_settings_.leaf_range.za);
-    setting.setValue("LEAF@ENABLE", optimizer_settings_.enable_leaf_);
-    setting.setValue("LEAF@BUDGET", optimizer_settings_.leaf_budget);
-    setting.endGroup();
+    settings_service_->SaveEdgeDetectionSettings(
+        ui.aperture_spin_box->value(),
+        ui.low_threshold_slider->value(),
+        ui.high_threshold_slider->value());
+    settings_service_->SaveSettings(session_);
 
     /*Update Dilation Frames*/
     UpdateDilationFrames();
@@ -5732,10 +3632,10 @@ void MainScreen::UpdateDilationFrames() {
      * Values for Viewing Purposes*/
     int dilation_val = 0;
     std::vector<jta_cost_function::Parameter<int>> active_int_params =
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
+        session_.trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
     for (int i = 0; i < active_int_params.size(); i++) {
         if (active_int_params[i].getParameterName() == "Dilation") {
-            dilation_val = trunk_manager_.getActiveCostFunctionClass()
+            dilation_val = session_.trunk_manager_.getActiveCostFunctionClass()
                                ->getIntParameters()
                                .at(i)
                                .getParameterValue();
@@ -5745,15 +3645,15 @@ void MainScreen::UpdateDilationFrames() {
         dilation_val = 0;
     }
     /*Mahfouz Case*/
-    if (trunk_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ") {
+    if (session_.trunk_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ") {
         dilation_val = 3;
     }
 
     /*Apply Dilation to All Images*/
-    for (int i = 0; i < loaded_frames.size(); i++) {
-        loaded_frames[i].SetDilatedImage(dilation_val);
-        if (calibrated_for_biplane_viewport_) {
-            loaded_frames_B[i].SetDilatedImage(dilation_val);
+    for (int i = 0; i < session_.loaded_frames.size(); i++) {
+        session_.loaded_frames[i].SetDilatedImage(dilation_val);
+        if (session_.calibrated_for_biplane_viewport_) {
+            session_.loaded_frames_B[i].SetDilatedImage(dilation_val);
         }
     }
     /*If Dilation View Selected*/
@@ -5762,6 +3662,12 @@ void MainScreen::UpdateDilationFrames() {
         on_dilation_image_radio_button_clicked();
         ui.qvtk_cpv->update();
         ui.qvtk_cpv->renderWindow()->Render();
+    }
+}
+
+void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
+    if (session_.optimizer_settings_.enable_leaf_) {
+        worker_orchestrator_->StartEstimation(session_);
     }
 }
 
@@ -5783,17 +3689,17 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
     // save the current location of the image
 
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        Point6D fem_pose = model_locations_.GetPose(i, selected[1].row());
-        Point6D tib_pose_orig = model_locations_.GetPose(i, selected[0].row());
+        Point6D fem_pose = session_.model_locations_.GetPose(i, selected[1].row());
+        Point6D tib_pose_orig = session_.model_locations_.GetPose(i, selected[0].row());
 
         Point6D tib_pose_final = tibial_pose_selector(fem_pose, tib_pose_orig);
-        model_locations_.SavePose(i, selected[0].row(), tib_pose_final);
+        session_.model_locations_.SavePose(i, selected[0].row(), tib_pose_final);
     }
     // Need to update the location of the frame that is currently on screen
     int selected_img_idx =
         ui.image_list_widget->selectionModel()->selectedRows()[0].row();
     Point6D current_img_pos =
-        model_locations_.GetPose(selected_img_idx, selected[0].row());
+        session_.model_locations_.GetPose(selected_img_idx, selected[0].row());
     model_actor_list[selected[0].row()]->SetPosition(
         current_img_pos.x, current_img_pos.y, current_img_pos.z);
     model_actor_list[selected[0].row()]->SetOrientation(

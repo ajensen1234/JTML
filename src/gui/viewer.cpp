@@ -225,6 +225,10 @@ void Viewer::load_models(QStringList cad_files, QStringList cad_models) {
     }
 }
 
+void Viewer::load_models(const std::vector<Model>& models) {
+    loaded_models_->insert(loaded_models_->end(), models.begin(), models.end());
+}
+
 bool Viewer::are_models_loaded_correctly(int index) {
     return loaded_models_->at(index).initialized_correctly_;
 }

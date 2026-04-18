@@ -3,6 +3,7 @@
 
 /*Standard Library*/
 #include "core/preprocessor-defs.h"
+#include "gpu/cuda_deleters.cuh"
 #include <iostream>
 #include <string>
 
@@ -54,11 +55,11 @@ public:
     JTML_DLL int GetFrameWidth();
 
 private:
-    /*Pointer to Device Image on GPU*/
-    unsigned char* dev_image_;
+    /*Pointer to Device Image on GPU (RAII-managed)*/
+    unique_device_ptr<unsigned char> dev_image_;
 
     /*Boolean indicating whether or not an dev_image_ exists on the GPU
-     * (device)*/
+      * (device)*/
     bool image_on_gpu_;
 
     /*Boolean indicating if the GPU image was initialized correctly*/
@@ -77,8 +78,9 @@ private:
     1: Bounding box of image - BY
     2: Bounding box of image - RX
     3: Bounding box of image - TY
-    Default: (0, 0, width - 1, height - 1)*/
-    int* bounding_box_;
+    Default: (0, 0, width - 1, height - 1)
+    (RAII-managed pinned host memory)*/
+    unique_host_ptr<int> bounding_box_;
 };
 } // namespace gpu_cost_function
 

@@ -18,8 +18,8 @@ High-performance CUDA kernels for image processing, 2D/3D registration metrics, 
 
 ## CONVENTIONS (CUDA SPECIFIC)
 - **Namespace**: All GPU logic lives in `gpu_cost_function`.
-- **Error Handling**: Check `cudaGetLastError()` after kernel launches.
-- **Memory**: Use `cudaMalloc` / `cudaFree` for device, `cudaHostAlloc` for pinned host memory.
+- **Error Handling**: Use `CUDA_CHECK(call)` for API calls and `CUDA_CHECK_KERNEL(launch)` for kernels.
+- **Memory**: USE RAII. Prefer `unique_device_ptr<T>` and `unique_host_ptr<T>` from `cuda_deleters.cuh`.
 - **Indexing**: Standard 1D/2D grid patterns. Use `threads_per_block` from `launch_config.cuh`.
 - **Performance**: Prefer `atomicMin`/`atomicMax` for bounding box updates. Use CUB for prefix sums.
-- **Cleanup**: Destructors MUST call `FreeCuda` to prevent leaks.
+- **Cleanup**: Handled automatically by smart pointers.

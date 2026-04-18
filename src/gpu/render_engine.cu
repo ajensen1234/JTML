@@ -138,31 +138,8 @@ RenderEngine::RenderEngine(
         ceil(sqrt(
             4.0 * triangle_count_ / static_cast<double>(threads_per_block))));
 
-    /*Initialize Host Variables*/
-    fragment_fill_ = 0;
-
-    /*Initialize Private Device Variables*/
-    dev_z_line_values_ = 0;
-    dev_triangles_ = 0;
-    dev_normals_ = 0;
-    dev_backface_ = 0;
-    dev_transf_vertex_zs_ = 0;
-    dev_tangent_triangle_ = 0;
-    dev_projected_triangles_ = 0;
-    dev_projected_triangles_snapped_ = 0;
-    dev_bounding_box_triangles_ = 0;
-    dev_bounding_box_triangles_sizes_ = 0;
-    dev_bounding_box_triangles_sizes_prefix_ = 0;
-    dev_bounding_box_ = 0;
-    dev_fragment_fill_ = 0;
-    dev_stride_prefixes_ = 0;
-
     /*Initialize CUB Temporary Storage*/
-    dev_cub_storage_ = 0;
     cub_storage_bytes_ = 0;
-
-    /*Initialize Renderer Output*/
-    renderer_output_ = 0;
 
     /*Initialize CUDA*/
     if (InitializeCUDA(triangles, normals, device) != cudaSuccess) {
@@ -171,63 +148,34 @@ RenderEngine::RenderEngine(
 }
 
 RenderEngine::RenderEngine() {
-    /*Initialize Host Variables*/
-    fragment_fill_ = 0;
-
-    /*Initialize Private Device Variables*/
-    dev_z_line_values_ = 0;
-    dev_triangles_ = 0;
-    dev_normals_ = 0;
-    dev_backface_ = 0;
-    dev_transf_vertex_zs_ = 0;
-    dev_tangent_triangle_ = 0;
-    dev_projected_triangles_ = 0;
-    dev_projected_triangles_snapped_ = 0;
-    dev_bounding_box_triangles_ = 0;
-    dev_bounding_box_triangles_sizes_ = 0;
-    dev_bounding_box_triangles_sizes_prefix_ = 0;
-    dev_bounding_box_ = 0;
-    dev_fragment_fill_ = 0;
-    dev_stride_prefixes_ = 0;
-
     /*Initialize CUB Temporary Storage*/
-    dev_cub_storage_ = 0;
     cub_storage_bytes_ = 0;
-
-    /*Initialize Renderer Output*/
-    renderer_output_ = 0;
 
     /*Default Constructor Never Initialized*/
     initialized_correctly_ = false;
 }
 
-RenderEngine::~RenderEngine() {
-    /*Free CUDA*/
-    FreeCuda();
-
-    delete renderer_output_;
-}
+RenderEngine::~RenderEngine() = default;
 
 void RenderEngine::FreeCuda() {
-    /*Free CUDA*/
-    CUDA_CHECK(cudaFree(dev_z_line_values_));
-    CUDA_CHECK(cudaFree(dev_triangles_));
-    CUDA_CHECK(cudaFree(dev_normals_));
-    CUDA_CHECK(cudaFree(dev_backface_));
-    CUDA_CHECK(cudaFree(dev_transf_vertex_zs_));
-    CUDA_CHECK(cudaFree(dev_tangent_triangle_));
-    CUDA_CHECK(cudaFree(dev_projected_triangles_));
-    CUDA_CHECK(cudaFree(dev_projected_triangles_snapped_));
-    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_));
-    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_sizes_));
-    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_sizes_prefix_));
-    CUDA_CHECK(cudaFree(dev_cub_storage_));
-    CUDA_CHECK(cudaFree(dev_bounding_box_));
-    CUDA_CHECK(cudaFree(dev_fragment_fill_));
-    CUDA_CHECK(cudaFree(dev_stride_prefixes_));
-
-    /*Free Host*/
-    CUDA_CHECK(cudaFreeHost(fragment_fill_));
+    dev_z_line_values_.reset();
+    dev_triangles_.reset();
+    dev_normals_.reset();
+    dev_backface_.reset();
+    dev_transf_vertex_zs_.reset();
+    dev_tangent_triangle_.reset();
+    dev_projected_triangles_.reset();
+    dev_projected_triangles_snapped_.reset();
+    dev_bounding_box_triangles_.reset();
+    dev_bounding_box_triangles_sizes_.reset();
+    dev_bounding_box_triangles_sizes_prefix_.reset();
+    dev_cub_storage_.reset();
+    dev_bounding_box_.reset();
+    dev_fragment_fill_.reset();
+    dev_stride_prefixes_.reset();
+    fragment_fill_.reset();
+    renderer_output_.reset();
+    cub_storage_bytes_ = 0;
 }
 
 cudaError_t
@@ -248,48 +196,23 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     }
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    CUDA_CHECK(cudaHostAlloc(
-        (void**)&fragment_fill_, 1 * sizeof(int), cudaHostAllocDefault));
+    fragment_fill_ = make_cuda_host_unique<int>(1);
 
     /*Allocate GPU buffers for image, triangles.*/
-    CUDA_CHECK(cudaMalloc((void**)&dev_z_line_values_, width_ * height_ * sizeof(float)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_triangles_, triangle_count_ * 9 * sizeof(float)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_normals_, triangle_count_ * 3 * sizeof(float)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_backface_, triangle_count_ * sizeof(bool)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_transf_vertex_zs_, triangle_count_ * 3 * sizeof(float)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_tangent_triangle_, triangle_count_ * sizeof(bool)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_projected_triangles_, triangle_count_ * 6 * sizeof(float)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_projected_triangles_snapped_,
-        triangle_count_ * 6 * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_bounding_box_triangles_,
-        triangle_count_ * 4 * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_bounding_box_triangles_sizes_,
-        triangle_count_ * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_bounding_box_triangles_sizes_prefix_,
-        triangle_count_ * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_bounding_box_, 4 * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc((void**)&dev_fragment_fill_, 1 * sizeof(int)));
-
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_stride_prefixes_, maximum_stride_size * sizeof(int)));
+    dev_z_line_values_ = make_cuda_unique<float>(width_ * height_);
+    dev_triangles_ = make_cuda_unique<float>(triangle_count_ * 9);
+    dev_normals_ = make_cuda_unique<float>(triangle_count_ * 3);
+    dev_backface_ = make_cuda_unique<bool>(triangle_count_);
+    dev_transf_vertex_zs_ = make_cuda_unique<float>(triangle_count_ * 3);
+    dev_tangent_triangle_ = make_cuda_unique<bool>(triangle_count_);
+    dev_projected_triangles_ = make_cuda_unique<float>(triangle_count_ * 6);
+    dev_projected_triangles_snapped_ = make_cuda_unique<int>(triangle_count_ * 6);
+    dev_bounding_box_triangles_ = make_cuda_unique<int>(triangle_count_ * 4);
+    dev_bounding_box_triangles_sizes_ = make_cuda_unique<int>(triangle_count_);
+    dev_bounding_box_triangles_sizes_prefix_ = make_cuda_unique<int>(triangle_count_);
+    dev_bounding_box_ = make_cuda_unique<int>(4);
+    dev_fragment_fill_ = make_cuda_unique<int>(1);
+    dev_stride_prefixes_ = make_cuda_unique<int>(maximum_stride_size);
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -300,27 +223,25 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     }
 
     /*Initialize the GPU Image*/
-    renderer_output_ = new GPUImage(width_, height_, device);
+    renderer_output_ = std::make_unique<GPUImage>(width_, height_, device);
 
     /*Check for errors*/
     if (!renderer_output_->IsInitializedCorrectly()) {
         initialized_correctly_ = false;
         FreeCuda();
-        delete renderer_output_;
-        renderer_output_ = 0;
         return cudaErrorUnknown;
     }
 
     /*Before Allocating Temporary Buffer for CUB to GPU, learn the size by
      * calling the function*/
     cub::DeviceScan::ExclusiveSum(
-        dev_cub_storage_,
+        dev_cub_storage_.get(),
         cub_storage_bytes_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_.get(),
         triangle_count_);
 
-    CUDA_CHECK(cudaMalloc(&dev_cub_storage_, cub_storage_bytes_));
+    dev_cub_storage_ = make_cuda_unique<std::byte>(cub_storage_bytes_);
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -332,13 +253,13 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
 
     /*Copy input from host memory to GPU.*/
     CUDA_CHECK(cudaMemcpy(
-        dev_triangles_,
+        dev_triangles_.get(),
         triangles,
         triangle_count_ * 9 * sizeof(float),
         cudaMemcpyHostToDevice));
 
     CUDA_CHECK(cudaMemcpy(
-        dev_normals_,
+        dev_normals_.get(),
         normals,
         triangle_count_ * 3 * sizeof(float),
         cudaMemcpyHostToDevice));
@@ -381,7 +302,7 @@ void RenderEngine::SetRotationMatrix(RotationMatrix model_rotation_matrix) {
 }
 
 GPUImage* RenderEngine::GetRenderOutput() {
-    return renderer_output_;
+    return renderer_output_.get();
 }
 
 __global__ void ResetKernel(int* dev_bounding_box, int width, int height) {
@@ -722,13 +643,14 @@ cudaError_t RenderEngine::Render() {
         width_ * height_ * sizeof(unsigned char)));
 
     /*Reset Launch Packet*/
-    CUDA_CHECK_KERNEL(ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_));
+    CUDA_CHECK_KERNEL(
+        ResetKernel<<<1, 1>>>(dev_bounding_box_.get(), width_, height_));
 
     /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
     CUDA_CHECK_KERNEL(WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
-        dev_triangles_,
-        dev_projected_triangles_,
-        dev_projected_triangles_snapped_,
+        dev_triangles_.get(),
+        dev_projected_triangles_.get(),
+        dev_projected_triangles_snapped_.get(),
         3 * triangle_count_,
         dist_over_pix_pitch_,
         pix_conversion_x_,
@@ -737,8 +659,8 @@ cudaError_t RenderEngine::Render() {
         model_pose_.y_location_,
         model_pose_.z_location_,
         model_rotation_mat_,
-        dev_normals_,
-        dev_backface_,
+        dev_normals_.get(),
+        dev_backface_.get(),
         use_backface_culling_,
         fx_,
         fy_,
@@ -749,26 +671,26 @@ cudaError_t RenderEngine::Render() {
     CUDA_CHECK_KERNEL(BoundingBoxForTrianglesKernel<<<
         dim_grid_bounding_box_,
         threads_per_block>>>(
-        dev_bounding_box_triangles_,
-        dev_projected_triangles_snapped_,
+        dev_bounding_box_triangles_.get(),
+        dev_projected_triangles_snapped_.get(),
         triangle_count_,
         width_,
         height_));
 
     /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
     CUDA_CHECK_KERNEL(BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
-        dev_bounding_box_triangles_,
-        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_.get(),
+        dev_bounding_box_triangles_sizes_.get(),
         triangle_count_,
-        dev_bounding_box_,
-        dev_backface_));
+        dev_bounding_box_.get(),
+        dev_backface_.get()));
 
     /*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
     cub::DeviceScan::ExclusiveSum(
-        dev_cub_storage_,
+        dev_cub_storage_.get(),
         cub_storage_bytes_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
         triangle_count_);
 
     /*Prepare Launch Packet and Send it to Host*/
@@ -776,19 +698,19 @@ cudaError_t RenderEngine::Render() {
     process (last element in dev_boundingBoxTrianglesSizePrefix and last element
     in dev_boundingBoxTrianglesSize)*/
     CUDA_CHECK_KERNEL(PrepareLaunchPacketKernel<<<1, 1>>>(
-        dev_fragment_fill_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
+        dev_fragment_fill_.get(),
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
         triangle_count_));
 
     CUDA_CHECK(cudaMemcpy(
         renderer_output_->GetBoundingBox(),
-        dev_bounding_box_,
+        dev_bounding_box_.get(),
         4 * sizeof(int),
         cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
-        fragment_fill_,
-        dev_fragment_fill_,
+        fragment_fill_.get(),
+        dev_fragment_fill_.get(),
         1 * sizeof(int),
         cudaMemcpyDeviceToHost));
 
@@ -801,7 +723,7 @@ cudaError_t RenderEngine::Render() {
     triangle test.*/
 
     /*Error check for too many fragments.*/
-    if (static_cast<double>(fragment_fill_[0]) >
+    if (static_cast<double>(*fragment_fill_) >
         static_cast<double>(maximum_stride_size) *
             static_cast<double>(threads_per_block - 1)) {
         fprintf(
@@ -814,29 +736,29 @@ cudaError_t RenderEngine::Render() {
 
     CUDA_CHECK_KERNEL(StridePrefixKernel<<<
         ceil(
-            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(*fragment_fill_) /
             static_cast<double>(threads_per_block * threads_per_block)),
         threads_per_block>>>(
         threads_per_block,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        dev_stride_prefixes_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
+        dev_stride_prefixes_.get(),
         triangle_count_));
 
     CUDA_CHECK_KERNEL(FillTriangleKernel<<<
         ceil(
-            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(*fragment_fill_) /
             static_cast<double>(threads_per_block)),
         threads_per_block>>>(
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
+        dev_bounding_box_triangles_.get(),
         renderer_output_->GetDeviceImagePointer(),
         triangle_count_,
         width_,
         height_,
-        dev_projected_triangles_,
-        dev_stride_prefixes_));
+        dev_projected_triangles_.get(),
+        dev_stride_prefixes_.get()));
 
     /*Check for Errors*/
     return cudaGetLastError();

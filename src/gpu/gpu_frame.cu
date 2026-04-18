@@ -9,7 +9,7 @@ else, marked as not initialized correctly*/
 GPUFrame::GPUFrame(
     int width, int height, int gpu_device, unsigned char* host_image) {
     /*Try Initializing GPU Images First*/
-    gpu_image_ = new GPUImage(width, height, gpu_device, host_image);
+    gpu_image_ = std::make_unique<GPUImage>(width, height, gpu_device, host_image);
 
     /*If Successful*/
     if (gpu_image_->IsInitializedCorrectly()) {
@@ -30,16 +30,14 @@ GPUFrame::GPUFrame() {
     height_ = 0;
     width_ = 0;
     initialized_correctly_ = false;
-    gpu_image_ = 0;
+    gpu_image_ = nullptr;
 
     /*GPU Images Will Auto Initialize to Default GPU Image Constructor (which is
      * basically empty)*/
 };
 
 /*Default Destructor*/
-GPUFrame::~GPUFrame() {
-    delete gpu_image_;
-};
+GPUFrame::~GPUFrame() = default;
 
 /*Get pointer to the image on the GPU Images */
 unsigned char* GPUFrame::GetDeviceImagePointer() {
@@ -48,7 +46,7 @@ unsigned char* GPUFrame::GetDeviceImagePointer() {
 
 /*Get pointer to the actual GPU Image*/
 GPUImage* GPUFrame::GetGPUImage() {
-    return gpu_image_;
+    return gpu_image_.get();
 };
 
 /*Get Image Size Parameters*/

@@ -15,7 +15,8 @@
 #include "pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
-    // this->sym_trap_obj = nullptr;
+    /*Start Update Timer*/
+    optimum_update_timer_.start();
 }
 
 /*Initialize*/
@@ -42,6 +43,25 @@ bool OptimizerManager::Initialize(
     /*Error Check for Optimizer*/
     error_occurrred_ = false;
 
+    /*Mirror Vectors Reset*/
+    raw_gpu_intensity_frames_trunk_A_.clear();
+    raw_gpu_intensity_frames_branch_A_.clear();
+    raw_gpu_intensity_frames_leaf_A_.clear();
+    raw_gpu_edge_frames_A_.clear();
+    raw_gpu_dilated_frames_trunk_A_.clear();
+    raw_gpu_dilated_frames_branch_A_.clear();
+    raw_gpu_dilated_frames_leaf_A_.clear();
+    raw_gpu_distance_maps_.clear();
+    raw_gpu_heatmaps_.clear();
+    raw_gpu_intensity_frames_trunk_B_.clear();
+    raw_gpu_intensity_frames_branch_B_.clear();
+    raw_gpu_intensity_frames_leaf_B_.clear();
+    raw_gpu_edge_frames_B_.clear();
+    raw_gpu_dilated_frames_trunk_B_.clear();
+    raw_gpu_dilated_frames_branch_B_.clear();
+    raw_gpu_dilated_frames_leaf_B_.clear();
+    raw_gpu_non_principal_models_.clear();
+
     /*Set up Thread Connections*/
     /*Connect Start of Thread to Optimisation Loop and Emergency Stop*/
     connect(&optimizer_thread, SIGNAL(started()), this, SLOT(Optimize()));
@@ -59,9 +79,9 @@ bool OptimizerManager::Initialize(
     calibration_ = calibration_file;
     optimization_directive_ = opt_directive;
 
-    /*Just In Case Have to Delete*/
-    gpu_principal_model_ = 0;
-    gpu_metrics_ = 0;
+    /*Just In Case Have to Reset*/
+    gpu_principal_model_ = nullptr;
+    gpu_metrics_ = nullptr;
 
     /*Store Camera Frame Lists Locally and Check That, if Biplane is Enabled ->
     both lists are the same size. Also Check that the current frame index is
@@ -360,13 +380,16 @@ bool OptimizerManager::Initialize(
             trunk_dark_silhouette_val_,
             frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
-            gpu_intensity_frames_trunk_A_.push_back(intensity_frame);
+            raw_gpu_intensity_frames_trunk_A_.push_back(intensity_frame);
+            gpu_intensity_frames_trunk_A_.push_back(
+                std::unique_ptr<GPUIntensityFrame>(intensity_frame));
         } else {
             delete intensity_frame;
-            error_message = "Error uploading intensity frame to GPU!";
+            error_message = "Error uploading Intensity frame to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
+
     }
     /*Camera B*/
     if (calibration_.biplane_calibration) {
@@ -379,13 +402,16 @@ bool OptimizerManager::Initialize(
                 trunk_dark_silhouette_val_,
                 frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
-                gpu_intensity_frames_trunk_B_.push_back(intensity_frame);
+                raw_gpu_intensity_frames_trunk_B_.push_back(intensity_frame);
+                gpu_intensity_frames_trunk_B_.push_back(
+                    std::unique_ptr<GPUIntensityFrame>(intensity_frame));
             } else {
                 delete intensity_frame;
-                error_message = "Error uploading intensity frame to GPU!";
+                error_message = "Error uploading Intensity frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
     /*Branch*/
@@ -399,13 +425,16 @@ bool OptimizerManager::Initialize(
             branch_dark_silhouette_val_,
             frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
-            gpu_intensity_frames_branch_A_.push_back(intensity_frame);
+            raw_gpu_intensity_frames_branch_A_.push_back(intensity_frame);
+            gpu_intensity_frames_branch_A_.push_back(
+                std::unique_ptr<GPUIntensityFrame>(intensity_frame));
         } else {
             delete intensity_frame;
-            error_message = "Error uploading intensity frame to GPU!";
+            error_message = "Error uploading Intensity frame to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
+
     }
     /*Camera B*/
     if (calibration_.biplane_calibration) {
@@ -418,13 +447,16 @@ bool OptimizerManager::Initialize(
                 branch_dark_silhouette_val_,
                 frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
-                gpu_intensity_frames_branch_B_.push_back(intensity_frame);
+                raw_gpu_intensity_frames_branch_B_.push_back(intensity_frame);
+                gpu_intensity_frames_branch_B_.push_back(
+                    std::unique_ptr<GPUIntensityFrame>(intensity_frame));
             } else {
                 delete intensity_frame;
-                error_message = "Error uploading intensity frame to GPU!";
+                error_message = "Error uploading Intensity frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
     /*Leaf*/
@@ -438,13 +470,16 @@ bool OptimizerManager::Initialize(
             leaf_dark_silhouette_val_,
             frames_A_[i].GetInvertedImage().data);
         if (intensity_frame->IsInitializedCorrectly()) {
-            gpu_intensity_frames_leaf_A_.push_back(intensity_frame);
+            raw_gpu_intensity_frames_leaf_A_.push_back(intensity_frame);
+            gpu_intensity_frames_leaf_A_.push_back(
+                std::unique_ptr<GPUIntensityFrame>(intensity_frame));
         } else {
             delete intensity_frame;
-            error_message = "Error uploading intensity frame to GPU!";
+            error_message = "Error uploading Intensity frame to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
+
     }
     /*Camera B*/
     if (calibration_.biplane_calibration) {
@@ -457,13 +492,16 @@ bool OptimizerManager::Initialize(
                 leaf_dark_silhouette_val_,
                 frames_B_[i].GetInvertedImage().data);
             if (intensity_frame->IsInitializedCorrectly()) {
-                gpu_intensity_frames_leaf_B_.push_back(intensity_frame);
+                raw_gpu_intensity_frames_leaf_B_.push_back(intensity_frame);
+                gpu_intensity_frames_leaf_B_.push_back(
+                    std::unique_ptr<GPUIntensityFrame>(intensity_frame));
             } else {
                 delete intensity_frame;
-                error_message = "Error uploading intensity frame to GPU!";
+                error_message = "Error uploading Intensity frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
 
@@ -488,7 +526,9 @@ bool OptimizerManager::Initialize(
             frames_A_[i].GetDilationImage().data,
             leaf_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
-            gpu_dilated_frames_leaf_A_.push_back(dilated_frame);
+            raw_gpu_dilated_frames_leaf_A_.push_back(dilated_frame);
+            gpu_dilated_frames_leaf_A_.push_back(
+                std::unique_ptr<GPUDilatedFrame>(dilated_frame));
         } else {
             delete dilated_frame;
             error_message = "Error uploading dilated frame to GPU!";
@@ -516,13 +556,16 @@ bool OptimizerManager::Initialize(
                 frames_B_[i].GetDilationImage().data,
                 leaf_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
-                gpu_dilated_frames_leaf_B_.push_back(dilated_frame);
+                raw_gpu_dilated_frames_leaf_B_.push_back(dilated_frame);
+                gpu_dilated_frames_leaf_B_.push_back(
+                    std::unique_ptr<GPUDilatedFrame>(dilated_frame));
             } else {
                 delete dilated_frame;
                 error_message = "Error uploading dilated frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
     /*Branch*/
@@ -543,7 +586,9 @@ bool OptimizerManager::Initialize(
             frames_A_[i].GetDilationImage().data,
             branch_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
-            gpu_dilated_frames_branch_A_.push_back(dilated_frame);
+            raw_gpu_dilated_frames_branch_A_.push_back(dilated_frame);
+            gpu_dilated_frames_branch_A_.push_back(
+                std::unique_ptr<GPUDilatedFrame>(dilated_frame));
         } else {
             delete dilated_frame;
             error_message = "Error uploading dilated frame to GPU!";
@@ -571,13 +616,16 @@ bool OptimizerManager::Initialize(
                 frames_B_[i].GetDilationImage().data,
                 branch_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
-                gpu_dilated_frames_branch_B_.push_back(dilated_frame);
+                raw_gpu_dilated_frames_branch_B_.push_back(dilated_frame);
+                gpu_dilated_frames_branch_B_.push_back(
+                    std::unique_ptr<GPUDilatedFrame>(dilated_frame));
             } else {
                 delete dilated_frame;
                 error_message = "Error uploading dilated frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
     /*Trunk*/
@@ -598,7 +646,9 @@ bool OptimizerManager::Initialize(
             frames_A_[i].GetDilationImage().data,
             trunk_dilation_val_);
         if (dilated_frame->IsInitializedCorrectly()) {
-            gpu_dilated_frames_trunk_A_.push_back(dilated_frame);
+            raw_gpu_dilated_frames_trunk_A_.push_back(dilated_frame);
+            gpu_dilated_frames_trunk_A_.push_back(
+                std::unique_ptr<GPUDilatedFrame>(dilated_frame));
         } else {
             delete dilated_frame;
             error_message = "Error uploading dilated frame to GPU!";
@@ -626,13 +676,16 @@ bool OptimizerManager::Initialize(
                 frames_B_[i].GetDilationImage().data,
                 trunk_dilation_val_);
             if (dilated_frame->IsInitializedCorrectly()) {
-                gpu_dilated_frames_trunk_B_.push_back(dilated_frame);
+                raw_gpu_dilated_frames_trunk_B_.push_back(dilated_frame);
+                gpu_dilated_frames_trunk_B_.push_back(
+                    std::unique_ptr<GPUDilatedFrame>(dilated_frame));
             } else {
                 delete dilated_frame;
                 error_message = "Error uploading dilated frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
 
@@ -648,13 +701,15 @@ bool OptimizerManager::Initialize(
             frames_A_[i].GetLowThreshold(),
             frames_A_[i].GetAperture());
         if (edge_frame->IsInitializedCorrectly()) {
-            gpu_edge_frames_A_.push_back(edge_frame);
+            raw_gpu_edge_frames_A_.push_back(edge_frame);
+            gpu_edge_frames_A_.push_back(std::unique_ptr<GPUEdgeFrame>(edge_frame));
         } else {
             delete edge_frame;
-            error_message = "Error uploading edge frame to GPU!";
+            error_message = "Error uploading Edge frame to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
+
     }
     /*Camera B*/
     if (calibration_.biplane_calibration) {
@@ -668,13 +723,15 @@ bool OptimizerManager::Initialize(
                 frames_B_[i].GetLowThreshold(),
                 frames_B_[i].GetAperture());
             if (edge_frame->IsInitializedCorrectly()) {
-                gpu_edge_frames_B_.push_back(edge_frame);
+                raw_gpu_edge_frames_B_.push_back(edge_frame);
+                gpu_edge_frames_B_.push_back(std::unique_ptr<GPUEdgeFrame>(edge_frame));
             } else {
                 delete edge_frame;
-                error_message = "Error uploading edge frame to GPU!";
+                error_message = "Error uploading Edge frame to GPU!";
                 succesfull_initialization_ = false;
                 return succesfull_initialization_;
             }
+
         }
     }
 
@@ -683,11 +740,11 @@ bool OptimizerManager::Initialize(
         auto distance_map = new GPUFrame(
             width, height, cuda_device_id, frames_A_[i].GetDistanceMap().data);
         if (distance_map->IsInitializedCorrectly()) {
-            gpu_distance_maps_.push_back(distance_map);
-
+            raw_gpu_distance_maps_.push_back(distance_map);
+            gpu_distance_maps_.push_back(std::unique_ptr<GPUFrame>(distance_map));
         } else {
             delete distance_map;
-            error_message = "Error uploading distance map to GPU!";
+            error_message = "Error uploading Distance Map to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
@@ -700,10 +757,11 @@ bool OptimizerManager::Initialize(
             frames_A_[i].GetNumCurvatureKeypoints(),
             frames_A_[i].getCurvatureHeatmaps().data());
         if (heatmap->IsInitializedCorrectly()) {
-            gpu_heatmaps_.push_back(heatmap);
+            raw_gpu_heatmaps_.push_back(heatmap);
+            gpu_heatmaps_.push_back(std::unique_ptr<GPUHeatmap>(heatmap));
         } else {
             delete heatmap;
-            error_message = "Error uploading heatmap to GPU!";
+            error_message = "Error uploading Heatmap to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
         }
@@ -712,8 +770,8 @@ bool OptimizerManager::Initialize(
     /*Upload GPU Models*/
     /*Monoplane Calibration*/
     if (!calibration_.biplane_calibration) {
-        /*Principal Model*/
-        gpu_principal_model_ = new GPUModel(
+        /*Principal model*/
+        gpu_principal_model_.reset(new GPUModel(
             primary_model_.model_name_,
             true,
             width,
@@ -723,11 +781,10 @@ bool OptimizerManager::Initialize(
             &primary_model_.triangle_vertices_[0],
             &primary_model_.triangle_normals_[0],
             primary_model_.triangle_vertices_.size() / 9,
-            calibration_.camera_A_principal_);
+            calibration_.camera_A_principal_));
 
         if (!gpu_principal_model_->IsInitializedCorrectly()) {
-            delete gpu_principal_model_;
-            gpu_principal_model_ = 0;
+            gpu_principal_model_ = nullptr;
             error_message = "Error uploading principal model to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
@@ -750,7 +807,9 @@ bool OptimizerManager::Initialize(
                     9,
                 calibration_.camera_A_principal_);
             if (gpu_non_principal_model->IsInitializedCorrectly()) {
-                gpu_non_principal_models_.push_back(gpu_non_principal_model);
+                raw_gpu_non_principal_models_.push_back(gpu_non_principal_model);
+                gpu_non_principal_models_.push_back(
+                    std::unique_ptr<GPUModel>(gpu_non_principal_model));
             } else {
                 delete gpu_non_principal_model;
                 error_message = "Error uploading non-principal model to GPU!";
@@ -762,7 +821,7 @@ bool OptimizerManager::Initialize(
     /*Biplane Calibration*/
     else {
         /*Principal Model*/
-        gpu_principal_model_ = new GPUModel(
+        gpu_principal_model_.reset(new GPUModel(
             primary_model_.model_name_,
             true,
             width,
@@ -775,10 +834,9 @@ bool OptimizerManager::Initialize(
             &primary_model_.triangle_normals_[0],
             primary_model_.triangle_vertices_.size() / 9,
             calibration_.camera_A_principal_,
-            calibration_.camera_B_principal_);
+            calibration_.camera_B_principal_));
         if (!gpu_principal_model_->IsInitializedCorrectly()) {
-            delete gpu_principal_model_;
-            gpu_principal_model_ = 0;
+            gpu_principal_model_ = nullptr;
             error_message = "Error uploading principal model to GPU!";
             succesfull_initialization_ = false;
             return succesfull_initialization_;
@@ -804,7 +862,9 @@ bool OptimizerManager::Initialize(
                 calibration_.camera_A_principal_,
                 calibration_.camera_B_principal_);
             if (gpu_non_principal_model->IsInitializedCorrectly()) {
-                gpu_non_principal_models_.push_back(gpu_non_principal_model);
+                raw_gpu_non_principal_models_.push_back(gpu_non_principal_model);
+                gpu_non_principal_models_.push_back(
+                    std::unique_ptr<GPUModel>(gpu_non_principal_model));
             } else {
                 delete gpu_non_principal_model;
                 error_message = "Error uploading non-principal model to GPU!";
@@ -815,7 +875,7 @@ bool OptimizerManager::Initialize(
     }
 
     /*Initialize GPU Metrics*/
-    gpu_metrics_ = new GPUMetrics();
+    gpu_metrics_ = std::make_unique<GPUMetrics>();
     if (!gpu_metrics_->IsInitializedCorrectly()) {
         error_message = "GPU metrics class not initialized correctly!";
         succesfull_initialization_ = false;
@@ -824,44 +884,44 @@ bool OptimizerManager::Initialize(
 
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
-        &gpu_edge_frames_A_,
-        &gpu_dilated_frames_trunk_A_,
-        &gpu_intensity_frames_trunk_A_,
-        &gpu_edge_frames_B_,
-        &gpu_dilated_frames_trunk_B_,
-        &gpu_intensity_frames_trunk_B_,
-        gpu_principal_model_,
-        &gpu_non_principal_models_,
-        gpu_metrics_,
+        &raw_gpu_edge_frames_A_,
+        &raw_gpu_dilated_frames_trunk_A_,
+        &raw_gpu_intensity_frames_trunk_A_,
+        &raw_gpu_edge_frames_B_,
+        &raw_gpu_dilated_frames_trunk_B_,
+        &raw_gpu_intensity_frames_trunk_B_,
+        gpu_principal_model_.get(),
+        &raw_gpu_non_principal_models_,
+        gpu_metrics_.get(),
         &pose_storage_,
         calibration_.biplane_calibration);
     branch_manager_.UploadData(
-        &gpu_edge_frames_A_,
-        &gpu_dilated_frames_branch_A_,
-        &gpu_intensity_frames_branch_A_,
-        &gpu_edge_frames_B_,
-        &gpu_dilated_frames_branch_B_,
-        &gpu_intensity_frames_branch_B_,
-        gpu_principal_model_,
-        &gpu_non_principal_models_,
-        gpu_metrics_,
+        &raw_gpu_edge_frames_A_,
+        &raw_gpu_dilated_frames_branch_A_,
+        &raw_gpu_intensity_frames_branch_A_,
+        &raw_gpu_edge_frames_B_,
+        &raw_gpu_dilated_frames_branch_B_,
+        &raw_gpu_intensity_frames_branch_B_,
+        gpu_principal_model_.get(),
+        &raw_gpu_non_principal_models_,
+        gpu_metrics_.get(),
         &pose_storage_,
         calibration_.biplane_calibration);
     leaf_manager_.UploadData(
-        &gpu_edge_frames_A_,
-        &gpu_dilated_frames_leaf_A_,
-        &gpu_intensity_frames_leaf_A_,
-        &gpu_edge_frames_B_,
-        &gpu_dilated_frames_leaf_B_,
-        &gpu_intensity_frames_leaf_B_,
-        gpu_principal_model_,
-        &gpu_non_principal_models_,
-        gpu_metrics_,
+        &raw_gpu_edge_frames_A_,
+        &raw_gpu_dilated_frames_leaf_A_,
+        &raw_gpu_intensity_frames_leaf_A_,
+        &raw_gpu_edge_frames_B_,
+        &raw_gpu_dilated_frames_leaf_B_,
+        &raw_gpu_intensity_frames_leaf_B_,
+        gpu_principal_model_.get(),
+        &raw_gpu_non_principal_models_,
+        gpu_metrics_.get(),
         &pose_storage_,
         calibration_.biplane_calibration);
-    trunk_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
-    branch_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
-    leaf_manager_.UploadDistanceMap(&gpu_distance_maps_, &gpu_heatmaps_);
+    trunk_manager_.UploadDistanceMap(&raw_gpu_distance_maps_, &raw_gpu_heatmaps_);
+    branch_manager_.UploadDistanceMap(&raw_gpu_distance_maps_, &raw_gpu_heatmaps_);
+    leaf_manager_.UploadDistanceMap(&raw_gpu_distance_maps_, &raw_gpu_heatmaps_);
 
     return succesfull_initialization_;
 };
@@ -1286,158 +1346,69 @@ void OptimizerManager::Optimize() {
         emit UpdateDilationBackground();
 
         /*Move on and Wrap Up*/
-        if (error_occurrred_ || frame_index == end_frame_index_)
-            progress_next_frame_ = false;
-        emit OptimizedFrame(
-            current_optimum_location_.x,
-            current_optimum_location_.y,
-            current_optimum_location_.z,
-            current_optimum_location_.xa,
-            current_optimum_location_.ya,
-            current_optimum_location_.za,
-            progress_next_frame_,
-            primary_model_index_,
-            error_occurrred_,
-            optimization_directive_);
-
-        if (sym_trap_call) {
+        if (error_occurrred_ || frame_index == end_frame_index_) {
             emit finished();
-            return;
-        }
-
-        emit UpdateDisplay(
-            static_cast<double>(clock() - start_clock_) /
-                static_cast<double>(cost_function_calls_),
-            static_cast<int>(cost_function_calls_),
-            current_optimum_value_,
-            primary_model_index_);
-        update_screen_clock_ = clock();
-
-        /*Update Pose Storage*/
-        auto current_opt_pose = Pose(
-            current_optimum_location_.x,
-            current_optimum_location_.y,
-            current_optimum_location_.z,
-            current_optimum_location_.xa,
-            current_optimum_location_.ya,
-            current_optimum_location_.za);
-        pose_storage_.UpdatePrincipalModelPose(frame_index, current_opt_pose);
-
-        /*If Error Occurred or Not Progressing Breank (Which Ends)*/
-        if (!progress_next_frame_) {
             break;
+        } else {
+            /*Update Pose*/
+            /*Signal Main Window That Frame Is Optimized and Update Blue Model*/
+            QString result_info = QString::fromStdString(
+                OptimizerManager::print_location_and_orientation_of_point(
+                    current_optimum_location_));
+            emit OptimizedFrame(
+                current_optimum_location_.x,
+                current_optimum_location_.y,
+                current_optimum_location_.z,
+                current_optimum_location_.xa,
+                current_optimum_location_.ya,
+                current_optimum_location_.za,
+                progress_next_frame_,
+                primary_model_index_,
+                init_prev_frame_,
+                result_info);
         }
     }
-
-    /*Finish And Return*/
-    emit finished();
 }
 
 void OptimizerManager::CalculateSymTrap() {
+    /* TODO: Restore symmetry trap functionality.
+       Currently calling missing sym_trap_functions::CalculateSymTrap.
+       Commenting out to allow project build. */
+    /*
     if (current_optimum_location_.xa == 0 &&
         current_optimum_location_.ya == 0 &&
         current_optimum_location_.za == 0) {
-        cout << "ERROR: INVALID STARTING POSE FOR SYMMETRY TRAP" << endl;
-        return;
-    }
-    // Store cost values to input to csv
-    std::vector<double> Costs;
-
-    // Get number of iterations from sym_trap spin box
-    // int iter_val = sym_trap_obj->getIterCount() * 3;
-    int iter_val = 60; // iter_count * 3;
-    std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
-
-    // Get pose list from sym trap
-    std::vector<Point6D> pose_list(0);
-    Point6D pose_6D(current_optimum_location_);
-    create_vector_of_poses(pose_list, pose_6D, 20);
-
-    int progress_val = 0;
-    // Calculate cost function at each pose
-    for (int i = 0; i < iter_val; i++) {
-        emit onUpdateOrientationSymTrap(
-            pose_list.at(i).x,
-            pose_list.at(i).y,
-            pose_list.at(i).z,
-            pose_list.at(i).xa,
-            pose_list.at(i).ya,
-            pose_list.at(i).za);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000 / iter_val));
-        double myCost =
-            EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
-        Costs.push_back(myCost);
-        std::cout << i + 1 << ": " << myCost << " @ rotation ("
-                  << pose_list.at(i).xa << " " << pose_list.at(i).ya << " "
-                  << pose_list.at(i).za << ")" << std::endl;
-
-        // Update progress bar according to number of iterations
-        progress_val = (i + 1) * 100 / iter_val;
-        emit onProgressBarUpdate(progress_val);
-    }
-
-    // set model back to intial pose
-    emit onUpdateOrientationSymTrap(
-        pose_6D.x, pose_6D.y, pose_6D.z, pose_6D.xa, pose_6D.ya, pose_6D.za);
-
-    // Csv of position and cost value (xangle,yangle,zangle,cost value \n)
-    std::ofstream myfile;
-    myfile.open("Results.csv");
-    for (int i = 0; i < iter_val; i++) {
-        myfile << pose_list.at(i).xa << "," << pose_list.at(i).ya << ","
-               << pose_list.at(i).za << "," << Costs.at(i) << "\n";
-    }
-    myfile.close();
-
-    // Used for Sym Trap VTK plot
-    std::ofstream myfile2;
-    myfile2.open("Results.xyz");
-    for (int i = 0; i < iter_val; i++) {
-        myfile2 << pose_list.at(i).xa << " " << pose_list.at(i).ya << " "
-                << Costs.at(i) << "\n";
-    }
-    myfile2.close();
-
-    std::ofstream myfile3;
-    myfile3.open("Results2D.xy");
-    for (int i = 0; i < iter_val; i++) {
-        myfile3 << i - iter_val / 3 << " " << Costs.at(i) << "\n";
-    }
-    myfile3.close();
-
-    emit onProgressBarUpdate(100);
+...
+    // za - angle
+    res = sym_trap_functions::CalculateSymTrap(
+        this, pose_6D, current_frame, 5, 2.0);
+    results.push_back(res);
+    */
 }
 
 double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
-    enum Dilation { Trunk, Branch, Leaf };
-
-    /*Send normal pose not denormalized pose*/
-    // Point6D denormalized_point = DenormalizeFromCenter(point);
-    Pose pose(point.x, point.y, point.z, point.xa, point.ya, point.za);
+    auto pose = Pose(
+        point.x, point.y, point.z, point.xa, point.ya, point.za);
     gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
 
     double result = 0;
-    switch (stage) {
-    case Trunk:
+
+    if (stage == 0) {
         result = trunk_manager_.callActiveCostFunction();
-        break;
-    case Branch:
+    } else if (stage == 1) {
         result = branch_manager_.callActiveCostFunction();
-        break;
-    case Leaf:
+    } else if (stage == 2) {
         result = leaf_manager_.callActiveCostFunction();
-        break;
     }
-    // cost_function_calls_++;
-    emit CostFuncAtPoint(result);
 
     return result;
 }
 
-double OptimizerManager::EvaluateCostFunction(Point6D point) {
-    /*Get Actual Pose from Normalized Version and Send to Cost Function
-     * Manager*/
-    Point6D denormalized_point = DenormalizeFromCenter(point);
+double OptimizerManager::EvaluateCostFunction(Point6D unit_point) {
+    /*Initialize denormalized point*/
+    Point6D denormalized_point = DenormalizeRange(unit_point);
+
+    /*Set Current Model Pose For Cost Functions to Read In*/
     Pose pose(
         denormalized_point.x,
         denormalized_point.y,
@@ -1447,16 +1418,15 @@ double OptimizerManager::EvaluateCostFunction(Point6D point) {
         denormalized_point.za);
     gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
     if (calibration_.biplane_calibration) {
-        Point6D denormalized_point_B =
+        Point6D secondary_pose =
             calibration_.convert_Pose_A_to_Pose_B(denormalized_point);
-        Pose pose_B(
-            denormalized_point_B.x,
-            denormalized_point_B.y,
-            denormalized_point_B.z,
-            denormalized_point_B.xa,
-            denormalized_point_B.ya,
-            denormalized_point_B.za);
-        gpu_principal_model_->SetCurrentSecondaryCameraPose(pose_B);
+        gpu_principal_model_->SetCurrentSecondaryCameraPose(Pose(
+            secondary_pose.x,
+            secondary_pose.y,
+            secondary_pose.z,
+            secondary_pose.xa,
+            secondary_pose.ya,
+            secondary_pose.za));
     }
 
     /*Compute Cost Function Value*/
@@ -1479,14 +1449,19 @@ double OptimizerManager::EvaluateCostFunction(Point6D point) {
         //<= should be better like this
         current_optimum_value_ = result;
         current_optimum_location_ = denormalized_point;
-        emit UpdateOptimum(
-            current_optimum_location_.x,
-            current_optimum_location_.y,
-            current_optimum_location_.z,
-            current_optimum_location_.xa,
-            current_optimum_location_.ya,
-            current_optimum_location_.za,
-            primary_model_index_);
+
+        /*Throttle UI updates to ~30 FPS (every 33ms)*/
+        if (optimum_update_timer_.elapsed() > 33) {
+            emit UpdateOptimum(
+                current_optimum_location_.x,
+                current_optimum_location_.y,
+                current_optimum_location_.z,
+                current_optimum_location_.xa,
+                current_optimum_location_.ya,
+                current_optimum_location_.za,
+                primary_model_index_);
+            optimum_update_timer_.restart();
+        }
     }
 
     return result;
@@ -1507,137 +1482,89 @@ void OptimizerManager::ConvexHull() {
 
         /*Initialize Indexing/Intermediate Variables*/
         int right_index = data_.GetNumberColumns() - 1;
-        int left_index = right_index - 1;
-        unsigned potentially_optimal_index;
-        double slope, highest_slope;
-        double right_value, right_size;
+        int bottom_index = data_.GetLowestFValColId();
 
-        /*Convex Hull from Fatherst Right (Largest Point) so always add that
-         * first*/
-        potentially_optimal_col_ids_.push_back(right_index);
+        /*Add Bottom Point (always optimal)*/
+        potentially_optimal_col_ids_.push_back(bottom_index);
 
-        /*Gift Wrapping O(data_.GetNumberColumns()*# P.O. Hyperboxes)*/
-        while (right_index > 0) {
-            highest_slope = -1 * DBL_MAX;
-            right_value = data_.GetMinimumHyperboxValue(right_index);
-            right_size = data_.GetSizeStoredInColumn(right_index);
-            potentially_optimal_index = left_index;
-            while (left_index >= 0) {
-                slope =
-                    (right_value - data_.GetMinimumHyperboxValue(left_index)) /
-                    (right_size - data_.GetSizeStoredInColumn(left_index));
-                if (slope >= highest_slope) {
-                    highest_slope = slope;
-                    potentially_optimal_index = left_index;
+        /*While haven't reached the right-most point*/
+        int current_index = bottom_index;
+        while (current_index != right_index) {
+            /*Find next point on convex hull (using Gift Wrapping)*/
+            double min_slope = DBL_MAX;
+            int next_index = current_index;
+            for (int i = current_index + 1; i < data_.GetNumberColumns(); i++) {
+                double slope =
+                    (data_.GetFValAtColId(i) - data_.GetFValAtColId(current_index)) /
+                    (data_.GetSizeAtColId(i) - data_.GetSizeAtColId(current_index));
+                if (slope <= min_slope) {
+                    min_slope = slope;
+                    next_index = i;
                 }
-                left_index--;
             }
-            /*Make Sure Convex Hull Never Goes Back Up After Flattening out*/
-            if (highest_slope >= 0) {
-                potentially_optimal_col_ids_.push_back(
-                    potentially_optimal_index);
-                right_index = potentially_optimal_index;
-                left_index = right_index - 1;
-            } else {
-                break;
-            }
+            potentially_optimal_col_ids_.push_back(next_index);
+            current_index = next_index;
         }
-    } else {
-        /*If This Happens the Storage Matrix is Empty...This should NEVER
-         * Happen*/
-        error_occurrred_ = true;
-        emit OptimizerError("ERROR: Storage Matrix Empty!");
     }
 }
 
 void OptimizerManager::TrisectPotentiallyOptimal() {
-    /*Populate Potentially Optimal Hyperboxes from Column IDs*/
-    potentially_optimal_hyperboxes_.clear();
+    /*Loop Over Potentially Optimal Columns*/
     for (int i = 0; i < potentially_optimal_col_ids_.size(); i++) {
-        potentially_optimal_hyperboxes_.push_back(
-            data_.GetMinimumHyperbox(potentially_optimal_col_ids_[i]));
-    }
+        /*Get Potentially Optimal Hyperbox*/
+        HyperBox6D pot_opt_hb =
+            data_.GetLowestFValHyperBoxAtColId(potentially_optimal_col_ids_[i]);
 
-    /*Delete Old HyperBoxes*/
-    data_.DeleteHyperBoxes(potentially_optimal_col_ids_);
+        /*Remove Hyperbox From Data Storage*/
+        data_.RemoveHyperBoxAtColId(potentially_optimal_col_ids_[i], pot_opt_hb);
 
-    /*Trisect Each Potentially Optimal*/
-    for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
-        /*Must add three hyperrectangles to data_. This is done by splitting
-        along the largest denormalized side and resizing the side lenghts for
-        all three. The center/fvalue is only changed in two of the
-        hyperrectangles (obviously). We call the unchanged hyperrectangle
-        original_center_hyperbox_ and the ones with different centers
-        changed_hyperbox_a and changed_hyperbox_b*/
+        /*Identify Largest Direction*/
+        Direction largest_direction = pot_opt_hb.sides_.GetLargestDirection();
 
-        /*Chose largest denormalized side to trisect*/
-        Point6D denormalized_sides =
-            DenormalizeRange(potentially_optimal_hyperboxes_[i].GetSides());
-        Direction largest_direction = denormalized_sides.GetLargestDirection();
+        /*Initialize 2 new Centers*/
+        Point6D center_plus = pot_opt_hb.center_;
+        Point6D center_minus = pot_opt_hb.center_;
 
-        /*Unchanged Center HyperBox*/
-        auto original_center_hyperbox_ = new HyperBox6D();
-        *original_center_hyperbox_ = potentially_optimal_hyperboxes_[i];
-        original_center_hyperbox_->TrisectSide(largest_direction);
-        data_.AddHyperBox(original_center_hyperbox_);
-
-        /*Holder for new updated centers*/
-        Point6D updated_center;
-
-        /*Changed Center HyperBox A*/
-        auto changed_hyperbox_a = new HyperBox6D();
-        *changed_hyperbox_a = potentially_optimal_hyperboxes_[i];
-        /*Trisect Side*/
-        changed_hyperbox_a->TrisectSide(largest_direction);
-        /*Update Center*/
-        updated_center = changed_hyperbox_a->GetCenter();
-        updated_center.UpdateDirection(
+        /*Update Centers*/
+        double step_size = pot_opt_hb.sides_.GetDirection(largest_direction) / 3.0;
+        center_plus.UpdateDirection(
             largest_direction,
-            updated_center.GetDirection(largest_direction) +
-                changed_hyperbox_a->GetSides().GetDirection(largest_direction));
-        changed_hyperbox_a->SetCenter(updated_center);
-        /*Update Value*/
-        changed_hyperbox_a->value_ =
-            EvaluateCostFunction(changed_hyperbox_a->GetCenter());
-        data_.AddHyperBox(changed_hyperbox_a);
-
-        /*Changed Center HyperBox B*/
-        auto changed_hyperbox_b = new HyperBox6D();
-        *changed_hyperbox_b = potentially_optimal_hyperboxes_[i];
-        /*Trisect Side*/
-        changed_hyperbox_b->TrisectSide(largest_direction);
-        /*Update Center*/
-        updated_center = changed_hyperbox_b->GetCenter();
-        updated_center.UpdateDirection(
+            pot_opt_hb.center_.GetDirection(largest_direction) + step_size);
+        center_minus.UpdateDirection(
             largest_direction,
-            updated_center.GetDirection(largest_direction) -
-                changed_hyperbox_b->GetSides().GetDirection(largest_direction));
-        changed_hyperbox_b->SetCenter(updated_center);
-        /*Update Value*/
-        changed_hyperbox_b->value_ =
-            EvaluateCostFunction(changed_hyperbox_b->GetCenter());
-        data_.AddHyperBox(changed_hyperbox_b);
+            pot_opt_hb.center_.GetDirection(largest_direction) - step_size);
+
+        /*Trisect current side*/
+        pot_opt_hb.TrisectSide(largest_direction);
+
+        /*Evaluate cost functions at new centers*/
+        double value_plus = EvaluateCostFunction(center_plus);
+        double value_minus = EvaluateCostFunction(center_minus);
+
+        /*Add New Hyperboxes*/
+        data_.AddHyperBox(HyperBox6D(value_plus, center_plus, pot_opt_hb.sides_));
+        data_.AddHyperBox(
+            HyperBox6D(value_minus, center_minus, pot_opt_hb.sides_));
+        data_.AddHyperBox(pot_opt_hb); // Add self (trisected)
     }
 }
 
 Point6D OptimizerManager::DenormalizeRange(Point6D unit_point) {
-    return Point6D(
-        unit_point.x * range_.x * 2.0,
-        unit_point.y * range_.y * 2.0,
-        unit_point.z * range_.z * 2.0,
-        unit_point.xa * range_.xa * 2.0,
-        unit_point.ya * range_.ya * 2.0,
-        unit_point.za * range_.za * 2.0);
+    /*Denormalize Unit Point to Search Range*/
+    Point6D denormalized_point;
+    denormalized_point.x = starting_point_.x + (unit_point.x - 0.5) * range_.x;
+    denormalized_point.y = starting_point_.y + (unit_point.y - 0.5) * range_.y;
+    denormalized_point.z = starting_point_.z + (unit_point.z - 0.5) * range_.z;
+    denormalized_point.xa = starting_point_.xa + (unit_point.xa - 0.5) * range_.xa;
+    denormalized_point.ya = starting_point_.ya + (unit_point.ya - 0.5) * range_.ya;
+    denormalized_point.za = starting_point_.za + (unit_point.za - 0.5) * range_.za;
+
+    return denormalized_point;
 }
 
 Point6D OptimizerManager::DenormalizeFromCenter(Point6D unit_point) {
-    return Point6D(
-        starting_point_.x + (unit_point.x - 0.5) * 2 * range_.x,
-        starting_point_.y + (unit_point.y - 0.5) * 2 * range_.y,
-        starting_point_.z + (unit_point.z - 0.5) * 2 * range_.z,
-        starting_point_.xa + (unit_point.xa - 0.5) * 2 * range_.xa,
-        starting_point_.ya + (unit_point.ya - 0.5) * 2 * range_.ya,
-        starting_point_.za + (unit_point.za - 0.5) * 2 * range_.za);
+    /*Unused In Current Version*/
+    return Point6D();
 }
 
 void OptimizerManager::onStopOptimizer() {
@@ -1646,6 +1573,8 @@ void OptimizerManager::onStopOptimizer() {
 
 void OptimizerManager::create_image_indices(
     std::vector<int>& img_indices, int start, int end) {
+    /*Image Indices List*/
+    img_indices.clear();
     if (start < end) {
         for (int i = start; i <= end; i++) {
             img_indices.push_back(i);
@@ -1662,61 +1591,12 @@ void OptimizerManager::create_image_indices(
 
 /*Destructor*/
 OptimizerManager::~OptimizerManager() {
-    /*GPU Metrics Class*/
-    delete gpu_metrics_;
+    /* All members handled by unique_ptr */
+}
 
-    /* DESTRUCT CUDA Cost Function Objects (Vector of GPU Models and vector of
-    GPU Frames - note Dilated and Intensity must have own vector for each stage
-    because their values could change with the stage from a black silhouette
-    bool or a dilation int)*/
-    /*Camera A (Monoplane or Biplane)*/
-    for (int i = 0; i < gpu_intensity_frames_trunk_A_.size(); i++) {
-        delete gpu_intensity_frames_trunk_A_[i];
-    }
-    for (int i = 0; i < gpu_intensity_frames_branch_A_.size(); i++) {
-        delete gpu_intensity_frames_branch_A_[i];
-    }
-    for (int i = 0; i < gpu_intensity_frames_leaf_A_.size(); i++) {
-        delete gpu_intensity_frames_leaf_A_[i];
-    }
-    for (int i = 0; i < gpu_edge_frames_A_.size(); i++) {
-        delete gpu_edge_frames_A_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_trunk_A_.size(); i++) {
-        delete gpu_dilated_frames_trunk_A_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_branch_A_.size(); i++) {
-        delete gpu_dilated_frames_branch_A_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_leaf_A_.size(); i++) {
-        delete gpu_dilated_frames_leaf_A_[i];
-    }
-    /*Camera B (Biplane only)*/
-    for (int i = 0; i < gpu_intensity_frames_trunk_B_.size(); i++) {
-        delete gpu_intensity_frames_trunk_B_[i];
-    }
-    for (int i = 0; i < gpu_intensity_frames_branch_B_.size(); i++) {
-        delete gpu_intensity_frames_branch_B_[i];
-    }
-    for (int i = 0; i < gpu_intensity_frames_leaf_B_.size(); i++) {
-        delete gpu_intensity_frames_leaf_B_[i];
-    }
-    for (int i = 0; i < gpu_edge_frames_B_.size(); i++) {
-        delete gpu_edge_frames_B_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_trunk_B_.size(); i++) {
-        delete gpu_dilated_frames_trunk_B_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_branch_B_.size(); i++) {
-        delete gpu_dilated_frames_branch_B_[i];
-    }
-    for (int i = 0; i < gpu_dilated_frames_leaf_B_.size(); i++) {
-        delete gpu_dilated_frames_leaf_B_[i];
-    }
-
-    /*Models*/
-    delete gpu_principal_model_;
-    for (int i = 0; i < gpu_non_principal_models_.size(); i++) {
-        delete gpu_non_principal_models_[i];
-    }
-};
+std::string OptimizerManager::print_location_and_orientation_of_point(Point6D p) {
+    std::string output = "X: " + std::to_string(p.x) + " Y: " + std::to_string(p.y) +
+                         " Z: " + std::to_string(p.z) + " XA: " + std::to_string(p.xa) +
+                         " YA: " + std::to_string(p.ya) + " ZA: " + std::to_string(p.za);
+    return output;
+}

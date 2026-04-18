@@ -6,6 +6,7 @@
 #include "device_launch_parameters.h"
 
 /*GPU Frame/Model*/
+#include "gpu/cuda_deleters.cuh"
 #include "gpu/gpu_dilated_frame.cuh"
 #include "gpu/gpu_edge_frame.cuh"
 #include "gpu/gpu_frame.cuh"
@@ -94,18 +95,18 @@ private:
     metric) This is often used to compute the metric so we include it in the
     base class definition.*/
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    int* pixel_score_;
+    unique_host_ptr<int> pixel_score_;
 
     /*Gpu Counterpart of the pixel score*/
-    int* dev_pixel_score_;
+    unique_device_ptr<int> dev_pixel_score_;
 
     /*Integers for Pinned Memory for IOU calculation(intermediary values).*/
-    int* intersection_score_;
-    int* union_score_;
+    unique_host_ptr<int> intersection_score_;
+    unique_host_ptr<int> union_score_;
 
     /*GPU counterparts for IOU intermediary values*/
-    int* dev_intersection_score_;
-    int* dev_union_score_;
+    unique_device_ptr<int> dev_intersection_score_;
+    unique_device_ptr<int> dev_union_score_;
 
     /*Initialized Correctly Variable Check*/
     bool initialized_correctly_;
@@ -118,19 +119,19 @@ private:
     int white_pix_count_;
 
     /*Gpu Counterpart of white pixel count*/
-    int* dev_white_pix_count_;
+    unique_device_ptr<int> dev_white_pix_count_;
 
     /*Counts the number of edge pixels in an image (with GPU counterpart)*/
-    int* edge_pixels_count_;
-    int* dev_edge_pixels_count_;
+    unique_host_ptr<int> edge_pixels_count_;
+    unique_device_ptr<int> dev_edge_pixels_count_;
 
     // Distance map count total (with GPU counterpart)
-    int* distance_map_score_;
-    int* dev_distance_map_score_;
+    unique_host_ptr<int> distance_map_score_;
+    unique_device_ptr<int> dev_distance_map_score_;
 
     // Curvature heatmap score (going to be min distance)
-    int* curvature_hausdorf_score_;
-    int* dev_curvature_hausdorf_score_;
+    unique_host_ptr<int> curvature_hausdorf_score_;
+    unique_device_ptr<int> dev_curvature_hausdorf_score_;
 };
 } // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

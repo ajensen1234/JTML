@@ -13,6 +13,8 @@
 
 /*Relevant QT Includes*/
 #include <memory.h>
+
+#include <memory>
 #include <qactiongroup.h>
 
 #include <QtWidgets/QMainWindow>
@@ -61,6 +63,9 @@
 /*Optimizer Manager*/
 #include "core/optimizer_manager.h"
 
+/*Session Context*/
+#include "core/session_context.h"
+
 /*Optimizer Settings Control Window*/
 #include "gui/settings_control.h"
 
@@ -78,6 +83,15 @@
 /*machine_learning_tools*/
 #include "core/machine_learning_tools.h"
 #include "gui/viewer.h"
+
+#include "gui/image_loading_service.h"
+#include "gui/worker_orchestrator.h"
+
+namespace jta_gui {
+class CalibrationService;
+class SceneController;
+class SettingsService;
+} // namespace jta_gui
 
 /**
  * @brief The MainScreen object that inherits the QMainWindow object type. This
@@ -116,9 +130,6 @@ private:
 
     Ui::MainScreenClass ui;
 
-    double UF_BLUE[3] = {0, 72, 204};
-    double UF_ORANGE[3] = {255, 77, 0};
-
     void print_selected_item();
 
     int curr_frame();
@@ -140,13 +151,6 @@ private:
     int model_selection_box_starting_height_;
     int qvtk_widget_starting_height_;
     int qvtk_widget_starting_width_;
-
-    /*Monoplane and Biplane Calibration Viewport Files*/
-    Calibration calibration_file_; /*Used in monoplane and biplane*/
-
-    /*Variables Indicating Calibration Status for Mono and Biplane*/
-    bool calibrated_for_monoplane_viewport_;
-    bool calibrated_for_biplane_viewport_;
 
     /*VTK Variables for main Viewer*/
     std::vector<vtkSmartPointer<vtkActor>> model_actor_list;
@@ -172,14 +176,6 @@ private:
     /*View Menu Radio Button Container*/
     QActionGroup *alignmentGroup, *alignmentGroupSegment;
 
-    /*Frame/Model Containers*/
-    std::vector<Frame> loaded_frames;
-    std::vector<Frame> loaded_frames_B; /*If Biplane mode, need second group of
-                                           loaded frames for camera B*/
-    std::vector<Model> loaded_models;
-    /*Location Storage Class*/
-    LocationStorage model_locations_;
-
     QModelIndexList selected_model_indices();
 
     /*Index of Previously Selected Frame/Models*/
@@ -189,19 +185,12 @@ private:
     /*Save the Pose From The Last Selected Frame*/
     void SaveLastPose();
 
-    /*Optimizer Settings That Must Be Set in Constructor and Changed on
-     * OSettings Update */
-    OptimizerSettings optimizer_settings_;
-
     /*Copy of the Above Only Used While Optimizing to Display Output*/
     OptimizerSettings display_optimizer_settings_;
 
-    /*Cost Function Managers (from JTA Cost Function Library) for each stage of
-     * DIRECT-JTA Optimizer*/
-    jta_cost_function::CostFunctionManager trunk_manager_;
-    jta_cost_function::CostFunctionManager branch_manager_;
-    jta_cost_function::CostFunctionManager
-        leaf_manager_; // For extra Z-translation usually (esp. when monoplane)
+    /*Session Context for calibration, frames, models, optimizer settings, and
+     * cost-function managers*/
+    jta_core::SessionContext session_;
 
     /*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int
     Parameter, else saves all the Dilation Images for Each Frame as the Dilation
@@ -220,6 +209,17 @@ private:
     /*Optimizer Thread and Manager*/
     QThread* optimizer_thread;
     OptimizerManager* optimizer_manager;
+
+    jta_gui::WorkerOrchestrator* worker_orchestrator_ = nullptr;
+
+    jta_gui::ImageLoadingService* image_loading_service_ = nullptr;
+
+    /*Calibration Service*/
+    jta_gui::CalibrationService* calibration_service_ = nullptr;
+
+    std::unique_ptr<jta_gui::SceneController> scene_controller_;
+
+    std::unique_ptr<jta_gui::SettingsService> settings_service_;
 
     /*Disable and Enable MainScreen During and After Optimization*/
     void DisableAll();
@@ -257,6 +257,8 @@ private:
 public Q_SLOTS:
     // Call Optimizer Launch
     void optimizer_launch_slot();
+
+    void onCalibrationLoaded(Calibration calibration);
 
     /*Load Buttons*/
     void on_load_calibration_button_clicked(); /*Load Calibration Clicked*/
@@ -389,6 +391,15 @@ public Q_SLOTS:
 
     void
     updateOrientationSymTrap_MS(double, double, double, double, double, double);
+
+    /*SEGMENTATION SLOTS*/
+    void onImageSegmented(int index, cv::Mat segmented, bool isBiplane);
+    void onSegmentationFinished(bool success, QString errorMessage);
+    void onSegmentationProgress(int value, QString status);
+
+    /*ESTIMATION SLOTS*/
+    void onPoseEstimated(int index, Point6D pose);
+    void onEstimationFinished(bool success, QString errorMessage);
 
     /*On Optimizer Control Windows Save Setting*/
     void onSaveSettings(

@@ -19,6 +19,7 @@
 #include "calibration.h"
 
 /*QT Threading*/
+#include <qelapsedtimer.h>
 #include <qobject.h>
 #include <qthread.h>
 
@@ -78,6 +79,8 @@ public:
     double EvaluateCostFunctionAtPoint(Point6D point, int stage);
     void CalculateSymTrap();
 
+    static std::string print_location_and_orientation_of_point(Point6D p);
+
 signals:
     /*Update Blue Current Optimum*/
     void
@@ -110,7 +113,7 @@ signals:
     void onProgressBarUpdate(int);
     void get_iter_count();
 
-public slots:
+public Q_SLOTS:
     /*Optimizer Biplane Single Model*/
     void Optimize();
 
@@ -184,40 +187,61 @@ private:
     bool leaf_dark_silhouette_val_;
 
     /*GPU Metrics Class*/
-    GPUMetrics* gpu_metrics_;
+    std::unique_ptr<GPUMetrics> gpu_metrics_;
 
     /*CUDA Cost Function Objects (Vector of GPU Models and vector of GPU Frames
     - note Dilated and Intensity must have own vector for each stage because
     their values could change with the stage from a black silhouette bool or a
     dilation int)*/
     /*Camera A (Monoplane or Biplane)*/
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_trunk_A_;
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_branch_A_;
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_leaf_A_;
-    std::vector<GPUEdgeFrame*> gpu_edge_frames_A_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_trunk_A_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_branch_A_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_leaf_A_;
-    std::vector<GPUFrame*> gpu_distance_maps_;
-    std::vector<GPUHeatmap*> gpu_heatmaps_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_trunk_A_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_branch_A_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_leaf_A_;
+    std::vector<std::unique_ptr<GPUEdgeFrame>> gpu_edge_frames_A_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_trunk_A_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_branch_A_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_leaf_A_;
+    std::vector<std::unique_ptr<GPUFrame>> gpu_distance_maps_;
+    std::vector<std::unique_ptr<GPUHeatmap>> gpu_heatmaps_;
     /*Camera B (Biplane only)*/
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_trunk_B_;
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_branch_B_;
-    std::vector<GPUIntensityFrame*> gpu_intensity_frames_leaf_B_;
-    std::vector<GPUEdgeFrame*> gpu_edge_frames_B_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_trunk_B_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_branch_B_;
-    std::vector<GPUDilatedFrame*> gpu_dilated_frames_leaf_B_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_trunk_B_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_branch_B_;
+    std::vector<std::unique_ptr<GPUIntensityFrame>> gpu_intensity_frames_leaf_B_;
+    std::vector<std::unique_ptr<GPUEdgeFrame>> gpu_edge_frames_B_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_trunk_B_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_branch_B_;
+    std::vector<std::unique_ptr<GPUDilatedFrame>> gpu_dilated_frames_leaf_B_;
 
     /*Models*/
-    GPUModel* gpu_principal_model_;
-    std::vector<GPUModel*> gpu_non_principal_models_;
+    std::unique_ptr<GPUModel> gpu_principal_model_;
+    std::vector<std::unique_ptr<GPUModel>> gpu_non_principal_models_;
 
     /*Set Search Range*/
     void SetSearchRange(Point6D range);
 
     /*Set Search Range*/
     void SetStartingPoint(Point6D starting_point);
+
+    /*Mirror Raw Pointer Vectors for CostFunctionManager compatibility*/
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_trunk_A_;
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_branch_A_;
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_leaf_A_;
+    std::vector<GPUEdgeFrame*> raw_gpu_edge_frames_A_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_trunk_A_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_branch_A_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_leaf_A_;
+    std::vector<GPUFrame*> raw_gpu_distance_maps_;
+    std::vector<GPUHeatmap*> raw_gpu_heatmaps_;
+    /*Camera B*/
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_trunk_B_;
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_branch_B_;
+    std::vector<GPUIntensityFrame*> raw_gpu_intensity_frames_leaf_B_;
+    std::vector<GPUEdgeFrame*> raw_gpu_edge_frames_B_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_trunk_B_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_branch_B_;
+    std::vector<GPUDilatedFrame*> raw_gpu_dilated_frames_leaf_B_;
+
+    std::vector<GPUModel*> raw_gpu_non_principal_models_;
 
     /*Actual Range of Search Direction for Each Variable*/
     Point6D range_;
@@ -278,6 +302,9 @@ private:
 
     /*Flag For Being in Either Trunk, Branch, or Z*/
     unsigned int search_stage_flag_;
+
+    /*Throttle UI updates to ~30 FPS (every 33ms)*/
+    QElapsedTimer optimum_update_timer_;
 };
 
 #endif /* OPTIMIZER_MANAGER_H */

@@ -437,17 +437,19 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
         width_ * height_ * sizeof(unsigned char)));
 
     /*Clear Line Integral Values*/
-    CUDA_CHECK(cudaMemset(dev_z_line_values_, 0, width_ * height_ * sizeof(float)));
+    CUDA_CHECK(
+        cudaMemset(dev_z_line_values_.get(), 0, width_ * height_ * sizeof(float)));
 
     /*Reset Launch Packet*/
-    CUDA_CHECK_KERNEL(DRR_ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_));
+    CUDA_CHECK_KERNEL(
+        DRR_ResetKernel<<<1, 1>>>(dev_bounding_box_.get(), width_, height_));
 
     /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
     CUDA_CHECK_KERNEL(DRR_WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
-        dev_triangles_,
-        dev_projected_triangles_,
-        dev_projected_triangles_snapped_,
-        dev_transf_vertex_zs_,
+        dev_triangles_.get(),
+        dev_projected_triangles_.get(),
+        dev_projected_triangles_snapped_.get(),
+        dev_transf_vertex_zs_.get(),
         3 * triangle_count_,
         dist_over_pix_pitch_,
         pix_conversion_x_,
@@ -456,33 +458,33 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
         model_pose_.y_location_,
         model_pose_.z_location_,
         model_rotation_mat_,
-        dev_normals_,
-        dev_backface_,
-        dev_tangent_triangle_));
+        dev_normals_.get(),
+        dev_backface_.get(),
+        dev_tangent_triangle_.get()));
 
     /*Calculate Bounding Boxes for Each Triangle*/
     CUDA_CHECK_KERNEL(DRR_BoundingBoxForTrianglesKernel<<<
         dim_grid_bounding_box_,
         threads_per_block>>>(
-        dev_bounding_box_triangles_,
-        dev_projected_triangles_snapped_,
+        dev_bounding_box_triangles_.get(),
+        dev_projected_triangles_snapped_.get(),
         triangle_count_,
         width_,
         height_));
 
     /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
     CUDA_CHECK_KERNEL(DRR_BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
-        dev_bounding_box_triangles_,
-        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_.get(),
+        dev_bounding_box_triangles_sizes_.get(),
         triangle_count_,
-        dev_bounding_box_));
+        dev_bounding_box_.get()));
 
     /*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
     cub::DeviceScan::ExclusiveSum(
-        dev_cub_storage_,
+        dev_cub_storage_.get(),
         cub_storage_bytes_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
         triangle_count_);
 
     /*Prepare Launch Packet and Send it to Host*/
@@ -490,19 +492,19 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
     process (last element in dev_boundingBoxTrianglesSizePrefix and last element
     in dev_boundingBoxTrianglesSize)*/
     CUDA_CHECK_KERNEL(DRR_PrepareLaunchPacketKernel<<<1, 1>>>(
-        dev_fragment_fill_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
+        dev_fragment_fill_.get(),
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
         triangle_count_));
 
     CUDA_CHECK(cudaMemcpy(
         renderer_output_->GetBoundingBox(),
-        dev_bounding_box_,
+        dev_bounding_box_.get(),
         4 * sizeof(int),
         cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
-        fragment_fill_,
-        dev_fragment_fill_,
+        fragment_fill_.get(),
+        dev_fragment_fill_.get(),
         1 * sizeof(int),
         cudaMemcpyDeviceToHost));
 
@@ -515,7 +517,7 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
     triangle test.*/
 
     /*Error check for too many fragments.*/
-    if (static_cast<double>(fragment_fill_[0]) >
+    if (static_cast<double>(*fragment_fill_) >
         static_cast<double>(maximum_stride_size) *
             static_cast<double>(threads_per_block - 1)) {
         fprintf(
@@ -528,32 +530,32 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
 
     CUDA_CHECK_KERNEL(DRR_StridePrefixKernel<<<
         ceil(
-            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(*fragment_fill_) /
             static_cast<double>(threads_per_block * threads_per_block)),
         threads_per_block>>>(
         threads_per_block,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        dev_stride_prefixes_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
+        dev_stride_prefixes_.get(),
         triangle_count_));
 
     CUDA_CHECK_KERNEL(DRR_FillTriangleKernel<<<
         ceil(
-            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(*fragment_fill_) /
             static_cast<double>(threads_per_block)),
         threads_per_block>>>(
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        dev_bounding_box_triangles_,
-        dev_z_line_values_,
+        dev_bounding_box_triangles_sizes_.get(),
+        dev_bounding_box_triangles_sizes_prefix_.get(),
+        dev_bounding_box_triangles_.get(),
+        dev_z_line_values_.get(),
         triangle_count_,
         width_,
         height_,
-        dev_projected_triangles_,
-        dev_transf_vertex_zs_,
-        dev_stride_prefixes_,
-        dev_backface_,
-        dev_tangent_triangle_));
+        dev_projected_triangles_.get(),
+        dev_transf_vertex_zs_.get(),
+        dev_stride_prefixes_.get(),
+        dev_backface_.get(),
+        dev_tangent_triangle_.get()));
 
     /* Compute launch parameters for Line Integral to DRR transformation. Want
      * same size as sub image  */
@@ -580,7 +582,7 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
         dim_grid_image_processing_,
         threads_per_block>>>(
         renderer_output_->GetDeviceImagePointer(),
-        dev_z_line_values_,
+        dev_z_line_values_.get(),
         width_,
         height_,
         diff_kernel_left_x,

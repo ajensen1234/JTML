@@ -69,6 +69,7 @@ public:
     std::vector<vtkSmartPointer<vtkActor>> get_model_actor_list();
     void set_3d_model_color(int index, double RGB[3]);
     void load_models(QStringList cad_files, QStringList cad_models);
+    void load_models(const std::vector<Model>& models);
     bool are_models_loaded_correctly(int index);
     bool are_models_loaded_incorrectly(int index);
     void change_model_opacity_to_original(int index);

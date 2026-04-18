@@ -72,7 +72,6 @@ struct HyperBox6D // Stores HyperCube Info
     Point6D GetCenter();
     void SetCenter(Point6D new_center);
 
-    /*Divide a Side in Three*/
     void TrisectSide(Direction trisect_side);
 
     void PrintCenter();

@@ -60,9 +60,11 @@ Leverage the Pixi-based environment to enforce quality:
 - Stabilize `OptimizerManager` resource lifecycle.
 
 ### Wave 3: Responsiveness (Weeks 4-5)
-- Extract `SegmentationWorker` and `ImplantEstimationWorker`.
-- Implement non-blocking progress bars and cancellation support.
-- Ensure VTK rendering stays on the main thread while math runs in background.
+- **Framework**: Establish `WorkerObject` base class for standardized progress/error reporting.
+- **Segmentation**: Extract `SegmentationWorker` to handle Torch inference async.
+- **Estimation**: Extract `EstimationWorker` to handle GPU model prep and pose prediction.
+- **Throttling**: Implement rate-limiting for `UpdateOptimum` signals (30 FPS) to prevent UI thread starvation.
+- **Safety**: Maintain main-thread VTK rendering via `QueuedConnection` slots.
 
 ### Wave 4: Architecture (Weeks 6-8)
 - Peel `MainScreen` into Controllers.

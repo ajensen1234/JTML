@@ -20,95 +20,68 @@ GPUMetrics::GPUMetrics() {
 
     /*Initialize Pinned Memory for Slightly Faster Transfer if Using Mismatched
      * Pixel Count*/
-    CUDA_CHECK(cudaHostAlloc((void**)&pixel_score_, sizeof(int), cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    pixel_score_ = make_cuda_host_unique<int>(1);
+    if (!pixel_score_) initialized_correctly_ = false;
 
     /*Initialize Pinned Memory for IOU Intermediary */
-    CUDA_CHECK(cudaHostAlloc(
-        (void**)&intersection_score_, sizeof(int), cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    intersection_score_ = make_cuda_host_unique<int>(1);
+    if (!intersection_score_) initialized_correctly_ = false;
 
     /*Initialize Pinned Memory for IOU Intermediary */
-    CUDA_CHECK(cudaHostAlloc((void**)&union_score_, sizeof(int), cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    union_score_ = make_cuda_host_unique<int>(1);
+    if (!union_score_) initialized_correctly_ = false;
 
     /*Allocate GPU buffers for pixel score.*/
-    CUDA_CHECK(cudaMalloc((void**)&dev_pixel_score_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    dev_pixel_score_ = make_cuda_unique<int>(1);
+    if (!dev_pixel_score_) initialized_correctly_ = false;
 
     /*Allocate GPU buffers for IOU Intermediary*/
-    CUDA_CHECK(cudaMalloc((void**)&dev_intersection_score_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    dev_intersection_score_ = make_cuda_unique<int>(1);
+    if (!dev_intersection_score_) initialized_correctly_ = false;
 
     /*Allocate GPU buffers for IOU Intermediary*/
-    CUDA_CHECK(cudaMalloc((void**)&dev_union_score_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    dev_union_score_ = make_cuda_unique<int>(1);
+    if (!dev_union_score_) initialized_correctly_ = false;
 
     /*Allocate GPU buffers for comparison white pixel count.*/
-    CUDA_CHECK(cudaMalloc((void**)&dev_white_pix_count_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    dev_white_pix_count_ = make_cuda_unique<int>(1);
+    if (!dev_white_pix_count_) initialized_correctly_ = false;
 
     /*Upload (Reset) white pixel count for comparison image from Host to
      * Device.*/
     white_pix_count_ = 0;
     CUDA_CHECK(cudaMemcpy(
-        dev_white_pix_count_,
+        dev_white_pix_count_.get(),
         &white_pix_count_,
         sizeof(int),
         cudaMemcpyHostToDevice));
     if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
 
-    CUDA_CHECK(cudaHostAlloc(
-        (void**)&distance_map_score_, sizeof(int), cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    distance_map_score_ = make_cuda_host_unique<int>(1);
+    if (!distance_map_score_) initialized_correctly_ = false;
+
     // Allocate some memory for the dev dm score
-    CUDA_CHECK(cudaMalloc((void**)&dev_distance_map_score_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) {
-        initialized_correctly_ = false;
-    }
+    dev_distance_map_score_ = make_cuda_unique<int>(1);
+    if (!dev_distance_map_score_) initialized_correctly_ = false;
 
     // Allocating memory for the edge pixels count (GPU and CPU)
-    CUDA_CHECK(cudaMalloc((void**)&dev_edge_pixels_count_, sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) {
-        initialized_correctly_ = false;
-    }
-    CUDA_CHECK(cudaHostAlloc(
-        (void**)&edge_pixels_count_, sizeof(int), cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) {
-        initialized_correctly_ = false;
-    }
+    dev_edge_pixels_count_ = make_cuda_unique<int>(1);
+    if (!dev_edge_pixels_count_) initialized_correctly_ = false;
+
+    edge_pixels_count_ = make_cuda_host_unique<int>(1);
+    if (!edge_pixels_count_) initialized_correctly_ = false;
 };
 
-GPUMetrics::~GPUMetrics() {
-    /*Free CUDA*/
-    CUDA_CHECK(cudaFree(dev_pixel_score_));
-    CUDA_CHECK(cudaFree(dev_intersection_score_));
-    CUDA_CHECK(cudaFree(dev_union_score_));
-    CUDA_CHECK(cudaFree(dev_edge_pixels_count_));
-    CUDA_CHECK(cudaFree(dev_distance_map_score_));
-    CUDA_CHECK(cudaFree(dev_curvature_hausdorf_score_));
-
-    /*Free Host*/
-    CUDA_CHECK(cudaFreeHost(pixel_score_));
-    CUDA_CHECK(cudaFreeHost(intersection_score_));
-    CUDA_CHECK(cudaFreeHost(union_score_));
-    CUDA_CHECK(cudaFreeHost(distance_map_score_));
-    CUDA_CHECK(cudaFreeHost(edge_pixels_count_));
-    CUDA_CHECK(cudaFreeHost(curvature_hausdorf_score_));
-};
+GPUMetrics::~GPUMetrics() = default;
 
 void GPUMetrics::AllocateCurvatureHausdorfScore(int num_keypoints) {
-    CUDA_CHECK(cudaMalloc(
-        (void**)&dev_curvature_hausdorf_score_, num_keypoints * sizeof(int)));
-    if (cudaGetLastError() != cudaSuccess) {
+    dev_curvature_hausdorf_score_ = make_cuda_unique<int>(num_keypoints);
+    if (!dev_curvature_hausdorf_score_) {
         initialized_correctly_ = false;
     }
 
-    CUDA_CHECK(cudaHostAlloc(
-        (void**)&curvature_hausdorf_score_,
-        num_keypoints * sizeof(int),
-        cudaHostAllocDefault));
-    if (cudaGetLastError() != cudaSuccess) {
+    curvature_hausdorf_score_ = make_cuda_host_unique<int>(num_keypoints);
+    if (!curvature_hausdorf_score_) {
         initialized_correctly_ = false;
     }
 };
@@ -141,7 +114,7 @@ int GPUMetrics::ComputeSumWhitePixels(GPUImage* image, cudaError* error) {
 
     /*Reset White Pixel Count*/
     CUDA_CHECK_KERNEL(ComputeSumWhitePixels__ResetWhitePixelScoreKernel<<<1, 1>>>(
-        dev_white_pix_count_));
+        dev_white_pix_count_.get()));
 
     /*Get Sum of White Pixels in Dilation Comparison Image and Total Pixel Sum*/
     auto dim_grid_comparison_white_pix = dim3(
@@ -155,12 +128,12 @@ int GPUMetrics::ComputeSumWhitePixels(GPUImage* image, cudaError* error) {
             static_cast<double>(256))));
     CUDA_CHECK_KERNEL(WhitePixelSum<<<dim_grid_comparison_white_pix, 256>>>(
         image->GetDeviceImagePointer(),
-        dev_white_pix_count_,
+        dev_white_pix_count_.get(),
         image->GetFrameWidth(),
         image->GetFrameHeight()));
     CUDA_CHECK(cudaMemcpy(
         &white_pix_count_,
-        dev_white_pix_count_,
+        dev_white_pix_count_.get(),
         sizeof(int),
         cudaMemcpyDeviceToHost));
     /*Get Errors*/

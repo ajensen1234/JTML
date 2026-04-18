@@ -13,7 +13,7 @@
 #include "data_structures_6D.h"
 
 // Standard
-#include <string>
+#include <memory>
 #include <vector>
 
 class DirectDataStorage {
@@ -22,25 +22,40 @@ public:
      * .5) with initial_value*/
     DirectDataStorage(double initial_value);
     DirectDataStorage(); /*Use Default Value of -1 For initial value*/
+    DirectDataStorage(const DirectDataStorage&) = delete;
+    DirectDataStorage& operator=(const DirectDataStorage&) = delete;
+    DirectDataStorage(DirectDataStorage&&) noexcept = default;
+    DirectDataStorage& operator=(DirectDataStorage&&) noexcept = default;
+    ~DirectDataStorage() = default;
     //~DirectDataStorage();
 
     /*Remove and Add HyperBoxes*/
-    void AddHyperBox(HyperBox6D* new_box);
+    void AddHyperBox(HyperBox6D new_box);
     void DeleteHyperBoxes(
-        std::vector<int> col_ids); /*Deletes the Best Hyperbox at the List of
-                                      Column IDs and Deletes Empty Columns*/
+        const std::vector<int>& col_ids); /*Deletes the Best Hyperbox at the
+                                             List of Column IDs and Deletes
+                                             Empty Columns*/
 
     /*Get Number of Columns*/
     unsigned int GetNumberColumns();
 
-    /*Get smallest Fvalue (last one) in column*/
-    HyperBox6D GetMinimumHyperbox(int col_id);
+    /*Get lowest FValue Column Id*/
+    int GetLowestFValColId();
 
-    /*Get Smallest Fvalue (Last one) in Column*/
-    double GetMinimumHyperboxValue(int col_id);
+    /*Get FVal stored in Column*/
+    double GetFValAtColId(int col_id);
 
     /*Get Hyperbox Size Stored Column*/
-    double GetSizeStoredInColumn(int col_id);
+    double GetSizeAtColId(int col_id);
+
+    /*Get smallest Fvalue (last one) in column*/
+    HyperBox6D GetLowestFValHyperBoxAtColId(int col_id);
+
+    /*Remove Hyperbox From Data Storage*/
+    void RemoveHyperBoxAtColId(int col_id, HyperBox6D box);
+
+    /*Get smallest Fvalue (last one) in column*/
+    HyperBox6D GetMinimumHyperbox(int col_id);
 
     /*Delete Contents of storage_matrix_ safely (also called in destructor)*/
     void DeleteAllStoredHyperboxes();
@@ -56,7 +71,7 @@ private:
     Kept in Sorted Decreasing (Max Value @ 0) Order High Level Vector of Vectors
     Represents All Sizes of Current Vectors, Kept in Sorted Increasing (Min
     Value @ 0) Order*/
-    std::vector<std::vector<HyperBox6D*>*> storage_matrix_;
+    std::vector<std::vector<std::unique_ptr<HyperBox6D>>> storage_matrix_;
 
     /*Vectors for Storing Minimum Hyperbox Size/Function Value Respectively for
     Each Column. This is done for speed as it is much faster to access. Might

@@ -5,23 +5,49 @@
 #include "core/direct_data_storage.h"
 
 // Standard
+#include <algorithm>
 #include <cmath>
-#include <fstream>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 using namespace std;
 
+namespace {
+
+constexpr double kInitialCenterCoordinate = 0.5;
+constexpr double kInitialSideLength = 1.0;
+
+Point6D InitialCenter() {
+    return {
+        kInitialCenterCoordinate,
+        kInitialCenterCoordinate,
+        kInitialCenterCoordinate,
+        kInitialCenterCoordinate,
+        kInitialCenterCoordinate,
+        kInitialCenterCoordinate};
+}
+
+Point6D InitialSides() {
+    return {
+        kInitialSideLength,
+        kInitialSideLength,
+        kInitialSideLength,
+        kInitialSideLength,
+        kInitialSideLength,
+        kInitialSideLength};
+}
+
+}  // namespace
+
 DirectDataStorage::DirectDataStorage(double initial_value) {
     /*Create New Vector of HyperBoxes and New HyperBox @ (.5, .5, .5, .5, .5,
      * .5) with initial_value*/
-    auto initial_column = new std::vector<HyperBox6D*>();
-    auto initial_hyperbox = new HyperBox6D(
-        initial_value,
-        Point6D(.5, .5, .5, .5, .5, .5),
-        Point6D(1, 1, 1, 1, 1, 1));
-    initial_column->push_back(initial_hyperbox);
-    storage_matrix_.push_back(initial_column);
+    std::vector<std::unique_ptr<HyperBox6D>> initial_column;
+    initial_column.push_back(std::make_unique<HyperBox6D>(
+        initial_value, InitialCenter(), InitialSides()));
+    const HyperBox6D* initial_hyperbox = initial_column.back().get();
+    storage_matrix_.push_back(std::move(initial_column));
 
     /*Add to Minimum Containers*/
     minimum_value_columns_.push_back(initial_hyperbox->value_);
@@ -31,11 +57,11 @@ DirectDataStorage::DirectDataStorage(double initial_value) {
 DirectDataStorage::DirectDataStorage() {
     /*Create New Vector of HyperBoxes and New HyperBox @ (.5, .5, .5, .5, .5,
      * .5) with initial value of -1*/
-    auto initial_column = new std::vector<HyperBox6D*>();
-    auto initial_hyperbox = new HyperBox6D(
-        -1, Point6D(.5, .5, .5, .5, .5, .5), Point6D(1, 1, 1, 1, 1, 1));
-    initial_column->push_back(initial_hyperbox);
-    storage_matrix_.push_back(initial_column);
+    std::vector<std::unique_ptr<HyperBox6D>> initial_column;
+    initial_column.push_back(std::make_unique<HyperBox6D>(
+        -1, InitialCenter(), InitialSides()));
+    const HyperBox6D* initial_hyperbox = initial_column.back().get();
+    storage_matrix_.push_back(std::move(initial_column));
 
     /*Add to Minimum Containers*/
     minimum_value_columns_.push_back(initial_hyperbox->value_);
@@ -48,16 +74,6 @@ DirectDataStorage::DirectDataStorage() {
 // }
 
 void DirectDataStorage::DeleteAllStoredHyperboxes() {
-    /*Delete Memory Allocated by New*/
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        /*Delete Hyperboxes*/
-        for (int j = 0; j < storage_matrix_[i]->size(); j++) {
-            delete (*storage_matrix_[i])[j];
-        }
-        /*Delete Columns of Hyperboxes*/
-        delete storage_matrix_[i];
-    }
-
     /*Clear Storage Matrix and Minimum Container Matrices*/
     storage_matrix_.clear();
     minimum_value_columns_.clear();
@@ -65,104 +81,111 @@ void DirectDataStorage::DeleteAllStoredHyperboxes() {
 }
 
 struct HyperBoxGreaterThanSize {
-    bool operator()(const std::vector<HyperBox6D*>* old, double comparison) {
-        return (comparison > (*old)[0]->size_);
+    bool operator()(
+        const std::vector<std::unique_ptr<HyperBox6D>>& old,
+        double comparison) {
+        return (comparison > old[0]->size_);
     }
 };
 
 struct HyperBoxLessThanValue {
-    bool operator()(const HyperBox6D* old, double comparison) {
+    bool operator()(const std::unique_ptr<HyperBox6D>& old, double comparison) {
         return (comparison < old->value_);
     }
 };
 
-void DirectDataStorage::AddHyperBox(HyperBox6D* new_box) {
+void DirectDataStorage::AddHyperBox(HyperBox6D new_box) {
+    auto owned_box = std::make_unique<HyperBox6D>(new_box);
+    const double new_box_value = owned_box->value_;
+    const double new_box_size = owned_box->size_;
+
     /*Search for Correct Size, If Doesn't Exist Insert New*/
-    auto iterator = std::lower_bound(
+    auto iterator = std::lower_bound(  // NOLINT(modernize-use-ranges)
         storage_matrix_.begin(),
         storage_matrix_.end(),
-        new_box->size_,
+        new_box_size,
         HyperBoxGreaterThanSize());
-    int iterator_index = std::distance(storage_matrix_.begin(), iterator);
+    const auto iterator_index =
+        static_cast<std::size_t>(std::distance(storage_matrix_.begin(), iterator));
+    const auto iterator_offset =
+        static_cast<decltype(minimum_value_columns_)::difference_type>(iterator_index);
 
     /*IF in range*/
     if (iterator != storage_matrix_.end()) {
         /*If Already Exists, Insert in That Column*/
-        if ((*iterator)->at(0)->size_ == new_box->size_) {
-            auto column_iterator = std::lower_bound(
-                (*iterator)->begin(),
-                (*iterator)->end(),
-                new_box->value_,
+        if (iterator->at(0)->size_ == new_box_size) {
+            auto column_iterator = std::lower_bound(  // NOLINT(modernize-use-ranges)
+                iterator->begin(),
+                iterator->end(),
+                new_box_value,
                 HyperBoxLessThanValue());
 
             /*IF in range, insert at column_iterator*/
-            if (column_iterator != (*iterator)->end()) {
-                (*iterator)->insert(column_iterator, new_box);
+            if (column_iterator != iterator->end()) {
+                iterator->insert(column_iterator, std::move(owned_box));
             } else {
                 /*Add New HyperBox At End*/
-                (*iterator)->push_back(new_box);
+                iterator->push_back(std::move(owned_box));
 
                 /*Replace Minimum Containers (NOT SAFE)*/
-                minimum_value_columns_[iterator_index] = new_box->value_;
-                size_columns_[iterator_index] = new_box->size_;
+                minimum_value_columns_[iterator_index] = new_box_value;
+                size_columns_[iterator_index] = new_box_size;
             }
         } else {
             /*The Index Instead Points where To insert a new column*/
-            auto new_column = new std::vector<HyperBox6D*>();
-            new_column->push_back(new_box);
-            storage_matrix_.insert(iterator, new_column);
+            std::vector<std::unique_ptr<HyperBox6D>> new_column;
+            new_column.push_back(std::move(owned_box));
+            storage_matrix_.insert(iterator, std::move(new_column));
 
             /*Insert Minimum Containers (NOT SAFE)*/
             minimum_value_columns_.insert(
-                minimum_value_columns_.begin() + iterator_index,
-                new_box->value_);
+                minimum_value_columns_.begin() + iterator_offset, new_box_value);
             size_columns_.insert(
-                size_columns_.begin() + iterator_index, new_box->size_);
+                size_columns_.begin() + iterator_offset, new_box_size);
         }
     } else {
         /*Add New Column At End*/
-        auto new_column = new std::vector<HyperBox6D*>();
-        new_column->push_back(new_box);
-        storage_matrix_.push_back(new_column);
+        std::vector<std::unique_ptr<HyperBox6D>> new_column;
+        new_column.push_back(std::move(owned_box));
+        storage_matrix_.push_back(std::move(new_column));
 
         /*Add to Minimum Containers*/
-        minimum_value_columns_.push_back(new_box->value_);
-        size_columns_.push_back(new_box->size_);
+        minimum_value_columns_.push_back(new_box_value);
+        size_columns_.push_back(new_box_size);
     }
 }
 
-void DirectDataStorage::DeleteHyperBoxes(std::vector<int> col_ids) {
+void DirectDataStorage::DeleteHyperBoxes(const std::vector<int>& col_ids) {
     /*CAN ASSUME col_ids IS SORTED IN DECREASING ORDER*/
 
     /*Variable for Current Col ID*/
     int col_id = -1;
 
     /*Scroll Through All Ids*/
-    for (int i = 0; i < col_ids.size(); i++) {
-        col_id = col_ids[i];
+    for (const int current_col_id : col_ids) {
+        col_id = current_col_id;
         /*Check if Valid Column ID*/
-        if (col_id < storage_matrix_.size() && col_id >= 0) {
+        if (col_id >= 0 && static_cast<std::size_t>(col_id) < storage_matrix_.size()) {
+            const auto column_index = static_cast<std::size_t>(col_id);
+            const auto column_offset = static_cast<decltype(storage_matrix_)::difference_type>(column_index);
             /*Delete HyperBox*/
-            if (storage_matrix_[col_id]->size() > 0) {
-                delete storage_matrix_[col_id]
-                    ->back(); /*Delete Pointer To Last HyperBox*/
-                storage_matrix_[col_id]
-                    ->pop_back(); /*At End Because Min Value is at the End!*/
+            if (!storage_matrix_[column_index].empty()) {
+                storage_matrix_[column_index]
+                    .pop_back(); /*At End Because Min Value is at the End!*/
             }
 
             /*If Column Is Now Empty, Delete It*/
-            if (storage_matrix_[col_id]->size() == 0) {
-                delete storage_matrix_[col_id]; /*Delete Pointer*/
-                storage_matrix_.erase(storage_matrix_.begin() + col_id);
+            if (storage_matrix_[column_index].empty()) {
+                storage_matrix_.erase(storage_matrix_.begin() + column_offset);
 
                 /*Delete Place in Minimum Containers (NOT SAFE)*/
                 minimum_value_columns_.erase(
-                    minimum_value_columns_.begin() + col_id);
-                size_columns_.erase(size_columns_.begin() + col_id);
+                    minimum_value_columns_.begin() + column_offset);
+                size_columns_.erase(size_columns_.begin() + column_offset);
             } else {
                 /*Reset Minimum Value Container (NOT SAFE)*/
-                minimum_value_columns_[col_id] =
-                    storage_matrix_[col_id]->back()->value_;
+                minimum_value_columns_[column_index] =
+                    storage_matrix_[column_index].back()->value_;
             }
         }
     }
@@ -172,87 +195,94 @@ unsigned int DirectDataStorage::GetNumberColumns() {
     return storage_matrix_.size();
 }
 
-HyperBox6D DirectDataStorage::GetMinimumHyperbox(int col_id) {
-    /*Return if in bounds*/
-    if (col_id < storage_matrix_.size() && col_id >= 0) {
-        return (*storage_matrix_[col_id]->back());
+int DirectDataStorage::GetLowestFValColId() {
+    double min_fval = DBL_MAX;
+    int col_id = -1;
+    for (int i = 0; i < minimum_value_columns_.size(); i++) {
+        if (minimum_value_columns_[i] < min_fval) {
+            min_fval = minimum_value_columns_[i];
+            col_id = i;
+        }
     }
-    return HyperBox6D(); /*Return dummy value if error*/
+    return col_id;
 }
 
-double DirectDataStorage::GetMinimumHyperboxValue(int col_id) {
-    /*Return if in bounds*/
-    if (col_id < minimum_value_columns_.size() && col_id >= 0) {
+double DirectDataStorage::GetFValAtColId(int col_id) {
+    if (col_id >= 0 && col_id < minimum_value_columns_.size()) {
         return minimum_value_columns_[col_id];
     }
-    return -1; /*Return -1 value if error*/
+    return DBL_MAX;
 }
 
-double DirectDataStorage::GetSizeStoredInColumn(int col_id) {
-    /*Return if in bounds*/
-    if (col_id < size_columns_.size() && col_id >= 0) {
+double DirectDataStorage::GetSizeAtColId(int col_id) {
+    if (col_id >= 0 && col_id < size_columns_.size()) {
         return size_columns_[col_id];
     }
-    return -1; /*Return -1 value if error*/
+    return -1;
 }
 
-void DirectDataStorage::PrintSize() {
-    /*Print Size*/
-    std::cout << "Columns: " << storage_matrix_.size();
-
-    /*Calculate Column Lengths Data*/
-    int minimum = INT_MAX;
-    int maximum = 0;
-    int average = 0;
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        int current_size = (*storage_matrix_[i]).size();
-        if (current_size <= minimum) minimum = current_size;
-        if (current_size >= maximum) maximum = current_size;
-        average += current_size;
+HyperBox6D DirectDataStorage::GetLowestFValHyperBoxAtColId(int col_id) {
+    if (col_id >= 0 && col_id < storage_matrix_.size()) {
+        return *storage_matrix_[col_id].back();
     }
+    return {};
+}
 
-    /*Output Data*/
-    std::cout << "\nColumn Length Minimum: " << minimum;
-    std::cout << "\nColumn Length Maximum: " << maximum;
-    std::cout << "\nColumn Length Average: "
-              << static_cast<double>(average) /
-                     static_cast<double>(storage_matrix_.size())
-              << std::endl;
+void DirectDataStorage::RemoveHyperBoxAtColId(int col_id, HyperBox6D box) {
+    if (col_id >= 0 && col_id < storage_matrix_.size()) {
+        storage_matrix_[col_id].pop_back();
+        if (storage_matrix_[col_id].empty()) {
+            storage_matrix_.erase(storage_matrix_.begin() + col_id);
+            minimum_value_columns_.erase(minimum_value_columns_.begin() + col_id);
+            size_columns_.erase(size_columns_.begin() + col_id);
+        } else {
+            minimum_value_columns_[col_id] = storage_matrix_[col_id].back()->value_;
+        }
+    }
+}
+
+HyperBox6D DirectDataStorage::GetMinimumHyperbox(int col_id) {
+    /*Return if in bounds*/
+    if (col_id >= 0 && static_cast<std::size_t>(col_id) < storage_matrix_.size()) {
+        return (*storage_matrix_[static_cast<std::size_t>(col_id)].back());
+    }
+    return {}; /*Return dummy value if error*/
 }
 
 void DirectDataStorage::PrintContents() {
+
     /*Print Column Headers*/
     std::cout << "\nColumn #:";
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        std::cout << "\t" << i;
+    std::size_t column_number = 0;
+    for (const auto& column : storage_matrix_) {
+        static_cast<void>(column);
+        std::cout << "\t" << column_number++;
     }
-    int maximum = 0;
+    std::size_t maximum = 0;
     std::cout << "\nColumn Length:";
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        std::cout << "\t" << (*storage_matrix_[i]).size();
-        if ((*storage_matrix_[i]).size() >= maximum)
-            maximum = (*storage_matrix_[i]).size();
+    for (const auto& column : storage_matrix_) {
+        std::cout << "\t" << column.size();
+        maximum = std::max(maximum, column.size());
     }
     std::cout << "\nMinimum Value:";
-    for (int i = 0; i < minimum_value_columns_.size(); i++) {
-        std::cout << "\t" << minimum_value_columns_[i];
+    for (const double minimum_value : minimum_value_columns_) {
+        std::cout << "\t" << minimum_value;
     }
     std::cout << "\nSize (Min):";
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        std::cout << "\t" << (*storage_matrix_[i])[0]->size_;
+    for (const auto& column : storage_matrix_) {
+        std::cout << "\t" << column[0]->size_;
     }
     std::cout << "\nSize (Matrix):";
-    for (int i = 0; i < storage_matrix_.size(); i++) {
-        std::cout << "\t" << (*storage_matrix_[i])[0]->size_;
+    for (const auto& column : storage_matrix_) {
+        std::cout << "\t" << column[0]->size_;
     }
 
     /*Print Matrix*/
-    for (int j = 0; j < maximum; j++) {
+    for (std::size_t j = 0; j < maximum; j++) {
         std::cout << "\n\t";
-        for (int i = 0; i < storage_matrix_.size(); i++) {
+        for (const auto& column : storage_matrix_) {
             std::cout << "\t";
-            if (j < (*storage_matrix_[i]).size())
-                std::cout << (*storage_matrix_[i])[j]->value_;
+            if (j < column.size()) std::cout << column[j]->value_;
         }
     }
 }

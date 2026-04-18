@@ -45,7 +45,7 @@ private:
     /*Optimizer Settings for Everything but the Cost Function Stuff*/
     OptimizerSettings opt_settings_;
 
-public slots:
+public Q_SLOTS:
     /*Save Button*/
     void on_save_button_clicked();
 

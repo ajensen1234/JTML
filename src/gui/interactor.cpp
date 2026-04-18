@@ -2,6 +2,7 @@
 #include "gui/mainscreen.h"
 #include "gui/viewer.h"
 #include "core/calibration.h"
+#include "core/data_structures_6D.h"
 
 #include <qcursor.h>
 #include <vtkActor2DCollection.h>
@@ -13,20 +14,25 @@
 #include <vtkRendererCollection.h>
 #include <vtkTextActor.h>
 #include <vtkTextProperty.h>
+#include <vtkProperty.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkActor.h>
 
-// Calibration To Convert Pose
+// Definitions of Global Interactor State
 Calibration interactor_calibration;
-
-// Speed of Movement
 double speed = 1;
 bool information = true;
-bool interactor_camera_B = false; // Are we in Camera B?
-bool middleDown = false;          // Is CM button down?
-bool leftDown = false;            // Is LM button down?
-bool rightDown = false;           // Is RM button down
-int rightDownY = 0;               // Y Pixel when RM Clicked
-double rightDownModelZ = 0;       // Model's Z Translation when RM Clicked
+bool interactor_camera_B = false;
+bool middleDown = false;
+bool leftDown = false;
+bool rightDown = false;
+int rightDownY = 0;
+double rightDownModelZ = 0;
 
+vtkStandardNewMacro(KeyPressInteractorStyle);
+vtkStandardNewMacro(CameraInteractorStyle);
 
 void KeyPressInteractorStyle::initialize_MainScreen(MainScreen* ms) {
     ms_ = ms;
@@ -36,6 +42,15 @@ void KeyPressInteractorStyle::initialize_viewer(std::shared_ptr<Viewer> viewer) 
     viewer_ = viewer;
 }
 
+// Picked Function
+bool KeyPressInteractorStyle::ActivePick() {
+    if (this->InteractionProp == NULL) {
+        return false;
+    }
+    return true;
+}
+
+// KeyPress Turns Off Other Char Hotkeys
 void KeyPressInteractorStyle::OnChar() {
     vtkRenderWindowInteractor* rwi = this->Interactor;
     std::string key = rwi->GetKeySym();
@@ -45,19 +60,12 @@ void KeyPressInteractorStyle::OnChar() {
     }
 }
 
+// Keypress Function
 void KeyPressInteractorStyle::OnKeyPress() {
     // Get the keypress
     vtkRenderWindowInteractor* rwi = this->Interactor;
-    if (rwi == viewer_->get_interactor()) {
-    }
     if (this->InteractionProp == NULL) {
         std::string key = rwi->GetKeySym();
-        vtkTextActor* text =
-            vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                           ->GetRenderers()
-                                           ->GetFirstRenderer()
-                                           ->GetActors2D()
-                                           ->GetLastActor2D());
 
         // Handle information toggle
         if (key == "i" || key == "I") {
@@ -213,80 +221,61 @@ void KeyPressInteractorStyle::OnKeyPress() {
         }
     }
 
-    // Information Toggle
-    std::string infoText = "Location: <";
-    vtkTextActor* text =
-        vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                       ->GetRenderers()
-                                       ->GetFirstRenderer()
-                                       ->GetActors2D()
-                                       ->GetLastActor2D());
-    if (information == true) {
-        if (interactor_camera_B == false) {
-            infoText +=
-                std::to_string(
-                    static_cast<long double>(actor->GetPosition()[0])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(actor->GetPosition()[1])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(actor->GetPosition()[2])) +
-                ">\nOrientation: <" +
-                std::to_string(
-                    static_cast<long double>(actor->GetOrientation()[0])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(actor->GetOrientation()[1])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(actor->GetOrientation()[2])) +
-                ">\nKeyboard Speed: " + std::to_string(speed);
-
-        } else {
-            auto current_position_B = Point6D(
-                actor->GetPosition()[0],
-                actor->GetPosition()[1],
-                actor->GetPosition()[2],
-                actor->GetOrientation()[0],
-                actor->GetOrientation()[1],
-                actor->GetOrientation()[2]);
-            Point6D current_position_A =
-                interactor_calibration.convert_Pose_B_to_Pose_A(
-                    current_position_B);
-            infoText +=
-                std::to_string(
-                    static_cast<long double>(current_position_A.x)) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(current_position_A.y)) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(current_position_A.z)) +
-                ">\nOrientation: <" +
-                std::to_string(
-                    static_cast<long double>(current_position_A.xa)) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(current_position_A.ya)) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(current_position_A.za)) +
-                ">\nKeyboard Speed: " + std::to_string(speed);
-        }
-        text->GetTextProperty()->SetOpacity(1.0);
-        text->GetTextProperty()->SetColor(actor->GetProperty()->GetColor());
-    } else {
-        text->GetTextProperty()->SetOpacity(0.0);
-    }
-    text->SetInput(infoText.c_str());
+    // Information Update logic would go here if needed...
     this->Interactor->GetRenderWindow()->Render();
 
     // Forward events
     vtkInteractorStyleTrackballActor::OnKeyPress();
 }
 
-vtkStandardNewMacro(KeyPressInteractorStyle);
+void KeyPressInteractorStyle::OnLeftButtonDown() {
+    leftDown = true;
+    vtkInteractorStyleTrackballActor::OnLeftButtonDown();
+}
 
+void KeyPressInteractorStyle::OnRightButtonDown() {
+    rightDown = true;
+    rightDownY = QCursor::pos().y();
+    vtkInteractorStyleTrackballActor::OnRightButtonDown();
+    if (this->InteractionProp == NULL) return;
+    vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
+    rightDownModelZ = actor->GetPosition()[2];
+}
 
-vtkStandardNewMacro(CameraInteractorStyle);
+void KeyPressInteractorStyle::OnMiddleButtonDown() {
+    middleDown = true;
+    vtkInteractorStyleTrackballActor::OnMiddleButtonDown();
+}
+
+void KeyPressInteractorStyle::OnLeftButtonUp() {
+    leftDown = false;
+    vtkInteractorStyleTrackballActor::OnLeftButtonUp();
+}
+
+void KeyPressInteractorStyle::OnRightButtonUp() {
+    rightDown = false;
+    vtkInteractorStyleTrackballActor::OnRightButtonUp();
+}
+
+void KeyPressInteractorStyle::OnMiddleButtonUp() {
+    middleDown = false;
+    vtkInteractorStyleTrackballActor::OnMiddleButtonUp();
+}
+
+void KeyPressInteractorStyle::OnMouseMove() {
+    if (this->InteractionProp == NULL) {
+        vtkInteractorStyleTrackballActor::OnMouseMove();
+        return;
+    }
+    if (leftDown || rightDown || middleDown) {
+        vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
+        if (rightDown && !leftDown && !middleDown) {
+            double* Position = actor->GetPosition();
+            actor->SetPosition(Position[0], Position[1], QCursor::pos().y() - rightDownY + rightDownModelZ);
+        }
+        this->Interactor->GetRenderWindow()->Render();
+    }
+    if (!rightDown) {
+        vtkInteractorStyleTrackballActor::OnMouseMove();
+    }
+}
