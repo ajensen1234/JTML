@@ -70,7 +70,7 @@ private:
     std::string parameter_name_;
 
     /*Parameter Value*/
-    int parameter_value_;
+    double parameter_value_;
 
     /*Class Type*/
     std::string parameter_type_;

@@ -110,6 +110,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 #=============================
+# Test Data Paths
+#=============================
+set(JTML_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/vtk" CACHE PATH
+    "Root directory for vtk tester data")
+add_compile_definitions(JTML_TEST_DATA_DIR="${JTML_TEST_DATA_DIR}")
+
+#=============================
 # Main Target
 #=============================
 
@@ -119,11 +126,11 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 # Subdirectories
 #=============================
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
 #add_subdirectory(lib)
 add_subdirectory(packaging)
 
 #=============================
 # Testing
 #=============================
-#enable_testing()
+enable_testing()

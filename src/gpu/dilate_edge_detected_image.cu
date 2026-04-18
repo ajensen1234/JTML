@@ -1,6 +1,9 @@
 /*GPU Metrics Header*/
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -116,7 +119,7 @@ bool GPUMetrics::DilateEdgeDetectedImage(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Dilation Kernel*/
-    DilateEdgeDetectedImage_DilateKernel<<<
+    CUDA_CHECK_KERNEL(DilateEdgeDetectedImage_DilateKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         edge_detected_image->GetDeviceImagePointer(),
@@ -125,7 +128,7 @@ bool GPUMetrics::DilateEdgeDetectedImage(
         sub_left_x,
         sub_bottom_y,
         sub_cropped_width,
-        dilation);
+        dilation));
 
     /*Change Launch Parameters For Gray Dilated Edge to White Edge Pass*/
     dim_grid_image_processing_ = dim3(
@@ -137,7 +140,7 @@ bool GPUMetrics::DilateEdgeDetectedImage(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Change Gray Dilated Edges to White, and All Others to Black*/
-    DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel<<<
+    CUDA_CHECK_KERNEL(DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         edge_detected_image->GetDeviceImagePointer(),
@@ -145,7 +148,7 @@ bool GPUMetrics::DilateEdgeDetectedImage(
         height,
         sub_left_x,
         sub_bottom_y,
-        sub_cropped_width);
+        sub_cropped_width));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());

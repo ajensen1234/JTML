@@ -1,5 +1,8 @@
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -45,8 +48,8 @@ double GPUMetrics::CurvatureHeatmapMetric(
     int num_kp = gpu_heatmap->GetNumKeypoints();
     int* bounding_box = projected_image->GetBoundingBox();
 
-    Reset_CurvatureHausdorfScore_Kernel<<<1, num_kp>>>(
-        dev_curvature_hausdorf_score_);
+    CUDA_CHECK_KERNEL(Reset_CurvatureHausdorfScore_Kernel<<<1, num_kp>>>(
+        dev_curvature_hausdorf_score_));
 
     int left_x = max(bounding_box[0], 0);
     int bottom_y = max(bounding_box[1], 0);

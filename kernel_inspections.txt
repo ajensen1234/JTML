@@ -1,0 +1,928 @@
+FILE: src/gpu/curvature_hausdorf_metric.cu LINE: 51
+    CUDA_CHECK_KERNEL(Reset_CurvatureHausdorfScore_Kernel<<<1, num_kp>>>(
+        dev_curvature_hausdorf_score_));
+
+    int left_x = max(bounding_box[0], 0);
+    int bottom_y = max(bounding_box[1], 0);
+    int right_x = min(bounding_box[2], width - 1);
+    int top_y = min(bounding_box[3], height - 1);
+    int diff_cropped_width = right_x - left_x - 1;
+    int diff_cropped_height = top_y - bottom_y + 1;
+
+    dim3 dim_grid_bounding_box = dim3(
+        ceil(
+            static_cast<double>(diff_cropped_width) /
+            sqrt(static_cast<double>(threads_per_block))),
+        ceil(
+            static_cast<double>(diff_cropped_height) /
+---
+FILE: src/gpu/dilate_edge_detected_image.cu LINE: 122
+    CUDA_CHECK_KERNEL(DilateEdgeDetectedImage_DilateKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        edge_detected_image->GetDeviceImagePointer(),
+        width,
+        height,
+        sub_left_x,
+        sub_bottom_y,
+        sub_cropped_width,
+        dilation));
+
+    /*Change Launch Parameters For Gray Dilated Edge to White Edge Pass*/
+    dim_grid_image_processing_ = dim3(
+        ceil(
+            static_cast<double>(sub_cropped_width) /
+            sqrt(static_cast<double>(threads_per_block))),
+---
+FILE: src/gpu/dilate_edge_detected_image.cu LINE: 143
+    CUDA_CHECK_KERNEL(DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        edge_detected_image->GetDeviceImagePointer(),
+        width,
+        height,
+        sub_left_x,
+        sub_bottom_y,
+        sub_cropped_width));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+};
+} // namespace gpu_cost_function
+---
+FILE: src/gpu/distance_map_metric.cu LINE: 74
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_distance_map_score_));
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_));
+
+    int diff_kernel_left_x = max(bounding_box[0] - dilation, dilation);
+    int diff_kernel_bottom_y = max(bounding_box[1] - dilation, dilation);
+    int diff_kernel_right_x =
+        min(bounding_box[2] + dilation, width - dilation - 1);
+    int diff_kernel_top_y =
+        min(bounding_box[3] + dilation, height - dilation - 1);
+    int diff_kernel_cropped_width =
+        diff_kernel_right_x - diff_kernel_left_x + 1;
+    int diff_kernel_cropped_height =
+        diff_kernel_top_y - diff_kernel_bottom_y + 1;
+
+    // Construct some grid/block/thread dimensions
+    // that fill out the whole of the bounding box
+---
+FILE: src/gpu/distance_map_metric.cu LINE: 75
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_));
+
+    int diff_kernel_left_x = max(bounding_box[0] - dilation, dilation);
+    int diff_kernel_bottom_y = max(bounding_box[1] - dilation, dilation);
+    int diff_kernel_right_x =
+        min(bounding_box[2] + dilation, width - dilation - 1);
+    int diff_kernel_top_y =
+        min(bounding_box[3] + dilation, height - dilation - 1);
+    int diff_kernel_cropped_width =
+        diff_kernel_right_x - diff_kernel_left_x + 1;
+    int diff_kernel_cropped_height =
+        diff_kernel_top_y - diff_kernel_bottom_y + 1;
+
+    // Construct some grid/block/thread dimensions
+    // that fill out the whole of the bounding box
+    // (maybe go a little bit more just to make sure
+---
+FILE: src/gpu/distance_map_metric.cu LINE: 101
+    CUDA_CHECK_KERNEL(DistanceMapMetric_Kernel<<<dim_grid_bounding_box, threads_per_block>>>(
+        projected_image->GetDeviceImagePointer(),
+        distance_map->GetDeviceImagePointer(),
+        dev_distance_map_score_,
+        dev_edge_pixels_count_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    CUDA_CHECK(cudaMemcpy(
+        distance_map_score_,
+        dev_distance_map_score_,
+        sizeof(int),
+        cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/edge_detect_rendered_implant_model.cu LINE: 142
+    CUDA_CHECK_KERNEL(EdgeDetectRenderedImplantModel_EdgeKernel<<<
+        dim_grid_image_processing_,
+        dim_block_image_processing_,
+        dim_block_image_processing_.x * dim_block_image_processing_.y *
+            sizeof(unsigned char)>>>(
+        rendered_model_image->GetDeviceImagePointer(),
+        bounding_box[0],
+        bounding_box[1],
+        bounding_box[2],
+        bounding_box[3],
+        width));
+
+    /*Change Launch Parameters For Gray Edge to White Edge Pass*/
+    dim_grid_image_processing_ = dim3(
+        ceil(
+            static_cast<double>(sub_cropped_width) /
+---
+FILE: src/gpu/edge_detect_rendered_implant_model.cu LINE: 164
+    CUDA_CHECK_KERNEL(EdgeDetectRenderedImplantModel_GrayEdgeToWhitePassKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_model_image->GetDeviceImagePointer(),
+        width,
+        height,
+        bounding_box[0],
+        bounding_box[1],
+        sub_cropped_width));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+} // namespace gpu_cost_function
+---
+FILE: src/gpu/fast_implant_dilation_metric.cu LINE: 173
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+
+    /*Explanation of widths and heights
+    IMAGE PROCESSING STAGE :
+    -NOTES : This is the edge detection, edge dilation, and overlap with sample
+    image computation stage.Relevant kernels are : a).edgeKernel b).dilateKernel
+    c).differenceKernel
+    - croppedWidth: The width of the cropped projection(removes black space and
+    forms a bounding rectangle).
+    - croppedHeight : The height of the cropped projection(removes black space
+    and forms a bounding rectangle).
+    - subCroppedWidth : The width of the cropped projection that is not in the
+    dilation dead space betweeen the "width" and the "leanWidth" (removed on
+    either side).
+    - subCroppedHeight : The height of the cropped projection that is not in the
+    dilation dead space betweeen the "height" and the "leanHeight" (removed on
+---
+FILE: src/gpu/fast_implant_dilation_metric.cu LINE: 221
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_EdgeKernel<<<
+        dim_grid_image_processing_,
+        dim_block_image_processing_,
+        dim_block_image_processing_.x * dim_block_image_processing_.y *
+            sizeof(unsigned char)>>>(
+        rendered_image->GetDeviceImagePointer(),
+        sub_left_x,
+        sub_bottom_y,
+        sub_right_x,
+        sub_top_y,
+        width,
+        dilation));
+
+    /* Compute launch parameters for dilation. Want 4 times the size of the sub
+     * image. */
+    dim_grid_image_processing_ = dim3(
+---
+FILE: src/gpu/fast_implant_dilation_metric.cu LINE: 245
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_DilateKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        width,
+        height,
+        sub_left_x,
+        sub_bottom_y,
+        sub_cropped_width,
+        dilation));
+
+    /* Compute launch parameters for difference. Want same size as sub image nut
+     * with no dilation padding at edges. */
+    int diff_kernel_left_x = max(bounding_box[0] - dilation, 0);
+    int diff_kernel_bottom_y = max(bounding_box[1] - dilation, 0);
+    int diff_kernel_right_x = min(bounding_box[2] + dilation, width - 1);
+---
+FILE: src/gpu/fast_implant_dilation_metric.cu LINE: 276
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_DifferenceKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        comparison_frame->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Return Pixel Score (# of Pixels that are white dilated edge and  black in
+    comparison image (which is a dilated version of the edge detected original x
+    ray) minus the number of pixels that are white in the comparison image and
+    white in the dilated edge)*/
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 248
+    CUDA_CHECK_KERNEL(BlendGrayscaleKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        destination_image->GetDeviceImagePointer(),
+        secondary_image->GetDeviceImagePointer(),
+        alpha,
+        width,
+        height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+
+/*Paste Non Zero (Black) Pixels of secondary_image on top of destination_image
+Bool return value indicates success.*/
+bool PasteNonBlackPixels(
+    GPUImage* destination_image, GPUImage* secondary_image) {
+    /*Clear Previous Errors*/
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 283
+    CUDA_CHECK_KERNEL(PasteNonBlackPixelsKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        destination_image->GetDeviceImagePointer(),
+        secondary_image->GetDeviceImagePointer(),
+        width,
+        height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+
+bool PasteNonBlackPixels(
+    unsigned char* dev_destination_image,
+    unsigned char* dev_secondary_image,
+    int height,
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 313
+    CUDA_CHECK_KERNEL(PasteNonBlackPixelsKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        dev_destination_image, dev_secondary_image, width, height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+
+/*Scale grayscale image so that the min and max pixels in the original image are
+transformed linearly to the bounds specified in the arguments. This new image is
+returned in the original image. Bool return value indicates success.*/
+bool ScaleGrayscaleToRange(
+    GPUImage* grayscale_image,
+    unsigned int lower_bound,
+    unsigned int upper_bound) {
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 356
+    CUDA_CHECK_KERNEL(InitializeMaxMinKernel<<<1, 1>>>(
+        dev_max, dev_min)); // Sets dev_max = 0, dev_min = 255
+
+    /*Kernels*/
+    CUDA_CHECK_KERNEL(GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_max,
+        dev_min,
+        width,
+        height));
+    CUDA_CHECK_KERNEL(ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_max,
+        dev_min,
+        lower_bound,
+        upper_bound,
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 360
+    CUDA_CHECK_KERNEL(GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_max,
+        dev_min,
+        width,
+        height));
+    CUDA_CHECK_KERNEL(ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_max,
+        dev_min,
+        lower_bound,
+        upper_bound,
+        width,
+        height));
+
+    /*Free Memory for dev-max/min*/
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 366
+    CUDA_CHECK_KERNEL(ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_max,
+        dev_min,
+        lower_bound,
+        upper_bound,
+        width,
+        height));
+
+    /*Free Memory for dev-max/min*/
+    CUDA_CHECK(cudaFree(dev_max));
+    CUDA_CHECK(cudaFree(dev_min));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 418
+    CUDA_CHECK_KERNEL(ConvolutionKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        dest_image->GetDeviceImagePointer(),
+        input_image->GetDeviceImagePointer(),
+        dev_kernel,
+        kernel_size,
+        width,
+        height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+
+/*Add Uniform random noise to each pixel (individually generated for each pixel)
+which is added to the existing pixel. If Value is out of bounds [0,255] snap to
+the lower or upper bound. Uniform range runs from lower bound to upper bound.
+MUST CALL InitializeCUDARandom FIRST!!!
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 462
+    CUDA_CHECK_KERNEL(AddUniformRandomNoiseKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        grayscale_image->GetDeviceImagePointer(),
+        dev_random_container,
+        lower_bound,
+        upper_bound,
+        width,
+        height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+
+/*Copies An Array of GPUImages to one Grid. Image width and height are for the
+smaller images. Grid with and height are expressed in number of small images.
+---
+FILE: src/gpu/gpu_image_functions.cu LINE: 503
+    CUDA_CHECK_KERNEL(CompileGridKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        dev_images,
+        dev_grid,
+        image_width,
+        image_height,
+        grid_width,
+        grid_height));
+
+    /*CUDA Get Last Error*/
+    return (cudaSuccess == cudaGetLastError());
+}
+} // namespace gpu_cost_function
+---
+FILE: src/gpu/gpu_metrics.cu LINE: 143
+    CUDA_CHECK_KERNEL(ComputeSumWhitePixels__ResetWhitePixelScoreKernel<<<1, 1>>>(
+        dev_white_pix_count_));
+
+    /*Get Sum of White Pixels in Dilation Comparison Image and Total Pixel Sum*/
+    auto dim_grid_comparison_white_pix = dim3(
+        ceil(sqrt(
+            static_cast<double>(
+                image->GetFrameWidth() * image->GetFrameHeight()) /
+            static_cast<double>(256))),
+        ceil(sqrt(
+            static_cast<double>(
+                image->GetFrameWidth() * image->GetFrameHeight()) /
+            static_cast<double>(256))));
+    CUDA_CHECK_KERNEL(WhitePixelSum<<<dim_grid_comparison_white_pix, 256>>>(
+        image->GetDeviceImagePointer(),
+        dev_white_pix_count_,
+---
+FILE: src/gpu/gpu_metrics.cu LINE: 156
+    CUDA_CHECK_KERNEL(WhitePixelSum<<<dim_grid_comparison_white_pix, 256>>>(
+        image->GetDeviceImagePointer(),
+        dev_white_pix_count_,
+        image->GetFrameWidth(),
+        image->GetFrameHeight()));
+    CUDA_CHECK(cudaMemcpy(
+        &white_pix_count_,
+        dev_white_pix_count_,
+        sizeof(int),
+        cudaMemcpyDeviceToHost));
+    /*Get Errors*/
+    *error = cudaGetLastError();
+    return white_pix_count_;
+};
+
+/*Get Initialized Correctly*/
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 267
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+
+    /* Compute launch parameters for difference. Want same size as sub image nut
+     * with no dilation padding at edges. */
+    int diff_kernel_left_x = max(bounding_box[0], 0);
+    int diff_kernel_bottom_y = max(bounding_box[1], 0);
+    int diff_kernel_right_x = min(bounding_box[2], width - 1);
+    int diff_kernel_top_y = min(bounding_box[3], height - 1);
+    int diff_kernel_cropped_width =
+        diff_kernel_right_x - diff_kernel_left_x + 1;
+    int diff_kernel_cropped_height =
+        diff_kernel_top_y - diff_kernel_bottom_y + 1;
+
+    dim_grid_image_processing_ = dim3(
+        ceil(
+            static_cast<double>(diff_kernel_cropped_width) /
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 290
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_SilhouetteMahfouzNumeratorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        comparison_intensity_frame->GetWhiteSilhouetteDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 309
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+
+    /*Calculate Mahfouz  Kernel (Denominator)*/
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_IntensityMahfouzDenominatorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 312
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_IntensityMahfouzDenominatorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
+    if (pixel_score_ != 0)
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 335
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+
+    int sub_left_x = max(bounding_box[0] - 3, 3);
+    int sub_bottom_y = max(bounding_box[1] - 3, 3);
+    int sub_right_x = min(bounding_box[2] + 3, width - 3 - 1);
+    int sub_top_y = min(bounding_box[3] + 3, height - 3 - 1);
+    int sub_cropped_width = sub_right_x - sub_left_x + 1;
+    int sub_cropped_height = sub_top_y - sub_bottom_y + 1;
+
+    /* Compute launch parameters for edge detection.
+    If 256, we have 16 x 16 Blocks (Read in at one less on less on all 4 sides,
+    so 14 x 14). */
+    dim_block_image_processing_ = dim3(
+        ceil(sqrt(static_cast<double>(threads_per_block))),
+        ceil(sqrt(static_cast<double>(threads_per_block))));
+    dim_grid_image_processing_ = dim3(
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 359
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeKernel<<<
+        dim_grid_image_processing_,
+        dim_block_image_processing_,
+        dim_block_image_processing_.x * dim_block_image_processing_.y *
+            sizeof(unsigned char)>>>(
+        rendered_image->GetDeviceImagePointer(),
+        sub_left_x,
+        sub_bottom_y,
+        sub_right_x,
+        sub_top_y,
+        width,
+        3));
+
+    /* Compute launch parameters for dilation. Want 4 times the size of the sub
+     * image. */
+    dim_grid_image_processing_ = dim3(
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 384
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_DilateKernelInverseMahfouzScale<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        width,
+        height,
+        sub_left_x,
+        sub_bottom_y,
+        sub_cropped_width));
+
+    /* Compute launch parameters for difference. Want same size as sub image nut
+     * with no dilation padding at edges. */
+    diff_kernel_left_x = max(bounding_box[0] - 3, 0);
+    diff_kernel_bottom_y = max(bounding_box[1] - 3, 0);
+    diff_kernel_right_x = min(bounding_box[2] + 3, width - 1);
+    diff_kernel_top_y = min(bounding_box[3] + 3, height - 1);
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 412
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeMahfouzNumeratorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        comparison_dilated_frame->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 431
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
+
+    /*Calculate Mahfouz Edge Kernel (Denominator)*/
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeMahfouzDenominatorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+---
+FILE: src/gpu/implant_mahfouz_metric.cu LINE: 434
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeMahfouzDenominatorKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        rendered_image->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
+    if (pixel_score_ != 0)
+---
+FILE: src/gpu/iou.cu LINE: 68
+    CUDA_CHECK_KERNEL(IOU__ResetIOUScoresKernel<<<1, 1>>>(
+        dev_intersection_score_, dev_union_score_));
+
+    /* Compute launch parameters for difference. Want same size as sub image nut
+     * with no dilation padding at edges. */
+    int diff_kernel_left_x = max(min(bounding_box_A[0], bounding_box_B[0]), 0);
+    int diff_kernel_bottom_y =
+        max(min(bounding_box_A[1], bounding_box_B[1]), 0);
+    int diff_kernel_right_x =
+        min(max(bounding_box_A[2], bounding_box_B[2]), width - 1);
+    int diff_kernel_top_y =
+        min(max(bounding_box_A[3], bounding_box_B[3]), height - 1);
+    int diff_kernel_cropped_width =
+        diff_kernel_right_x - diff_kernel_left_x + 1;
+    int diff_kernel_cropped_height =
+        diff_kernel_top_y - diff_kernel_bottom_y + 1;
+---
+FILE: src/gpu/iou.cu LINE: 94
+    CUDA_CHECK_KERNEL(IOUKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        image_A->GetDeviceImagePointer(),
+        image_B->GetDeviceImagePointer(),
+        dev_intersection_score_,
+        dev_union_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Return IOU Score*/
+    CUDA_CHECK(cudaMemcpy(
+        intersection_score_,
+        dev_intersection_score_,
+        sizeof(int),
+---
+FILE: src/gpu/l_1_1_matrix_diff_norm.cu LINE: 63
+    CUDA_CHECK_KERNEL(L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel<<<1, 1>>>(
+        dev_pixel_score_));
+
+    /* Compute launch parameters for difference. Want same size as sub image nut
+     * with no dilation padding at edges. */
+    int diff_kernel_left_x = max(min(bounding_box_A[0], bounding_box_B[0]), 0);
+    int diff_kernel_bottom_y =
+        max(min(bounding_box_A[1], bounding_box_B[1]), 0);
+    int diff_kernel_right_x =
+        min(max(bounding_box_A[2], bounding_box_B[2]), width - 1);
+    int diff_kernel_top_y =
+        min(max(bounding_box_A[3], bounding_box_B[3]), height - 1);
+    int diff_kernel_cropped_width =
+        diff_kernel_right_x - diff_kernel_left_x + 1;
+    int diff_kernel_cropped_height =
+        diff_kernel_top_y - diff_kernel_bottom_y + 1;
+---
+FILE: src/gpu/l_1_1_matrix_diff_norm.cu LINE: 89
+    CUDA_CHECK_KERNEL(L_1_1_MatrixDifferenceNorm_DifferenceKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        image_A->GetDeviceImagePointer(),
+        image_B->GetDeviceImagePointer(),
+        dev_pixel_score_,
+        width,
+        height,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width));
+
+    /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
+     * Projected)/(Sum of Pixel Projected) )*/
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 443
+    CUDA_CHECK_KERNEL(DRR_ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_));
+
+    /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
+    CUDA_CHECK_KERNEL(DRR_WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
+        dev_triangles_,
+        dev_projected_triangles_,
+        dev_projected_triangles_snapped_,
+        dev_transf_vertex_zs_,
+        3 * triangle_count_,
+        dist_over_pix_pitch_,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        model_pose_.x_location_,
+        model_pose_.y_location_,
+        model_pose_.z_location_,
+        model_rotation_mat_,
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 446
+    CUDA_CHECK_KERNEL(DRR_WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
+        dev_triangles_,
+        dev_projected_triangles_,
+        dev_projected_triangles_snapped_,
+        dev_transf_vertex_zs_,
+        3 * triangle_count_,
+        dist_over_pix_pitch_,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        model_pose_.x_location_,
+        model_pose_.y_location_,
+        model_pose_.z_location_,
+        model_rotation_mat_,
+        dev_normals_,
+        dev_backface_,
+        dev_tangent_triangle_));
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 464
+    CUDA_CHECK_KERNEL(DRR_BoundingBoxForTrianglesKernel<<<
+        dim_grid_bounding_box_,
+        threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_projected_triangles_snapped_,
+        triangle_count_,
+        width_,
+        height_));
+
+    /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
+    CUDA_CHECK_KERNEL(DRR_BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_,
+        triangle_count_,
+        dev_bounding_box_));
+
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 474
+    CUDA_CHECK_KERNEL(DRR_BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_,
+        triangle_count_,
+        dev_bounding_box_));
+
+    /*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
+    cub::DeviceScan::ExclusiveSum(
+        dev_cub_storage_,
+        cub_storage_bytes_,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        triangle_count_);
+
+    /*Prepare Launch Packet and Send it to Host*/
+    /*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 492
+    CUDA_CHECK_KERNEL(DRR_PrepareLaunchPacketKernel<<<1, 1>>>(
+        dev_fragment_fill_,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        triangle_count_));
+
+    CUDA_CHECK(cudaMemcpy(
+        renderer_output_->GetBoundingBox(),
+        dev_bounding_box_,
+        4 * sizeof(int),
+        cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
+        fragment_fill_,
+        dev_fragment_fill_,
+        1 * sizeof(int),
+        cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 529
+    CUDA_CHECK_KERNEL(DRR_StridePrefixKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block * threads_per_block)),
+        threads_per_block>>>(
+        threads_per_block,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        dev_stride_prefixes_,
+        triangle_count_));
+
+    CUDA_CHECK_KERNEL(DRR_FillTriangleKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block)),
+        threads_per_block>>>(
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 540
+    CUDA_CHECK_KERNEL(DRR_FillTriangleKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block)),
+        threads_per_block>>>(
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        dev_bounding_box_triangles_,
+        dev_z_line_values_,
+        triangle_count_,
+        width_,
+        height_,
+        dev_projected_triangles_,
+        dev_transf_vertex_zs_,
+        dev_stride_prefixes_,
+        dev_backface_,
+---
+FILE: src/gpu/render_drr_engine.cu LINE: 579
+    CUDA_CHECK_KERNEL(ZToLineIntegralToDRRConversionKernel<<<
+        dim_grid_image_processing_,
+        threads_per_block>>>(
+        renderer_output_->GetDeviceImagePointer(),
+        dev_z_line_values_,
+        width_,
+        height_,
+        diff_kernel_left_x,
+        diff_kernel_bottom_y,
+        diff_kernel_cropped_width,
+        lower_bound,
+        upper_bound,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        camera_calibration_.pixel_pitch_,
+        camera_calibration_.principal_distance_));
+---
+FILE: src/gpu/render_engine.cu LINE: 725
+    CUDA_CHECK_KERNEL(ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_));
+
+    /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
+    CUDA_CHECK_KERNEL(WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
+        dev_triangles_,
+        dev_projected_triangles_,
+        dev_projected_triangles_snapped_,
+        3 * triangle_count_,
+        dist_over_pix_pitch_,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        model_pose_.x_location_,
+        model_pose_.y_location_,
+        model_pose_.z_location_,
+        model_rotation_mat_,
+        dev_normals_,
+---
+FILE: src/gpu/render_engine.cu LINE: 728
+    CUDA_CHECK_KERNEL(WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
+        dev_triangles_,
+        dev_projected_triangles_,
+        dev_projected_triangles_snapped_,
+        3 * triangle_count_,
+        dist_over_pix_pitch_,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        model_pose_.x_location_,
+        model_pose_.y_location_,
+        model_pose_.z_location_,
+        model_rotation_mat_,
+        dev_normals_,
+        dev_backface_,
+        use_backface_culling_,
+        fx_,
+---
+FILE: src/gpu/render_engine.cu LINE: 749
+    CUDA_CHECK_KERNEL(BoundingBoxForTrianglesKernel<<<
+        dim_grid_bounding_box_,
+        threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_projected_triangles_snapped_,
+        triangle_count_,
+        width_,
+        height_));
+
+    /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
+    CUDA_CHECK_KERNEL(BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_,
+        triangle_count_,
+        dev_bounding_box_,
+        dev_backface_));
+---
+FILE: src/gpu/render_engine.cu LINE: 759
+    CUDA_CHECK_KERNEL(BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_,
+        triangle_count_,
+        dev_bounding_box_,
+        dev_backface_));
+
+    /*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
+    cub::DeviceScan::ExclusiveSum(
+        dev_cub_storage_,
+        cub_storage_bytes_,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        triangle_count_);
+
+    /*Prepare Launch Packet and Send it to Host*/
+---
+FILE: src/gpu/render_engine.cu LINE: 778
+    CUDA_CHECK_KERNEL(PrepareLaunchPacketKernel<<<1, 1>>>(
+        dev_fragment_fill_,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        triangle_count_));
+
+    CUDA_CHECK(cudaMemcpy(
+        renderer_output_->GetBoundingBox(),
+        dev_bounding_box_,
+        4 * sizeof(int),
+        cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
+        fragment_fill_,
+        dev_fragment_fill_,
+        1 * sizeof(int),
+        cudaMemcpyDeviceToHost));
+---
+FILE: src/gpu/render_engine.cu LINE: 815
+    CUDA_CHECK_KERNEL(StridePrefixKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block * threads_per_block)),
+        threads_per_block>>>(
+        threads_per_block,
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        dev_stride_prefixes_,
+        triangle_count_));
+
+    CUDA_CHECK_KERNEL(FillTriangleKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block)),
+        threads_per_block>>>(
+---
+FILE: src/gpu/render_engine.cu LINE: 826
+    CUDA_CHECK_KERNEL(FillTriangleKernel<<<
+        ceil(
+            static_cast<double>(fragment_fill_[0]) /
+            static_cast<double>(threads_per_block)),
+        threads_per_block>>>(
+        dev_bounding_box_triangles_sizes_,
+        dev_bounding_box_triangles_sizes_prefix_,
+        dev_bounding_box_triangles_,
+        renderer_output_->GetDeviceImagePointer(),
+        triangle_count_,
+        width_,
+        height_,
+        dev_projected_triangles_,
+        dev_stride_prefixes_));
+
+    /*Check for Errors*/
+---

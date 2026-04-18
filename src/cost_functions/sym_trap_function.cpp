@@ -103,7 +103,7 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     float x2tib[4][4];
     create_312_transform(
         x2tib,
-        p.z_location_,
+    p.x_location_,
         p.y_location_,
         p.z_location_,
         p.z_angle_,

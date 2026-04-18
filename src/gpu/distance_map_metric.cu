@@ -5,6 +5,8 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 
+#include "gpu/cuda_check.cuh"
+
 /*Grayscale Colors*/
 #include "gpu/pixel_grayscale_colors.h"
 
@@ -24,7 +26,7 @@ __global__ void DistanceMapMetric_Kernel(
     int diff_kernel_bottom_y,
     int diff_kernel_cropped_width) {
     // Global Thread
-    int i = (blockIdx.y + gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
     // Now, we need to convert the threadIdx (from
     // 0->Num_pixels_in_bounding_box) into something that we can use relative to
     // our entire image array. First, note that for any global thread (i),
@@ -69,8 +71,8 @@ double GPUMetrics::DistanceMapMetric(
     int width = projected_image->GetFrameWidth();
     int* bounding_box = projected_image->GetBoundingBox();
 
-    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_distance_map_score_);
-    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_);
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_distance_map_score_));
+    CUDA_CHECK_KERNEL(DistanceMapMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_edge_pixels_count_));
 
     int diff_kernel_left_x = max(bounding_box[0] - dilation, dilation);
     int diff_kernel_bottom_y = max(bounding_box[1] - dilation, dilation);
@@ -96,7 +98,7 @@ double GPUMetrics::DistanceMapMetric(
             static_cast<double>(diff_kernel_cropped_height) /
             sqrt(static_cast<double>(threads_per_block))));
 
-    DistanceMapMetric_Kernel<<<dim_grid_bounding_box, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(DistanceMapMetric_Kernel<<<dim_grid_bounding_box, threads_per_block>>>(
         projected_image->GetDeviceImagePointer(),
         distance_map->GetDeviceImagePointer(),
         dev_distance_map_score_,
@@ -105,18 +107,18 @@ double GPUMetrics::DistanceMapMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         distance_map_score_,
         dev_distance_map_score_,
         sizeof(int),
-        cudaMemcpyDeviceToHost);
-    cudaMemcpy(
+        cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
         edge_pixels_count_,
         dev_edge_pixels_count_,
         sizeof(int),
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
 
     // std::cout << "Distance Map Total Score : " << distance_map_score_[0] <<
     // std::endl; std::cout << "Number of Edge Pixels " << edge_pixels_count_[0]

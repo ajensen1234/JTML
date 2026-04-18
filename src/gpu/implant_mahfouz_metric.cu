@@ -1,6 +1,9 @@
 /*GPU Metrics Header*/
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -261,7 +264,7 @@ double GPUMetrics::ImplantMahfouzMetric(
     int width = rendered_image->GetFrameWidth();
 
     /*Reset the Pixel Score*/
-    ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_);
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -284,7 +287,7 @@ double GPUMetrics::ImplantMahfouzMetric(
 
     /*Calculate Mahfouz Edge Kernel (Numerator) (Note Rendered Image is ALWAYS
      * White)*/
-    ImplantMahfouzMetric_SilhouetteMahfouzNumeratorKernel<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_SilhouetteMahfouzNumeratorKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -294,19 +297,19 @@ double GPUMetrics::ImplantMahfouzMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     double intensity_score = pixel_score_[0];
     double num = intensity_score;
     /*Reset and Calculate Denominator*/
-    ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_);
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
 
     /*Calculate Mahfouz  Kernel (Denominator)*/
-    ImplantMahfouzMetric_IntensityMahfouzDenominatorKernel<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_IntensityMahfouzDenominatorKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -315,12 +318,12 @@ double GPUMetrics::ImplantMahfouzMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     if (pixel_score_ != 0)
         intensity_score =
             intensity_score / static_cast<double>(pixel_score_[0]);
@@ -329,7 +332,7 @@ double GPUMetrics::ImplantMahfouzMetric(
 
     /*Contour Section*/
     /*Reset the Pixel Score*/
-    ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_);
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
 
     int sub_left_x = max(bounding_box[0] - 3, 3);
     int sub_bottom_y = max(bounding_box[1] - 3, 3);
@@ -353,7 +356,7 @@ double GPUMetrics::ImplantMahfouzMetric(
             static_cast<double>(dim_block_image_processing_.y - 2)));
 
     /*Compute Edge Detection*/
-    ImplantMahfouzMetric_EdgeKernel<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeKernel<<<
         dim_grid_image_processing_,
         dim_block_image_processing_,
         dim_block_image_processing_.x * dim_block_image_processing_.y *
@@ -364,7 +367,7 @@ double GPUMetrics::ImplantMahfouzMetric(
         sub_right_x,
         sub_top_y,
         width,
-        3);
+        3));
 
     /* Compute launch parameters for dilation. Want 4 times the size of the sub
      * image. */
@@ -378,7 +381,7 @@ double GPUMetrics::ImplantMahfouzMetric(
 
     /*Dilation Inverse Kernel for Dilation Level of 3 With Linear Inverse
      * Weighting*/
-    ImplantMahfouzMetric_DilateKernelInverseMahfouzScale<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_DilateKernelInverseMahfouzScale<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -386,7 +389,7 @@ double GPUMetrics::ImplantMahfouzMetric(
         height,
         sub_left_x,
         sub_bottom_y,
-        sub_cropped_width);
+        sub_cropped_width));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -406,7 +409,7 @@ double GPUMetrics::ImplantMahfouzMetric(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Calculate Mahfouz Edge Kernel (Numerator)*/
-    ImplantMahfouzMetric_EdgeMahfouzNumeratorKernel<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeMahfouzNumeratorKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -416,19 +419,19 @@ double GPUMetrics::ImplantMahfouzMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     double contour_score = 255.0 * pixel_score_[0];
 
     /*Reset and Calculate Denominator*/
-    ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_);
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
 
     /*Calculate Mahfouz Edge Kernel (Denominator)*/
-    ImplantMahfouzMetric_EdgeMahfouzDenominatorKernel<<<
+    CUDA_CHECK_KERNEL(ImplantMahfouzMetric_EdgeMahfouzDenominatorKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -437,12 +440,12 @@ double GPUMetrics::ImplantMahfouzMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Denominator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     if (pixel_score_ != 0)
         contour_score = contour_score / static_cast<double>(pixel_score_[0]);
     else

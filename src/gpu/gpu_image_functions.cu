@@ -1,6 +1,9 @@
 /*GPU Image Functions Header*/
 #include "gpu/gpu_image_functions.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -242,12 +245,12 @@ bool BlendGrayscaleImages(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Kernel*/
-    BlendGrayscaleKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(BlendGrayscaleKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         destination_image->GetDeviceImagePointer(),
         secondary_image->GetDeviceImagePointer(),
         alpha,
         width,
-        height);
+        height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -277,13 +280,13 @@ bool PasteNonBlackPixels(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Kernel*/
-    PasteNonBlackPixelsKernel<<<
+    CUDA_CHECK_KERNEL(PasteNonBlackPixelsKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         destination_image->GetDeviceImagePointer(),
         secondary_image->GetDeviceImagePointer(),
         width,
-        height);
+        height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -307,10 +310,10 @@ bool PasteNonBlackPixels(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Kernel*/
-    PasteNonBlackPixelsKernel<<<
+    CUDA_CHECK_KERNEL(PasteNonBlackPixelsKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
-        dev_destination_image, dev_secondary_image, width, height);
+        dev_destination_image, dev_secondary_image, width, height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -348,30 +351,30 @@ bool ScaleGrayscaleToRange(
     /*Create Device Pointer Container for Max and Min*/
     int* dev_max = 0;
     int* dev_min = 0;
-    cudaMalloc((void**)&dev_max, 1 * sizeof(int));
-    cudaMalloc((void**)&dev_min, 1 * sizeof(int));
-    InitializeMaxMinKernel<<<1, 1>>>(
-        dev_max, dev_min); // Sets dev_max = 0, dev_min = 255
+    CUDA_CHECK(cudaMalloc((void**)&dev_max, 1 * sizeof(int)));
+    CUDA_CHECK(cudaMalloc((void**)&dev_min, 1 * sizeof(int)));
+    CUDA_CHECK_KERNEL(InitializeMaxMinKernel<<<1, 1>>>(
+        dev_max, dev_min)); // Sets dev_max = 0, dev_min = 255
 
     /*Kernels*/
-    GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         grayscale_image->GetDeviceImagePointer(),
         dev_max,
         dev_min,
         width,
-        height);
-    ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+        height));
+    CUDA_CHECK_KERNEL(ScaleImageToRangeKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         grayscale_image->GetDeviceImagePointer(),
         dev_max,
         dev_min,
         lower_bound,
         upper_bound,
         width,
-        height);
+        height));
 
     /*Free Memory for dev-max/min*/
-    cudaFree(dev_max);
-    cudaFree(dev_min);
+    CUDA_CHECK(cudaFree(dev_max));
+    CUDA_CHECK(cudaFree(dev_min));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -412,13 +415,13 @@ bool Convolve(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Kernel*/
-    ConvolutionKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(ConvolutionKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         dest_image->GetDeviceImagePointer(),
         input_image->GetDeviceImagePointer(),
         dev_kernel,
         kernel_size,
         width,
-        height);
+        height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -456,7 +459,7 @@ bool AddUniformNoise(
     curandGenerateUniform(*prng, dev_random_container, width * height);
 
     /*Kernels*/
-    AddUniformRandomNoiseKernel<<<
+    CUDA_CHECK_KERNEL(AddUniformRandomNoiseKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         grayscale_image->GetDeviceImagePointer(),
@@ -464,7 +467,7 @@ bool AddUniformNoise(
         lower_bound,
         upper_bound,
         width,
-        height);
+        height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
@@ -497,13 +500,13 @@ bool CompileGrid(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Kernels*/
-    CompileGridKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(CompileGridKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         dev_images,
         dev_grid,
         image_width,
         image_height,
         grid_width,
-        grid_height);
+        grid_height));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());

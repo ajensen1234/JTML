@@ -1,6 +1,9 @@
 /*GPU Metrics Header*/
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -57,8 +60,8 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
     int width = image_A->GetFrameWidth();
 
     /*Reset the Pixel Score*/
-    L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel<<<1, 1>>>(
-        dev_pixel_score_);
+    CUDA_CHECK_KERNEL(L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel<<<1, 1>>>(
+        dev_pixel_score_));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -83,7 +86,7 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
             sqrt(static_cast<double>(threads_per_block))));
 
     /*L_{1,1} Matrix Norm Difference Kernel*/
-    L_1_1_MatrixDifferenceNorm_DifferenceKernel<<<
+    CUDA_CHECK_KERNEL(L_1_1_MatrixDifferenceNorm_DifferenceKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         image_A->GetDeviceImagePointer(),
@@ -93,12 +96,12 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Numerator of Pixel Score (See Mahfouz Paper: (Sum of Pixel Input * Pixel
      * Projected)/(Sum of Pixel Projected) )*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     return pixel_score_[0];
 }
 } // namespace gpu_cost_function

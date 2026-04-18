@@ -1,6 +1,9 @@
 /*GPU Metrics Header*/
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -136,7 +139,7 @@ bool GPUMetrics::EdgeDetectRenderedImplantModel(
             static_cast<double>(dim_block_image_processing_.y - 2)));
 
     /*Compute Edge Detection*/
-    EdgeDetectRenderedImplantModel_EdgeKernel<<<
+    CUDA_CHECK_KERNEL(EdgeDetectRenderedImplantModel_EdgeKernel<<<
         dim_grid_image_processing_,
         dim_block_image_processing_,
         dim_block_image_processing_.x * dim_block_image_processing_.y *
@@ -146,7 +149,7 @@ bool GPUMetrics::EdgeDetectRenderedImplantModel(
         bounding_box[1],
         bounding_box[2],
         bounding_box[3],
-        width);
+        width));
 
     /*Change Launch Parameters For Gray Edge to White Edge Pass*/
     dim_grid_image_processing_ = dim3(
@@ -158,7 +161,7 @@ bool GPUMetrics::EdgeDetectRenderedImplantModel(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Change Gray Edges to White, and All Others to Black*/
-    EdgeDetectRenderedImplantModel_GrayEdgeToWhitePassKernel<<<
+    CUDA_CHECK_KERNEL(EdgeDetectRenderedImplantModel_GrayEdgeToWhitePassKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_model_image->GetDeviceImagePointer(),
@@ -166,7 +169,7 @@ bool GPUMetrics::EdgeDetectRenderedImplantModel(
         height,
         bounding_box[0],
         bounding_box[1],
-        sub_cropped_width);
+        sub_cropped_width));
 
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());

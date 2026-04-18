@@ -37,8 +37,3 @@ check
 *.egg-info
 /_deps/
 /compile_commands.json
-conversion_results
-smart_pointer_conversion.md
-smart_pointer_analysis
-.tasks/**/*
-.memory-bank

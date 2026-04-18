@@ -1,6 +1,9 @@
 /*Render Engine Header*/
 #include "gpu/render_engine.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cub Library (CUDA)*/
 #include "cub/cub.cuh"
 #include "cub/device/device_scan.cuh"
@@ -207,24 +210,24 @@ RenderEngine::~RenderEngine() {
 
 void RenderEngine::FreeCuda() {
     /*Free CUDA*/
-    cudaFree(dev_z_line_values_);
-    cudaFree(dev_triangles_);
-    cudaFree(dev_normals_);
-    cudaFree(dev_backface_);
-    cudaFree(dev_transf_vertex_zs_);
-    cudaFree(dev_tangent_triangle_);
-    cudaFree(dev_projected_triangles_);
-    cudaFree(dev_projected_triangles_snapped_);
-    cudaFree(dev_bounding_box_triangles_);
-    cudaFree(dev_bounding_box_triangles_sizes_);
-    cudaFree(dev_bounding_box_triangles_sizes_prefix_);
-    cudaFree(dev_cub_storage_);
-    cudaFree(dev_bounding_box_);
-    cudaFree(dev_fragment_fill_);
-    cudaFree(dev_stride_prefixes_);
+    CUDA_CHECK(cudaFree(dev_z_line_values_));
+    CUDA_CHECK(cudaFree(dev_triangles_));
+    CUDA_CHECK(cudaFree(dev_normals_));
+    CUDA_CHECK(cudaFree(dev_backface_));
+    CUDA_CHECK(cudaFree(dev_transf_vertex_zs_));
+    CUDA_CHECK(cudaFree(dev_tangent_triangle_));
+    CUDA_CHECK(cudaFree(dev_projected_triangles_));
+    CUDA_CHECK(cudaFree(dev_projected_triangles_snapped_));
+    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_));
+    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_sizes_));
+    CUDA_CHECK(cudaFree(dev_bounding_box_triangles_sizes_prefix_));
+    CUDA_CHECK(cudaFree(dev_cub_storage_));
+    CUDA_CHECK(cudaFree(dev_bounding_box_));
+    CUDA_CHECK(cudaFree(dev_fragment_fill_));
+    CUDA_CHECK(cudaFree(dev_stride_prefixes_));
 
     /*Free Host*/
-    cudaFreeHost(fragment_fill_);
+    CUDA_CHECK(cudaFreeHost(fragment_fill_));
 }
 
 cudaError_t
@@ -234,7 +237,7 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     cudaError_t cudaStatus;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
-    cudaSetDevice(device);
+    CUDA_CHECK(cudaSetDevice(device));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -245,48 +248,48 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     }
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    cudaHostAlloc(
-        (void**)&fragment_fill_, 1 * sizeof(int), cudaHostAllocDefault);
+    CUDA_CHECK(cudaHostAlloc(
+        (void**)&fragment_fill_, 1 * sizeof(int), cudaHostAllocDefault));
 
     /*Allocate GPU buffers for image, triangles.*/
-    cudaMalloc((void**)&dev_z_line_values_, width_ * height_ * sizeof(float));
+    CUDA_CHECK(cudaMalloc((void**)&dev_z_line_values_, width_ * height_ * sizeof(float)));
 
-    cudaMalloc((void**)&dev_triangles_, triangle_count_ * 9 * sizeof(float));
+    CUDA_CHECK(cudaMalloc((void**)&dev_triangles_, triangle_count_ * 9 * sizeof(float)));
 
-    cudaMalloc((void**)&dev_normals_, triangle_count_ * 3 * sizeof(float));
+    CUDA_CHECK(cudaMalloc((void**)&dev_normals_, triangle_count_ * 3 * sizeof(float)));
 
-    cudaMalloc((void**)&dev_backface_, triangle_count_ * sizeof(bool));
+    CUDA_CHECK(cudaMalloc((void**)&dev_backface_, triangle_count_ * sizeof(bool)));
 
-    cudaMalloc(
-        (void**)&dev_transf_vertex_zs_, triangle_count_ * 3 * sizeof(float));
+    CUDA_CHECK(cudaMalloc(
+        (void**)&dev_transf_vertex_zs_, triangle_count_ * 3 * sizeof(float)));
 
-    cudaMalloc((void**)&dev_tangent_triangle_, triangle_count_ * sizeof(bool));
+    CUDA_CHECK(cudaMalloc((void**)&dev_tangent_triangle_, triangle_count_ * sizeof(bool)));
 
-    cudaMalloc(
-        (void**)&dev_projected_triangles_, triangle_count_ * 6 * sizeof(float));
+    CUDA_CHECK(cudaMalloc(
+        (void**)&dev_projected_triangles_, triangle_count_ * 6 * sizeof(float)));
 
-    cudaMalloc(
+    CUDA_CHECK(cudaMalloc(
         (void**)&dev_projected_triangles_snapped_,
-        triangle_count_ * 6 * sizeof(int));
+        triangle_count_ * 6 * sizeof(int)));
 
-    cudaMalloc(
+    CUDA_CHECK(cudaMalloc(
         (void**)&dev_bounding_box_triangles_,
-        triangle_count_ * 4 * sizeof(int));
+        triangle_count_ * 4 * sizeof(int)));
 
-    cudaMalloc(
+    CUDA_CHECK(cudaMalloc(
         (void**)&dev_bounding_box_triangles_sizes_,
-        triangle_count_ * sizeof(int));
+        triangle_count_ * sizeof(int)));
 
-    cudaMalloc(
+    CUDA_CHECK(cudaMalloc(
         (void**)&dev_bounding_box_triangles_sizes_prefix_,
-        triangle_count_ * sizeof(int));
+        triangle_count_ * sizeof(int)));
 
-    cudaMalloc((void**)&dev_bounding_box_, 4 * sizeof(int));
+    CUDA_CHECK(cudaMalloc((void**)&dev_bounding_box_, 4 * sizeof(int)));
 
-    cudaMalloc((void**)&dev_fragment_fill_, 1 * sizeof(int));
+    CUDA_CHECK(cudaMalloc((void**)&dev_fragment_fill_, 1 * sizeof(int)));
 
-    cudaMalloc(
-        (void**)&dev_stride_prefixes_, maximum_stride_size * sizeof(int));
+    CUDA_CHECK(cudaMalloc(
+        (void**)&dev_stride_prefixes_, maximum_stride_size * sizeof(int)));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -317,7 +320,7 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
         dev_bounding_box_triangles_sizes_,
         triangle_count_);
 
-    cudaMalloc(&dev_cub_storage_, cub_storage_bytes_);
+    CUDA_CHECK(cudaMalloc(&dev_cub_storage_, cub_storage_bytes_));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -328,17 +331,17 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     }
 
     /*Copy input from host memory to GPU.*/
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         dev_triangles_,
         triangles,
         triangle_count_ * 9 * sizeof(float),
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice));
 
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         dev_normals_,
         normals,
         triangle_count_ * 3 * sizeof(float),
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -713,16 +716,16 @@ cudaError_t RenderEngine::Render() {
     cudaGetLastError(); // Resets Errors (MAYBE DELETE TO SAVE TIME?)
 
     /*Clear Image*/
-    cudaMemset(
+    CUDA_CHECK(cudaMemset(
         renderer_output_->GetDeviceImagePointer(),
         0,
-        width_ * height_ * sizeof(unsigned char));
+        width_ * height_ * sizeof(unsigned char)));
 
     /*Reset Launch Packet*/
-    ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_);
+    CUDA_CHECK_KERNEL(ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_));
 
     /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
-    WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
         dev_triangles_,
         dev_projected_triangles_,
         dev_projected_triangles_snapped_,
@@ -740,25 +743,25 @@ cudaError_t RenderEngine::Render() {
         fx_,
         fy_,
         cx_,
-        cy_);
+        cy_));
 
     /*Calculate Bounding Boxes for Each Triangle*/
-    BoundingBoxForTrianglesKernel<<<
+    CUDA_CHECK_KERNEL(BoundingBoxForTrianglesKernel<<<
         dim_grid_bounding_box_,
         threads_per_block>>>(
         dev_bounding_box_triangles_,
         dev_projected_triangles_snapped_,
         triangle_count_,
         width_,
-        height_);
+        height_));
 
     /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
-    BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
         dev_bounding_box_triangles_,
         dev_bounding_box_triangles_sizes_,
         triangle_count_,
         dev_bounding_box_,
-        dev_backface_);
+        dev_backface_));
 
     /*Use CUB library to compute exlusive prefix sum of bound box sizes.*/
     cub::DeviceScan::ExclusiveSum(
@@ -772,22 +775,22 @@ cudaError_t RenderEngine::Render() {
     /*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to
     process (last element in dev_boundingBoxTrianglesSizePrefix and last element
     in dev_boundingBoxTrianglesSize)*/
-    PrepareLaunchPacketKernel<<<1, 1>>>(
+    CUDA_CHECK_KERNEL(PrepareLaunchPacketKernel<<<1, 1>>>(
         dev_fragment_fill_,
         dev_bounding_box_triangles_sizes_,
         dev_bounding_box_triangles_sizes_prefix_,
-        triangle_count_);
+        triangle_count_));
 
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         renderer_output_->GetBoundingBox(),
         dev_bounding_box_,
         4 * sizeof(int),
-        cudaMemcpyDeviceToHost);
-    cudaMemcpy(
+        cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
         fragment_fill_,
         dev_fragment_fill_,
         1 * sizeof(int),
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
 
     /*Because doing a binary search for every fragement on the prefix search
     takes too long, we first do this on every 256th fragment, then load the
@@ -809,7 +812,7 @@ cudaError_t RenderEngine::Render() {
         return cudaErrorMemoryAllocation;
     }
 
-    StridePrefixKernel<<<
+    CUDA_CHECK_KERNEL(StridePrefixKernel<<<
         ceil(
             static_cast<double>(fragment_fill_[0]) /
             static_cast<double>(threads_per_block * threads_per_block)),
@@ -818,9 +821,9 @@ cudaError_t RenderEngine::Render() {
         dev_bounding_box_triangles_sizes_,
         dev_bounding_box_triangles_sizes_prefix_,
         dev_stride_prefixes_,
-        triangle_count_);
+        triangle_count_));
 
-    FillTriangleKernel<<<
+    CUDA_CHECK_KERNEL(FillTriangleKernel<<<
         ceil(
             static_cast<double>(fragment_fill_[0]) /
             static_cast<double>(threads_per_block)),
@@ -833,7 +836,7 @@ cudaError_t RenderEngine::Render() {
         width_,
         height_,
         dev_projected_triangles_,
-        dev_stride_prefixes_);
+        dev_stride_prefixes_));
 
     /*Check for Errors*/
     return cudaGetLastError();
@@ -849,11 +852,11 @@ bool RenderEngine::WriteImage(std::string file_name) {
     /*Array for Storing Device Image on Host*/
     auto host_image = static_cast<unsigned char*>(
         malloc(width_ * height_ * sizeof(unsigned char)));
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         host_image,
         renderer_output_->GetDeviceImagePointer(),
         width_ * height_ * sizeof(unsigned char),
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
 
     /*OpenCV Image Container/Write Function*/
     auto projection_mat =
@@ -877,11 +880,11 @@ cv::Mat RenderEngine::GetcvMatImage() {
     /*Array for Storing Device Image on Host*/
     auto host_image = static_cast<unsigned char*>(
         malloc(width_ * height_ * sizeof(unsigned char)));
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         host_image,
         renderer_output_->GetDeviceImagePointer(),
         width_ * height_ * sizeof(unsigned char),
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
 
     /*OpenCV Image Container/Write Function*/
     auto projection_mat =

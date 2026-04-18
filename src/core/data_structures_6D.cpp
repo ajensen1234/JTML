@@ -37,7 +37,7 @@ Point6D::Point6D(gpu_cost_function::Pose p) {
     this->z = p.z_location_;
     this->xa = p.x_angle_;
     this->ya = p.y_angle_;
-    this->xa = p.z_angle_;
+    this->za = p.z_angle_;
 }
 
 double Point6D::GetDistanceFrom(Point6D otherPoint) {

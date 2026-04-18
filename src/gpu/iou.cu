@@ -1,6 +1,9 @@
 /*GPU Metrics Header*/
 #include "gpu/gpu_metrics.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -62,8 +65,8 @@ double GPUMetrics::IOU(GPUImage* image_A, GPUImage* image_B) {
     int width = image_A->GetFrameWidth();
 
     /*Reset the IOU Score*/
-    IOU__ResetIOUScoresKernel<<<1, 1>>>(
-        dev_intersection_score_, dev_union_score_);
+    CUDA_CHECK_KERNEL(IOU__ResetIOUScoresKernel<<<1, 1>>>(
+        dev_intersection_score_, dev_union_score_));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -88,7 +91,7 @@ double GPUMetrics::IOU(GPUImage* image_A, GPUImage* image_B) {
             sqrt(static_cast<double>(threads_per_block))));
 
     /*IOU Kernel*/
-    IOUKernel<<<dim_grid_image_processing_, threads_per_block>>>(
+    CUDA_CHECK_KERNEL(IOUKernel<<<dim_grid_image_processing_, threads_per_block>>>(
         image_A->GetDeviceImagePointer(),
         image_B->GetDeviceImagePointer(),
         dev_intersection_score_,
@@ -97,16 +100,16 @@ double GPUMetrics::IOU(GPUImage* image_A, GPUImage* image_B) {
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Return IOU Score*/
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         intersection_score_,
         dev_intersection_score_,
         sizeof(int),
-        cudaMemcpyDeviceToHost);
-    cudaMemcpy(
-        union_score_, dev_union_score_, sizeof(int), cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
+        union_score_, dev_union_score_, sizeof(int), cudaMemcpyDeviceToHost));
     return static_cast<double>(intersection_score_[0]) /
            static_cast<double>(union_score_[0]);
 }

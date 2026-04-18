@@ -7,6 +7,7 @@ add_executable(vtk-tester
     ${PROJECT_SOURCE_DIR}/include/gui/viewer.h 
 
 )
+target_compile_definitions(vtk-tester PRIVATE JTML_TEST_DATA_DIR="${JTML_TEST_DATA_DIR}")
 target_link_libraries(vtk-tester PRIVATE ${VTK_LIBRARIES})
 target_link_libraries(vtk-tester PRIVATE jtml_gpu jtml_core)
 target_link_libraries(vtk-tester PRIVATE ${REQUIRED_LIBS_QUALIFIED})

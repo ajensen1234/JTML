@@ -43,7 +43,7 @@ CostFunctionManager::CostFunctionManager(Stage stage) {
 
     /*Initialize stage*/
     stage_ = stage;
-    if (stage_ != Stage::Trunk || stage_ != Stage::Branch ||
+    if (stage_ != Stage::Trunk && stage_ != Stage::Branch &&
         stage_ != Stage::Leaf)
         stage_ = Stage::Trunk;
 

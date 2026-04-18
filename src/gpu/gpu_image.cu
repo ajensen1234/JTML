@@ -1,6 +1,8 @@
 /*GPU Image Header*/
 #include "gpu/gpu_image.cuh"
 
+#include "gpu/cuda_check.cuh"
+
 /*Cuda*/
 #include "cuda_runtime.h"
 
@@ -18,15 +20,15 @@ GPUImage::GPUImage(int width, int height, int gpu_device) {
     cudaError_t cudaStatus;
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    cudaHostAlloc(
-        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault);
+    CUDA_CHECK(cudaHostAlloc(
+        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault));
     bounding_box_[0] = 0;
     bounding_box_[1] = 0;
     bounding_box_[2] = width - 1;
     bounding_box_[3] = height - 1;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
-    cudaSetDevice(gpu_device);
+    CUDA_CHECK(cudaSetDevice(gpu_device));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -40,15 +42,15 @@ GPUImage::GPUImage(int width, int height, int gpu_device) {
         dev_image_ = 0;
 
         /*Allocate GPU buffers for image, triangles.*/
-        cudaMalloc(
-            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char));
+        CUDA_CHECK(cudaMalloc(
+            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char)));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess) {
             image_on_gpu_ = false;
             /*Free CUDA*/
-            cudaFree(dev_image_);
+            CUDA_CHECK(cudaFree(dev_image_));
         } else {
             image_on_gpu_ = true;
         }
@@ -67,20 +69,20 @@ GPUImage::GPUImage(
     cudaError_t cudaStatus;
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    cudaHostAlloc(
-        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault);
+    CUDA_CHECK(cudaHostAlloc(
+        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault));
     bounding_box_[0] = 0;
     bounding_box_[1] = 0;
     bounding_box_[2] = width - 1;
     bounding_box_[3] = height - 1;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
-    cudaSetDevice(gpu_device);
+    CUDA_CHECK(cudaSetDevice(gpu_device));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         initialized_correctly_ = false;
         image_on_gpu_ = false;
         return;
@@ -92,7 +94,7 @@ GPUImage::GPUImage(
     dev_image_ = 0;
 
     /*Allocate GPU buffers for image, triangles.*/
-    cudaMalloc((void**)&dev_image_, width_ * height_ * sizeof(unsigned char));
+    CUDA_CHECK(cudaMalloc((void**)&dev_image_, width_ * height_ * sizeof(unsigned char)));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -101,16 +103,16 @@ GPUImage::GPUImage(
         initialized_correctly_ = false;
         image_on_gpu_ = false;
         /*Free CUDA*/
-        cudaFree(dev_image_);
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFree(dev_image_));
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         return;
     }
     /*Upload Image from Host to Device*/
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         dev_image_,
         host_image,
         width_ * height_ * sizeof(unsigned char),
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -119,8 +121,8 @@ GPUImage::GPUImage(
         initialized_correctly_ = false;
         image_on_gpu_ = false;
         /*Free CUDA*/
-        cudaFree(dev_image_);
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFree(dev_image_));
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         return;
     }
     /*Correctly Initialized*/
@@ -141,8 +143,8 @@ GPUImage::GPUImage() {
 
 GPUImage::~GPUImage() {
     /*Free CUDA*/
-    cudaFree(dev_image_);
-    cudaFreeHost(bounding_box_);
+    CUDA_CHECK(cudaFree(dev_image_));
+    CUDA_CHECK(cudaFreeHost(bounding_box_));
 };
 
 bool GPUImage::UploadBlankImageToGPU(int width, int height) {
@@ -154,7 +156,7 @@ bool GPUImage::UploadBlankImageToGPU(int width, int height) {
     if (image_on_gpu_) {
 
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
-        cudaSetDevice(device_);
+    CUDA_CHECK(cudaSetDevice(device_));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
@@ -162,8 +164,8 @@ bool GPUImage::UploadBlankImageToGPU(int width, int height) {
             return false;
         }
         /*Free CUDA*/
-        cudaFree(dev_image_);
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFree(dev_image_));
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         if (cudaStatus != cudaSuccess) {
             return false;
         }
@@ -171,20 +173,20 @@ bool GPUImage::UploadBlankImageToGPU(int width, int height) {
     }
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    cudaHostAlloc(
-        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault);
+    CUDA_CHECK(cudaHostAlloc(
+        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault));
     bounding_box_[0] = 0;
     bounding_box_[1] = 0;
     bounding_box_[2] = width - 1;
     bounding_box_[3] = height - 1;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
-    cudaSetDevice(device_);
+    CUDA_CHECK(cudaSetDevice(device_));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         image_on_gpu_ = false;
     } else {
         /*Initialize Private Host Variables*/
@@ -193,16 +195,16 @@ bool GPUImage::UploadBlankImageToGPU(int width, int height) {
         dev_image_ = 0;
 
         /*Allocate GPU buffers for image, triangles.*/
-        cudaMalloc(
-            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char));
+        CUDA_CHECK(cudaMalloc(
+            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char)));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess) {
             image_on_gpu_ = false;
             /*Free CUDA*/
-            cudaFree(dev_image_);
-            cudaFreeHost(bounding_box_);
+            CUDA_CHECK(cudaFree(dev_image_));
+            CUDA_CHECK(cudaFreeHost(bounding_box_));
         } else {
             image_on_gpu_ = true;
         }
@@ -220,7 +222,7 @@ bool GPUImage::UploadImageToGPU(
     if (image_on_gpu_) {
 
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
-        cudaSetDevice(device_);
+        CUDA_CHECK(cudaSetDevice(device_));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
@@ -228,8 +230,8 @@ bool GPUImage::UploadImageToGPU(
             return false;
         }
         /*Free CUDA*/
-        cudaFree(dev_image_);
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFree(dev_image_));
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         if (cudaStatus != cudaSuccess) {
             return false;
         }
@@ -237,20 +239,20 @@ bool GPUImage::UploadImageToGPU(
     }
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
-    cudaHostAlloc(
-        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault);
+    CUDA_CHECK(cudaHostAlloc(
+        (void**)&bounding_box_, 4 * sizeof(int), cudaHostAllocDefault));
     bounding_box_[0] = 0;
     bounding_box_[1] = 0;
     bounding_box_[2] = width - 1;
     bounding_box_[3] = height - 1;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
-    cudaSetDevice(device_);
+        CUDA_CHECK(cudaSetDevice(device_));
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         image_on_gpu_ = false;
     } else {
         /*Initialize Private Host Variables*/
@@ -259,8 +261,8 @@ bool GPUImage::UploadImageToGPU(
         dev_image_ = 0;
 
         /*Allocate GPU buffers for image, triangles.*/
-        cudaMalloc(
-            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char));
+        CUDA_CHECK(cudaMalloc(
+            (void**)&dev_image_, width_ * height_ * sizeof(unsigned char)));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
@@ -268,15 +270,15 @@ bool GPUImage::UploadImageToGPU(
         if (cudaStatus != cudaSuccess) {
             image_on_gpu_ = false;
             /*Free CUDA*/
-            cudaFree(dev_image_);
-            cudaFreeHost(bounding_box_);
+            CUDA_CHECK(cudaFree(dev_image_));
+            CUDA_CHECK(cudaFreeHost(bounding_box_));
         } else {
             /*Upload Image from Host to Device*/
-            cudaMemcpy(
+            CUDA_CHECK(cudaMemcpy(
                 dev_image_,
                 host_image,
                 width_ * height_ * sizeof(unsigned char),
-                cudaMemcpyHostToDevice);
+                cudaMemcpyHostToDevice));
 
             /*Check for Errors*/
             cudaStatus = cudaGetLastError();
@@ -284,8 +286,8 @@ bool GPUImage::UploadImageToGPU(
             if (cudaStatus != cudaSuccess) {
                 image_on_gpu_ = false;
                 /*Free CUDA*/
-                cudaFree(dev_image_);
-                cudaFreeHost(bounding_box_);
+                CUDA_CHECK(cudaFree(dev_image_));
+                CUDA_CHECK(cudaFreeHost(bounding_box_));
             } else {
                 image_on_gpu_ = true;
             }
@@ -303,7 +305,7 @@ bool GPUImage::RemoveImageFromGPU() {
     if (image_on_gpu_) {
 
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
-        cudaSetDevice(device_);
+        CUDA_CHECK(cudaSetDevice(device_));
 
         /*Check for Errors*/
         cudaStatus = cudaGetLastError();
@@ -311,8 +313,8 @@ bool GPUImage::RemoveImageFromGPU() {
             return false;
         }
         /*Free CUDA*/
-        cudaFree(dev_image_);
-        cudaFreeHost(bounding_box_);
+        CUDA_CHECK(cudaFree(dev_image_));
+        CUDA_CHECK(cudaFreeHost(bounding_box_));
         if (cudaStatus != cudaSuccess) {
             return false;
         }
@@ -329,9 +331,9 @@ unsigned char* GPUImage::GetDeviceImagePointer() {
     if (image_on_gpu_) {
         return dev_image_;
     }
-    cudaFree(bounding_box_);
+    CUDA_CHECK(cudaFreeHost(bounding_box_));
     bounding_box_ = 0;
-    cudaFree(dev_image_);
+    CUDA_CHECK(cudaFree(dev_image_));
     dev_image_ = 0;
     return dev_image_;
 };
@@ -340,7 +342,7 @@ int* GPUImage::GetBoundingBox() {
     if (image_on_gpu_) {
         return bounding_box_;
     }
-    cudaFree(bounding_box_);
+    CUDA_CHECK(cudaFreeHost(bounding_box_));
     bounding_box_ = 0;
     return bounding_box_;
 }
@@ -359,11 +361,11 @@ bool GPUImage::WriteImage(std::string file_name) {
     /*Array for Storing Device Image on Host*/
     auto host_image = static_cast<unsigned char*>(
         malloc(width_ * height_ * sizeof(unsigned char)));
-    cudaMemcpy(
+    CUDA_CHECK(cudaMemcpy(
         host_image,
         this->GetDeviceImagePointer(),
         width_ * height_ * sizeof(unsigned char),
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost));
 
     /*OpenCV Image Container/Write Function*/
     auto projection_mat =

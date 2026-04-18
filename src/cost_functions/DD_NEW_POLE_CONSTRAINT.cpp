@@ -131,7 +131,7 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
     this->getActiveCostFunctionClass()->getBoolParameterValue(
         "Z_TRANS", z_tran);
 
-    double min_dist;
+    double min_dist = 0.0;
 
     if (x_tran) {
         min_dist += X_dist * pole_weight;

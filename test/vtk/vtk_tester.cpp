@@ -9,6 +9,7 @@
 #include <QString>
 #include <QTextStream>
 #include <iostream>
+#include <filesystem>
 #include <vector>
 
 #include "core/calibration.h"
@@ -33,7 +34,7 @@ Calibration read_calibration(const QString& cal_path) {
 };
 
 int main() {
-    std::string home_dir = "C:/JTML/JTA-CMake/test/vtk/";
+    const std::filesystem::path home_dir = JTML_TEST_DATA_DIR;
     vtkNew<vtkRenderer> my_renderer;
     auto actor = vtkSmartPointer<vtkActor>::New();
     print_hello();
@@ -42,7 +43,7 @@ int main() {
     vw.initialize_vtk_mappers();
     vw.initialize_vtk_renderers();
     QString cal_path("./test_case/calibration.txt");
-    std::string img_path = home_dir + "/test_case/HL_V1_K1_0001.tif";
+    std::string img_path = (home_dir / "test_case" / "HL_V1_K1_0001.tif").string();
     QStringList fem_path_extension("./test_case/KR_left_8_fem.stl");
     QStringList fem_loaded_name(
         QFileInfo(QString::fromStdString(fem_path_extension[0].toStdString()))

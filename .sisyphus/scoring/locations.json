@@ -1,0 +1,8 @@
+[
+  { "path": ".", "score": 100, "reason": "root" },
+  { "path": "src/core", "score": 25, "reason": "central logic, 13+ files, many symbols" },
+  { "path": "src/gpu", "score": 30, "reason": "specialized CUDA kernels, 22+ files" },
+  { "path": "src/gui", "score": 28, "reason": "Qt logic, MainScreen complexity hotspot" },
+  { "path": "src/cost_functions", "score": 22, "reason": "domain-specific math logic" },
+  { "path": "include/core", "score": 18, "reason": "mirrored header structure" }
+]

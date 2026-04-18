@@ -293,6 +293,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/pytorch-gpu-2.4.1-cuda120py312h4ea2c68_300.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-5.15.8-hf11cfaa_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-main-5.15.8-hc9dc06e_21.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/qt-wayland-5.15.8-hca6e417_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-webengine-5.15.8-h3e791b3_6.conda
       - conda: https://prefix.dev/conda-forge/linux-64/readline-8.2-h8228510_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/rhash-1.4.5-hb9d3cd8_0.conda
@@ -642,6 +643,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/pytorch-gpu-2.4.1-cuda120py312h4ea2c68_300.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-5.15.8-hf11cfaa_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-main-5.15.8-hc9dc06e_21.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/qt-wayland-5.15.8-hca6e417_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-webengine-5.15.8-h3e791b3_6.conda
       - conda: https://prefix.dev/conda-forge/linux-64/readline-8.2-h8228510_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/rhash-1.4.5-hb9d3cd8_0.conda
@@ -992,6 +994,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/pytorch-gpu-2.4.1-cuda120py312h4ea2c68_300.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-5.15.8-hf11cfaa_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-main-5.15.8-hc9dc06e_21.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/qt-wayland-5.15.8-hca6e417_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/qt-webengine-5.15.8-h3e791b3_6.conda
       - conda: https://prefix.dev/conda-forge/linux-64/readline-8.2-h8228510_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/rhash-1.4.5-hb9d3cd8_0.conda
@@ -4557,6 +4560,28 @@ packages:
   license_family: LGPL
   size: 61305384
   timestamp: 1712549380352
+- conda: https://prefix.dev/conda-forge/linux-64/qt-wayland-5.15.8-hca6e417_0.conda
+  sha256: 3e53c619737b35b41e0c66939d6c53410d4d4b951d9481c9b371ef07d00aefdd
+  md5: cb3eba8c4d621836f8067b7aae19ebb6
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - fontconfig >=2.14.2,<3.0a0
+  - fonts-conda-ecosystem
+  - freetype >=2.12.1,<3.0a0
+  - libgcc-ng >=12
+  - libglib >=2.74.1,<3.0a0
+  - libstdcxx-ng >=12
+  - libxkbcommon >=1.5.0,<2.0a0
+  - libzlib >=1.2.13,<2.0.0a0
+  - qt-main >=5.15.8,<5.16.0a0
+  - wayland >=1.21.0,<2.0a0
+  - xorg-libx11 >=1.8.4,<2.0a0
+  - xorg-libxcomposite
+  - xorg-libxext >=1.3.4,<2.0a0
+  license: LGPL-3.0-only
+  license_family: LGPL
+  size: 1035801
+  timestamp: 1678659439827
 - conda: https://prefix.dev/conda-forge/linux-64/qt-webengine-5.15.8-h3e791b3_6.conda
   sha256: 119589ba656d5f5f776b265f5c8cf8c28a914abb4ab3bf2dc9a67ec0953f529e
   md5: e6ae9b17fc93997289fc33fa7fc15f16

@@ -13,6 +13,9 @@
 
 #include "fast_implant_dilation_metric.cuh"
 
+/*CUDA Error Checking*/
+#include "gpu/cuda_check.cuh"
+
 /*Kernels*/
 __global__ void
 FastImplantDilationMetric_ResetPixelScoreKernel(int* dev_pixel_score) {
@@ -167,7 +170,7 @@ double GPUMetrics::FastImplantDilationMetric(
     int width = rendered_image->GetFrameWidth();
 
     /*Reset the Pixel Score*/
-    FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_);
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1>>>(dev_pixel_score_));
 
     /*Explanation of widths and heights
     IMAGE PROCESSING STAGE :
@@ -215,7 +218,7 @@ double GPUMetrics::FastImplantDilationMetric(
             static_cast<double>(dim_block_image_processing_.y - 2)));
 
     /*Compute Edge Detection*/
-    FastImplantDilationMetric_EdgeKernel<<<
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_EdgeKernel<<<
         dim_grid_image_processing_,
         dim_block_image_processing_,
         dim_block_image_processing_.x * dim_block_image_processing_.y *
@@ -226,7 +229,7 @@ double GPUMetrics::FastImplantDilationMetric(
         sub_right_x,
         sub_top_y,
         width,
-        dilation);
+        dilation));
 
     /* Compute launch parameters for dilation. Want 4 times the size of the sub
      * image. */
@@ -239,7 +242,7 @@ double GPUMetrics::FastImplantDilationMetric(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Dilation Kernel*/
-    FastImplantDilationMetric_DilateKernel<<<
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_DilateKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -248,7 +251,7 @@ double GPUMetrics::FastImplantDilationMetric(
         sub_left_x,
         sub_bottom_y,
         sub_cropped_width,
-        dilation);
+        dilation));
 
     /* Compute launch parameters for difference. Want same size as sub image nut
      * with no dilation padding at edges. */
@@ -270,7 +273,7 @@ double GPUMetrics::FastImplantDilationMetric(
             sqrt(static_cast<double>(threads_per_block))));
 
     /*Calculate Regions of No Overlap With Comparison Image*/
-    FastImplantDilationMetric_DifferenceKernel<<<
+    CUDA_CHECK_KERNEL(FastImplantDilationMetric_DifferenceKernel<<<
         dim_grid_image_processing_,
         threads_per_block>>>(
         rendered_image->GetDeviceImagePointer(),
@@ -280,14 +283,14 @@ double GPUMetrics::FastImplantDilationMetric(
         height,
         diff_kernel_left_x,
         diff_kernel_bottom_y,
-        diff_kernel_cropped_width);
+        diff_kernel_cropped_width));
 
     /*Return Pixel Score (# of Pixels that are white dilated edge and  black in
     comparison image (which is a dilated version of the edge detected original x
     ray) minus the number of pixels that are white in the comparison image and
     white in the dilated edge)*/
-    cudaMemcpy(
-        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(
+        pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost));
     return -1 * pixel_score_[0];
 };
 } // namespace gpu_cost_function
