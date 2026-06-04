@@ -9,8 +9,8 @@
 
 using namespace std;
 
-Model::Model(std::string file_location, std::string model_name,
-             std::string model_type) {
+Model::Model(
+    std::string file_location, std::string model_name, std::string model_type) {
     /*Set Public File Location string*/
     file_location_ = file_location;
     model_name_ = model_name;
@@ -29,6 +29,8 @@ Model::Model(std::string file_location, std::string model_name,
 }
 
 stl_reader::STL_STATUS Model::LoadVerticesAndNormals() {
-    return stl_reader::readAnySTL(QString::fromStdString(file_location_),
-                                  triangle_vertices_, triangle_normals_);
+    return stl_reader::readAnySTL(
+        QString::fromStdString(file_location_),
+        triangle_vertices_,
+        triangle_normals_);
 }

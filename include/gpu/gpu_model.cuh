@@ -37,23 +37,35 @@ class GPUModel {
        below).
 
     */
-   public:
+public:
     /*Monoplane constructor*/
-    JTML_DLL GPUModel(std::string model_name, bool principal_model, int width,
-                      int height, int device_primary_cam,
-                      bool use_backface_culling_primary_cam, float* triangles,
-                      float* normals, int triangle_count,
-                      CameraCalibration camera_calibration_primary_cam);
+    JTML_DLL GPUModel(
+        std::string model_name,
+        bool principal_model,
+        int width,
+        int height,
+        int device_primary_cam,
+        bool use_backface_culling_primary_cam,
+        float* triangles,
+        float* normals,
+        int triangle_count,
+        CameraCalibration camera_calibration_primary_cam);
 
     /*Biplane constructor*/
-    JTML_DLL GPUModel(std::string model_name, bool principal_model, int width,
-                      int height, int device_primary_cam,
-                      int device_secondary_cam,
-                      bool use_backface_culling_primary_cam,
-                      bool use_backface_secondary_cam, float* triangles,
-                      float* normals, int triangle_count,
-                      CameraCalibration camera_calibration_primary_cam,
-                      CameraCalibration camera_calibration_secondary_cam);
+    JTML_DLL GPUModel(
+        std::string model_name,
+        bool principal_model,
+        int width,
+        int height,
+        int device_primary_cam,
+        int device_secondary_cam,
+        bool use_backface_culling_primary_cam,
+        bool use_backface_secondary_cam,
+        float* triangles,
+        float* normals,
+        int triangle_count,
+        CameraCalibration camera_calibration_primary_cam,
+        CameraCalibration camera_calibration_secondary_cam);
 
     /*Default Constructor and Destructor*/
     JTML_DLL GPUModel();
@@ -62,19 +74,19 @@ class GPUModel {
     /*Render to cache function (returns true if worked correctly)
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL bool RenderPrimaryCamera(Pose model_pose);
-    JTML_DLL bool RenderPrimaryCamera_RotationMatrix(
-        RotationMatrix model_pose_matrix);
+    JTML_DLL bool
+    RenderPrimaryCamera_RotationMatrix(RotationMatrix model_pose_matrix);
     JTML_DLL bool RenderSecondaryCamera(Pose model_pose);
 
-    JTML_DLL void RenderPrimaryCameraAndWriteImage(Pose model_pose,
-                                                   std::string img_name);
+    JTML_DLL void
+    RenderPrimaryCameraAndWriteImage(Pose model_pose, std::string img_name);
 
     /*Render DRR to cache function (returns true if worked correctly)
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
-    JTML_DLL bool RenderDRRPrimaryCamera(Pose model_pose, float lower_bound,
-                                         float upper_bound);
-    JTML_DLL bool RenderDRRSecondaryCamera(Pose model_pose, float lower_bound,
-                                           float upper_bound);
+    JTML_DLL bool RenderDRRPrimaryCamera(
+        Pose model_pose, float lower_bound, float upper_bound);
+    JTML_DLL bool RenderDRRSecondaryCamera(
+        Pose model_pose, float lower_bound, float upper_bound);
 
     /*Get pointer to rendered image on GPU
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
@@ -117,7 +129,7 @@ class GPUModel {
     JTML_DLL Pose GetCurrentSecondaryCameraPose();
     JTML_DLL void SetCurrentSecondaryCameraPose(Pose current_pose);
 
-   private:
+private:
     /*Render Engines*/
     /*Render Engine for primary camera (used in both monoplane and biplane
      * mode).*/
@@ -147,6 +159,6 @@ class GPUModel {
     Pose current_pose_A_;
     Pose current_pose_B_;
 };
-}  // namespace gpu_cost_function
+} // namespace gpu_cost_function
 
 #endif /* GPU_MODEL_H */

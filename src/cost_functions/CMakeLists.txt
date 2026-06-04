@@ -9,8 +9,7 @@ set(CMAKE_AUTOUIC ON)
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/cost_functions)
 file(GLOB HEADER_FILES ${HEADER_DIR}/*.h)
 
-add_library(JTA_Cost_Functions
-		SHARED
+add_library(JTA_Cost_Functions SHARED
 		CostFunction.cpp
 		CostFunctionManager.cpp
 		DD_NEW_POLE_CONSTRAINT.cpp
@@ -22,20 +21,25 @@ add_library(JTA_Cost_Functions
 		sym_trap_function.cpp
 		${HEADER_FILES})
 
+set_target_properties(JTA_Cost_Functions PROPERTIES 
+	BUILD_WITH_INSTALL_RPATH TRUE
+	INSTALL_RPATH "$ENV{CONDA_PREFIX}/lib"
+	INSTALL_RPATH_USE_LINK_PATH TRUE
+)
 
+target_link_libraries(JTA_Cost_Functions 
+	PUBLIC
+		${REQUIRED_LIBS_QUALIFIED}
+		${TORCH_LIBRARIES}
+		${OpenCV_LIBRARIES}
+		CUDA::cudart
+		CUDA::cublas
+		jtml_gpu
+)
 
-
-target_link_libraries(JTA_Cost_Functions ${REQUIRED_LIBS_QUALIFIED})
-target_link_libraries(JTA_Cost_Functions ${TORCH_LIBRARIES})
-#target_link_libraries(JTA_Cost_Functions ${VTK_LIBRARIES})
-target_link_libraries(JTA_Cost_Functions ${OpenCV_LIBRARIES})
-target_link_libraries(JTA_Cost_Functions ${CUDA_LIBRARIES})
-
-
-target_link_libraries(JTA_Cost_Functions jtml_gpu)
-target_include_directories(JTA_Cost_Functions PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(JTA_Cost_Functions PUBLIC ${HEADER_DIR})
-
-
-
-
+target_include_directories(JTA_Cost_Functions 
+	PUBLIC 
+		${PROJECT_SOURCE_DIR}/include
+		${HEADER_DIR}
+		${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+)

@@ -25,8 +25,13 @@ enum Direction {
 
 /*Point6D to store Pose Information*/
 struct Point6D {
-    Point6D(double xval, double yval, double zval, double xaval, double yaval,
-            double zaval);
+    Point6D(
+        double xval,
+        double yval,
+        double zval,
+        double xaval,
+        double yaval,
+        double zaval);
     Point6D();
     Point6D(gpu_cost_function::Pose p);
 
@@ -48,7 +53,7 @@ struct Point6D {
 
 /*Storage Class (Linked List of HyperMatrices/Columns) for DIRECT optimization
  * algorithm*/
-struct HyperBox6D  // Stores HyperCube Info
+struct HyperBox6D // Stores HyperCube Info
 {
     HyperBox6D(double value, Point6D center, Point6D sides);
     HyperBox6D();

@@ -10,8 +10,11 @@
 
 #include "core/preprocessor-defs.h"
 struct CameraCalibration {
-    CameraCalibration(float principal_distance, float principal_x,
-                      float principal_y, float pixel_pitch) {
+    CameraCalibration(
+        float principal_distance,
+        float principal_x,
+        float principal_y,
+        float pixel_pitch) {
         type_ = "UF";
         principal_distance_ = principal_distance;
         principal_x_ = principal_x;
@@ -47,7 +50,7 @@ struct CameraCalibration {
         fy_ = fy;
         cx_ = cx;
         cy_ = cy;
-        pixel_pitch_ = 0.375;  // TODO: placeholder pixel pitch for denver
+        pixel_pitch_ = 0.375; // TODO: placeholder pixel pitch for denver
         principal_distance_ = fx_ * pixel_pitch_;
         principal_x_ = (cx_ - 512) * pixel_pitch_;
         principal_y_ = (512 - cy_) * pixel_pitch_;
@@ -77,12 +80,20 @@ struct CameraCalibration {
     float camera_matrix_[9];
     std::string type_;
 
-    float fx() { return fx_; }
-    float fy() { return fy_; }
-    float cx() { return cx_; }
-    float cy() { return cy_; }
+    float fx() {
+        return fx_;
+    }
+    float fy() {
+        return fy_;
+    }
+    float cx() {
+        return cx_;
+    }
+    float cy() {
+        return cy_;
+    }
 
-   private:
+private:
     float fx_, fy_, cx_, cy_;
 };
 

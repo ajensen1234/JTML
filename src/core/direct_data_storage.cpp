@@ -16,9 +16,10 @@ DirectDataStorage::DirectDataStorage(double initial_value) {
     /*Create New Vector of HyperBoxes and New HyperBox @ (.5, .5, .5, .5, .5,
      * .5) with initial_value*/
     auto initial_column = new std::vector<HyperBox6D*>();
-    auto initial_hyperbox =
-        new HyperBox6D(initial_value, Point6D(.5, .5, .5, .5, .5, .5),
-                       Point6D(1, 1, 1, 1, 1, 1));
+    auto initial_hyperbox = new HyperBox6D(
+        initial_value,
+        Point6D(.5, .5, .5, .5, .5, .5),
+        Point6D(1, 1, 1, 1, 1, 1));
     initial_column->push_back(initial_hyperbox);
     storage_matrix_.push_back(initial_column);
 
@@ -31,8 +32,8 @@ DirectDataStorage::DirectDataStorage() {
     /*Create New Vector of HyperBoxes and New HyperBox @ (.5, .5, .5, .5, .5,
      * .5) with initial value of -1*/
     auto initial_column = new std::vector<HyperBox6D*>();
-    auto initial_hyperbox = new HyperBox6D(-1, Point6D(.5, .5, .5, .5, .5, .5),
-                                           Point6D(1, 1, 1, 1, 1, 1));
+    auto initial_hyperbox = new HyperBox6D(
+        -1, Point6D(.5, .5, .5, .5, .5, .5), Point6D(1, 1, 1, 1, 1, 1));
     initial_column->push_back(initial_hyperbox);
     storage_matrix_.push_back(initial_column);
 
@@ -77,18 +78,22 @@ struct HyperBoxLessThanValue {
 
 void DirectDataStorage::AddHyperBox(HyperBox6D* new_box) {
     /*Search for Correct Size, If Doesn't Exist Insert New*/
-    auto iterator =
-        std::lower_bound(storage_matrix_.begin(), storage_matrix_.end(),
-                         new_box->size_, HyperBoxGreaterThanSize());
+    auto iterator = std::lower_bound(
+        storage_matrix_.begin(),
+        storage_matrix_.end(),
+        new_box->size_,
+        HyperBoxGreaterThanSize());
     int iterator_index = std::distance(storage_matrix_.begin(), iterator);
 
     /*IF in range*/
     if (iterator != storage_matrix_.end()) {
         /*If Already Exists, Insert in That Column*/
         if ((*iterator)->at(0)->size_ == new_box->size_) {
-            auto column_iterator =
-                std::lower_bound((*iterator)->begin(), (*iterator)->end(),
-                                 new_box->value_, HyperBoxLessThanValue());
+            auto column_iterator = std::lower_bound(
+                (*iterator)->begin(),
+                (*iterator)->end(),
+                new_box->value_,
+                HyperBoxLessThanValue());
 
             /*IF in range, insert at column_iterator*/
             if (column_iterator != (*iterator)->end()) {
@@ -111,8 +116,8 @@ void DirectDataStorage::AddHyperBox(HyperBox6D* new_box) {
             minimum_value_columns_.insert(
                 minimum_value_columns_.begin() + iterator_index,
                 new_box->value_);
-            size_columns_.insert(size_columns_.begin() + iterator_index,
-                                 new_box->size_);
+            size_columns_.insert(
+                size_columns_.begin() + iterator_index, new_box->size_);
         }
     } else {
         /*Add New Column At End*/
@@ -151,8 +156,8 @@ void DirectDataStorage::DeleteHyperBoxes(std::vector<int> col_ids) {
                 storage_matrix_.erase(storage_matrix_.begin() + col_id);
 
                 /*Delete Place in Minimum Containers (NOT SAFE)*/
-                minimum_value_columns_.erase(minimum_value_columns_.begin() +
-                                             col_id);
+                minimum_value_columns_.erase(
+                    minimum_value_columns_.begin() + col_id);
                 size_columns_.erase(size_columns_.begin() + col_id);
             } else {
                 /*Reset Minimum Value Container (NOT SAFE)*/

@@ -122,14 +122,14 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
     /*Parameter*/
     double pole_weight;
     bool x_tran, y_tran, z_tran;
-    this->getActiveCostFunctionClass()->getDoubleParameterValue("PoleWeight",
-                                                                pole_weight);
-    this->getActiveCostFunctionClass()->getBoolParameterValue("X_TRANS",
-                                                              x_tran);
-    this->getActiveCostFunctionClass()->getBoolParameterValue("Y_TRANS",
-                                                              y_tran);
-    this->getActiveCostFunctionClass()->getBoolParameterValue("Z_TRANS",
-                                                              z_tran);
+    this->getActiveCostFunctionClass()->getDoubleParameterValue(
+        "PoleWeight", pole_weight);
+    this->getActiveCostFunctionClass()->getBoolParameterValue(
+        "X_TRANS", x_tran);
+    this->getActiveCostFunctionClass()->getBoolParameterValue(
+        "Y_TRANS", y_tran);
+    this->getActiveCostFunctionClass()->getBoolParameterValue(
+        "Z_TRANS", z_tran);
 
     double min_dist;
 
@@ -158,4 +158,4 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
 
     return metric_score + min_dist;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

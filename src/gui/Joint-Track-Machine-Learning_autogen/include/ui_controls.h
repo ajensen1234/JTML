@@ -22,15 +22,17 @@
 QT_BEGIN_NAMESPACE
 
 class Ui_controls {
-   public:
-    void setupUi(QDialog *controls) {
+public:
+    void setupUi(QDialog* controls) {
         if (controls->objectName().isEmpty())
             controls->setObjectName(QString::fromUtf8("controls"));
         controls->resize(522, 257);
         QIcon icon;
         icon.addFile(
             QString::fromUtf8(":/Desktop_Icon/Resources/jta_dime_icon.png"),
-            QSize(), QIcon::Normal, QIcon::Off);
+            QSize(),
+            QIcon::Normal,
+            QIcon::Off);
         controls->setWindowIcon(icon);
         controls->setStyleSheet(QString::fromUtf8(
             "/*\n"
@@ -402,18 +404,18 @@ class Ui_controls {
         retranslateUi(controls);
 
         QMetaObject::connectSlotsByName(controls);
-    }  // setupUi
+    } // setupUi
 
-    void retranslateUi(QDialog *controls) {
+    void retranslateUi(QDialog* controls) {
         controls->setWindowTitle(QCoreApplication::translate(
             "controls", "Main Window Controls", nullptr));
-    }  // retranslateUi
+    } // retranslateUi
 };
 
 namespace Ui {
 class controls : public Ui_controls {};
-}  // namespace Ui
+} // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif  // UI_CONTROLS_H
+#endif // UI_CONTROLS_H

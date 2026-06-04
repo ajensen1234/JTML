@@ -29,8 +29,10 @@ void Viewer::initialize_vtk_pointers() {
     actor_text_->GetTextProperty()->SetFontSize(16);
     actor_text_->GetTextProperty()->SetFontFamilyToCourier();
     actor_text_->SetPosition2(0, 0);
-    actor_text_->GetTextProperty()->SetColor(214.0 / 255.0, 108.0 / 255.0,
-                                             35.0 / 255.0);  // Earth Reda
+    actor_text_->GetTextProperty()->SetColor(
+        214.0 / 255.0,
+        108.0 / 255.0,
+        35.0 / 255.0); // Earth Reda
     render_window_interactor_ =
         vtkSmartPointer<vtkRenderWindowInteractor>::New();
 }
@@ -60,21 +62,29 @@ int Viewer::get_number_of_model_actors() {
     return this->model_actor_list_.size();
 }
 
-vtkSmartPointer<vtkActor> Viewer::get_actor_image() { return actor_image_; }
+vtkSmartPointer<vtkActor> Viewer::get_actor_image() {
+    return actor_image_;
+}
 
 vtkSmartPointer<vtkImageData> Viewer::get_current_background() {
     return current_background_;
 }
 
-vtkSmartPointer<vtkSTLReader> Viewer::get_stl_reader() { return stl_reader_; }
+vtkSmartPointer<vtkSTLReader> Viewer::get_stl_reader() {
+    return stl_reader_;
+}
 
 vtkSmartPointer<vtkDataSetMapper> Viewer::get_image_mapper() {
     return image_mapper_;
 }
 
-vtkSmartPointer<vtkTextActor> Viewer::get_actor_text() { return actor_text_; }
+vtkSmartPointer<vtkTextActor> Viewer::get_actor_text() {
+    return actor_text_;
+}
 
-vtkSmartPointer<vtkImageImport> Viewer::get_importer() { return importer_; }
+vtkSmartPointer<vtkImageImport> Viewer::get_importer() {
+    return importer_;
+}
 
 void Viewer::update_display_background(cv::Mat desiredBackground) {
     if (current_background_) {
@@ -82,8 +92,13 @@ void Viewer::update_display_background(cv::Mat desiredBackground) {
     }
     importer_->SetDataSpacing(1, 1, 1);
     importer_->SetDataOrigin(0, 0, 0);
-    importer_->SetWholeExtent(0, desiredBackground.size().width - 1, 0,
-                              desiredBackground.size().height - 1, 0, 0);
+    importer_->SetWholeExtent(
+        0,
+        desiredBackground.size().width - 1,
+        0,
+        desiredBackground.size().height - 1,
+        0,
+        0);
     importer_->SetDataExtentToWholeExtent();
     importer_->SetDataScalarTypeToUnsignedChar();
     importer_->SetNumberOfScalarComponents(desiredBackground.channels());
@@ -96,18 +111,20 @@ void Viewer::set_importer_output_to_background() {
     importer_->SetOutput(current_background_);
 }
 
-void Viewer::make_image_invisible() { actor_image_->SetVisibility(false); }
+void Viewer::make_image_invisible() {
+    actor_image_->SetVisibility(false);
+}
 
-void Viewer::set_loaded_frames(std::vector<Frame> &frames) {
+void Viewer::set_loaded_frames(std::vector<Frame>& frames) {
     loaded_frames_ = frames;
 }
 
-void Viewer::set_loaded_frames_b(std::vector<Frame> &frames) {
+void Viewer::set_loaded_frames_b(std::vector<Frame>& frames) {
     loaded_frames_B_ = frames;
 }
 
-void Viewer::update_display_background_to_edge_image(int frame_number,
-                                                     bool CameraASelected) {
+void Viewer::update_display_background_to_edge_image(
+    int frame_number, bool CameraASelected) {
     // if 1, do 2. Else, do 3 (ternary operator)
     (CameraASelected)
         ? update_display_background(loaded_frames_[frame_number].GetEdgeImage())
@@ -115,24 +132,24 @@ void Viewer::update_display_background_to_edge_image(int frame_number,
               loaded_frames_B_[frame_number].GetEdgeImage());
 }
 
-void Viewer::update_display_background_to_original_image(int frame_number,
-                                                         bool CameraASelected) {
+void Viewer::update_display_background_to_original_image(
+    int frame_number, bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetOriginalImage())
                       : update_display_background(
                             loaded_frames_B_[frame_number].GetOriginalImage());
 }
 
-void Viewer::update_display_background_to_dilation_image(int frame_number,
-                                                         bool CameraASelected) {
+void Viewer::update_display_background_to_dilation_image(
+    int frame_number, bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetDilationImage())
                       : update_display_background(
                             loaded_frames_B_[frame_number].GetDilationImage());
 }
 
-void Viewer::update_display_background_to_inverted_image(int frame_number,
-                                                         bool CameraASelected) {
+void Viewer::update_display_background_to_inverted_image(
+    int frame_number, bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetInvertedImage())
                       : update_display_background(
@@ -143,20 +160,20 @@ void Viewer::setup_camera_calibration(Calibration cal) {
     (cal.type_ == "UF") ? background_camera_->SetFocalPoint(0, 0, -1)
                         : background_camera_->SetFocalPoint(0, 0, -1);
     background_camera_->SetPosition(0, 0, 0);
-    background_camera_->SetClippingRange(0.1,
-                                         2.0 * cal.camera_A_principal_.fy());
+    background_camera_->SetClippingRange(
+        0.1, 2.0 * cal.camera_A_principal_.fy());
 }
 
 void Viewer::setup_camera_coronal_plane() {
     background_camera_->SetPosition(-1, 1, 0);
 }
 
-void Viewer::place_image_actors_according_to_calibration(Calibration cal,
-                                                         int img_w, int img_h) {
+void Viewer::place_image_actors_according_to_calibration(
+    Calibration cal, int img_w, int img_h) {
     const float x_pos = -0.5 * img_w;
     const float y_pos = -0.5 * img_h;
     float z_pos;
-    (cal.type_ == "UF") ? z_pos = -cal.camera_A_principal_.fy() *cal
+    (cal.type_ == "UF") ? z_pos = -cal.camera_A_principal_.fy()* cal
                                        .camera_A_principal_.pixel_pitch_
                         : z_pos = -cal.camera_A_principal_.fy() *
                                   cal.camera_A_principal_.pixel_pitch_;
@@ -203,8 +220,8 @@ void Viewer::set_3d_model_color(int index, double RGB[3]) {
 
 void Viewer::load_models(QStringList cad_files, QStringList cad_models) {
     for (int i = 0; i < cad_files.size(); i++) {
-        loaded_models_->push_back(Model(cad_files[i].toStdString(),
-                                        cad_models[i].toStdString(), "BLANK"));
+        loaded_models_->push_back(Model(
+            cad_files[i].toStdString(), cad_models[i].toStdString(), "BLANK"));
     }
 }
 
@@ -252,18 +269,18 @@ void Viewer::change_model_opacity_to_solid(int index) {
     model_actor_list_[index]->GetProperty()->SetOpacity(1);
 }
 
-void Viewer::set_model_position_at_index(int index, double x, double y,
-                                         double z) {
+void Viewer::set_model_position_at_index(
+    int index, double x, double y, double z) {
     model_actor_list_[index]->SetPosition(x, y, z);
 }
 
-void Viewer::set_model_orientation_at_index(int index, double xrot, double yrot,
-                                            double zrot) {
+void Viewer::set_model_orientation_at_index(
+    int index, double xrot, double yrot, double zrot) {
     model_actor_list_[index]->SetOrientation(xrot, yrot, zrot);
 }
 
-std::string Viewer::print_location_and_orientation_of_model_at_index(
-    int index) {
+std::string
+Viewer::print_location_and_orientation_of_model_at_index(int index) {
     std::string infoText = "Location: <";
     infoText += std::to_string(static_cast<long double>(
                     model_actor_list_[index]->GetPosition()[0])) +
@@ -317,11 +334,11 @@ void Viewer::set_render_window_and_display() {
     interactor->Start();
 }
 
-double *Viewer::get_model_orientation_at_index(int index) {
+double* Viewer::get_model_orientation_at_index(int index) {
     return model_actor_list_[index]->GetOrientation();
 }
 
-double *Viewer::get_model_position_at_index(int index) {
+double* Viewer::get_model_position_at_index(int index) {
     return model_actor_list_[index]->GetPosition();
 }
 
@@ -362,7 +379,9 @@ void Viewer::load_renderers_into_render_window(Calibration cal) {
     qvtk_render_window_->AddRenderer(scene_renderer_);
 }
 
-void Viewer::print_render_window() { qvtk_render_window_->Print(std::cout); }
+void Viewer::print_render_window() {
+    qvtk_render_window_->Print(std::cout);
+}
 
 void Viewer::make_actor_text_invisible() {
     vtkTextActor::SafeDownCast(actor_text_)->GetTextProperty()->SetOpacity(0.0);
@@ -377,9 +396,11 @@ void Viewer::load_in_interactor_style(
     render_window_interactor_->SetInteractorStyle(in);
 }
 
-int Viewer::model_actor_list_size() { return model_actor_list_.size(); }
+int Viewer::model_actor_list_size() {
+    return model_actor_list_.size();
+}
 
-vtkActor *Viewer::get_model_actor_at_index(int index) {
+vtkActor* Viewer::get_model_actor_at_index(int index) {
     return model_actor_list_[index].GetPointer();
 }
 
@@ -423,10 +444,8 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
     scene_camera_->SetViewUp(0, -1, 0);
 }
 
-void Viewer::calculate_and_set_window_center_from_calibration(const int w,
-                                                              const int h,
-                                                              const float cx,
-                                                              const float cy) {
+void Viewer::calculate_and_set_window_center_from_calibration(
+    const int w, const int h, const float cx, const float cy) {
     this->wcx = -(2 * cx - w) / w;
     this->wcy = (2 * cy - h) / h;
 
@@ -434,7 +453,9 @@ void Viewer::calculate_and_set_window_center_from_calibration(const int w,
     scene_camera_->SetWindowCenter(wcx, wcy);
 }
 
-bool Viewer::windowCenterSet() { return this->windowCenter; }
+bool Viewer::windowCenterSet() {
+    return this->windowCenter;
+}
 
 void Viewer::update_window_center_on_resize() {
     // render window width and height
@@ -447,14 +468,14 @@ void Viewer::update_window_center_on_resize() {
         : scene_camera_->SetWindowCenter(this->wcx, this->wcy * (rww / rwh));
 }
 
-void Viewer::calculate_and_set_viewing_angle_from_calibration(const int h,
-                                                              const int fy) {
+void Viewer::calculate_and_set_viewing_angle_from_calibration(
+    const int h, const int fy) {
     long double angle = (180.0 / pi) * 2 * atan2(h, 2 * fy);
     scene_camera_->SetViewAngle(angle);
 }
 
-void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx,
-                                                              const float fy) {
+void Viewer::calculate_and_set_camera_aspect_from_calibration(
+    const float fx, const float fy) {
     vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
     m->Identity();
     double aspect = fx / fy;
@@ -465,7 +486,7 @@ void Viewer::calculate_and_set_camera_aspect_from_calibration(const float fx,
     t->SetMatrix(m);
     scene_camera_->SetUserTransform(t);
 
-    vtkMatrix4x4 *mat =
+    vtkMatrix4x4* mat =
         scene_camera_->GetProjectionTransformMatrix(scene_renderer_);
 
     for (int i = 0; i < 4; i++) {

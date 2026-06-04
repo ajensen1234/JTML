@@ -14,7 +14,7 @@
 ./out/build/*
 .\out\build\Release
 /out/build
-*build*/
+.build*/
 *idea*/
 .cmake
 CMakeFiles
@@ -31,3 +31,9 @@ Makefile
 example_studies/KCL
 .cache
 check
+
+# pixi environments
+.pixi
+*.egg-info
+/_deps/
+/compile_commands.json

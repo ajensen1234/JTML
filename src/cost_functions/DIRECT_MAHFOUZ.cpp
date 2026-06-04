@@ -55,4 +55,4 @@ double CostFunctionManager::costFunctionDIRECT_MAHFOUZ() {
 
     return metric_score;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

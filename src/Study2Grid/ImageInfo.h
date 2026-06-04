@@ -36,26 +36,27 @@ models
 
 struct ImageInfo {
     /*Constructor*/
-    ImageInfo(Study study, std::string image_path,
-              vector<std::string> model_types,
-              vector<std::string> label_img_paths,
-              vector<gpu_cost_function::Pose> pose_img_models,
-              vector<vector<basic_la::XYPoint>> norm_KP_points_list);
+    ImageInfo(
+        Study study,
+        std::string image_path,
+        vector<std::string> model_types,
+        vector<std::string> label_img_paths,
+        vector<gpu_cost_function::Pose> pose_img_models,
+        vector<vector<basic_la::XYPoint>> norm_KP_points_list);
 
     /*Append Information to Text File*/
     void AppendInformation(
         std::string text_file_path,
-        int model_type_index);  // int model_type_index is index of model type
-                                // in study
+        int model_type_index); // int model_type_index is index of model type
+                               // in study
 
     /*Study*/
     Study study_;
 
     /*Paths*/
     std::string image_path_;
-    vector<std::string>
-        label_img_paths_;  // For each model in the image (stored same order as
-                           // models in study)
+    vector<std::string> label_img_paths_; // For each model in the image (stored
+                                          // same order as models in study)
 
     /*Model Types Present*/
     vector<std::string> model_types_;

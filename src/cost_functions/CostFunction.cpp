@@ -12,7 +12,7 @@ CostFunction::CostFunction() {
 CostFunction::CostFunction(std::string cost_function_name) {
     cost_function_name_ = cost_function_name;
 };
-CostFunction::~CostFunction(){};
+CostFunction::~CostFunction() {};
 
 /*Add Parameter (w/ Default Value)*/
 void CostFunction::addParameter(Parameter<double> new_parameter) {
@@ -26,8 +26,8 @@ void CostFunction::addParameter(Parameter<bool> new_parameter) {
 };
 
 /*Set Parameter Values*/
-bool CostFunction::setDoubleParameterValue(std::string parameter_name,
-                                           double value) {
+bool CostFunction::setDoubleParameterValue(
+    std::string parameter_name, double value) {
     /*Search for Parameter*/
     for (int i = 0; i < double_parameters_.size(); i++) {
         if (double_parameters_[i].getParameterName() == parameter_name) {
@@ -49,8 +49,8 @@ bool CostFunction::setIntParameterValue(std::string parameter_name, int value) {
     /*Couldn't Find Parameter*/
     return false;
 };
-bool CostFunction::setBoolParameterValue(std::string parameter_name,
-                                         bool value) {
+bool CostFunction::setBoolParameterValue(
+    std::string parameter_name, bool value) {
     /*Search for Parameter*/
     for (int i = 0; i < bool_parameters_.size(); i++) {
         if (bool_parameters_[i].getParameterName() == parameter_name) {
@@ -63,8 +63,8 @@ bool CostFunction::setBoolParameterValue(std::string parameter_name,
 };
 
 /*Get Parameter Values*/
-bool CostFunction::getDoubleParameterValue(std::string parameter_name,
-                                           double &value) {
+bool CostFunction::getDoubleParameterValue(
+    std::string parameter_name, double& value) {
     /*Search for Parameter*/
     for (int i = 0; i < double_parameters_.size(); i++) {
         if (double_parameters_[i].getParameterName() == parameter_name) {
@@ -75,8 +75,8 @@ bool CostFunction::getDoubleParameterValue(std::string parameter_name,
     /*Couldn't Find Parameter*/
     return false;
 };
-bool CostFunction::getIntParameterValue(std::string parameter_name,
-                                        int &value) {
+bool CostFunction::getIntParameterValue(
+    std::string parameter_name, int& value) {
     /*Search for Parameter*/
     for (int i = 0; i < int_parameters_.size(); i++) {
         if (int_parameters_[i].getParameterName() == parameter_name) {
@@ -87,8 +87,8 @@ bool CostFunction::getIntParameterValue(std::string parameter_name,
     /*Couldn't Find Parameter*/
     return false;
 };
-bool CostFunction::getBoolParameterValue(std::string parameter_name,
-                                         bool &value) {
+bool CostFunction::getBoolParameterValue(
+    std::string parameter_name, bool& value) {
     /*Search for Parameter*/
     for (int i = 0; i < bool_parameters_.size(); i++) {
         if (bool_parameters_[i].getParameterName() == parameter_name) {
@@ -112,9 +112,11 @@ std::vector<Parameter<bool>> CostFunction::getBoolParameters() {
 };
 
 /*Get/Set Cost Function Name*/
-std::string CostFunction::getCostFunctionName() { return cost_function_name_; };
+std::string CostFunction::getCostFunctionName() {
+    return cost_function_name_;
+};
 void CostFunction::setCostFunctionName(std::string cost_function_name) {
     cost_function_name_ = cost_function_name;
 };
 
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

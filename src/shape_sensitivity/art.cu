@@ -1,8 +1,15 @@
 #include "art.cuh"
 
-__global__ void art_np_kernel(int height, int width, int n, int p,
-                              unsigned char* image, float* dev_fnp_re,
-                              float* dev_fnp_imag, int left_x, int bottom_y) {
+__global__ void art_np_kernel(
+    int height,
+    int width,
+    int n,
+    int p,
+    unsigned char* image,
+    float* dev_fnp_re,
+    float* dev_fnp_imag,
+    int left_x,
+    int bottom_y) {
     // thread values
     int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
     int thread_y = (blockIdx.y * blockDim.y) + threadIdx.y;
@@ -50,9 +57,13 @@ __global__ void reset_vars(float* dev_fnp_re, float* dev_fnp_imag) {
     dev_fnp_imag[0] = 0;
 }
 
-__global__ void raw_image_moments_kernel(float* img_moments, int height,
-                                         int width, unsigned char* image,
-                                         int left_x, int bottom_y) {
+__global__ void raw_image_moments_kernel(
+    float* img_moments,
+    int height,
+    int width,
+    unsigned char* image,
+    int left_x,
+    int bottom_y) {
     int thread_x = (blockIdx.x * blockDim.x) + threadIdx.x;
     int thread_y = (blockIdx.y * blockDim.y) + threadIdx.y;
 
@@ -135,8 +146,8 @@ img_desc::img_desc(int height, int width, int gpu_device) {
         init_ = false;
     }
 
-    cudaHostAlloc((void**)&raw_img_moments_, 11 * sizeof(float),
-                  cudaHostAllocDefault);
+    cudaHostAlloc(
+        (void**)&raw_img_moments_, 11 * sizeof(float), cudaHostAllocDefault);
     if (cudaGetLastError() != cudaSuccess) {
         init_ = false;
     }
@@ -155,15 +166,17 @@ img_desc::~img_desc() {
     cudaFree(dev_raw_img_moments_);
 };
 // Our "good to go" function that tells us if everything went according to plan
-bool img_desc::good_to_go() { return init_; }
+bool img_desc::good_to_go() {
+    return init_;
+}
 
 // Our function that actually calls the kernel
 // TODO: We will need to update this to accept the dev_image from some of our
 // projections, eventually
 // That will also include some bounding box stuff (which should actually speed
 // things up considerably)
-std::complex<float> img_desc::art_n_p(int n, int p,
-                                      gpu_cost_function::GPUImage* dev_image) {
+std::complex<float>
+img_desc::art_n_p(int n, int p, gpu_cost_function::GPUImage* dev_image) {
     // Standard defintion for creating our work groups
     const int threads_per_block = 256;
     int* bounding_box = dev_image->GetBoundingBox();
@@ -174,21 +187,31 @@ std::complex<float> img_desc::art_n_p(int n, int p,
     int diff_cropped_width = right_x - left_x - 1;
     int diff_cropped_height = top_y - bottom_y + 1;
 
-    dim3 dim_grid_bounding_box =
-        dim3(ceil(static_cast<float>(diff_cropped_width) /
-                  sqrt(static_cast<float>(threads_per_block))),
-             ceil(static_cast<float>(diff_cropped_height) /
-                  sqrt(static_cast<float>(threads_per_block))));
+    dim3 dim_grid_bounding_box = dim3(
+        ceil(
+            static_cast<float>(diff_cropped_width) /
+            sqrt(static_cast<float>(threads_per_block))),
+        ceil(
+            static_cast<float>(diff_cropped_height) /
+            sqrt(static_cast<float>(threads_per_block))));
 
-    dim3 dim_block = dim3(ceil(sqrt(static_cast<float>(threads_per_block))),
-                          ceil(sqrt(static_cast<float>(threads_per_block))));
+    dim3 dim_block = dim3(
+        ceil(sqrt(static_cast<float>(threads_per_block))),
+        ceil(sqrt(static_cast<float>(threads_per_block))));
 
     // Reset the variables that we are storing
     reset_vars<<<1, 1>>>(dev_Fnp_re, dev_Fnp_imag);
     // Run the kernel
     art_np_kernel<<<dim_grid_bounding_box, dim_block>>>(
-        height_, width_, n, p, dev_image->GetDeviceImagePointer(), dev_Fnp_re,
-        dev_Fnp_imag, left_x, bottom_y);
+        height_,
+        width_,
+        n,
+        p,
+        dev_image->GetDeviceImagePointer(),
+        dev_Fnp_re,
+        dev_Fnp_imag,
+        left_x,
+        bottom_y);
 
     // Copying everything back to host (CPU)
     cudaMemcpy(Fnp_re, dev_Fnp_re, sizeof(float), cudaMemcpyDeviceToHost);
@@ -198,11 +221,15 @@ std::complex<float> img_desc::art_n_p(int n, int p,
     std::complex<float> fnp(Fnp_re[0], Fnp_imag[0]);
     return fnp;
 };
-int img_desc::height() { return height_; };
-int img_desc::width() { return width_; };
+int img_desc::height() {
+    return height_;
+};
+int img_desc::width() {
+    return width_;
+};
 
-std::vector<float> img_desc::hu_moments(
-    gpu_cost_function::GPUImage* dev_image) {
+std::vector<float>
+img_desc::hu_moments(gpu_cost_function::GPUImage* dev_image) {
     const int threads_per_block = 256;
     int* bounding_box = dev_image->GetBoundingBox();
     int left_x = max(bounding_box[0], 0);
@@ -212,23 +239,33 @@ std::vector<float> img_desc::hu_moments(
     int diff_cropped_width = right_x - left_x - 1;
     int diff_cropped_height = top_y - bottom_y + 1;
 
-    dim3 dim_grid_bounding_box =
-        dim3(ceil(static_cast<float>(diff_cropped_width) /
-                  sqrt(static_cast<float>(threads_per_block))),
-             ceil(static_cast<float>(diff_cropped_height) /
-                  sqrt(static_cast<float>(threads_per_block))));
+    dim3 dim_grid_bounding_box = dim3(
+        ceil(
+            static_cast<float>(diff_cropped_width) /
+            sqrt(static_cast<float>(threads_per_block))),
+        ceil(
+            static_cast<float>(diff_cropped_height) /
+            sqrt(static_cast<float>(threads_per_block))));
 
-    dim3 dim_block = dim3(ceil(sqrt(static_cast<float>(threads_per_block))),
-                          ceil(sqrt(static_cast<float>(threads_per_block))));
+    dim3 dim_block = dim3(
+        ceil(sqrt(static_cast<float>(threads_per_block))),
+        ceil(sqrt(static_cast<float>(threads_per_block))));
 
     clear_img_moments<<<1, 1>>>(dev_raw_img_moments_);
     raw_image_moments_kernel<<<dim_grid_bounding_box, dim_block>>>(
-        dev_raw_img_moments_, height_, width_,
-        dev_image->GetDeviceImagePointer(), left_x, bottom_y);
+        dev_raw_img_moments_,
+        height_,
+        width_,
+        dev_image->GetDeviceImagePointer(),
+        left_x,
+        bottom_y);
 
     // copy raw image moments back to host
-    cudaMemcpy(raw_img_moments_, dev_raw_img_moments_, 11 * sizeof(float),
-               cudaMemcpyDeviceToHost);
+    cudaMemcpy(
+        raw_img_moments_,
+        dev_raw_img_moments_,
+        11 * sizeof(float),
+        cudaMemcpyDeviceToHost);
 
     // Here, we use those moments to calculate the values of the kernel;
     // Storing values as variables to make life a LOT easier

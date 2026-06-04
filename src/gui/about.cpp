@@ -29,12 +29,14 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
         ui.cc_label->setText("N/A");
     } else if (gpu_device_count == 0) {
         ui.gpu_label->setText(QString(properties.name) + " (Incompatible)");
-        ui.cc_label->setText(QString::number(properties.major) + "." +
-                             QString::number(properties.minor) + " (Too Low)");
+        ui.cc_label->setText(
+            QString::number(properties.major) + "." +
+            QString::number(properties.minor) + " (Too Low)");
     } else {
         ui.gpu_label->setText(QString(properties.name));
-        ui.cc_label->setText(QString::number(properties.major) + "." +
-                             QString::number(properties.minor));
+        ui.cc_label->setText(
+            QString::number(properties.major) + "." +
+            QString::number(properties.minor));
     }
 
     /*Set Title Font to Larger*/
@@ -81,12 +83,13 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
         max_width = title_metric.horizontalAdvance(ui.title_label->text());
 
     /*Set Positions*/
-    ui.title_label->setGeometry(
-        QRect(306 + (max_width -
-                     title_metric.horizontalAdvance(ui.title_label->text())) /
-                        2,
-              25, title_metric.horizontalAdvance(ui.title_label->text()),
-              title_metric.height()));
+    ui.title_label->setGeometry(QRect(
+        306 + (max_width -
+               title_metric.horizontalAdvance(ui.title_label->text())) /
+                  2,
+        25,
+        title_metric.horizontalAdvance(ui.title_label->text()),
+        title_metric.height()));
     ui.copyright_label->setGeometry(QRect(
         306 + (max_width -
                text_metric.horizontalAdvance(ui.copyright_label->text())) /
@@ -94,21 +97,22 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
         LABEL_TO_LABEL_Y + ui.title_label->geometry().bottom(),
         text_metric.horizontalAdvance(ui.copyright_label->text()),
         text_metric.height()));
-    ui.version_label->setGeometry(
-        QRect(306 + (max_width -
-                     text_metric.horizontalAdvance(ui.version_label->text())) /
-                        2,
-              LABEL_TO_LABEL_Y + ui.copyright_label->geometry().bottom(),
-              text_metric.horizontalAdvance(ui.version_label->text()),
-              text_metric.height()));
-    ui.detected_group_box->setGeometry(
-        QRect(306 + (max_width - group_box_width) / 2,
-              ui.version_label->geometry().bottom() + LABEL_TO_GROUP_BOX_Y,
-              group_box_width,
-              group_box_to_top_button_y + 2 * GROUP_BOX_TO_LABEL_Y +
-                  LABEL_TO_LABEL_Y + 2 * text_metric.height()));
+    ui.version_label->setGeometry(QRect(
+        306 + (max_width -
+               text_metric.horizontalAdvance(ui.version_label->text())) /
+                  2,
+        LABEL_TO_LABEL_Y + ui.copyright_label->geometry().bottom(),
+        text_metric.horizontalAdvance(ui.version_label->text()),
+        text_metric.height()));
+    ui.detected_group_box->setGeometry(QRect(
+        306 + (max_width - group_box_width) / 2,
+        ui.version_label->geometry().bottom() + LABEL_TO_GROUP_BOX_Y,
+        group_box_width,
+        group_box_to_top_button_y + 2 * GROUP_BOX_TO_LABEL_Y +
+            LABEL_TO_LABEL_Y + 2 * text_metric.height()));
     ui.gpu_description_label->setGeometry(QRect(
-        GROUP_BOX_TO_LABEL_X, group_box_to_top_button_y + GROUP_BOX_TO_LABEL_Y,
+        GROUP_BOX_TO_LABEL_X,
+        group_box_to_top_button_y + GROUP_BOX_TO_LABEL_Y,
         text_metric.horizontalAdvance(ui.gpu_description_label->text()),
         text_metric.height()));
     ui.cc_description_label->setGeometry(QRect(
@@ -118,25 +122,25 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
         ui.gpu_description_label->geometry().bottom() + LABEL_TO_LABEL_Y,
         text_metric.horizontalAdvance(ui.cc_description_label->text()),
         text_metric.height()));
-    ui.gpu_label->setGeometry(
-        QRect(ui.gpu_description_label->geometry().right() + LABEL_TO_LABEL_X,
-              group_box_to_top_button_y + GROUP_BOX_TO_LABEL_Y,
-              text_metric.horizontalAdvance(ui.gpu_label->text()),
-              text_metric.height()));
-    ui.cc_label->setGeometry(
-        QRect(ui.gpu_description_label->geometry().right() + LABEL_TO_LABEL_X,
-              ui.gpu_description_label->geometry().bottom() + LABEL_TO_LABEL_Y,
-              text_metric.horizontalAdvance(ui.cc_label->text()),
-              text_metric.height()));
-    ui.close_button->setGeometry(
-        QRect(306 + (max_width -
-                     (text_metric.horizontalAdvance(ui.close_button->text()) +
-                      INSIDE_BUTTON_PADDING_X)) /
-                        2,
-              ui.detected_group_box->geometry().bottom() + GROUP_BOX_TO_LABEL_Y,
-              text_metric.horizontalAdvance(ui.close_button->text()) +
-                  INSIDE_BUTTON_PADDING_X,
-              text_metric.height() + INSIDE_BUTTON_PADDING_Y));
+    ui.gpu_label->setGeometry(QRect(
+        ui.gpu_description_label->geometry().right() + LABEL_TO_LABEL_X,
+        group_box_to_top_button_y + GROUP_BOX_TO_LABEL_Y,
+        text_metric.horizontalAdvance(ui.gpu_label->text()),
+        text_metric.height()));
+    ui.cc_label->setGeometry(QRect(
+        ui.gpu_description_label->geometry().right() + LABEL_TO_LABEL_X,
+        ui.gpu_description_label->geometry().bottom() + LABEL_TO_LABEL_Y,
+        text_metric.horizontalAdvance(ui.cc_label->text()),
+        text_metric.height()));
+    ui.close_button->setGeometry(QRect(
+        306 + (max_width -
+               (text_metric.horizontalAdvance(ui.close_button->text()) +
+                INSIDE_BUTTON_PADDING_X)) /
+                  2,
+        ui.detected_group_box->geometry().bottom() + GROUP_BOX_TO_LABEL_Y,
+        text_metric.horizontalAdvance(ui.close_button->text()) +
+            INSIDE_BUTTON_PADDING_X,
+        text_metric.height() + INSIDE_BUTTON_PADDING_Y));
 
     /*Set Minimum Width and Height*/
     setFixedSize(331 + max_width, ui.close_button->geometry().bottom() + 25);
@@ -146,6 +150,7 @@ About::~About() {}
 
 // Set Version Number
 void About::setVersion(int A, int B, int C) {
-    ui.version_label->setText("Version " + QString::number(A) + "." +
-                              QString::number(B) + "." + QString::number(C));
+    ui.version_label->setText(
+        "Version " + QString::number(A) + "." + QString::number(B) + "." +
+        QString::number(C));
 }

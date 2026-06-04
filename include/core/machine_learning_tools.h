@@ -14,6 +14,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-cv::Mat segment_image(const cv::Mat& orig_image, bool black_sil_used,
-                      torch::jit::Module* model, unsigned int input_width,
-                      unsigned int input_height);
+cv::Mat segment_image(
+    const cv::Mat& orig_image,
+    bool black_sil_used,
+    torch::jit::Module* model,
+    unsigned int input_width,
+    unsigned int input_height);

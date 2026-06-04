@@ -15,7 +15,7 @@ namespace basic_la {
 struct XYPoint {
     /*Functions*/
     XYPoint(double X, double Y);
-    XYPoint(){};
+    XYPoint() {};
 
     /*Data*/
     double X_;
@@ -25,7 +25,7 @@ struct XYPoint {
 struct XYZPoint {
     /*Functions*/
     XYZPoint(double X, double Y, double Z);
-    XYZPoint(){};
+    XYZPoint() {};
 
     /*Data*/
     double X_;
@@ -36,7 +36,7 @@ struct XYZPoint {
 struct RotationMatrixZXY {
     /*Functions*/
     RotationMatrixZXY(double Z_angle, double X_angle, double Y_angle);
-    RotationMatrixZXY(){};
+    RotationMatrixZXY() {};
     XYZPoint RotatePoint(XYZPoint point);
 
     /*Data*/
@@ -50,4 +50,4 @@ struct RotationMatrixZXY {
     double rotation_21_;
     double rotation_22_;
 };
-}  // namespace basic_la
+} // namespace basic_la

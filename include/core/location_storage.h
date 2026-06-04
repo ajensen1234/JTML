@@ -16,9 +16,9 @@
 #include "data_structures_6D.h"
 
 class LocationStorage {
-   public:
-    LocationStorage(){};
-    ~LocationStorage(){};
+public:
+    LocationStorage() {};
+    ~LocationStorage() {};
 
     /*Add New Model to JTA-GPU So Initialize ALl Loaded Frames with
     Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0)*/
@@ -41,7 +41,7 @@ class LocationStorage {
     /*Get Model Storage Size (-1 if Inconsistent Sizes)*/
     int GetModelCount();
 
-   private:
+private:
     /*List of Model Location Points for Each Frame
     (So The Outside Vector is the length of the loaded frames
     and the inside vector is the length of the loaded models)*/

@@ -17,7 +17,7 @@
 #include <vector>
 
 class DirectDataStorage {
-   public:
+public:
     /*Initialize Direct Storage with a Unit Size HyperBox @ (.5, .5, .5, .5, .5,
      * .5) with initial_value*/
     DirectDataStorage(double initial_value);
@@ -25,7 +25,7 @@ class DirectDataStorage {
     //~DirectDataStorage();
 
     /*Remove and Add HyperBoxes*/
-    void AddHyperBox(HyperBox6D *new_box);
+    void AddHyperBox(HyperBox6D* new_box);
     void DeleteHyperBoxes(
         std::vector<int> col_ids); /*Deletes the Best Hyperbox at the List of
                                       Column IDs and Deletes Empty Columns*/
@@ -50,13 +50,13 @@ class DirectDataStorage {
     /*Print */
     void PrintContents();
 
-   private:
+private:
     /*Vector of Vector of HyperBoxes:
     Low Level Vector of HyperBoxes Represents All Hyperboxes of a Given Size,
     Kept in Sorted Decreasing (Max Value @ 0) Order High Level Vector of Vectors
     Represents All Sizes of Current Vectors, Kept in Sorted Increasing (Min
     Value @ 0) Order*/
-    std::vector<std::vector<HyperBox6D *> *> storage_matrix_;
+    std::vector<std::vector<HyperBox6D*>*> storage_matrix_;
 
     /*Vectors for Storing Minimum Hyperbox Size/Function Value Respectively for
     Each Column. This is done for speed as it is much faster to access. Might

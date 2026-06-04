@@ -9,10 +9,16 @@ RotationMatrix rotation_nudge(Pose input_pose, float theta, std::string axis) {
     float sy = sin(input_pose.y_angle_ * 3.14159265358979323846f / 180.0f);
 
     /* R*v = RzRxRy*v */
-    RotationMatrix model_rotation_mat_ =
-        RotationMatrix(cz * cy - sz * sx * sy, -1.0 * sz * cx,
-                       cz * sy + sz * cy * sx, sz * cy + cz * sx * sy, cz * cx,
-                       sz * sy - cz * cy * sx, -1.0 * cx * sy, sx, cx * cy);
+    RotationMatrix model_rotation_mat_ = RotationMatrix(
+        cz * cy - sz * sx * sy,
+        -1.0 * sz * cx,
+        cz * sy + sz * cy * sx,
+        sz * cy + cz * sx * sy,
+        cz * cx,
+        sz * sy - cz * cy * sx,
+        -1.0 * cx * sy,
+        sx,
+        cx * cy);
 
     // Now, we need a match statement to determine which of the axis we are
     // rotation about
@@ -56,7 +62,9 @@ RotationMatrix rotation_nudge(Pose input_pose, float theta, std::string axis) {
         sz_nudge * cy_nudge + cz_nudge * sx_nudge * sy_nudge,
         cz_nudge * cx_nudge,
         sz_nudge * sy_nudge - cz_nudge * cy_nudge * sx_nudge,
-        -1.0 * cx_nudge * sy_nudge, sx_nudge, cx_nudge * cy_nudge);
+        -1.0 * cx_nudge * sy_nudge,
+        sx_nudge,
+        cx_nudge * cy_nudge);
 
     return matmul(model_rotation_mat_, mat_nudge);
 };
@@ -96,8 +104,8 @@ RotationMatrix matmul(RotationMatrix A, RotationMatrix B) {
     return result;
 }
 
-std::vector<float> vector_differece(std::vector<float> vec1,
-                                    std::vector<float> vec2) {
+std::vector<float>
+vector_differece(std::vector<float> vec1, std::vector<float> vec2) {
     // Check to make sure that the vectors are the same size
     if (vec1.size() != vec2.size()) {
         throw std::invalid_argument(

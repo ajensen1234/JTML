@@ -22,15 +22,15 @@
 class Controls : public QDialog {
     Q_OBJECT
 
-   public:
+public:
     Controls(QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
     ~Controls() override;
 
-   private:
+private:
     Ui::controls ui;
     QGraphicsScene* center_scene;
     QGraphicsView* center_graph;
     QGraphicsPixmapItem* center_item;
 };
 
-#endif  // CONTROLS_H
+#endif // CONTROLS_H

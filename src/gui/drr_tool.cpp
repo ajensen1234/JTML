@@ -18,9 +18,12 @@
 vtkSmartPointer<DRRInteractorStyle> drr_interactor;
 
 // About JTA Popup CPP
-DRRTool::DRRTool(Model model, CameraCalibration calibration,
-                 double model_z_plane, QWidget* parent, Qt::WindowFlags flags)
-    : QDialog(parent, flags) {
+DRRTool::DRRTool(
+    Model model,
+    CameraCalibration calibration,
+    double model_z_plane,
+    QWidget* parent,
+    Qt::WindowFlags flags) : QDialog(parent, flags) {
     ui.setupUi(this);
 
     /*Set up VTK*/
@@ -60,14 +63,22 @@ DRRTool::DRRTool(Model model, CameraCalibration calibration,
 
     /*GPU*/
     gpu_model_ = new gpu_cost_function::GPUModel(
-        model_.model_name_, true, ui.qvtkWidget->width(),
-        ui.qvtkWidget->height(), 0, true, &model_.triangle_vertices_[0],
-        &model_.triangle_normals_[0], model_.triangle_vertices_.size() / 9,
+        model_.model_name_,
+        true,
+        ui.qvtkWidget->width(),
+        ui.qvtkWidget->height(),
+        0,
+        true,
+        &model_.triangle_vertices_[0],
+        &model_.triangle_normals_[0],
+        model_.triangle_vertices_.size() / 9,
         calibration_);
     if (!gpu_model_->IsInitializedCorrectly()) {
-        QMessageBox::critical(this, "Error!",
-                              "Error initializing DRR GPU Model.",
-                              QMessageBox::Ok);
+        QMessageBox::critical(
+            this,
+            "Error!",
+            "Error initializing DRR GPU Model.",
+            QMessageBox::Ok);
         this->close();
     }
 
@@ -77,14 +88,17 @@ DRRTool::DRRTool(Model model, CameraCalibration calibration,
         drr_interactor);
 
     /*Initialize Local Image Memory*/
-    host_image_ = static_cast<unsigned char*>(
-        malloc(ui.drr_image_label->height() * ui.drr_image_label->width() *
-               sizeof(unsigned char)));
+    host_image_ = static_cast<unsigned char*>(malloc(
+        ui.drr_image_label->height() * ui.drr_image_label->width() *
+        sizeof(unsigned char)));
 
     /*Initialize QT Host Image*/
     qt_host_image_ = QImage(
-        host_image_, ui.drr_image_label->width(), ui.drr_image_label->height(),
-        ui.drr_image_label->width(), QImage::Format_Grayscale8);
+        host_image_,
+        ui.drr_image_label->width(),
+        ui.drr_image_label->height(),
+        ui.drr_image_label->width(),
+        QImage::Format_Grayscale8);
 
     /*Draw DRR*/
     ui.minValue->setText(QString::number(
@@ -113,9 +127,12 @@ void DRRTool::DrawDRR() {
     /*DRR Render*/
     gpu_model_->RenderDRRPrimaryCamera(
         gpu_cost_function::Pose(
-            actor_->GetPosition()[0], actor_->GetPosition()[1],
-            actor_->GetPosition()[2], actor_->GetOrientation()[0],
-            actor_->GetOrientation()[1], actor_->GetOrientation()[2]),
+            actor_->GetPosition()[0],
+            actor_->GetPosition()[1],
+            actor_->GetPosition()[2],
+            actor_->GetOrientation()[0],
+            actor_->GetOrientation()[1],
+            actor_->GetOrientation()[2]),
         (ui.minUpperSpinBox->value() - ui.minLowerSpinBox->value()) *
                 (static_cast<double>(ui.minSlider->value()) / 1000.0) +
             ui.minLowerSpinBox->value(),
@@ -124,10 +141,12 @@ void DRRTool::DrawDRR() {
             ui.maxLowerSpinBox->value());
 
     /*Download DRR Render to Host*/
-    cudaMemcpy(host_image_, gpu_model_->GetPrimaryCameraRenderedImagePointer(),
-               ui.drr_image_label->height() * ui.drr_image_label->width() *
-                   sizeof(unsigned char),
-               cudaMemcpyDeviceToHost);
+    cudaMemcpy(
+        host_image_,
+        gpu_model_->GetPrimaryCameraRenderedImagePointer(),
+        ui.drr_image_label->height() * ui.drr_image_label->width() *
+            sizeof(unsigned char),
+        cudaMemcpyDeviceToHost);
 
     /*Connect Host Image Pixmap to Label*/
     ui.drr_image_label->setPixmap(

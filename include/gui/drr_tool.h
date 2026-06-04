@@ -35,15 +35,19 @@
 class DRRTool : public QDialog {
     Q_OBJECT
 
-   public:
-    DRRTool(Model model, CameraCalibration calibration, double model_z_plane,
-            QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
+public:
+    DRRTool(
+        Model model,
+        CameraCalibration calibration,
+        double model_z_plane,
+        QWidget* parent = 0,
+        Qt::WindowFlags flags = Qt::WindowFlags());
     ~DRRTool() override;
 
     /*Draw DRR*/
     void DrawDRR();
 
-   public slots:
+public slots:
     /*Threshold Changes*/
     void on_minLowerSpinBox_valueChanged();
     void on_maxLowerSpinBox_valueChanged();
@@ -52,7 +56,7 @@ class DRRTool : public QDialog {
     void on_minSlider_valueChanged();
     void on_maxSlider_valueChanged();
 
-   private:
+private:
     Ui::drrTool ui;
 
     /*VTK*/
@@ -77,4 +81,4 @@ class DRRTool : public QDialog {
     QImage qt_host_image_;
 };
 
-#endif  // DRR_TOOL_H
+#endif // DRR_TOOL_H

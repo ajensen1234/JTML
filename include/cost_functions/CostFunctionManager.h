@@ -31,7 +31,7 @@
 
 namespace jta_cost_function {
 class CostFunctionManager {
-   public:
+public:
     /******************************************************************************/
     /**************************PUBLIC DLL FUNCTIONS BEGIN
      * *************************/
@@ -54,7 +54,8 @@ class CostFunctionManager {
 
     /*Update Cost Function Values from Saved Session*/
     JTML_DLL bool updateCostFunctionParameterValues(
-        std::string cost_function_name, std::string parameter_name,
+        std::string cost_function_name,
+        std::string parameter_name,
         double value);
     JTML_DLL bool updateCostFunctionParameterValues(
         std::string cost_function_name, std::string parameter_name, int value);
@@ -62,10 +63,10 @@ class CostFunctionManager {
         std::string cost_function_name, std::string parameter_name, bool value);
 
     /*Call Initialization for Active Cost Function*/
-    JTML_DLL bool InitializeActiveCostFunction(std::string &error_message);
+    JTML_DLL bool InitializeActiveCostFunction(std::string& error_message);
 
     /*Call Destructor for Active Cost Function*/
-    JTML_DLL bool DestructActiveCostFunction(std::string &error_message);
+    JTML_DLL bool DestructActiveCostFunction(std::string& error_message);
 
     /*Call Active Cost Function*/
     JTML_DLL double callActiveCostFunction();
@@ -74,10 +75,10 @@ class CostFunctionManager {
     JTML_DLL std::string getActiveCostFunction();
 
     /*Get Active Cost Function Class*/
-    JTML_DLL CostFunction *getActiveCostFunctionClass();
+    JTML_DLL CostFunction* getActiveCostFunctionClass();
 
     /*Get Cost Function Class*/
-    JTML_DLL CostFunction *getCostFunctionClass(std::string cost_function_name);
+    JTML_DLL CostFunction* getCostFunctionClass(std::string cost_function_name);
 
     /*Get Vector of Cost Functions*/
     JTML_DLL std::vector<CostFunction> getAvailableCostFunctions();
@@ -87,29 +88,30 @@ class CostFunctionManager {
 
     /*Upload Data (Images,Poses etc.)*/
     JTML_DLL void UploadData(
-        std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_A,
-        std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_A,
-        std::vector<gpu_cost_function::GPUIntensityFrame *>
-            *gpu_intensity_frames_A,
-        std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_B,
-        std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_B,
-        std::vector<gpu_cost_function::GPUIntensityFrame *>
-            *gpu_intensity_frames_B,
-        gpu_cost_function::GPUModel *gpu_principal_model,
-        std::vector<gpu_cost_function::GPUModel *> *gpu_non_principal_models,
-        gpu_cost_function::GPUMetrics *gpu_metrics, PoseMatrix *pose_storage,
+        std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,
+        std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_A,
+        std::vector<gpu_cost_function::GPUIntensityFrame*>*
+            gpu_intensity_frames_A,
+        std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_B,
+        std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_B,
+        std::vector<gpu_cost_function::GPUIntensityFrame*>*
+            gpu_intensity_frames_B,
+        gpu_cost_function::GPUModel* gpu_principal_model,
+        std::vector<gpu_cost_function::GPUModel*>* gpu_non_principal_models,
+        gpu_cost_function::GPUMetrics* gpu_metrics,
+        PoseMatrix* pose_storage,
         bool biplane_mode);
 
     JTML_DLL void UploadDistanceMap(
-        std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps,
-        std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps);
+        std::vector<gpu_cost_function::GPUFrame*>* gpu_distance_maps,
+        std::vector<gpu_cost_function::GPUHeatmap*>* gpu_heatmaps);
 
     /******************************************************************************/
     /***************************PUBLIC DLL FUNCTIONS END
      * **************************/
     /******************************************************************************/
 
-   private:
+private:
     /******************************************************************************/
     /* *******************ESSENTIAL CLASS VARIABLES BEGIN
      * *************************/
@@ -145,34 +147,32 @@ class CostFunctionManager {
     Stage stage_;
 
     /*Storage for GPU Metrics class*/
-    gpu_cost_function::GPUMetrics *gpu_metrics_;
+    gpu_cost_function::GPUMetrics* gpu_metrics_;
 
     /*Storage for Data (images, poses ,etc.)*/
     /*Pointer to Vector of GPU Frame Pointers*/
     /*Camera A*/
-    std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_A_;
-    std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_A_;
-    std::vector<gpu_cost_function::GPUIntensityFrame *>
-        *gpu_intensity_frames_A_;
+    std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A_;
+    std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_A_;
+    std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_A_;
     /*Camera B*/
-    std::vector<gpu_cost_function::GPUEdgeFrame *> *gpu_edge_frames_B_;
-    std::vector<gpu_cost_function::GPUDilatedFrame *> *gpu_dilated_frames_B_;
-    std::vector<gpu_cost_function::GPUIntensityFrame *>
-        *gpu_intensity_frames_B_;
+    std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_B_;
+    std::vector<gpu_cost_function::GPUDilatedFrame*>* gpu_dilated_frames_B_;
+    std::vector<gpu_cost_function::GPUIntensityFrame*>* gpu_intensity_frames_B_;
 
-    std::vector<gpu_cost_function::GPUFrame *> *gpu_distance_maps_;
-    std::vector<gpu_cost_function::GPUHeatmap *> *gpu_heatmaps_;
+    std::vector<gpu_cost_function::GPUFrame*>* gpu_distance_maps_;
+    std::vector<gpu_cost_function::GPUHeatmap*>* gpu_heatmaps_;
 
     /*Pointer to Vector of principal GPU Model Pointer*/
-    gpu_cost_function::GPUModel *gpu_principal_model_;
+    gpu_cost_function::GPUModel* gpu_principal_model_;
     /*Pointer to Vector of non-principal GPU Model Pointers*/
-    std::vector<gpu_cost_function::GPUModel *> *gpu_non_principal_models_;
-    float *prin_dist_;
+    std::vector<gpu_cost_function::GPUModel*>* gpu_non_principal_models_;
+    float* prin_dist_;
     /*Current Frame Index (0 based)*/
     unsigned int current_frame_index_;
 
     /*Pose Matrix*/
-    PoseMatrix *pose_storage_;
+    PoseMatrix* pose_storage_;
 
     /*Biplane Mode?*/
     bool biplane_mode_;
@@ -216,21 +216,21 @@ class CostFunctionManager {
     double costFunctionDIRECT_DILATION();
     double costFunctionDIRECT_MAHFOUZ();
     /*Cost Function Initializations*/
-    bool initializesym_trap_function(std::string &error_message);
-    bool initializeDD_NEW_POLE_CONSTRAINT(std::string &error_message);
-    bool initializeDIRECT_DILATION_POLE_CONSTRAINT(std::string &error_message);
-    bool initializeDIRECT_DILATION_SAME_Z(std::string &error_message);
-    bool initializeDIRECT_DILATION_T1(std::string &error_message);
-    bool initializeDIRECT_DILATION(std::string &error_message);
-    bool initializeDIRECT_MAHFOUZ(std::string &error_message);
+    bool initializesym_trap_function(std::string& error_message);
+    bool initializeDD_NEW_POLE_CONSTRAINT(std::string& error_message);
+    bool initializeDIRECT_DILATION_POLE_CONSTRAINT(std::string& error_message);
+    bool initializeDIRECT_DILATION_SAME_Z(std::string& error_message);
+    bool initializeDIRECT_DILATION_T1(std::string& error_message);
+    bool initializeDIRECT_DILATION(std::string& error_message);
+    bool initializeDIRECT_MAHFOUZ(std::string& error_message);
     /*Cost Function Destructors*/
-    bool destructsym_trap_function(std::string &error_message);
-    bool destructDD_NEW_POLE_CONSTRAINT(std::string &error_message);
-    bool destructDIRECT_DILATION_POLE_CONSTRAINT(std::string &error_message);
-    bool destructDIRECT_DILATION_SAME_Z(std::string &error_message);
-    bool destructDIRECT_DILATION_T1(std::string &error_message);
-    bool destructDIRECT_DILATION(std::string &error_message);
-    bool destructDIRECT_MAHFOUZ(std::string &error_message);
+    bool destructsym_trap_function(std::string& error_message);
+    bool destructDD_NEW_POLE_CONSTRAINT(std::string& error_message);
+    bool destructDIRECT_DILATION_POLE_CONSTRAINT(std::string& error_message);
+    bool destructDIRECT_DILATION_SAME_Z(std::string& error_message);
+    bool destructDIRECT_DILATION_T1(std::string& error_message);
+    bool destructDIRECT_DILATION(std::string& error_message);
+    bool destructDIRECT_MAHFOUZ(std::string& error_message);
     /*END FUNCTIONS THAT INTERACT WITH WIZARD*/
     /******************************** END WARNING
      * *********************************/
@@ -239,6 +239,6 @@ class CostFunctionManager {
      * *************************/
     /******************************************************************************/
 };
-}  // namespace jta_cost_function
+} // namespace jta_cost_function
 
-#endif  // COSTFUNCTIONMANAGER_H
+#endif // COSTFUNCTIONMANAGER_H

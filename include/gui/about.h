@@ -14,13 +14,13 @@
 class About : public QDialog {
     Q_OBJECT
 
-   public:
+public:
     About(QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
     ~About() override;
-    void setVersion(int A, int B, int C);  // Sets Version Number Label
+    void setVersion(int A, int B, int C); // Sets Version Number Label
 
-   private:
+private:
     Ui::aboutJTA ui;
 };
 
-#endif  // ABOUT_H
+#endif // ABOUT_H

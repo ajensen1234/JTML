@@ -32,7 +32,7 @@
 
 /*VTK*/
 #include <vtkActor.h>
-#include <vtkAutoInit.h>  // Added post migration to Banks' lab computer
+#include <vtkAutoInit.h> // Added post migration to Banks' lab computer
 #include <vtkCamera.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
@@ -86,8 +86,8 @@
 class MainScreen : public QMainWindow {
     Q_OBJECT
 
-   public:
-    MainScreen(QWidget *parent = 0);
+public:
+    MainScreen(QWidget* parent = 0);
 
     ~MainScreen() override;
 
@@ -95,13 +95,13 @@ class MainScreen : public QMainWindow {
     void VTKEscapeSignal();
 
     /*Make Selected Actor Principal from VTK*/
-    void VTKMakePrincipalSignal(vtkActor *new_principal_actor);
+    void VTKMakePrincipalSignal(vtkActor* new_principal_actor);
 
     /*Bool to see if currently optimizing*/
 
     bool currently_optimizing_;
 
-   Q_SIGNALS:
+Q_SIGNALS:
     /*Update Whether To Write TO Text Display*/
     void UpdateDisplayText(bool);
 
@@ -111,7 +111,7 @@ class MainScreen : public QMainWindow {
     // [SYM TRAP] Send out optimizer time remaining
     void UpdateTimeRemaining(int);
 
-   private:
+private:
     double pi = 3.14159265358979323846;
 
     Ui::MainScreenClass ui;
@@ -201,7 +201,7 @@ class MainScreen : public QMainWindow {
     jta_cost_function::CostFunctionManager trunk_manager_;
     jta_cost_function::CostFunctionManager branch_manager_;
     jta_cost_function::CostFunctionManager
-        leaf_manager_;  // For extra Z-translation usually (esp. when monoplane)
+        leaf_manager_; // For extra Z-translation usually (esp. when monoplane)
 
     /*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int
     Parameter, else saves all the Dilation Images for Each Frame as the Dilation
@@ -214,12 +214,12 @@ class MainScreen : public QMainWindow {
     /*Launch Optimizer*/
 
     void LaunchOptimizer(
-        QString directive);  // Directive Says whether it is Optimize Single,
-                             // From, All, or Each (or Sym_Trap)
+        QString directive); // Directive Says whether it is Optimize Single,
+                            // From, All, or Each (or Sym_Trap)
 
     /*Optimizer Thread and Manager*/
-    QThread *optimizer_thread;
-    OptimizerManager *optimizer_manager;
+    QThread* optimizer_thread;
+    OptimizerManager* optimizer_manager;
 
     /*Disable and Enable MainScreen During and After Optimization*/
     void DisableAll();
@@ -234,7 +234,7 @@ class MainScreen : public QMainWindow {
     void matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output);
 
     /*Optimizer Window Control*/
-    SettingsControl *settings_control;
+    SettingsControl* settings_control;
 
     /*Sym Trap Window*/
 
@@ -242,9 +242,10 @@ class MainScreen : public QMainWindow {
     double CalculateViewingAngle(int width, int height, bool CameraA);
 
     /*Helper Function To Segment And Update Frames According to Model File*/
-    void segmentHelperFunction(std::string pt_model_location,
-                               unsigned int input_width,
-                               unsigned int input_height);
+    void segmentHelperFunction(
+        std::string pt_model_location,
+        unsigned int input_width,
+        unsigned int input_height);
 
     // Helper function for sym_trap to get information about the current pose
     Point6D copy_current_pose();
@@ -253,7 +254,7 @@ class MainScreen : public QMainWindow {
 
     void update_image_list_widget(); /*Updates ui.image_list_widget*/
 
-   public Q_SLOTS:
+public Q_SLOTS:
     // Call Optimizer Launch
     void optimizer_launch_slot();
 
@@ -359,12 +360,21 @@ class MainScreen : public QMainWindow {
 
     /*OPTIMIZATION SLOTS*/
     /*Update Blue Current Optimum*/
-    void onUpdateOptimum(double, double, double, double, double, double,
-                         unsigned int);
+    void onUpdateOptimum(
+        double, double, double, double, double, double, unsigned int);
 
     /*Finished Optimizing Frame, Send Optimum to MainScreen*/
-    void onOptimizedFrame(double, double, double, double, double, double, bool,
-                          unsigned int, bool, QString);
+    void onOptimizedFrame(
+        double,
+        double,
+        double,
+        double,
+        double,
+        double,
+        bool,
+        unsigned int,
+        bool,
+        QString);
 
     /*Uh oh There was an Error. String contains the message
      */
@@ -377,19 +387,20 @@ class MainScreen : public QMainWindow {
      * Betweeen Trunks and Branches*/
     void onUpdateDilationBackground();
 
-    void updateOrientationSymTrap_MS(double, double, double, double, double,
-                                     double);
+    void
+    updateOrientationSymTrap_MS(double, double, double, double, double, double);
 
     /*On Optimizer Control Windows Save Setting*/
-    void onSaveSettings(OptimizerSettings,
-                        jta_cost_function::CostFunctionManager,
-                        jta_cost_function::CostFunctionManager,
-                        jta_cost_function::CostFunctionManager);
+    void onSaveSettings(
+        OptimizerSettings,
+        jta_cost_function::CostFunctionManager,
+        jta_cost_function::CostFunctionManager,
+        jta_cost_function::CostFunctionManager);
 
-   protected:
-    void resizeEvent(QResizeEvent *event) override;
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 
-    void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 };
 
 #endif /* MAINSCREEN_H */

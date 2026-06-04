@@ -20,26 +20,28 @@
 QT_BEGIN_NAMESPACE
 
 class Ui_aboutJTA {
-   public:
-    QPushButton *close_button;
-    QLabel *title_label;
-    QLabel *picture;
-    QLabel *version_label;
-    QLabel *copyright_label;
-    QGroupBox *detected_group_box;
-    QLabel *gpu_label;
-    QLabel *cc_label;
-    QLabel *gpu_description_label;
-    QLabel *cc_description_label;
+public:
+    QPushButton* close_button;
+    QLabel* title_label;
+    QLabel* picture;
+    QLabel* version_label;
+    QLabel* copyright_label;
+    QGroupBox* detected_group_box;
+    QLabel* gpu_label;
+    QLabel* cc_label;
+    QLabel* gpu_description_label;
+    QLabel* cc_description_label;
 
-    void setupUi(QDialog *aboutJTA) {
+    void setupUi(QDialog* aboutJTA) {
         if (aboutJTA->objectName().isEmpty())
             aboutJTA->setObjectName(QString::fromUtf8("aboutJTA"));
         aboutJTA->resize(932, 476);
         QIcon icon;
         icon.addFile(
             QString::fromUtf8(":/Desktop_Icon/Resources/jta_dime_icon.png"),
-            QSize(), QIcon::Normal, QIcon::Off);
+            QSize(),
+            QIcon::Normal,
+            QIcon::Off);
         aboutJTA->setWindowIcon(icon);
         aboutJTA->setStyleSheet(QString::fromUtf8(
             "/*\n"
@@ -815,13 +817,13 @@ class Ui_aboutJTA {
         cc_description_label->setGeometry(QRect(80, 70, 151, 21));
 
         retranslateUi(aboutJTA);
-        QObject::connect(close_button, SIGNAL(clicked(bool)), aboutJTA,
-                         SLOT(close()));
+        QObject::connect(
+            close_button, SIGNAL(clicked(bool)), aboutJTA, SLOT(close()));
 
         QMetaObject::connectSlotsByName(aboutJTA);
-    }  // setupUi
+    } // setupUi
 
-    void retranslateUi(QDialog *aboutJTA) {
+    void retranslateUi(QDialog* aboutJTA) {
         aboutJTA->setWindowTitle(QCoreApplication::translate(
             "aboutJTA", "About JointTrack Auto", nullptr));
         close_button->setText(
@@ -843,13 +845,13 @@ class Ui_aboutJTA {
             "aboutJTA", "CUDA Device (GPU):", nullptr));
         cc_description_label->setText(QCoreApplication::translate(
             "aboutJTA", "Compute Capability:", nullptr));
-    }  // retranslateUi
+    } // retranslateUi
 };
 
 namespace Ui {
 class aboutJTA : public Ui_aboutJTA {};
-}  // namespace Ui
+} // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif  // UI_ABOUT_H
+#endif // UI_ABOUT_H

@@ -11,19 +11,19 @@
 #include "gpu/gpu_image.cuh"
 
 class img_desc {
-   public:
+public:
     img_desc(int height, int width, int gpu_device);
     ~img_desc();
     bool good_to_go();
 
-    std::complex<float> art_n_p(int n, int p,
-                                gpu_cost_function::GPUImage* dev_image);
+    std::complex<float>
+    art_n_p(int n, int p, gpu_cost_function::GPUImage* dev_image);
 
     std::vector<float> hu_moments(gpu_cost_function::GPUImage* dev_image);
     int height();
     int width();
 
-   private:
+private:
     float* dev_Fnp_re;
     float* dev_Fnp_imag;
     float* Fnp_re;

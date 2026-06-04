@@ -14,8 +14,8 @@ Point6D compute_mirror_pose(Point6D pose) {
     // pose (3-1-2 rotation order)
     float rad2deg = 180.0 / 3.1415928;
     // float transform[4][4]; // blank matrix that will get populated
-    float Rot[3][3];  // blank matrix that contains the rotation matrix of the
-                      // above transformation matrix
+    float Rot[3][3]; // blank matrix that contains the rotation matrix of the
+                     // above transformation matrix
 
     // create_312_transform(transform, pose);
     rotation_matrix(Rot, pose);
@@ -92,8 +92,8 @@ Point6D compute_mirror_pose(Point6D pose) {
     float yr_dual_deg = yr_dual * rad2deg;
     float zr_dual_deg = zr_dual * rad2deg;
 
-    Point6D final_pose(pose.x, pose.y, pose.z, xr_dual_deg, yr_dual_deg,
-                       zr_dual_deg);
+    Point6D final_pose(
+        pose.x, pose.y, pose.z, xr_dual_deg, yr_dual_deg, zr_dual_deg);
     return final_pose;
 }
 
@@ -165,8 +165,8 @@ void matmult4(float ans[4][4], float matrix1[4][4], float matrix2[4][4]) {
     }
 }
 
-void matmult3(float ans[3][3], const float matrix1[3][3],
-              const float matrix2[3][3]) {
+void matmult3(
+    float ans[3][3], const float matrix1[3][3], const float matrix2[3][3]) {
     int i, j, k;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
@@ -182,8 +182,8 @@ void matmult3(float ans[3][3], const float matrix1[3][3],
     }
 }
 
-void dot_product(float& result, const float vector1[3],
-                 const float vector2[3]) {
+void dot_product(
+    float& result, const float vector1[3], const float vector2[3]) {
     for (int i = 0; i < 3; i++) {
         result += (vector1[i] * vector2[i]);
     }
@@ -195,8 +195,8 @@ void cross_product(float CP[3], const float v1[3], const float v2[3]) {
     CP[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-void equivalent_axis_angle_rotation(float rot[3][3], const float m[3],
-                                    const float angle) {
+void equivalent_axis_angle_rotation(
+    float rot[3][3], const float m[3], const float angle) {
     float c = cos(angle);
     float s = sin(angle);
     float v = 1.0 - c;
@@ -254,8 +254,8 @@ void getRotations312(float& xr, float& yr, float& zr, const float Rot[3][3]) {
     }
 }
 
-void copy_matrix_by_value(float (&new_matrix)[3][3],
-                          const float (&old_matrix)[3][3]) {
+void copy_matrix_by_value(
+    float (&new_matrix)[3][3], const float (&old_matrix)[3][3]) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             new_matrix[i][j] = old_matrix[i][j];
@@ -263,8 +263,8 @@ void copy_matrix_by_value(float (&new_matrix)[3][3],
     }
 }
 
-void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
-                            int numPoses) {
+void create_vector_of_poses(
+    std::vector<Point6D>& pose_list, Point6D pose, int numPoses) {
     // convert curr_pose into a Point6D
     // Point6D pose = Point6D(curr_pose.x_location_, curr_pose.y_location_,
     // curr_pose.z_location_, curr_pose.x_angle_, curr_pose.y_angle_,
@@ -272,8 +272,14 @@ void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
 
     // loop and push values into pose list, to be used in optimizer manager
     cout << "Running Gather Dataset:" << endl;
-    printf("Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n", pose.x,
-           pose.y, pose.z, pose.xa, pose.ya, pose.za);
+    printf(
+        "Starting Pose: x %f, y %f, z %f, xa %f, ya %f, za %f\n",
+        pose.x,
+        pose.y,
+        pose.z,
+        pose.xa,
+        pose.ya,
+        pose.za);
 
     // number of intermediary poses
     // int numPoses = getIterCount(); // read this in from UI in the future
@@ -287,8 +293,8 @@ void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
     // pose (3-1-2 rotation order)
     float rad2deg = 180.0 / 3.1415928;
     // float transform[4][4]; // blank matrix that will get populated
-    float Rot[3][3];  // blank matrix that contains the rotation matrix of the
-                      // above transformation matrix
+    float Rot[3][3]; // blank matrix that contains the rotation matrix of the
+                     // above transformation matrix
 
     // create_312_transform(transform, pose);
     rotation_matrix(Rot, pose);
@@ -399,7 +405,7 @@ void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
     }
 
     // initialize r_base to current pose
-    float r_base[3][3];  // base pose rotation matrix
+    float r_base[3][3]; // base pose rotation matrix
     rotation_matrix(r_base, pose);
 
     std::vector<Point6D> pose_list_half;
@@ -418,12 +424,25 @@ void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
         float x_rot, y_rot, z_rot;
         getRotations312(x_rot, y_rot, z_rot, r_new);
 
-        auto n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot,
-                         rad2deg * y_rot, rad2deg * z_rot);
+        auto n = Point6D(
+            pose.x,
+            pose.y,
+            pose.z,
+            rad2deg * x_rot,
+            rad2deg * y_rot,
+            rad2deg * z_rot);
         // xrot yrot zrot, and however we plug x y and z positions in (Do xyz
         // pos stay the same?)
-        printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i,
-               rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
+        printf(
+            "Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n",
+            i,
+            rotToEval[i] * rad2deg,
+            n.x,
+            n.y,
+            n.z,
+            n.xa,
+            n.ya,
+            n.za);
 
         pose_list_half.push_back(n);
         copy_matrix_by_value(r_old, r_new);
@@ -442,12 +461,25 @@ void create_vector_of_poses(std::vector<Point6D>& pose_list, Point6D pose,
         float x_rot, y_rot, z_rot;
         getRotations312(x_rot, y_rot, z_rot, r_new);
 
-        auto n = Point6D(pose.x, pose.y, pose.z, rad2deg * x_rot,
-                         rad2deg * y_rot, rad2deg * z_rot);
+        auto n = Point6D(
+            pose.x,
+            pose.y,
+            pose.z,
+            rad2deg * x_rot,
+            rad2deg * y_rot,
+            rad2deg * z_rot);
         // xrot yrot zrot, and however we plug x y and z positions in (Do xyz
         // pos stay the same?)
-        printf("Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n", i,
-               rotToEval[i] * rad2deg, n.x, n.y, n.z, n.xa, n.ya, n.za);
+        printf(
+            "Rotation %d (%f): x %f, y %f, z %f, xa %f, ya %f, za %f\n",
+            i,
+            rotToEval[i] * rad2deg,
+            n.x,
+            n.y,
+            n.z,
+            n.xa,
+            n.ya,
+            n.za);
 
         pose_list_rev.push_back(n);
         copy_matrix_by_value(r_old, r_new);
@@ -485,7 +517,7 @@ std::vector<double> linspace(T start_in, T end_in, int num_in) {
     for (int i = 0; i < num - 1; ++i) {
         linspaced.push_back(start + delta * i);
     }
-    linspaced.push_back(end);  // I want to ensure that start and end
+    linspaced.push_back(end); // I want to ensure that start and end
     // are exactly the same as the input
     return linspaced;
 }

@@ -20,31 +20,32 @@
 class SettingsControl : public QDialog {
     Q_OBJECT
 
-   public:
-    SettingsControl(QWidget* parent = 0,
-                    Qt::WindowFlags flags = Qt::WindowFlags());
+public:
+    SettingsControl(
+        QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
     ~SettingsControl() override;
 
     /*Load Optimizer Settings from Main Window*/
-    void LoadSettings(jta_cost_function::CostFunctionManager sc_trunk_manager,
-                      jta_cost_function::CostFunctionManager sc_branch_manager,
-                      jta_cost_function::CostFunctionManager sc_leaf_manager,
-                      OptimizerSettings opt_settings);
+    void LoadSettings(
+        jta_cost_function::CostFunctionManager sc_trunk_manager,
+        jta_cost_function::CostFunctionManager sc_branch_manager,
+        jta_cost_function::CostFunctionManager sc_leaf_manager,
+        OptimizerSettings opt_settings);
 
-   private:
+private:
     Ui::settings_control ui;
 
     /*Local to Settings Control Cost Function Managers*/
     jta_cost_function::CostFunctionManager sc_trunk_manager_;
     jta_cost_function::CostFunctionManager sc_branch_manager_;
     jta_cost_function::CostFunctionManager
-        sc_leaf_manager_;  // For extra Z-translation usually (esp. when
-                           // monoplane)
+        sc_leaf_manager_; // For extra Z-translation usually (esp. when
+                          // monoplane)
 
     /*Optimizer Settings for Everything but the Cost Function Stuff*/
     OptimizerSettings opt_settings_;
 
-   public slots:
+public slots:
     /*Save Button*/
     void on_save_button_clicked();
 
@@ -78,16 +79,18 @@ class SettingsControl : public QDialog {
     void on_bool_parameter_true_radioButton_clicked();
     void on_bool_parameter_false_radioButton_clicked();
 
-   signals:
+signals:
     /*Saves the three Cost Function Manager Settings and the Optimizer Settings
     to:
     - the registry
     - their local class versions on the main window GUI*/
-    void SaveSettings(OptimizerSettings, jta_cost_function::CostFunctionManager,
-                      jta_cost_function::CostFunctionManager,
-                      jta_cost_function::CostFunctionManager);  //
+    void SaveSettings(
+        OptimizerSettings,
+        jta_cost_function::CostFunctionManager,
+        jta_cost_function::CostFunctionManager,
+        jta_cost_function::CostFunctionManager); //
     /*Close Window*/
-    void Done();  //
+    void Done(); //
 };
 
 #endif /* SETTINGS_CONTROL_H */

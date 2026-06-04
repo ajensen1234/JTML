@@ -66,7 +66,8 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_T1() {
             (DIRECT_DILATION_T1_current_white_pix_sum_dilated_comparison_image_A_ +
              gpu_metrics_->FastImplantDilationMetric(
                  gpu_principal_model_->GetPrimaryCameraRenderedImage(),
-                 gpu_dilated_frames_A_->at(current_frame_index_), 1));
+                 gpu_dilated_frames_A_->at(current_frame_index_),
+                 1));
     } else {
         /*If not in trunk, Dilate rendered image to same dilation as comparison
          * image*/
@@ -90,7 +91,8 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_T1() {
                 (DIRECT_DILATION_T1_current_white_pix_sum_dilated_comparison_image_B_ +
                  gpu_metrics_->FastImplantDilationMetric(
                      gpu_principal_model_->GetSecondaryCameraRenderedImage(),
-                     gpu_dilated_frames_B_->at(current_frame_index_), 1));
+                     gpu_dilated_frames_B_->at(current_frame_index_),
+                     1));
         } else {
             /*If not in trunk, Dilate rendered image to same dilation as
              * comparison image*/
@@ -105,4 +107,4 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_T1() {
 
     return metric_score;
 }
-}  // namespace jta_cost_function
+} // namespace jta_cost_function

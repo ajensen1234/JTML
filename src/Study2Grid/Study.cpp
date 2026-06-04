@@ -19,7 +19,9 @@
 /*CV Namespace*/
 using namespace cv;
 
-Study::Study() { passed_check_ = false; }
+Study::Study() {
+    passed_check_ = false;
+}
 
 Study::Study(string fluoro_study_dir, bool key_points) {
     /*Save Study Directory*/
@@ -198,17 +200,17 @@ Study::Study(string fluoro_study_dir, bool key_points) {
     }
 
     QStringList movement_list =
-        study_info_list[study_info_list.size() - 1].split("_");  // Movement
+        study_info_list[study_info_list.size() - 1].split("_"); // Movement
     mov_name_ = movement_list[0].toStdString();
     mov_num_ = movement_list[1].toInt();
     QStringList session_list =
-        study_info_list[study_info_list.size() - 2].split("_");  // Session
+        study_info_list[study_info_list.size() - 2].split("_"); // Session
     sess_num_ = session_list[1].toInt();
     patient_name_ = study_info_list[study_info_list.size() - 3]
-                        .toStdString();  // Patient Name
+                        .toStdString(); // Patient Name
     study_name_ = study_info_list[study_info_list.size() - 4]
-                      .toStdString();  // Overall Study Name (File Usually
-                                       // Called Something a Bit Modified)
+                      .toStdString(); // Overall Study Name (File Usually
+                                      // Called Something a Bit Modified)
 
     /*Get Info about Images*/
     /*Initialize Image Sizes*/
@@ -234,8 +236,8 @@ Study::Study(string fluoro_study_dir, bool key_points) {
     read_directory_for_directories(study_dir_, directories_to_delete);
     for (int dir_to_del_ind = 0; dir_to_del_ind < directories_to_delete.size();
          dir_to_del_ind++) {
-        if (std::filesystem::remove_all(directories_to_delete[dir_to_del_ind],
-                                        errorCode) ==
+        if (std::filesystem::remove_all(
+                directories_to_delete[dir_to_del_ind], errorCode) ==
             static_cast<std::uintmax_t>(-1)) {
             /*ERROR CODE is static_cast<std::uintmax_t>(-1)
             See: https://en.cppreference.com/w/cpp/experimental/fs/remove */
@@ -273,8 +275,8 @@ Study::Study(string fluoro_study_dir, bool key_points) {
 
     /*If Need Be Create Key_Points folder and for model types with */
     if (key_points) {
-        if (!std::filesystem::create_directory(study_dir_ + "/Key_Points",
-                                               errorCode)) {
+        if (!std::filesystem::create_directory(
+                study_dir_ + "/Key_Points", errorCode)) {
             cout << "\nError with " + study_dir_ << endl
                  << "\t Could not create Key_Points directory.\n\t "
                  << errorCode.message();
