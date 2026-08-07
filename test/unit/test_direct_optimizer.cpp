@@ -8,6 +8,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
+#include <cfloat>
 
 #include "core/direct_optimizer.h"
 
@@ -129,4 +130,62 @@ TEST_CASE("DirectOptimizer honors an early stop request",
     // skipped and only the seed evaluation runs.
     REQUIRE(opt.Run());
     REQUIRE(opt.GetCostFunctionCalls() == 1u);
+}
+
+TEST_CASE("DirectOptimizer call-offset shifts the cumulative budget guard",
+          "[direct_optimizer][budget][offset]") {
+    // Budget 2000, offset 1000: the loop must run only until the *effective*
+    // count (offset + internal) reaches the budget, mirroring a mid-stream
+    // stage in the cumulative trunk/branch/leaf sequence.
+    DirectOptimizer opt(QuadraticCost(Origin()), UnitSideRange(10.0), Origin(),
+                        2000);
+    opt.SetCallOffset(1000);
+    REQUIRE(opt.Run());
+    // Effective calls >= budget (loop exits after crossing the guard)...
+    REQUIRE(opt.GetCostFunctionCalls() >= 2000u);
+    // ...but internal calls only spanned the remaining 1000.
+    // GetCostFunctionCalls() == offset + internal, so the internal count is
+    // bounded by (budget - offset), i.e. the effective 10k/20k/30k span.
+    REQUIRE(opt.GetCostFunctionCalls() - 1000u < 2000u);
+}
+
+TEST_CASE("DirectOptimizer fires the iteration callback per iteration",
+          "[direct_optimizer][callback]") {
+    DirectOptimizer opt(QuadraticCost(Origin()), UnitSideRange(10.0), Origin(),
+                        20000);
+    int iterations = 0;
+    opt.SetIterationCallback([&]() { iterations++; });
+    REQUIRE(opt.Run());
+    // At least one ConvexHull+Trisect iteration ran under a growing budget.
+    REQUIRE(iterations > 0);
+}
+
+TEST_CASE("DirectOptimizer fires the improvement callback on improvements",
+          "[direct_optimizer][callback]") {
+    // Minimum at origin, seed at origin: exactly the start point, so no
+    // improvement should fire.
+    DirectOptimizer no_improve(QuadraticCost(Origin()), UnitSideRange(10.0),
+                               Origin(), 20000);
+    int improvements_no = 0;
+    no_improve.SetImprovementCallback(
+        [&](const Point6D&, double) { improvements_no++; });
+    REQUIRE(no_improve.Run());
+    REQUIRE(improvements_no == 0);
+
+    // Minimum shifted to (3,3,3,3,3,3), seed at origin: DIRECT must improve and
+    // each improvement must report a better (lower) value.
+    Point6D target(3, 3, 3, 3, 3, 3);
+    DirectOptimizer improve(QuadraticCost(target), UnitSideRange(10.0),
+                            Origin(), 20000);
+    int improvements = 0;
+    double last_value = DBL_MAX;
+    improve.SetImprovementCallback([&](const Point6D& loc, double val) {
+        improvements++;
+        REQUIRE(val <= last_value);  // non-increasing over the run
+        REQUIRE(improve.GetOptimumLocation().GetDistanceFrom(loc) ==
+                Approx(0.0).margin(1e-12));
+        last_value = val;
+    });
+    REQUIRE(improve.Run());
+    REQUIRE(improvements > 0);
 }

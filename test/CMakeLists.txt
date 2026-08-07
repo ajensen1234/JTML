@@ -17,6 +17,52 @@
 find_package(Catch2 REQUIRED)
 
 # ---------------------------------------------------------------------------
+# Hegel property-based testing (experiment, see test_hegel_smoke.cpp).
+# hegel-cpp is a static lib pulled in via FetchContent; it is C++20 and
+# runner-agnostic (we call hegel::test() inside a Catch2 TEST_CASE). If this
+# integration ever headaches the build, drop these two blocks and the
+# jtml.test_hegel_smoke target -- the rest of the suite does not depend on it.
+# ---------------------------------------------------------------------------
+include(FetchContent)
+FetchContent_Declare(
+    hegel
+    GIT_REPOSITORY https://github.com/hegeldev/hegel-cpp.git
+    GIT_TAG v0.11.1
+)
+FetchContent_MakeAvailable(hegel)
+
+add_executable(jtml_test_hegel_smoke unit/test_hegel_smoke.cpp)
+# hegel-cpp needs dladdr/dlsym (libdl) which the conda-forge GCC toolchain
+# does not link in by default.
+target_link_libraries(jtml_test_hegel_smoke PRIVATE Catch2::Catch2WithMain hegel dl)
+# libhegel_c.so is emitted into the _deps build dir at configure time; the
+# conda toolchain's BUILD_RPATH is not honoured, so append the dir explicitly
+# (GNU ld accumulates -rpath, keeping the pixi lib path too).
+target_link_options(jtml_test_hegel_smoke PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.hegel_smoke COMMAND jtml_test_hegel_smoke)
+set_tests_properties(jtml.hegel_smoke PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel property-based tests for the pure DirectOptimizer (PBT layer). Linked
+# CUDA-free from the direct-optimizer + data-structure sources, exactly like
+# jtml_test_direct_optimizer, but with hegel for auto-generated invariants.
+add_executable(jtml_test_direct_optimizer_props
+    unit/test_direct_optimizer_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+)
+target_include_directories(jtml_test_direct_optimizer_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+# Same two hegel link/rpath tweaks as the smoke target (kept next to the lib so
+# the rationale is co-located for both).
+target_link_libraries(jtml_test_direct_optimizer_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_direct_optimizer_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.direct_optimizer_props COMMAND jtml_test_direct_optimizer_props)
+set_tests_properties(jtml.direct_optimizer_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# ---------------------------------------------------------------------------
 # Unit tests (Catch2; pure logic, no Qt event loop)
 # ---------------------------------------------------------------------------
 add_executable(jtml_test_smoke unit/test_harness_smoke.cpp)

@@ -5,6 +5,7 @@
 
 #include <cfloat>
 #include <climits>
+#include <utility>
 
 namespace {
 // The unit-cube center used to seed the search (all DOFs at 0.5).
@@ -39,7 +40,12 @@ bool DirectOptimizer::Run() {
     current_optimum_location_ = starting_point_;
     data_ = DirectDataStorage(current_optimum_value_);
 
-    while (cost_function_calls_ < budget_ && !stop_requested_) {
+    // The loop guard uses the effective (cumulative) call count, so a stage
+    // beginning part-way through the running counter is bounded by the same
+    // cumulative budget as the original Optimize(): with call_offset_ == 0 the
+    // guard is identically (calls < budget), preserving existing behavior.
+    while ((cost_function_calls_ + call_offset_) < budget_ &&
+           !stop_requested_) {
         ConvexHull();
         TrisectPotentiallyOptimal();
 
@@ -49,13 +55,15 @@ bool DirectOptimizer::Run() {
             break;
         }
         if (error_occurrred_) break;
+
+        if (iteration_callback_) iteration_callback_();
     }
 
     return !error_occurrred_;
 }
 
 unsigned int DirectOptimizer::GetCostFunctionCalls() const {
-    return cost_function_calls_;
+    return cost_function_calls_ + call_offset_;
 }
 
 Point6D DirectOptimizer::GetOptimumLocation() const {
@@ -68,6 +76,18 @@ double DirectOptimizer::GetOptimumValue() const {
 
 void DirectOptimizer::Stop() {
     stop_requested_ = true;
+}
+
+void DirectOptimizer::SetCallOffset(unsigned int offset) {
+    call_offset_ = offset;
+}
+
+void DirectOptimizer::SetIterationCallback(IterationCallback cb) {
+    iteration_callback_ = std::move(cb);
+}
+
+void DirectOptimizer::SetImprovementCallback(ImprovementCallback cb) {
+    improvement_callback_ = std::move(cb);
 }
 
 void DirectOptimizer::ConvexHull() {
@@ -190,6 +210,10 @@ double DirectOptimizer::EvaluateCostFunction(Point6D unit_point) {
     if (result < current_optimum_value_) {
         current_optimum_value_ = result;
         current_optimum_location_ = denormalized_point;
+        if (improvement_callback_) {
+            improvement_callback_(current_optimum_location_,
+                                  current_optimum_value_);
+        }
     }
 
     return result;

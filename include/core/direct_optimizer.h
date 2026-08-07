@@ -45,6 +45,29 @@ public:
     // loop cannot be interrupted mid-kernel by design).
     void Stop();
 
+    // Optional callbacks for driving the production UI from the extracted
+    // optimizer (R4/R6, plan U6). Both are backward compatible: unset by
+    // default, and only ever *reported* back to the caller -- they do not
+    // affect the search.
+
+    using IterationCallback = std::function<void()>;
+    using ImprovementCallback = std::function<void(const Point6D&, double)>;
+
+    // Extend the cumulative budget by a fixed number of pre-consumed calls.
+    // The production app runs one stage per DirectOptimizer instance while
+    // keeping a single running counter across stages (trunk 10k -> branch 20k
+    // -> leaf 30k). Setting the offset makes GetCostFunctionCalls() and the
+    // loop guard reflect the stage's position in that cumulative count.
+    void SetCallOffset(unsigned int offset);
+
+    // Called after each ConvexHull + Trisect iteration (drives a ~30fps
+    // progress display).
+    void SetIterationCallback(IterationCallback cb);
+
+    // Called whenever the search finds a new best point (drives a live
+    // optimum display). Receives the physical/denormalized location and value.
+    void SetImprovementCallback(ImprovementCallback cb);
+
 private:
     void ConvexHull();
     void TrisectPotentiallyOptimal();
@@ -60,6 +83,10 @@ private:
 
     unsigned int budget_ = 0;
     unsigned int cost_function_calls_ = 0;
+    unsigned int call_offset_ = 0;
+
+    IterationCallback iteration_callback_;
+    ImprovementCallback improvement_callback_;
 
     DirectDataStorage data_;
     std::vector<int> potentially_optimal_col_ids_;
