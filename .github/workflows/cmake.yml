@@ -1,40 +1,40 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-name: CMake
+# CI: configure the pixi project, build, and run the headless test suite.
+# The default `pixi run test` runs the `headless` ctest label only (no GUI, no
+# GPU). GPU/oracle cases are gated externally on GPU machines (see plan U2/U6).
+
+name: CI
 
 on:
   push:
-    branches: [ "actions-test" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "actions-test" ]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+    branches: [ "main" ]
 
 jobs:
-  build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  build-and-test:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 90
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      # VTK is expected to be fetched/built by `pixi run configure` in CI.
+      # If that is too heavy for the runner, swap this job to use the
+      # conda-forge `vtk` package (see plan U8) and drop build-vtk.
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8
+        with:
+          pixi-version: latest
+          cache: true
+          cache-write: true
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Configure
+        run: pixi run configure
 
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+      - name: Build
+        run: pixi run build
 
+      - name: Test (headless)
+        run: pixi run test

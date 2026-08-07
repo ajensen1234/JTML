@@ -37,6 +37,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
+# Build the test suite (headless default; GPU/oracle cases are a separate label)
+option(JTML_BUILD_TESTS "Build and enable JTML tests" ON)
+
 #=============================
 # Global Settings
 #=============================
@@ -119,11 +122,9 @@ set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
 # Subdirectories
 #=============================
 add_subdirectory(src)
-#add_subdirectory(test)
+if(JTML_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
 #add_subdirectory(lib)
 add_subdirectory(packaging)
-
-#=============================
-# Testing
-#=============================
-#enable_testing()

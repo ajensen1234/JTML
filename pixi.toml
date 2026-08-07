@@ -35,6 +35,7 @@ libegl-devel = ">=1.7.0,<2"
 libgles-devel = ">=1.7.0,<2"
 libopengl-devel = ">=1.7.0,<2"
 clang-tools = ">=19.1.2,<20"
+catch2 = ">=3.15.3,<4"
 
 [feature.build.dependencies]
 cmake = ">=3.31.4,<4"
@@ -89,6 +90,13 @@ cmd = ".build/bin/joint-track-machine-learning"
 depends-on = ["build"]
 #env = {"GDK_BACKEND" = "wayland,x11","QT_QPA_PLATFORM" = "wayland;xcb",}
 #set(USE_CUDNN 1)
+
+[tasks.test]
+# Run the headless test suite (no GUI/VTK/GPU). Run GPU/oracle tests explicitly
+# with: ctest --test-dir .build -L oracle
+cmd = ["ctest", "--test-dir", ".build", "--output-on-failure", "--timeout", "600", "-L", "headless"]
+depends-on = ["build"]
+env = {"QT_QPA_PLATFORM" = "offscreen"}
 
 [tasks.check-display]
 cmd = """
