@@ -31,15 +31,6 @@ Point6D::Point6D() {
     za = 0;
 }
 
-Point6D::Point6D(gpu_cost_function::Pose p) {
-    this->x = p.x_location_;
-    this->y = p.y_location_;
-    this->z = p.z_location_;
-    this->xa = p.x_angle_;
-    this->ya = p.y_angle_;
-    this->xa = p.z_angle_;
-}
-
 double Point6D::GetDistanceFrom(Point6D otherPoint) {
     return std::sqrt(
         ((otherPoint.x - x) * (otherPoint.x - x)) +

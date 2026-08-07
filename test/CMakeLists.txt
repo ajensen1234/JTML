@@ -24,6 +24,19 @@ target_link_libraries(jtml_test_smoke PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.smoke COMMAND jtml_test_smoke)
 set_tests_properties(jtml.smoke PROPERTIES LABELS "headless" TIMEOUT 60)
 
+# Pure data-structure test. Compiled CUDA-free directly from the two data
+# .cpp files (data_structures_6D.cpp + direct_data_storage.cpp) rather than
+# linking the CUDA-heavy jtml_core, per plan U3/R11.
+add_executable(jtml_test_data_structures
+    unit/test_data_structures.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+)
+target_include_directories(jtml_test_data_structures PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_data_structures PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.data_structures COMMAND jtml_test_data_structures)
+set_tests_properties(jtml.data_structures PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.

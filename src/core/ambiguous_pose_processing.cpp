@@ -3,6 +3,9 @@
 
 #include "core/ambiguous_pose_processing.h"
 
+/*Standard*/
+#include <iostream>
+
 Point6D tibial_pose_selector(Point6D& femur_pose, Point6D& tibia_pose) {
     Point6D tibial_dual_pose = compute_mirror_pose(
         tibia_pose); // calculate the mirror pose for the tibia

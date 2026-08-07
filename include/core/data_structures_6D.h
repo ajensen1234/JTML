@@ -9,8 +9,6 @@
 /*Standard*/
 #include <algorithm>
 
-#include "gpu/render_engine.cuh"
-
 /*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/
 
 /*Enum Structure for Directions*/
@@ -33,7 +31,6 @@ struct Point6D {
         double yaval,
         double zaval);
     Point6D();
-    Point6D(gpu_cost_function::Pose p);
 
     double x;
     double y;

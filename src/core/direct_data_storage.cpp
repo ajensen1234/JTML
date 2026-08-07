@@ -5,6 +5,7 @@
 #include "core/direct_data_storage.h"
 
 // Standard
+#include <climits>
 #include <cmath>
 #include <fstream>
 #include <iostream>

@@ -3,6 +3,9 @@
 
 #include "core/sym_trap_functions.h"
 
+/*Standard*/
+#include <iostream>
+
 using namespace std;
 
 Point6D compute_mirror_pose(Point6D pose) {

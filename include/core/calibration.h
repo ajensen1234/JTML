@@ -9,6 +9,9 @@
 /*Includes*/
 #include "camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
 
+/*Standard*/
+#include <cmath>
+
 /*Vec 3*/
 #include "data_structures_6D.h"
 struct Vect_3 {
