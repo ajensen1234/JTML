@@ -361,7 +361,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U7. **MainScreen MVVM decomposition (view vs state vs services)** *(sequenced after phases 1–3 are green)*
+- [ ] U7. **MainScreen MVVM decomposition (view vs state vs services)** *(sequenced after phases 1–3 are green)* *(phase-1 done: `pose_file_io` persistence service + MainScreen strangle rewired; full MVVM phase-gated/re-scoped per the entry gate — decided to proceed to U8)*
 
 **Goal:** Extract app-state/command orchestration and services (frames/models/selection, pose & kinematics persistence, optimize intent) out of `MainScreen`, leaving a thinner view layer that binds to the coordinator and services.
 

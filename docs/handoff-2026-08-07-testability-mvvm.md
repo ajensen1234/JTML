@@ -21,13 +21,11 @@
 
 `pixi run test` → 6/6 pass (~0.1s, no GPU/GUI). This is the "fearlessly edit" headless seam. (U6 added hegel PBT tests; the Tier-2 GPU oracle runs separately under `ctest -L oracle`.)
 
-## Next: U7 - MainScreen MVVM decomposition
+## Next: U8 - Qt5 -> Qt6 migration (gated by the oracle)
 
-U6 is **DONE** (see the table above). The production `OptimizerManager` now runs each stage through the extracted `DirectOptimizer` behind the real GPU cost, and the Tier-2 appearance oracle gates it (IoU 0.9936 vs 0.85 gate; recovered-pose-vs-fem.jts within ~1mm/~0.14deg; headless suite still 6/6). Measured thresholds are recorded in `test/golden/baseline.json` and `golden_oracle.org`.
+U6 is **DONE** (see the table above). The production `OptimizerManager` now runs each stage through the extracted `DirectOptimizer` behind the real GPU cost, and the Tier-2 appearance oracle gates it (IoU 0.9936 vs 0.85 gate; recovered-pose-vs-fem.jts within ~1mm/~0.14deg; headless suite 7/7). Measured thresholds are recorded in `test/golden/baseline.json` and `golden_oracle.org`.
 
-U7 is the MVVM decomposition of `MainScreen` (view vs app-state/command orchestration vs services). See the U7 unit in the plan: its entry gate is re-validating the human outcome (fast headless pass/fail) at the Phase-3 completion point; extract pose/kinematics persistence as pure tested functions (`src/core/pose_file_io.cpp`), crawl model-list state / pose storage out strangle-style, keep render binding in `Viewer`. Per-layer gate: logic/service/coordinator extractions get headless unit gates; presentation-only cuts get compile + a scheduled manual-visual check (no `MainScreen` characterization, R12). Track `MainScreen` line count + `ui.`-reference count down.
-
-**U7 phase-1 done (persistence seam):** extracted the pure `pose_file_io` service (round-trip + real-fixture tests, headless 7/7) and rewired the four pose/kinematics persistence slots in `MainScreen` to it — preserved all dialogs + view updates; `MainScreen` 5806 -> 5620 lines, `ui.` refs 837 -> 833. Remaining U7 work is the heavier, widget-coupled session/model-list-state extraction, which is phase-gated (re-validate human outcome; the full MVVM commit is re-scoped if the headless seam already delivers the value).
+U7 **phase-1 done** (persistence seam): the pure `pose_file_io` service (tested, headless 7/7) is extracted and `MainScreen`'s four pose/kinematics slots are rewired to it (5806 -> 5620 lines, ui. 837 -> 833). The full MVVM decomposition (session/model-list state) is phase-gated / re-scoped per the plan; we are proceeding to U8.
 
 ## Key decisions / gotchas to preserve
 
