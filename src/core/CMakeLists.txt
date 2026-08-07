@@ -12,6 +12,8 @@ file(GLOB HEADER_FILES ${HEADER_DIR}/*.h)
 add_library(jtml_core STATIC
 	data_structures_6D.cpp
 	direct_data_storage.cpp
+	direct_optimizer.cpp
+	optimize_coordinator.cpp
 	frame.cu
 	location_storage.cpp
 	model.cpp
