@@ -96,6 +96,21 @@ target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
 set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Pose / kinematics persistence service round-trip tests (plan U7, R2/R8/R9).
+# Pure file-format logic; compiled CUDA/Qt-free alongside the real golden
+# fixture with the data-structure source, no event loop, no GPU.
+add_executable(jtml_test_pose_file_io
+    unit/test_pose_file_io.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/pose_file_io.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_pose_file_io PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_pose_file_io PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.pose_file_io COMMAND jtml_test_pose_file_io)
+# TEST_WORKING_DIRECTORY so the fixture test finds test/golden/fem_golden.jts.
+set_tests_properties(jtml.pose_file_io PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # Headless optimize-lifecycle seam (plan U4, R4/R5/R7, AE1). QtTest with a real
 # QThread + worker and an injected stub cost; observed via QSignalSpy on the
 # coordinator (no GPU, no display, QCoreApplication only).
