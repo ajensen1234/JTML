@@ -13,37 +13,23 @@
 | U4 | headless `OptimizeCoordinator` + persistent worker thread + QtTest lifecycle suite |
 | U2 | captured Qt5/GPU baseline (`fem_oracle.jtak`); appearance-based Tier-2 oracle spec + tolerances in `test/golden/baseline.json` |
 | build | added `direct_optimizer.cpp` + `optimize_coordinator.cpp` to `jtml_core` (fixed the `file(GLOB)` AUTOMOC link breakage) |
+| U6-a | `DirectOptimizer`: SetCallOffset (cumulative 20k/25k/30k) + iteration/improvement callbacks + hegel property-based tests |
+| U6-b | `OptimizerManager::Optimize()` rewire to `RunDirectStage(range, stage_manager)` per trunk/branch/leaf with the real GPU DIRECT_DILATION cost |
+| U6-c | Tier-2 GPU appearance oracle (`test/oracle/oracle_test.cpp`) — IoU 0.9936 vs 0.85 gate; headless still 6/6 |
 
-`pixi run test` → 4/4 pass (~0.05s, no GPU/GUI). This is the "fearlessly edit" headless seam.
+`pixi run test` → 6/6 pass (~0.1s, no GPU/GUI). This is the "fearlessly edit" headless seam. (U6 added hegel PBT tests; the Tier-2 GPU oracle runs separately under `ctest -L oracle`.)
 
-## Next: U6 — rewire `OptimizerManager` to `DirectOptimizer` + build the Tier-2 oracle
+## Next: U7 - MainScreen MVVM decomposition
 
-U6 is the delicate validated-GPU-path change and is **NOT yet done**. Its full design:
+U6 is **DONE** (see the table above). The production `OptimizerManager` now runs each stage through the extracted `DirectOptimizer` behind the real GPU cost, and the Tier-2 appearance oracle gates it (IoU 0.9936 vs 0.85 gate; recovered-pose-vs-fem.jts within ~1mm/~0.14deg; headless suite still 6/6). Measured thresholds are recorded in `test/golden/baseline.json` and `golden_oracle.org`.
 
-1. **Extend `DirectOptimizer`** (backward-compatible) with:
-   - `SetCallOffset(unsigned)` — cumulative budget across stages (trunk 10k → branch 20k → leaf 30k),
-   - `SetIterationCallback(std::function<void()>)` — fired after each ConvexHull+Trisect (drives 30fps `UpdateDisplay`),
-   - `SetImprovementCallback(std::function<void(6x double, double)>)` — fired on best-improvement (drives live `UpdateOptimum`).
-2. **Add `OptimizerManager::RunDirectStage(range, stage_manager)`** that:
-   - sets starting point + search range,
-   - builds a `DirectOptimizer` with a GPU eval lambda (sets `gpu_principal_model_` pose A (+B if biplane), calls `stage_manager.callActiveCostFunction()`),
-   - sets call offset = running `cost_function_calls_`, budget = cumulative `budget_`,
-   - wires the callbacks to `emit UpdateOptimum` / 30fps `UpdateDisplay`,
-   - updates `cost_function_calls_`/`current_optimum_*` from the result.
-3. **Replace the three near-identical stage loops** (trunk/branch/leaf) in `OptimizerManager::Optimize()` with `RunDirectStage`, keeping the per-stage init/destruct/dilation/`UpdateDilationBackground` + `budget_ += stage_budget` intact.
-4. **Build `test/oracle/oracle_test.cpp`** (GPU-labeled): load Kneel_1, optimize, **render the implant at the optimized pose, compare the silhouette to `Labels/fem/`** (pixel-diff / IoU) — the robust appearance-based gate; the recovered-pose-vs-`fem.jts` check is informational only.
-   - Wire into `test/CMakeLists.txt` under the `oracle` label (never the `headless` default).
-   - It links the GPU pipeline (jtml_gpu/libraries) — needs a GPU machine to run.
-
-**Verification for U6:** `pixi run build` green; `pixi run test` (headless) green; Tier-2 oracle passes on a GPU machine against the captured `fem_oracle.jtak`/`fem.jts`. Because this rewires the validated production optimizer, confirm the GUI still optimizes Kneel_1 acceptably before moving on.
-
-Then U7 (MainScreen MVVM decomposition) and U8 (Qt5→Qt6), both still pending.
+U7 is the MVVM decomposition of `MainScreen` (view vs app-state/command orchestration vs services). See the U7 unit in the plan: its entry gate is re-validating the human outcome (fast headless pass/fail) at the Phase-3 completion point; extract pose/kinematics persistence as pure tested functions (`src/core/pose_file_io.cpp`), crawl model-list state / pose storage out strangle-style, keep render binding in `Viewer`. Per-layer gate: logic/service/coordinator extractions get headless unit gates; presentation-only cuts get compile + a scheduled manual-visual check (no `MainScreen` characterization, R12). Track `MainScreen` line count + `ui.`-reference count down.
 
 ## Key decisions / gotchas to preserve
 
 - **Golden oracle is a behavior-preservation gate, not a correctness check**; correctness comes from independent sources (Tier-1 analytic, known-good Labels).
 - **Tier-2 oracle is appearance-based** (render-at-optimized-pose vs Labels), because DIRECT numeric convergence is noisy — don't gate on raw pose values.
-- **Cumulative budget is load-bearing** (R15): effective 10k/20k/30k; the original zeroes `cost_function_calls_` only before trunk.
+- **Cumulative budget is load-bearing** (R15): effective 20k/25k/30k per stage (settings_constants: trunk 20000, branch 5000, leaf 5000; the docs text "10k/20k/30k" is stale); the original zeroes `cost_function_calls_` only before trunk.
 - QTn **AUTOMOC**: add Q_OBJECT headers to `add_executable` sources (see `jtml_test_coordinator`).
 - `OptimizeCoordinator` uses a **single persistent worker thread** (not per-run deleteLater threads) — per-run threads caused a dangling-pointer segfault in the destructor.
 - `jj describe` then `jj new` per change (owner's workflow).

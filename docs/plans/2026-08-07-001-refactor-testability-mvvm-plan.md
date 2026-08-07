@@ -337,7 +337,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U6. **Rewire the real GPU cost into the extracted optimizer**
+- [x] U6. **Rewire the real GPU cost into the extracted optimizer** *(done 2026-08-07: RunDirectStage + Tier-2 GPU oracle)*
 
 **Goal:** Make the production app run the extracted `DirectOptimizer` with the real `OptimizerManager::EvaluateCostFunction` adapter — behavior-preserving, gated by the oracle/convergence tests.
 
