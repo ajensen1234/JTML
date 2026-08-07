@@ -50,6 +50,23 @@ target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
 set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Headless optimize-lifecycle seam (plan U4, R4/R5/R7, AE1). QtTest with a real
+# QThread + worker and an injected stub cost; observed via QSignalSpy on the
+# coordinator (no GPU, no display, QCoreApplication only).
+find_package(Qt5 COMPONENTS Core Test REQUIRED)
+add_executable(jtml_test_coordinator
+    lifecycle/coordinator_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/optimize_coordinator.cpp
+    ${PROJECT_SOURCE_DIR}/include/core/optimize_coordinator.h
+    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+)
+target_include_directories(jtml_test_coordinator PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_coordinator PRIVATE Qt5::Core Qt5::Test)
+add_test(NAME jtml.coordinator COMMAND jtml_test_coordinator)
+set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.
