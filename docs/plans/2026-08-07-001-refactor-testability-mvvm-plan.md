@@ -195,7 +195,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ## Implementation Units
 
-- [ ] U1. **Test harness, frameworks, and CI**
+- [x] U1. **Test harness, frameworks, and CI**
 
 **Goal:** Enable CTest; add Catch2 + QtTest; register the headless suite with a default run that has no GPU/display; add a real pixi/CI gating job.
 
@@ -225,7 +225,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U2. **Golden-oracle definition and Qt5 baseline capture** *(a pre-flight gate — see Notes)*
+- [x] U2. **Golden-oracle definition and Qt5 baseline capture** *(a pre-flight gate — see Notes)*
 
 **Goal:** Decide the DRR/cost compare reference + tolerance, record them and the copied Kneel_1 fixtures as committed ground truth, and capture the known-good pose from the Qt5/GPU app.
 
@@ -254,7 +254,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U3. **Decouple pure data structures from GPU**
+- [x] U3. **Decouple pure data structures from GPU**
 
 **Goal:** Remove the `Point6D(Pose)` constructor and the `gpu/render_engine.cuh` include from `data_structures_6D`/`direct_data_storage` so those, and everything depending on them, compile without CUDA.
 
@@ -279,7 +279,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U4. **Headless optimize-coordinator + worker**
+- [x] U4. **Headless optimize-coordinator + worker**
 
 **Goal:** Extract the optimize orchestration (state machine + worker thread) into a widget-free `OptimizeCoordinator` testable under `QCoreApplication` + `QSignalSpy` with an injected stub cost; fix the cross-thread stop.
 
@@ -309,7 +309,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U5. **Extract the pure DIRECT optimizer**
+- [x] U5. **Extract the pure DIRECT optimizer**
 
 **Goal:** Move `ConvexHull`/`TrisectPotentiallyOptimally`/`Denormalize*`/`SetSearchRange`/`SetStartingPoint` and the cumulative-budget loop into a CUDA-free `DirectOptimizer` that takes an injected cost function and returns the argmin.
 
