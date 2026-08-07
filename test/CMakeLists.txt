@@ -124,9 +124,44 @@ set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
 # set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 60)
 
 # ---------------------------------------------------------------------------
-# (Placeholder) GPU / oracle target, added at U6. Labeled so it is NOT in the
-# default headless run.
+# Tier-2 GPU oracle (plan U6). Appearance-based: optimize Kneel_1 femur with
+# the rewire (DirectOptimizer bound to the real GPU DIRECT_DILATION cost),
+# render the implant at the recovered pose, and compare the silhouette to the
+# known-good label (Labels/fem/) via IOU. GPU-only: NEVER run in the headless
+# default. Run explicitly with: ctest --test-dir .build -L oracle
 # ---------------------------------------------------------------------------
-# add_executable(jtml_test_oracle oracle/oracle_test.cpp)
-# add_test(NAME jtml.oracle COMMAND jtml_test_oracle)
-# set_tests_properties(jtml.oracle PROPERTIES LABELS "oracle" TIMEOUT 1800)
+add_executable(jtml_test_oracle oracle/oracle_test.cpp)
+target_include_directories(jtml_test_oracle PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_oracle PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_core
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBS}
+    Eigen3::Eigen
+    Catch2::Catch2WithMain
+)
+set_property(TARGET jtml_test_oracle PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_oracle PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
+)
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_gpu/JTA_Cost_Functions live in
+# the build lib dir, VTK + conda libs in their install dirs.
+target_link_options(jtml_test_oracle PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.oracle COMMAND jtml_test_oracle)
+# The oracle reads its fixtures via repo-relative paths (example_studies/Kneel_1/)
+# and writes hm*.png/contour.png diagnostic artifacts, so it must run from the
+# repo root -- not the .build dir that ctest defaults to.
+set_tests_properties(jtml.oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

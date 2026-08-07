@@ -79,6 +79,19 @@ reference. Tolerance on the RENDERED silhouette is the load-bearing comparison.
 ~100); dilation trunk 6px / branch 3px / leaf 1px. (Note the budget is cumulative across
 stages, so effective caps are ~10k/20k/30k.)
 
+**Measured thresholds (U6, first Tier-2 run on RTX 3090, test/oracle/oracle_test.cpp):**
+- HARD gate: rendered-silhouette IOU > 0.85. Measured recovered-pose IoU = 0.9936
+  (per-px L1 = 0.0207).
+- Frame <-> label correspondence (resolved empirically, not name-aligned):
+  1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif (start-pose render IoU == 1.0).
+  The binary label TIFFs use a bottom-left y-origin; the oracle vertically flips them.
+- Recovered pose vs fem.jts (informational): within ~1mm / ~0.14 deg (gap
+  (-0.05, 0.004, -0.91, 0.04, 0.002, -0.14)).
+- Oracle run config: DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k
+  for run time); search range (12,12,15,15,15,15) around fem.jts frame 0; Canny 3/0/150;
+  dilation 6; backface culling OFF (matches the label generator, src/Study2Grid).
+- The oracle covers frame 0 only; expanding to all 3 Kneel_1 frames is a follow-on.
+
 
 Let me know if that makes sense. We don't have to worry about the other ones for now, I don't think, this should be a good test case.
 

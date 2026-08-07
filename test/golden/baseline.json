@@ -44,8 +44,8 @@
   },
 
   "tolerances": {
-    "silhouette_pixel_diff_threshold": null,
-    "silhouette_iou_threshold": null,
+    "silhouette_iou_threshold": 0.85,
+    "silhouette_pixel_diff_threshold": 0.021,
     "pose_per_axis_informational": {
       "x_tran": 1.0,
       "y_tran": 1.0,
@@ -62,6 +62,16 @@
       "x_rot": 0.38,
       "y_rot": 0.10
     },
-    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels appearance check (pixel-diff / IoU), not the absolute pose: DIRECT convergence is noisy, so pose values are informational. silhouette thresholds TODO: measure at first Tier-2 oracle run (render at the optimized pose, compare to Labels/fem/)."
+    "measured": {
+      "note": "Measured at the first Tier-2 oracle run (RTX 3090) via test/oracle/oracle_test.cpp.",
+      "recovered_pose_iou": 0.993627,
+      "recovered_pose_L1_pixel_diff": 21675,
+      "recovered_pose_per_px_L1": 0.0206709,
+      "start_pose_iou_correspondence": 1.0,
+      "recovered_pose_vs_fem_jts_gap_mm_deg": [-0.048, 0.004, -0.905, 0.042, 0.002, -0.135],
+      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k for run time); search range (12,12,15,15,15,15) around fem.jts frame 0; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid)",
+      "frame_label_mapping": "1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif (resolved empirically: start-pose render IoU==1.0; the binary label TIFFs use a bottom-left y-origin, so the oracle vertically flips the label)"
+    },
+    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9936); per-px L1 (0.0207 < 0.021 informational) and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by a start-pose IoU == 1.0. Thresholds measured on the RTX 3090; other GPU hardware may vary slightly."
   }
 }

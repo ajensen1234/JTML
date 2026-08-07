@@ -48,3 +48,7 @@ check
 # abandoned-attempt / research noise (large, not source)
 big-main-diff.diff
 refs/
+# Frame::setCurvatureHeatmaps() diagnostic artifacts written to the CWD when the
+# Tier-2 oracle (and Study2Grid) run from the repo root.
+hm*.png
+contour.png
