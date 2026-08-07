@@ -33,6 +33,13 @@ Dilation settings (confirmed): trunk is 6px dilated, branch is 3px dilated, leaf
 (D)/home/ajj/repo/uf/JTML/example_studies/Kneel_1/KR_right_7_fem.stl - this is the femoral
 stl
 
+(E) /home/ajj/repo/uf/JTML/example_studies/Kneel_1/calibration.txt - the calibration file
+used (JT_INTCALIB; values: principal pixel 1198, principal x 0, principal y 0, pitch 0.373).
+
+(F) /home/ajj/repo/uf/JTML/example_studies/Kneel_1/fem_oracle.jtak - the captured Qt5/GPU
+baseline: the optimizer's actual per-frame output on Kneel_1. This is the Tier-2 golden to
+compare against during regression runs (recorded in test/golden/baseline.json).
+
 
 And so, if you wanted to think about this, i'm going to label each of the above
 files/directory A/B/C/D so that we can reference them cleanly.
@@ -45,6 +52,32 @@ There's technically an ML integration step where we run a trained model over the
 image, and we can certainly test that pathway out, but what that does is set the value of
 the edge image application to the ML binary segmentation, which is effectively the same as
 just using a binary silhoette as the main frame.
+
+Ticket: %EMOJI% no wait, use the below:
+
+* Baseline / Oracle Verification
+
+This file is the authoritative oracle spec (referenced by docs/brainstorms/... and
+docs/plans/2026-08-07-001-...). The oracle is a *behavior-preservation* gate: it catches
+regression (drift from current known-good behavior), not latent correctness bugs.
+
+**Compare reference (two-tier, per the plan):**
+- Tier 1 (CI, headless, CPU): the extracted `DirectOptimizer` (test/unit/
+test_direct_optimizer.cpp) converges on an analytic cost function. Deterministic, no GPU.
+- Tier 2 (GPU-labeled, gpu machine): run the real pipeline on Kneel_1; at the final
+  optimized pose, project the implant (DRR) and assert the rendered silhouette matches
+the known-good `Labels` (B) within a pixel-diff / IoU threshold. This appearance-based
+gate is the robust one: DIRECT numeric convergence is noisy, so ABSOLUTE pose-vs-`fem.jts`
+is treated as informational only (not the hard gate).
+
+**Baseline:** (C) `fem.jts` gives the starting/known-good pose; (F) `fem_oracle.jtak` is the
+actual captured Qt5/GPU output. The captured pose and the known-good projection (B) are the
+reference. Tolerance on the RENDERED silhouette is the load-bearing comparison.
+
+**Settings (authoritative):** DIRECT_DILATION for the femur; trunk / 2-branch / 1-leaf;
+~10000 iteration budget per stage; ranges trunk +/-30, branch +/-20, leaf +/-3 (z opened to
+~100); dilation trunk 6px / branch 3px / leaf 1px. (Note the budget is cumulative across
+stages, so effective caps are ~10k/20k/30k.)
 
 
 Let me know if that makes sense. We don't have to worry about the other ones for now, I don't think, this should be a good test case.

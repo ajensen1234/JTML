@@ -1,0 +1,67 @@
+{
+  "oracle": "JTML Kneel_1 femoral golden oracle",
+  "spec_source": "golden_oracle.org",
+  "description": "Behavior-preservation (golden-master) gate. Tier-2 (GPU): recovered per-frame pose vs fem.jts within tolerance; projected silhouette vs Labels within pixel threshold. Tolerance finalized from the one-time Qt5/GPU capture (fem_oracle.jtak).",
+
+  "compare_reference": {
+    "tier1": "CI headless CPU: DirectOptimizer converges on analytic cost (test/unit/test_direct_optimizer.cpp)",
+    "tier2": "GPU (robust, appearance-based): project the implant (DRR) at the final optimized pose and compare the rendered silhouette to Labels/fem/ within a pixel-diff / IoU threshold. Pose-vs-fem.jts is informational only, because DIRECT numeric convergence is noisy."
+  },
+
+  "settings": {
+    "cost_function": "DIRECT_DILATION",
+    "stages": "trunk / 2-branch / 1-leaf",
+    "budget_per_stage": 10000,
+    "budget_effective_cumulative": [10000, 20000, 30000],
+    "ranges": { "trunk": 30, "branch": 20, "leaf": 3, "leaf_z": 100 },
+    "dilation_px": { "trunk": 6, "branch": 3, "leaf": 1 }
+  },
+
+  "fixtures": {
+    "base_images": "example_studies/Kneel_1/1024/*.tif",
+    "fem_stl": "example_studies/Kneel_1/KR_right_7_fem.stl",
+    "labels": "example_studies/Kneel_1/Labels/fem/",
+    "calibration": "example_studies/Kneel_1/calibration.txt"
+  },
+
+  "golden_units": "fem.jts (3 frames, JT_EULER_312: x_tran,y_tran,z_tran,z_rot,x_rot,y_rot)",
+
+  "expected_pose_per_frame": [
+    { "frame": 0, "x_tran": 18.52191, "y_tran": 19.69514, "z_tran": -1027.713, "z_rot": -26.69708, "x_rot": -7.419319, "y_rot": -0.2587041 },
+    { "frame": 1, "x_tran": 19.01747, "y_tran": 20.15555, "z_tran": -1026.732, "z_rot": -27.37827, "x_rot": -7.56846, "y_rot": -0.2358893 },
+    { "frame": 2, "x_tran": 16.4709, "y_tran": 16.4248, "z_tran": -1028.69, "z_rot": -24.12223, "x_rot": -7.678545, "y_rot": 0.3264978 }
+  ],
+
+  "captured_baseline": {
+    "source_file": "example_studies/Kneel_1/fem_oracle.jtak",
+    "capture_ready": true,
+    "captured_per_frame": [
+      { "frame": 0, "x_tran": 18.3984, "y_tran": 19.6297, "z_tran": -1022.93, "z_rot": -27.0152, "x_rot": -7.79231, "y_rot": -0.227713 },
+      { "frame": 1, "x_tran": 18.8612, "y_tran": 20.1056, "z_tran": -1020.42, "z_rot": -27.8138, "x_rot": -7.95082, "y_rot": -0.260229 },
+      { "frame": 2, "x_tran": 16.3709, "y_tran": 16.3502, "z_tran": -1024.28, "z_rot": -24.4668, "x_rot": -8.04481, "y_rot": 0.424626 }
+    ],
+    "notes": "Direct comparative output of the current Qt5/GPU pipeline on Kneel_1. Matches fem.jts within tolerance (gaps below)."
+  },
+
+  "tolerances": {
+    "silhouette_pixel_diff_threshold": null,
+    "silhouette_iou_threshold": null,
+    "pose_per_axis_informational": {
+      "x_tran": 1.0,
+      "y_tran": 1.0,
+      "z_tran": 15.0,
+      "z_rot": 2.0,
+      "x_rot": 2.0,
+      "y_rot": 1.0
+    },
+    "observed_max_gap_vs_golden": {
+      "x_tran": 0.16,
+      "y_tran": 0.08,
+      "z_tran": 6.31,
+      "z_rot": 0.44,
+      "x_rot": 0.38,
+      "y_rot": 0.10
+    },
+    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels appearance check (pixel-diff / IoU), not the absolute pose: DIRECT convergence is noisy, so pose values are informational. silhouette thresholds TODO: measure at first Tier-2 oracle run (render at the optimized pose, compare to Labels/fem/)."
+  }
+}
