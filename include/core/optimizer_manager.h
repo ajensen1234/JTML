@@ -33,6 +33,9 @@
 #include "data_structures_6D.h"
 #include "direct_data_storage.h"
 
+/*Extracted pure DIRECT optimizer (plan U5/U6)*/
+#include "core/direct_optimizer.h"
+
 /*Custom Calibration Struct (Used in CUDA GPU METRICS)*/
 #include "calibration.h"
 
@@ -250,6 +253,16 @@ private:
 
     /*Evaluate Cost Function at Given Point*/
     double EvaluateCostFunction(Point6D point);
+
+    /*Run one DIRECT stage (trunk/branch/leaf) using the extracted pure
+     * DirectOptimizer with the real GPU eval (plan U6). `range` is the stage
+     * search range (already applied to range_ by the caller), and
+     * `stage_manager` is the stage's CostFunctionManager; starting_point_ and
+     * the cumulative budget_ / cost_function_calls_ members are read by the
+     * caller before invoking and written back on return.*/
+    void RunDirectStage(
+        Point6D range,
+        jta_cost_function::CostFunctionManager& stage_manager);
 
     /*Denormalize Range Point (converts Unit Point to correct values)*/
     Point6D DenormalizeRange(Point6D unit_point);

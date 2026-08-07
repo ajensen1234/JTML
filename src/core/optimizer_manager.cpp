@@ -1000,13 +1000,9 @@ void OptimizerManager::Optimize() {
                 error_occurrred_ = true;
             }
 
-            /*Initialize with Unit Sized HyperBox at Center*/
-            if (!error_occurrred_) {
-                current_optimum_value_ =
-                    EvaluateCostFunction(Point6D(.5, .5, .5, .5, .5, .5));
-                current_optimum_location_ = starting_point_;
-                data_ = DirectDataStorage(current_optimum_value_);
-            }
+            /*Seed + search loop now run inside RunDirectStage (plan U6), bound
+             * to the real GPU cost, using the trunk range/budget/start already
+             * set above.*/
 
             /*Make Sure Dilation Image is Showing Trunk Value (Should be
              * Unnecessary)*/
@@ -1026,42 +1022,13 @@ void OptimizerManager::Optimize() {
             }
             emit UpdateDilationBackground();
 
-            /*Main Loop*/
+            /*Run the trunk stage of DIRECT bound to the real GPU cost. The
+             * budget_ member was just reset to optimizer_settings_.trunk_budget
+             * and cost_function_calls_ to 0 above; RunDirectStage uses the
+             * cumulative call-offset and drives the live UpdateDisplay /
+             * UpdateOptimum signals.*/
             if (!error_occurrred_) {
-                while (cost_function_calls_ < budget_) {
-                    /*Scroll Through Convex Hull to Get List of Potentially
-                    Optimal Hyperboxes to Evaluate. This is stored as list of
-                    column IDs in DATA that need to have least Fvalued
-                    hyperbox (last in list) returned for trisection and
-                    evaluation.*/
-                    ConvexHull();
-
-                    /*Trisect Potentially Optimal Rectangles*/
-                    TrisectPotentiallyOptimal();
-
-                    /*Safety Break...Should Never Happen*/
-                    if (potentially_optimal_col_ids_.size() == 0) {
-                        emit OptimizerError(
-                            "Error, no potentially optimal hyper rectangles "
-                            "found!");
-                        error_occurrred_ = true;
-                        break;
-                    }
-
-                    /*If Error*/
-                    if (error_occurrred_) break;
-
-                    /*Update Screen at Rate of 30 FPS*/
-                    if ((clock() - update_screen_clock_) > 33) {
-                        emit UpdateDisplay(
-                            static_cast<double>(clock() - start_clock_) /
-                                static_cast<double>(cost_function_calls_),
-                            static_cast<int>(cost_function_calls_),
-                            current_optimum_value_,
-                            primary_model_index_);
-                        update_screen_clock_ = clock();
-                    }
-                }
+                RunDirectStage(optimizer_settings_.trunk_range, trunk_manager_);
             }
 
             /*Destruct Trunk Manager Initialization*/
@@ -1118,49 +1085,12 @@ void OptimizerManager::Optimize() {
                 SetSearchRange(optimizer_settings_.branch_range);
                 /*Reset Budget and Cost Function Calls*/
                 budget_ += optimizer_settings_.branch_budget;
-                /*Reset Storage*/
-                data_.DeleteAllStoredHyperboxes();
-                /*Initialize with Unit Sized HyperBox at Center*/
-                current_optimum_value_ =
-                    EvaluateCostFunction(Point6D(.5, .5, .5, .5, .5, .5));
-                current_optimum_location_ = starting_point_;
-                data_ = DirectDataStorage(current_optimum_value_);
-
-                /*Main Loop*/
-                while (cost_function_calls_ < budget_) {
-                    /*Scroll Through Convex Hull to Get List of Potentially
-                    Optimal Hyperboxes to Evaluate. This is stored as list of
-                    column IDs in DATA that need to have least Fvalued
-                    hyperbox (last in list) returned for trisection and
-                    evaluation.*/
-                    ConvexHull();
-
-                    /*Trisect Potentially Optimal Rectangles*/
-                    TrisectPotentiallyOptimal();
-
-                    /*Safety Break...Should Never Happen*/
-                    if (potentially_optimal_col_ids_.size() == 0) {
-                        emit OptimizerError(
-                            "Error, no potentialy optimal hyper rectangles "
-                            "found!");
-                        error_occurrred_ = true;
-                        break;
-                    }
-
-                    /*If Error*/
-                    if (error_occurrred_) break;
-
-                    /*Update Screen at Rate of 30 FPS*/
-                    if ((clock() - update_screen_clock_) > 33) {
-                        emit UpdateDisplay(
-                            static_cast<double>(clock() - start_clock_) /
-                                static_cast<double>(cost_function_calls_),
-                            static_cast<int>(cost_function_calls_),
-                            current_optimum_value_,
-                            primary_model_index_);
-                        update_screen_clock_ = clock();
-                    }
-                }
+                /*Run this branch stage of DIRECT bound to the real GPU cost.
+                 * budget_ is cumulative (trunk + branch); RunDirectStage uses
+                 * it as the stage cap against the running cost_function_calls_
+                 * offset.*/
+                RunDirectStage(optimizer_settings_.branch_range,
+                               branch_manager_);
             }
         }
 
@@ -1210,48 +1140,10 @@ void OptimizerManager::Optimize() {
             SetSearchRange(optimizer_settings_.leaf_range);
             /*Reset Budget and Cost Function Calls*/
             budget_ += optimizer_settings_.leaf_budget;
-            /*Reset Storage*/
-            data_.DeleteAllStoredHyperboxes();
-            /*Initialize with Unit Sized HyperBox at Center*/
-            current_optimum_value_ =
-                EvaluateCostFunction(Point6D(.5, .5, .5, .5, .5, .5));
-            current_optimum_location_ = starting_point_;
-            data_ = DirectDataStorage(current_optimum_value_);
-
-            /*Main Loop*/
-            while (cost_function_calls_ < budget_) {
-                /*Scroll Through Convex Hull to Get List of Potentially
-                Optimal Hyperboxes to Evaluate. This is stored as list of
-                column IDs in DATA that need to have least Fvalued
-                hyperbox (last in list) returned for trisection and
-                evaluation.*/
-                ConvexHull();
-
-                /*Trisect Potentially Optimal Rectangles*/
-                TrisectPotentiallyOptimal();
-
-                /*Safety Break...Should Never Happen*/
-                if (potentially_optimal_col_ids_.size() == 0) {
-                    emit OptimizerError(
-                        "Error, no potentialy optimal hyper rectangles found!");
-                    error_occurrred_ = true;
-                    break;
-                }
-
-                /*If Error*/
-                if (error_occurrred_) break;
-
-                /*Update Screen at Rate of 30 FPS*/
-                if ((clock() - update_screen_clock_) > 33) {
-                    emit UpdateDisplay(
-                        static_cast<double>(clock() - start_clock_) /
-                            static_cast<double>(cost_function_calls_),
-                        static_cast<int>(cost_function_calls_),
-                        current_optimum_value_,
-                        primary_model_index_);
-                    update_screen_clock_ = clock();
-                }
-            }
+            /*Run the leaf stage of DIRECT bound to the real GPU cost. budget_
+             * is cumulative (trunk + branch + leaf); RunDirectStage uses it as
+             * the stage cap against the running cost_function_calls_ offset.*/
+            RunDirectStage(optimizer_settings_.leaf_range, leaf_manager_);
         }
 
         /*Destruct Leaf Initialization CFM*/
@@ -1331,6 +1223,68 @@ void OptimizerManager::Optimize() {
 
     /*Finish And Return*/
     emit finished();
+}
+
+void OptimizerManager::RunDirectStage(
+    Point6D range,
+    jta_cost_function::CostFunctionManager& stage_manager) {
+    /*Cross the extracted pure optimizer boundary with the real GPU cost. The
+     * DirectOptimizer hands the injected lambda the *denormalized physical*
+     * point, so set the GPU model poses from it directly (primary, + biplane
+     * secondary via the calibration), then score the stage's cost function.
+     * No here-optimum tracking: DirectOptimizer owns that internally and we
+     * read it back after Run().*/
+    DirectOptimizer opt(
+        [this, &stage_manager](const Point6D& physical) -> double {
+            Pose pose(physical.x, physical.y, physical.z, physical.xa,
+                      physical.ya, physical.za);
+            gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
+            if (calibration_.biplane_calibration) {
+                Point6D physical_B =
+                    calibration_.convert_Pose_A_to_Pose_B(physical);
+                gpu_principal_model_->SetCurrentSecondaryCameraPose(Pose(
+                    physical_B.x, physical_B.y, physical_B.z, physical_B.xa,
+                    physical_B.ya, physical_B.za));
+            }
+            return stage_manager.callActiveCostFunction();
+        },
+        range, starting_point_, budget_);
+
+    /*Cumulative budget semantics: this stage continues from the running call
+     * count, so the extracted optimizer's loop guard uses call_offset_ + its
+     * own count against the (already-accumulated) budget_ member.*/
+    opt.SetCallOffset(cost_function_calls_);
+
+    /*Progress at ~30fps while the inner loop runs (mirrors the original
+     * update_screen_clock_ throttle inside each stage's main loop).*/
+    opt.SetIterationCallback([this, &opt]() {
+        if ((clock() - update_screen_clock_) > 33) {
+            emit UpdateDisplay(
+                static_cast<double>(clock() - start_clock_) /
+                    static_cast<double>(opt.GetCostFunctionCalls()),
+                static_cast<int>(opt.GetCostFunctionCalls()),
+                opt.GetOptimumValue(), primary_model_index_);
+            update_screen_clock_ = clock();
+        }
+    });
+
+    /*Live optimum display when the search improves (mirrors the original
+     * UpdateOptimum emit inside EvaluateCostFunction).*/
+    opt.SetImprovementCallback([this](const Point6D& loc, double) {
+        emit UpdateOptimum(loc.x, loc.y, loc.z, loc.xa, loc.ya, loc.za,
+                           primary_model_index_);
+    });
+
+    if (!opt.Run()) {
+        emit OptimizerError("Error optimizing current frame!");
+        error_occurrred_ = true;
+        return;
+    }
+
+    /*Write the stage result back into the running members.*/
+    cost_function_calls_ = opt.GetCostFunctionCalls();
+    current_optimum_location_ = opt.GetOptimumLocation();
+    current_optimum_value_ = opt.GetOptimumValue();
 }
 
 void OptimizerManager::CalculateSymTrap() {
