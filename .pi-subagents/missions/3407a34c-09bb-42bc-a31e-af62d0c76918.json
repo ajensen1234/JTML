@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "id": "3407a34c-09bb-42bc-a31e-af62d0c76918",
+  "title": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).",
+  "goal": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).\nFIRST read the plan fully at: /home/ajj/repo/uf/JTML/docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md. Also read the origin requirements doc at: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md so you can check that the plan honors the R1-R16 / AE1-AE5 contract without dropping origin content. You may skim the repo (CMakeLists.txt, pixi.toml, src/core/optimizer_manager.cpp, example_studies/Kneel_1) to verify feasibility, but your findings are about the PLAN document.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema, no prose outside it:\n{ reviewer: string, findings: [ {...} ], residual_risks: [string], deferred_questions: [string] }\n\nEach finding: title(<=10 words), severity(\"P0\"|\"P1\"|\"P2\"|\"P3\"), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type(\"error\"|\"omission\"), autofix_class(\"safe_auto\"|\"gated_auto\"|\"manual\"), confidence(in 0,25,50,75,100), evidence(ARRAY of >=1 direct quote from the plan), suggested_fix (required for safe_auto/gated_auto).\n\nRules:\n- severity: P0-P3 only. finding_type error|omission. confidence anchors: 0/25 suppressed (never emit), 50 = FYI advisory, 75 = verified with concrete downstream consequence, 100 = airtight.\n- Do not flag pedantic style, other-persona territory, already-resolved items, pre-existing repo issues the plan didn't introduce, speculative future-work, or lint-caught issues.\n- Strawman rule: \"do nothing/defer to later\" is not a real alternative.\n- Focus on: plan-internal consistency (U-ID references, dependencies, phase ordering), feasibility gaps, scope creep vs the origin contract, missing test scenarios, risk handling, and whether an implementer can start without inventing decisions.\n</output-contract>\n\nReturn the JSON as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T15:07:50.237Z",
+  "updatedAt": "2026-08-07T15:11:52.216Z",
+  "runs": [
+    {
+      "runId": "e9cf4d80",
+      "mode": "single",
+      "agent": "ce-coherence-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T15:11:52.216Z",
+      "completedAt": "2026-08-07T15:11:52.216Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/e9cf4d80_ce-coherence-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/e9cf4d80_ce-coherence-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "I now have enough verified evidence. Let me compose the review.\n\n**Analysis summary:**\n\nThe plan honors the R1–R16/AE1–AE5 contract — no origin requirement or acceptance example is dropped, all U-ID references resolve, and `lifecycle-seam-first` ordering (U4 before U5) matches the origin. The D3 pre-flight gate consistently blocks U2 and U8 with a consistent fallback. The one real plan-internal contradiction is the MVVM gate (U7) vs. its declared dependency list.```json\n{\n  \"reviewer\": \"ce-coherence-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"MVVM gate requires oracle; U7 deps omit it\",\n      \"severity\": \"P2\",\n      \"section\": \"Implementation Units / U7 (MVVM decomposition)\",\n      \"why_it_matters\": \"The plan's stated gate and the unit's formal dependency list disagree. The Overview, Key Decisions, and the U7 header all say MVVM may only proceed after 'phases 1–3 are green,' and phase 1 includes the golden-oracle foundation (U2), which is explicitly blocked until the user captures the Qt5 GPU baseline (D3). But U7's Dependencies list is only 'U4, U6 (coordinator + DIRECT in place)' — it omits U2. An implementer following the dependency list can start (and ship) the MVVM decomposition before the oracle baseline exists, even when D3 is unobtainable — directly contradicting R8 ('committed to only after phases 1–3 land') and the plan's own Headless/oracle-gated narrative, which otherwise defers work when the baseline is missing.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"**MainScreen MVVM decomposition (view vs state vs services)** *(sequenced after phases 1–3 are green)*\",\n        \"**Dependencies:** U4, U6 (coordinator + DIRECT in place).\",\n        \"(4) MVVM decomposition of `MainScreen` (only after the first three are green)\",\n        \"**MVVM is sequenced, not committed upfront (R8):** decompose `MainScreen` only after phases 1–3 are green and re-validated against the human outc...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned concrete coherence findings with the source plan section, severity (P2/P3), direct quoted evidence from the plan, and suggested fixes. Verified the R1-R16/AE1-AE5 contract is fully honored (no dropped origin items), all U1-U8 cross-references resolve, lifecycle-seam-first ordering matches the origin, and D3 pre-flight gating is consistent; flagged the MVVM gate-vs-dependency contradiction (U7) and the unanchored R16 MainScreen revalidation (U8)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md",
+          "result": "passed",
+          "summary": "Read the full implementation plan."
+        },
+        {
+          "command": "read docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md",
+          "result": "passed",
+          "summary": "Read the full origin requirements doc to check the R1-R16/AE1-AE5 contract."
+        },
+        {
+          "command": "grep/sed extraction of U2/U7 dependency and gate lines",
+          "result": "passed",
+          "summary": "Verified exact text of U7 Dependencies (U4, U6) and U2 pre-flight gate for the MVVM-gate finding."
+        }
+      ],
+      "validationOutput": [
+        "Requirement/acceptance coverage: R1-R16 and AE1-AE5 all mapped to implementation units; no origin content dropped.",
+        "Cross-references: all U1-U8 IDs resolve; no stale or nonexistent section references found.",
+        "Terminology: 'coordinator'/'OptimizeCoordinator', 'DirectOptimizer', 'two-tier oracle', 'cumulative budget 10k/20k/30k', and 'bounded manually smoke' are used consistently.",
+        "Coherence finding 1 (P2, gated_auto, conf 75): MVVM 'after phases 1-3 green' gate contradictes U7 dependency list (omits U2/oracle baseline).",
+        "Coherence finding 2 (P3, gated_auto, conf 50): R16 'API revalidation across MainScreen' has no MainScreen file in U8 Files list."
+      ],
+      "residualRisks": [
+        "MVVM can be started before the oracle baseline capture because U7 deps omit U2 despite the stated gate.",
+        "Tier-2 numeric tolerances undefined until U2 baseline capture.",
+        "U3 not represented as a distinct step in the high-level phase narrative."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Review-only task; no repository files were modified. Findings concern the plan document docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md.",
+      "reviewFindings": [
+        "P2 gated_auto conf 75 (plan U7): MVVM gate requires phases 1-3 green incl. oracle (U2), but U7 Dependencies list only U4/U6 - implementer could ship MVVM before the D3 baseline exists, contradicting R8.",
+        "P3 gated_auto conf 50 (plan U8): R16 requires Qt5-API revalidation across MainScreen, but U8 Files list omits mainscreen.cpp/header - touchpoint unanchored.",
+        "No blockers at P0/P1; no dropped origin requirements/acceptance examples."
+      ],
+      "manualNotes": "Findings target the PLAN document only, as assigned. The MVVM-gate finding is the only genuine plan-internal contradiction and is flagged at 75 (charitable reading: dependency list is authoritative and MVVM is intentionally decoupled from the oracle baseline - but the plan does not say that, so the reader cannot tell)."
+    }
+  }
+}

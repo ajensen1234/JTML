@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "e6398912-9264-46ad-9015-f750ed602acc",
+  "title": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).",
+  "goal": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).\nFIRST read the plan fully at: /home/ajj/repo/uf/JTML/docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md. Also read the origin requirements doc at: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md so you can check that the plan honors the R1-R16 / AE1-AE5 contract without dropping origin content. You may skim the repo (CMakeLists.txt, pixi.toml, src/core/optimizer_manager.cpp, example_studies/Kneel_1) to verify feasibility, but your findings are about the PLAN document.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema, no prose outside it:\n{ reviewer: string, findings: [ {...} ], residual_risks: [string], deferred_questions: [string] }\n\nEach finding: title(<=10 words), severity(\"P0\"|\"P1\"|\"P2\"|\"P3\"), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type(\"error\"|\"omission\"), autofix_class(\"safe_auto\"|\"gated_auto\"|\"manual\"), confidence(in 0,25,50,75,100), evidence(ARRAY of >=1 direct quote from the plan), suggested_fix (required for safe_auto/gated_auto).\n\nRules:\n- severity: P0-P3 only. finding_type error|omission. confidence anchors: 0/25 suppressed (never emit), 50 = FYI advisory, 75 = verified with concrete downstream consequence, 100 = airtight.\n- Do not flag pedantic style, other-persona territory, already-resolved items, pre-existing repo issues the plan didn't introduce, speculative future-work, or lint-caught issues.\n- Strawman rule: \"do nothing/defer to later\" is not a real alternative.\n- Focus on: plan-internal consistency (U-ID references, dependencies, phase ordering), feasibility gaps, scope creep vs the origin contract, missing test scenarios, risk handling, and whether an implementer can start without inventing decisions.\n</output-contract>\n\nReturn the JSON as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T15:07:50.519Z",
+  "updatedAt": "2026-08-07T15:11:25.907Z",
+  "runs": [
+    {
+      "runId": "47acefe3",
+      "mode": "single",
+      "agent": "ce-design-lens-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T15:11:25.907Z",
+      "completedAt": "2026-08-07T15:11:25.907Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/47acefe3_ce-design-lens-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/47acefe3_ce-design-lens-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "Based on my full read of the plan and requirements, verification against the repo (CMakeLists.txt, pixi.toml, optimizer_manager.cpp, data_structures_6D.*, mainscreen.cpp), here are my findings.\n\n```json\n{\n  \"reviewer\": \"ce-design-lens-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"Tier-1 golden depends on not-yet-extracted optimizer\",\n      \"severity\": \"P1\",\n      \"section\": \"U2 Golden-oracle / U5 Extract pure DIRECT\",\n      \"why_it_matters\": \"U2 claims to run the Tier-1 analytic CPU golden 'in CI' but that golden exercises the extracted pure DirectOptimizer, which is only created in U5; U2 lists Dependencies as U1 only. An implementer starting U2 cannot build Tier-1 (no CPU-runnable DIRECT exists until U3 decouples data structures and U5 extracts the loop), so they will stall or invent a temporary Tier-1 against the still-CUDA-coupled inline loop. The same Tier-1 artifact is double-claimed by both U2 (under U2) and U5 (as a U5 requirement), with no resolved sequencing.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"U2 **Requirements:** R1, R2, R3, AE2, D3. **Dependencies:** U1 (harness to run the oracle target).\",\n        \"U2 **Approach:** ... **Tier-1** analytic CPU golden runs in CI; **Tier-2** GPU tolerance-based gate runs only under the `oracle` label...\",\n        \"**Two-tier oracle (R3):** Tier 1 = pure-CPU analytic golden (bit-exact, CI) for the extracted DIRECT algorithm against an analytic cost function\",\n        \"U5 **Requirements:** R2, R15, AE2 (Tier-1), Tier-1 golden.\"\n      ],\n      \"suggested_fix\": \"Restate U2 as baseline-capture + oracle-spec only (fixtures, baseline.json, tolerance recording in golden_oracle.org) and move the Tier-1 analytic CPU golden test into U5 (where the extracted DirectOptimizer exists), or add U5 as a hard dependency of the Tier-1 portion of U2 and reorder so the extracted-optimizer unit precedes the Tier-1 gate.\"\n    },\n    {\n      \"title\": \"...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 4 concrete findings with files/sections and severities (U2/U5 Tier-1 dependency gap P1, U4 vs U5/U6 rewire ambiguity P2, U3 wrong call-site refs P3, QtTest Qt5/Qt6 naming P3), each with direct plan quotes, confidence, autofix class, and fixes; plus residual_risks and deferred_questions."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "grep/sed against CMakeLists.txt, pixi.toml, optimizer_manager.cpp, data_structures_6D.{h,cpp}, mainscreen.cpp",
+          "result": "passed",
+          "summary": "Verified plan's cited Point6D(Pose) call sites are mislocated and the ctor has no production call sites; confirmed project declares LANGUAGES CXX CUDA and Qt5 pin."
+        }
+      ],
+      "validationOutput": [
+        "Plan read in full alongside origin requirements; R1-R16/AE1-AE5 contract traced. Findings target plan-internal dependency ordering, runtime feasibility seams, and accuracy of cited code locations; no scope drift vs origin contract found. Origin content (R4/R7 cancelled-state coverage, AE1-AE5, D3 gate) is honored."
+      ],
+      "residualRisks": [
+        "Pre-existing latent pose-ctor bug (xa assigned twice, za never set) and no call sites affecting U3 scope; global CUDA/Qt5 CMake flags vs CUDA-free headless target; D3 GPU-baseline gate scheduling; U4/U6 production rewire ordering."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files were modified; this is a document-review-only task returning findings on the implementation plan.",
+      "reviewFindings": [
+        "P1: docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md (U2/U5) - Tier-1 analytic golden sequenced before the optimizer it tests; order U5 before Tier-1 or move Tier-1 into U5",
+        "P2: same plan (U4/U6) - production GUI binding vs real-cost rewire ordering unspecified; state what the coordinator worker runs between U4 and U5",
+        "P3: same plan (U3) - cited Point6D(Pose) call sites (optimizer_manager.cpp:1353, mainscreen.cpp:1376) are value/copy ctors; ctor has no call sites",
+        "P3: same plan (Key Decisions/U1) - Qt6::Test naming while project is Qt5 until U8"
+      ],
+      "manualNotes": "No blockers at P0. Findings are design/implementation-decision gaps, not file edits; the parent can fold in the U2/U5 reorder and U4/U6 wiring decision before the implementer starts U2/U4."
+    }
+  }
+}

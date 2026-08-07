@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "id": "091ff81c-389e-40bd-9760-5ad1974e1eb1",
+  "title": "You are a specialist document reviewer for an engineering requirements document.",
+  "goal": "You are a specialist document reviewer for an engineering requirements document.\nFIRST: read the entire document at the path: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md. Also, if useful, read the referenced file /home/ajj/repo/uf/JTML/golden_oracle.org and skim the repo (src/gui/mainscreen.cpp, src/core/optimizer_manager.cpp) for context, but your findings must be about the DOCUMENT.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema. No prose, no markdown fences, no explanation outside the JSON object.\n\nSchema (object with 4 required keys):\n- reviewer: string (your persona name)\n- findings: array of finding objects\n- residual_risks: array of strings\n- deferred_questions: array of strings\n\nEach finding object requires: title (<=10 words), severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence, and optional suggested_fix.\n\nHard constraints:\n- severity: one of \"P0\",\"P1\",\"P2\",\"P3\" only.\n- finding_type: one of \"error\" (document says something wrong) or \"omission\" (document forgot to say something).\n- autofix_class: one of \"safe_auto\" (one clear correct fix, silent), \"gated_auto\" (concrete fix but touches meaning/scope, needs sign-off), \"manual\" (needs human judgment).\n- confidence: exactly one of 0,25,50,75,100. 0/25 are suppressed (never emit). 50 = advisory/FYI (verifiable but \"nothing breaks\"). 75 = verified real issue with a concrete downstream consequence an implementer/reader will hit. 100 = airtight, will occur in practice.\n- evidence: an ARRAY of strings with >=1 element, each a direct quote from the document. NOT a single string.\n- why_it_matters: lead with the observable consequence to the reader/implementer; 2-4 sentences; explain why the fix resolves it.\n- suggested_fix: required for safe_auto and gated_auto.\n- strawman rule: a \"do nothing / accept it / defer to later\" alternative is not a real alternative; if the only alternatives are strawmen, classify safe_auto or gated_auto.\nSuppress: pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the doc, pre-existing repo issues the document did not introduce, speculative future-work, theoretical concerns without baseline data, things a linter would catch.\nIf you find no issues, return an empty findings array but still populate residual_risks/deferred_questions.\n</output-contract>\n\nReturn the JSON object as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:39:58.096Z",
+  "updatedAt": "2026-08-07T14:43:12.954Z",
+  "runs": [
+    {
+      "runId": "8f60c4af",
+      "mode": "single",
+      "agent": "ce-product-lens-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T14:43:12.954Z",
+      "completedAt": "2026-08-07T14:43:12.954Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/8f60c4af_ce-product-lens-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/8f60c4af_ce-product-lens-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "{\n  \"reviewer\": \"ce-product-lens-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"Full MVVM decomposition may exceed the stated outcome\",\n      \"severity\": \"P2\",\n      \"section\": \"Requirements (R8-R10) / Success Criteria\",\n      \"why_it_matters\": \"A planner following this doc will commit to a full MVVM decomposition of a 5,806-line god object and a Qt6 migration to satisfy a Success Criterion that is purely about testability. The stated human outcome — 'change an algorithm or a button path and get a fast headless pass/fail' — is already delivered by the lifecycle seam (R4-R7), the golden-oracle gate, the headless suite, and CI; full presentation-layer decomposition is a separable, much larger bet. The doc never examines the 80/20 path (ship phases 1-3, verify the outcome, then decide if MVVM is still warranted), so the reader cannot tell whether R8-R10 is load-bearing for the goal or a parallel ambition that roughly doubles effort and risk.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"**Human outcome:** A change to an algorithm or a button path is verifiable by a fast, headless test — never requiring launching the GUI and clicking to find a hang or regression.\",\n        \"R6. The GUI binds to the coordinator as a thin caller, so the thread/completion logic lives in headless-testable code rather than inside a widget slot.\",\n        \"R8. Decompose `MainScreen` so presentation (widgets, slots, VTK render binding) is separated from app-state/command orchestration (frames, models, selection, save/load, optimize intent) and from services (optimization, persistence, cost, compute).\"\n      ],\n      \"suggested_fix\": \"Explicitly state whether R8-R10 is required to meet the stated Success Criterion or is a separate maintainability goal; if the latter, re-sequence so phases 1-3 (oracle + runner + CI, lifecycle seam, DIRECT/cost seams) land and are validated against the human outcome before commit...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 5 product-lens findings (ce-product-lens-reviewer) with severity, section, evidence quotes, confidence, and suggested fixes targeting the requirements document at docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md; cross-checked repo facts (mainscreen.cpp=5806 lines, optimizer_manager.cpp=1722, commented-out testing, single-documented oracle case) to ground the findings."
+        }
+      ],
+      "changedFiles": [
+        "none (review-only; no edits made)"
+      ],
+      "testsAddedOrUpdated": [
+        "none"
+      ],
+      "commandsRun": [
+        {
+          "command": "wc -l src/gui/mainscreen.cpp src/core/optimizer_manager.cpp; grep add_subdirectory(test)/enable_testing in CMakeLists.txt",
+          "result": "passed",
+          "summary": "Verified 5806/1722 line counts and commented-out testing match document claims."
+        },
+        {
+          "command": "ls example_studies/Kneel_1 example_studies test",
+          "result": "passed",
+          "summary": "Confirmed Kneel_1 fixtures exist; multiple study cases present but only Kneel_1 documented as oracle."
+        }
+      ],
+      "validationOutput": [
+        "Findings calibrated per product-lens anchored rubric (premise/strategy domain): confidence 75 for premise/strategy concerns, 50 for advisory note; no speculative-future items emitted; suppressed non-product concerns (architecture, security, style, scope-sizing, coherence)."
+      ],
+      "residualRisks": [
+        "Oracle determinism/tolerance unresolved (P1-gated finding).",
+        "Single-fixture oracle coverage bound the regression guarantee.",
+        "Manual Qt5 GPU baseline is the unconfirmed critical-path gate.",
+        "Feasibility of headless Qt offscreen in pixi assumed but unverified.",
+        "Qt6-bundled-with-refactor regression attribution risk (advisory)."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files modified; output is a document review artifact only.",
+      "reviewFindings": [
+        "p2: MVVM decomposition scope may exceed stated testability outcome (omission)",
+        "p1: Oracle determinism/tolerance deferred as routine though load-bearing (omission)",
+        "p2: Single-fixture oracle bounds the regression guarantee (omission)",
+        "p2: Manual Qt5 baseline is unconfirmed critical-path gate (omission)",
+        "p3: Qt6 migration bundled with refactor risk not examined (advisory)"
+      ],
+      "manualNotes": "Product-lens (premise/strategy). Internal developer/research tool, so weighted simplicity, workflow integration, and maintenance surface; competitive positioning not applicable. Answers outside criterion-1 (output-contract JSON schema) are delivered in the review-findings block above."
+    }
+  }
+}

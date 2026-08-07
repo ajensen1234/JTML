@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "e2ecddce-883b-40fb-9b00-adecda4890c9",
+  "title": "You are a specialist document reviewer for an engineering requirements document.",
+  "goal": "You are a specialist document reviewer for an engineering requirements document.\nFIRST: read the entire document at the path: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md. Also, if useful, read the referenced file /home/ajj/repo/uf/JTML/golden_oracle.org and skim the repo (src/gui/mainscreen.cpp, src/core/optimizer_manager.cpp) for context, but your findings must be about the DOCUMENT.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema. No prose, no markdown fences, no explanation outside the JSON object.\n\nSchema (object with 4 required keys):\n- reviewer: string (your persona name)\n- findings: array of finding objects\n- residual_risks: array of strings\n- deferred_questions: array of strings\n\nEach finding object requires: title (<=10 words), severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence, and optional suggested_fix.\n\nHard constraints:\n- severity: one of \"P0\",\"P1\",\"P2\",\"P3\" only.\n- finding_type: one of \"error\" (document says something wrong) or \"omission\" (document forgot to say something).\n- autofix_class: one of \"safe_auto\" (one clear correct fix, silent), \"gated_auto\" (concrete fix but touches meaning/scope, needs sign-off), \"manual\" (needs human judgment).\n- confidence: exactly one of 0,25,50,75,100. 0/25 are suppressed (never emit). 50 = advisory/FYI (verifiable but \"nothing breaks\"). 75 = verified real issue with a concrete downstream consequence an implementer/reader will hit. 100 = airtight, will occur in practice.\n- evidence: an ARRAY of strings with >=1 element, each a direct quote from the document. NOT a single string.\n- why_it_matters: lead with the observable consequence to the reader/implementer; 2-4 sentences; explain why the fix resolves it.\n- suggested_fix: required for safe_auto and gated_auto.\n- strawman rule: a \"do nothing / accept it / defer to later\" alternative is not a real alternative; if the only alternatives are strawmen, classify safe_auto or gated_auto.\nSuppress: pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the doc, pre-existing repo issues the document did not introduce, speculative future-work, theoretical concerns without baseline data, things a linter would catch.\nIf you find no issues, return an empty findings array but still populate residual_risks/deferred_questions.\n</output-contract>\n\nReturn the JSON object as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:39:58.247Z",
+  "updatedAt": "2026-08-07T14:42:34.976Z",
+  "runs": [
+    {
+      "runId": "af726dbf",
+      "mode": "single",
+      "agent": "ce-scope-guardian-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T14:42:34.975Z",
+      "completedAt": "2026-08-07T14:42:34.975Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/af726dbf_ce-scope-guardian-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/af726dbf_ce-scope-guardian-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "```json\n{\n  \"reviewer\": \"ce-scope-guardian-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"MVVM decomposition and CI have no acceptance example\",\n      \"severity\": \"P2\",\n      \"section\": \"Acceptance Examples\",\n      \"why_it_matters\": \"The MVVM decomposition (R8-R10) is half of the document's own stated deliverable (it is in the title and problem frame), yet no acceptance example demonstrates it, and neither R13 (CI) nor R8-R10 appear in any of AE1-AE3. A planner/implementer reading the acceptance examples will find no verifiable gate proving the seams moved out of MainScreen or that CI actually gates every change, so the 'handoff quality' safety net is silent on exactly the structural-change goal the effort exists to deliver. Adding acceptance examples for R8-R10 and R13 closes this gap so the headline outcomes are testably attested.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"AE1. **Covers R4, R5, R7.** Given a headless `QCoreApplication` and a stub cost function, when the coordinator runs an optimize cycle to completion (and again after a stop), it returns to the idle state and accepts another launch; no test hangs or deadlocks.\",\n        \"AE2. **Covers R1, R2, R16.** Given the `golden_oracle.org` Kneel_1 case...\",\n        \"AE3. **Covers R11, R12.** The default test target runs and passes with no GPU and no display; real-VTK/GPU cases require the explicit flag/target.\",\n        \"R8. Decompose `MainScreen` so presentation (widgets, slots, VTK render binding) is separated from app-state/command orchestration (frames, models, selection, save/load, optimize intent) and from services (optimization, persistence, cost, compute).\",\n        \"R13. Provide a working CI on the pixi build that configures, builds, and runs the headless test suite so every change is gated.\"\n      ],\n      \"suggested_fix\": \"Add an AE4 targeting R8-R10 (e.g., assert the coordinator/services no longer live in Main...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 3 concrete, document-quoted findings with severity mapped to the document's own stated goals/constraints (MVVM acceptance gap P2, R7 GPU-init headless contradiction P2, nonexistent seam/test-gate list P2), plus residual-risks and deferred-questions arrays. Each finding carries evidence quotes, confidence, finding_type, autofix_class, and suggested_fix."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "grep -rn \"seam/test-gate\\|seam order\\|test-gate order\" docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md",
+          "result": "passed",
+          "summary": "Confirmed the only 'seam/test-gate order' occurrence is the self-referential handoff-quality line; no ordered seam list exists in the doc, supporting Finding 3."
+        }
+      ],
+      "validationOutput": [
+        "Read full target doc and golden_oracle.org; skimmed src/gui/mainscreen.cpp (5806-line god object confirmed). Reviewed all 16 requirements, 3 acceptance examples, success criteria, scope boundaries, and deferred questions."
+      ],
+      "residualRisks": [
+        "none"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files changed — reviewer-only task; findings returned as structured JSON.",
+      "reviewFindings": [
+        "P2: Acceptance Examples omit any gate for MVVM decomposition (R8-R10) and CI (R13)",
+        "P2: R7 GPU-init-failure coverage contradicts headless/no-GPU requirement (R4/R5/R11/AE3)",
+        "P2: Handoff-quality references a nonexistent seam/test-gate order list"
+      ],
+      "manualNotes": "Reviewer returned the schema-compliant findings JSON. The Qt6-migration breadth (R16) was considered and deliberately suppressed as a decided product decision (product-lens), not a scope defect."
+    }
+  }
+}

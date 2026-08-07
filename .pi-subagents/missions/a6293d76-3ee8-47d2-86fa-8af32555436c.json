@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "a6293d76-3ee8-47d2-86fa-8af32555436c",
+  "title": "You are a specialist document reviewer for an engineering requirements document.",
+  "goal": "You are a specialist document reviewer for an engineering requirements document.\nFIRST: read the entire document at the path: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md. Also, if useful, read the referenced file /home/ajj/repo/uf/JTML/golden_oracle.org and skim the repo (src/gui/mainscreen.cpp, src/core/optimizer_manager.cpp) for context, but your findings must be about the DOCUMENT.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema. No prose, no markdown fences, no explanation outside the JSON object.\n\nSchema (object with 4 required keys):\n- reviewer: string (your persona name)\n- findings: array of finding objects\n- residual_risks: array of strings\n- deferred_questions: array of strings\n\nEach finding object requires: title (<=10 words), severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence, and optional suggested_fix.\n\nHard constraints:\n- severity: one of \"P0\",\"P1\",\"P2\",\"P3\" only.\n- finding_type: one of \"error\" (document says something wrong) or \"omission\" (document forgot to say something).\n- autofix_class: one of \"safe_auto\" (one clear correct fix, silent), \"gated_auto\" (concrete fix but touches meaning/scope, needs sign-off), \"manual\" (needs human judgment).\n- confidence: exactly one of 0,25,50,75,100. 0/25 are suppressed (never emit). 50 = advisory/FYI (verifiable but \"nothing breaks\"). 75 = verified real issue with a concrete downstream consequence an implementer/reader will hit. 100 = airtight, will occur in practice.\n- evidence: an ARRAY of strings with >=1 element, each a direct quote from the document. NOT a single string.\n- why_it_matters: lead with the observable consequence to the reader/implementer; 2-4 sentences; explain why the fix resolves it.\n- suggested_fix: required for safe_auto and gated_auto.\n- strawman rule: a \"do nothing / accept it / defer to later\" alternative is not a real alternative; if the only alternatives are strawmen, classify safe_auto or gated_auto.\nSuppress: pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the doc, pre-existing repo issues the document did not introduce, speculative future-work, theoretical concerns without baseline data, things a linter would catch.\nIf you find no issues, return an empty findings array but still populate residual_risks/deferred_questions.\n</output-contract>\n\nReturn the JSON object as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:39:58.024Z",
+  "updatedAt": "2026-08-07T14:43:55.974Z",
+  "runs": [
+    {
+      "runId": "a8f2db82",
+      "mode": "single",
+      "agent": "ce-feasibility-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T14:43:55.974Z",
+      "completedAt": "2026-08-07T14:43:55.974Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/a8f2db82_ce-feasibility-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/a8f2db82_ce-feasibility-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "I have enough evidence from the document and codebase to complete the review.\n\n```json\n{\n  \"reviewer\": \"ce-feasibility-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"Qt6 migration scoped too small: VTK and pixi pinned to Qt5\",\n      \"severity\": \"P1\",\n      \"section\": \"R16 / Key Decision 'Migrate to Qt6' / Deferred to Planning\",\n      \"why_it_matters\": \"An implementer following R16 will find the Qt6 migration is not 'find_package(Qt6)': the whole build is hard-pinned to Qt5 (pixi.toml `qt = \\\"5.*\\\"`, CMake `find_package(Qt5 ...)`, `-DQt5_DIR=$CONDA_PREFIX/lib/cmake/Qt5`), and `vtk_installer.sh` builds VTK explicitly with `-DVTK_QT_VERSION=5`, `-DVTK_USE_QT6=OFF`, and `-DQt6_DIR=\\\"\\\"`. VTK's GUISupportQt/QVTKOpenGLNativeWidget is Qt-major-version-specific, so Qt6 forces a full VTK rebuild plus a pixi qt pin change (5.* -> 6.*) and revalidation of Qt5-API usage across the 5,806-line MainScreen — a much larger, build-machine/GPU-dependent effort than the deferred 'CMake find_package(Qt6)' implies. Listing only 'find_package(Qt6)/autogen' as the migration mechanics understates the seam and will surprise the planner.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"R16. Migrate Qt5 → Qt6 as part of this effort, gated by the golden oracle and the headless suite (both captured pre-migration), so migration regressions are caught headlessly\",\n        \"[Affects R16][Technical] Qt6 migration mechanics (CMake `find_package(Qt6)`), keeping the existing autogen/UI build approach.\",\n        \"Migrate to Qt6, gated by the oracle: the Qt6 migration is real scope here, but behavior is protected by the pre-migration baseline + headless suite.\"\n      ],\n      \"suggested_fix\": \"Expand the R16 migration scope (and its deferred list) to explicitly include: (1) changing the pixi `qt` pin from `5.*` to `6.*` (R14-style declared dependency change), and (2) rebuilding VTK against Qt6 (`-DVTK_USE_QT6=ON`, `-DVTK_QT...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 3 concrete findings (P1 Qt6/VTK-pin migration scope, P2 oracle-gate/CI headless contradiction, P3 test/vtk fixture mismatch) each with severity, section, evidence quotes from the document, and codebase-verified grounding (pixi.toml qt=5.*, vtk_installer.sh VTK_QT_VERSION=5, test/vtk/test_case KR_left_8), plus residual_risks and deferred_questions arrays per the output contract."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md + golden_oracle.org",
+          "result": "passed",
+          "summary": "Full requirements document and oracle spec read."
+        },
+        {
+          "command": "wc/grep/ls CMakeLists.txt, pixi.toml, vtk_installer.sh, test/vtk/test_case, .github/workflows/cmake.yml, optimizer_manager.cpp, mainscreen.cpp",
+          "result": "passed",
+          "summary": "Verified doc's factual assumptions (testing disabled, no test framework in pixi, inert CI) and surfaced Qt5-pinning + fixture mismatches."
+        }
+      ],
+      "validationOutput": [
+        "Document factual claims spot-checked against repo: #add_subdirectory(test)/#enable_testing() commented out (confirmed), no catch2/gtest in pixi.toml (confirmed), .github/workflows/cmake.yml triggers only on 'actions-test' branch (confirmed). Traced golden-oracle/optimize-lifecycle data flows for happy/nil/empty/error paths."
+      ],
+      "residualRisks": [
+        "no blockers in the strict sense; the plan is buildable as a first-phase (oracle/unit-seam harness), but the numeric gate and Qt6 migration are both materially underspecified and GPU-bound"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Document review only; no source files changed.",
+      "reviewFindings": [
+        "P1: R16 Qt6 migration omits VTK rebuild (VTK_QT_VERSION=5 pinned) and pixi qt=5.* pin change - scope bigger than 'find_package(Qt6)'",
+        "P2: golden-oracle gate (F2/AE2/R15) is GPU/VTK-bound and excluded from headless CI, so 'every change gated / fails headlessly' overstates what CI gates",
+        "P3: D2 overstates test/vtk/test_case as oracle-capture fixtures (different left-knee case than Kneel_1 oracle)"
+      ],
+      "manualNotes": "Findings rely on codebase evidence cross-checked against the doc; confidence capped at 75 where behavior depends on undocumented implementation details (e.g., whether a CPU render reference exists). The P1 finding requires the parent/planner to re-scope R16 before planning the Qt6 migration."
+    }
+  }
+}

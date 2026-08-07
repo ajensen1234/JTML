@@ -1,0 +1,156 @@
+{
+  "runId": "d7aac674",
+  "agent": "ce-learnings-researcher",
+  "task": "Planning a refactor of JTML, a Qt5+VTK+CUDA+OpenCV 2D-3D knee-implant registration GUI app (repo root /home/ajj/repo/uf/JTML, C++20, CMake, pixi). Goal: enable fearless editing via (1) a golden-oracle regression gate captured from the known-good Qt5 app (Kneel_1 fixture: silhouettes in example_studies/Kneel_1, femoral STL KR_right_7_fem.stl, pose fem.jts, known-good Labels projections; optimizer settings: trunk/2-branch/1-leaf stages, DIRECT_DILATION, trunk 6px/branch 3px/leaf 1px dilation, trunk range +-30, branch +-20, leaf +-3 with z opened ~100, ~10000 iteration budget); (2) a headless-testable optimize-lifecycle seam: a coordinator owning an idle->running->finished->error(state machine + worker thread, tested with an injected stub cost function under QCoreApplication + QSignalSpy with zero GPU; (3) extracting the pure DIRECT optimizer (ConvexHull/TrisectPotentiallyOptimal/Denormalize/SetSearchRange are currently PRIVATE methods of src/core/optimizer_manager.cpp, hard-coupled to CUDA types GPUMetrics/GPUModel/GPUFrames) behind an injected cost-function boundary (double eval(Point6D)); (4) decomposing MainScreen (src/gui/mainscreen.cpp, 5806 lines) toward MVVM (view/state/services); (5) migrating Qt5->Qt6 (pixi.toml pins qt=5.*; CMake find_package(Qt5); vtk_installer.sh forces -DVTK_QT_VERSION=5 -DVTK_USE_QT6=OFF). There are NO tests (test/ subdir commented out in CMake), NO test framework declared in pixi, and CI (.github/workflows/cmake.yml) is inert boilerplate. test/vtk/test_case is a separate LEFT-knee case. The app entry is src/gui/main.cpp. A prior abandoned attempt added 18 test files + wrapper abstractions (qt_wrappers.h function-pointer wrappers around QFileDialog/QMessageBox, characterize-the-real-god-object tests) rejected as low-value/bunk. AVOID: Qt-mocking wrappers, run-the-real-MainScreen characterization tests, doc sprawl.\n\nReport relevant institutional learnings from docs/solutions/ or repo memory that materially affect this refactor/testability plan.",
+  "exitCode": 0,
+  "usage": {
+    "input": 26764,
+    "output": 9326,
+    "cacheRead": 313856,
+    "cacheWrite": 0,
+    "cost": 0.009736848000000001,
+    "turns": 10
+  },
+  "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+  "attemptedModels": [
+    "openrouter/deepseek/deepseek-v4-flash-0731"
+  ],
+  "modelAttempts": [
+    {
+      "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 26764,
+        "output": 9326,
+        "cacheRead": 313856,
+        "cacheWrite": 0,
+        "cost": 0.009736848000000001,
+        "turns": 10
+      }
+    }
+  ],
+  "durationMs": 171137,
+  "toolCount": 17,
+  "launchContractDigest": "22ebc29e5f70c00e87405f0252b2187cffa1fb123aa51346cc340e56358990e3",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 5 concrete findings, each with repo-relative file paths and severity: (1) HIGH abandoned-attempt failure modes (false confidence + circular tests) in docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md; (2) HIGH R1-R16 decision record/AE1-AE5 contract in same doc; (3) MEDIUM golden_oracle.org settings inconsistency + pre-flight tolerance/reference precondition; (4) MEDIUM wrong-knee data reality (test/vtk/test_case is KR_left_8_* vs example_studies/Kneel_1 right knee) + #add_subdirectory(test)/#enable_testing() commented at CMakeLists.txt:122/129; (5) LOW-MED infra facts (no test framework in pixi.toml, inert .github/workflows/cmake.yml, no AGENTS.md, no initialized memory, RPATH/VTK Qt6 work already in big-main-diff.diff)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "find docs/solutions/ && ls docs/{brainstorms,plans,superpowers}",
+          "result": "passed",
+          "summary": "Confirmed no docs/solutions/ KB exists; docs/brainstorms has exactly one file (the decision record)."
+        },
+        {
+          "command": "cat docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md",
+          "result": "passed",
+          "summary": "Read the full R1-R16 decision record + abandoned-attempt lessons + pre-flight preconditions."
+        },
+        {
+          "command": "cat golden_oracle.org && grep -n test CMakeLists.txt && ls test/vtk/test_case/*.stl",
+          "result": "passed",
+          "summary": "Verified golden_oracle settings (trunk6/branch3/leaf1, DIRECT_DILATION, ranges), test subdir + enable_testing commented out, and left-knee KR_left_8_* fixtures."
+        },
+        {
+          "command": "memory_check + find .memory-bank .claude -type f",
+          "result": "passed",
+          "summary": "Confirmed empty .memory-bank/.claude and no initialized /home/ajj/.pi/memory-md/JTML memory."
+        }
+      ],
+      "validationOutput": [
+        "Verification: test subdir disabled (CMakeLists.txt:122,129); no test framework in pixi.toml; .github/workflows/cmake.yml inert; AGENTS.md absent; only real test C++ is test/nfd/nfd_speed_test.cpp; test/vtk/test_case is left-knee (KR_left_8_*). golden_oracle.org currently reads trunk 6px/branch 3px/leaf 1px (consistent with the task), though the brainstorm flagged it as previously inconsistent - flag for verification before planning."
+      ],
+      "residualRisks": [
+        "No docs/solutions/ tree or initialized memory exists, so the 'institutional learnings' here are the brainstorm decision record + golden_oracle.org rather than a curated learnings KB; the absence is itself signal that the refactor outcome should be captured via /ce-compound.",
+        "golden_oracle.org settings block was flagged inconsistent in the brainstorm; current file content appears corrected but should be re-verified before planning (pre-flight precondition R3/D1).",
+        "DRR/cost reference (CPU vs GPU render) and numeric tolerance values are unresolved pre-conditions for the oracle gate and are not yet recorded in golden_oracle.org.",
+        "Qt5 GPU baseline capture feasibility (D3 pre-flight) is unconfirmed; if unobtainable, R1/R16 needs a fallback (defer Qt6).",
+        "The three 'Resolve Before Planning' decisions are upstream of phase 1 and out of this researcher's scope to resolve."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Research-only task: no source files changed; findings are read-only distillations with no diff.",
+      "reviewFindings": [
+        "info: docs/solutions/ does not exist in this repo; institutional knowledge is concentrated in docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md and golden_oracle.org. No blockers."
+      ],
+      "manualNotes": "Highest-value takeaways for the planner: (1) lifecycle-seam-first sequencing, no-Qt-mocking wrappers, and no real-MainScreen characterization tests are direct lessons from the abandoned 18-file attempt and are codified as R2/R12; (2) the golden oracle is a behavior-preservation gate, not a correctness check - independent ground truth (analytic cost fns + known-good Labels B) is required to avoid circularity; (3) source oracle fixtures exclusively from example_studies/Kneel_1 (right knee), never test/vtk/test_case (left knee); (4) test harness, test framework, and CI are all net-new (R11/R13/R14)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/d7aac674_ce-learnings-researcher_0_transcript.jsonl",
+  "timestamp": 1786114873747
+}

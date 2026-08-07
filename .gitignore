@@ -37,3 +37,6 @@ check
 *.egg-info
 /_deps/
 /compile_commands.json
+
+# agent working artifacts
+.pi-subagents/

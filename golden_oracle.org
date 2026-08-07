@@ -1,0 +1,52 @@
+#+title: Golden Oracle
+
+* Introduction
+These are the best ways that you can generally re-create the performance of JTML on some
+example cases.
+
+* Optimizer Settings
+Generally, trunk, 2 branch, 1 leaf, each has about 10000 iteration budget.
+
+trunk has ranges +/- 30mm/deg for all
+
+branch is +/- 20 for all
+
+leaf is +/- 3 for all except z translation, which is opened to ~100 so that you can help
+with that sensitivity.
+
+The optimizer that you primariy use is DIRECT_DILATION for the femoral implants.
+
+Dilation settings (confirmed): trunk is 6px dilated, branch is 3px dilated, leaf is 1px dilated.
+
+
+* Directory Structure
+
+(A) /home/ajj/repo/uf/JTML/example_studies/Kneel_1 - this is going to be the main source of
+ testing that we have.
+
+(B) /home/ajj/repo/uf/JTML/example_studies/Kneel_1/Labels - this is going to be the cude
+ projected images at the correct values.
+
+(C) /home/ajj/repo/uf/JTML/example_studies/Kneel_1/fem.jts - this is going to be the pose
+ information that you would get at the correctly optimized pose.
+
+(D)/home/ajj/repo/uf/JTML/example_studies/Kneel_1/KR_right_7_fem.stl - this is the femoral
+stl
+
+
+And so, if you wanted to think about this, i'm going to label each of the above
+files/directory A/B/C/D so that we can reference them cleanly.
+
+If you were to load images from (A) as the "base" image (i know it's technically just a
+silhoutte, that's fine), and run the optimizer using the STL (D), then you would get the
+pose results from (C).
+
+There's technically an ML integration step where we run a trained model over the original
+image, and we can certainly test that pathway out, but what that does is set the value of
+the edge image application to the ML binary segmentation, which is effectively the same as
+just using a binary silhoette as the main frame.
+
+
+Let me know if that makes sense. We don't have to worry about the other ones for now, I don't think, this should be a good test case.
+
+And, with tihs, i'm sure you can figure out how to use the other data as well.

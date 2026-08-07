@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "id": "276458ff-204e-48a5-bcbd-321aaa04740a",
+  "title": "You are a specialist document reviewer for an engineering requirements document.",
+  "goal": "You are a specialist document reviewer for an engineering requirements document.\nFIRST: read the entire document at the path: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md. Also, if useful, read the referenced file /home/ajj/repo/uf/JTML/golden_oracle.org and skim the repo (src/gui/mainscreen.cpp, src/core/optimizer_manager.cpp) for context, but your findings must be about the DOCUMENT.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema. No prose, no markdown fences, no explanation outside the JSON object.\n\nSchema (object with 4 required keys):\n- reviewer: string (your persona name)\n- findings: array of finding objects\n- residual_risks: array of strings\n- deferred_questions: array of strings\n\nEach finding object requires: title (<=10 words), severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence, and optional suggested_fix.\n\nHard constraints:\n- severity: one of \"P0\",\"P1\",\"P2\",\"P3\" only.\n- finding_type: one of \"error\" (document says something wrong) or \"omission\" (document forgot to say something).\n- autofix_class: one of \"safe_auto\" (one clear correct fix, silent), \"gated_auto\" (concrete fix but touches meaning/scope, needs sign-off), \"manual\" (needs human judgment).\n- confidence: exactly one of 0,25,50,75,100. 0/25 are suppressed (never emit). 50 = advisory/FYI (verifiable but \"nothing breaks\"). 75 = verified real issue with a concrete downstream consequence an implementer/reader will hit. 100 = airtight, will occur in practice.\n- evidence: an ARRAY of strings with >=1 element, each a direct quote from the document. NOT a single string.\n- why_it_matters: lead with the observable consequence to the reader/implementer; 2-4 sentences; explain why the fix resolves it.\n- suggested_fix: required for safe_auto and gated_auto.\n- strawman rule: a \"do nothing / accept it / defer to later\" alternative is not a real alternative; if the only alternatives are strawmen, classify safe_auto or gated_auto.\nSuppress: pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the doc, pre-existing repo issues the document did not introduce, speculative future-work, theoretical concerns without baseline data, things a linter would catch.\nIf you find no issues, return an empty findings array but still populate residual_risks/deferred_questions.\n</output-contract>\n\nReturn the JSON object as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:39:58.329Z",
+  "updatedAt": "2026-08-07T14:42:35.564Z",
+  "runs": [
+    {
+      "runId": "5ae86eab",
+      "mode": "single",
+      "agent": "ce-adversarial-document-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T14:42:35.564Z",
+      "completedAt": "2026-08-07T14:42:35.564Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/5ae86eab_ce-adversarial-document-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/5ae86eab_ce-adversarial-document-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "All context gathered. The document claims largely verify against the repo (line counts 5806/1722 are accurate; test/CMakeLists disabled; no Catch2 in pixi; `.github/workflows/cmake.yml` is indeed inert boilerplate triggering only on `actions-test`). My findings therefore target the epistemological weaknesses in the plan itself.\n\n```json\n{\n  \"reviewer\": \"ce-adversarial-document-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"Golden oracle is not independent ground truth; anti-circularity overclaim\",\n      \"severity\": \"P1\",\n      \"section\": \"Problem Frame / R2 / Key Decisions (Golden-oracle-first)\",\n      \"why_it_matters\": \"The document asserts that both prior failure modes — false confidence and circularity — are 'structurally prevented' by the golden oracle. But R1 mandates the baseline be 'established from the current, working Qt5 app,' i.e. captured FROM the code-under-test itself. A baseline derived from the code-under-test's own output tests stability, not correctness: any bug present in the current Qt5 app is locked in and will 'pass,' silently reintroducing the false-confidence mode the plan claims to eliminate. The oracle only genuinely prevents the narrower helper-re-derivation circularity; the doc accidentally overstates the guarantee, so an implementer may believe a green oracle disproves a numeric regression when it only proves behavior is unchanged. The doc should explicitly label the oracle as a behavior-preservation (golden-master) gate, and only treat genuinely independent sources (analytic cost functions, known-good projections) as correctness checks.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"manual\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"R2. No test may assert an expected value derived by re-deriving the code-under-test's own math. Extracted logic must be exercised against the golden oracle or another independent ground truth (analytic cost functions, real fixture round-trips, known-good projections).\",\n        \"...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 5 concrete adversarial findings with section references (Problem Frame, R2, R3, R5, R7, AE1, AE2, R16, Key Decisions, Scope, Deferred) and severity P1/P2/P3, plus residual_risks and deferred_questions arrays. All findings quote exact document text as evidence arrays, and repo context (CMakeLists test-disable, pixi.toml, golden_oracle.org settings inconsistency) was used to validate assumptions before adjudicating."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md",
+          "result": "passed",
+          "summary": "Read full requirements document under review (~1100 words)."
+        },
+        {
+          "command": "bash: wc -l src/gui/mainscreen.cpp src/core/optimizer_manager.cpp",
+          "result": "passed",
+          "summary": "Verified claimed line counts (5806 / 1722) match document."
+        },
+        {
+          "command": "bash: grep test/Catch2 in CMakeLists.txt and pixi.toml",
+          "result": "passed",
+          "summary": "Confirmed #add_subdirectory(test) and #enable_testing() commented out; no Catch2/QtTest in pixi."
+        },
+        {
+          "command": "bash: cat .github/workflows/cmake.yml; ls test/; ls example_studies/Kneel_1/",
+          "result": "passed",
+          "summary": "Confirmed inert CI on 'actions-test', test/vtk fixtures present, Kneel_1 fixtures (fem.jts, KR_right_7_fem.stl, Labels) present."
+        },
+        {
+          "command": "bash: grep optimizer dilation settings in golden_oracle.org",
+          "result": "passed",
+          "summary": "Found inconsistency: 'branch is 6px dilated, branch is 3px dilated' (trunk setting missing) — folded into finding B/residual risk."
+        }
+      ],
+      "validationOutput": [
+        "Document's repo claims (line counts, disabled tests, inert CI, no declared test framework) verified accurate.",
+        "Findings scoped to the document's epistemological quality (premise/assumption/decision stress-testing) per adversarial-reviewer persona; no findings handed off to coherence/feasibility/scope/design/security/product personas.",
+        "Confidence calibration applied: P1/P1/P2 at 75 (normal adversarial ceiling, concrete implementer consequence), P3/P3 at 50 (advisory)."
+      ],
+      "residualRisks": [
+        "Golden-master lock-in: oracle from the code-under-test preserves current values, so latent numerics bugs pass the gate.",
+        "GPU-baseline vs CPU-headless float divergence may make the chosen tolerance flaky or unusable.",
+        "D2 fixture 'usable as-is' unverified despite fixture presence.",
+        "Authoritative oracle source has inconsistent dilation settings (trunk missing)."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Review-only; no files modified.",
+      "reviewFindings": [
+        "P1: docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md - Golden oracle is not independent ground truth; anti-circularity overclaim (R2/Problem Frame)",
+        "P1: same doc - Oracle gate's numeric tolerance undefined and deferred despite R3/AE2 hinging on it (R3/AE2/D1)",
+        "P2: same doc - 'No hangs/deadlock' acceptance lacks timeout mechanism to fail a hang (R5/AE1/R7)",
+        "P3: same doc - Hang diagnosis asserted without root-cause evidence; seam may miss real hang site (Key Decisions)",
+        "P3: same doc - Qt6 migration 'caught headlessly' overstates gate; UI regressions not headless-catchable (R16)"
+      ],
+      "manualNotes": "All reviewed claims verified against the repo before adjudicating. Strongest non-reviewable risk is Finding B: the plan's central regression gate depends on tolerances and an authoritative oracle file that are currently undefined/inconsistent, so 'golden-first' ordering cannot actually gate until a planner resolves them."
+    }
+  }
+}

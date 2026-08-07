@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "id": "8924a2f7-4fd2-4eba-a514-3e290be0d47e",
+  "title": "You are a specialist document reviewer for an engineering requirements document.",
+  "goal": "You are a specialist document reviewer for an engineering requirements document.\nFIRST: read the entire document at the path: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md. Also, if useful, read the referenced file /home/ajj/repo/uf/JTML/golden_oracle.org and skim the repo (src/gui/mainscreen.cpp, src/core/optimizer_manager.cpp) for context, but your findings must be about the DOCUMENT.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema. No prose, no markdown fences, no explanation outside the JSON object.\n\nSchema (object with 4 required keys):\n- reviewer: string (your persona name)\n- findings: array of finding objects\n- residual_risks: array of strings\n- deferred_questions: array of strings\n\nEach finding object requires: title (<=10 words), severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence, and optional suggested_fix.\n\nHard constraints:\n- severity: one of \"P0\",\"P1\",\"P2\",\"P3\" only.\n- finding_type: one of \"error\" (document says something wrong) or \"omission\" (document forgot to say something).\n- autofix_class: one of \"safe_auto\" (one clear correct fix, silent), \"gated_auto\" (concrete fix but touches meaning/scope, needs sign-off), \"manual\" (needs human judgment).\n- confidence: exactly one of 0,25,50,75,100. 0/25 are suppressed (never emit). 50 = advisory/FYI (verifiable but \"nothing breaks\"). 75 = verified real issue with a concrete downstream consequence an implementer/reader will hit. 100 = airtight, will occur in practice.\n- evidence: an ARRAY of strings with >=1 element, each a direct quote from the document. NOT a single string.\n- why_it_matters: lead with the observable consequence to the reader/implementer; 2-4 sentences; explain why the fix resolves it.\n- suggested_fix: required for safe_auto and gated_auto.\n- strawman rule: a \"do nothing / accept it / defer to later\" alternative is not a real alternative; if the only alternatives are strawmen, classify safe_auto or gated_auto.\nSuppress: pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the doc, pre-existing repo issues the document did not introduce, speculative future-work, theoretical concerns without baseline data, things a linter would catch.\nIf you find no issues, return an empty findings array but still populate residual_risks/deferred_questions.\n</output-contract>\n\nReturn the JSON object as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:39:58.170Z",
+  "updatedAt": "2026-08-07T14:43:07.159Z",
+  "runs": [
+    {
+      "runId": "a9f2e840",
+      "mode": "single",
+      "agent": "ce-design-lens-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T14:43:07.159Z",
+      "completedAt": "2026-08-07T14:43:07.159Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/a9f2e840_ce-design-lens-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/a9f2e840_ce-design-lens-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "```json\n{\n  \"reviewer\": \"ce-design-lens-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"Failure/cancel collapse into idle; no error state for view\",\n      \"severity\": \"P1\",\n      \"section\": \"R7 / F1 / R4\",\n      \"why_it_matters\": \"The coordinator state machine is defined only as idle → running → finished → idle, yet R7 makes failure and stop return to idle while simultaneously 'surfacing an error into the UI state'. That requires the error to live somewhere the view can render, but the document never specifies the error state, how it is displayed, how it is cleared, or whether re-launch dismisses it. On the exact hang-prone seam this plan exists to fix, an implementer will guess at the error/cancel interaction model, producing a UI that either never shows why an optimize died or shows a stale error on the next launch. Defining the error surface (distinct state vs. transient error payload consumed by the thin view, plus its lifecycle) removes the guess.\",\n      \"finding_type\": \"omission\",\n      \"autofix_class\": \"gated_auto\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"a failed cost/GPU init surfaces an error into the UI state and returns to idle without deadlock; a stop request returns to idle promptly.\",\n        \"the coordinator moves idle → running → finished → idle\",\n        \"a coordinator/orchestration object ... owns the state machine (idle → running → finished → idle) and the worker thread\"\n      ],\n      \"suggested_fix\": \"State explicitly whether failure/stop produce a distinct terminal state (e.g. error/cancelled) or a transient error/cancel signal consumed by the thin view, and specify how the view renders and clears it and whether re-launch resets it.\"\n    },\n    {\n      \"title\": \"Stop/cancel propagation unspecified; 'promptly' undefined on hang seam\",\n      \"severity\": \"P1\",\n      \"section\": \"R7 / F1\",\n      \"why_it_matters\": \"The stop path is written as 'a stop request returns to idle promptly', but nothing defines how the stop request reache...",
+  "acceptance": {
+    "status": "rejected",
+    "evidenceStatus": "rejected",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "attestation",
+        "status": "failed",
+        "message": "Structured acceptance report not found."
+      }
+    ],
+    "verifyRuns": [],
+    "childReportParseError": "Structured acceptance report not found."
+  }
+}

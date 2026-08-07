@@ -1,0 +1,155 @@
+{
+  "runId": "c7c77c66",
+  "agent": "ce-best-practices-researcher",
+  "task": "Research current engineering best practices for: (a) slowly refactoring a large untested legacy C++ GUI god object toward MVVM/testability (strangler pattern, characterization testing, dependency injection, seams); (b) choosing between Catch2 and QtTest for a mixed pure-logic + Qt application test suite; (c) golden-master / golden-file regression testing of deterministic compute (numerics tolerance, CPU-vs-GPU determinism concerns for a CUDA/DRR renderer). Planning a refactor of JTML, a Qt5+VTK+CUDA+OpenCV 2D-3D knee-implant registration GUI app (repo root /home/ajj/repo/uf/JTML, C++20, CMake, pixi). Goal: enable fearless editing via (1) a golden-oracle regression gate captured from the known-good Qt5 app (Kneel_1 fixture: silhouettes in example_studies/Kneel_1, femoral STL KR_right_7_fem.stl, pose fem.jts, known-good Labels projections; optimizer settings: trunk/2-branch/1-leaf stages, DIRECT_DILATION, trunk 6px/branch 3px/leaf 1px dilation, trunk range +-30, branch +-20, leaf +-3 with z opened ~100, ~10000 iteration budget); (2) a headless-testable optimize-lifecycle seam: a coordinator owning an idle->running->finished->error(state machine + worker thread, tested with an injected stub cost function under QCoreApplication + QSignalSpy with zero GPU; (3) extracting the pure DIRECT optimizer (ConvexHull/TrisectPotentiallyOptimal/Denormalize/SetSearchRange are currently PRIVATE methods of src/core/optimizer_manager.cpp, hard-coupled to CUDA types GPUMetrics/GPUModel/GPUFrames) behind an injected cost-function boundary (double eval(Point6D)); (4) decomposing MainScreen (src/gui/mainscreen.cpp, 5806 lines) toward MVVM (view/state/services); (5) migrating Qt5->Qt6 (pixi.toml pins qt=5.*; CMake find_package(Qt5); vtk_installer.sh forces -DVTK_QT_VERSION=5 -DVTK_USE_QT6=OFF). There are NO tests (test/ subdir commented out in CMake), NO test framework declared in pixi, and CI (.github/workflows/cmake.yml) is inert boilerplate. test/vtk/test_case is a separate LEFT-knee case. The app entry is src/gui/main.cpp. A prior abandoned attempt added 18 test files + wrapper abstractions (qt_wrappers.h function-pointer wrappers around QFileDialog/QMessageBox, characterize-the-real-god-object tests) rejected as low-value/bunk. AVOID: Qt-mocking wrappers, run-the-real-MainScreen characterization tests, doc sprawl.",
+  "exitCode": 0,
+  "usage": {
+    "input": 53846,
+    "output": 11731,
+    "cacheRead": 495616,
+    "cacheWrite": 0,
+    "cost": 0.015878808,
+    "turns": 12
+  },
+  "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+  "attemptedModels": [
+    "openrouter/deepseek/deepseek-v4-flash-0731"
+  ],
+  "modelAttempts": [
+    {
+      "model": "openrouter/deepseek/deepseek-v4-flash-0731",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 53846,
+        "output": 11731,
+        "cacheRead": 495616,
+        "cacheWrite": 0,
+        "cost": 0.015878808,
+        "turns": 12
+      }
+    }
+  ],
+  "durationMs": 227343,
+  "toolCount": 21,
+  "launchContractDigest": "bcd35be0b47b7c1063b7594237e1e45261fe5b9191227130b98b70adbc03562b",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned concrete findings with file paths and severity for all three research areas: DIRECT seam locations (src/core/optimizer_manager.cpp:869,879,1495,1553,1623,1633), Point6D->Pose coupling (include/core/data_structures_6D.h:36, src/core/data_structures_6D.cpp:34), optimizer header CUDA pollution (include/core/optimizer_manager.h:6-20), dead test tree (CMakeLists.txt:122, test/CMakeLists.txt), Qt5 EOL + VTK Qt5 pin (vtk_installer.sh, pixi.toml qt=5.*), MainScreen god object (src/gui/mainscreen.cpp 5806 lines, include/gui/mainscreen.h 79 methods). All tagged high/med/low."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj st / ls / find / cat of repo structure, CMakeLists, pixi.toml, vtk_installer.sh, src tree, test tree",
+          "result": "passed",
+          "summary": "Grounded research in actual repo: confirmed 5806-line mainscreen.cpp, 79 MainScreen:: methods, private DIRECT methods, Point6D Pose coupling, commented-out test/ subdir, inert CI, Qt5 pin, CUDA/VTK includes."
+        },
+        {
+          "command": "grep for DIRECT methods, Point6D/Pose usage, add_subdirectory(test), MainScreen:: count",
+          "result": "passed",
+          "summary": "Confirmed concrete seam line numbers and that only 2 call sites use Point6D(Pose); test tree not wired into build."
+        },
+        {
+          "command": "web_search across 11 queries (strangler/characterization/seams; Catch2 vs QtTest; CUDA/GPU determinism; golden-file/pixel tolerance; Qt6 migration; DIRECT algorithm)",
+          "result": "passed",
+          "summary": "Sourced best practices from Fowler, Feathers (Working Effectively with Legacy Code), NVIDIA CUDA/Warp determinism docs, Catch2 v3 CMake docs, Qt docs, VTK Qt6 support; no deprecated APIs recommended."
+        }
+      ],
+      "validationOutput": [
+        "Read-only research; no code or build executed. Findings grounded in verified repo facts + authoritative current documentation (2026)."
+      ],
+      "residualRisks": [
+        "GPU/cross-platform nondeterminism of CUDA DRR renderer requires tolerance-based Tier-2 golden and per-platform re-capture; Tier-1 CPU golden is bit-exact/portable.",
+        "CI without GPU cannot run Tier-2 silhouette/Labels tests; needs GPU-labeled jobs or skip-if-no-CUDA guards.",
+        "Removing Point6D(Pose) ctor must be verified against sym_trap_functions and call sites optimizer_manager.cpp:1353, mainscreen.cpp:1376.",
+        "Abandoned-attempt history signals over-engineering risk; keep goal-2/3 tests thin.",
+        "Golden gate captures current (not provably correct) optimizer behavior; opened-up z may expose a pre-existing discrepancy, not a regression."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No source changes made — this is a read-only best-practices research deliverable for parent orchestrator.",
+      "reviewFindings": [
+        "high: DIRECT core is pure and extractable but hard-coupled via private methods + EvaluateCostFunction (optimizer_manager.cpp:1437,1495,1553,1623,1633) and Point6D(Pose) (data_structures_6D.h:36). Extraction = behavior-preserving seam.",
+        "high: test/ is dead (root CMakeLists.txt:122 commented; test/CMakeLists.txt only nfd+vtk); no test framework in pixi.toml; CI cmake.yml inert (actions-test branch only, no deps/setup).",
+        "med: optimizer_manager.h:6-20 drags six CUDA .cuh includes; extraction must produce CUDA-free header.",
+        "med: Qt5 EOL for OSS; migration coupled to vtk_installer.sh Qt5 pin and pixi.toml qt=5.* — sequence after golden oracle.",
+        "low: golden_oracle.org settings should be committed as a reproducible fixture."
+      ],
+      "manualNotes": "Recommendation summary: (1) build optimizer-level characterization/golden gate (Tier-1 CPU bit-exact DIRECT via injected std::function cost + analytic fn; Tier-2 tolerance-based Labels/silhouettes) headless with QT_QPA_PLATFORM=offscreen; (2) coordinator state machine = QtTest + QSignalSpy + stub cost, zero GPU; (3) extract DirectOptimizer behind std::function<double(const Point6D&)> after removing Point6D->Pose coupling; (4) MainScreen MVVM via strangler outward from coordinator service (avoid widget-mocking/real-MainScreen tests); (5) Qt5->Qt6 last, coordinated pixi+VTK-installer+CMake change, guarded by the oracle. Test framework: hybrid Catch2 v3 (pure logic + golden comparisons) + QtTest (QObject/threading/widget/model)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/c7c77c66_ce-best-practices-researcher_0_transcript.jsonl",
+  "timestamp": 1786114930138
+}

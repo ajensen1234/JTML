@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "id": "a0d4238b-d67d-4e57-93fb-20e7d5293dac",
+  "title": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).",
+  "goal": "You are a specialist document reviewer of an engineering IMPLEMENTATION PLAN (type refactor).\nFIRST read the plan fully at: /home/ajj/repo/uf/JTML/docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md. Also read the origin requirements doc at: /home/ajj/repo/uf/JTML/docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md so you can check that the plan honors the R1-R16 / AE1-AE5 contract without dropping origin content. You may skim the repo (CMakeLists.txt, pixi.toml, src/core/optimizer_manager.cpp, example_studies/Kneel_1) to verify feasibility, but your findings are about the PLAN document.\n\n<output-contract>\nReturn ONLY valid JSON matching this schema, no prose outside it:\n{ reviewer: string, findings: [ {...} ], residual_risks: [string], deferred_questions: [string] }\n\nEach finding: title(<=10 words), severity(\"P0\"|\"P1\"|\"P2\"|\"P3\"), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type(\"error\"|\"omission\"), autofix_class(\"safe_auto\"|\"gated_auto\"|\"manual\"), confidence(in 0,25,50,75,100), evidence(ARRAY of >=1 direct quote from the plan), suggested_fix (required for safe_auto/gated_auto).\n\nRules:\n- severity: P0-P3 only. finding_type error|omission. confidence anchors: 0/25 suppressed (never emit), 50 = FYI advisory, 75 = verified with concrete downstream consequence, 100 = airtight.\n- Do not flag pedantic style, other-persona territory, already-resolved items, pre-existing repo issues the plan didn't introduce, speculative future-work, or lint-caught issues.\n- Strawman rule: \"do nothing/defer to later\" is not a real alternative.\n- Focus on: plan-internal consistency (U-ID references, dependencies, phase ordering), feasibility gaps, scope creep vs the origin contract, missing test scenarios, risk handling, and whether an implementer can start without inventing decisions.\n</output-contract>\n\nReturn the JSON as your final output.",
+  "status": "completed",
+  "createdAt": "2026-08-07T15:07:50.425Z",
+  "updatedAt": "2026-08-07T15:11:22.760Z",
+  "runs": [
+    {
+      "runId": "45e30fcc",
+      "mode": "single",
+      "agent": "ce-product-lens-reviewer",
+      "status": "completed",
+      "startedAt": "2026-08-07T15:11:22.760Z",
+      "completedAt": "2026-08-07T15:11:22.760Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/45e30fcc_ce-product-lens-reviewer_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/45e30fcc_ce-product-lens-reviewer_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "I've read both the plan and the origin requirements doc fully, and verified key claims against the repo (golden_oracle.org dilation settings confirmed corrected; Kneel_1 fixtures present; CMake test lines still commented; pixi qt still 5.*; no test/golden dirs yet). Now I'll compile my findings.\n\n```json\n{\n  \"reviewer\": \"ce-product-lens-reviewer\",\n  \"findings\": [\n    {\n      \"title\": \"U5 misattributes AE2 to Tier-1 analytic test\",\n      \"severity\": \"P2\",\n      \"section\": \"U5 (Extract the pure DIRECT optimizer) / Requirements Trace\",\n      \"why_it_matters\": \"AE2 in the origin contract is specifically the Kneel_1 GPU oracle lesson (Tier-2 tolerance gate), but U5 lists 'AE2 (Tier-1)' as covered by its pure-CPU analytic test, which runs in CI with an injected sphere/quadratic cost. An implementer will read this as 'U5 satisfies AE2' and may skip or defer the real GPU oracle, believing the acceptance example is already met. The mismatch is compounded by the Requirements Trace block, which correctly scopes AE2 to 'Kneel_1 oracle within tolerance'.\",\n      \"finding_type\": \"error\",\n      \"autofix_class\": \"manual\",\n      \"confidence\": 75,\n      \"evidence\": [\n        \"**Requirements:** R2, R15, AE2 (Tier-1), Tier-1 golden.\",\n        \"Happy path: analytic sphere/quadratic cost (e.g. `f = Σ(p−c)²` on the unit cube) converges to the known min within tolerance; returns the argmin (`Covers AE2` Tier-1, independent ground truth per R2).\",\n        \"AE2 (Covers R1,R2,R16 — Kneel_1 oracle within tolerance)\"\n      ],\n      \"suggested_fix\": \"Remove 'AE2' from U5's Requirements list (keep Tier-1). AE2 is satisfied only by U2's captured baseline and U6's post-rewire GPU oracle; label U5 as covering the Tier-1 analytic golden, not AE2.\"\n    },\n    {\n      \"title\": \"R7b real-GPU-init-failure test has no owning unit\",\n      \"severity\": \"P2\",\n      \"section\": \"U4 (Headless optimize-coordinator + worker) / R7b\",\n      \"why_it_matters\": \"Origin R7b requires the real GPU-init-failure path to ...",
+  "acceptance": {
+    "status": "rejected",
+    "evidenceStatus": "rejected",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "attestation",
+        "status": "failed",
+        "message": "Structured acceptance report not found."
+      }
+    ],
+    "verifyRuns": [],
+    "childReportParseError": "Structured acceptance report not found."
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "id": "4ab5b2c9-a3c7-4fc3-bf18-449eca21ac07",
+  "title": "Research current best practices for: (a) Qt5->Qt6 migration incl. VTK's QVTKOpenGLNativeWidget + ...",
+  "goal": "Research current best practices for: (a) Qt5->Qt6 migration incl. VTK's QVTKOpenGLNativeWidget + building VTK against Qt6 (VTK_QT_VERSION=6, VTK_USE_QT6), and Qt6 find_package; (b) headless testing of Qt signal/slot + threads: QCoreApplication + QSignalSpy + QtTest vs Catch2, offscreen platform / QT_QPA_PLATFORM=offscreen; (c) testing a QObject worker + QThread coordinator state machine headlessly. Planning a refactor of JTML, a Qt5+VTK+CUDA+OpenCV 2D-3D knee-implant registration GUI app (repo root /home/ajj/repo/uf/JTML, C++20, CMake, pixi). Goal: enable fearless editing via (1) a golden-oracle regression gate captured from the known-good Qt5 app (Kneel_1 fixture: silhouettes in example_studies/Kneel_1, femoral STL KR_right_7_fem.stl, pose fem.jts, known-good Labels projections; optimizer settings: trunk/2-branch/1-leaf stages, DIRECT_DILATION, trunk 6px/branch 3px/leaf 1px dilation, trunk range +-30, branch +-20, leaf +-3 with z opened ~100, ~10000 iteration budget); (2) a headless-testable optimize-lifecycle seam: a coordinator owning an idle->running->finished->error(state machine + worker thread, tested with an injected stub cost function under QCoreApplication + QSignalSpy with zero GPU; (3) extracting the pure DIRECT optimizer (ConvexHull/TrisectPotentiallyOptimal/Denormalize/SetSearchRange are currently PRIVATE methods of src/core/optimizer_manager.cpp, hard-coupled to CUDA types GPUMetrics/GPUModel/GPUFrames) behind an injected cost-function boundary (double eval(Point6D)); (4) decomposing MainScreen (src/gui/mainscreen.cpp, 5806 lines) toward MVVM (view/state/services); (5) migrating Qt5->Qt6 (pixi.toml pins qt=5.*; CMake find_package(Qt5); vtk_installer.sh forces -DVTK_QT_VERSION=5 -DVTK_USE_QT6=OFF). There are NO tests (test/ subdir commented out in CMake), NO test framework declared in pixi, and CI (.github/workflows/cmake.yml) is inert boilerplate. test/vtk/test_case is a separate LEFT-knee case. The app entry is src/gui/main.cpp. A prior abandoned attempt added 18 test files + wrapper abstractions (qt_wrappers.h function-pointer wrappers around QFileDialog/QMessageBox, characterize-the-real-god-object tests) rejected as low-value/bunk. AVOID: Qt-mocking wrappers, run-the-real-MainScreen characterization tests, doc sprawl.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:58:22.697Z",
+  "updatedAt": "2026-08-07T15:03:03.299Z",
+  "runs": [
+    {
+      "runId": "bf8dcff8",
+      "mode": "single",
+      "agent": "ce-framework-docs-researcher",
+      "status": "completed",
+      "startedAt": "2026-08-07T15:03:03.299Z",
+      "completedAt": "2026-08-07T15:03:03.299Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/bf8dcff8_ce-framework-docs-researcher_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/bf8dcff8_ce-framework-docs-researcher_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "I now have comprehensive research from official Qt/VTK docs, VTK Discourse, conda-forge, and codebase analysis. Here is my findings report.\n\n---\n\n# Framework Documentation Research Report — JTML Refactor\n\n## 1. Summary\nJTML is a Qt5 + VTK(9.3) + CUDA + OpenCV + libtorch C++20 GUI app for 3D knee-implant registration (DIRECT optimizer over a GPU cost function). The refactor needs: (1) a golden-oracle regression gate, (2) a headless-testable optimize-lifecycle seam, (3) a pure DIRECT optimizer behind an injected cost-function boundary, (4) MainScreen decomposition toward MVVM, (5) Qt5→Qt6 migration, plus a real test framework + CI. This report covers the Qt6/VTK migration and headless Qt/QObject/QThread testing best practices, grounded in concrete codebase findings.\n\nI did **not** find the abandoned 18-test-file/wrapper attempt in the working tree (only clangd index artifacts matched \"wrapper\"); it is not recoverable from `jj st` output, so I flagged the deprecated APIs it would have touched (see Residual Risks).\n\n---\n\n## 2. Version Information (from codebase + lockfile)\n| Dependency | Current | Notes |\n|---|---|---|\n| Qt | **5.15.8** (`pixi.lock`: `qt-5.15.8`, `qt-main-5.15.8`) | pinned `qt = \"5.*\"` in `pixi.toml:14` |\n| VTK | **9.3.0** (manual build via `vtk_installer.sh`) | `find_package(VTK 9.3 ...)` in `CMakeLists.txt` |\n| CUDA | 12.4 (`pixi.toml`) | |\n| C++ standard | 20 (`CMakeLists.txt`) | |\n| CMake | ≥3.31.4 | |\n| Tests | none (none declared; `test/CMakeLists.txt` only has nfd + vtk-tester) | |\n| CI | inert boilerplate (`.github/workflows/cmake.yml` triggers on `actions-test` branch, bare `cmake -B build`) | |\n\n**Key app build facts (concrete):**\n- Top-level `CMakeLists.txt` uses `find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)` and `Qt5::Core/Gui/Widgets` targets.\n- GUI is already on **`QVTKOpenGLNativeWidget`** (the modern Qt5/Qt6-compatible widget) in `include/gui/mainscreen.ui` (lines 2151, 2470, 4225–4227) and `include/gui/drr_tool.ui` (625, 63...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 10+ concrete findings with file paths and severity: M-1 HIGH src/gui/main.cpp missing QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat()); M-2 HIGH CMakeLists.txt find_package(Qt5)/Qt5:: targets must become Qt6; M-3 HIGH vtk_installer.sh -DQt5_DIR/-DVTK_USE_QT6=OFF/-DVTK_QT_VERSION=5/-DVTK_GROUP_ENABLE_Qt6=NO must flip to Qt6 incl. cache purge; M-4 MEDIUM recommend conda-forge vtk package; M-5 MEDIUM src/Study2Grid/main.cpp QRegExp -> Qt5Compat; M-6/M-7 LOW unaffected APIs; M-8 INFO QVTKOpenGLNativeWidget already Qt6-compatible (mainscreen.ui 2151/2470/4225, drr_tool.ui 625). Plus DIRECT extraction boundary (optimizer_manager.cpp ConvexHull/Trisect/Denormalize/SetSearchRange pure vs EvaluateCostFunction 1437 GPU-coupled; data_structures_6D.h pulls gpu/render_engine.cuh) and headless QtTest/QSignalSpy/coordinator+QThread recommended pattern with QTBUG-2842 rationale, and inert CI (.github/workflows/cmake.yml)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj st / jj log",
+          "result": "passed",
+          "summary": "Confirmed no test framework, Qt5=5.15.8 in lock, inert CI; abandoned wrapper attempt not present in working tree."
+        },
+        {
+          "command": "grep src/include for Qt5-only APIs and QVTK usage",
+          "result": "passed",
+          "summary": "Found QRegExp in Study2Grid/main.cpp, QVTKOpenGLNativeWidget in .ui/autogen, no QSurfaceFormat in main.cpp."
+        },
+        {
+          "command": "read optimizer_manager.cpp / CostFunctionManager.h / data_structures_6D.h",
+          "result": "passed",
+          "summary": "Isolated ConvexHull(1495)/Trisect(1553)/Denormalize(1623,1633)/SetSearchRange(869) as GPU-pure; EvaluateCostFunction(1437) as sole GPU-coupled step."
+        },
+        {
+          "command": "web_search + context7 (Qt6 docs, VTK discourse, conda-forge)",
+          "result": "passed",
+          "summary": "Confirmed Qt6/CMake find_package changes, QThread worker/controller pattern, QSignalSpy wait + QTBUG-2842, offscreen usage, VTK Qt6 build flags, conda vtk availability."
+        }
+      ],
+      "validationOutput": [
+        "Recommended QtTest (Qt::Test) via find_package(Qt6 COMPONENTS Core Gui Widgets Test) for seam tests (spy on coordinator on main thread, QSignalSpy::wait/QTRY_ no fixed sleeps, QCoreApplication sufficient, QT_QPA_PLATFORM=offscreen only for widget tests), Catch2 only for the pure DIRECT solver; add BUILD_TESTING guard + add_test registration (currently absent)."
+      ],
+      "residualRisks": [
+        "Qt6 migration risk: any stale Qt5 CMake cache (vtk_installer.sh/_deps) pins Qt5 silently; must purge _deps/vtk/build+install before reconfiguring.",
+        "direct-data model: data_structures_6D.h and Point6D(gpu_cost_function::Pose) ctor transitively include gpu/render_engine.cuh; pure-solver extraction requires stripping that CUDA dependency (MEDIUM, not exercised in this read-only pass).",
+        "QRegExp in src/Study2Grid is only a problem if Study2Grid is part of the Qt6 build; scope ownership unverified.",
+        "conda-forge vtk (M-4) GUISupportQt is not packaged for Windows, and adopting it changes VTK config ownership from the repo's hand-build to conda-forge; a decision is required before migration.",
+        "Study2Grid and the exact scope of the prior abandoned attempt's 18 test files were not reconstructable from the current working tree; referenced only via risk assessment.",
+        "This is research only: nothing compiled or executed; flag behavior validated against cited docs (QTBUG-2842, QSignalSpy, VTK defaultFormat) not against a live Qt6+VTK9.3 build."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files modified; research-only findings for Qt5->Qt6 migration (incl. VTK Qt6) and headless QObject/QThread/QSignalSpy testing best practices with concrete codebase paths and severities.",
+      "reviewFindings": [
+        "no blockers (research-only task; no edits made)"
+      ],
+      "manualNotes": "Key concretes: current Qt is 5.15.8 (pixi.lock); GUI already uses QVTKOpenGLNativeWidget (Qt6-compatible); main.cpp missing mandatory QSurfaceFormat::setDefaultFormat(defaultFormat()); vtk_installer.sh currently forces -DVTK_QT_VERSION=5 -DVTK_USE_QT6=OFF and passes Qt5_DIR. Strongest simplification lever is M-4 (conda-forge vtk, pixi add vtk), which eliminates the manual VTK build; decide before migration. For the lifecycle seam use coordinator-in-test-thread + worker-moveToThread + spy-on-coordinator pattern with QCoreApplication (zero GPU/display) to avoid the QSignalSpy worker-thread crash. Acceptance evidence is documentation/research, not compilation."
+    }
+  }
+}

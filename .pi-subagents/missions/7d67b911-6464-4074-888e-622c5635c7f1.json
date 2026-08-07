@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "id": "7d67b911-6464-4074-888e-622c5635c7f1",
+  "title": "Scope: technology, architecture, patterns, implementation seams, build/test wiring. Planning a re...",
+  "goal": "Scope: technology, architecture, patterns, implementation seams, build/test wiring. Planning a refactor of JTML, a Qt5+VTK+CUDA+OpenCV 2D-3D knee-implant registration GUI app (repo root /home/ajj/repo/uf/JTML, C++20, CMake, pixi). Goal: enable fearless editing via (1) a golden-oracle regression gate captured from the known-good Qt5 app (Kneel_1 fixture: silhouettes in example_studies/Kneel_1, femoral STL KR_right_7_fem.stl, pose fem.jts, known-good Labels projections; optimizer settings: trunk/2-branch/1-leaf stages, DIRECT_DILATION, trunk 6px/branch 3px/leaf 1px dilation, trunk range +-30, branch +-20, leaf +-3 with z opened ~100, ~10000 iteration budget); (2) a headless-testable optimize-lifecycle seam: a coordinator owning an idle->running->finished->error(state machine + worker thread, tested with an injected stub cost function under QCoreApplication + QSignalSpy with zero GPU; (3) extracting the pure DIRECT optimizer (ConvexHull/TrisectPotentiallyOptimal/Denormalize/SetSearchRange are currently PRIVATE methods of src/core/optimizer_manager.cpp, hard-coupled to CUDA types GPUMetrics/GPUModel/GPUFrames) behind an injected cost-function boundary (double eval(Point6D)); (4) decomposing MainScreen (src/gui/mainscreen.cpp, 5806 lines) toward MVVM (view/state/services); (5) migrating Qt5->Qt6 (pixi.toml pins qt=5.*; CMake find_package(Qt5); vtk_installer.sh forces -DVTK_QT_VERSION=5 -DVTK_USE_QT6=OFF). There are NO tests (test/ subdir commented out in CMake), NO test framework declared in pixi, and CI (.github/workflows/cmake.yml) is inert boilerplate. test/vtk/test_case is a separate LEFT-knee case. The app entry is src/gui/main.cpp. A prior abandoned attempt added 18 test files + wrapper abstractions (qt_wrappers.h function-pointer wrappers around QFileDialog/QMessageBox, characterize-the-real-god-object tests) rejected as low-value/bunk. AVOID: Qt-mocking wrappers, run-the-real-MainScreen characterization tests, doc sprawl.\n\nReport: build system specifics (pixi tasks, CMake targets jtml_gpu/jtml_core/JTA_Cost_Functions, test target wiring), exact private methods and data flow inside optimizer_manager.cpp, where cost functions map to CUDA, what the DIRECT loop depends on vs the GPU-only parts, existing patterns to follow, and AGENTS.md/justfile constraints affecting the plan.",
+  "status": "completed",
+  "createdAt": "2026-08-07T14:58:22.509Z",
+  "updatedAt": "2026-08-07T15:03:12.417Z",
+  "runs": [
+    {
+      "runId": "459efcd5",
+      "mode": "single",
+      "agent": "ce-repo-research-analyst",
+      "status": "completed",
+      "startedAt": "2026-08-07T15:03:12.417Z",
+      "completedAt": "2026-08-07T15:03:12.417Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "output",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/459efcd5_ce-repo-research-analyst_0_output.md"
+    },
+    {
+      "kind": "other",
+      "path": "/home/ajj/repo/uf/JTML/.pi-subagents/artifacts/459efcd5_ce-repo-research-analyst_0_transcript.jsonl",
+      "description": "Child transcript"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-07T14-03-20-693Z_019fdc89-1af5-73a6-a454-8b4cf640c911.jsonl",
+  "summary": "I have completed a thorough investigation of the repository. Here is my research report.\n\n## Repository Research Summary — JTML (Joint Track Machine Learning)\n\n### Technology & Infrastructure\n\n**Stack (all resolved via pixi/prefix.dev, conda-forge + nvidia channels):**\n- **C++20** (CUDA 20), CMake ≥3.26, Ninja generator, pixi env named `joint-track-machine-learning`\n- **Qt 5.x** — pinned `qt = \"5.*\"` in pixi.toml; `find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)`; RPATH points at conda prefix\n- **VTK 9.3** — NOT a pixi dep; built separately via `vtk_installer.sh` which hard-forces `-DVTK_USE_QT6=OFF` and `-DVTK_QT_VERSION=5` (line 76–77). Found under `_deps/vtk/install/lib{,64}/cmake/vtk-9.3/`\n- **OpenCV 4.10** (qt5 build — see pixi.lock), **Torch** (pytorch-gpu ≥2), **Eigen3**, **CUDA 12.4** (cuda, cuda-version, nvtx, ccache, gcc, clang-tools 19.x, ninja, glew, libopengl, sdl2)\n\n**Deployment model:** single desktop GUI application (monolithic, not serverless/multi-service). Entry: `src/gui/main.cpp` → `QApplication` + `MainScreen`.\n\n**API style:** none external — it's a native GUI + in-process libraries, no REST/gRPC/GraphQL surface.\n\n**Data/async patterns:** CUDA GPU kernels (`src/gpu/*.cu`, compiled into shared `jtml_gpu`); a QThread-based optimizer worker (`OptimizerManager` moved to a `QThread` inside `MainScreen::LaunchOptimizer`). OpenCV for image dilation; nested-vector `DirectDataStorage` for the DIRECT search.\n\n**Module organization:**\n```\nsrc/\n  core/          -> jtml_core (STATIC): optimizer_manager, model, frame, stl_reader, optimizer_settings, machine_learning_tools, DirectDataStorage, sym_trap...\n  gpu/           -> jtml_gpu (SHARED): all .cu kernels (metrics, rendering, dilation, distance maps, heatmaps, model)\n  cost_functions -> JTA_Cost_Functions (SHARED): CostFunction{Manager}, DIRECT_DILATION, DIRECT_MAHFOUZ, sym_trap, pole-constraint variants\n  gui/           -> executable joint-track-machine-learning: mainscreen, viewer, controls, se...",
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Delivered concrete, file-routed findings with severity. Build/test wiring: pixi tasks (pixi.toml, no test task), CMake targets jtml_core/jtml_gpu/JTA_Cost_Functions/exec (src/*/CMakeLists.txt), test target absent + enable_testing/add_subdirectory(test) commented (CMakeLists.txt:51-52,54), inert CI (.github/workflows/cmake.yml, branch 'actions-test', plain cmake -B build). DIRECT private methods mapped with line numbers (optimizer_manager.cpp): SetSearchRange 869, SetStartingPoint 879, Optimize 883, EvaluateCostFunctionAtPoint 1411, EvaluateCostFunction 1437, ConvexHull 1495, TrisectPotentiallyOptimal 1553, DenormalizeRange 1623, DenormalizeFromCenter 1633, onStopOptimizer 1643. Data flow documented (trunk/branch/leaf, cumulative budget). CUDA mapping shown: CostFunctionManager::callActiveCostFunction -> costFunctionDIRECT_DILATION (DIRECT_DILATION.cpp) -> GPUModel::Render* + GPUMetrics::FastImplantDilationMetric/DistanceMapMetric/ComputeSumWhitePixels. Pure-vs-GPU split explicit with injection seam double eval(Point6D). GPU header leak into pure structures flagged (data_structures_6D.h/direct_data_storage.h include gpu/render_engine.cuh). MainScreen 5806-line god object + header; Viewer seam; MainScreen::LaunchOptimizer ~4652. No AGENTS.md/CLAUDE.md exists; binding constraints sourced from docs/brainstorms R1-R16 and justfile."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read/ls/find/grep over pixi.toml CMakeLists.txt src/* include/* golden_oracle.org docs/brainstorms justfile .github vtk_installer.sh",
+          "result": "passed",
+          "summary": "Read all relevant manifests, CMake files, optimizer_manager.cpp (+header), CostFunctionManager/DIRECT_DILATION, mainscreen.cpp(+header), brainstorm requirements doc, CI; confirmed no test framework, no test target, inert CI"
+        }
+      ],
+      "validationOutput": [
+        "Static read-only research; no files changed, no tests run (research task). All claims grounded in specific file:line evidence."
+      ],
+      "residualRisks": [
+        "golden-oracle numeric reference (CPU vs GPU DRR/cost) and tolerance values are unresolved - load-bearing precondition of R3/AE2 oracle gate",
+        "Pre-flight gate D3: Qt5 GPU baseline capture by user on GPU machine required before Phase 1; fallback = defer Qt6 migration",
+        "golden_oracle.org optimizer-settings correctness flagged as inconsistent in the brainstorm doc; current text (trunk 6/branch 3/leaf 1, +-30/20/3, z~100, ~10k) matches task statement but must be confirmed against app defaults",
+        "Effective iteration budget is CUMULATIVE across trunk/branch/leaf (budget_ += per stage, calls never reset after trunk) - plan must not assume per-stage 10k budgets",
+        "OpenCV resolves as a qt5 build variant in pixi.lock - an additional migration ripple beyond the qt pin + VTK rebuild for R16",
+        "Qt6 migration uses old-style SIGNAL/SLOT string connections across MainScreen wiring - compat but deprecation surface to revalidate",
+        "Cross-thread StopOptimizer uses Qt::DirectConnection (mainscreen.cpp ~4742) - thread-safety smell at the R5/R7 stop-path seam"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No diff - this is a read-only repository research/discovery task; no files modified.",
+      "reviewFindings": [
+        "info: CMakeLists.txt:51-54 - test/ subdirectory and enable_testing() commented out; no test target exists (foundation for R11)",
+        "info: pixi.toml - no test task and no test framework declared (R14 gap; verified absent in pixi.lock)",
+        "info: .github/workflows/cmake.yml - inert boilerplate: triggers only on branch 'actions-test', runs cmake -B build without pixi/CUDA/Qt env (R13 gap)",
+        "seam: include/core/data_structures_6D.h + include/core/direct_data_storage.h include 'gpu/render_engine.cuh' purely for Point6D(Pose) ctor - GPU leak into pure DIRECT data structures blocking headless extraction",
+        "seam: src/core/optimizer_manager.cpp Optimize() budget is cumulative (budget_ += trunk/branch/leaf; cost_function_calls_ not reset per stage) - iteration-budget semantics that must be preserved in extraction",
+        "seam: src/gui/mainscreen.cpp ~4742 - StopOptimizer connected with Qt::DirectConnection across threads near the hang-prone lifecycle seam",
+        "info: src/gui/mainscreen.cpp is a 5806-line god object mixing UI/VTK/state/persistence/# optimizer-orchestration (R8 target); Viewer (include/gui/viewer.h) is an existing reusable seam",
+        "info: no AGENTS.md/CLAUDE.md present; .claude/skills and .memory-bank are empty scaffolding; binding plan constraints live in docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md (R1-R16)"
+      ],
+      "manualNotes": "Scope was technology, architecture, patterns, implementation seams, build/test wiring - all covered. All findings are read-only; no files changed. The plan must honor docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md R1-R16 (esp. R12 no-Qt-mocking/no-god-object-characterization, R2 anti-circularity, R11 headless-default + separate GPU target, R14 add test framework to pixi, R16 Qt6) and golden_oracle.org. optimizer_manager.cpp headers drag CUDA .cuh includes; a dep-light DirectOptimizer TU is the highest-value first cut (gold). No decision needed from supervisor."
+    }
+  }
+}
