@@ -12,7 +12,6 @@ opencv = "*"
 pytorch-gpu = ">=2"
 cuda-version = "12.4"
 cuda = "12.4"
-qt = "5.*"
 eigen = "*"
 ninja = "*"
 nvtx = "*"
@@ -36,6 +35,8 @@ libgles-devel = ">=1.7.0,<2"
 libopengl-devel = ">=1.7.0,<2"
 clang-tools = ">=19.1.2,<20"
 catch2 = ">=3.15.3,<4"
+qt6-main = "6.*"
+qt6-wayland = "6.*"
 
 [feature.build.dependencies]
 cmake = ">=3.31.4,<4"
@@ -71,7 +72,7 @@ cmd = ["cmake",
     "-DTorch_DIR=$CONDA_PREFIX/lib/cmake/Torch",
     "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
     "-DLIBNVTOOLSEXT=$CONDA_PREFIX/lib/libnvToolsExt.so.1",
-    "-DQt5_DIR=$CONDA_PREFIX/lib/cmake/Qt5",
+    "-DQt6_DIR=$CONDA_PREFIX/lib/cmake/Qt6",
     "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
 ]
@@ -120,7 +121,7 @@ build = ["build"]
 dev = ["build", "dev"]
 
 [activation.env]
-Qt5_DIR = "${CONDA_PREFIX}/lib/cmake/Qt5"
+Qt6_DIR = "${CONDA_PREFIX}/lib/cmake/Qt6"
 VTK_DIR = "${CONDA_PREFIX}/lib/cmake/vtk-9.3"
 Torch_DIR = "${CONDA_PREFIX}/lib/cmake/Torch"
 OpenCV_DIR = "${CONDA_PREFIX}/lib/cmake/opencv4"

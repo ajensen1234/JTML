@@ -114,7 +114,7 @@ set_tests_properties(jtml.pose_file_io PROPERTIES LABELS "headless" TIMEOUT 120
 # Headless optimize-lifecycle seam (plan U4, R4/R5/R7, AE1). QtTest with a real
 # QThread + worker and an injected stub cost; observed via QSignalSpy on the
 # coordinator (no GPU, no display, QCoreApplication only).
-find_package(Qt5 COMPONENTS Core Test REQUIRED)
+find_package(Qt6 COMPONENTS Core Test REQUIRED)
 add_executable(jtml_test_coordinator
     lifecycle/coordinator_test.cpp
     ${PROJECT_SOURCE_DIR}/src/core/optimize_coordinator.cpp
@@ -124,7 +124,7 @@ add_executable(jtml_test_coordinator
     ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_coordinator PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(jtml_test_coordinator PRIVATE Qt5::Core Qt5::Test)
+target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test)
 add_test(NAME jtml.coordinator COMMAND jtml_test_coordinator)
 set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
 

@@ -8,6 +8,7 @@
 #include <qfontmetrics.h>
 
 #include <QScreen>
+#include <QRegularExpression>
 #include <opencv2/highgui.hpp>
 
 /*Settings Constants*/
@@ -22,7 +23,6 @@
 #include <qapplication.h>
 
 /*Settings*/
-#include <qdesktopwidget.h>
 #include <qguiapplication.h>
 #include <qsettings.h>
 
@@ -2421,7 +2421,8 @@ void MainScreen::on_load_calibration_button_clicked() {
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
         QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]|,|\t| "), Qt::SkipEmptyParts);
+            in.readAll().split(QRegularExpression("[\\r\\n]|,|\\t| "),
+                               Qt::SkipEmptyParts);
 
         /*Valid Code for Monoplane*/
         if (InputList[0] == "JT_INTCALIB" || InputList[0] == "JTA_INTCALIB") {

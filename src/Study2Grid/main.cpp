@@ -53,6 +53,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qtextstream.h>
+#include <QtCore/QRegularExpression>
 
 /*Study Class*/
 #include "Study.h"
@@ -206,7 +207,7 @@ int main() {
         if (inputFile.open(QIODevice::ReadOnly)) {
             QTextStream in(&inputFile);
             QStringList InputList = in.readAll().split(
-                QRegExp("[\r\n]|,|\t| "), Qt::SkipEmptyParts);
+                QRegularExpression("[\\r\\n]|,|\\t| "), Qt::SkipEmptyParts);
 
             /*Valid Code for Monoplane*/
             if (InputList[0] == "JT_INTCALIB" ||
@@ -281,7 +282,8 @@ int main() {
             if (inputFile_kin_mod.open(QIODevice::ReadOnly)) {
                 QTextStream in(&inputFile_kin_mod);
                 QStringList InputList =
-                    in.readAll().split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
+                    in.readAll().split(QRegularExpression("[\\r\\n]"),
+                                       Qt::SkipEmptyParts);
                 if (InputList.size() == 0) {
                     cout << "\nInvalid "
                          << studies[study_ind].stl_types_[model_types_indx]
@@ -296,7 +298,7 @@ int main() {
                                     (i - 2) < studies[study_ind].images_.size();
                          i++) {
                         QStringList LineList = InputList[i].split(
-                            QRegExp("[,]"), Qt::SkipEmptyParts);
+                            QRegularExpression("[,]"), Qt::SkipEmptyParts);
                         if (LineList.size() >= 6) {
                             LineList[0].replace(" ", "");
                             if (LineList[0] != "NOT_OPTIMIZED") {

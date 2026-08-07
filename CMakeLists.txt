@@ -45,7 +45,7 @@ option(JTML_BUILD_TESTS "Build and enable JTML tests" ON)
 #=============================
 set(USE_CUDNN 1)
 set(REQUIRED_LIBS Core Gui Widgets)
-set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
+set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Widgets)
 
 # Qt setup
 set(CMAKE_AUTOMOC ON)
@@ -72,7 +72,7 @@ set(CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS})
 #=============================
 # Find Required Packages
 #=============================
-find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 #find_package(CUDA REQUIRED)
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)

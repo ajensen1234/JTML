@@ -2,10 +2,17 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 #include <QtWidgets/QApplication>
+#include <QSurfaceFormat>
+#include <QVTKOpenGLNativeWidget.h>
 
 #include "gui/mainscreen.h"
 
 int main(int argc, char* argv[]) {
+    /*QVTKOpenGLNativeWidget must have its default surface format set before any
+     * QApplication exists (required for correct OpenGL context on Qt6).*/
+    QSurfaceFormat::setDefaultFormat(
+        QVTKOpenGLNativeWidget::defaultFormat());
+
     /*Otherwise Cant See TEXT*/
     QApplication a(argc, argv);
     MainScreen w;

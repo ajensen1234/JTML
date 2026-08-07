@@ -58,7 +58,7 @@ cmake "$SOURCE_DIR" \
     -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
     -DVTK_GROUP_ENABLE_Qt=YES \
     -DVTK_MODULE_ENABLE_VTK_GUISupportQt=YES \
-    -DQt5_DIR="$CONDA_PREFIX/lib/cmake/Qt5" \
+    -DQt6_DIR="$CONDA_PREFIX/lib/cmake/Qt6" \
     -DCMAKE_BUILD_TYPE=Release \
     -DVTK_MODULE_ENABLE_VTK_RenderingCore=YES \
     -DVTK_MODULE_ENABLE_VTK_RenderingOpenGL2=YES \
@@ -72,10 +72,9 @@ cmake "$SOURCE_DIR" \
     -DVTK_MODULE_ENABLE_VTK_InteractionStyle=YES \
     -DVTK_USE_X=OFF \
     -DVTK_USE_SDL2=ON \
-    -DVTK_GROUP_ENABLE_Qt6=NO \
-    -DVTK_USE_QT6=OFF \
-    -DVTK_QT_VERSION=5 \
-    -DQt6_DIR="" \
+    -DVTK_GROUP_ENABLE_Qt6=YES \
+    -DVTK_USE_QT6=ON \
+    -DVTK_QT_VERSION=6 \
     -DVTK_OPENGL_HAS_OSMESA=OFF \
     -DVTK_OPENGL_HAS_EGL=OFF \
     -G Ninja

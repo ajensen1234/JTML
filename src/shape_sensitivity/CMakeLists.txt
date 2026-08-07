@@ -9,9 +9,9 @@ add_executable(shape-sensitivity
 )
 
 
-set(QT_VERSION 5)
+set(QT_VERSION 6)
 set(REQUIRED_LIBS Core Gui Widgets)
-set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
+set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Widgets)
 
 
 target_link_libraries(shape-sensitivity ${VTK_LIBRARIES})
