@@ -13,6 +13,7 @@
 /*Settings Constants*/
 #include "core/curvature_utilities.h"
 #include "core/settings_constants.h"
+#include "core/pose_file_io.h"
 
 /*Size Constants*/
 #include "core/mainscreen_size_constants.h"
@@ -1049,42 +1050,9 @@ void MainScreen::on_actionSave_Pose_triggered() {
         tr("Save Pose"),
         ".",
         tr("JTA Pose File (*.jtap);; Pose File (*.txt)"));
-    QFile file(SavePoseExtension);
-    if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
-        QTextStream stream(&file);
-        stream << "JTA_EULER_POSE\nX_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_ROT\t\tX_"
-                  "ROT\t\tY_ROT\n";
-        if (QString::number(saved_pose.x).length() < 7) {
-            stream << saved_pose.x << ",\t\t";
-        } else {
-            stream << saved_pose.x << ",\t";
-        }
-        if (QString::number(saved_pose.y).length() < 7) {
-            stream << saved_pose.y << ",\t\t";
-        } else {
-            stream << saved_pose.y << ",\t";
-        }
-        if (QString::number(saved_pose.z).length() < 7) {
-            stream << saved_pose.z << ",\t\t";
-        } else {
-            stream << saved_pose.z << ",\t";
-        }
-        if (QString::number(saved_pose.za).length() < 7) {
-            stream << saved_pose.za << ",\t\t";
-        } else {
-            stream << saved_pose.za << ",\t";
-        }
-        if (QString::number(saved_pose.xa).length() < 7) {
-            stream << saved_pose.xa << ",\t\t";
-        } else {
-            stream << saved_pose.xa << ",\t";
-        }
-        if (QString::number(saved_pose.ya).length() < 7) {
-            stream << saved_pose.ya << ",\t\t";
-        } else {
-            stream << saved_pose.ya << ",\n";
-        }
-    }
+    // Persistence is handled by the pure pose_file_io service (plan U7).
+    jta::pose_file::WritePoseFile(SavePoseExtension.toStdString(),
+                                  saved_pose);
 }
 
 /*Save Kinematics*/
@@ -1121,44 +1089,15 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
         tr("Save Kinematics"),
         ".",
         tr("JTA Kinematics File (*.jtak);; Kinematics File (*.txt)"));
-    QFile file(SavePoseExtension);
-    if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
-        QTextStream stream(&file);
-        stream << "JTA_EULER_KINEMATICS\nX_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_"
-                  "ROT\t\tX_"
-                  "ROT\t\tY_ROT\n";
-        /*Get Pose to Save*/
-        for (int i = 0; i < ui.image_list_widget->count(); i++) {
-            Point6D saved_pose = model_locations_.GetPose(i, selected[0].row());
-
-            if (QString::number(saved_pose.x).length() < 7) {
-                stream << saved_pose.x << ",\t\t";
-            } else {
-                stream << saved_pose.x << ",\t";
-            }
-            if (QString::number(saved_pose.y).length() < 7) {
-                stream << saved_pose.y << ",\t\t";
-            } else {
-                stream << saved_pose.y << ",\t";
-            }
-            if (QString::number(saved_pose.z).length() < 7) {
-                stream << saved_pose.z << ",\t\t";
-            } else {
-                stream << saved_pose.z << ",\t";
-            }
-            if (QString::number(saved_pose.za).length() < 7) {
-                stream << saved_pose.za << ",\t\t";
-            } else {
-                stream << saved_pose.za << ",\t";
-            }
-            if (QString::number(saved_pose.xa).length() < 7) {
-                stream << saved_pose.xa << ",\t\t";
-            } else {
-                stream << saved_pose.xa << ",\t";
-            }
-            stream << saved_pose.ya << ",\n";
-        }
+    // Persistence is handled by the pure pose_file_io service (plan U7).
+    std::vector<Point6D> all_poses;
+    all_poses.reserve(static_cast<size_t>(ui.image_list_widget->count()));
+    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+        all_poses.push_back(
+            model_locations_.GetPose(i, selected[0].row()));
     }
+    jta::pose_file::WriteKinematicsFile(SavePoseExtension.toStdString(),
+                                        all_poses);
 }
 
 /*Load Pose*/
@@ -1192,123 +1131,34 @@ void MainScreen::on_actionLoad_Pose_triggered() {
         tr("JTA Pose File (*.jtap);; JointTrack Pose File (*.jtp);; Pose "
            "File "
            "(*.txt);;"));
-    QFile inputFile(LoadPoseExtension);
-    QFileInfo inputFileInfo(inputFile);
-    if (inputFile.open(QIODevice::ReadOnly)) {
-        QTextStream in(&inputFile);
-        QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
-        if (InputList.size() == 0) {
-            QMessageBox::critical(
-                this, "Error!", "Invalid Pose File!", QMessageBox::Ok);
-            inputFile.close();
-            return;
-        }
-        if (inputFileInfo.suffix() == "jtp") {
-            QStringList LineList =
-                InputList[0].split(QRegExp("[,]"), Qt::SkipEmptyParts);
-            if (LineList.size() >= 6) {
-                LineList[0].replace(" ", "");
-                if (LineList[0] == "NOT_OPTIMIZED") {
-                    QMessageBox::critical(
-                        this, "Error!", "No Pose Exists!", QMessageBox::Ok);
-                    inputFile.close();
-                    return;
-                }
-                auto loaded_pose = Point6D(
-                    LineList[0].toDouble(),
-                    LineList[1].toDouble(),
-                    LineList[2].toDouble(),
-                    LineList[4].toDouble(),
-                    LineList[5].toDouble(),
-                    LineList[3].toDouble());
-                model_locations_.SavePose(
-                    ui.image_list_widget->currentRow(),
-                    selected[0].row(),
-                    loaded_pose);
-                vw->set_model_position_at_index(
-                    selected[0].row(),
-                    loaded_pose.x,
-                    loaded_pose.y,
-                    loaded_pose.z);
-                vw->set_model_orientation_at_index(
-                    selected[0].row(),
-                    loaded_pose.xa,
-                    loaded_pose.ya,
-                    loaded_pose.za);
-                coronal_vw->set_model_position_at_index(
-                    selected[0].row(),
-                    loaded_pose.x,
-                    loaded_pose.y,
-                    loaded_pose.z);
-                coronal_vw->set_model_orientation_at_index(
-                    selected[0].row(),
-                    loaded_pose.xa,
-                    loaded_pose.ya,
-                    loaded_pose.za);
-                ui.qvtk_widget->update();
-                ui.qvtk_widget->renderWindow()->Render();
-                ui.qvtk_cpv->update();
-                ui.qvtk_cpv->renderWindow()->Render();
-            } else {
-                QMessageBox::critical(
-                    this, "Error!", "Invalid Pose!", QMessageBox::Ok);
-                inputFile.close();
-                return;
-            }
-        } else {
-            if (InputList[0] == "JTA_EULER_POSE") {
-                QStringList LineList =
-                    InputList[2].split(QRegExp("[,]"), Qt::SkipEmptyParts);
-                if (LineList.size() >= 6) {
-                    LineList[0].replace(" ", "");
-                    if (LineList[0] == "NOT_OPTIMIZED") {
-                        QMessageBox::critical(
-                            this, "Error!", "No Pose Exists!", QMessageBox::Ok);
-                        inputFile.close();
-                        return;
-                    }
-                    auto loaded_pose = Point6D(
-                        LineList[0].toDouble(),
-                        LineList[1].toDouble(),
-                        LineList[2].toDouble(),
-                        LineList[4].toDouble(),
-                        LineList[5].toDouble(),
-                        LineList[3].toDouble());
-                    model_locations_.SavePose(
-                        ui.image_list_widget->currentRow(),
-                        selected[0].row(),
-                        loaded_pose);
-                    vw->set_model_position_at_index(
-                        selected[0].row(),
-                        loaded_pose.x,
-                        loaded_pose.y,
-                        loaded_pose.z);
-                    vw->set_model_orientation_at_index(
-                        selected[0].row(),
-                        loaded_pose.xa,
-                        loaded_pose.ya,
-                        loaded_pose.za);
-                    ui.qvtk_widget->update();
-                    ui.qvtk_widget->renderWindow()->Render();
-                    ui.qvtk_cpv->update();
-                    ui.qvtk_cpv->renderWindow()->Render();
-                } else {
-                    QMessageBox::critical(
-                        this, "Error!", "Invalid Pose!", QMessageBox::Ok);
-                    inputFile.close();
-                    return;
-                }
-            } else {
-                QMessageBox::critical(
-                    this, "Error!", "Invalid Pose File!", QMessageBox::Ok);
-                inputFile.close();
-                return;
-            }
-        }
-
-        inputFile.close();
+    Point6D loaded_pose;
+    jta::pose_file::LoadResult res =
+        jta::pose_file::ReadPoseFile(LoadPoseExtension.toStdString(),
+                                     loaded_pose);
+    if (!res.ok) {
+        // NOT_OPTIMIZED is a valid-but-empty pose ("No Pose Exists!"); any
+        // other parse failure is an invalid file. Both surface and return,
+        // mirroring the previous inline parsing.
+        QMessageBox::critical(
+            this, "Error!",
+            res.not_optimized ? "No Pose Exists!" : "Invalid Pose File!",
+            QMessageBox::Ok);
+        return;
     }
+    model_locations_.SavePose(ui.image_list_widget->currentRow(),
+                              selected[0].row(), loaded_pose);
+    vw->set_model_position_at_index(selected[0].row(), loaded_pose.x,
+                                    loaded_pose.y, loaded_pose.z);
+    vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa,
+                                       loaded_pose.ya, loaded_pose.za);
+    coronal_vw->set_model_position_at_index(selected[0].row(), loaded_pose.x,
+                                            loaded_pose.y, loaded_pose.z);
+    coronal_vw->set_model_orientation_at_index(
+        selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+    ui.qvtk_widget->update();
+    ui.qvtk_widget->renderWindow()->Render();
+    ui.qvtk_cpv->update();
+    ui.qvtk_cpv->renderWindow()->Render();
 }
 
 /*Copy Previous Pose*/
@@ -1455,76 +1305,40 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
         tr("JTA Kinematics File (*.jtak);; "
            "JointTrack Kinematics File (*.jts);; "
            "Kinematics File (*.txt)"));
-    QFile inputFile(LoadPoseExtension);
-    if (inputFile.open(QIODevice::ReadOnly)) {
-        QTextStream in(&inputFile);
-        QStringList InputList =
-            in.readAll().split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
-        if (InputList.size() == 0) {
-            QMessageBox::critical(
-                this, "Error!", "Invalid Kinematics File!", QMessageBox::Ok);
-            inputFile.close();
-            return;
-        }
-        if (InputList[0] == "JTA_EULER_KINEMATICS" ||
-            InputList[0] == "JT_EULER_312") {
-            for (int i = 2; i < InputList.length() &&
-                            (i - 2) < ui.image_list_widget->count();
-                 i++) {
-                QStringList LineList =
-                    InputList[i].split(QRegExp("[,]"), Qt::SkipEmptyParts);
-                if (LineList.size() >= 6) {
-                    LineList[0].replace(" ", "");
-                    if (LineList[0] != "NOT_OPTIMIZED") {
-                        auto loaded_pose = Point6D(
-                            LineList[0].toDouble(),
-                            LineList[1].toDouble(),
-                            LineList[2].toDouble(),
-                            LineList[4].toDouble(),
-                            LineList[5].toDouble(),
-                            LineList[3].toDouble());
-                        model_locations_.SavePose(
-                            i - 2,
-                            ui.model_list_widget->currentRow(),
-                            loaded_pose);
-                    }
-                }
-            }
-            if (ui.image_list_widget->currentRow() >= 0) {
-                Point6D loaded_pose = model_locations_.GetPose(
-                    ui.image_list_widget->currentRow(), selected[0].row());
-                vw->set_model_position_at_index(
-                    selected[0].row(),
-                    loaded_pose.x,
-                    loaded_pose.y,
-                    loaded_pose.z);
-                vw->set_model_orientation_at_index(
-                    selected[0].row(),
-                    loaded_pose.xa,
-                    loaded_pose.ya,
-                    loaded_pose.za);
-                coronal_vw->set_model_position_at_index(
-                    selected[0].row(),
-                    loaded_pose.x,
-                    loaded_pose.y,
-                    loaded_pose.z);
-                coronal_vw->set_model_orientation_at_index(
-                    selected[0].row(),
-                    loaded_pose.xa,
-                    loaded_pose.ya,
-                    loaded_pose.za);
-                ui.qvtk_widget->update();
-                ui.qvtk_widget->renderWindow()->Render();
-                ui.qvtk_cpv->update();
-                ui.qvtk_cpv->renderWindow()->Render();
-            }
-        } else {
-            QMessageBox::critical(
-                this, "Error!", "Invalid Kinematics File!", QMessageBox::Ok);
-            inputFile.close();
-            return;
-        }
-        inputFile.close();
+    std::vector<Point6D> loaded_poses;
+    jta::pose_file::LoadResult res =
+        jta::pose_file::ReadKinematicsFile(LoadPoseExtension.toStdString(),
+                                           loaded_poses);
+    if (!res.ok) {
+        QMessageBox::critical(
+            this, "Error!", "Invalid Kinematics File!", QMessageBox::Ok);
+        return;
+    }
+    // Apply up to the number of loaded frames (excess rows are ignored,
+    // mirroring the previous loop bound). NOT_OPTIMIZED rows were skipped by
+    // the service.
+    int frame_count = ui.image_list_widget->count();
+    for (size_t i = 0; i < loaded_poses.size() && static_cast<int>(i) < frame_count;
+         ++i) {
+        model_locations_.SavePose(static_cast<int>(i),
+                                  ui.model_list_widget->currentRow(),
+                                  loaded_poses[i]);
+    }
+    if (ui.image_list_widget->currentRow() >= 0) {
+        Point6D loaded_pose = model_locations_.GetPose(
+            ui.image_list_widget->currentRow(), selected[0].row());
+        vw->set_model_position_at_index(
+            selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+        vw->set_model_orientation_at_index(
+            selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+        coronal_vw->set_model_position_at_index(
+            selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+        coronal_vw->set_model_orientation_at_index(
+            selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+        ui.qvtk_widget->update();
+        ui.qvtk_widget->renderWindow()->Render();
+        ui.qvtk_cpv->update();
+        ui.qvtk_cpv->renderWindow()->Render();
     }
 }
 
