@@ -16,6 +16,7 @@
 #include "core/settings_constants.h"
 #include "core/pose_file_io.h"
 #include "core/optimize_intent_controller.h"
+#include "core/model_list_builder.h"
 
 /*Size Constants*/
 #include "core/mainscreen_size_constants.h"
@@ -2713,16 +2714,20 @@ void MainScreen::on_load_image_button_clicked() {
             /*Check That All Frames Are The Same Size and Not Empty*/
             int width = new_frame.GetEdgeImage().cols;
             int height = new_frame.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames.size(); j++) {
-                if (width != loaded_frames[j].GetEdgeImage().cols ||
-                    height != loaded_frames[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop;
-                }
+            std::vector<std::pair<int, int>> loaded_sizes;
+            loaded_sizes.reserve(loaded_frames.size());
+            for (auto& f : loaded_frames) {
+                loaded_sizes.emplace_back(f.GetEdgeImage().cols,
+                                          f.GetEdgeImage().rows);
+            }
+            if (!jta::ModelListBuilder::AllSameSize(width, height,
+                                                    loaded_sizes)) {
+                QMessageBox::critical(
+                    this,
+                    "Error!",
+                    "Images Loaded Must Be The Same Size!",
+                    QMessageBox::Ok);
+                goto stop;
             }
             // Add to Loaded Frames
             loaded_frames.push_back(new_frame);
@@ -2788,32 +2793,41 @@ void MainScreen::on_load_image_button_clicked() {
                 ui.low_threshold_slider->value(),
                 ui.high_threshold_slider->value(),
                 dilation_val);
-            /*Check That All Frames Are The Same Size and Not Empty*/
-            int width = new_frame_A.GetEdgeImage().cols;
-            int height = new_frame_A.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames.size(); j++) {
-                if (width != loaded_frames[j].GetEdgeImage().cols ||
-                    height != loaded_frames[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop_biplane;
-                }
+            /*Check That All Camera-A Frames Are The Same Size and Not Empty*/
+            int widthA = new_frame_A.GetEdgeImage().cols;
+            int heightA = new_frame_A.GetEdgeImage().rows;
+            std::vector<std::pair<int, int>> sizesA;
+            sizesA.reserve(loaded_frames.size());
+            for (auto& f : loaded_frames) {
+                sizesA.emplace_back(f.GetEdgeImage().cols,
+                                    f.GetEdgeImage().rows);
             }
-            width = new_frame_B.GetEdgeImage().cols;
-            height = new_frame_B.GetEdgeImage().rows;
-            for (int j = 0; j < loaded_frames_B.size(); j++) {
-                if (width != loaded_frames_B[j].GetEdgeImage().cols ||
-                    height != loaded_frames_B[j].GetEdgeImage().rows) {
-                    QMessageBox::critical(
-                        this,
-                        "Error!",
-                        "Images Loaded Must Be The Same Size!",
-                        QMessageBox::Ok);
-                    goto stop_biplane;
-                }
+            if (!jta::ModelListBuilder::AllSameSize(widthA, heightA,
+                                                    sizesA)) {
+                QMessageBox::critical(
+                    this,
+                    "Error!",
+                    "Images Loaded Must Be The Same Size!",
+                    QMessageBox::Ok);
+                goto stop_biplane;
+            }
+            /*Camera-B frames must also match the loaded B list.*/
+            int widthB = new_frame_B.GetEdgeImage().cols;
+            int heightB = new_frame_B.GetEdgeImage().rows;
+            std::vector<std::pair<int, int>> sizesB;
+            sizesB.reserve(loaded_frames_B.size());
+            for (auto& f : loaded_frames_B) {
+                sizesB.emplace_back(f.GetEdgeImage().cols,
+                                    f.GetEdgeImage().rows);
+            }
+            if (!jta::ModelListBuilder::AllSameSize(widthB, heightB,
+                                                    sizesB)) {
+                QMessageBox::critical(
+                    this,
+                    "Error!",
+                    "Images Loaded Must Be The Same Size!",
+                    QMessageBox::Ok);
+                goto stop_biplane;
             }
 
             // Add to Loaded Frames
@@ -2864,52 +2878,28 @@ void MainScreen::on_load_model_button_clicked() {
     QStringList CADFileExtensions = QFileDialog::getOpenFileNames(
         this, tr("Load Implant Model(s)"), ".", tr("CAD File(s) (*.stl)"));
 
-    /*For Each Cad File Extension Create Model Name*/
-    QStringList CADModelNames, OldCADModelNames, LoadedCADModelNames,
-        NewCADModelNames;
-
-    /*Initialize List With All CAD Model Names*/
+    /*For Each Cad File Extension Create Model Name -- unique display names
+     * built by the pure ModelListBuilder (plan U7, U10 / R10; R15: reproduces
+     * the original two-pass dedup exactly).*/
+    std::vector<std::string> existing_names;
+    existing_names.reserve(loaded_models.size());
     for (int i = 0; i < loaded_models.size(); i++) {
-        OldCADModelNames.push_back(
-            QString::fromStdString(loaded_models[i].model_name_));
+        existing_names.push_back(loaded_models[i].model_name_);
     }
+    std::vector<std::string> new_base_names;
+    new_base_names.reserve(CADFileExtensions.size());
     for (int i = 0; i < CADFileExtensions.size(); i++) {
-        LoadedCADModelNames.push_back(
-            QFileInfo(
-                QString::fromStdString(CADFileExtensions[i].toStdString()))
-                .baseName());
+        new_base_names.push_back(
+            QFileInfo(CADFileExtensions[i]).baseName().toStdString());
     }
-    /*Check to See if Loaded Names are Unique*/
-    for (int i = 0; i < LoadedCADModelNames.size(); i++) {
-        QString temp_model_name = LoadedCADModelNames[i];
-        int already_exists = 1;
-        /*Search To See If Name Already Exists*/
-        for (int j = 0; j < LoadedCADModelNames.size(); j++) {
-            if (LoadedCADModelNames[j] == temp_model_name && j != i) {
-                j = -1;
-                already_exists++;
-                temp_model_name = LoadedCADModelNames[i] + "(" +
-                                  QString::number(already_exists) + ")";
-            }
-        }
-        LoadedCADModelNames[i] = temp_model_name;
-    }
+    std::vector<std::string> unique_names =
+        jta::ModelListBuilder::UniquifyModelNames(new_base_names,
+                                                  existing_names);
 
-    /*Check to See if Already Exists in Model List*/
-    for (int i = 0; i < LoadedCADModelNames.size(); i++) {
-        QString temp_model_name = LoadedCADModelNames[i];
-        int already_exists = 1;
-        /*Search To See If Name Already Exists*/
-        for (int j = 0; j < OldCADModelNames.size(); j++) {
-            if (OldCADModelNames[j] == temp_model_name) {
-                j = -1;
-                already_exists++;
-                temp_model_name = LoadedCADModelNames[i] + "(" +
-                                  QString::number(already_exists) + ")";
-            }
-        }
-        CADModelNames.push_back(temp_model_name); // adding models that are new
-        NewCADModelNames.push_back(temp_model_name);
+    QStringList CADModelNames;
+    CADModelNames.reserve(static_cast<int>(unique_names.size()));
+    for (const auto& n : unique_names) {
+        CADModelNames.push_back(QString::fromStdString(n));
     }
 
     // for (int i = 0; i < CADFileExtensions.size(); i++)

@@ -20,6 +20,7 @@ add_library(jtml_core STATIC
 	frame.cu
 	location_storage.cpp
 	model.cpp
+	model_list_builder.cpp
 	optimizer_manager.cpp
 	optimizer_settings.cpp
 	stl_reader.cpp

@@ -122,6 +122,33 @@ target_link_libraries(jtml_test_session_state PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.session_state COMMAND jtml_test_session_state)
 set_tests_properties(jtml.session_state PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Hegel property-based tests for the pure ModelListBuilder (plan U7, U10).
+# Linked CUDA/Qt-free from the builder source, exactly like the direct-optimizer
+# PBT target, with the same hegel link/rpath tweaks; runner-agnostic hegel::test()
+# inside a Catch2 TEST_CASE.
+add_executable(jtml_test_model_list_builder_props
+    unit/test_model_list_builder_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/model_list_builder.cpp
+)
+target_include_directories(jtml_test_model_list_builder_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_model_list_builder_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_model_list_builder_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.model_list_builder_props COMMAND jtml_test_model_list_builder_props)
+set_tests_properties(jtml.model_list_builder_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# ModelListBuilder tests (plan U7, U10 / R10). Pure name/dedup + size logic;
+# no Qt, no GPU, headless -- mirrors jtml.session_state registration.
+add_executable(jtml_test_model_list_builder
+    unit/test_model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/model_list_builder.cpp
+)
+target_include_directories(jtml_test_model_list_builder PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_model_list_builder PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.model_list_builder COMMAND jtml_test_model_list_builder)
+set_tests_properties(jtml.model_list_builder PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Optimize-intent controller tests (plan U7, R8/R9, AE4). Pure decision logic;
 # no Qt, no GPU, headless -- mirrors jtml.session_state registration.
 add_executable(jtml_test_optimize_intent
