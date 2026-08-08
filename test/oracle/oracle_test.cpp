@@ -58,7 +58,10 @@ namespace {
 
 const std::string kStudyDir = "example_studies/Kneel_1/";
 // fem.jts poses were captured against these frames.
-const std::string kBaseImage = kStudyDir + "1024/2806.tif";
+const std::vector<std::string> kBaseImages = {
+    kStudyDir + "1024/2806.tif",
+    kStudyDir + "1024/2807.tif",
+    kStudyDir + "1024/2808.tif"};
 const std::vector<std::string> kLabels = {
     kStudyDir + "Labels/fem/AT_K1_V1_0160_label_fem.tif",
     kStudyDir + "Labels/fem/AT_K1_V1_0170_label_fem.tif",
@@ -69,12 +72,18 @@ const int kWidth = 1024;
 const int kHeight = 1024;
 const int kDevice = 0;
 
-// fem.jts frame 0. Point6D order is (x,y,z, x_rot, y_rot, z_rot):
-//   x_tran=18.52191, y_tran=19.69514, z_tran=-1027.713,
-//   z_rot=-26.69708 -> za, x_rot=-7.419319 -> xa, y_rot=-0.2587041 -> ya.
-Point6D StartPose() {
-    return Point6D(18.52191, 19.69514, -1027.713, -7.419319, -0.2587041,
-                   -26.69708);
+// fem.jts per-frame start poses. Point6D order is (x,y,z, x_rot, y_rot,
+// z_rot) = (x_tran, y_tran, z_tran, x_rot, y_rot, z_rot) from baseline.json
+// expected_pose_per_frame (Table 1 of the golden spec).
+std::vector<Point6D> StartPoses() {
+    return {
+        Point6D(18.52191, 19.69514, -1027.713, -7.419319, -0.2587041,
+                -26.69708),  // frame 0 (2806.tif)
+        Point6D(19.01747, 20.15555, -1026.732, -7.56846, -0.2358893,
+                -27.37827),  // frame 1 (2807.tif)
+        Point6D(16.4709, 16.4248, -1028.69, -7.678545, 0.3264978,
+                -24.12223),  // frame 2 (2808.tif)
+    };
 }
 
 Point6D SearchRange() {
@@ -140,45 +149,33 @@ Pose ToPose(const Point6D& p) {
     return Pose(p.x, p.y, p.z, p.xa, p.ya, p.za);
 }
 
-}  // namespace
-
-TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
-          "[oracle][gpu]") {
-    /*--- Calibration: JT_INTCALIB 1198 0 0 0.373 ---*/
-    CameraCalibration cam(1198.0f, -1.0f * 0.0f, -1.0f * 0.0f, 0.373f);
-    Calibration calib(cam);
-
-    /*--- Base frame (1024/2806.tif) + femur STL ---*/
-    Frame frame(kBaseImage, 3, 0, 150, /*dilation=*/6);
+// Builds a monoplane GPU pipeline for one base frame (mirrors
+// OptimizerManager::Initialize): uploads the processed Frame outputs (edge /
+// dilation / intensity / distance-map / curvature heatmaps) and wires a trunk
+// DIRECT_DILATION cost manager. The caller owns the returned Pipeline (its
+// destructor frees the GPU objects).
+Pipeline BuildFramePipeline(const std::string& base_image) {
+    Frame frame(base_image, 3, 0, 150, /*dilation=*/6);
     frame.setCurvatureHeatmaps();
-    Model femur(kFemStl, "femur", "femur");
-    REQUIRE(femur.initialized_correctly_);
-    int triangle_count = static_cast<int>(femur.triangle_vertices_.size() / 9);
-    REQUIRE(triangle_count > 0);
 
-    /*--- GPU pipeline (mirrors OptimizerManager::Initialize, monoplane) ---*/
     Pipeline p;
     p.metrics = new GPUMetrics();
     REQUIRE(p.metrics->IsInitializedCorrectly());
     p.pose_storage = new PoseMatrix();
 
-    // Upload the *processed* Frame outputs exactly as production does:
-    // GPUEdgeFrame <- Canny edge image, GPUDilatedFrame <- dilated edge image,
-    // GPUIntensityFrame <- original + inverted, GPUFrame(distance map) <- the
-    // Frame's precomputed distance map. (Feeding the raw x-ray here is what
-    // made DIRECT_DILATION mislead the search in an earlier iteration.)
     auto edge_upload = MatToUchar(frame.GetEdgeImage());
-    auto edge =
-        new GPUEdgeFrame(kWidth, kHeight, kDevice, edge_upload.data(),
-                         frame.GetHighThreshold(), frame.GetLowThreshold(),
-                         frame.GetAperture());
+    auto edge = new GPUEdgeFrame(
+        kWidth, kHeight, kDevice, edge_upload.data(),
+        frame.GetHighThreshold(), frame.GetLowThreshold(), frame.GetAperture());
     REQUIRE(edge->IsInitializedCorrectly());
     p.edge_a.push_back(edge);
+
     auto dil_upload = MatToUchar(frame.GetDilationImage());
-    auto dilated =
-        new GPUDilatedFrame(kWidth, kHeight, kDevice, dil_upload.data(), 6);
+    auto dilated = new GPUDilatedFrame(kWidth, kHeight, kDevice,
+                                       dil_upload.data(), 6);
     REQUIRE(dilated->IsInitializedCorrectly());
     p.dilated_a.push_back(dilated);
+
     auto orig_upload = MatToUchar(frame.GetOriginalImage());
     auto inv_upload = MatToUchar(frame.GetInvertedImage());
     auto intensity = new GPUIntensityFrame(kWidth, kHeight, kDevice,
@@ -186,37 +183,53 @@ TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
                                            inv_upload.data());
     REQUIRE(intensity->IsInitializedCorrectly());
     p.intensity_a.push_back(intensity);
+
     auto dist_upload = MatToUchar(frame.GetDistanceMap());
     auto dm = new GPUFrame(kWidth, kHeight, kDevice, dist_upload.data());
     REQUIRE(dm->IsInitializedCorrectly());
     p.distance_maps.push_back(dm);
+
     auto hm = new GPUHeatmap(kWidth, kHeight, kDevice,
                              frame.GetNumCurvatureKeypoints(),
                              frame.getCurvatureHeatmaps().data());
     REQUIRE(hm->IsInitializedCorrectly());
     p.heatmaps.push_back(hm);
 
-    p.model = new GPUModel("femur", /*principal=*/true, kWidth, kHeight, kDevice,
-                           /*use_backface_culling=*/false,
+    Model femur(kFemStl, "femur", "femur");
+    REQUIRE(femur.initialized_correctly_);
+    int triangle_count =
+        static_cast<int>(femur.triangle_vertices_.size() / 9);
+    REQUIRE(triangle_count > 0);
+
+    CameraCalibration cam(1198.0f, -1.0f * 0.0f, -1.0f * 0.0f, 0.373f);
+    Calibration calib(cam);
+    p.model = new GPUModel("femur", /*principal=*/true, kWidth, kHeight,
+                           kDevice, /*use_backface_culling=*/false,
                            &femur.triangle_vertices_[0],
                            &femur.triangle_normals_[0], triangle_count,
                            calib.camera_A_principal_);
     REQUIRE(p.model->IsInitializedCorrectly());
 
-    /*--- Cost manager: DIRECT_DILATION wired to the GPU pipeline ---*/
     p.trunk = new jta_cost_function::CostFunctionManager(Stage::Trunk);
     p.trunk->setActiveCostFunction("DIRECT_DILATION");
-    p.trunk->updateCostFunctionParameterValues("DIRECT_DILATION", "Dilation", 6);
-    p.trunk->UploadData(
-        &p.edge_a, &p.dilated_a, &p.intensity_a, &p.edge_a, &p.dilated_a,
-        &p.intensity_a, p.model, &p.non_principal, p.metrics, p.pose_storage,
-        /*biplane=*/false);
+    p.trunk->updateCostFunctionParameterValues("DIRECT_DILATION",
+                                                "Dilation", 6);
+    p.trunk->UploadData(&p.edge_a, &p.dilated_a, &p.intensity_a, &p.edge_a,
+                        &p.dilated_a, &p.intensity_a, p.model,
+                        &p.non_principal, p.metrics, p.pose_storage,
+                        /*biplane=*/false);
     p.trunk->UploadDistanceMap(&p.distance_maps, &p.heatmaps);
     p.trunk->setCurrentFrameIndex(0);
-    std::string err;
-    REQUIRE(p.trunk->InitializeActiveCostFunction(err));
+    return p;
+}
 
-    /*--- Load the three candidate labels (GPU) ---*/
+}  // namespace
+
+TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
+          "[oracle][gpu]") {
+    // Load the three candidate labels once (GPU). The per-frame correspondence
+    // is resolved empirically below (binary label TIFFs are bottom-left
+    // y-origin, so we vertically flip them).
     std::vector<std::vector<unsigned char>> label_bufs;
     std::vector<GPUImage*> label_gpus;
     for (const auto& path : kLabels) {
@@ -226,82 +239,98 @@ TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
         REQUIRE(label_gpus.back()->IsInitializedCorrectly());
     }
 
-    /*--- Diagnostic: render at the fem.jts start pose, find the label whose
-     * silhouette the start pose matches best. This pins the base-frame<->
-     * label correspondence empirically (names are not aligned). ---*/
-    Pose golden = ToPose(StartPose());
-    p.model->SetCurrentPrimaryCameraPose(golden);
-    REQUIRE(p.model->RenderPrimaryCamera(golden));
-    GPUImage* golden_render = p.model->GetPrimaryCameraRenderedImage();
-    int best_label = 0;
-    double best_iou = -1.0;
-    std::vector<double> start_iou;
-    for (int i = 0; i < (int)label_gpus.size(); ++i) {
-        double v = p.metrics->IOU(golden_render, label_gpus[i]);
-        start_iou.push_back(v);
-        std::cout << "[oracle] fem.jts-pose IoU vs label[" << i << "] = " << v
-                  << std::endl;
-        if (v > best_iou) {
-            best_iou = v;
-            best_label = i;
-        }
-    }
-    std::cout << "[oracle] selected label index for this frame = " << best_label
-              << " (" << kLabels[best_label] << ")" << std::endl;
-    // The start pose must match SOME label well; otherwise pose<->image
-    // correspondence is broken and the gate is meaningless.
-    REQUIRE(best_iou > 0.50);
-
-    /*--- Optimize: DirectOptimizer bound to the real GPU DIRECT_DILATION cost,
-     * exactly as OptimizerManager::RunDirectStage does in production (U6). ---*/
+    auto start_poses = StartPoses();
+    REQUIRE(start_poses.size() == kBaseImages.size());
     const unsigned int kBudget = 3000;  // few minutes; production uses 20k/25k/30k
-    auto cost = [&p](const Point6D& physical) -> double {
-        p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
-        return p.trunk->callActiveCostFunction();
-    };
-    DirectOptimizer opt(cost, SearchRange(), StartPose(), kBudget);
-    REQUIRE(opt.Run());
-    Point6D recovered = opt.GetOptimumLocation();
-
-    std::cout << "[oracle] recovered pose: (" << recovered.x << ", "
-              << recovered.y << ", " << recovered.z << ", " << recovered.xa
-              << ", " << recovered.ya << ", " << recovered.za << ")"
-              << std::endl;
-    std::cout << "[oracle] cost calls: " << opt.GetCostFunctionCalls()
-              << std::endl;
-    std::cout << "[oracle] gap vs fem.jts: ("
-              << recovered.x - StartPose().x << ", "
-              << recovered.y - StartPose().y << ", "
-              << recovered.z - StartPose().z << ", "
-              << recovered.xa - StartPose().xa << ", "
-              << recovered.ya - StartPose().ya << ", "
-              << recovered.za - StartPose().za << ")" << std::endl;
-
-    /*--- THE LOAD-BEARING APPEARANCE GATE ---*/
-    Pose final_pose = ToPose(recovered);
-    p.model->SetCurrentPrimaryCameraPose(final_pose);
-    REQUIRE(p.model->RenderPrimaryCamera(final_pose));
-    GPUImage* final_render = p.model->GetPrimaryCameraRenderedImage();
-
-    double iou = p.metrics->IOU(final_render, label_gpus[best_label]);
-    double l1 = p.metrics->L_1_1_MatrixDifferenceNorm(final_render,
-                                                      label_gpus[best_label]);
-    double per_px = l1 / (double)(kWidth * kHeight);
-    std::cout << "[oracle] recovered-pose IoU vs label[" << best_label
-              << "] = " << iou << std::endl;
-    std::cout << "[oracle] recovered-pose L1 pixel-diff = " << l1
-              << " (per-px " << per_px << ")" << std::endl;
-    CAPTURE(iou, best_iou, per_px);
-
-    // The recovered femur silhouette must substantially overlap its known-good
-    // label. Gate set from the first measured run on the RTX 3090:
-    //   fem.jts-pose IoU = 1.0 (correspondence) and recovered-pose IoU = 0.9936
-    //   (per-px L1 = 0.0207). We assert with a healthy margin below that, so a
-    //   regression in the rewire (DirectOptimizer <-> real GPU DIRECT_DILATION
-    //   cost) fails loudly while genuine hardware/float variance passes. IoU in
-    //   [0,1].
     const double kIouGate = 0.85;
-    std::cout << "[oracle] appearance gate: recovered IoU " << iou
-              << " vs threshold " << kIouGate << std::endl;
-    REQUIRE(iou > kIouGate);
+
+    // Loop over all three Kneel_1 frames: per-frame pipeline, per-frame
+    // empirical label correspondence, per-frame optimize, per-frame IoU gate.
+    // This closes the original frame-0-only coverage gap.
+    for (int f = 0; f < (int)kBaseImages.size(); ++f) {
+        std::cout << "[oracle] --- frame " << f << " (" << kBaseImages[f]
+                  << ") ---" << std::endl;
+
+        Pipeline p = BuildFramePipeline(kBaseImages[f]);
+        std::string err;
+        REQUIRE(p.trunk->InitializeActiveCostFunction(err));
+        Point6D start = start_poses[f];
+
+        /*--- Diagnostic: render at the fem.jts start pose, find the label
+         * whose silhouette the start pose matches best. Pins this frame's
+         * correspondence empirically (names are not aligned). ---*/
+        Pose golden = ToPose(start);
+        p.model->SetCurrentPrimaryCameraPose(golden);
+        REQUIRE(p.model->RenderPrimaryCamera(golden));
+        GPUImage* golden_render = p.model->GetPrimaryCameraRenderedImage();
+        int best_label = 0;
+        double best_iou = -1.0;
+        std::vector<double> start_iou;
+        for (int i = 0; i < (int)label_gpus.size(); ++i) {
+            double v = p.metrics->IOU(golden_render, label_gpus[i]);
+            start_iou.push_back(v);
+            std::cout << "[oracle] fem.jts-pose IoU vs label[" << i
+                      << "] = " << v << std::endl;
+            if (v > best_iou) {
+                best_iou = v;
+                best_label = i;
+            }
+        }
+        std::cout << "[oracle] selected label index for frame " << f << " = "
+                  << best_label << " (" << kLabels[best_label] << ")"
+                  << std::endl;
+        // Each frame's start pose must match SOME label well; otherwise the
+        // pose<->image correspondence is broken and the gate is meaningless.
+        REQUIRE(best_iou > 0.50);
+
+        /*--- Optimize: DirectOptimizer bound to the real GPU DIRECT_DILATION
+         * cost, exactly as OptimizerManager::RunDirectStage does (U6). ---*/
+        auto cost = [&p](const Point6D& physical) -> double {
+            p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
+            return p.trunk->callActiveCostFunction();
+        };
+        DirectOptimizer opt(cost, SearchRange(), start, kBudget);
+        REQUIRE(opt.Run());
+        Point6D recovered = opt.GetOptimumLocation();
+
+        std::cout << "[oracle] frame " << f << " recovered pose: ("
+                  << recovered.x << ", " << recovered.y << ", "
+                  << recovered.z << ", " << recovered.xa << ", "
+                  << recovered.ya << ", " << recovered.za << ")"
+                  << std::endl;
+        std::cout << "[oracle] frame " << f << " cost calls: "
+                  << opt.GetCostFunctionCalls() << std::endl;
+        std::cout << "[oracle] frame " << f << " gap vs fem.jts: ("
+                  << recovered.x - start.x << ", " << recovered.y - start.y
+                  << ", " << recovered.z - start.z << ", "
+                  << recovered.xa - start.xa << ", "
+                  << recovered.ya - start.ya << ", "
+                  << recovered.za - start.za << ")" << std::endl;
+
+        /*--- THE LOAD-BEARING APPEARANCE GATE ---*/
+        Pose final_pose = ToPose(recovered);
+        p.model->SetCurrentPrimaryCameraPose(final_pose);
+        REQUIRE(p.model->RenderPrimaryCamera(final_pose));
+        GPUImage* final_render = p.model->GetPrimaryCameraRenderedImage();
+
+        double iou = p.metrics->IOU(final_render, label_gpus[best_label]);
+        double l1 = p.metrics->L_1_1_MatrixDifferenceNorm(
+            final_render, label_gpus[best_label]);
+        double per_px = l1 / (double)(kWidth * kHeight);
+        std::cout << "[oracle] frame " << f << " recovered-pose IoU vs label["
+                  << best_label << "] = " << iou << std::endl;
+        std::cout << "[oracle] frame " << f << " recovered-pose L1 pixel-diff = "
+                  << l1 << " (per-px " << per_px << ")" << std::endl;
+        CAPTURE(f, iou, best_iou, per_px);
+
+        // The recovered femur silhouette must substantially overlap its
+        // known-good label. Gate set from the first measured run on the RTX
+        // 3090 (frame 0 recovered IoU = 0.9936): we assert with a healthy
+        // margin below that, so a regression in the rewire fails loudly while
+        // genuine hardware/float variance passes. IoU in [0,1].
+        std::cout << "[oracle] frame " << f << " appearance gate: recovered IoU "
+                  << iou << " vs threshold " << kIouGate << "" << std::endl;
+        REQUIRE(iou > kIouGate);
+    }
 }
+
