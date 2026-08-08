@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "core/pose_file_io.h"
+#include "domain/pose_file_io.h"
 
 using Catch::Approx;
 using jta::pose_file::LoadResult;

@@ -21,7 +21,7 @@
 #include <iostream>
 #include <opencv2/core/mat.hpp>
 
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/

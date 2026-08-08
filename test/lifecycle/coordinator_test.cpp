@@ -11,7 +11,7 @@
 #include <QtTest/QtTest>
 #include <stdexcept>
 
-#include "core/optimize_coordinator.h"
+#include "coordinator/optimize_coordinator.h"
 
 namespace {
 

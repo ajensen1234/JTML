@@ -18,7 +18,7 @@
 #include "Stage.h"
 /*Parameter Class*/
 #include "Parameter.h"
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 /****************Begin Custom Variables*************/
 void invert_transformation(float result[4][4], float tran[4][4]) {

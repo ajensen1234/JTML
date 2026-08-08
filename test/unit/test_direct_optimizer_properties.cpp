@@ -23,7 +23,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "core/direct_optimizer.h"
+#include "domain/direct_optimizer.h"
 
 namespace gs = hegel::generators;
 using Catch::Approx;

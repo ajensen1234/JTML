@@ -10,7 +10,7 @@
 #include <cmath>
 #include <cfloat>
 
-#include "core/direct_optimizer.h"
+#include "domain/direct_optimizer.h"
 
 using Catch::Approx;
 

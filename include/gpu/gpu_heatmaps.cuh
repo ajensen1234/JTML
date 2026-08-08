@@ -1,5 +1,5 @@
 #pragma once
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 namespace gpu_cost_function {
 class GPUHeatmap {

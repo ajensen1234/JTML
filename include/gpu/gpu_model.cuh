@@ -7,7 +7,7 @@
 /*Include opencv for image processing on rendered outputs*/
 #include <opencv2/core/mat.hpp>
 
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 /*GPU Cost Function Library Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {

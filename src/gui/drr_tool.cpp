@@ -5,7 +5,7 @@
 #include "gui/drr_tool.h"
 
 /*Interactor*/
-#include "core/drr_interactor.h"
+#include "gui/drr_interactor.h"
 
 /*Message Box*/
 #include <qmessagebox.h>

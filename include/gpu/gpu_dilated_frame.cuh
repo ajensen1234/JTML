@@ -2,7 +2,7 @@
 #define GPU_DILATED_FRAME_H
 
 /*GPU Frame Class*/
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 #include "gpu/gpu_frame.cuh"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/

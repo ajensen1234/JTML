@@ -7,7 +7,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "core/optimize_intent_controller.h"
+#include "domain/optimize_intent_controller.h"
 
 using jta::OptimizeIntentController;
 

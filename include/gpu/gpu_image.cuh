@@ -2,7 +2,7 @@
 #define GPU_IMAGE_H
 
 /*Standard Library*/
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 #include <iostream>
 #include <string>
 

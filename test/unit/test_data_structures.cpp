@@ -10,8 +10,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 
-#include "core/data_structures_6D.h"
-#include "core/direct_data_storage.h"
+#include "domain/data_structures_6D.h"
+#include "domain/direct_data_storage.h"
 
 using Catch::Approx;
 

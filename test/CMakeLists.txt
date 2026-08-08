@@ -48,9 +48,9 @@ set_tests_properties(jtml.hegel_smoke PROPERTIES LABELS "headless" TIMEOUT 300)
 # jtml_test_direct_optimizer, but with hegel for auto-generated invariants.
 add_executable(jtml_test_direct_optimizer_props
     unit/test_direct_optimizer_properties.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_direct_optimizer_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
 # Same two hegel link/rpath tweaks as the smoke target (kept next to the lib so
@@ -75,8 +75,8 @@ set_tests_properties(jtml.smoke PROPERTIES LABELS "headless" TIMEOUT 60)
 # linking the CUDA-heavy jtml_core, per plan U3/R11.
 add_executable(jtml_test_data_structures
     unit/test_data_structures.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_data_structures PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_data_structures PRIVATE Catch2::Catch2WithMain)
@@ -87,9 +87,9 @@ set_tests_properties(jtml.data_structures PROPERTIES LABELS "headless" TIMEOUT 1
 # CUDA-free from the optimizer + data-structure sources, no jtml_core.
 add_executable(jtml_test_direct_optimizer
     unit/test_direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_direct_optimizer PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
@@ -101,8 +101,8 @@ set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 
 # fixture with the data-structure source, no event loop, no GPU.
 add_executable(jtml_test_pose_file_io
     unit/test_pose_file_io.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/pose_file_io.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/pose_file_io.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
 )
 target_include_directories(jtml_test_pose_file_io PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_pose_file_io PRIVATE Catch2::Catch2WithMain)
@@ -115,7 +115,7 @@ set_tests_properties(jtml.pose_file_io PROPERTIES LABELS "headless" TIMEOUT 120
 # no Qt, no widgets, headless.
 add_executable(jtml_test_session_state
     unit/test_session_state.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
 )
 target_include_directories(jtml_test_session_state PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_session_state PRIVATE Catch2::Catch2WithMain)
@@ -128,7 +128,7 @@ set_tests_properties(jtml.session_state PROPERTIES LABELS "headless" TIMEOUT 120
 # inside a Catch2 TEST_CASE.
 add_executable(jtml_test_model_list_builder_props
     unit/test_model_list_builder_properties.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
 )
 target_include_directories(jtml_test_model_list_builder_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_model_list_builder_props PRIVATE
@@ -142,7 +142,7 @@ set_tests_properties(jtml.model_list_builder_props PROPERTIES LABELS "headless" 
 # no Qt, no GPU, headless -- mirrors jtml.session_state registration.
 add_executable(jtml_test_model_list_builder
     unit/test_model_list_builder.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
 )
 target_include_directories(jtml_test_model_list_builder PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_model_list_builder PRIVATE Catch2::Catch2WithMain)
@@ -153,7 +153,7 @@ set_tests_properties(jtml.model_list_builder PROPERTIES LABELS "headless" TIMEOU
 # no Qt, no GPU, headless -- mirrors jtml.session_state registration.
 add_executable(jtml_test_optimize_intent
     unit/test_optimize_intent_controller.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/optimize_intent_controller.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/optimize_intent_controller.cpp
 )
 target_include_directories(jtml_test_optimize_intent PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_optimize_intent PRIVATE Catch2::Catch2WithMain)
@@ -166,11 +166,11 @@ set_tests_properties(jtml.optimize_intent PROPERTIES LABELS "headless" TIMEOUT 1
 find_package(Qt6 COMPONENTS Core Test REQUIRED)
 add_executable(jtml_test_coordinator
     lifecycle/coordinator_test.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/optimize_coordinator.cpp
-    ${PROJECT_SOURCE_DIR}/include/core/optimize_coordinator.h
-    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/optimize_coordinator.cpp
+    ${PROJECT_SOURCE_DIR}/include/coordinator/optimize_coordinator.h
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_coordinator PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test)

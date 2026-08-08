@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*STLReader header*/
-#include "STLReader.h"
+#include "STLReader.h"    // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
 
 /*Standard Library*/
 #include <bitset>

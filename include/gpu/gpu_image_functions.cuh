@@ -17,7 +17,7 @@
 #include "gpu/gpu_model.cuh"
 
 /*Pose Matrix Class*/
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 #include "pose_matrix.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/

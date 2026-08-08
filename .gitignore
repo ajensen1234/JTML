@@ -52,3 +52,13 @@ refs/
 # Tier-2 oracle (and Study2Grid) run from the repo root.
 hm*.png
 contour.png
+
+# 003 U1 — committed in-source build artifacts (pruned from the tree). Never re-track
+# stale CMake/autogen binaries/libs generated into the source tree by in-source builds.
+*.a
+*.so
+*_autogen/
+Joint-Track-Machine-Learning
+# Generated Doxygen output (regenerate with `doxygen Doxyfile`; carries stale paths).
+docs/html/
+docs/latex/

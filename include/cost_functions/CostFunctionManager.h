@@ -8,7 +8,7 @@
 
 /*Class for Storing Cost Function Info*/
 #include "CostFunction.h"
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 /*Cost Function Tools Library*/
 #include "gpu/gpu_dilated_frame.cuh"

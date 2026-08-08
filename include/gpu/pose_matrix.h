@@ -6,7 +6,7 @@
 #pragma once
 
 /*Render Engine Header for Pose Class*/
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 #include "gpu/render_engine.cuh"
 /*Standard Library*/
 #include <string>

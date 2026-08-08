@@ -172,7 +172,7 @@ per-cut gates; coupling metrics still tracked). No new product behavior.
 
 ## Implementation Units
 
-- [ ] U1. **Cleanup: prune committed in-source build artifacts + gitignore**
+- [x] U1. **Cleanup: prune committed in-source build artifacts + gitignore** — done: pruned 1016 tracked artifacts (`src/**` Makefiles, `cmake_install.cmake`, `*_autogen/`, `*.a`/`*.so`, GUI binary) + generated `docs/html`+`docs/latex` (976); added `.gitignore` guards (`.a`, `.so`, `*_autogen/`, binary, `docs/html`, `docs/latex`); source untouched; build + headless 11/11 green
 
 **Goal:** Delete the 75 committed non-source build artifacts under `src/` and add
 a `.gitignore` guard before any move, so renames don't drag stale binaries.
@@ -204,7 +204,7 @@ build && test` green; `jj file list` no longer lists `.a`/`.so`/binary/`_autogen
 
 ---
 
-- [ ] U2. **Cut 1 — rename `core` to layered dirs + re-point includes (single lib
+- [x] U2. **Cut 1 — rename `core` to layered dirs + re-point includes (single lib
   intact)**
 
 **Goal:** Relocate `src/core`/`include/core` files into `domain/`, `services/`,

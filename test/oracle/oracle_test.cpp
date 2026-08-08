@@ -31,11 +31,11 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "core/data_structures_6D.h"
-#include "core/direct_optimizer.h"
-#include "core/frame.h"
-#include "core/model.h"
-#include "core/calibration.h"
+#include "domain/data_structures_6D.h"
+#include "domain/direct_optimizer.h"
+#include "compute/frame.h"
+#include "services/model.h"
+#include "services/calibration.h"
 
 #include "cost_functions/CostFunctionManager.h"
 

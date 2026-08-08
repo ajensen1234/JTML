@@ -4,8 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include <sstream>
 
-#include "core/calibration.h"
-#include "core/model.h"
+#include "services/calibration.h"
+#include "services/model.h"
 #include "descriptors.h"
 #include "gpu/gpu_model.cuh"
 #include "matrix_vector_utils.h"

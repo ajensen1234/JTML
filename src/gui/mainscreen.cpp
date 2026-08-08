@@ -12,14 +12,14 @@
 #include <opencv2/highgui.hpp>
 
 /*Settings Constants*/
-#include "core/curvature_utilities.h"
-#include "core/settings_constants.h"
-#include "core/pose_file_io.h"
-#include "core/optimize_intent_controller.h"
-#include "core/model_list_builder.h"
+#include "compute/curvature_utilities.h"
+#include "domain/settings_constants.h"
+#include "domain/pose_file_io.h"
+#include "domain/optimize_intent_controller.h"
+#include "domain/model_list_builder.h"
 
 /*Size Constants*/
-#include "core/mainscreen_size_constants.h"
+#include "domain/mainscreen_size_constants.h"
 
 /*Process Events*/
 #include <qapplication.h>
@@ -51,7 +51,7 @@
 #include "gui/controls.h"
 
 /*STL Reader*/
-#include "core/STLReader.h"
+#include "services/STLReader.h"
 
 /* PyTorch 1.0 CPP Torch Script*/
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -60,8 +60,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include "core/ambiguous_pose_processing.h"
-#include "core/machine_learning_tools.h"
+#include "domain/ambiguous_pose_processing.h"
+#include "compute/machine_learning_tools.h"
 #include <iostream> // For std::cerr
 #include <utility>   // std::move
 

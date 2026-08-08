@@ -46,7 +46,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 /*STL Reader*/
-#include "STLReader.h"
+#include "STLReader.h"    // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
 
 /*QT*/
 #include <QtCore/qfileinfo.h>

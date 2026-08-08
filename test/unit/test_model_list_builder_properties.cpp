@@ -23,7 +23,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "core/model_list_builder.h"
+#include "domain/model_list_builder.h"
 
 namespace gs = hegel::generators;
 

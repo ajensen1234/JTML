@@ -7,7 +7,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "core/session_state.h"
+#include "domain/session_state.h"
 
 using jta::SessionState;
 

@@ -11,7 +11,7 @@
 #include "ui_settings_control.h"
 
 /*Optimizer Settings Class*/
-#include "core/optimizer_settings.h"
+#include "services/optimizer_settings.h"
 
 /*JTA Cost Function Class*/
 #include "cost_functions/CostFunctionManager.h"

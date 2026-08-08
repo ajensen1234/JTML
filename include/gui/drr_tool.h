@@ -26,7 +26,7 @@
 #include <vtkSmartPointer.h>
 
 /*Models*/
-#include "core/model.h"
+#include "services/model.h"
 
 /*GPU Models*/
 #include "gpu/gpu_model.cuh"

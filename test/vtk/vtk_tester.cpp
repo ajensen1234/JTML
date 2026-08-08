@@ -11,9 +11,9 @@
 #include <iostream>
 #include <vector>
 
-#include "core/calibration.h"
-#include "core/frame.h"
-#include "core/model.h"
+#include "services/calibration.h"
+#include "compute/frame.h"
+#include "services/model.h"
 #include "gpu/camera_calibration.h"
 #include "gui/viewer.h"
 // Calibration read_calibration(const QString& cal_path);

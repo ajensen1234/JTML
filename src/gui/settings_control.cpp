@@ -8,10 +8,10 @@
 #include <qmessagebox.h>
 
 /*Settings Constant*/
-#include "core/settings_constants.h"
+#include "domain/settings_constants.h"
 
 /*Spacing Constants*/
-#include "core/settings_window_size_constants.h"
+#include "domain/settings_window_size_constants.h"
 
 SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
     QDialog(parent, flags) {

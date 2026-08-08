@@ -18,7 +18,7 @@ for the cost function along with a parameter type and parameter name.*/
 #include <string>
 #include <type_traits>
 
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 /*Custom Namespace for JTA Cost Function Library (Compiling as DLL)*/
 namespace jta_cost_function {

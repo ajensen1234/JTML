@@ -18,7 +18,7 @@
 #include "Stage.h"
 /*Parameter Class*/
 #include "Parameter.h"
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 
 /****************Begin Custom Variables*************/
 /*Sum of the white pixels in the current dilation comparison image*/

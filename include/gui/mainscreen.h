@@ -25,10 +25,10 @@
 #include <QKeyEvent>
 
 /*Direct Data Structures*/
-#include "core/curvature_utilities.h"
-#include "core/data_structures_6D.h"
+#include "compute/curvature_utilities.h"
+#include "domain/data_structures_6D.h"
 /*Custom Calibration Struct (Used in CUDA GPU METRICS)*/
-#include "core/calibration.h"
+#include "services/calibration.h"
 
 /*VTK*/
 #include <vtkActor.h>
@@ -51,21 +51,21 @@
 #include <vtkVersion.h>
 
 /*Frame and Model and Location Storage*/
-#include "core/frame.h"
-#include "core/location_storage.h"
-#include "core/model.h"
+#include "compute/frame.h"
+#include "services/location_storage.h"
+#include "services/model.h"
 
 /*Optimizer Settings*/
-#include "core/optimizer_settings.h"
+#include "services/optimizer_settings.h"
 
 /*Optimizer Manager*/
-#include "core/optimizer_manager.h"
+#include "coordinator/optimizer_manager.h"
 
 /*Optimizer Settings Control Window*/
 #include "gui/settings_control.h"
 
 /*App-State Service (plan U7, R8/E11)*/
-#include "core/session_state.h"
+#include "domain/session_state.h"
 
 /*DRR Settings Control Window*/
 #include "drr_tool.h"
@@ -79,7 +79,7 @@
 #include "camera_calibration.h"
 
 /*machine_learning_tools*/
-#include "core/machine_learning_tools.h"
+#include "compute/machine_learning_tools.h"
 #include "gui/viewer.h"
 
 /**

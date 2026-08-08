@@ -2,7 +2,7 @@
 #define GPU_FRAME_H
 
 /*GPU Image Class*/
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 #include "gpu/gpu_image.cuh"
 #include <string>
 

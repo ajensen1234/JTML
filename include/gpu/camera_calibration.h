@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "core/preprocessor-defs.h"
+#include "domain/preprocessor-defs.h"
 struct CameraCalibration {
     CameraCalibration(
         float principal_distance,

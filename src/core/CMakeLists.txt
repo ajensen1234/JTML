@@ -5,30 +5,39 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/core)
-file(GLOB HEADER_FILES ${HEADER_DIR}/*.h)
+# 003 U2: single jtml_core target preserved but sources now live in the layered
+# dirs (domain/services/coordinator/compute). The header GLOB spans all four
+# include dirs so Q_OBJECT headers (optimize_coordinator.h, optimizer_manager.h
+# in coordinator/) still get AUTOMOC'd; explicit-impl list stays (GLOB alone
+# would miss an impl -> AUTOMOC undefined-symbol link error).
+file(GLOB HEADER_FILES
+	${PROJECT_SOURCE_DIR}/include/domain/*.h
+	${PROJECT_SOURCE_DIR}/include/services/*.h
+	${PROJECT_SOURCE_DIR}/include/coordinator/*.h
+	${PROJECT_SOURCE_DIR}/include/compute/*.h
+)
 
 
 add_library(jtml_core STATIC
-	data_structures_6D.cpp
-	direct_data_storage.cpp
-	direct_optimizer.cpp
-	optimize_coordinator.cpp
-	optimize_intent_controller.cpp
-	pose_file_io.cpp
-	session_state.cpp
-	frame.cu
-	location_storage.cpp
-	model.cpp
-	model_list_builder.cpp
-	optimizer_manager.cpp
-	optimizer_settings.cpp
-	stl_reader.cpp
-	STLReader.cpp
-	machine_learning_tools.cpp
-	sym_trap_functions.cpp
-	ambiguous_pose_processing.cpp
-	curvature_utilities.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/ambiguous_pose_processing.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/optimize_intent_controller.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/pose_file_io.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+	${PROJECT_SOURCE_DIR}/src/domain/sym_trap_functions.cpp
+	${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+	${PROJECT_SOURCE_DIR}/src/services/model.cpp
+	${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+	${PROJECT_SOURCE_DIR}/src/services/stl_reader.cpp
+	${PROJECT_SOURCE_DIR}/src/services/STLReader.cpp
+	${PROJECT_SOURCE_DIR}/src/coordinator/optimize_coordinator.cpp
+	${PROJECT_SOURCE_DIR}/src/coordinator/optimizer_manager.cpp
+	${PROJECT_SOURCE_DIR}/src/compute/curvature_utilities.cpp
+	${PROJECT_SOURCE_DIR}/src/compute/frame.cu
+	${PROJECT_SOURCE_DIR}/src/compute/machine_learning_tools.cpp
 	${HEADER_FILES}
 )
 # Linking Necessary Libraries

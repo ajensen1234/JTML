@@ -1,7 +1,7 @@
 #include "gui/interactor.h"
 #include "gui/mainscreen.h"
 #include "gui/viewer.h"
-#include "core/calibration.h"
+#include "services/calibration.h"
 
 #include <qcursor.h>
 #include <vtkActor2DCollection.h>
