@@ -5118,6 +5118,7 @@ packages:
   - cuda-nvml-dev 12.4.99.*
   - cuda-tools 12.4.0.*
   license: LicenseRef-NVIDIA-End-User-License-Agreement
+  run_exports: {}
   size: 20088
   timestamp: 1709946497989
 - conda: https://prefix.dev/conda-forge/noarch/cuda-version-12.4-h3060b56_3.conda
