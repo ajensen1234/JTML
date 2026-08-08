@@ -421,7 +421,7 @@ composition root `main.cpp` + `Study2Grid` into `src/app`, and keep `.ui`/`.qrc`
 
 ---
 
-- [ ] U6. **Cleanup + docs finalization**
+- [x] U6. **Cleanup + docs finalization** — done (7111870a): deleted orphan `src/view/interactor.cpp`; re-pointed docs/solutions conventions examples; swept AGENTS/docs-solutions/golden_oracle/baseline/HEGEL guide for stale path refs. Remaining from the follow-up code review: tick this checkbox; golden_oracle.org:98/82 path fixes; comment hygiene; see post-003 review-fixes commit.
 
 **Goal:** Update all documentation/AGENTS references to the new paths, delete any
 stale artifacts surfaced by the moves (incl. the dead `include/core/

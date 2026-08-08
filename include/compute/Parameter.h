@@ -70,7 +70,9 @@ private:
     std::string parameter_name_;
 
     /*Parameter Value*/
-    int parameter_value_;
+    double parameter_value_;  // 003 review: was `int`, silently truncating every
+                              // double parameter (15.5 -> 15.0) - caught by the
+                              // cost_function hegel PBT round-trip invariant.
 
     /*Class Type*/
     std::string parameter_type_;

@@ -10,7 +10,7 @@
 # never mocs them -> undefined-vtable link error.
 set(CMAKE_AUTOMOC ON)
 
-file(GLOB HEADER_FILES
+file(GLOB HEADER_FILES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/include/coordinator/*.h
 )
 
@@ -20,8 +20,8 @@ add_library(jtml_coordinator STATIC
     ${HEADER_FILES}
 )
 
-# Downward deps: services (-> domain) + the GPU/cost shared libs (optimizer_manager
-# uses bare gpu_*.cuh + CostFunctionManager.h => jtml_gpu + JTA_Cost_Functions).
+# Downward deps: services (-> domain) + the single SHARED compute lib
+# (optimizer_manager uses gpu_*.cuh + CostFunctionManager.h => jtml_compute, merged U4).
 target_link_libraries(jtml_coordinator PUBLIC jtml_services ${JTA_LIBS})
 # Qt + VTK (via optimizer_manager/services), Torch + OpenCV + CUDA (compute).
 target_link_libraries(jtml_coordinator PRIVATE
@@ -39,7 +39,6 @@ target_include_directories(jtml_coordinator PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/compute
     ${CUDA_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/lib/
 )
 
 # The compute + GPU/CUDA surface now lives in the jtml_compute SHARED lib, linked

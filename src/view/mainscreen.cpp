@@ -19,7 +19,7 @@
 #include "domain/model_list_builder.h"
 
 /*Size Constants*/
-#include "domain/mainscreen_size_constants.h"
+#include "view/mainscreen_size_constants.h"
 
 /*Process Events*/
 #include <qapplication.h>

@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/view)
-file(GLOB HEADER_FILES ${HEADER_DIR}/*.ui ${HEADER_DIR}/*.h)
+file(GLOB HEADER_FILES CONFIGURE_DEPENDS ${HEADER_DIR}/*.ui ${HEADER_DIR}/*.h)
 set(RESOURCE_DIR ${PROJECT_SOURCE_DIR}/res)
 
 add_library(jtml_view STATIC
@@ -24,10 +24,9 @@ add_library(jtml_view STATIC
     ${HEADER_FILES}
     ${HEADER_DIR}/mainscreen.qrc
 )
-# NOTE: interactor.cpp is NOT compiled - include/view/interactor.h defines its VTK
-# classes inline (vtkStandardNewMacro in the header), and the old gui target also
-# omitted interactor.cpp (orphan). Compiling it redefines New() -> link redefinition
-# error. It is dead weight, flagged for the U6 cleanup sweep.
+# NOTE: no interactor.cpp is compiled - include/view/interactor.h defines its VTK
+# interactor classes inline (vtkStandardNewMacro in the header). The orphan .cpp was
+# deleted in 003 U6; compiling a copy would redefine New() (link error).
 
 # View consumes the layered stack (coordinator -> services -> domain, + compute)
 # and the Qt/VTK/OpenCV/Eigen toolchain.

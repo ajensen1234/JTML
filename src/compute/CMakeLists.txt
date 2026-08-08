@@ -7,10 +7,13 @@
 # machine_learning_tools.cpp). The merge is acyclic (cost functions depend one-way
 # on the GPU primitives), so one SHARED lib preserves the link order with no break
 # (R15). JTA_LIBS now == this lib.
-set(CMAKE_AUTOMOC ON)
-
+#
+# Naming (directory provenance): gpu_*.cuh / snake_case <- ex-jtml_gpu,
+# CostFunction*/...CustomVariables.h <- ex-JTA_Cost_Functions, and frame.h/
+# pose_matrix.h/camera_calibration.h from the 003 U2 compute layer. No Qt/Q_OBJECT
+# here - AUTOMOC stays OFF.
 set(HEADER_DIR ${PROJECT_SOURCE_DIR}/include/compute)
-file(GLOB HEADER_FILES ${HEADER_DIR}/*.h ${HEADER_DIR}/*.cuh)
+file(GLOB HEADER_FILES CONFIGURE_DEPENDS ${HEADER_DIR}/*.h ${HEADER_DIR}/*.cuh)
 
 add_library(jtml_compute SHARED
     # --- GPU primitives (ex-jtml_gpu) ---
@@ -61,7 +64,6 @@ set_target_properties(jtml_compute PROPERTIES
 
 target_link_libraries(jtml_compute
     PUBLIC
-        ${REQUIRED_LIBS_QUALIFIED}
         ${TORCH_LIBRARIES}
         ${OpenCV_LIBRARIES}
         CUDA::cublas
@@ -71,7 +73,7 @@ target_link_libraries(jtml_compute
 
 target_include_directories(jtml_compute
     PUBLIC
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
         ${HEADER_DIR}
         ${PROJECT_SOURCE_DIR}/include
+        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )

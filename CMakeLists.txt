@@ -78,8 +78,9 @@ find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-set(JTA_LIBS jtml_compute)
-#set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
+# JTA_LIBS is defined ONCE below (before add_subdirectory) as the single handle
+# to the merged compute SHARED lib; do not define it twice here (a one-sided
+# edit of a second occurrence would silently diverge every consumer's links).
 
 
 # VTK setup - assuming VTK was built using the separate build script

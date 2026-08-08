@@ -7,7 +7,7 @@
 # nothing heavy.
 set(CMAKE_AUTOMOC ON)
 
-file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/domain/*.h)
+file(GLOB HEADER_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/domain/*.h)
 
 add_library(jtml_domain STATIC
     ambiguous_pose_processing.cpp
@@ -24,4 +24,3 @@ add_library(jtml_domain STATIC
 
 # Adding Include Directories
 target_include_directories(jtml_domain PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(jtml_domain PUBLIC ${PROJECT_SOURCE_DIR}/lib/)

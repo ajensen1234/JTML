@@ -232,6 +232,82 @@ target_link_options(jtml_test_calibration_props PRIVATE
 add_test(NAME jtml.calibration_props COMMAND jtml_test_calibration_props)
 set_tests_properties(jtml.calibration_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# --- post-003 review additions: CostFunction/Parameter registry (U4-merged pure
+# surface, zero headless coverage before this) + deterministic twins for the four
+# PBT-only modules (house rule: PBT complements, never replaces). ---
+
+# CostFunction parameter registry: hegel PBT (typed round-trip, rejection edges).
+# Compiled CUDA/Qt-free from src/compute/CostFunction.cpp (std-only surface).
+add_executable(jtml_test_cost_function_props
+    unit/test_cost_function_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/CostFunction.cpp
+)
+target_include_directories(jtml_test_cost_function_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_cost_function_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_cost_function_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.cost_function_props COMMAND jtml_test_cost_function_props)
+set_tests_properties(jtml.cost_function_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# CostFunction parameter registry: deterministic twin.
+add_executable(jtml_test_cost_function
+    unit/test_cost_function.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/CostFunction.cpp
+)
+target_include_directories(jtml_test_cost_function PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_cost_function PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.cost_function COMMAND jtml_test_cost_function)
+set_tests_properties(jtml.cost_function PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Deterministic twin: sym_trap_functions (complements sym_trap_functions_props).
+add_executable(jtml_test_sym_trap_functions
+    unit/test_sym_trap_functions.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/sym_trap_functions.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_sym_trap_functions PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_sym_trap_functions PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.sym_trap_functions COMMAND jtml_test_sym_trap_functions)
+set_tests_properties(jtml.sym_trap_functions PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Deterministic twin: ambiguous_pose_processing (complements ambiguous_pose_props).
+add_executable(jtml_test_ambiguous_pose
+    unit/test_ambiguous_pose_processing.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/ambiguous_pose_processing.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/sym_trap_functions.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_ambiguous_pose PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_ambiguous_pose PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.ambiguous_pose COMMAND jtml_test_ambiguous_pose)
+set_tests_properties(jtml.ambiguous_pose PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Deterministic twin: location_storage (complements location_storage_props).
+add_executable(jtml_test_location_storage
+    unit/test_location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_location_storage PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_location_storage PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.location_storage COMMAND jtml_test_location_storage)
+set_tests_properties(jtml.location_storage PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Deterministic twin: calibration (complements calibration_props; header-only).
+add_executable(jtml_test_calibration
+    unit/test_calibration.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_calibration PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_calibration PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.calibration COMMAND jtml_test_calibration)
+set_tests_properties(jtml.calibration PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Hegel PBT for the DIRECT container (src/domain): cached-min consistency with the
 # column tail box across random insertions.
 add_executable(jtml_test_direct_data_storage_props
@@ -317,7 +393,7 @@ target_link_libraries(jtml_test_oracle PRIVATE
     ${JTA_LIBS}
     ${VTK_LIBRARIES}
     ${TORCH_LIBRARIES}
-    ${OpenCV_LIBS}
+    ${OpenCV_LIBRARIES}
     Eigen3::Eigen
     Catch2::Catch2WithMain
 )
@@ -326,8 +402,8 @@ set_target_properties(jtml_test_oracle PROPERTIES
     BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
 )
 # The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
-# explicitly (GNU ld accumulates -rpath): jtml_gpu/JTA_Cost_Functions live in
-# the build lib dir, VTK + conda libs in their install dirs.
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir, VTK + conda libs in their install dirs.
 target_link_options(jtml_test_oracle PRIVATE
     "-Wl,-rpath,$ORIGIN/../lib"
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"

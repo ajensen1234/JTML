@@ -79,7 +79,7 @@ DIRECT_DILATION for the femur; trunk / 2-branch / 1-leaf. Budget per stage (prod
 defaults): trunk 20000, +2 branches 5000 each, +leaf 5000. The budget is CUMULATIVE via
 RunDirectStage's SetCallOffset, so the effective caps are
 20,000 -> 25,000 -> 30,000 -> 35,000 (trunk, +branch1, +branch2, +leaf). Ranges:
-src/domain/settings_constants.h (trunk +/-35 all, branch +/-15 with +/-25 z, leaf +/-3 with
+include/domain/settings_constants.h (trunk +/-35 all, branch +/-15 with +/-25 z, leaf +/-3 with
 +/-15 z). Dilation comes per-stage from the cost-function-manager's "Dilation" int param
 (historically trunk 6 / branch 3 / leaf 1; the Tier-2 oracle used 6). (The oracle's flat
 budget 3000 and range (12,12,15,...) are REDUCED for run time and not the production budget
@@ -95,7 +95,7 @@ shape.)
   (-0.05, 0.004, -0.91, 0.04, 0.002, -0.14)).
 - Oracle run config: DIRECT_DILATION; budget 3000 (reduced from cumulative
   20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts frame 0;
-  Canny 3/0/150; dilation 6; backface culling OFF (matches the label generator, src/Study2Grid).
+  Canny 3/0/150; dilation 6; backface culling OFF (matches the label generator, src/app/Study2Grid).
 - The oracle covers frame 0 only; expanding to all 3 Kneel_1 frames is a follow-on.
 
 

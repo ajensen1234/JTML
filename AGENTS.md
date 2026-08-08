@@ -74,12 +74,13 @@ Architecture seams introduced so far:
 - `include/coordinator/optimize_coordinator.h` / `src/coordinator/optimize_coordinator.cpp` — headless
   state machine (Idle→Running→Idle) + persistent worker thread, for the GUI to bind to.
 
-> **003 U2/U3 layered layout:** `src/core`+`include/core` was split into `domain/`
-> (pure logic), `services/` (non-pure headless services), `coordinator/` (QObject
-> orchestration), `compute/` (GPU/CUDA). U3 then split the single `jtml_core` lib into
-> `jtml_domain` / `jtml_services` / `jtml_coordinator` / `jtml_view` STATIC libs, plus the
-> single SHARED `jtml_compute` (the merged GPU + cost-functions lib, owns `src/compute`).
-> The thin GUI composition root + `Study2Grid` live in `src/app`. `jtml_domain` is
+> **003 layered layout:** `src/core`+`include/core` was split into `domain/` (pure
+> logic), `services/` (non-pure headless services), `coordinator/` (QObject
+> orchestration), `compute/` (GPU/CUDA). U3 split the single `jtml_core` lib into
+> `jtml_domain` / `jtml_services` / `jtml_coordinator` STATIC libs; U4 merged the GPU +
+> cost-functions libs into the single SHARED `jtml_compute`; U5 added the STATIC
+> `jtml_view` (QWidgets, QML-swappable) + moved the thin GUI composition root and
+> `Study2Grid` to `src/app`. `jtml_domain` is
 > the Qt/GPU-free Rust-interop surface; `jtml_services`/`jtml_coordinator` are Qt-linked
 > until the deferred purity decouples. The old `src/core/` dir is gone.
 

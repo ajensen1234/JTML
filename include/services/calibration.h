@@ -8,6 +8,9 @@
 
 /*Includes*/
 #include "compute/camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
+// 003 review: explicit compute/ prefix documents the services->compute header
+// reach; moving camera_calibration.h to domain/ is the deferred decouple that
+// would let jtml_services drop its PUBLIC include/compute export.
 
 /*Standard*/
 #include <cmath>

@@ -8,7 +8,7 @@
 # jtml_domain (optimizer_settings.cpp -> domain/settings_constants.h).
 set(CMAKE_AUTOMOC ON)
 
-file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/services/*.h)
+file(GLOB HEADER_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/services/*.h)
 
 add_library(jtml_services STATIC
     location_storage.cpp
@@ -30,5 +30,4 @@ target_link_libraries(jtml_services PRIVATE ${REQUIRED_LIBS_QUALIFIED} ${VTK_LIB
 # location_storage.h by any jtml_services consumer.
 target_include_directories(jtml_services PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/compute
-    ${PROJECT_SOURCE_DIR}/lib/)
+    ${PROJECT_SOURCE_DIR}/include/compute)
