@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include "gpu/gpu_image.cuh"
+#include "compute/gpu_image.cuh"
 
 class img_desc {
 public:

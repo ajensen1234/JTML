@@ -332,7 +332,7 @@ the deferred decouples, not a Qt-free lib on this cut.
 
 ---
 
-- [ ] U4. **Cut 3 — merge `gpu` + `cost_functions` → `compute`(single lib)**
+- [x] U4. **Cut 3 — merge `gpu` + `cost_functions` → `compute`(single lib)** — done: merged `jtml_gpu` + `JTA_Cost_Functions` into SHARED `jtml_compute` (`src/compute`, `include/compute`), moved the 3 temp-housed compute sources out of `jtml_coordinator`, re-pointed `JTA_LIBS`→`jtml_compute` (both root occurrences), standardized all `gpu/`|`cost_functions/`|bare `gpu_*.cuh` includes → `compute/...` (149 sites); re-pointed gui/oracle/vtk/Study2Grid/shape_sensitivity/packaging. Build green incl. Study2Grid + oracle; headless 18/18; zero bare `gpu_`/`gpu/`/`cost_functions/` includes; GPU oracle run deferred to an explicit GPU pass.
 
 **Goal:** Merge `jtml_gpu` + `JTA_Cost_Functions` into one `jtml_compute` SHARED
 lib (acyclic one-way dep), relocate `src/gpu`/`src/cost_functions` → `src/compute`,

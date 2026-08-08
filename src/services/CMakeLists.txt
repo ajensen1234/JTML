@@ -25,10 +25,10 @@ target_link_libraries(jtml_services PUBLIC jtml_domain)
 # (model.h vtkSTLReader/vtkSmartPointer).
 target_link_libraries(jtml_services PRIVATE ${REQUIRED_LIBS_QUALIFIED} ${VTK_LIBRARIES})
 
-# Adding Include Directories. include/gpu is PUBLIC because calibration.h -> the
-# bare camera_calibration.h include (in include/gpu) is consumed through
+# Adding Include Directories. include/compute is PUBLIC because calibration.h -> the
+# bare camera_calibration.h include (in include/compute) is consumed through
 # location_storage.h by any jtml_services consumer.
 target_include_directories(jtml_services PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/gpu
+    ${PROJECT_SOURCE_DIR}/include/compute
     ${PROJECT_SOURCE_DIR}/lib/)

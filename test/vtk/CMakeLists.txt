@@ -8,7 +8,7 @@ add_executable(vtk-tester
 
 )
 target_link_libraries(vtk-tester PRIVATE ${VTK_LIBRARIES})
-target_link_libraries(vtk-tester PRIVATE jtml_gpu jtml_coordinator)
+target_link_libraries(vtk-tester PRIVATE jtml_compute jtml_coordinator)
 target_link_libraries(vtk-tester PRIVATE ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(vtk-tester PRIVATE ${OpenCV_LIBRARIES})
 

@@ -73,10 +73,10 @@
 /* Symmetry Trap Analysis Window*/
 
 /*Cost Function Library*/
-#include "cost_functions/CostFunctionManager.h"
+#include "compute/CostFunctionManager.h"
 
 /*CostFunctionTools*/
-#include "camera_calibration.h"
+#include "compute/camera_calibration.h"
 
 /*machine_learning_tools*/
 #include "compute/machine_learning_tools.h"

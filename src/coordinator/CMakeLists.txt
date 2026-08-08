@@ -1,10 +1,9 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-# 003 U3: jtml_coordinator is the Qt orchestration layer (optimize_coordinator,
-# optimizer_manager) plus, TEMPORARILY, the compute sources (frame.cu,
-# curvature_utilities, machine_learning_tools) until src/compute/ owns its own
-# lib in U4. It links services+domain (down) and the GPU/CUDA/Torch/OpenCV stack.
+# 003 U3/U4: jtml_coordinator is the Qt orchestration layer (optimize_coordinator,
+# optimizer_manager). It consumes the single jtml_compute SHARED lib (via JTA_LIBS) --
+# the compute sources moved out of the coordinator into jtml_compute in U4.
 #
 # AUTOMOC: the Q_OBJECT headers (optimize_coordinator.h, optimizer_manager.h)
 # MUST be in the source list (via the coordinator header GLOB below) or AUTOMOC
@@ -13,16 +12,11 @@ set(CMAKE_AUTOMOC ON)
 
 file(GLOB HEADER_FILES
     ${PROJECT_SOURCE_DIR}/include/coordinator/*.h
-    ${PROJECT_SOURCE_DIR}/include/compute/*.h
 )
 
 add_library(jtml_coordinator STATIC
     optimize_coordinator.cpp
     optimizer_manager.cpp
-    # Compute sources are housed here until src/compute/ lands in U4.
-    ${PROJECT_SOURCE_DIR}/src/compute/curvature_utilities.cpp
-    ${PROJECT_SOURCE_DIR}/src/compute/frame.cu
-    ${PROJECT_SOURCE_DIR}/src/compute/machine_learning_tools.cpp
     ${HEADER_FILES}
 )
 
@@ -38,15 +32,16 @@ target_link_libraries(jtml_coordinator PRIVATE
     ${CUDA_LIBRARIES}
 )
 
-# Adding Include Directories. include/gpu resolves the bare gpu_*.cuh/pose_matrix.h
-# in optimizer_manager + camera_calibration.h; CUDA includes for machine_learning_tools.
+# Adding Include Directories. include/compute resolves the bare/resolver gpu/cost
+# headers (gpu_*.cuh, pose_matrix.h, camera_calibration.h) in optimizer_manager + the
+# cost managers; CUDA includes for the compute path.
 target_include_directories(jtml_coordinator PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/gpu
+    ${PROJECT_SOURCE_DIR}/include/compute
     ${CUDA_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/lib/
 )
 
-# frame.cu compiles in a STATIC lib (proven: jtml_core did the same) and inherits
-# the project-wide CMAKE_CUDA_ARCHITECTURES=native; no per-target CUDA flags or
-# separable compilation are required here (that is jtml_gpu only).
+# The compute + GPU/CUDA surface now lives in the jtml_compute SHARED lib, linked
+# through ${JTA_LIBS}; no per-target CUDA flags or separable compilation are needed
+# here (that is jtml_compute only).

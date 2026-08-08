@@ -47,7 +47,7 @@
 
 /*Cost Function Library*/
 #include "domain/sym_trap_functions.h"
-#include "cost_functions/CostFunctionManager.h"
+#include "compute/CostFunctionManager.h"
 
 using namespace gpu_cost_function;
 

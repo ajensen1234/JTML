@@ -13,15 +13,15 @@
 #include <vector>
 
 /*Cost Function Tools Library*/
-#include "gpu_dilated_frame.cuh"
-#include "gpu_edge_frame.cuh"
-#include "gpu_frame.cuh"
-#include "gpu_image.cuh"
-#include "gpu_image_functions.cuh"
-#include "gpu_intensity_frame.cuh"
-#include "gpu_metrics.cuh"
-#include "gpu_model.cuh"
-#include "render_engine.cuh"
+#include "compute/gpu_dilated_frame.cuh"
+#include "compute/gpu_edge_frame.cuh"
+#include "compute/gpu_frame.cuh"
+#include "compute/gpu_image.cuh"
+#include "compute/gpu_image_functions.cuh"
+#include "compute/gpu_intensity_frame.cuh"
+#include "compute/gpu_metrics.cuh"
+#include "compute/gpu_model.cuh"
+#include "compute/render_engine.cuh"
 
 /*Basic Linear Algebra Structures*/
 #include "BasicLinearAlgebraStructures.h"

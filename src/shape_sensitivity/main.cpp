@@ -7,7 +7,7 @@
 #include "services/calibration.h"
 #include "services/model.h"
 #include "descriptors.h"
-#include "gpu/gpu_model.cuh"
+#include "compute/gpu_model.cuh"
 #include "matrix_vector_utils.h"
 int main() {
     auto mod_name = std::string("sca");

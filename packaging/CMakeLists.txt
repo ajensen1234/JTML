@@ -39,7 +39,7 @@ elseif(UNIX)  # Assumes Linux for simplicity
     # Additional Linux-specific installations
     install(DIRECTORY ${networks_dir} DESTINATION share/${CPACK_PACKAGE_NAME})
     install(DIRECTORY ${platforms_dir} DESTINATION share/${CPACK_PACKAGE_NAME})
-    install(TARGETS jtml_gpu jtml_domain jtml_services jtml_coordinator JTA_Cost_Functions
+    install(TARGETS jtml_compute jtml_domain jtml_services jtml_coordinator
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin)

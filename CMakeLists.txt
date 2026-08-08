@@ -78,7 +78,7 @@ find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
+set(JTA_LIBS jtml_compute)
 #set(JTA_INCLUDES ${JTA_COST_FUNCTIONS_INCLUDE_PATH} ${COSTFUNCTIONTOOLS_INCLUDE_PATH})
 
 
@@ -116,7 +116,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 # Main Target
 #=============================
 
-set(JTA_LIBS jtml_gpu JTA_Cost_Functions)
+set(JTA_LIBS jtml_compute)
 
 #=============================
 # Subdirectories

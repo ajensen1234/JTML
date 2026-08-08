@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "art.cuh"
-#include "gpu/gpu_image.cuh"
+#include "compute/gpu_image.cuh"
 
 std::vector<float>
 calculateIARTD(img_desc* img_desc_gpu, gpu_cost_function::GPUImage* dev_image);

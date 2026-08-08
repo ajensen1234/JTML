@@ -3,10 +3,9 @@
 
 add_subdirectory(domain)
 add_subdirectory(services)
+add_subdirectory(compute)
 add_subdirectory(coordinator)
 #add_subdirectory(nfd)
 add_subdirectory(gui)
-add_subdirectory(gpu)
-add_subdirectory(cost_functions)
 add_subdirectory(Study2Grid)
 #add_subdirectory(shape_sensitivity)

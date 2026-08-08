@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "gpu/render_engine.cuh"
+#include "compute/render_engine.cuh"
 
 using namespace gpu_cost_function;
 

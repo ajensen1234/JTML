@@ -7,7 +7,7 @@
 #define CALIBRATION_H
 
 /*Includes*/
-#include "camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
+#include "compute/camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
 
 /*Standard*/
 #include <cmath>

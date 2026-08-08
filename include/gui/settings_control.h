@@ -14,7 +14,7 @@
 #include "services/optimizer_settings.h"
 
 /*JTA Cost Function Class*/
-#include "cost_functions/CostFunctionManager.h"
+#include "compute/CostFunctionManager.h"
 
 // About OptimizerSettings Popup Header
 class SettingsControl : public QDialog {

@@ -199,7 +199,7 @@ add_test(NAME jtml.ambiguous_pose_props COMMAND jtml_test_ambiguous_pose_props)
 set_tests_properties(jtml.ambiguous_pose_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
 # Hegel PBT for the LocationStorage pose-matrix service (src/services). Needs
-# include/gpu on the path because services/calibration.h pulls camera_calibration.h.
+# include/compute on the path because services/calibration.h pulls camera_calibration.h.
 add_executable(jtml_test_location_storage_props
     unit/test_location_storage_properties.cpp
     ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
@@ -207,7 +207,7 @@ add_executable(jtml_test_location_storage_props
 )
 target_include_directories(jtml_test_location_storage_props PRIVATE
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/gpu)
+    ${PROJECT_SOURCE_DIR}/include/compute)
 target_link_libraries(jtml_test_location_storage_props PRIVATE
     Catch2::Catch2WithMain hegel dl)
 target_link_options(jtml_test_location_storage_props PRIVATE
@@ -216,7 +216,7 @@ add_test(NAME jtml.location_storage_props COMMAND jtml_test_location_storage_pro
 set_tests_properties(jtml.location_storage_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
 # Hegel PBT for the header-only biplane Calibration conversion (src/services). The
-# test needs include/gpu for camera_calibration.h; only data_structures_6D.cpp is
+# test needs include/compute for camera_calibration.h; only data_structures_6D.cpp is
 # compiled (calibration.h is header-only).
 add_executable(jtml_test_calibration_props
     unit/test_calibration_properties.cpp
@@ -224,7 +224,7 @@ add_executable(jtml_test_calibration_props
 )
 target_include_directories(jtml_test_calibration_props PRIVATE
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/gpu)
+    ${PROJECT_SOURCE_DIR}/include/compute)
 target_link_libraries(jtml_test_calibration_props PRIVATE
     Catch2::Catch2WithMain hegel dl)
 target_link_options(jtml_test_calibration_props PRIVATE

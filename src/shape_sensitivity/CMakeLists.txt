@@ -18,7 +18,7 @@ target_link_libraries(shape-sensitivity ${VTK_LIBRARIES})
 
 target_link_libraries(shape-sensitivity ${JTA_LIBS})
 target_link_libraries(shape-sensitivity jtml_coordinator)
-target_link_libraries(shape-sensitivity jtml_gpu)
+target_link_libraries(shape-sensitivity jtml_compute)
 # Adding Include Directories
 target_include_directories(shape-sensitivity PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(shape-sensitivity PUBLIC ${CUDA_INCLUDE_DIRS})

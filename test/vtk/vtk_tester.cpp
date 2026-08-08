@@ -14,7 +14,7 @@
 #include "services/calibration.h"
 #include "compute/frame.h"
 #include "services/model.h"
-#include "gpu/camera_calibration.h"
+#include "compute/camera_calibration.h"
 #include "gui/viewer.h"
 // Calibration read_calibration(const QString& cal_path);
 

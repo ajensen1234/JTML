@@ -37,12 +37,12 @@
 #include "services/model.h"
 #include "services/calibration.h"
 
-#include "cost_functions/CostFunctionManager.h"
+#include "compute/CostFunctionManager.h"
 
-#include "gpu/camera_calibration.h"
-#include "gpu/gpu_metrics.cuh"
-#include "gpu/gpu_model.cuh"
-#include "gpu/pose_matrix.h"
+#include "compute/camera_calibration.h"
+#include "compute/gpu_metrics.cuh"
+#include "compute/gpu_model.cuh"
+#include "compute/pose_matrix.h"
 
 using gpu_cost_function::Pose;
 using gpu_cost_function::GPUEdgeFrame;

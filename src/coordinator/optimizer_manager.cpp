@@ -10,9 +10,9 @@
 #include <chrono>
 #include <thread>
 
-#include "gpu_heatmaps.cuh"
-#include "gpu_model.cuh"
-#include "pose_matrix.h"
+#include "compute/gpu_heatmaps.cuh"
+#include "compute/gpu_model.cuh"
+#include "compute/pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
     // this->sym_trap_obj = nullptr;

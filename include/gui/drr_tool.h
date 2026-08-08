@@ -29,7 +29,7 @@
 #include "services/model.h"
 
 /*GPU Models*/
-#include "gpu/gpu_model.cuh"
+#include "compute/gpu_model.cuh"
 
 // About JTA Popup Header
 class DRRTool : public QDialog {
