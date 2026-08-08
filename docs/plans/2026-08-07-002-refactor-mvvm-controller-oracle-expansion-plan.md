@@ -1,7 +1,7 @@
 ---
 title: refactor: Complete U7 MVVM — optimize-intent controller, MainScreen shrink, oracle expansion
 type: refactor
-status: active
+status: complete
 date: 2026-08-07
 origin: docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md
 deepened: 2026-08-07
@@ -202,7 +202,7 @@ MainScreen; headless gates; coupling metrics moved in the tracked direction).
 
 ## Implementation Units
 
-- [ ] U9. **Optimize-intent controller (headless AE4 gate)**
+- [x] U9. **Optimize-intent controller (headless AE4 gate)**  — landed (`tsrvnltv`); headless `jtml.optimize_intent` green
 
 **Goal:** Extract the widget-free "can I optimize / what do I need" decision and the
 `OptimizerManager::Initialize` argument packaging out of `MainScreen::LaunchOptimizer` into a
@@ -266,7 +266,7 @@ optimize entry to a valid precondition.
 
 ---
 
-- [ ] U10. **MainScreen shrink — list population + load-logic extraction (R10)**
+- [x] U10. **MainScreen shrink — list population + load-logic extraction (R10)**  — landed (`ynnkwmwl`); `jtml.model_list_builder`(+`_props`) green; mainscreen.cpp 5693 lines
 
 **Goal:** Move the *real, non-trivial* pure load logic (model name-dedup, frame same-size
 consistency) and the list-population display-name construction out of MainScreen, so
@@ -326,7 +326,7 @@ buttons (list population names unchanged).
 
 ---
 
-- [ ] U11. **Tier-2 oracle expansion — multi-frame + cumulative multi-stage (covers the
+- [x] U11. **Tier-2 oracle expansion — multi-frame + cumulative multi-stage (covers the
   documented gap)**
 
 **Goal:** Extend the GPU oracle so it exercises the production `Optimize()` orchestration —

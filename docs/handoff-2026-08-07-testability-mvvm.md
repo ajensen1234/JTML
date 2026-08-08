@@ -22,9 +22,13 @@
 
 `pixi run test` → 6/6 pass (~0.1s, no GPU/GUI). This is the "fearlessly edit" headless seam. (U6 added hegel PBT tests; the Tier-2 GPU oracle runs separately under `ctest -L oracle`.)
 
-## Status: COMPLETE (U1-U8 done)
+## Status: 001 + 002 COMPLETE; 003 (layered directory restructure) is the ACTIVE plan
 
-All units of the plan are **done**: U1 harness/CI, U2 oracle baseline, U3 CUDA-ree decoupling, U4 headless coordinator, U5 pure DIRECT optimizer, U6 `OptimizerManager` -> `DirectOptimizer` rewire + Tier-2 GPU oracle, U7 phase-1 (persistence service + MainScreen strangle; full MVVM phase-gated/re-scoped), and U8 Qt5 -> Qt6 migration (gated by the oracle).
+**Plan 001 (U1-U8)** — done. U1 harness/CI, U2 oracle baseline, U3 CUDA-ree decoupling, U4 headless coordinator, U5 pure DIRECT optimizer, U6 `OptimizerManager` -> `DirectOptimizer` rewire + Tier-2 GPU oracle, U7 phase-1 (persistence service + MainScreen strangle; full MVVM phase-gated/re-scoped), U8 Qt5 -> Qt6 migration (gated by the oracle).
+
+**Plan 002 (U9-U11)** — done (code landed, checkboxes ticked). U9 `OptimizeIntentController` (headless AE4 gate), U10 `ModelListBuilder` + MainScreen shrink, U11 Tier-2 oracle expanded to all 3 Kneel_1 frames with per-frame correspondence + reconciled cumulative budget (`[20000,25000,30000,35000]`). Headless suite 11/11 green.
+
+**Plan 003** — the current plan (`docs/plans/2026-08-07-003-refactor-layered-directory-restructure-plan.md`): restructure src/+include/ into `domain/services/coordinator/compute/view/app` layers. Six cuts (U1 cleanup of committed build artifacts, U2 core path renames, U3 layered lib split, U4 gpu+cost_functions->compute merge, U5 view+app isolation, U6 docs finalization). Pure reorg, zero runtime behavior (R15).
 
 Current state is green under **Qt6**: `pixi run test` (headless) 7/7; `ctest -L oracle` (GPU) passes (IoU 0.9936 vs 0.85 gate); bounded GUI smoke runs the event loop on a real display. Full MVVM decomposition of `MainScreen` (session/model-list state) remains as intentionally re-scoped follow-on work, as does expanding the oracle beyond frame 0.
 
