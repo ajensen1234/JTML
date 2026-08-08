@@ -5,7 +5,7 @@
 #include <QSurfaceFormat>
 #include <QVTKOpenGLNativeWidget.h>
 
-#include "gui/mainscreen.h"
+#include "view/mainscreen.h"
 
 int main(int argc, char* argv[]) {
     /*QVTKOpenGLNativeWidget must have its default surface format set before any

@@ -3,8 +3,8 @@
 
 add_executable(vtk-tester
     vtk_tester.cpp
-    "../../src/gui/viewer.cpp" 
-    ${PROJECT_SOURCE_DIR}/include/gui/viewer.h 
+    "../../src/view/viewer.cpp"
+    ${PROJECT_SOURCE_DIR}/include/view/viewer.h 
 
 )
 target_link_libraries(vtk-tester PRIVATE ${VTK_LIBRARIES})

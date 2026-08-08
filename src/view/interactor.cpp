@@ -1,6 +1,6 @@
-#include "gui/interactor.h"
-#include "gui/mainscreen.h"
-#include "gui/viewer.h"
+#include "view/interactor.h"
+#include "view/mainscreen.h"
+#include "view/viewer.h"
 #include "services/calibration.h"
 
 #include <qcursor.h>

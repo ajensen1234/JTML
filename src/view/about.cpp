@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*About Window Header*/
-#include "gui/about.h"
+#include "view/about.h"
 
 /*CUDA Headers*/
 #include <cuda_runtime.h>

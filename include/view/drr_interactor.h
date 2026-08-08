@@ -21,7 +21,7 @@
 #include "services/calibration.h"
 
 /*Drr Tool Header*/
-#include "gui/drr_tool.h"
+#include "view/drr_tool.h"
 
 /*DRR Globals*/
 bool middleDownDRR = false;    // Is CM button down?

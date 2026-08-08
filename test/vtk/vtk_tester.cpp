@@ -15,7 +15,7 @@
 #include "compute/frame.h"
 #include "services/model.h"
 #include "compute/camera_calibration.h"
-#include "gui/viewer.h"
+#include "view/viewer.h"
 // Calibration read_calibration(const QString& cal_path);
 
 void print_hello() { std::cout << "hello" << std::endl; }

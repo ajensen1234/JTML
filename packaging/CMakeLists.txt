@@ -12,7 +12,7 @@ set(CPACK_VERBATIM_VARIABLES YES)
 
 # Set platform-specific variables
 if(WIN32)
-    set(build_dir_libs ${CMAKE_BINARY_DIR}/src/gui/Release)
+    set(build_dir_libs ${CMAKE_BINARY_DIR}/src/view/Release)
     set(networks_dir ${build_dir_libs}/Networks)
     set(platforms_dir ${build_dir_libs}/platforms)
 
@@ -28,7 +28,7 @@ if(WIN32)
 
 elseif(UNIX)  # Assumes Linux for simplicity
     # Set Linux-specific variables
-    set(build_dir_libs ${CMAKE_BINARY_DIR}/src/gui)
+    set(build_dir_libs ${CMAKE_BINARY_DIR}/src/view)
     set(networks_dir ${build_dir_libs}/Networks)
     #set(platforms_dir ${build_dir_libs}/platforms)
 

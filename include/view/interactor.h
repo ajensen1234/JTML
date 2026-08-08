@@ -20,8 +20,8 @@
 #include <utility>
 
 /*Ref to QMainWindow*/
-#include "gui/mainscreen.h"
-#include "gui/viewer.h"
+#include "view/mainscreen.h"
+#include "view/viewer.h"
 
 // Calibration To Convert Pose
 #include "services/calibration.h"

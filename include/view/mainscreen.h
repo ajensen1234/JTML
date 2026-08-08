@@ -62,7 +62,7 @@
 #include "coordinator/optimizer_manager.h"
 
 /*Optimizer Settings Control Window*/
-#include "gui/settings_control.h"
+#include "view/settings_control.h"
 
 /*App-State Service (plan U7, R8/E11)*/
 #include "domain/session_state.h"
@@ -80,7 +80,7 @@
 
 /*machine_learning_tools*/
 #include "compute/machine_learning_tools.h"
-#include "gui/viewer.h"
+#include "view/viewer.h"
 
 /**
  * @brief The MainScreen object that inherits the QMainWindow object type. This

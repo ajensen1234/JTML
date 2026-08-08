@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*Main Screen Header*/
-#include "gui/mainscreen.h"
+#include "view/mainscreen.h"
 
 /*Font Manipulation*/
 #include <qfontmetrics.h>
@@ -32,7 +32,7 @@
 #include <qfiledialog.h>
 #include <qtextstream.h>
 
-#include "gui/interactor.h"
+#include "view/interactor.h"
 
 /*Messages*/
 #include <qmessagebox.h>
@@ -42,13 +42,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 /*Custom Interactor*/
-#include "gui/interactor.h"
+#include "view/interactor.h"
 
 /*About Window*/
-#include "gui/about.h"
+#include "view/about.h"
 
 /*Control Window*/
-#include "gui/controls.h"
+#include "view/controls.h"
 
 /*STL Reader*/
 #include "services/STLReader.h"

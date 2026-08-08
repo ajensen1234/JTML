@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*About Window Header*/
-#include "gui/drr_tool.h"
+#include "view/drr_tool.h"
 
 /*Interactor*/
-#include "gui/drr_interactor.h"
+#include "view/drr_interactor.h"
 
 /*Message Box*/
 #include <qmessagebox.h>

@@ -77,9 +77,9 @@ Architecture seams introduced so far:
 > **003 U2/U3 layered layout:** `src/core`+`include/core` was split into `domain/`
 > (pure logic), `services/` (non-pure headless services), `coordinator/` (QObject
 > orchestration), `compute/` (GPU/CUDA). U3 then split the single `jtml_core` lib into
-> `jtml_domain` / `jtml_services` / `jtml_coordinator` STATIC libs, plus the single
-> SHARED `jtml_compute` (the merged GPU + cost-functions lib, owns `src/compute`).
-> `jtml_domain` is
+> `jtml_domain` / `jtml_services` / `jtml_coordinator` / `jtml_view` STATIC libs, plus the
+> single SHARED `jtml_compute` (the merged GPU + cost-functions lib, owns `src/compute`).
+> The thin GUI composition root + `Study2Grid` live in `src/app`. `jtml_domain` is
 > the Qt/GPU-free Rust-interop surface; `jtml_services`/`jtml_coordinator` are Qt-linked
 > until the deferred purity decouples. The old `src/core/` dir is gone.
 

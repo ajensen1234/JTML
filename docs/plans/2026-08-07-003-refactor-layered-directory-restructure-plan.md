@@ -377,7 +377,7 @@ on the recorded GPU+GUI pass), `Study2Grid` builds, headless `pixi run test` gre
 
 ---
 
-- [ ] U5. **Cut 4 — view + app isolation**
+- [x] U5. **Cut 4 — view + app isolation** — done: moved src/gui -> src/view (QWidgets, now a separable `jtml_view` STATIC lib, QML-swappable later) + include/gui -> include/view (incl. drr_interactor.h, its single owning cut; .ui/.qrc/Resources atomic). Composition root src/gui/main.cpp + src/Study2Grid -> src/app (src/app defines the GUI exe linking jtml_view + the layered libs; Study2Grid kept as its own subdir). Re-pointed all 21 `gui/`->`view/` includes + packaging/test-vtk path refs. Build green (view lib + app exe + Study2Grid + oracle); headless 18/18; zero `gui/` refs remain. Flagged: `interactor.cpp` is an orphan (interactor.h defines its VTK classes inline) - excluded from the build, dead for U6; real GUI display smoke deferred to a display run.
 
 **Goal:** Move `src/gui` → `src/view` (QWidgets, QML-swappable later), move the
 composition root `main.cpp` + `Study2Grid` into `src/app`, and keep `.ui`/`.qrc`/

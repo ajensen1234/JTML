@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*Settings Control Window*/
-#include "gui/settings_control.h"
+#include "view/settings_control.h"
 
 /*Message Box*/
 #include <qmessagebox.h>
