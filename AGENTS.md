@@ -36,6 +36,12 @@ Layout under `test/`, all registered in `test/CMakeLists.txt`:
 
 Conventions:
 - **QtTest for Qt/threading seams; Catch2 for pure math.** Both register via CTest.
+- **Prefer hegel property-based tests for extracted pure logic.** When a piece of pure,
+  CUDA/Qt-free logic has invariants worth locking down (length preservation,
+  collision-freedom, monotonicity, determinism), add a hegel PBT test alongside its
+  deterministic Catch2 unit test — PBT complements, never replaces, the deterministic cases.
+  See `test/HEGEL-PBT-GUIDE.md` for the authoring patterns, built-in generator survey, and
+  how to discover the hegel API.
 - **Default `headless` label must never touch GPU, VTK render, or a widget.** GPU/real-VTK
   cases go under a separate `oracle`/`gpu` label, run explicitly on a GPU machine.
 - **New Qt test target gotcha:** CMake AUTOMOC does not auto-moc an included shared header,
