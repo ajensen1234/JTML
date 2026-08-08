@@ -111,6 +111,17 @@ add_test(NAME jtml.pose_file_io COMMAND jtml_test_pose_file_io)
 set_tests_properties(jtml.pose_file_io PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# App-state / session orchestration tests (plan U7, R8/R9). Pure state holder;
+# no Qt, no widgets, headless.
+add_executable(jtml_test_session_state
+    unit/test_session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/session_state.cpp
+)
+target_include_directories(jtml_test_session_state PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_session_state PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.session_state COMMAND jtml_test_session_state)
+set_tests_properties(jtml.session_state PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Headless optimize-lifecycle seam (plan U4, R4/R5/R7, AE1). QtTest with a real
 # QThread + worker and an injected stub cost; observed via QSignalSpy on the
 # coordinator (no GPU, no display, QCoreApplication only).

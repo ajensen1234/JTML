@@ -15,6 +15,7 @@ add_library(jtml_core STATIC
 	direct_optimizer.cpp
 	optimize_coordinator.cpp
 	pose_file_io.cpp
+	session_state.cpp
 	frame.cu
 	location_storage.cpp
 	model.cpp
