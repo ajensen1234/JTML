@@ -33,7 +33,7 @@ tags:
 
 JTML is a validated Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 rebuilt against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant registration (a DIRECT global optimizer over a GPU cost function). Before the refactor it could not be edited fearlessly:
 
-- `src/gui/mainscreen.cpp` is a ~5,806-line god object mixing UI wiring, app state, compute, I/O, and optimize orchestration.
+- `src/view/mainscreen.cpp` is a ~5,800-line god object mixing UI wiring, app state, compute, I/O, and optimize orchestration.
 - `src/coordinator/optimizer_manager.cpp` (~1,722 lines) coupled the pure DIRECT algorithm directly to CUDA; only `EvaluateCostFunction` touched the GPU, but the loop lived inline next to it.
 - Testing was effectively disabled (`#add_subdirectory(test)` + `#enable_testing()` commented out in `CMakeLists.txt`); there was no working CI (the `.github/workflows/cmake.yml` was inert boilerplate), and no test framework was declared in `pixi.toml`.
 
@@ -80,17 +80,21 @@ set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 
 
 AUTOMOC does **not** auto-moc an included shared header. If a Q_OBJECT class lives in a header you only `#include`, its moc is never generated → undefined-symbol link error. Fix: list the header in the target's sources. See the `jtml_test_coordinator` target (`test/CMakeLists.txt`) — note `include/coordinator/optimize_coordinator.h` explicitly listed.
 
-### 3. The `file(GLOB)` trap in `src/core/CMakeLists.txt`
+### 3. The `file(GLOB)` trap in the layered lib `CMakeLists.txt`
 
-`src/core/CMakeLists.txt` uses `file(GLOB ...)` for headers **and** an explicit source list. Because GLOB only catches headers, a new header globbed without its implementation in the explicit source list causes an AUTOMOC undefined-symbol link error. The observed breakage: adding `direct_optimizer.h` + `optimize_coordinator.h` without their `.cpp` files. Fix — list every implementation explicitly:
+Each layered lib (`src/{domain,services,coordinator,view}/CMakeLists.txt` — the former
+single `src/core/CMakeLists.txt` was deleted in 003 U3) uses `file(GLOB ...)` for headers
+**and** an explicit `.cpp`/`.cu` source list. Because GLOB only catches headers, a new
+header globbed without its implementation in the explicit source list causes an
+AUTOMOC undefined-symbol link error. The observed breakage: adding `direct_optimizer.h`
++ `optimize_coordinator.h` without their `.cpp` files. Fix — list every implementation
+explicitly:
 
 ```cmake
-add_library(jtml_core STATIC
+add_library(jtml_domain STATIC
     data_structures_6D.cpp
     direct_data_storage.cpp
     direct_optimizer.cpp       # must be added explicitly
-    optimize_coordinator.cpp   # must be added explicitly
-    frame.cu
     ...
     ${HEADER_FILES})
 ```
@@ -163,7 +167,7 @@ manual-visual for presentation-only cuts. Two worked examples from this session:
 Key rules: keep production binding intact (R15); reproduce quirks exactly and pin them
 with deterministic unit tests before "normalizing" behavior; back extracted pure logic with
 a hegel property-based test next to its Catch2 cases (`test/HEGEL-PBT-GUIDE.md`); add any
-new core `.cpp` to the **explicit** `src/core/CMakeLists.txt` list (GLOB header-trap, §3).
+new `.cpp` to the **explicit** source list of its layer's `CMakeLists.txt` (GLOB header-trap, §3).
 
 ### 8. Tier-2 oracle: multi-frame + per-frame empirical label (U11)
 
