@@ -1,6 +1,7 @@
 ---
 title: Headless Testing and Testability-Refactor Conventions for a Qt/GPU Desktop App (JTML)
 date: 2026-08-07
+last_updated: 2026-08-08
 category: conventions
 module: JTML
 problem_type: convention
@@ -116,7 +117,7 @@ public:
 
 Correctness rules to preserve during extraction (R15):
 
-- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage → effective caps **20k / 25k / 30k** across trunk / 2-branch / 1-leaf (`settings_constants`: trunk 20000, branch 5000, leaf 5000). Do NOT "fix" it to per-stage caps. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly or you diverge from the golden.
+- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage. Reconciled authoritative caps (verified against `src/core/optimizer_settings.cpp` defaults + `OptimizerManager::Optimize`, not prose): **20k → 25k → 30k → 35k** = trunk 20,000 + **2 branches** 5,000 each + leaf 5,000 (`settings_constants`: trunk 20000, branch 5000, number_branches 2, leaf/z-search 5000). Do NOT "fix" it to per-stage caps, and ignore stale "~10k/stage" / "20k/25k/30k" prose in older handoff/golden text. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly.
 - **Cost is injected in denormalized physical space** — the callback receives the denormalized `Point6D`, not the unit-cube point.
 - The `DirectOptimizer` may carry cumulative-offset + iteration/improvement callbacks for a throttled production UI (plan U6 design); the pure Tier-1 test uses defaults.
 
@@ -139,6 +140,41 @@ The oracle is a **behavior-preservation gate, not a correctness check** (the bas
 
 Authoritative fixtures under `example_studies/Kneel_1/` (mirrored to `test/golden/`): base silhouettes, `Labels/fem/`, `fem.jts` (JT_EULER_312), `KR_right_7_fem.stl`, `calibration.txt` (JT_INTCALIB), and `fem_oracle.jtak` (the captured Qt5/GPU baseline recorded in `test/golden/baseline.json`).
 
+### 7. MVVM strangle: extract widget-free controllers + pure builders (U9/U10, AE4/R9/R15)
+
+Shrink the `MainScreen` god object one seam at a time. For each extraction, pull the
+widget-free **decision/state/packaging** out into a pure service; leave the **view
+(render/color/widget binding)** and the **real production binding** in `MainScreen`.
+Per-layer gate (R9): headless unit/coordinator for logic; compile + scheduled
+manual-visual for presentation-only cuts. Two worked examples from this session:
+
+- **Controller — `OptimizeIntentController` (`include/core/optimize_intent_controller.h`):**
+  owns the "can I optimize / what do I need" predicate + `Initialize` argument packaging
+  (primary model = first selected row, current frame) that used to live inline in
+  `MainScreen::LaunchOptimizer`. It takes **plain values** (no widgets) and returns a typed
+  `Intent{status, primary_model_index, current_frame}`. `MainScreen` keeps only the error
+  presentation + the real GPU `OptimizerManager` binding (R15 — do NOT rewire to the stub
+  `OptimizeCoordinator`).
+- **Builder — `ModelListBuilder` (`include/core/model_list_builder.h`):** a pure `std::string`
+  service owning the model name-dedup (two-pass "scan-restart" quirk preserved verbatim —
+  `["A","A","A"]` → `["A(2)","A(3)","A"]`) + the frame same-size checks. View keeps only
+  `addItem(...)` + VTK binding.
+
+Key rules: keep production binding intact (R15); reproduce quirks exactly and pin them
+with deterministic unit tests before "normalizing" behavior; back extracted pure logic with
+a hegel property-based test next to its Catch2 cases (`test/HEGEL-PBT-GUIDE.md`); add any
+new core `.cpp` to the **explicit** `src/core/CMakeLists.txt` list (GLOB header-trap, §3).
+
+### 8. Tier-2 oracle: multi-frame + per-frame empirical label (U11)
+
+The Tier-2 appearance oracle is no longer frame-0-only. `test/oracle/oracle_test.cpp` now
+loops all **3 Kneel_1 frames** (`1024/2806-2808.tif`), each with its **own** `fem.jts` start
+pose (from `test/golden/baseline.json` `expected_pose_per_frame`) and its **own**
+empirically-resolved label (start-pose IoU pick; never by filename) — all pass IoU > 0.85
+(measured 0.9936 / 0.9910 / 0.9946 on the RTX 3090). Keep the silhouette/IoU gate (not raw
+pose — DIRECT convergence is noisy), the vertical label flip, and the repo-root
+`WORKING_DIRECTORY`.
+
 ## Why This Matters
 
 - **Fearlessness:** the watched failure classes — "optimizer hangs after finishing", "button click hangs", "optimizer button doesn't fire" — live in thread/orchestration seams that used to be impossible to exercise without running the GUI. A headless coordinator seam + timeout-bounded tests turn each into a fast, non-interactive pass/fail.
@@ -159,16 +195,21 @@ The hybrid Catch2/QtTest split (pure math vs threading seam) is key: don't force
 
 ## Examples
 
-- `pixi run test` → `ctest -L headless --timeout 600` → 8 tests pass (no GPU/display). `ctest -L oracle` runs the GPU Tier-2 gate only on a GPU machine.
+- `pixi run test` → `ctest -L headless --timeout 600` → 11 tests pass (no GPU/display). `ctest -L oracle` runs the GPU Tier-2 gate only on a GPU machine.
 - Tier-1 golden — `test/unit/test_direct_optimizer.cpp` (Catch2): converges an analytic quadratic to its known min; asserts budget accounting (seed consumes one unit) matches the cumulative cap.
 - Lifecycle seam — `test/lifecycle/coordinator_test.cpp` (QtTest): stub cost drives Idle→Running→Finished→Idle, re-launches, refuses double-start, recovers from injected cost-init failure, and a stuck worker fails via timeout (AE5).
-- Tier-2 oracle (built, U6) — `test/oracle/oracle_test.cpp` (Catch2, `oracle` label): loads Kneel_1, optimizes, renders at the optimized pose, compares the silhouette to `Labels/fem/` (IoU > 0.85 gate; measured recovered-pose IoU 0.9936). Labels are vertically flipped (bottom-left vs top-left y-origin); the oracle runs from the repo root (fixture-relative paths).
+- MVVM controller+builder — `test/unit/test_optimize_intent_controller.cpp`, `test/unit/test_model_list_builder.cpp` (+ hegel PBT `test/unit/test_model_list_builder_properties.cpp`): lock the widget-free intent predicate and the dedup quirks.
+- Tier-2 oracle (U11, multi-frame) — `test/oracle/oracle_test.cpp` (Catch2, `oracle` label): loops all 3 Kneel_1 frames, each empirically mapped to its label, optimizes, renders at the optimized pose, compares the silhouette to `Labels/fem/` (IoU > 0.85 gate). Labels are vertically flipped (bottom-left vs top-left y-origin); the oracle runs from the repo root (fixture-relative paths).
 - Seam boundary — `include/core/direct_optimizer.h` + `include/core/optimize_coordinator.h`: `DirectOptimizer(std::function<double(const Point6D&)>, range, start, budget)`; `OptimizeCoordinator` re-emits Succeeded/Failed/StateChanged on the main thread for `QSignalSpy`.
 
 ## Related
 
 - Requirements (normative): `docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md` (R1–R16, AE1–AE5)
 - Plan (Units U1–U8, stable U-IDs): `docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md`
+- MVVM controller-oracle continuation (U9/U10/U11): `docs/plans/2026-08-07-002-refactor-mvvm-controller-oracle-expansion-plan.md`
+- Layered-dir restructure (domain/services/coordinator/compute/view/app) + its adversarial review:
+  `docs/plans/2026-08-07-003-refactor-layered-directory-restructure-plan.md`,
+  `docs/reviews/ce-adversarial-003-layered-restructure.json`
 - Status / next steps: `docs/handoff-2026-08-07-testability-mvvm.md`
 - Oracle spec: `golden_oracle.org`; baselines in `test/golden/`
 - Working conventions: root `AGENTS.md`
