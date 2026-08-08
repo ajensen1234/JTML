@@ -18,14 +18,15 @@
 | U6-c | Tier-2 GPU appearance oracle (`test/oracle/oracle_test.cpp`) — IoU 0.9936 vs 0.85 gate; headless still 6/6 |
 | U7-a | extracted pure `pose_file_io` persistence service (round-trip + real-fixture tests) |
 | U7-b | rewired MainScreen's 4 pose/kinematics slots to `pose_file_io` (strangle; 5806->5620 lines, ui. 837->833) |
+| U8 | Qt5 -> Qt6 migration: pixi Qt6 (qt6-main/wayland 6.7.2), VTK-6 rebuild, Qt6 CMake + API fixes (QRegExp->QRegularExpression, QSurfaceFormat), oracle + headless green under Qt6 |
 
 `pixi run test` → 6/6 pass (~0.1s, no GPU/GUI). This is the "fearlessly edit" headless seam. (U6 added hegel PBT tests; the Tier-2 GPU oracle runs separately under `ctest -L oracle`.)
 
-## Next: U8 - Qt5 -> Qt6 migration (gated by the oracle)
+## Status: COMPLETE (U1-U8 done)
 
-U6 is **DONE** (see the table above). The production `OptimizerManager` now runs each stage through the extracted `DirectOptimizer` behind the real GPU cost, and the Tier-2 appearance oracle gates it (IoU 0.9936 vs 0.85 gate; recovered-pose-vs-fem.jts within ~1mm/~0.14deg; headless suite 7/7). Measured thresholds are recorded in `test/golden/baseline.json` and `golden_oracle.org`.
+All units of the plan are **done**: U1 harness/CI, U2 oracle baseline, U3 CUDA-ree decoupling, U4 headless coordinator, U5 pure DIRECT optimizer, U6 `OptimizerManager` -> `DirectOptimizer` rewire + Tier-2 GPU oracle, U7 phase-1 (persistence service + MainScreen strangle; full MVVM phase-gated/re-scoped), and U8 Qt5 -> Qt6 migration (gated by the oracle).
 
-U7 **phase-1 done** (persistence seam): the pure `pose_file_io` service (tested, headless 7/7) is extracted and `MainScreen`'s four pose/kinematics slots are rewired to it (5806 -> 5620 lines, ui. 837 -> 833). The full MVVM decomposition (session/model-list state) is phase-gated / re-scoped per the plan; we are proceeding to U8.
+Current state is green under **Qt6**: `pixi run test` (headless) 7/7; `ctest -L oracle` (GPU) passes (IoU 0.9936 vs 0.85 gate); bounded GUI smoke runs the event loop on a real display. Full MVVM decomposition of `MainScreen` (session/model-list state) remains as intentionally re-scoped follow-on work, as does expanding the oracle beyond frame 0.
 
 ## Key decisions / gotchas to preserve
 

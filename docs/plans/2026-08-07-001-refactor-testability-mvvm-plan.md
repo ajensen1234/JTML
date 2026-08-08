@@ -391,7 +391,7 @@ The pure-data seam (U3) removes the `Point6D(Pose)` ctor so `data_structures_6D`
 
 ---
 
-- [ ] U8. **Qt5 → Qt6 migration (gated by the oracle)**
+- [x] U8. **Qt5 → Qt6 migration (gated by the oracle)** *(done 2026-08-07: pixi Qt6 + VTK-6 rebuild + Qt6 CMake/API; oracle + headless green under Qt6, GUI smoke passes)*
 
 **Goal:** Move the whole build to Qt6: pixi pin, VTK rebuild against Qt6, `find_package(Qt6)`, API revalidation across `MainScreen`, plus the `QSurfaceFormat::setDefaultFormat` fix and a bounded manual GUI smoke step.
 
