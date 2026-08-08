@@ -313,7 +313,7 @@ target_include_directories(jtml_test_oracle PRIVATE
 )
 target_link_libraries(jtml_test_oracle PRIVATE
     ${REQUIRED_LIBS_QUALIFIED}
-    jtml_core
+    jtml_coordinator
     ${JTA_LIBS}
     ${VTK_LIBRARIES}
     ${TORCH_LIBRARIES}

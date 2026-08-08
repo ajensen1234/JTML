@@ -17,7 +17,7 @@ set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Widgets)
 target_link_libraries(shape-sensitivity ${VTK_LIBRARIES})
 
 target_link_libraries(shape-sensitivity ${JTA_LIBS})
-target_link_libraries(shape-sensitivity jtml_core)
+target_link_libraries(shape-sensitivity jtml_coordinator)
 target_link_libraries(shape-sensitivity jtml_gpu)
 # Adding Include Directories
 target_include_directories(shape-sensitivity PUBLIC ${PROJECT_SOURCE_DIR}/include)

@@ -31,7 +31,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     ${REQUIRED_LIBS_QUALIFIED}
-    jtml_core
+    jtml_coordinator
     ${JTA_LIBS}
     ${VTK_LIBRARIES}
     ${TORCH_LIBRARIES}

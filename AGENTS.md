@@ -74,17 +74,21 @@ Architecture seams introduced so far:
 - `include/coordinator/optimize_coordinator.h` / `src/coordinator/optimize_coordinator.cpp` — headless
   state machine (Idle→Running→Idle) + persistent worker thread, for the GUI to bind to.
 
-> **003 U2 layered layout:** `src/core`+`include/core` was split into `domain/` (pure
-> logic), `services/` (non-pure headless services), `coordinator/` (QObject orchestration),
-> `compute/` (GPU/CUDA), with the single `jtml_core` target preserved pending the lib split
-> (U3). The `src/core/CMakeLists.txt` below is the sole owner of that target.
+> **003 U2/U3 layered layout:** `src/core`+`include/core` was split into `domain/`
+> (pure logic), `services/` (non-pure headless services), `coordinator/` (QObject
+> orchestration), `compute/` (GPU/CUDA). U3 then split the single `jtml_core` lib into
+> `jtml_domain` / `jtml_services` / `jtml_coordinator` STATIC libs (compute sources are
+> temporarily housed in `jtml_coordinator` until U4 owns `src/compute`). `jtml_domain` is
+> the Qt/GPU-free Rust-interop surface; `jtml_services`/`jtml_coordinator` are Qt-linked
+> until the deferred purity decouples. The old `src/core/` dir is gone.
 
 ## Repo gotchas
 
-- `src/core/CMakeLists.txt` uses `file(GLOB ...)` for headers **and** an explicit source
-  list. New core `.cpp` files must be added to that explicit list (GLOB only catches headers;
-  a header globbed without its impl in the target causes an AUTOMOC undefined-symbol link
-  error). See `direct_optimizer.cpp`/`optimize_coordinator.cpp` entries there.
+- Each layered lib (`src/{domain,services,coordinator}/CMakeLists.txt`) uses
+  `file(GLOB ...)` for headers **and** an explicit `.cpp`/`.cu` source list. New `.cpp`
+  files must be added to the explicit list (GLOB only catches headers; a header globbed
+  without its impl in the target causes an AUTOMOC undefined-symbol link error). See
+  `direct_optimizer.cpp`/`optimize_coordinator.cpp` entries there.
 - Several files historically relied on **transitive standard includes** that used to arrive
   via `gpu/render_engine.cuh`. The data-structures decoupling (U3) removed that — always
   include what you use (`<cmath>`, `<iostream>`, `<climits>`, ...).

@@ -269,7 +269,7 @@ header-GLOB; `test/CMakeLists.txt` CUDA-free-from-source targets.
 
 ---
 
-- [ ] U3. **Cut 2 — break `core` into real layered libs (`domain`/`services`/
+- [x] U3. **Cut 2 — break `core` into real layered libs (`domain`/`services`/
   `coordinator`)**
 
 **Goal:** Turn the single `jtml_core` into `jtml_domain` (STATIC, Qt/GPU-free),
