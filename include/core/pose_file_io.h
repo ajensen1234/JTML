@@ -4,6 +4,7 @@
 #pragma once
 
 #include <istream>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -45,9 +46,13 @@ LoadResult ReadPose(std::istream& in, Point6D& out);
 // Write per-frame kinematics in JTA_EULER_KINEMATICS format (one row per pose).
 bool WriteKinematics(std::ostream& out, const std::vector<Point6D>& poses);
 
-// Read kinematics from a JTA_EULER_KINEMATICS or JT_EULER_312 stream, skipping
-// NOT_OPTIMIZED rows. Appends parsed poses to `out`.
-LoadResult ReadKinematics(std::istream& in, std::vector<Point6D>& out);
+// Read kinematics from a JTA_EULER_KINEMATICS or JT_EULER_312 stream.
+// `out` is POSITION-PRESERVING: out[j] holds the pose for FRAME j (the (j+2)th
+// data line), and NOT_OPTIMIZED / malformed rows yield std::nullopt for that
+// frame so subsequent frames stay aligned (the original loader keyed frames by
+// line index, not by a compacted count).
+LoadResult ReadKinematics(std::istream& in,
+                          std::vector<std::optional<Point6D>>& out);
 
 // File-path convenience wrappers.
 bool WritePoseFile(const std::string& path, const Point6D& pose);
@@ -55,7 +60,7 @@ LoadResult ReadPoseFile(const std::string& path, Point6D& out);
 bool WriteKinematicsFile(const std::string& path,
                          const std::vector<Point6D>& poses);
 LoadResult ReadKinematicsFile(const std::string& path,
-                              std::vector<Point6D>& out);
+                              std::vector<std::optional<Point6D>>& out);
 
 }  // namespace pose_file
 }  // namespace jta

@@ -74,6 +74,7 @@ double Point6D::GetDirection(Direction direction) {
         return za;
         break;
     }
+    return 0.0;  // unreachable; silences -Wreturn-type for any out-of-enum value
 }
 
 void Point6D::UpdateDirection(Direction direction, double updated_value) {

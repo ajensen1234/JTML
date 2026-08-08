@@ -1305,7 +1305,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
         tr("JTA Kinematics File (*.jtak);; "
            "JointTrack Kinematics File (*.jts);; "
            "Kinematics File (*.txt)"));
-    std::vector<Point6D> loaded_poses;
+    std::vector<std::optional<Point6D>> loaded_poses;
     jta::pose_file::LoadResult res =
         jta::pose_file::ReadKinematicsFile(LoadPoseExtension.toStdString(),
                                            loaded_poses);
@@ -1314,15 +1314,18 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
             this, "Error!", "Invalid Kinematics File!", QMessageBox::Ok);
         return;
     }
-    // Apply up to the number of loaded frames (excess rows are ignored,
-    // mirroring the previous loop bound). NOT_OPTIMIZED rows were skipped by
-    // the service.
+    // Apply up to the number of loaded frames (excess rows are ignored).
+    // loaded_poses is position-preserving: index i = frame i; NOT_OPTIMIZED /
+    // malformed rows are std::nullopt and leave that frame unset, so the
+    // remaining frames keep their original alignment (no shifting).
     int frame_count = ui.image_list_widget->count();
     for (size_t i = 0; i < loaded_poses.size() && static_cast<int>(i) < frame_count;
          ++i) {
-        model_locations_.SavePose(static_cast<int>(i),
-                                  ui.model_list_widget->currentRow(),
-                                  loaded_poses[i]);
+        if (loaded_poses[i].has_value()) {
+            model_locations_.SavePose(static_cast<int>(i),
+                                      ui.model_list_widget->currentRow(),
+                                      *loaded_poses[i]);
+        }
     }
     if (ui.image_list_widget->currentRow() >= 0) {
         Point6D loaded_pose = model_locations_.GetPose(

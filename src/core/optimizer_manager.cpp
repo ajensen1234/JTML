@@ -1255,9 +1255,23 @@ void OptimizerManager::RunDirectStage(
      * own count against the (already-accumulated) budget_ member.*/
     opt.SetCallOffset(cost_function_calls_);
 
-    /*Progress at ~30fps while the inner loop runs (mirrors the original
-     * update_screen_clock_ throttle inside each stage's main loop).*/
+    /*Live optimum display when the search improves (mirrors the original
+     * UpdateOptimum emit inside EvaluateCostFunction).*/
+    opt.SetImprovementCallback([this](const Point6D& loc, double) {
+        emit UpdateOptimum(loc.x, loc.y, loc.z, loc.xa, loc.ya, loc.za,
+                           primary_model_index_);
+    });
+
+    /*Progress at ~30fps + cooperative stop, fired after each ConvexHull+Trisect
+     * iteration (the stage's cooperative break boundary). onStopOptimizer sets
+     * error_occurrred_, which is NOT polled inside DirectOptimizer::Run(), so
+     * forward it to opt.Stop() here -- mirroring the original per-stage
+     * `if (error_occurrred_) break;`.*/
     opt.SetIterationCallback([this, &opt]() {
+        if (error_occurrred_) {
+            opt.Stop();
+            return;
+        }
         if ((clock() - update_screen_clock_) > 33) {
             emit UpdateDisplay(
                 static_cast<double>(clock() - start_clock_) /
@@ -1266,13 +1280,6 @@ void OptimizerManager::RunDirectStage(
                 opt.GetOptimumValue(), primary_model_index_);
             update_screen_clock_ = clock();
         }
-    });
-
-    /*Live optimum display when the search improves (mirrors the original
-     * UpdateOptimum emit inside EvaluateCostFunction).*/
-    opt.SetImprovementCallback([this](const Point6D& loc, double) {
-        emit UpdateOptimum(loc.x, loc.y, loc.z, loc.xa, loc.ya, loc.za,
-                           primary_model_index_);
     });
 
     if (!opt.Run()) {
@@ -1365,8 +1372,7 @@ void OptimizerManager::CalculateSymTrap() {
 double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
     enum Dilation { Trunk, Branch, Leaf };
 
-    /*Send normal pose not denormalized pose*/
-    // Point6D denormalized_point = DenormalizeFromCenter(point);
+    /*Send the already-physical pose directly (no denormalize step).*/
     Pose pose(point.x, point.y, point.z, point.xa, point.ya, point.za);
     gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
 
@@ -1382,7 +1388,6 @@ double OptimizerManager::EvaluateCostFunctionAtPoint(Point6D point, int stage) {
         result = leaf_manager_.callActiveCostFunction();
         break;
     }
-    // cost_function_calls_++;
     emit CostFuncAtPoint(result);
 
     return result;

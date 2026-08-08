@@ -3,6 +3,7 @@
 
 #include "core/pose_file_io.h"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <fstream>
@@ -83,12 +84,20 @@ Point6D ColumnsToPoint(const std::array<std::string, kFieldCount>& t) {
     return Point6D(x, y, z, x_rot, y_rot, z_rot);
 }
 
-// Collect the non-empty trimmed lines of a stream.
+// Collect the non-empty, non-whitespace-only lines of a stream (a whitespace-
+// only trailing/newline line is not a data frame).
 std::vector<std::string> ReadLines(std::istream& in) {
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
+        bool whitespace_only = true;
+        for (char c : line) {
+            if (!std::isspace(static_cast<unsigned char>(c))) {
+                whitespace_only = false;
+                break;
+            }
+        }
+        if (whitespace_only) continue;
         lines.push_back(line);
     }
     return lines;
@@ -150,27 +159,38 @@ bool WriteKinematics(std::ostream& out, const std::vector<Point6D>& poses) {
     return static_cast<bool>(out);
 }
 
-LoadResult ReadKinematics(std::istream& in, std::vector<Point6D>& out) {
+LoadResult ReadKinematics(std::istream& in,
+                           std::vector<std::optional<Point6D>>& out) {
     LoadResult res;
     auto lines = ReadLines(in);
     if (lines.empty()) return res;
-    if (lines[0] != "JTA_EULER_KINEMATICS" && lines[0] != "JT_EULER_312") return res;
+    if (lines[0] != "JTA_EULER_KINEMATICS" && lines[0] != "JT_EULER_312")
+        return res;
     res.kind = FileKind::Kinematics;
     // Data rows start after the header (line 0) + column title (line 1).
+    // out is POSITION-PRESERVING: out[j] is the pose for frame j; a skipped
+    // (NOT_OPTIMIZED or malformed) row leaves that frame as std::nullopt so
+    // subsequent frames stay aligned (the original loader keyed frames by line
+    // index, not by a compacted count).
     for (size_t i = 2; i < lines.size(); ++i) {
         std::array<std::string, kFieldCount> tokens;
-        if (!TokenizeLine(lines[i], tokens)) continue;
+        if (!TokenizeLine(lines[i], tokens)) {
+            out.push_back(std::nullopt);
+            continue;
+        }
         if (tokens[0] == "NOT_OPTIMIZED") {
             res.not_optimized = true;
+            out.push_back(std::nullopt);
             continue;
         }
         try {
             out.push_back(ColumnsToPoint(tokens));
         } catch (const std::exception&) {
-            // Skip a malformed row rather than failing the whole file.
+            out.push_back(std::nullopt);  // malformed row -> that frame unset
         }
     }
-    res.ok = !out.empty();
+    res.ok = std::any_of(out.begin(), out.end(),
+                         [](const std::optional<Point6D>& p) { return p.has_value(); });
     return res;
 }
 
@@ -192,7 +212,7 @@ bool WriteKinematicsFile(const std::string& path,
 }
 
 LoadResult ReadKinematicsFile(const std::string& path,
-                              std::vector<Point6D>& out) {
+                              std::vector<std::optional<Point6D>>& out) {
     std::ifstream f(path);
     if (!f) return LoadResult{};
     return ReadKinematics(f, out);

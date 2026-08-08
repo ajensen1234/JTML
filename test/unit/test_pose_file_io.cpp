@@ -65,13 +65,65 @@ TEST_CASE("kinematics round-trip multiple frames", "[pose_file]") {
     std::ostringstream os;
     REQUIRE(WriteKinematics(os, src));
     std::istringstream is(os.str());
-    std::vector<Point6D> parsed;
+    std::vector<std::optional<Point6D>> parsed;
     LoadResult res = ReadKinematics(is, parsed);
     REQUIRE(res.ok);
     REQUIRE(res.kind == jta::pose_file::FileKind::Kinematics);
     REQUIRE(parsed.size() == 2);
-    RequirePointNear(parsed[0], a);
-    RequirePointNear(parsed[1], b);
+    REQUIRE(parsed[0].has_value());
+    REQUIRE(parsed[1].has_value());
+    RequirePointNear(*parsed[0], a);
+    RequirePointNear(*parsed[1], b);
+}
+
+TEST_CASE("kinematics NOT_OPTIMIZED rows keep frame alignment",
+          "[pose_file]") {
+    // A mid-file NOT_OPTIMIZED row must leave that frame unset WITHOUT shifting
+    // the following frames (regression guard for the ReadKinematics re-index).
+    std::istringstream is(
+        "JTA_EULER_KINEMATICS\n"
+        "X_TRAN\tY_TRAN\tZ_TRAN\tZ_ROT\tX_ROT\tY_ROT\n"
+        "18.52191,\t19.69514,\t-1027.713,\t-26.69708,\t-7.419319,\t-0.2587041,\n"
+        "NOT_OPTIMIZED,\t0,\t0,\t0,\t0,\t0,\n"
+        "16.4709,\t16.4248,\t-1028.69,\t-24.12223,\t-7.678545,\t0.3264978,\n");
+    std::vector<std::optional<Point6D>> parsed;
+    LoadResult res = ReadKinematics(is, parsed);
+    REQUIRE(res.ok);
+    REQUIRE(res.not_optimized);
+    REQUIRE(parsed.size() == 3);
+    REQUIRE(parsed[0].has_value());   // frame 0 valid
+    REQUIRE_FALSE(parsed[1].has_value());  // frame 1 NOT_OPTIMIZED -> unset
+    REQUIRE(parsed[2].has_value());   // frame 2 STILL at index 2 (not shifted)
+    RequirePointNear(*parsed[0], MakeSample());
+    RequirePointNear(*parsed[2], Point6D(16.4709, 16.4248, -1028.69,
+                                         -7.678545, 0.3264978, -24.12223));
+}
+
+TEST_CASE("kinematics all-NOT_OPTIMIZED yields a clean not-ok",
+          "[pose_file]") {
+    std::istringstream is(
+        "JTA_EULER_KINEMATICS\nX_TRAN Y_TRAN Z_TRAN Z_ROT X_ROT Y_ROT\n"
+        "NOT_OPTIMIZED 0 0 0 0 0\nNOT_OPTIMIZED 0 0 0 0 0\n");
+    std::vector<std::optional<Point6D>> parsed;
+    LoadResult res = ReadKinematics(is, parsed);
+    REQUIRE(res.not_optimized);
+    REQUIRE_FALSE(res.ok);  // no valid poses anywhere
+}
+
+TEST_CASE("kinematics malformed/few-column rows are skipped in place",
+          "[pose_file]") {
+    std::istringstream is(
+        "JTA_EULER_KINEMATICS\nX_TRAN Y_TRAN Z_TRAN Z_ROT X_ROT Y_ROT\n"
+        "18.5219 19.6951 -1027.713 -26.697 -7.4193 -0.2587\n"
+        "garbage row that is not a pose\n"
+        "16.4709 16.4248 -1028.69 -24.122 -7.6785 0.3264\n");
+    std::vector<std::optional<Point6D>> parsed;
+    LoadResult res = ReadKinematics(is, parsed);
+    REQUIRE(res.ok);
+    REQUIRE(parsed.size() == 3);
+    REQUIRE(parsed[0].has_value());
+    REQUIRE_FALSE(parsed[1].has_value());  // malformed row -> frame unset, no shift
+    REQUIRE(parsed[2].has_value());
 }
 
 TEST_CASE("real golden fixture (JT_EULER_312) parses to baseline poses",
@@ -82,21 +134,24 @@ TEST_CASE("real golden fixture (JT_EULER_312) parses to baseline poses",
     // derived from the code under test.
     std::ifstream f("test/golden/fem_golden.jts");
     REQUIRE(f.good());
-    std::vector<Point6D> parsed;
+    std::vector<std::optional<Point6D>> parsed;
     LoadResult res = ReadKinematics(f, parsed);
     REQUIRE(res.ok);
     REQUIRE(parsed.size() == 3);
+    REQUIRE(parsed[0].has_value());
+    REQUIRE(parsed[1].has_value());
+    REQUIRE(parsed[2].has_value());
 
     // frame 0
-    RequirePointNear(parsed[0],
+    RequirePointNear(*parsed[0],
                      Point6D(18.52191, 19.69514, -1027.713, -7.419319,
                              -0.2587041, -26.69708));
     // frame 1
-    RequirePointNear(parsed[1],
+    RequirePointNear(*parsed[1],
                      Point6D(19.01747, 20.15555, -1026.732, -7.56846,
                              -0.2358893, -27.37827));
     // frame 2
-    RequirePointNear(parsed[2],
+    RequirePointNear(*parsed[2],
                      Point6D(16.4709, 16.4248, -1028.69, -7.678545, 0.3264978,
                              -24.12223));
 }
@@ -126,4 +181,19 @@ TEST_CASE("malformed or empty pose file yields a clean failure", "[pose_file]") 
         Point6D p;
         REQUIRE_FALSE(ReadPose(is, p).ok);
     }
+    {   // 6 columns but a non-numeric field (stod throws) -> not ok, no crash.
+        std::istringstream is("1 2 3 4 five 6");
+        Point6D p;
+        REQUIRE_FALSE(ReadPose(is, p).ok);
+    }
+}
+
+TEST_CASE("pose_file path wrappers fail cleanly on unopenable paths",
+          "[pose_file]") {
+    Point6D p;
+    REQUIRE_FALSE(jta::pose_file::ReadPoseFile(
+        "/nonexistent/does/not/exist.ptp", p).ok);
+    std::vector<std::optional<Point6D>> kin;
+    REQUIRE_FALSE(jta::pose_file::ReadKinematicsFile(
+        "/nonexistent/does/not/exist.jts", kin).ok);
 }
