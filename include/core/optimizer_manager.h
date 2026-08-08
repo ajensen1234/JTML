@@ -234,26 +234,6 @@ private:
     /*Budget*/
     unsigned int budget_;
 
-    /*Data Storage*/
-    DirectDataStorage data_;
-
-    /*Potentially Optimal Column Ids (Given by Convex Hull)*/
-    std::vector<int> potentially_optimal_col_ids_;
-
-    /*Potentially Optimal Hyperboxes (Taken from potentially optimal column
-     * ids)*/
-    std::vector<HyperBox6D> potentially_optimal_hyperboxes_;
-
-    /*Convex Hull Loop of DIRECT*/
-    void ConvexHull();
-
-    /*Trisect Potentially Optimal Hypers and Sample and Add
-    to the storage. Delete old ones.*/
-    void TrisectPotentiallyOptimal();
-
-    /*Evaluate Cost Function at Given Point*/
-    double EvaluateCostFunction(Point6D point);
-
     /*Run one DIRECT stage (trunk/branch/leaf) using the extracted pure
      * DirectOptimizer with the real GPU eval (plan U6). `range` is the stage
      * search range (already applied to range_ by the caller), and
@@ -263,12 +243,6 @@ private:
     void RunDirectStage(
         Point6D range,
         jta_cost_function::CostFunctionManager& stage_manager);
-
-    /*Denormalize Range Point (converts Unit Point to correct values)*/
-    Point6D DenormalizeRange(Point6D unit_point);
-
-    /*Denormalize Point From Center (converts Unit Point to correct values)*/
-    Point6D DenormalizeFromCenter(Point6D unit_point);
 
     /*Cost Function Calls*/
     unsigned int cost_function_calls_;
