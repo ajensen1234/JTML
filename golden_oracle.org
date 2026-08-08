@@ -74,12 +74,12 @@ is treated as informational only (not the hard gate).
 actual captured Qt5/GPU output. The captured pose and the known-good projection (B) are the
 reference. Tolerance on the RENDERED silhouette is the load-bearing comparison.
 
-**Settings (authoritative — reconciled to src/core/optimizer_settings.cpp + Optimize()):**
+**Settings (authoritative — reconciled to src/services/optimizer_settings.cpp + Optimize()):**
 DIRECT_DILATION for the femur; trunk / 2-branch / 1-leaf. Budget per stage (production
 defaults): trunk 20000, +2 branches 5000 each, +leaf 5000. The budget is CUMULATIVE via
 RunDirectStage's SetCallOffset, so the effective caps are
 20,000 -> 25,000 -> 30,000 -> 35,000 (trunk, +branch1, +branch2, +leaf). Ranges:
-src/core/settings_constants.h (trunk +/-35 all, branch +/-15 with +/-25 z, leaf +/-3 with
+src/domain/settings_constants.h (trunk +/-35 all, branch +/-15 with +/-25 z, leaf +/-3 with
 +/-15 z). Dilation comes per-stage from the cost-function-manager's "Dilation" int param
 (historically trunk 6 / branch 3 / leaf 1; the Tier-2 oracle used 6). (The oracle's flat
 budget 3000 and range (12,12,15,...) are REDUCED for run time and not the production budget

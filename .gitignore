@@ -40,6 +40,8 @@ check
 
 # agent working artifacts
 .pi-subagents/
+# compound-pipeline review run artifacts (transient; see .context/compound-engineering/)
+.context/
 # hegel property-based testing (Beta; see test/CMakeLists.txt). The nested
 # .hegel/.gitignore ignores the failure DB + server cache, but keep the dir
 # itself out of tree.

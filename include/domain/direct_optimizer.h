@@ -13,7 +13,7 @@
 // with the cost function injected and zero Qt/VTK/CUDA/JTML dependencies.
 //
 // This is a faithful extraction of the DIRECT loop that ran inside
-// OptimizerManager (see src/core/optimizer_manager.cpp): ConvexHull (Jarvis
+// OptimizerManager (see src/coordinator/optimizer_manager.cpp): ConvexHull (Jarvis
 // gift-wrapping), TrisectPotentiallyOptimal, DenormalizeRange /
 // DenormalizeFromCenter, and the budget loop are preserved verbatim. The lone
 // GPU touchpoint -- EvaluateCostFunction -- is replaced by the injected `cost`

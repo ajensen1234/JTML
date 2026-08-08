@@ -156,7 +156,7 @@ ignores `BUILD_RPATH`):
 ```cmake
 add_executable(jtml_test_<mod>_props
     unit/test_<mod>_properties.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/<mod>.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/<mod>.cpp
 )
 target_include_directories(jtml_test_<mod>_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_<mod>_props PRIVATE
@@ -171,6 +171,13 @@ Hegel's `libhegel_c.so` needs a `uv`-launched `hegel-core` Python server at
 runtime (cached under `.hegel/`, auto-gitignored). If that ever blocks an offline
 configure, the hegel block in `test/CMakeLists.txt` is a swappable, option-gated
 layer (see the tooling-recipe doc).
+
+> **Layer paths (post 003 U2):** the compiled source you pass to the props target
+> lives in the layer dir of its module — `src/domain/<mod>.cpp` for pure logic
+> (e.g. `pose_file_io`, `session_state`), `src/services/<mod>.cpp` for
+> non-pure-but-headless services (e.g. `location_storage`), `src/coordinator/`
+> or `src/compute/` for those layers. Use the real path; GLOB covers headers only,
+> so the impl must be in the target's explicit source list (the AUTOMOC/impl trap).
 
 ---
 

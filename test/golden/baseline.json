@@ -13,7 +13,7 @@
     "stages": "trunk / 2-branch / 1-leaf",
     "budget_per_stage": { "trunk": 20000, "branch": 5000, "leaf": 5000, "number_branches": 2 },
     "budget_cumulative_effective": [20000, 25000, 30000, 35000],
-    "budget_note": "Production cumulative caps from src/core/optimizer_settings.cpp defaults + Optimize(): trunk 20000, +2 branches 5000 each, +leaf 5000. The Tier-2 oracle run was reduced to a flat 3000 for run time and is NOT the production budget shape.",
+    "budget_note": "Production cumulative caps from src/services/optimizer_settings.cpp defaults + Optimize(): trunk 20000, +2 branches 5000 each, +leaf 5000. The Tier-2 oracle run was reduced to a flat 3000 for run time and is NOT the production budget shape.",
     "ranges": { "trunk": 35, "branch": 15, "branch_z": 25, "leaf": 3, "leaf_z": 15 },
     "dilation_px": { "trunk": 6, "branch": 3, "leaf": 1 }
   },

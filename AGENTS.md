@@ -67,12 +67,17 @@ Conventions:
   conventions).
 
 Architecture seams introduced so far:
-- `include/core/direct_optimizer.h` / `src/core/direct_optimizer.cpp` — pure DIRECT with an
+- `include/domain/direct_optimizer.h` / `src/domain/direct_optimizer.cpp` — pure DIRECT with an
   injected `std::function<double(const Point6D&)>` cost. **Preserves the cumulative budget**
   (effective 20k/25k/30k across trunk/branch/leaf). Has call-offset + iteration/improvement
   callbacks for the production caller.
-- `include/core/optimize_coordinator.h` / `src/core/optimize_coordinator.cpp` — headless
+- `include/coordinator/optimize_coordinator.h` / `src/coordinator/optimize_coordinator.cpp` — headless
   state machine (Idle→Running→Idle) + persistent worker thread, for the GUI to bind to.
+
+> **003 U2 layered layout:** `src/core`+`include/core` was split into `domain/` (pure
+> logic), `services/` (non-pure headless services), `coordinator/` (QObject orchestration),
+> `compute/` (GPU/CUDA), with the single `jtml_core` target preserved pending the lib split
+> (U3). The `src/core/CMakeLists.txt` below is the sole owner of that target.
 
 ## Repo gotchas
 

@@ -34,7 +34,7 @@ tags:
 JTML is a validated Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 rebuilt against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant registration (a DIRECT global optimizer over a GPU cost function). Before the refactor it could not be edited fearlessly:
 
 - `src/gui/mainscreen.cpp` is a ~5,806-line god object mixing UI wiring, app state, compute, I/O, and optimize orchestration.
-- `src/core/optimizer_manager.cpp` (~1,722 lines) coupled the pure DIRECT algorithm directly to CUDA; only `EvaluateCostFunction` touched the GPU, but the loop lived inline next to it.
+- `src/coordinator/optimizer_manager.cpp` (~1,722 lines) coupled the pure DIRECT algorithm directly to CUDA; only `EvaluateCostFunction` touched the GPU, but the loop lived inline next to it.
 - Testing was effectively disabled (`#add_subdirectory(test)` + `#enable_testing()` commented out in `CMakeLists.txt`); there was no working CI (the `.github/workflows/cmake.yml` was inert boilerplate), and no test framework was declared in `pixi.toml`.
 
 A **prior agent attempt was abandoned**, and its two failure modes are load-bearing lessons:
@@ -63,9 +63,9 @@ CTest registration pattern (from `test/CMakeLists.txt`):
 find_package(Catch2 REQUIRED)
 add_executable(jtml_test_direct_optimizer
     unit/test_direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_optimizer.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/core/direct_data_storage.cpp)
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp)
 target_include_directories(jtml_test_direct_optimizer PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
@@ -78,7 +78,7 @@ set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 
 
 ### 2. CMake AUTOMOC gotcha: list Q_OBJECT headers in `add_executable`
 
-AUTOMOC does **not** auto-moc an included shared header. If a Q_OBJECT class lives in a header you only `#include`, its moc is never generated → undefined-symbol link error. Fix: list the header in the target's sources. See the `jtml_test_coordinator` target (`test/CMakeLists.txt`) — note `include/core/optimize_coordinator.h` explicitly listed.
+AUTOMOC does **not** auto-moc an included shared header. If a Q_OBJECT class lives in a header you only `#include`, its moc is never generated → undefined-symbol link error. Fix: list the header in the target's sources. See the `jtml_test_coordinator` target (`test/CMakeLists.txt`) — note `include/coordinator/optimize_coordinator.h` explicitly listed.
 
 ### 3. The `file(GLOB)` trap in `src/core/CMakeLists.txt`
 
@@ -99,7 +99,7 @@ Generalize: **any new core `.cpp` reached via the header GLOB must be added to t
 
 ### 4. Extract the pure algorithm behind an injected `std::function` (U5, R2/R15)
 
-Extract the DIRECT loop (`ConvexHull`, `TrisectPotentiallyOptimal`, `DenormalizeRange`, `DenormalizeFromCenter`) into a CUDA-free class with the GPU touchpoint replaced by an injected cost callback (`include/core/direct_optimizer.h`):
+Extract the DIRECT loop (`ConvexHull`, `TrisectPotentiallyOptimal`, `DenormalizeRange`, `DenormalizeFromCenter`) into a CUDA-free class with the GPU touchpoint replaced by an injected cost callback (`include/domain/direct_optimizer.h`):
 
 ```cpp
 class DirectOptimizer {
@@ -117,13 +117,13 @@ public:
 
 Correctness rules to preserve during extraction (R15):
 
-- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage. Reconciled authoritative caps (verified against `src/core/optimizer_settings.cpp` defaults + `OptimizerManager::Optimize`, not prose): **20k → 25k → 30k → 35k** = trunk 20,000 + **2 branches** 5,000 each + leaf 5,000 (`settings_constants`: trunk 20000, branch 5000, number_branches 2, leaf/z-search 5000). Do NOT "fix" it to per-stage caps, and ignore stale "~10k/stage" / "20k/25k/30k" prose in older handoff/golden text. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly.
+- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage. Reconciled authoritative caps (verified against `src/services/optimizer_settings.cpp` defaults + `OptimizerManager::Optimize`, not prose): **20k → 25k → 30k → 35k** = trunk 20,000 + **2 branches** 5,000 each + leaf 5,000 (`settings_constants`: trunk 20000, branch 5000, number_branches 2, leaf/z-search 5000). Do NOT "fix" it to per-stage caps, and ignore stale "~10k/stage" / "20k/25k/30k" prose in older handoff/golden text. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly.
 - **Cost is injected in denormalized physical space** — the callback receives the denormalized `Point6D`, not the unit-cube point.
 - The `DirectOptimizer` may carry cumulative-offset + iteration/improvement callbacks for a throttled production UI (plan U6 design); the pure Tier-1 test uses defaults.
 
 ### 5. One persistent worker thread, not per-run threads (U4)
 
-The headless `OptimizeCoordinator` owns the state machine and a **single persistent worker thread** reused across runs via a queued `RunRequested` signal (`src/core/optimize_coordinator.cpp`). Do **not** create/`deleteLater` a thread per run — that caused a dangling-pointer segfault in the destructor. Teardown: `RequestStop(); quit(); wait(5000); delete worker_`.
+The headless `OptimizeCoordinator` owns the state machine and a **single persistent worker thread** reused across runs via a queued `RunRequested` signal (`src/coordinator/optimize_coordinator.cpp`). Do **not** create/`deleteLater` a thread per run — that caused a dangling-pointer segfault in the destructor. Teardown: `RequestStop(); quit(); wait(5000); delete worker_`.
 
 Threading rules that make it spy-able and crash-free:
 
@@ -148,14 +148,14 @@ widget-free **decision/state/packaging** out into a pure service; leave the **vi
 Per-layer gate (R9): headless unit/coordinator for logic; compile + scheduled
 manual-visual for presentation-only cuts. Two worked examples from this session:
 
-- **Controller — `OptimizeIntentController` (`include/core/optimize_intent_controller.h`):**
+- **Controller — `OptimizeIntentController` (`include/domain/optimize_intent_controller.h`):**
   owns the "can I optimize / what do I need" predicate + `Initialize` argument packaging
   (primary model = first selected row, current frame) that used to live inline in
   `MainScreen::LaunchOptimizer`. It takes **plain values** (no widgets) and returns a typed
   `Intent{status, primary_model_index, current_frame}`. `MainScreen` keeps only the error
   presentation + the real GPU `OptimizerManager` binding (R15 — do NOT rewire to the stub
   `OptimizeCoordinator`).
-- **Builder — `ModelListBuilder` (`include/core/model_list_builder.h`):** a pure `std::string`
+- **Builder — `ModelListBuilder` (`include/domain/model_list_builder.h`):** a pure `std::string`
   service owning the model name-dedup (two-pass "scan-restart" quirk preserved verbatim —
   `["A","A","A"]` → `["A(2)","A(3)","A"]`) + the frame same-size checks. View keeps only
   `addItem(...)` + VTK binding.
@@ -200,7 +200,7 @@ The hybrid Catch2/QtTest split (pure math vs threading seam) is key: don't force
 - Lifecycle seam — `test/lifecycle/coordinator_test.cpp` (QtTest): stub cost drives Idle→Running→Finished→Idle, re-launches, refuses double-start, recovers from injected cost-init failure, and a stuck worker fails via timeout (AE5).
 - MVVM controller+builder — `test/unit/test_optimize_intent_controller.cpp`, `test/unit/test_model_list_builder.cpp` (+ hegel PBT `test/unit/test_model_list_builder_properties.cpp`): lock the widget-free intent predicate and the dedup quirks.
 - Tier-2 oracle (U11, multi-frame) — `test/oracle/oracle_test.cpp` (Catch2, `oracle` label): loops all 3 Kneel_1 frames, each empirically mapped to its label, optimizes, renders at the optimized pose, compares the silhouette to `Labels/fem/` (IoU > 0.85 gate). Labels are vertically flipped (bottom-left vs top-left y-origin); the oracle runs from the repo root (fixture-relative paths).
-- Seam boundary — `include/core/direct_optimizer.h` + `include/core/optimize_coordinator.h`: `DirectOptimizer(std::function<double(const Point6D&)>, range, start, budget)`; `OptimizeCoordinator` re-emits Succeeded/Failed/StateChanged on the main thread for `QSignalSpy`.
+- Seam boundary — `include/domain/direct_optimizer.h` + `include/coordinator/optimize_coordinator.h`: `DirectOptimizer(std::function<double(const Point6D&)>, range, start, budget)`; `OptimizeCoordinator` re-emits Succeeded/Failed/StateChanged on the main thread for `QSignalSpy`.
 
 ## Related
 

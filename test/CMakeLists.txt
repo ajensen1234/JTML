@@ -138,6 +138,115 @@ target_link_options(jtml_test_model_list_builder_props PRIVATE
 add_test(NAME jtml.model_list_builder_props COMMAND jtml_test_model_list_builder_props)
 set_tests_properties(jtml.model_list_builder_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Hegel PBT for the pure pose/kinematics file format (src/domain). Locks the
+# frame-count-preserving round-trip invariant (see guide "The shape of a PBT").
+add_executable(jtml_test_pose_file_io_props
+    unit/test_pose_file_io_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/pose_file_io.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_pose_file_io_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_pose_file_io_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_pose_file_io_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.pose_file_io_props COMMAND jtml_test_pose_file_io_props)
+set_tests_properties(jtml.pose_file_io_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the pure SessionState app-state holder (src/domain). Locks the
+# selection well-formedness invariant.
+add_executable(jtml_test_session_state_props
+    unit/test_session_state_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+)
+target_include_directories(jtml_test_session_state_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_session_state_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_session_state_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.session_state_props COMMAND jtml_test_session_state_props)
+set_tests_properties(jtml.session_state_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the pure sym-trap transform helpers (src/domain): rotation_matrix
+# orthonormality (R * R^T ~= I).
+add_executable(jtml_test_sym_trap_functions_props
+    unit/test_sym_trap_functions_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/sym_trap_functions.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_sym_trap_functions_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_sym_trap_functions_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_sym_trap_functions_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.sym_trap_functions_props COMMAND jtml_test_sym_trap_functions_props)
+set_tests_properties(jtml.sym_trap_functions_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the pure ambiguous-pose post-processing (src/domain): varus/valgus
+# range + tibial selector set-membership.
+add_executable(jtml_test_ambiguous_pose_props
+    unit/test_ambiguous_pose_processing_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/ambiguous_pose_processing.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/sym_trap_functions.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_ambiguous_pose_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_ambiguous_pose_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_ambiguous_pose_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.ambiguous_pose_props COMMAND jtml_test_ambiguous_pose_props)
+set_tests_properties(jtml.ambiguous_pose_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the LocationStorage pose-matrix service (src/services). Needs
+# include/gpu on the path because services/calibration.h pulls camera_calibration.h.
+add_executable(jtml_test_location_storage_props
+    unit/test_location_storage_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_location_storage_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/gpu)
+target_link_libraries(jtml_test_location_storage_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_location_storage_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.location_storage_props COMMAND jtml_test_location_storage_props)
+set_tests_properties(jtml.location_storage_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the header-only biplane Calibration conversion (src/services). The
+# test needs include/gpu for camera_calibration.h; only data_structures_6D.cpp is
+# compiled (calibration.h is header-only).
+add_executable(jtml_test_calibration_props
+    unit/test_calibration_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_calibration_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/gpu)
+target_link_libraries(jtml_test_calibration_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_calibration_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.calibration_props COMMAND jtml_test_calibration_props)
+set_tests_properties(jtml.calibration_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT for the DIRECT container (src/domain): cached-min consistency with the
+# column tail box across random insertions.
+add_executable(jtml_test_direct_data_storage_props
+    unit/test_direct_data_storage_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_direct_data_storage_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_direct_data_storage_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_direct_data_storage_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.direct_data_storage_props COMMAND jtml_test_direct_data_storage_props)
+set_tests_properties(jtml.direct_data_storage_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # ModelListBuilder tests (plan U7, U10 / R10). Pure name/dedup + size logic;
 # no Qt, no GPU, headless -- mirrors jtml.session_state registration.
 add_executable(jtml_test_model_list_builder

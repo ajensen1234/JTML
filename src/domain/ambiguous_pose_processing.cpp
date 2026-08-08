@@ -13,8 +13,6 @@ Point6D tibial_pose_selector(Point6D& femur_pose, Point6D& tibia_pose) {
     float vv_original = varus_valgus_calculation(femur_pose, tibia_pose);
     float vv_mirror = varus_valgus_calculation(femur_pose, tibial_dual_pose);
 
-    std::cout << vv_original << std::endl;
-    std::cout << vv_mirror << std::endl;
     // if normal pose has a greater VV, return the dual pose.
     if (vv_original > vv_mirror) return tibial_dual_pose;
     // if normal pose has lower VV than mirror pose, return the normal pose.
