@@ -1,0 +1,108 @@
+{
+  "reviewer": "ce-adversarial-document-reviewer",
+  "findings": [
+    {
+      "title": "U3 services 'Qt-free' claim contradicted by its files",
+      "severity": "P2",
+      "section": "U3 / Key Technical Decisions / Deferred to Follow-Up",
+      "why_it_matters": "jtml_services is defined as 'STATIC, Qt-free / QMetaType-decoupled or relocating the Qt bit', but two files mapped into services today require Qt: optimizer_settings.h does '#include <QMetaType>' and 'Q_DECLARE_METATYPE(OptimizerSettings);', and stl_reader.h includes <QtCore/qfile.h>/<QtCore/qstring.h>/<QtCore/qtextstream.h>. Because the plan simultaneously defers ALL purity decouples as out-of-scope follow-up, the Qt-free services deliverable is satisfiable only by work the plan refuses to scope in; as written, either services ships Qt-linked (contradicting its stated taxonomy and the dependency-light layered-lib deliverable) or U3 silently grows a decouple refactor (violating the pure-reorg/no-behavior-change contract). The plan names three uncommitted alternatives and never picks one, so the implementer has no stated resolution. Note the 'honest gate' reasoning is applied to domain (9 pure files) but not extended to services, despite the same impurity.",
+      "finding_type": "omission",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "'services/ = `model`, `stl_reader`, `STLReader`, `optimizer_settings`, `location_storage`, `calibration.h`' (U2)",
+        "U3: 'jtml_services` (STATIC, Qt-free / QMetaType-decoupled or relocating the Qt bit)'",
+        "include/core/optimizer_settings.h:12 '#include <QMetaType>' ; :40 'Q_DECLARE_METATYPE(OptimizerSettings);'",
+        "include/core/stl_reader.h:8-10 '#include <QtCore/qfile.h>' '#include <QtCore/qfileinfo.h>' '#include <QtCore/qstring.h>'",
+        "'The actual VTK/Qt/QMetaType stripping is deferred (U3 note) so this stays a pure relocate+re-point.'"
+      ],
+      "suggested_fix": "Decide and pin the state for services in U3: either (a) commit that services ships Qt-linked and drop the 'Qt-free' claim from the deliverable, or (b) explicitly move optimizer_settings.h (+ its QMetaType) out of services into coordinator before the split, or (c) pull the QMetaType decouple INTO U3 scope and update the scope/deferred sections so the plan is internally consistent."
+    },
+    {
+      "title": "Packaging install(TARGETS) breaks at U3, never re-pointed",
+      "severity": "P2",
+      "section": "U3 (Files: Modify) / U4",
+      "why_it_matters": "packaging/CMakeLists.txt:42 does 'install(TARGETS jtml_gpu jtml_core JTA_Cost_Functions ...)'. U3 splits `jtml_core` into jtml_domain/services/coordinator but its 'Modify' file list covers only root CMakeLists, JTA_LIBS, src/gui and test link lines — packaging is not listed. After U3 the `jtml_core` target no longer exists, so any `install`/packaging run fails (or silently installs nothing for core). The per-cut gate (build + headless + oracle + GUI smoke) and CI (headless only) never exercise packaging/install, so U3 'passes' its gate while leaving packaging broken; U4 later edits packaging only for the gpu/cost_functions merge ('install(TARGETS ...)') and the plan never adds the three new layered libs to the install list. A cut that passes every advertised gate but silently breaks downstream install is exactly the failure the plan claims to prevent.",
+      "finding_type": "omission",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "packaging/CMakeLists.txt:42: 'install(TARGETS jtml_gpu jtml_core JTA_Cost_Functions  LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)'",
+        "U3 Files Modify: 'Modify: root CMakeLists.txt ... JTA_LIBS composition, src/gui/CMakeLists.txt + test/CMakeLists.txt link lines to the new lib names.' (packaging absent)",
+        "U4: 'packaging/CMakeLists.txt `install(TARGETS ...)`' (packaging addressed only here, for the compute merge)",
+        "Per-cut gate: 'pixi run build` green; `pixi run test` headless green; `ctest -L oracle` green'"
+      ],
+      "suggested_fix": "Add packaging/CMakeLists.txt to U3's Modify list: replace `jtml_core` in install(TARGETS ...) with the three new layered libs (jtml_domain, jtml_services, jtml_coordinator) at the point core is split, and extend the U3 gate to run an install/packaging step so the break is caught at the same cut that causes it."
+    },
+    {
+      "title": "Core-include rewrite footprint ~2x the stated ~53",
+      "severity": "P3",
+      "section": "System-Wide Impact / U2",
+      "why_it_matters": "System-Wide Impact claims 'every #include \"core/...\" site (~53) — all re-pointed by U2', but the live tree holds ~104 `core/...` include sites across src/include/test, of which ~33 are internal self-references inside src/core+include/core that must also be rewritten as those files move. The plan's external-only count (~53) omits the internal self-refs, so an implementer gating completeness on 'rewrite these ~53' can miss roughly half the surface. Most missed rewrites surface as compile errors via the headless suite, but shape_sensitivity (never rebuilt, per the plan) sits in the footprint with 'core/calibration.h' and 'core/model.h' includes that rot silently and are excluded from U4's bare-gpu grep guard, so the 'every site' claim is unverifiable for it.",
+      "finding_type": "omission",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "'Interaction graph: every `#include \"core/...\"` site (~53) and every `src/core`/`include/core` test-target source path (~20) — all re-pointed by U2.'",
+        "grep: 104 total `#include \"core/...\"` sites in src+include+test; 33 reside inside src/core+include/core",
+        "'Re-enabling `shape_sensitivity` — currently unbuilt; its includes rot under renames. Left disabled; noted as drift'",
+        "src/shape_sensitivity includes: '\"core/calibration.h\" \"core/model.h\"'"
+      ],
+      "suggested_fix": "Replace the '~53' estimate with a grep-derived count and add a machine-checkable completeness guard for each cut (e.g. build a lint/test step asserting zero remaining '#include \"core/\"' after U2, and run the same grep across src/shape_sensitivity even though it is unbuilt) so 'every site' is attested rather than estimated."
+    },
+    {
+      "title": "U4 merge verifiability is manual-only; CI runs headless only",
+      "severity": "P2",
+      "section": "U4 / context7-style Verification / Risks",
+      "why_it_matters": "The single most behavior-risky cut — turning two SHARED libs (jtml_gpu, JTA_Cost_Functions) into one jtml_compute with re-pointed JTA_LIBS and standardized bare includes — has no automated check in CI; .github/workflows/cmake.yml runs only 'pixi run configure/build/test' (headless). The gates that can actually detect a silent link/shared-object change (GPU oracle `ctest -L oracle` + GUI launch) depend on a developer manually running them on a GPU machine with a display. The plan's confidence in R15 ('no runtime behavior change by construction') for U4 therefore rests entirely on unrecorded manual evidence, and a merge that compiles and passes headless but changes shared-object interposition/visibility behavior would land with the attestation gap invisible. The 'one-way dep → no link-order break' justification only proves link success, not behavioral parity.",
+      "finding_type": "omission",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        ".github/workflows/cmake.yml: 'Run: pixi run build' ; 'Run: pixi run test' and comment 'GPU/oracle cases are gated externally on GPU machines (see plan U2/U6).'",
+        "U4 arrangement: 'One SHARED `jtml_compute`; update `JTA_LIBS` everywhere it's used.'",
+        "U4 verification: 'GUI `pixi run run` launches; `ctest -L oracle` green on GPU; `Study2Grid` builds; headless `pixi run test` still green.'",
+        "'Merging `cost_functions`+`gpu`→`compute` is acyclic (one-way dep `cost→gpu`), so `JTA_LIBS` can become a single `jtml_compute` with no link-order break'"
+      ],
+      "suggested_fix": "Either promote the oracle+GUI runs into an enforced artifact for U4 (document GPUs recorded per cut, or add a CI job that runs `ctest -L oracle` on a GPU runner), or weaken the R15 'by construction' wording for U4 to 'verified by manual oracle + GUI' and gate cut-4 on a written pass record from a GPU machine before proceeding."
+    },
+    {
+      "title": "JTA_LIBS set twice in root CMakeLists; re-point must hit both",
+      "severity": "P3",
+      "section": "U4 / System-Wide Impact",
+      "why_it_matters": "JTA_LIBS is assigned twice in the root CMakeLists (line 78 and line 119), the second time just before 'add_subdirectory(src)', so the LAST assignment wins for every consumer (jtml_core, gui, Study2Grid, shape_sensitivity, test). The plan's instruction 'root `JTA_LIBS` → `jtml_compute`' names a single variable without flagging the duplicate; an implementer who edits only the first `set` leaves line 119 re-assigning the old `jtml_gpu JTA_Cost_Functions`, which after the merge points at removed targets and breaks the whole build. Not a silent failure, but it is a concrete trap the plan does not enumerate, and the 're-point everywhere' phrasing gives no explicit checklist.",
+      "finding_type": "omission",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "CMakeLists.txt:78: 'set(JTA_LIBS jtml_gpu JTA_Cost_Functions)'",
+        "CMakeLists.txt:119: 'set(JTA_LIBS jtml_gpu JTA_Cost_Functions)  # immediately before add_subdirectory(src)'",
+        "Plan: 'root `JTA_LIBS` → `jtml_compute`; ... `cost_functions/*.h` bare gpu includes → `compute/...`'"
+      ],
+      "suggested_fix": "In U4, explicitly instruct: update or delete BOTH `set(JTA_LIBS ...)` occurrences in root CMakeLists.txt (or assign once before all subdirectories), and list every JTA_LIBS consumer (jtml_core, gui, Study2Grid, shape_sensitivity, test line 208) as check-off items."
+    },
+    {
+      "title": "golden_oracle.org path refs are not 'unchanged'",
+      "severity": "P3",
+      "section": "U6 (Cleanup + docs)",
+      "why_it_matters": "U6 asserts golden_oracle.org is 'unchanged — repo-root', but the file's own content hard-references paths the reorg moves: 'reconciled to src/core/optimizer_settings.cpp' and 'src/core/settings_constants.h'. optimizer_settings and settings_constants are among the files relocated out of core (to services/), so the oracle's authoritative path note becomes stale and points at a directory that no longer holds the file. The statement only distinguishes WORKING_DIRECTORY (indeed repo-root, unchanged) from the document's embedded path references, which do change. A stale authoritative-path note in the oracle undermines the same repro/methods contract the reorg claims to preserve.",
+      "finding_type": "error",
+      "autofix_class": "manual",
+      "confidence": 75,
+      "evidence": [
+        "U6: 'golden_oracle.org fixture path notes (unchanged — repo-root)'",
+        "golden_oracle.org:77: '**Settings (authoritative — reconciled to src/core/optimizer_settings.cpp + Optimize()):**'",
+        "golden_oracle.org:82: 'src/core/settings_constants.h (trunk +/-35 all, ...)'"
+      ],
+      "suggested_fix": "Change U6 to explicitly list the golden_oracle.org `src/core/...` path references (optimizer_settings.cpp, settings_constants.h) as needing update to `services/...`, and add them to the docs sweep, keeping the (correct) note that WORKING_DIRECTORY stays repo-root."
+    }
+  ],
+  "residual_risks": [
+    "shape_sensitivity is never rebuilt, so any include it pulls from renamed dirs (core/calibration.h, core/model.h, bare gpu/ render/art/descriptors headers) rots silently; if it is later re-enabled it will fail to compile against the new layout. The plan flags this as drift but provides no guard or re-enable step.",
+    "deferring the camera_calibration.h decouple means calibration/location_storage stay impure across domain/services; any follow-up that re-enables the 'pure FFI surface' claim must re-gate it, and nothing in this plan tracks that debt beyond a prose note.",
+    "stl_reader vs STLReader consolidation and the include/core/machine_learning_tools.cpp duplicate are deferred; the duplicate is deleted in U6 but the plan does not verify no active #include references the dead file (its basename collides with the live machine_learning_tools.cpp).",
+    "The R15 'no runtime behavior change' claim for merging two SHARED libs into one is stronger than 'no path change': the plan's verification (headless + oracle + GUI) can miss shared-object interposition/visibility differences that do not alter round-trip numeric output.",
+    "Exact committed-artifact inventory is stated as 75 but a repo scan enumerates ~39 with the plan's own categories; the mismatch is harmless (U1 re-verifies via `jj file list`) but should be reconciled rather than copy-pasted."
+  ],
+  "deferred_questions": []
+}
