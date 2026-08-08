@@ -30,7 +30,7 @@ tags:
 
 ## Context
 
-JTML is a validated Qt5 + VTK 9.3 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant registration (a DIRECT global optimizer over a GPU cost function). Before the refactor it could not be edited fearlessly:
+JTML is a validated Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 rebuilt against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant registration (a DIRECT global optimizer over a GPU cost function). Before the refactor it could not be edited fearlessly:
 
 - `src/gui/mainscreen.cpp` is a ~5,806-line god object mixing UI wiring, app state, compute, I/O, and optimize orchestration.
 - `src/core/optimizer_manager.cpp` (~1,722 lines) coupled the pure DIRECT algorithm directly to CUDA; only `EvaluateCostFunction` touched the GPU, but the loop lived inline next to it.
@@ -41,7 +41,7 @@ A **prior agent attempt was abandoned**, and its two failure modes are load-bear
 1. **False confidence** — passing tests covered pure math and a GPU-bound "run the real MainScreen" test while never touching the thread/orchestration seams (idle→running→finished→re-launch) where the actual hangs lived.
 2. **Circular tests** — test helpers re-derived the code-under-test's own math (pose-file and denormalization tests reimplemented production logic), so a green suite proved nothing.
 
-This session's outcome (all green via `pixi run test`, ~0.05s, no GPU/GUI): a headless harness, a pure extracted `DirectOptimizer`, a headless `OptimizeCoordinator` thread seam, and a two-tier golden oracle — the foundation the MVVM refactor is sequenced onto.
+This session's outcome (all green via `pixi run test`, no GPU/GUI): a headless harness, a pure extracted `DirectOptimizer`, a headless `OptimizeCoordinator` thread seam, a two-tier golden oracle, extracted `pose_file_io`/`session_state` services, and the Qt5->Qt6 migration — the foundation the MVVM refactor is sequenced onto.
 
 ## Guidance
 
@@ -116,7 +116,7 @@ public:
 
 Correctness rules to preserve during extraction (R15):
 
-- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage → effective caps ~**10k / 20k / 30k** across trunk / 2-branch / 1-leaf. Do NOT "fix" it to per-stage 10k. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly or you diverge from the golden.
+- **Cumulative budget is load-bearing.** The original zeroes `cost_function_calls_` only *before trunk*, then `+=` per stage → effective caps **20k / 25k / 30k** across trunk / 2-branch / 1-leaf (`settings_constants`: trunk 20000, branch 5000, leaf 5000). Do NOT "fix" it to per-stage caps. The seed (center) evaluation consumes one budget unit — preserve that off-by-one exactly or you diverge from the golden.
 - **Cost is injected in denormalized physical space** — the callback receives the denormalized `Point6D`, not the unit-cube point.
 - The `DirectOptimizer` may carry cumulative-offset + iteration/improvement callbacks for a throttled production UI (plan U6 design); the pure Tier-1 test uses defaults.
 
@@ -159,10 +159,10 @@ The hybrid Catch2/QtTest split (pure math vs threading seam) is key: don't force
 
 ## Examples
 
-- `pixi run test` → `ctest -L headless --timeout 600` → 4/4 tests pass (~0.05s, no GPU/display). `ctest -L oracle` runs the GPU Tier-2 gate only on a GPU machine.
+- `pixi run test` → `ctest -L headless --timeout 600` → 8 tests pass (no GPU/display). `ctest -L oracle` runs the GPU Tier-2 gate only on a GPU machine.
 - Tier-1 golden — `test/unit/test_direct_optimizer.cpp` (Catch2): converges an analytic quadratic to its known min; asserts budget accounting (seed consumes one unit) matches the cumulative cap.
 - Lifecycle seam — `test/lifecycle/coordinator_test.cpp` (QtTest): stub cost drives Idle→Running→Finished→Idle, re-launches, refuses double-start, recovers from injected cost-init failure, and a stuck worker fails via timeout (AE5).
-- Tier-2 oracle (planned, plan U6) — `test/oracle/oracle_test.cpp` (Catch2, `oracle` label): loads Kneel_1, optimizes, renders at the optimized pose, compares the silhouette to `Labels/fem/`.
+- Tier-2 oracle (built, U6) — `test/oracle/oracle_test.cpp` (Catch2, `oracle` label): loads Kneel_1, optimizes, renders at the optimized pose, compares the silhouette to `Labels/fem/` (IoU > 0.85 gate; measured recovered-pose IoU 0.9936). Labels are vertically flipped (bottom-left vs top-left y-origin); the oracle runs from the repo root (fixture-relative paths).
 - Seam boundary — `include/core/direct_optimizer.h` + `include/core/optimize_coordinator.h`: `DirectOptimizer(std::function<double(const Point6D&)>, range, start, budget)`; `OptimizeCoordinator` re-emits Succeeded/Failed/StateChanged on the main thread for `QSignalSpy`.
 
 ## Related

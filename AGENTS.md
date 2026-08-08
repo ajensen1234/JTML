@@ -1,6 +1,6 @@
 # JTML — Agent Working Guide
 
-JTML is a Qt5 + VTK 9.3 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant
+JTML is a Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 built against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant
 registration (D.R.E.C.T. global optimizer over a GPU cost function). This file captures the
 conventions a coding agent needs to work here without re-deriving them.
 
@@ -32,7 +32,7 @@ Layout under `test/`, all registered in `test/CMakeLists.txt`:
   `OptimizeCoordinator`), run under `QCoreApplication` with zero GPU/display.
 - `test/golden/` — golden-oracle baseline (`baseline.json`, `fem_golden.jts`,
   `fem_oracle_captured.jtak`, `calibration.txt`).
-- `test/oracle/` — (planned, U6) the GPU-labeled Tier-2 oracle.
+- `test/oracle/` — the GPU-labeled Tier-2 appearance oracle (built, U6).
 
 Conventions:
 - **QtTest for Qt/threading seams; Catch2 for pure math.** Both register via CTest.
@@ -63,7 +63,7 @@ Conventions:
 Architecture seams introduced so far:
 - `include/core/direct_optimizer.h` / `src/core/direct_optimizer.cpp` — pure DIRECT with an
   injected `std::function<double(const Point6D&)>` cost. **Preserves the cumulative budget**
-  (effective 10k/20k/30k across trunk/branch/leaf). Has call-offset + iteration/improvement
+  (effective 20k/25k/30k across trunk/branch/leaf). Has call-offset + iteration/improvement
   callbacks for the production caller.
 - `include/core/optimize_coordinator.h` / `src/core/optimize_coordinator.cpp` — headless
   state machine (Idle→Running→Idle) + persistent worker thread, for the GUI to bind to.
