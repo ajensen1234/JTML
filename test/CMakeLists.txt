@@ -122,6 +122,17 @@ target_link_libraries(jtml_test_session_state PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.session_state COMMAND jtml_test_session_state)
 set_tests_properties(jtml.session_state PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Optimize-intent controller tests (plan U7, R8/R9, AE4). Pure decision logic;
+# no Qt, no GPU, headless -- mirrors jtml.session_state registration.
+add_executable(jtml_test_optimize_intent
+    unit/test_optimize_intent_controller.cpp
+    ${PROJECT_SOURCE_DIR}/src/core/optimize_intent_controller.cpp
+)
+target_include_directories(jtml_test_optimize_intent PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_optimize_intent PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.optimize_intent COMMAND jtml_test_optimize_intent)
+set_tests_properties(jtml.optimize_intent PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Headless optimize-lifecycle seam (plan U4, R4/R5/R7, AE1). QtTest with a real
 # QThread + worker and an injected stub cost; observed via QSignalSpy on the
 # coordinator (no GPU, no display, QCoreApplication only).

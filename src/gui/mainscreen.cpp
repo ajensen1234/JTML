@@ -15,6 +15,7 @@
 #include "core/curvature_utilities.h"
 #include "core/settings_constants.h"
 #include "core/pose_file_io.h"
+#include "core/optimize_intent_controller.h"
 
 /*Size Constants*/
 #include "core/mainscreen_size_constants.h"
@@ -61,6 +62,7 @@
 #include "core/ambiguous_pose_processing.h"
 #include "core/machine_learning_tools.h"
 #include <iostream> // For std::cerr
+#include <utility>   // std::move
 
 using namespace std;
 
@@ -4499,22 +4501,35 @@ void MainScreen::LaunchOptimizer(QString directive) {
     } else {
         iter_count = 0;
     }
-    /*Can Only Optimize If Chosen Frame and Model*/
+    /*Can Only Optimize If Chosen Frame and Model -- decided by the widget-free
+     * OptimizeIntentController (plan U7, AE4); the view keeps only the error
+     * presentation + the GPU Initialize binding (R15).*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (selected.size() == 0 || previous_frame_index_ < 0 ||
-        ui.image_list_widget->currentIndex().row() != previous_frame_index_ ||
-        ui.image_list_widget->currentIndex().row() >= loaded_frames.size() ||
-        ui.model_list_widget->currentIndex().row() >= loaded_models.size()) {
+    std::vector<int> selected_rows;
+    selected_rows.reserve(selected.size());
+    for (const auto& idx : selected) {
+        selected_rows.push_back(idx.row());
+    }
+    jta::OptimizeIntentController::Input in;
+    in.selected_model_rows = std::move(selected_rows);
+    in.previous_frame_index = previous_frame_index_;
+    in.current_frame = ui.image_list_widget->currentIndex().row();
+    in.frame_count = static_cast<int>(loaded_frames.size());
+    in.model_current_index = ui.model_list_widget->currentIndex().row();
+    in.model_count = static_cast<int>(loaded_models.size());
+    in.pose_frame_count = model_locations_.GetFrameCount();
+    in.pose_model_count = model_locations_.GetModelCount();
+    jta::OptimizeIntentController::Intent intent =
+        jta::OptimizeIntentController::Evaluate(in);
+    if (intent.status ==
+        jta::OptimizeIntentController::Status::SelectFrameAndModel) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
     }
-
-    /*Check Frame List by Model List and Guess Matrix Dimensions are the
-     * Same Size*/
-    if (model_locations_.GetFrameCount() != loaded_frames.size() ||
-        model_locations_.GetModelCount() != loaded_models.size()) {
+    if (intent.status ==
+        jta::OptimizeIntentController::Status::PoseMatrixDimensionMismatch) {
         QMessageBox::critical(
             this,
             "Critical Error!",
@@ -4548,10 +4563,10 @@ void MainScreen::LaunchOptimizer(QString directive) {
         calibration_file_,
         loaded_frames,
         loaded_frames_B,
-        ui.image_list_widget->currentIndex().row(),
+        intent.current_frame,
         loaded_models,
         selected,
-        session_state_.GetPrimaryModelIndex(),
+        intent.primary_model_index,
         model_locations_,
         optimizer_settings_,
         trunk_manager_,
