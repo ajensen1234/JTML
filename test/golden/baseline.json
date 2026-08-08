@@ -11,9 +11,10 @@
   "settings": {
     "cost_function": "DIRECT_DILATION",
     "stages": "trunk / 2-branch / 1-leaf",
-    "budget_per_stage": 10000,
-    "budget_effective_cumulative": [10000, 20000, 30000],
-    "ranges": { "trunk": 30, "branch": 20, "leaf": 3, "leaf_z": 100 },
+    "budget_per_stage": { "trunk": 20000, "branch": 5000, "leaf": 5000, "number_branches": 2 },
+    "budget_cumulative_effective": [20000, 25000, 30000, 35000],
+    "budget_note": "Production cumulative caps from src/core/optimizer_settings.cpp defaults + Optimize(): trunk 20000, +2 branches 5000 each, +leaf 5000. The Tier-2 oracle run was reduced to a flat 3000 for run time and is NOT the production budget shape.",
+    "ranges": { "trunk": 35, "branch": 15, "branch_z": 25, "leaf": 3, "leaf_z": 15 },
     "dilation_px": { "trunk": 6, "branch": 3, "leaf": 1 }
   },
 
@@ -69,7 +70,7 @@
       "recovered_pose_per_px_L1": 0.0206709,
       "start_pose_iou_correspondence": 1.0,
       "recovered_pose_vs_fem_jts_gap_mm_deg": [-0.048, 0.004, -0.905, 0.042, 0.002, -0.135],
-      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k for run time); search range (12,12,15,15,15,15) around fem.jts frame 0; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid)",
+      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts frame 0; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid)",
       "frame_label_mapping": "1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif (resolved empirically: start-pose render IoU==1.0; the binary label TIFFs use a bottom-left y-origin, so the oracle vertically flips the label)"
     },
     "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9936); per-px L1 (0.0207 < 0.021 informational) and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by a start-pose IoU == 1.0. Thresholds measured on the RTX 3090; other GPU hardware may vary slightly."
