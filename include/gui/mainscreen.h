@@ -64,6 +64,9 @@
 /*Optimizer Settings Control Window*/
 #include "gui/settings_control.h"
 
+/*App-State Service (plan U7, R8/E11)*/
+#include "core/session_state.h"
+
 /*DRR Settings Control Window*/
 #include "drr_tool.h"
 
@@ -185,6 +188,18 @@ private:
     /*Index of Previously Selected Frame/Models*/
     int previous_frame_index_;
     QModelIndexList previous_model_indices_;
+
+    /*App-State Service: owns the pure, widget-free session facts (model
+     * list, selection, primary model, current frame). MainScreen keeps it
+     * current from widget events; the rest of MainScreen reads it instead of
+     * reaching into the UI directly (plan U7, R8/E11). Holds no widgets or
+     * render binding, so it is headless-testable. NOT an observable
+     * ViewModel (R12: no binding framework).*/
+    jta::SessionState session_state_;
+
+    /*Pull the current widget state into session_state_. Called wherever the
+     * model/frame lists or their selection/current rows change.*/
+    void SyncSessionState();
 
     /*Save the Pose From The Last Selected Frame*/
     void SaveLastPose();

@@ -85,7 +85,31 @@ void MainScreen::matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output) {
 }
 
 int MainScreen::curr_frame() {
-    return ui.image_list_widget->currentIndex().row();
+    // Keep the service in sync and read the current frame from it (plan U7).
+    SyncSessionState();
+    return session_state_.GetCurrentFrame();
+}
+
+void MainScreen::SyncSessionState() {
+    /*Pull the current widget state into session_state_. Model/frame counts,
+     * the selected model rows, and the current frame all flow out of the
+     * widgets here and are read back via the service everywhere else (plan
+     * U7, R8/E11). Keep the VIEW (colors/opacity/VTK renders) in the slots;
+     * only the state moves.*/
+    session_state_.SetModelCount(static_cast<int>(loaded_models.size()));
+    session_state_.SetFrameCount(ui.image_list_widget->count());
+
+    QModelIndexList selected =
+        ui.model_list_widget->selectionModel()->selectedRows();
+    std::vector<int> rows;
+    rows.reserve(selected.size());
+    for (const auto& idx : selected) {
+        rows.push_back(idx.row());
+    }
+    session_state_.SetSelectedModels(rows);
+
+    session_state_.SetCurrentFrame(
+        ui.image_list_widget->currentIndex().row());
 }
 
 /*Global Interactor Variable*/
@@ -1042,7 +1066,8 @@ void MainScreen::on_actionSave_Pose_triggered() {
 
     /*Get Pose to Save*/
     Point6D saved_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
+        ui.image_list_widget->currentRow(),
+        session_state_.GetPrimaryModelIndex());
 
     // Open Save File Dialogue
     QString SavePoseExtension = QFileDialog::getSaveFileName(
@@ -1093,8 +1118,8 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
     std::vector<Point6D> all_poses;
     all_poses.reserve(static_cast<size_t>(ui.image_list_widget->count()));
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        all_poses.push_back(
-            model_locations_.GetPose(i, selected[0].row()));
+        all_poses.push_back(model_locations_.GetPose(
+            i, session_state_.GetPrimaryModelIndex()));
     }
     jta::pose_file::WriteKinematicsFile(SavePoseExtension.toStdString(),
                                         all_poses);
@@ -1146,15 +1171,20 @@ void MainScreen::on_actionLoad_Pose_triggered() {
         return;
     }
     model_locations_.SavePose(ui.image_list_widget->currentRow(),
-                              selected[0].row(), loaded_pose);
-    vw->set_model_position_at_index(selected[0].row(), loaded_pose.x,
-                                    loaded_pose.y, loaded_pose.z);
-    vw->set_model_orientation_at_index(selected[0].row(), loaded_pose.xa,
-                                       loaded_pose.ya, loaded_pose.za);
-    coronal_vw->set_model_position_at_index(selected[0].row(), loaded_pose.x,
-                                            loaded_pose.y, loaded_pose.z);
+                              session_state_.GetPrimaryModelIndex(),
+                              loaded_pose);
+    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
+                                    loaded_pose.x, loaded_pose.y,
+                                    loaded_pose.z);
+    vw->set_model_orientation_at_index(
+        session_state_.GetPrimaryModelIndex(), loaded_pose.xa, loaded_pose.ya,
+        loaded_pose.za);
+    coronal_vw->set_model_position_at_index(
+        session_state_.GetPrimaryModelIndex(), loaded_pose.x, loaded_pose.y,
+        loaded_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+        session_state_.GetPrimaryModelIndex(), loaded_pose.xa, loaded_pose.ya,
+        loaded_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
     ui.qvtk_cpv->update();
@@ -1183,19 +1213,23 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
         return;
     }
     Point6D prev_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow() - 1, selected[0].row());
+        ui.image_list_widget->currentRow() - 1,
+        session_state_.GetPrimaryModelIndex());
     model_locations_.SavePose(
         ui.image_list_widget->currentRow(),
         ui.model_list_widget->currentRow(),
         prev_pose);
-    vw->set_model_position_at_index(
-        selected[0].row(), prev_pose.x, prev_pose.y, prev_pose.z);
-    vw->set_model_orientation_at_index(
-        selected[0].row(), prev_pose.xa, prev_pose.ya, prev_pose.za);
+    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
+                                    prev_pose.x, prev_pose.y, prev_pose.z);
+    vw->set_model_orientation_at_index(session_state_.GetPrimaryModelIndex(),
+                                       prev_pose.xa, prev_pose.ya,
+                                       prev_pose.za);
     coronal_vw->set_model_position_at_index(
-        selected[0].row(), prev_pose.x, prev_pose.y, prev_pose.z);
+        session_state_.GetPrimaryModelIndex(), prev_pose.x, prev_pose.y,
+        prev_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        selected[0].row(), prev_pose.xa, prev_pose.ya, prev_pose.za);
+        session_state_.GetPrimaryModelIndex(), prev_pose.xa, prev_pose.ya,
+        prev_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
     ui.qvtk_cpv->update();
@@ -1224,7 +1258,8 @@ Point6D MainScreen::copy_current_pose() {
         return Point6D();
     }
     Point6D pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
+        ui.image_list_widget->currentRow(),
+        session_state_.GetPrimaryModelIndex());
     return pose;
 }
 
@@ -1251,20 +1286,24 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
         return;
     }
     Point6D next_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow() + 1, selected[0].row());
+        ui.image_list_widget->currentRow() + 1,
+        session_state_.GetPrimaryModelIndex());
     model_locations_.SavePose(
         ui.image_list_widget->currentRow(),
         ui.model_list_widget->currentRow(),
         next_pose);
 
-    vw->set_model_position_at_index(
-        selected[0].row(), next_pose.x, next_pose.y, next_pose.z);
-    vw->set_model_orientation_at_index(
-        selected[0].row(), next_pose.xa, next_pose.ya, next_pose.za);
+    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
+                                    next_pose.x, next_pose.y, next_pose.z);
+    vw->set_model_orientation_at_index(session_state_.GetPrimaryModelIndex(),
+                                       next_pose.xa, next_pose.ya,
+                                       next_pose.za);
     coronal_vw->set_model_position_at_index(
-        selected[0].row(), next_pose.x, next_pose.y, next_pose.z);
+        session_state_.GetPrimaryModelIndex(), next_pose.x, next_pose.y,
+        next_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        selected[0].row(), next_pose.xa, next_pose.ya, next_pose.za);
+        session_state_.GetPrimaryModelIndex(), next_pose.xa, next_pose.ya,
+        next_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
     ui.qvtk_cpv->update();
@@ -1329,15 +1368,20 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     }
     if (ui.image_list_widget->currentRow() >= 0) {
         Point6D loaded_pose = model_locations_.GetPose(
-            ui.image_list_widget->currentRow(), selected[0].row());
-        vw->set_model_position_at_index(
-            selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+            ui.image_list_widget->currentRow(),
+            session_state_.GetPrimaryModelIndex());
+        vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
+                                        loaded_pose.x, loaded_pose.y,
+                                        loaded_pose.z);
         vw->set_model_orientation_at_index(
-            selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+            session_state_.GetPrimaryModelIndex(), loaded_pose.xa,
+            loaded_pose.ya, loaded_pose.za);
         coronal_vw->set_model_position_at_index(
-            selected[0].row(), loaded_pose.x, loaded_pose.y, loaded_pose.z);
+            session_state_.GetPrimaryModelIndex(), loaded_pose.x, loaded_pose.y,
+            loaded_pose.z);
         coronal_vw->set_model_orientation_at_index(
-            selected[0].row(), loaded_pose.xa, loaded_pose.ya, loaded_pose.za);
+            session_state_.GetPrimaryModelIndex(), loaded_pose.xa,
+            loaded_pose.ya, loaded_pose.za);
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -2700,6 +2744,10 @@ void MainScreen::on_load_image_button_clicked() {
 
         // this->vw->set_loaded_frames(loaded_frames);
 
+        /*Sync app-state (new frame count / current frame) from the widgets
+         * (plan U7).*/
+        SyncSessionState();
+
     } else if (calibrated_for_biplane_viewport_) {
         // Load TIFF images for Camera A and Camera B - Must Be Same Amount
         // or Error and None Will Load!
@@ -2794,6 +2842,9 @@ void MainScreen::on_load_image_button_clicked() {
         }
         vw->set_loaded_frames(loaded_frames);
         vw->set_loaded_frames_b(loaded_frames_B);
+        /*Sync app-state (new frame count / current frame) from the widgets
+         * (plan U7).*/
+        SyncSessionState();
     }
 }
 
@@ -2922,6 +2973,8 @@ void MainScreen::on_load_model_button_clicked() {
         //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
         //     loaded_frames[0].GetOriginalImage().rows);
     }
+    /*Sync app-state (new model count) from the widgets (plan U7).*/
+    SyncSessionState();
 }
 
 /*Biplane View Button (Camera A,Camera B*/
@@ -3251,6 +3304,9 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 /*Frame Widget*/
 /* this is where we are setting the current background */
 void MainScreen::on_image_list_widget_itemSelectionChanged() {
+    /*Sync app-state (current frame) from the widget (plan U7).*/
+    SyncSessionState();
+
     /*Make Sure A View is Selected*/
     if (!ui.original_image_radio_button->isChecked() &&
         !ui.inverted_image_radio_button->isChecked() &&
@@ -3475,6 +3531,10 @@ void MainScreen::print_selected_item() {
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
+    /*Sync app-state (model selection / primary model) from the widget
+     * (plan U7).*/
+    SyncSessionState();
+
     /*Save Last Pair Pose if not currently optimizing*/
     if (!currently_optimizing_) {
         SaveLastPose(); // Needs Work
@@ -4491,7 +4551,7 @@ void MainScreen::LaunchOptimizer(QString directive) {
         ui.image_list_widget->currentIndex().row(),
         loaded_models,
         selected,
-        selected[0].row(),
+        session_state_.GetPrimaryModelIndex(),
         model_locations_,
         optimizer_settings_,
         trunk_manager_,
@@ -5595,26 +5655,30 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
     }
 
     // Loop through each of the frames
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
 
     // save the current location of the image
 
+    // App-state selection via the service (plan U7): two selected models
+    // (tibial = primary/first, femoral = second)
+    std::vector<int> selected_models =
+        session_state_.GetSelectedModels();
+
     for (int i = 0; i < ui.image_list_widget->count(); i++) {
-        Point6D fem_pose = model_locations_.GetPose(i, selected[1].row());
-        Point6D tib_pose_orig = model_locations_.GetPose(i, selected[0].row());
+        Point6D fem_pose = model_locations_.GetPose(i, selected_models[1]);
+        Point6D tib_pose_orig =
+            model_locations_.GetPose(i, selected_models[0]);
 
         Point6D tib_pose_final = tibial_pose_selector(fem_pose, tib_pose_orig);
-        model_locations_.SavePose(i, selected[0].row(), tib_pose_final);
+        model_locations_.SavePose(i, selected_models[0], tib_pose_final);
     }
     // Need to update the location of the frame that is currently on screen
     int selected_img_idx =
         ui.image_list_widget->selectionModel()->selectedRows()[0].row();
-    Point6D current_img_pos =
-        model_locations_.GetPose(selected_img_idx, selected[0].row());
-    model_actor_list[selected[0].row()]->SetPosition(
+    Point6D current_img_pos = model_locations_.GetPose(
+        selected_img_idx, selected_models[0]);
+    model_actor_list[selected_models[0]]->SetPosition(
         current_img_pos.x, current_img_pos.y, current_img_pos.z);
-    model_actor_list[selected[0].row()]->SetOrientation(
+    model_actor_list[selected_models[0]]->SetOrientation(
         current_img_pos.xa, current_img_pos.ya, current_img_pos.za);
 
     ui.qvtk_widget->update();
