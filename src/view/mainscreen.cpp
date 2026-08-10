@@ -17,6 +17,7 @@
 #include "domain/pose_file_io.h"
 #include "domain/optimize_intent_controller.h"
 #include "domain/model_list_builder.h"
+#include "domain/pose_copy.h"
 
 /*Size Constants*/
 #include "view/mainscreen_size_constants.h"
@@ -1066,18 +1067,21 @@ void MainScreen::resizeEvent(QResizeEvent* event) {
 /*Save Pose*/
 void MainScreen::on_actionSave_Pose_triggered() {
     // Save Single Pose
-    // Selection Check
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
     }
 
     // Must be in Single Selection Mode to Load Pose
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1108,10 +1112,14 @@ void MainScreen::on_actionSave_Pose_triggered() {
 /*Save Kinematics*/
 void MainScreen::on_actionSave_Kinematics_triggered() {
     // Save Single Pose
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1121,7 +1129,7 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
     }
 
     // Must be in Single Selection Mode to Load Pose
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1153,18 +1161,21 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
 /*Load Pose*/
 void MainScreen::on_actionLoad_Pose_triggered() {
     // Load Pose
-    // Selection Check
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
     }
 
     // Must be in Single Selection Mode to Load Pose
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1218,9 +1229,14 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 
 /*Copy Previous Pose*/
 void MainScreen::on_actionCopy_Previous_Pose_triggered() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1229,7 +1245,7 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
         return;
     }
 
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1237,13 +1253,20 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
             QMessageBox::Ok);
         return;
     }
-    Point6D prev_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentIndex().row() - 1,
-        session_state_.GetPrimaryModelIndex());
-    model_locations_.SavePose(
+
+    // R13 index split + boundary rule owned by the pure pose_copy seam
+    // (plan 004 U4): READ at (row - 1, primary model), WRITE at
+    // (row, CURRENT model row). At row 0 the read is GetPose(-1, ...) -- the
+    // no-image default pose, stored verbatim, overwriting frame 0 (preserved,
+    // pinned by test/unit/pose_copy_test.cpp). No A<->B conversion here.
+    jta::pose_copy::CopyPlan plan = jta::pose_copy::PreviousPose(
         ui.image_list_widget->currentIndex().row(),
         ui.model_list_widget->currentIndex().row(),
-        prev_pose);
+        session_state_.GetPrimaryModelIndex(),
+        ui.image_list_widget->model()->rowCount());
+    Point6D prev_pose =
+        model_locations_.GetPose(plan.read_frame, plan.read_model);
+    model_locations_.SavePose(plan.write_frame, plan.write_model, prev_pose);
     vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
                                     prev_pose.x, prev_pose.y, prev_pose.z);
     vw->set_model_orientation_at_index(session_state_.GetPrimaryModelIndex(),
@@ -1263,9 +1286,14 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
 
 // For passing current pose into sym_trap window
 Point6D MainScreen::copy_current_pose() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1274,7 +1302,7 @@ Point6D MainScreen::copy_current_pose() {
         return Point6D();
     }
 
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1291,9 +1319,14 @@ Point6D MainScreen::copy_current_pose() {
 /*Copy Next Pose*/
 
 void MainScreen::on_actionCopy_Next_Pose_triggered() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1302,7 +1335,7 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
         return;
     }
 
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1310,13 +1343,21 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
             QMessageBox::Ok);
         return;
     }
-    Point6D next_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentIndex().row() + 1,
-        session_state_.GetPrimaryModelIndex());
-    model_locations_.SavePose(
+
+    // R13 index split + boundary rule owned by the pure pose_copy seam
+    // (plan 004 U4): READ at (row + 1, primary model), WRITE at
+    // (row, CURRENT model row). At the last row the read is
+    // GetPose(count(), ...) -- the no-image default pose, stored verbatim,
+    // overwriting the last frame (preserved, pinned by
+    // test/unit/pose_copy_test.cpp). No A<->B conversion here.
+    jta::pose_copy::CopyPlan plan = jta::pose_copy::NextPose(
         ui.image_list_widget->currentIndex().row(),
         ui.model_list_widget->currentIndex().row(),
-        next_pose);
+        session_state_.GetPrimaryModelIndex(),
+        ui.image_list_widget->model()->rowCount());
+    Point6D next_pose =
+        model_locations_.GetPose(plan.read_frame, plan.read_model);
+    model_locations_.SavePose(plan.write_frame, plan.write_model, next_pose);
 
     vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
                                     next_pose.x, next_pose.y, next_pose.z);
@@ -1338,11 +1379,14 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
 /*Load Kinematics*/
 void MainScreen::on_actionLoad_Kinematics_triggered() {
     // Load Kinematics to Frames
-    // Selection Check
-    /*Load Models Selected Indices*/
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
+    // Selection Check (guard decision owned by the pure pose_copy seam,
+    // plan 004 U4)
+    jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        ui.image_list_widget->currentIndex().row(),
+        static_cast<int>(
+            ui.model_list_widget->selectionModel()->selectedRows().size()),
+        ui.multiple_model_radio_button->isChecked());
+    if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1352,7 +1396,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     }
 
     // Must be in Single Selection Mode to Load Pose
-    if (ui.multiple_model_radio_button->isChecked()) {
+    if (guard == jta::pose_copy::SelectionGuard::MultiModelMode) {
         QMessageBox::critical(
             this,
             "Error!",

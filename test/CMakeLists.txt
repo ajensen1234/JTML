@@ -409,6 +409,41 @@ target_link_options(jtml_test_settings_service_props PRIVATE
 add_test(NAME jtml.settings_service_props COMMAND jtml_test_settings_service_props)
 set_tests_properties(jtml.settings_service_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Pose-copy seam tests (plan 004 U4, R8/R13/R14/R15). The Catch2 deterministic
+# twin compiles the pure seam + the real LocationStorage service (headless,
+# Qt-free) so the no-image boundary-fallback chain (GetPose(-1, ...) -> the
+# no-image default pose overwriting frame 0 / the last frame) is pinned
+# end-to-end. Needs include/compute because services/calibration.h pulls
+# compute/camera_calibration.h (same pattern as jtml.location_storage).
+add_executable(jtml_test_pose_copy
+    unit/pose_copy_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/pose_copy.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_pose_copy PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_pose_copy PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.pose_copy COMMAND jtml_test_pose_copy)
+set_tests_properties(jtml.pose_copy PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Hegel PBT for the pure pose-copy seam (plan 004 U4): index/boundary
+# invariants (row 0, last row, single/multi selection, no frames) + the
+# primary-vs-current split preservation. Pure index math -- no services/vtk/
+# Qt -- with the standard hegel link/rpath recipe.
+add_executable(jtml_test_pose_copy_props
+    unit/pose_copy_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/pose_copy.cpp
+)
+target_include_directories(jtml_test_pose_copy_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_pose_copy_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_pose_copy_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.pose_copy_props COMMAND jtml_test_pose_copy_props)
+set_tests_properties(jtml.pose_copy_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.

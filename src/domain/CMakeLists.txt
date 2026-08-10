@@ -16,6 +16,7 @@ add_library(jtml_domain STATIC
     direct_optimizer.cpp
     model_list_builder.cpp
     optimize_intent_controller.cpp
+    pose_copy.cpp
     pose_file_io.cpp
     session_state.cpp
     sym_trap_functions.cpp
