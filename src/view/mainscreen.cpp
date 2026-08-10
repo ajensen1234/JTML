@@ -26,7 +26,6 @@
 
 /*Settings*/
 #include <qguiapplication.h>
-#include <qsettings.h>
 
 /*File Processing*/
 #include <qfiledialog.h>
@@ -4144,15 +4143,8 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
             }
         }
         /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", ui.aperture_spin_box->value());
-        setting.setValue("LOW_THRESH", low_val);
-        setting.setValue("HIGH_THRESH", high_val);
-        setting.endGroup();
+        settings_service_.SaveEdgeSettings(
+            ui.aperture_spin_box->value(), low_val, high_val);
     }
 };
 
@@ -4237,15 +4229,8 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
             }
         }
         /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", aperture);
-        setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-        setting.setValue("HIGH_THRESH", high_val);
-        setting.endGroup();
+        settings_service_.SaveEdgeSettings(
+            aperture, ui.low_threshold_slider->value(), high_val);
     }
 };
 
@@ -4330,15 +4315,8 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
             }
         }
         /*Save To Optimizer Settings and Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", aperture);
-        setting.setValue("LOW_THRESH", low_val);
-        setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-        setting.endGroup();
+        settings_service_.SaveEdgeSettings(
+            aperture, low_val, ui.high_threshold_slider->value());
     }
 };
 /*Apply All Edges*/
@@ -4397,15 +4375,10 @@ void MainScreen::on_apply_all_edge_button_clicked() {
         }
     }
     /*Save To Optimizer Settings and Registry*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
-    setting.beginGroup("EdgeDetectionSettings");
-    setting.setValue("APERTURE", ui.aperture_spin_box->value());
-    setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-    setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-    setting.endGroup();
+    settings_service_.SaveEdgeSettings(
+        ui.aperture_spin_box->value(),
+        ui.low_threshold_slider->value(),
+        ui.high_threshold_slider->value());
 }
 
 /*Reset Edge Detection Values*/
@@ -5012,42 +4985,34 @@ void MainScreen::onUpdateDilationBackground() {
  * Loading*/
 void MainScreen::LoadSettingsBetweenSessions() {
     /*Check if Loaded Before*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
-    bool first_time_loading = false;
-    QStringList groupList = setting.childGroups();
-    if (groupList.size() == 0) {
-        first_time_loading = true;
-    }
+    jta::SettingsService::LoadResult result = settings_service_.LoadSettings();
+    bool first_time_loading = result.first_time;
 
     /*Not First Time Loading*/
     if (!first_time_loading) {
-        /*Save Cost Function Settings*/
-        setting.beginGroup("CostFunctionSettings");
-
-        /*Get list of all keys and split into terminology*/
-        QStringList cost_function_settings_keys = setting.allKeys();
+        /*Apply Saved Cost Function Settings*/
+        std::vector<jta::RegistryEntry> cost_function_settings_keys =
+            result.cost_function_entries;
         for (int i = 0; i < cost_function_settings_keys.size(); i++) {
             /*If 2 codes, should be the STAGE and ACTIVE_CF.
             If 4 codes, should be the STAGE, Cost Function Name, Parameter
             Name, Parameter Type*/
-            QStringList key_codes = cost_function_settings_keys[i].split("@");
+            QStringList key_codes =
+                cost_function_settings_keys[i].key.split("@");
             if (key_codes.size() == 2 && key_codes[1] == "ACTIVE_CF") {
                 if (key_codes[0] == "TRUNK") {
                     trunk_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
+                        cost_function_settings_keys[i].value
                             .toString()
                             .toStdString());
                 } else if (key_codes[0] == "BRANCH") {
                     branch_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
+                        cost_function_settings_keys[i].value
                             .toString()
                             .toStdString());
                 } else if (key_codes[0] == "LEAF") {
                     leaf_manager_.setActiveCostFunction(
-                        setting.value(cost_function_settings_keys[i])
+                        cost_function_settings_keys[i].value
                             .toString()
                             .toStdString());
                 } else {
@@ -5064,21 +5029,21 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toDouble());
                     } else if (key_codes[3] == "INT") {
                         trunk_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toInt());
                     } else if (key_codes[3] == "BOOL") {
                         trunk_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toBool());
                     } else {
                         QMessageBox::critical(
@@ -5093,21 +5058,21 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toDouble());
                     } else if (key_codes[3] == "INT") {
                         branch_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toInt());
                     } else if (key_codes[3] == "BOOL") {
                         branch_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toBool());
                     } else {
                         QMessageBox::critical(
@@ -5122,21 +5087,21 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toDouble());
                     } else if (key_codes[3] == "INT") {
                         leaf_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toInt());
                     } else if (key_codes[3] == "BOOL") {
                         leaf_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                setting.value(cost_function_settings_keys[i])
+                                cost_function_settings_keys[i].value
                                     .toBool());
                     } else {
                         QMessageBox::critical(
@@ -5161,57 +5126,14 @@ void MainScreen::LoadSettingsBetweenSessions() {
                     QMessageBox::Ok);
             }
         }
-        setting.endGroup();
 
         /*Load Optimizer Settings*/
-        setting.beginGroup("OptimizerSettings");
-        /*Variables*/
-        /*Trunk*/
-        optimizer_settings_.trunk_range = Point6D(
-            setting.value("TRUNK@RANGE_X").toDouble(),
-            setting.value("TRUNK@RANGE_Y").toDouble(),
-            setting.value("TRUNK@RANGE_Z").toDouble(),
-            setting.value("TRUNK@RANGE_XA").toDouble(),
-            setting.value("TRUNK@RANGE_YA").toDouble(),
-            setting.value("TRUNK@RANGE_ZA").toDouble());
-        optimizer_settings_.trunk_budget =
-            setting.value("TRUNK@BUDGET").toInt();
-
-        /*Branch*/
-        optimizer_settings_.branch_range = Point6D(
-            setting.value("BRANCH@RANGE_X").toDouble(),
-            setting.value("BRANCH@RANGE_Y").toDouble(),
-            setting.value("BRANCH@RANGE_Z").toDouble(),
-            setting.value("BRANCH@RANGE_XA").toDouble(),
-            setting.value("BRANCH@RANGE_YA").toDouble(),
-            setting.value("BRANCH@RANGE_ZA").toDouble());
-        optimizer_settings_.number_branches =
-            setting.value("BRANCH@NUMBER_BRANCHES").toInt();
-        optimizer_settings_.enable_branch_ =
-            setting.value("BRANCH@ENABLE").toBool();
-        optimizer_settings_.branch_budget =
-            setting.value("BRANCH@BUDGET").toInt();
-
-        /*Leaf*/
-        optimizer_settings_.leaf_range = Point6D(
-            setting.value("LEAF@RANGE_X").toDouble(),
-            setting.value("LEAF@RANGE_Y").toDouble(),
-            setting.value("LEAF@RANGE_Z").toDouble(),
-            setting.value("LEAF@RANGE_XA").toDouble(),
-            setting.value("LEAF@RANGE_YA").toDouble(),
-            setting.value("LEAF@RANGE_ZA").toDouble());
-        optimizer_settings_.enable_leaf_ =
-            setting.value("LEAF@ENABLE").toBool();
-        optimizer_settings_.leaf_budget = setting.value("LEAF@BUDGET").toInt();
-        setting.endGroup();
+        optimizer_settings_ = result.optimizer;
 
         /*Edge Detection Settings*/
-        setting.beginGroup("EdgeDetectionSettings");
-        ui.aperture_spin_box->setValue(setting.value("APERTURE").toInt());
-        ui.low_threshold_slider->setValue(setting.value("LOW_THRESH").toInt());
-        ui.high_threshold_slider->setValue(
-            setting.value("HIGH_THRESH").toInt());
-        setting.endGroup();
+        ui.aperture_spin_box->setValue(result.edge.aperture);
+        ui.low_threshold_slider->setValue(result.edge.low_thresh);
+        ui.high_threshold_slider->setValue(result.edge.high_thresh);
     } else {
         /*Check CUDA Compatibility*/
         int gpu_device_count = 0, device_count;
@@ -5259,9 +5181,7 @@ void MainScreen::LoadSettingsBetweenSessions() {
             /*First Time Loading Message Will Now Go Away By Marking in
              * Registry*/
             /*DEPRECATED BUT STILL IN THE CODE - WHATEVER*/
-            setting.beginGroup("FirstTime");
-            setting.setValue("JTAFirstTime", false);
-            setting.endGroup();
+            settings_service_.MarkFirstTimeDone();
         }
 
         /*Save Default Settings*/
@@ -5281,199 +5201,21 @@ void MainScreen::LoadSettingsBetweenSessions() {
             ->setIntParameterValue("Dilation", 1);
 
         /*Save to Registry*/
-        QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                          QString::number(VER_MIDDLE_NUM) +
-                          QString::number(VER_LAST_NUM);
-        QSettings setting("JointTrackAutoGPU", Version);
-
-        /*Save Cost Function Settings*/
-        setting.beginGroup("CostFunctionSettings");
-        /*Cost Function Managers (Save All Values for Parameters and Active
-         * Cost Function*/
-        /*Trunk*/
-        setting.setValue(
-            "TRUNK@ACTIVE_CF",
-            QString::fromStdString(trunk_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-            trunk_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < trunk_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                trunk_parameters_double =
-                    trunk_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < trunk_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_double[j].getParameterName() + "@" +
-                        trunk_parameters_double[j].getParameterType()),
-                    trunk_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>>
-                trunk_parameters_int =
-                    trunk_cost_functions[i].getIntParameters();
-            for (int j = 0; j < trunk_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_int[j].getParameterName() + "@" +
-                        trunk_parameters_int[j].getParameterType()),
-                    trunk_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                trunk_parameters_bool =
-                    trunk_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "TRUNK@" +
-                        trunk_cost_functions[i].getCostFunctionName() + "@" +
-                        trunk_parameters_bool[j].getParameterName() + "@" +
-                        trunk_parameters_bool[j].getParameterType()),
-                    trunk_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        /*Branch*/
-        setting.setValue(
-            "BRANCH@ACTIVE_CF",
-            QString::fromStdString(branch_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-            branch_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < branch_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                branch_parameters_double =
-                    branch_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < branch_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_double[j].getParameterName() + "@" +
-                        branch_parameters_double[j].getParameterType()),
-                    branch_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>>
-                branch_parameters_int =
-                    branch_cost_functions[i].getIntParameters();
-            for (int j = 0; j < branch_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_int[j].getParameterName() + "@" +
-                        branch_parameters_int[j].getParameterType()),
-                    branch_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                branch_parameters_bool =
-                    branch_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < branch_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "BRANCH@" +
-                        branch_cost_functions[i].getCostFunctionName() + "@" +
-                        branch_parameters_bool[j].getParameterName() + "@" +
-                        branch_parameters_bool[j].getParameterType()),
-                    branch_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        /*Leaf*/
-        setting.setValue(
-            "LEAF@ACTIVE_CF",
-            QString::fromStdString(leaf_manager_.getActiveCostFunction()));
-        std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-            leaf_manager_.getAvailableCostFunctions();
-        for (int i = 0; i < leaf_cost_functions.size(); i++) {
-            std::vector<jta_cost_function::Parameter<double>>
-                leaf_parameters_double =
-                    leaf_cost_functions[i].getDoubleParameters();
-            for (int j = 0; j < leaf_parameters_double.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_double[j].getParameterName() +
-                        "@" + leaf_parameters_double[j].getParameterType()),
-                    leaf_parameters_double[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
-                leaf_cost_functions[i].getIntParameters();
-            for (int j = 0; j < leaf_parameters_int.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_int[j].getParameterName() + "@" +
-                        leaf_parameters_int[j].getParameterType()),
-                    leaf_parameters_int[j].getParameterValue());
-            }
-            std::vector<jta_cost_function::Parameter<bool>>
-                leaf_parameters_bool =
-                    leaf_cost_functions[i].getBoolParameters();
-            for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-                setting.setValue(
-                    QString::fromStdString(
-                        "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                        "@" + leaf_parameters_bool[j].getParameterName() + "@" +
-                        leaf_parameters_bool[j].getParameterType()),
-                    leaf_parameters_bool[j].getParameterValue());
-            }
-        }
-
-        setting.endGroup();
-
-        /*Save Optimizer Settings*/
-        setting.beginGroup("OptimizerSettings");
-        /*Variables*/
-        /*Trunk*/
-        setting.setValue("TRUNK@RANGE_X", optimizer_settings_.trunk_range.x);
-        setting.setValue("TRUNK@RANGE_Y", optimizer_settings_.trunk_range.y);
-        setting.setValue("TRUNK@RANGE_Z", optimizer_settings_.trunk_range.z);
-        setting.setValue("TRUNK@RANGE_XA", optimizer_settings_.trunk_range.xa);
-        setting.setValue("TRUNK@RANGE_YA", optimizer_settings_.trunk_range.ya);
-        setting.setValue("TRUNK@RANGE_ZA", optimizer_settings_.trunk_range.za);
-        setting.setValue("TRUNK@BUDGET", optimizer_settings_.trunk_budget);
-
-        /*Branch*/
-        setting.setValue("BRANCH@RANGE_X", optimizer_settings_.branch_range.x);
-        setting.setValue("BRANCH@RANGE_Y", optimizer_settings_.branch_range.y);
-        setting.setValue("BRANCH@RANGE_Z", optimizer_settings_.branch_range.z);
-        setting.setValue(
-            "BRANCH@RANGE_XA", optimizer_settings_.branch_range.xa);
-        setting.setValue(
-            "BRANCH@RANGE_YA", optimizer_settings_.branch_range.ya);
-        setting.setValue(
-            "BRANCH@RANGE_ZA", optimizer_settings_.branch_range.za);
-        setting.setValue(
-            "BRANCH@NUMBER_BRANCHES", optimizer_settings_.number_branches);
-        setting.setValue("BRANCH@ENABLE", optimizer_settings_.enable_branch_);
-        setting.setValue("BRANCH@BUDGET", optimizer_settings_.branch_budget);
-
-        /*Leaf*/
-        setting.setValue("LEAF@RANGE_X", optimizer_settings_.leaf_range.x);
-        setting.setValue("LEAF@RANGE_Y", optimizer_settings_.leaf_range.y);
-        setting.setValue("LEAF@RANGE_Z", optimizer_settings_.leaf_range.z);
-        setting.setValue("LEAF@RANGE_XA", optimizer_settings_.leaf_range.xa);
-        setting.setValue("LEAF@RANGE_YA", optimizer_settings_.leaf_range.ya);
-        setting.setValue("LEAF@RANGE_ZA", optimizer_settings_.leaf_range.za);
-        setting.setValue("LEAF@ENABLE", optimizer_settings_.enable_leaf_);
-        setting.setValue("LEAF@BUDGET", optimizer_settings_.leaf_budget);
-        setting.endGroup();
+        settings_service_.SaveCostFunctionSettings(
+            BuildCostFunctionRegistryEntries(
+                trunk_manager_, branch_manager_, leaf_manager_));
+        settings_service_.SaveOptimizerSettings(optimizer_settings_);
 
         /*Edge Detection Settings*/
-        setting.beginGroup("EdgeDetectionSettings");
         ui.aperture_spin_box->setValue(APERTURE);
         ui.low_threshold_slider->setValue(LOW_THRESH);
         ui.high_threshold_slider->setValue(HIGH_THRESH);
-        setting.endGroup();
 
         /*Save*/
-        setting.beginGroup("EdgeDetectionSettings");
-        setting.setValue("APERTURE", ui.aperture_spin_box->value());
-        setting.setValue("LOW_THRESH", ui.low_threshold_slider->value());
-        setting.setValue("HIGH_THRESH", ui.high_threshold_slider->value());
-        setting.endGroup();
+        settings_service_.SaveEdgeSettings(
+            ui.aperture_spin_box->value(),
+            ui.low_threshold_slider->value(),
+            ui.high_threshold_slider->value());
     }
 }
 
@@ -5494,174 +5236,157 @@ void MainScreen::onSaveSettings(
     leaf_manager_ = leaf_manager;
 
     /*Save to Registry*/
-    QString Version = "Version" + QString::number(VER_FIRST_NUM) +
-                      QString::number(VER_MIDDLE_NUM) +
-                      QString::number(VER_LAST_NUM);
-    QSettings setting("JointTrackAutoGPU", Version);
+    settings_service_.SaveCostFunctionSettings(
+        BuildCostFunctionRegistryEntries(
+            trunk_manager_, branch_manager_, leaf_manager_));
+    settings_service_.SaveOptimizerSettings(optimizer_settings_);
 
-    /*Save Cost Function Settings*/
-    setting.beginGroup("CostFunctionSettings");
+    /*Update Dilation Frames*/
+    UpdateDilationFrames();
+}
+
+/*Builds the raw CostFunctionSettings registry entries (key formats
+ * STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE) from the three cost function
+ * managers -- relocated verbatim from the first-run save and onSaveSettings
+ * (plan 004 U3). The SettingsService round-trips the raw entries; the view
+ * maps managers <-> entries because the GPU-linked CostFunctionManager must
+ * not enter the QtCore-only service.*/
+std::vector<jta::RegistryEntry>
+MainScreen::BuildCostFunctionRegistryEntries(
+    jta_cost_function::CostFunctionManager& trunk_manager,
+    jta_cost_function::CostFunctionManager& branch_manager,
+    jta_cost_function::CostFunctionManager& leaf_manager) const {
+    std::vector<jta::RegistryEntry> entries;
+
     /*Cost Function Managers (Save All Values for Parameters and Active Cost
      * Function*/
     /*Trunk*/
-    setting.setValue(
-        "TRUNK@ACTIVE_CF",
-        QString::fromStdString(trunk_manager_.getActiveCostFunction()));
+    entries.push_back(jta::RegistryEntry{
+        QStringLiteral("TRUNK@ACTIVE_CF"),
+        QString::fromStdString(trunk_manager.getActiveCostFunction())});
     std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-        trunk_manager_.getAvailableCostFunctions();
+        trunk_manager.getAvailableCostFunctions();
     for (int i = 0; i < trunk_cost_functions.size(); i++) {
         std::vector<jta_cost_function::Parameter<double>>
             trunk_parameters_double =
                 trunk_cost_functions[i].getDoubleParameters();
         for (int j = 0; j < trunk_parameters_double.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_double[j].getParameterName() + "@" +
+                    "TRUNK@" +
+                    trunk_cost_functions[i].getCostFunctionName() + "@" +
+                    trunk_parameters_double[j].getParameterName() + "@" +
                     trunk_parameters_double[j].getParameterType()),
-                trunk_parameters_double[j].getParameterValue());
+                trunk_parameters_double[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<int>> trunk_parameters_int =
             trunk_cost_functions[i].getIntParameters();
         for (int j = 0; j < trunk_parameters_int.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_int[j].getParameterName() + "@" +
+                    "TRUNK@" +
+                    trunk_cost_functions[i].getCostFunctionName() + "@" +
+                    trunk_parameters_int[j].getParameterName() + "@" +
                     trunk_parameters_int[j].getParameterType()),
-                trunk_parameters_int[j].getParameterValue());
+                trunk_parameters_int[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<bool>> trunk_parameters_bool =
             trunk_cost_functions[i].getBoolParameters();
         for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_bool[j].getParameterName() + "@" +
+                    "TRUNK@" +
+                    trunk_cost_functions[i].getCostFunctionName() + "@" +
+                    trunk_parameters_bool[j].getParameterName() + "@" +
                     trunk_parameters_bool[j].getParameterType()),
-                trunk_parameters_bool[j].getParameterValue());
+                trunk_parameters_bool[j].getParameterValue()});
         }
     }
 
     /*Branch*/
-    setting.setValue(
-        "BRANCH@ACTIVE_CF",
-        QString::fromStdString(branch_manager_.getActiveCostFunction()));
+    entries.push_back(jta::RegistryEntry{
+        QStringLiteral("BRANCH@ACTIVE_CF"),
+        QString::fromStdString(branch_manager.getActiveCostFunction())});
     std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-        branch_manager_.getAvailableCostFunctions();
+        branch_manager.getAvailableCostFunctions();
     for (int i = 0; i < branch_cost_functions.size(); i++) {
         std::vector<jta_cost_function::Parameter<double>>
             branch_parameters_double =
                 branch_cost_functions[i].getDoubleParameters();
         for (int j = 0; j < branch_parameters_double.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_double[j].getParameterName() + "@" +
+                    "BRANCH@" +
+                    branch_cost_functions[i].getCostFunctionName() + "@" +
+                    branch_parameters_double[j].getParameterName() + "@" +
                     branch_parameters_double[j].getParameterType()),
-                branch_parameters_double[j].getParameterValue());
+                branch_parameters_double[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<int>> branch_parameters_int =
             branch_cost_functions[i].getIntParameters();
         for (int j = 0; j < branch_parameters_int.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_int[j].getParameterName() + "@" +
+                    "BRANCH@" +
+                    branch_cost_functions[i].getCostFunctionName() + "@" +
+                    branch_parameters_int[j].getParameterName() + "@" +
                     branch_parameters_int[j].getParameterType()),
-                branch_parameters_int[j].getParameterValue());
+                branch_parameters_int[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<bool>> branch_parameters_bool =
             branch_cost_functions[i].getBoolParameters();
         for (int j = 0; j < branch_parameters_bool.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_bool[j].getParameterName() + "@" +
+                    "BRANCH@" +
+                    branch_cost_functions[i].getCostFunctionName() + "@" +
+                    branch_parameters_bool[j].getParameterName() + "@" +
                     branch_parameters_bool[j].getParameterType()),
-                branch_parameters_bool[j].getParameterValue());
+                branch_parameters_bool[j].getParameterValue()});
         }
     }
 
     /*Leaf*/
-    setting.setValue(
-        "LEAF@ACTIVE_CF",
-        QString::fromStdString(leaf_manager_.getActiveCostFunction()));
+    entries.push_back(jta::RegistryEntry{
+        QStringLiteral("LEAF@ACTIVE_CF"),
+        QString::fromStdString(leaf_manager.getActiveCostFunction())});
     std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-        leaf_manager_.getAvailableCostFunctions();
+        leaf_manager.getAvailableCostFunctions();
     for (int i = 0; i < leaf_cost_functions.size(); i++) {
         std::vector<jta_cost_function::Parameter<double>>
             leaf_parameters_double =
                 leaf_cost_functions[i].getDoubleParameters();
         for (int j = 0; j < leaf_parameters_double.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
                     "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
                     "@" + leaf_parameters_double[j].getParameterName() + "@" +
                     leaf_parameters_double[j].getParameterType()),
-                leaf_parameters_double[j].getParameterValue());
+                leaf_parameters_double[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
             leaf_cost_functions[i].getIntParameters();
         for (int j = 0; j < leaf_parameters_int.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
                     "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
                     "@" + leaf_parameters_int[j].getParameterName() + "@" +
                     leaf_parameters_int[j].getParameterType()),
-                leaf_parameters_int[j].getParameterValue());
+                leaf_parameters_int[j].getParameterValue()});
         }
         std::vector<jta_cost_function::Parameter<bool>> leaf_parameters_bool =
             leaf_cost_functions[i].getBoolParameters();
         for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-            setting.setValue(
+            entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
                     "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
                     "@" + leaf_parameters_bool[j].getParameterName() + "@" +
                     leaf_parameters_bool[j].getParameterType()),
-                leaf_parameters_bool[j].getParameterValue());
+                leaf_parameters_bool[j].getParameterValue()});
         }
     }
 
-    setting.endGroup();
-
-    /*Save Optimizer Settings*/
-    setting.beginGroup("OptimizerSettings");
-    /*Variables*/
-    /*Trunk*/
-    setting.setValue("TRUNK@RANGE_X", optimizer_settings_.trunk_range.x);
-    setting.setValue("TRUNK@RANGE_Y", optimizer_settings_.trunk_range.y);
-    setting.setValue("TRUNK@RANGE_Z", optimizer_settings_.trunk_range.z);
-    setting.setValue("TRUNK@RANGE_XA", optimizer_settings_.trunk_range.xa);
-    setting.setValue("TRUNK@RANGE_YA", optimizer_settings_.trunk_range.ya);
-    setting.setValue("TRUNK@RANGE_ZA", optimizer_settings_.trunk_range.za);
-    setting.setValue("TRUNK@BUDGET", optimizer_settings_.trunk_budget);
-
-    /*Branch*/
-    setting.setValue("BRANCH@RANGE_X", optimizer_settings_.branch_range.x);
-    setting.setValue("BRANCH@RANGE_Y", optimizer_settings_.branch_range.y);
-    setting.setValue("BRANCH@RANGE_Z", optimizer_settings_.branch_range.z);
-    setting.setValue("BRANCH@RANGE_XA", optimizer_settings_.branch_range.xa);
-    setting.setValue("BRANCH@RANGE_YA", optimizer_settings_.branch_range.ya);
-    setting.setValue("BRANCH@RANGE_ZA", optimizer_settings_.branch_range.za);
-    setting.setValue(
-        "BRANCH@NUMBER_BRANCHES", optimizer_settings_.number_branches);
-    setting.setValue("BRANCH@ENABLE", optimizer_settings_.enable_branch_);
-    setting.setValue("BRANCH@BUDGET", optimizer_settings_.branch_budget);
-
-    /*Leaf*/
-    setting.setValue("LEAF@RANGE_X", optimizer_settings_.leaf_range.x);
-    setting.setValue("LEAF@RANGE_Y", optimizer_settings_.leaf_range.y);
-    setting.setValue("LEAF@RANGE_Z", optimizer_settings_.leaf_range.z);
-    setting.setValue("LEAF@RANGE_XA", optimizer_settings_.leaf_range.xa);
-    setting.setValue("LEAF@RANGE_YA", optimizer_settings_.leaf_range.ya);
-    setting.setValue("LEAF@RANGE_ZA", optimizer_settings_.leaf_range.za);
-    setting.setValue("LEAF@ENABLE", optimizer_settings_.enable_leaf_);
-    setting.setValue("LEAF@BUDGET", optimizer_settings_.leaf_budget);
-    setting.endGroup();
-
-    /*Update Dilation Frames*/
-    UpdateDilationFrames();
+    return entries;
 }
 
 /*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int

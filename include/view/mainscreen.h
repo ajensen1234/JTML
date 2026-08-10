@@ -58,6 +58,10 @@
 /*Optimizer Settings*/
 #include "services/optimizer_settings.h"
 
+/*Settings persistence service (plan 004 U3 / R9): owns the QSettings
+ * round-trip for cost-function/optimizer/edge settings; widget-free.*/
+#include "services/settings_service.h"
+
 /*Optimizer Manager*/
 #include "coordinator/optimizer_manager.h"
 
@@ -218,6 +222,13 @@ private:
     /*Save the Pose From The Last Selected Frame*/
     void SaveLastPose();
 
+    /*Settings persistence (plan 004 U3): the service owns the QSettings
+     * round-trip (registry parity: org JointTrackAutoGPU / app Version340 /
+     * groups CostFunctionSettings / OptimizerSettings / EdgeDetectionSettings /
+     * FirstTime). The view maps the GPU-linked CostFunctionManagers <-> raw
+     * registry entries and owns the CUDA probe + dialogs.*/
+    jta::SettingsService settings_service_;
+
     /*Optimizer Settings That Must Be Set in Constructor and Changed on
      * OSettings Update */
     OptimizerSettings optimizer_settings_;
@@ -258,6 +269,17 @@ private:
     /*Function That Loads Settings from Registry or (If First Time Loading
     Saves Default Settings*/
     void LoadSettingsBetweenSessions();
+
+    /*Builds the raw CostFunctionSettings registry entries (key format
+     * STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE) from the three cost
+     * function managers -- relocated verbatim from the first-run save and
+     * onSaveSettings (plan 004 U3). The service round-trips the entries;
+     * the view maps managers <-> entries because the GPU-linked
+     * CostFunctionManager must not enter the QtCore-only service.*/
+    std::vector<jta::RegistryEntry> BuildCostFunctionRegistryEntries(
+        jta_cost_function::CostFunctionManager& trunk_manager,
+        jta_cost_function::CostFunctionManager& branch_manager,
+        jta_cost_function::CostFunctionManager& leaf_manager) const;
 
     /*Mat to Vtk*/
     void matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output);

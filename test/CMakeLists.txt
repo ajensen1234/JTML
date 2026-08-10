@@ -379,6 +379,36 @@ target_link_libraries(jtml_test_list_models PRIVATE Qt6::Core Qt6::Test)
 add_test(NAME jtml.list_models COMMAND jtml_test_list_models)
 set_tests_properties(jtml.list_models PROPERTIES LABELS "headless" TIMEOUT 60)
 
+# SettingsService tests (plan 004 U3, R9/R14/R15). QtCore-only: the service
+# .cpp + optimizer_settings.cpp compile directly against Qt6::Core (QSettings
+# redirected to a temp ini via the path/format override -- never the real
+# registry). Catch2 for the parity contract + error paths; hegel PBT for the
+# save -> load round-trip invariant (fractional/negative/±0.0 draws).
+add_executable(jtml_test_settings_service
+    unit/settings_service_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_settings_service PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_settings_service PRIVATE Catch2::Catch2WithMain Qt6::Core)
+add_test(NAME jtml.settings_service COMMAND jtml_test_settings_service)
+set_tests_properties(jtml.settings_service PROPERTIES LABELS "headless" TIMEOUT 120)
+
+add_executable(jtml_test_settings_service_props
+    unit/settings_service_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_settings_service_props PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_settings_service_props PRIVATE
+    Catch2::Catch2WithMain hegel dl Qt6::Core)
+target_link_options(jtml_test_settings_service_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.settings_service_props COMMAND jtml_test_settings_service_props)
+set_tests_properties(jtml.settings_service_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.
