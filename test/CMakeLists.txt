@@ -640,3 +640,44 @@ set_tests_properties(jtml.probe_vtk PROPERTIES LABELS "oracle;render" TIMEOUT 12
 # repo root -- not the .build dir that ctest defaults to.
 set_tests_properties(jtml.oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# ---------------------------------------------------------------------------
+# Tier-2 GPU oracle: segmentation + implant estimate path (plan 004 U8).
+# Gates the U8 extraction (SegmentationController + ImplantEstimator) by the
+# appearance contract (silhouette IoU vs Labels/ -- golden_oracle.org), never
+# raw pose. The .pt torch models are USER-PROVIDED (NOT in test/golden/): the
+# test skips cleanly with a message until JTML_SEG_PT / JTML_FEM_ESTIMATE_PT
+# are set on the GPU machine. Same registration pattern as jtml.oracle:
+# `oracle` label (never headless), repo-root WORKING_DIRECTORY, long TIMEOUT.
+# ---------------------------------------------------------------------------
+add_executable(jtml_test_segmentation_oracle oracle/segmentation_oracle_test.cpp)
+target_include_directories(jtml_test_segmentation_oracle PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_segmentation_oracle PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_services
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Catch2::Catch2WithMain
+)
+set_property(TARGET jtml_test_segmentation_oracle PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_segmentation_oracle PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
+)
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir, VTK + conda libs in their install dirs.
+target_link_options(jtml_test_segmentation_oracle PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.segmentation_oracle COMMAND jtml_test_segmentation_oracle)
+set_tests_properties(jtml.segmentation_oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

@@ -62,7 +62,8 @@
 #include <torch/torch.h>
 
 #include "domain/ambiguous_pose_processing.h"
-#include "compute/machine_learning_tools.h"
+/*Segmentation controller (plan 004 U8 / R12): per-frame segment/estimate ops*/
+#include "services/segmentation_controller.h"
 #include <iostream> // For std::cerr
 #include <utility>   // std::move
 
@@ -1706,18 +1707,16 @@ void MainScreen::segmentHelperFunction(
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        cv::Mat unpadded = segment_image(
+        /*Per-frame segment (plan 004 U8 / R12): SegmentationController owns
+         * segment_image + the CUDA cache clear verbatim; the view keeps the
+         * Frame post-processing and the progress/render interleave.*/
+        cv::Mat unpadded = segmentation_controller_.SegmentFrame(
             loaded_frames[i].GetOriginalImage(),
             black_sil_used,
             model,
             input_width,
             input_height);
         unpadded.copyTo(loaded_frames[i].GetInvertedImage());
-        // Explicitly clear CUDA cache to free up GPU memory after processing
-        // each image. This is particularly helpful for GPUs with limited VRAM,
-        // like the RTX 4070, to prevent out-of-memory errors during sequential
-        // image processing.
-        c10::cuda::CUDACachingAllocator::emptyCache();
         int dilation_val = 0;
         trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
             "Dilation", dilation_val);
@@ -1731,18 +1730,15 @@ void MainScreen::segmentHelperFunction(
         loaded_frames[i].setCurvatureHeatmaps();
         //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
         if (calibrated_for_biplane_viewport_) {
-            cv::Mat unpadded_biplane = segment_image(
+            /*Per-frame segment (plan 004 U8 / R12): same controller op for
+             * the camera-B frame (the biplane emptyCache call moved with it).*/
+            cv::Mat unpadded_biplane = segmentation_controller_.SegmentFrame(
                 loaded_frames_B[i].GetOriginalImage(),
                 black_sil_used,
                 model,
                 input_width,
                 input_height);
             unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
-            // Explicitly clear CUDA cache to free up GPU memory after
-            // processing each biplane image. This is particularly helpful for
-            // GPUs with limited VRAM, like the RTX 4070, to prevent
-            // out-of-memory errors during sequential image processing.
-            c10::cuda::CUDACachingAllocator::emptyCache();
             loaded_frames_B[i].SetEdgeImage(
                 ui.aperture_spin_box->value(),
                 ui.low_threshold_slider->value(),
@@ -1899,198 +1895,35 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         torch::zeros(
             {1, 1, input_height, input_width},
             device(torch::kCUDA).dtype(torch::kByte)));
+    /*Per-frame estimate context (plan 004 U8 / R12): the estimator is
+     * stateless; the slot builds the context once (GPU model, torch pose
+     * model, scratch buffers, calibration) and the loop feeds it one
+     * inverted image per frame.*/
+    jta::ImplantEstimateContext estimate_ctx;
+    estimate_ctx.gpu_mod = gpu_mod;
+    estimate_ctx.model = model;
+    estimate_ctx.host_image = host_image;
+    estimate_ctx.orientation = orientation;
+    estimate_ctx.gpu_byte_placeholder = gpu_byte_placeholder;
+    estimate_ctx.calibration = calibration_file_;
+    estimate_ctx.input_width = input_width;
+    estimate_ctx.input_height = input_height;
+    estimate_ctx.orig_width = orig_width;
+    estimate_ctx.orig_height = orig_height;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-        cv::Mat padded;
-        if (orig_inverted.cols > orig_inverted.rows) {
-            padded.create(
-                orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-        } else {
-            padded.create(
-                orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-        }
-        unsigned int padded_width = padded.cols;
-        unsigned int padded_height = padded.rows;
-        padded.setTo(cv::Scalar::all(0));
-        orig_inverted.copyTo(
-            padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-        cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-        cudaMemcpy(
-            gpu_byte_placeholder.data_ptr(),
-            padded.data,
-            input_width * input_height * sizeof(unsigned char),
-            cudaMemcpyHostToDevice);
-        std::vector<torch::jit::IValue> inputs;
-        inputs.push_back(gpu_byte_placeholder.to(dtype(torch::kFloat))
-                             .flip({2})); // Must flip first
-        cudaMemcpy(
-            orientation,
-            model->forward(inputs)
-                .toTensor()
-                .to(dtype(torch::kFloat))
-                .data_ptr(),
-            3 * sizeof(float),
-            cudaMemcpyDeviceToHost);
-        /*Flip Segment*/
-        auto output_mat_seg =
-            cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-        flip(orig_inverted, output_mat_seg, 0);
-
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(Pose(
-            0,
-            0,
-            -calibration_file_.camera_A_principal_.principal_distance_,
-            orientation[1],
-            orientation[2],
-            orientation[0]));
-
-        /*Copy To Mat*/
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-
-        /*OpenCV Image Container/Write Function*/
-        auto projection_mat = cv::Mat(
-            orig_height,
-            orig_width,
-            CV_8UC1,
-            host_image); /*Reverse before flip*/
-        auto output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get Scale*/
-        double sum_seg = sum(sum(output_mat_seg))[0] / 255.0;
-        double sum_proj = sum(sum(output_mat))[0] / 255.0;
-        double z;
-        /* Creating A check to ensure that the z translation is not greater
-         * than the principal distance */
-        if (sum_proj / sum_seg > 1) {
-            z = -calibration_file_.camera_A_principal_.principal_distance_;
-        } else {
-            z = -calibration_file_.camera_A_principal_.principal_distance_ *
-                sqrt(sum_proj / sum_seg);
-        }
-
-        /*Reproject*/
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(
-            Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-        projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-        output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*cv::imwrite("C:/Users/pflood/Desktop/output_mat.png", output_mat);
-        cv::imwrite("C:/Users/pflood/Desktop/output_mat_seg.png",
-        output_mat_seg);*/
-
-        /*Get X and Y*/
-        cv::Mat proj64;
-        output_mat.convertTo(proj64, CV_64FC1);
-        cv::Mat seg64;
-        output_mat_seg.convertTo(seg64, CV_64FC1);
-        cv::Point2d x_y_point =
-            phaseCorrelate(proj64, seg64) *
-            (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-            calibration_file_.camera_A_principal_.principal_distance_;
-        double x = x_y_point.x;
-        double y = -1 * x_y_point.y;
-
-        // QMessageBox::critical(this, "Error!", QString::number(x) + ", " +
-        //	QString::number(y) + ", " +
-        //	QString::number(z) + ", " +
-        //	QString::number(orientation[1]) + ", " +
-        //	QString::number(orientation[2]) + ", " +
-        //	QString::number(orientation[0]), QMessageBox::Ok);
-
-        /*Convert from (0,0) Centered*/
-        float za_rad = orientation[0] * pi / 180.0;
-        float xa_rad = orientation[1] * pi / 180.0;
-        float ya_rad = orientation[2] * pi / 180.0;
-        float cz = cos(za_rad);
-        float sz = sin(za_rad);
-        float cx = cos(xa_rad);
-        float sx = sin(xa_rad);
-        float cy = cos(ya_rad);
-        float sy = sin(ya_rad);
-        Matrix_3_3 R_g(
-            cz * cy - sz * sx * sy,
-            -1.0 * sz * cx,
-            cz * sy + sz * cy * sx,
-            sz * cy + cz * sx * sy,
-            cz * cx,
-            sz * sy - cz * cy * sx,
-            -1.0 * cx * sy,
-            sx,
-            cx * cy);
-        float theta_x = std::atan(-1.0 * y / z);
-        float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-        Matrix_3_3 R_x(
-            1,
-            0,
-            0,
-            0,
-            cos(theta_x),
-            -sin(theta_x),
-            0,
-            sin(theta_x),
-            cos(theta_x));
-        Matrix_3_3 R_y(
-            cos(theta_y),
-            0,
-            sin(theta_y),
-            0,
-            1,
-            0,
-            -sin(theta_y),
-            0,
-            cos(theta_y));
-        Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(
-            R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-        /*Rot Mat To Eul ZXY*/
-        /*Algorithm To Recover Z - X - Y Euler Angles*/
-        float xa, ya, za;
-        if (R_orig.A_32_ < 1) {
-            if (R_orig.A_32_ > -1) {
-                xa = asin(R_orig.A_32_);
-                za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-                ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-            } else {
-                xa = -pi / 2.0;
-                za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-                ya = 0;
-            }
-        } else {
-            xa = pi / 2.0;
-            za = atan2(R_orig.A_13_, R_orig.A_11_);
-            ya = 0;
-        }
-
-        xa = xa * 180.0 / pi;
-        ya = ya * 180.0 / pi;
-        za = za * 180.0 / pi;
-        /*
-                        QMessageBox::critical(this, "Error!",
-           QString::number(x)
-           +
-           ", " + QString::number(y) + ", " + QString::number(z) + ", " +
-                                QString::number(xa) + ", " +
-                                QString::number(ya) + ", " +
-                                QString::number(za), QMessageBox::Ok);*/
-        /*Update Model Pose*/
+        /*Per-frame estimate (plan 004 U8 / R12): the estimate math for one
+         * frame moved to the ImplantEstimator (reached through the
+         * SegmentationController); the view keeps the pose save and the
+         * progress/render interleave. clamp_z_to_principal preserves the
+         * femoral slot's z clamp.*/
+        Point6D estimated_pose = segmentation_controller_.EstimateImplantPose(
+            estimate_ctx,
+            loaded_frames[i].GetInvertedImage(),
+            /*clamp_z_to_principal=*/true);
         model_locations_.SavePose(
             i,
             ui.model_list_widget->currentIndex().row(),
-            Point6D(x, y, z, xa, ya, za));
+            estimated_pose);
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));
@@ -2261,171 +2094,35 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
         torch::zeros(
             {1, 1, input_height, input_width},
             device(torch::kCUDA).dtype(torch::kByte)));
+    /*Per-frame estimate context (plan 004 U8 / R12): the estimator is
+     * stateless; the slot builds the context once (GPU model, torch pose
+     * model, scratch buffers, calibration) and the loop feeds it one
+     * inverted image per frame.*/
+    jta::ImplantEstimateContext estimate_ctx;
+    estimate_ctx.gpu_mod = gpu_mod;
+    estimate_ctx.model = model;
+    estimate_ctx.host_image = host_image;
+    estimate_ctx.orientation = orientation;
+    estimate_ctx.gpu_byte_placeholder = gpu_byte_placeholder;
+    estimate_ctx.calibration = calibration_file_;
+    estimate_ctx.input_width = input_width;
+    estimate_ctx.input_height = input_height;
+    estimate_ctx.orig_width = orig_width;
+    estimate_ctx.orig_height = orig_height;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
-        cv::Mat padded;
-        if (orig_inverted.cols > orig_inverted.rows) {
-            padded.create(
-                orig_inverted.cols, orig_inverted.cols, orig_inverted.type());
-        } else {
-            padded.create(
-                orig_inverted.rows, orig_inverted.rows, orig_inverted.type());
-        }
-        unsigned int padded_width = padded.cols;
-        unsigned int padded_height = padded.rows;
-        padded.setTo(cv::Scalar::all(0));
-        orig_inverted.copyTo(
-            padded(cv::Rect(0, 0, orig_inverted.cols, orig_inverted.rows)));
-        cv::resize(padded, padded, cv::Size(input_width, input_height));
-
-        cudaMemcpy(
-            gpu_byte_placeholder.data_ptr(),
-            padded.data,
-            input_width * input_height * sizeof(unsigned char),
-            cudaMemcpyHostToDevice);
-        std::vector<torch::jit::IValue> inputs;
-        inputs.push_back(gpu_byte_placeholder.to(dtype(torch::kFloat))
-                             .flip({2})); // Must flip first
-        cudaMemcpy(
-            orientation,
-            model->forward(inputs)
-                .toTensor()
-                .to(dtype(torch::kFloat))
-                .data_ptr(),
-            3 * sizeof(float),
-            cudaMemcpyDeviceToHost);
-        /*Flip Segment*/
-        auto output_mat_seg =
-            cv::Mat(orig_inverted.rows, orig_inverted.cols, CV_8UC1);
-        flip(orig_inverted, output_mat_seg, 0);
-
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(Pose(
-            0,
-            0,
-            -calibration_file_.camera_A_principal_.principal_distance_,
-            orientation[1],
-            orientation[2],
-            orientation[0]));
-
-        /*Copy To Mat*/
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-
-        /*OpenCV Image Container/Write Function*/
-        auto projection_mat = cv::Mat(
-            orig_height,
-            orig_width,
-            CV_8UC1,
-            host_image); /*Reverse before flip*/
-        auto output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get Scale*/
-        double sum_seg = sum(sum(output_mat_seg))[0] / 255.0;
-        double sum_proj = sum(sum(output_mat))[0] / 255.0;
-        double z = -calibration_file_.camera_A_principal_.principal_distance_ *
-                   sqrt(sum_proj / sum_seg);
-        /*Reproject*/
-        /*Render*/
-        gpu_mod->RenderPrimaryCamera(
-            Pose(0, 0, z, orientation[1], orientation[2], orientation[0]));
-        cudaMemcpy(
-            host_image,
-            gpu_mod->GetPrimaryCameraRenderedImagePointer(),
-            orig_width * orig_height * sizeof(unsigned char),
-            cudaMemcpyDeviceToHost);
-        projection_mat = cv::Mat(orig_height, orig_width, CV_8UC1, host_image);
-        output_mat = cv::Mat(orig_width, orig_height, CV_8UC1);
-        flip(projection_mat, output_mat, 0);
-
-        /*Get X and Y*/
-        cv::Mat proj64;
-        output_mat.convertTo(proj64, CV_64FC1);
-        cv::Mat seg64;
-        output_mat_seg.convertTo(seg64, CV_64FC1);
-        cv::Point2d x_y_point =
-            phaseCorrelate(proj64, seg64) *
-            (calibration_file_.camera_A_principal_.pixel_pitch_ * z * -1) /
-            calibration_file_.camera_A_principal_.principal_distance_;
-        double x = x_y_point.x;
-        double y = -1 * x_y_point.y;
-
-        /*Convert from (0,0) Centered*/
-        float za_rad = orientation[0] * pi / 180.0;
-        float xa_rad = orientation[1] * pi / 180.0;
-        float ya_rad = orientation[2] * pi / 180.0;
-        float cz = cos(za_rad);
-        float sz = sin(za_rad);
-        float cx = cos(xa_rad);
-        float sx = sin(xa_rad);
-        float cy = cos(ya_rad);
-        float sy = sin(ya_rad);
-        Matrix_3_3 R_g(
-            cz * cy - sz * sx * sy,
-            -1.0 * sz * cx,
-            cz * sy + sz * cy * sx,
-            sz * cy + cz * sx * sy,
-            cz * cx,
-            sz * sy - cz * cy * sx,
-            -1.0 * cx * sy,
-            sx,
-            cx * cy);
-        float theta_x = std::atan(-1.0 * y / z);
-        float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
-        Matrix_3_3 R_x(
-            1,
-            0,
-            0,
-            0,
-            cos(theta_x),
-            -sin(theta_x),
-            0,
-            sin(theta_x),
-            cos(theta_x));
-        Matrix_3_3 R_y(
-            cos(theta_y),
-            0,
-            sin(theta_y),
-            0,
-            1,
-            0,
-            -sin(theta_y),
-            0,
-            cos(theta_y));
-        Matrix_3_3 R_orig = calibration_file_.multiplication_mat_mat(
-            R_y, calibration_file_.multiplication_mat_mat(R_x, R_g));
-        /*Rot Mat To Eul ZXY*/
-        /*Algorithm To Recover Z - X - Y Euler Angles*/
-        float xa, ya, za;
-        if (R_orig.A_32_ < 1) {
-            if (R_orig.A_32_ > -1) {
-                xa = asin(R_orig.A_32_);
-                za = atan2(-1 * R_orig.A_12_, R_orig.A_22_);
-                ya = atan2(-1 * R_orig.A_31_, R_orig.A_33_);
-
-            } else {
-                xa = -pi / 2.0;
-                za = -1 * atan2(R_orig.A_13_, R_orig.A_11_);
-                ya = 0;
-            }
-        } else {
-            xa = pi / 2.0;
-            za = atan2(R_orig.A_13_, R_orig.A_11_);
-            ya = 0;
-        }
-
-        xa = xa * 180.0 / pi;
-        ya = ya * 180.0 / pi;
-        za = za * 180.0 / pi;
-
+        /*Per-frame estimate (plan 004 U8 / R12): the estimate math for one
+         * frame moved to the ImplantEstimator (reached through the
+         * SegmentationController); the view keeps the pose save and the
+         * progress/render interleave. clamp_z_to_principal stays false: the
+         * tibial slot had no z clamp (preserved).*/
+        Point6D estimated_pose = segmentation_controller_.EstimateImplantPose(
+            estimate_ctx,
+            loaded_frames[i].GetInvertedImage(),
+            /*clamp_z_to_principal=*/false);
         model_locations_.SavePose(
             i,
             ui.model_list_widget->currentIndex().row(),
-            Point6D(x, y, z, xa, ya, za));
+            estimated_pose);
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));

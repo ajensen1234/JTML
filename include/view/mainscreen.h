@@ -90,6 +90,18 @@
 
 /*machine_learning_tools*/
 #include "compute/machine_learning_tools.h"
+
+/*Segmentation controller (plan 004 U8 / R12): owns the per-frame segment +
+ * implant-estimate ops (GPU/torch). The view owns the per-frame loops, the
+ * progress, processEvents, and the render interleave; the controller exposes
+ * per-frame operations only. jtml_services is GPU-linked as of U8.
+ *
+ * INCLUDE ORDER NOTE: this header pulls torch, and PyTorch's ivalue_inl.h
+ * does `#undef slots` (the Qt keyword macro). It must stay AFTER the
+ * coordinator/view headers that use the raw `public slots:` keyword
+ * (optimizer_manager.h / settings_control.h / drr_tool.h) -- same constraint
+ * as the torch-bearing machine_learning_tools.h include above.*/
+#include "services/segmentation_controller.h"
 #include "view/viewer.h"
 
 /*List view-models (plan 004 U2, R4/R5): the image/model QListViews render
@@ -228,6 +240,13 @@ private:
      * keeps ownership + the dialogs, view-model insertion, interactor.h
      * global writes, and VTK wiring.*/
     jta::SessionController session_controller_;
+
+    /*Segmentation controller (plan 004 U8 / R12): per-frame segment +
+     * implant-estimate operations (SegmentFrame / EstimateImplantPose). The
+     * view keeps the loops, the torch model loading, the progress/render
+     * interleave, and the Frame post-processing; the controller wraps the
+     * GPU/torch calls verbatim (per-frame API -- no controller-owned loop).*/
+    jta::SegmentationController segmentation_controller_;
 
     /*Pull the current widget state into session_state_. Called wherever the
      * model/frame lists or their selection/current rows change.*/
