@@ -54,6 +54,8 @@ refs/
 # Tier-2 oracle (and Study2Grid) run from the repo root.
 hm*.png
 contour.png
+# Offscreen render-smoke output (test/oracle/render_smoke.cpp) - inspect, don't track.
+render-smoke-output/
 
 # 003 U1 — committed in-source build artifacts (pruned from the tree). Never re-track
 # stale CMake/autogen binaries/libs generated into the source tree by in-source builds.

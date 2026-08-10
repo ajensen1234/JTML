@@ -52,7 +52,10 @@ cuda = "12.4"
 
 [tasks.build-vtk]
 cmd = ["./vtk_installer.sh"]
-outputs = ["./_deps/vtk/build/CMakeCache.txt"]
+# inputs/outputs make pixi skip the (long) VTK rebuild unless the installer
+# script changes or the cache disappears (was re-running every invocation).
+inputs = ["vtk_installer.sh"]
+outputs = ["_deps/vtk/build/CMakeCache.txt"]
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
@@ -87,7 +90,9 @@ depends-on = ["configure", "build-vtk"]
 # Run task that depends on build
 cmd = ".build/bin/joint-track-machine-learning"
 depends-on = ["build"]
-#env = {"GDK_BACKEND" = "wayland,x11","QT_QPA_PLATFORM" = "wayland;xcb",}
+# Wayland's EGL stack on this machine can't give QVTKOpenGLNativeWidget a GL
+# context (blank render window); xcb (X11/GLX) works. Default the app to xcb.
+env = {"QT_QPA_PLATFORM" = "xcb"}
 #set(USE_CUDNN 1)
 
 [tasks.test]

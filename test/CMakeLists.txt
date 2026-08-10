@@ -409,6 +409,70 @@ target_link_options(jtml_test_oracle PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
     "-Wl,-rpath,${VTK_LIB_DIR}")
 add_test(NAME jtml.oracle COMMAND jtml_test_oracle)
+
+# Offscreen VTK rendering smoke (post-003 debug): drives the real Viewer's
+# display path (calibration -> image -> models -> render) offscreen and saves
+# PNGs to render-smoke-output/ so a human/CI can verify the rendering loop.
+# Needs a working GL/EGL context - NEVER headless (label: render; also oracle
+# so the explicit GPU/real-VTK run picks it up).
+add_executable(jtml_test_render_smoke
+    oracle/render_smoke.cpp
+)
+target_include_directories(jtml_test_render_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_render_smoke PRIVATE
+    jtml_view
+    ${REQUIRED_LIBS_QUALIFIED}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+)
+# VTK 9 requires per-target factory registration: without vtk_module_autoinit,
+# vtkRenderWindow::New() returns the BASE class (no GL backend), vtkTextRenderer
+# returns null, and vtkWindowToImageFilter segfaults reading the framebuffer.
+vtk_module_autoinit(TARGETS jtml_test_render_smoke MODULES ${VTK_LIBRARIES})
+set_property(TARGET jtml_test_render_smoke PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_render_smoke PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.render_smoke COMMAND jtml_test_render_smoke)
+# Renders from the repo root so example_studies/Kneel_1 + render-smoke-output/ resolve.
+# Force xcb: the Wayland/EGL stack on this box cannot give QVTKOpenGLNativeWidget
+# a GL context (blank render) - the app's historical working platform is xcb.
+set_tests_properties(jtml.render_smoke PROPERTIES LABELS "oracle;render" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ENVIRONMENT "QT_QPA_PLATFORM=xcb")
+
+# Minimal VTK standalone-render probe (post-003 debug): isolates VTK+GL+W2I from
+# the Viewer. Also needs a GL context; never headless.
+add_executable(jtml_test_probe_vtk
+    oracle/probe_vtk.cpp
+)
+target_include_directories(jtml_test_probe_vtk PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_probe_vtk PRIVATE
+    ${VTK_LIBRARIES}
+    ${REQUIRED_LIBS_QUALIFIED}
+)
+vtk_module_autoinit(TARGETS jtml_test_probe_vtk MODULES ${VTK_LIBRARIES})
+set_property(TARGET jtml_test_probe_vtk PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_probe_vtk PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.probe_vtk COMMAND jtml_test_probe_vtk)
+set_tests_properties(jtml.probe_vtk PROPERTIES LABELS "oracle;render" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ENVIRONMENT "QT_QPA_PLATFORM=xcb")
 # The oracle reads its fixtures via repo-relative paths (example_studies/Kneel_1/)
 # and writes hm*.png/contour.png diagnostic artifacts, so it must run from the
 # repo root -- not the .build dir that ctest defaults to.
