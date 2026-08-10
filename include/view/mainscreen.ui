@@ -754,6 +754,10 @@ QListWidget::item:selected {
     background-color: #2158AA;
 }
 
+QListView::item:selected {
+    background-color: #2158AA;
+}
+
  QMenu::item:selected{
 	background: #353535;
 	border: 2px solid #D66C23;
@@ -1175,6 +1179,10 @@ QGroupBox {
 }
 
 QListWidget::item:selected {
+    background-color: #2158AA;
+}
+
+QListView::item:selected {
     background-color: #2158AA;
 }
 
@@ -1639,6 +1647,10 @@ QListWidget::item:selected {
     background-color: #2158AA;
 }
 
+QListView::item:selected {
+    background-color: #2158AA;
+}
+
  QMenu::item:selected{
 	background: #353535;
 	border: 2px solid #D66C23;
@@ -2065,6 +2077,10 @@ QListWidget::item:selected {
     background-color: #2158AA;
 }
 
+QListView::item:selected {
+    background-color: #2158AA;
+}
+
  QMenu::item:selected{
 	background: #353535;
 	border: 2px solid #D66C23;
@@ -2129,7 +2145,7 @@ QMenu::separator {
               </layout>
              </item>
              <item>
-              <widget class="QListWidget" name="image_list_widget">
+              <widget class="QListView" name="image_list_widget">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
@@ -2848,6 +2864,10 @@ QListWidget::item:selected {
     background-color: #2158AA;
 }
 
+QListView::item:selected {
+    background-color: #2158AA;
+}
+
  QMenu::item:selected{
 	background: #353535;
 	border: 2px solid #D66C23;
@@ -3352,6 +3372,10 @@ QGroupBox {
 }
 
 QListWidget::item:selected {
+    background-color: #2158AA;
+}
+
+QListView::item:selected {
     background-color: #2158AA;
 }
 
@@ -3862,7 +3886,7 @@ QMenu::separator {
               </layout>
              </item>
              <item>
-              <widget class="QListWidget" name="model_list_widget">
+              <widget class="QListView" name="model_list_widget">
                <property name="styleSheet">
                 <string notr="true"/>
                </property>

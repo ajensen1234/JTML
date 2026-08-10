@@ -362,6 +362,23 @@ target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test)
 add_test(NAME jtml.coordinator COMMAND jtml_test_coordinator)
 set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Headless view-model tests (plan 004 U2, R4/R5/R14/R15). QtTest compiling the
+# two list-model .cpp files directly against Qt6::Core/Qt6::Test (no widgets,
+# no VTK). Q_OBJECT headers go in the add_executable source list (AUTOMOC
+# gotcha); ModelListModel pulls jta::ModelListBuilder for the dedup reuse.
+add_executable(jtml_test_list_models
+    lifecycle/list_models_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+)
+target_include_directories(jtml_test_list_models PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_list_models PRIVATE Qt6::Core Qt6::Test)
+add_test(NAME jtml.list_models COMMAND jtml_test_list_models)
+set_tests_properties(jtml.list_models PROPERTIES LABELS "headless" TIMEOUT 60)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.

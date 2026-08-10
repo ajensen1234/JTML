@@ -82,6 +82,12 @@
 #include "compute/machine_learning_tools.h"
 #include "view/viewer.h"
 
+/*List view-models (plan 004 U2, R4/R5): the image/model QListViews render
+ * these passively; selection lives in the views' QItemSelectionModel (model +
+ * selectionModel together are the headless-testable unit).*/
+#include "view/frame_list_model.h"
+#include "view/model_list_model.h"
+
 /**
  * @brief The MainScreen object that inherits the QMainWindow object type. This
  * object serves as the class hosting all the items on the main window.
@@ -188,6 +194,14 @@ private:
     /*Index of Previously Selected Frame/Models*/
     int previous_frame_index_;
     QModelIndexList previous_model_indices_;
+
+    /*List view-models (plan 004 U2): write-once display-name models behind
+     * the two passive QListViews (ui.image_list_widget / model_list_widget).
+     * MainScreen's list bookkeeping (addItem/count/currentRow) is gone; the
+     * views read the models, and selection state lives in the views'
+     * QItemSelectionModel, which SyncSessionState reads.*/
+    FrameListModel frame_list_model_;
+    ModelListModel model_list_model_;
 
     /*App-State Service: owns the pure, widget-free session facts (model
      * list, selection, primary model, current frame). MainScreen keeps it

@@ -94,13 +94,14 @@ int MainScreen::curr_frame() {
 }
 
 void MainScreen::SyncSessionState() {
-    /*Pull the current widget state into session_state_. Model/frame counts,
-     * the selected model rows, and the current frame all flow out of the
-     * widgets here and are read back via the service everywhere else (plan
-     * U7, R8/E11). Keep the VIEW (colors/opacity/VTK renders) in the slots;
+    /*Pull the current list state into session_state_. Model/frame counts
+     * come from the view-models, selection/current from the views'
+     * QItemSelectionModel (plan 004 U2: MainScreen's list bookkeeping is
+     * gone; model + selectionModel together are the headless-testable
+     * unit). Keep the VIEW (colors/opacity/VTK renders) in the slots;
      * only the state moves.*/
-    session_state_.SetModelCount(static_cast<int>(loaded_models.size()));
-    session_state_.SetFrameCount(ui.image_list_widget->count());
+    session_state_.SetModelCount(ui.model_list_widget->model()->rowCount());
+    session_state_.SetFrameCount(ui.image_list_widget->model()->rowCount());
 
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
@@ -143,6 +144,28 @@ double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
 /*Constructor*/
 MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     ui.setupUi(this);
+
+    /*View-models (plan 004 U2): the lists are passive QListViews over
+     * headless-testable QAbstractListModel classes; selection lives in the
+     * views' QItemSelectionModel. setModel() MUST precede the selectionChanged
+     * connects (setModel replaces the selection model — a connect issued
+     * before it dies silently).*/
+    ui.image_list_widget->setModel(&frame_list_model_);
+    ui.model_list_widget->setModel(&model_list_model_);
+    /*Explicit connects replace the by-name auto-connect that silently stops
+     * connecting on QListView (no itemSelectionChanged signal). selectionChanged
+     * ONLY — currentChanged is deliberately not connected (MultiSelection
+     * arrow-key behavior).*/
+    connect(
+        ui.image_list_widget->selectionModel(),
+        &QItemSelectionModel::selectionChanged,
+        this,
+        &MainScreen::on_image_list_widget_itemSelectionChanged);
+    connect(
+        ui.model_list_widget->selectionModel(),
+        &QItemSelectionModel::selectionChanged,
+        this,
+        &MainScreen::on_model_list_widget_itemSelectionChanged);
 
     this->start_time = -1;
     sym_trap_running = false;
@@ -1048,7 +1071,7 @@ void MainScreen::on_actionSave_Pose_triggered() {
     /*Load Models Selected Indices*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
@@ -1069,7 +1092,7 @@ void MainScreen::on_actionSave_Pose_triggered() {
 
     /*Get Pose to Save*/
     Point6D saved_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(),
+        ui.image_list_widget->currentIndex().row(),
         session_state_.GetPrimaryModelIndex());
 
     // Open Save File Dialogue
@@ -1089,7 +1112,7 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
     /*Load Models Selected Indices*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1119,8 +1142,8 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
         tr("JTA Kinematics File (*.jtak);; Kinematics File (*.txt)"));
     // Persistence is handled by the pure pose_file_io service (plan U7).
     std::vector<Point6D> all_poses;
-    all_poses.reserve(static_cast<size_t>(ui.image_list_widget->count()));
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    all_poses.reserve(static_cast<size_t>(ui.image_list_widget->model()->rowCount()));
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         all_poses.push_back(model_locations_.GetPose(
             i, session_state_.GetPrimaryModelIndex()));
     }
@@ -1135,7 +1158,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
     /*Load Models Selected Indices*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
         return;
@@ -1173,7 +1196,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
             QMessageBox::Ok);
         return;
     }
-    model_locations_.SavePose(ui.image_list_widget->currentRow(),
+    model_locations_.SavePose(ui.image_list_widget->currentIndex().row(),
                               session_state_.GetPrimaryModelIndex(),
                               loaded_pose);
     vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
@@ -1198,7 +1221,7 @@ void MainScreen::on_actionLoad_Pose_triggered() {
 void MainScreen::on_actionCopy_Previous_Pose_triggered() {
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1216,11 +1239,11 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
         return;
     }
     Point6D prev_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow() - 1,
+        ui.image_list_widget->currentIndex().row() - 1,
         session_state_.GetPrimaryModelIndex());
     model_locations_.SavePose(
-        ui.image_list_widget->currentRow(),
-        ui.model_list_widget->currentRow(),
+        ui.image_list_widget->currentIndex().row(),
+        ui.model_list_widget->currentIndex().row(),
         prev_pose);
     vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
                                     prev_pose.x, prev_pose.y, prev_pose.z);
@@ -1243,7 +1266,7 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
 Point6D MainScreen::copy_current_pose() {
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1261,7 +1284,7 @@ Point6D MainScreen::copy_current_pose() {
         return Point6D();
     }
     Point6D pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(),
+        ui.image_list_widget->currentIndex().row(),
         session_state_.GetPrimaryModelIndex());
     return pose;
 }
@@ -1271,7 +1294,7 @@ Point6D MainScreen::copy_current_pose() {
 void MainScreen::on_actionCopy_Next_Pose_triggered() {
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1289,11 +1312,11 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
         return;
     }
     Point6D next_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow() + 1,
+        ui.image_list_widget->currentIndex().row() + 1,
         session_state_.GetPrimaryModelIndex());
     model_locations_.SavePose(
-        ui.image_list_widget->currentRow(),
-        ui.model_list_widget->currentRow(),
+        ui.image_list_widget->currentIndex().row(),
+        ui.model_list_widget->currentIndex().row(),
         next_pose);
 
     vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
@@ -1320,7 +1343,7 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     /*Load Models Selected Indices*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (ui.image_list_widget->currentRow() < 0 || selected.size() == 0) {
+    if (ui.image_list_widget->currentIndex().row() < 0 || selected.size() == 0) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -1360,18 +1383,18 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     // loaded_poses is position-preserving: index i = frame i; NOT_OPTIMIZED /
     // malformed rows are std::nullopt and leave that frame unset, so the
     // remaining frames keep their original alignment (no shifting).
-    int frame_count = ui.image_list_widget->count();
+    int frame_count = ui.image_list_widget->model()->rowCount();
     for (size_t i = 0; i < loaded_poses.size() && static_cast<int>(i) < frame_count;
          ++i) {
         if (loaded_poses[i].has_value()) {
             model_locations_.SavePose(static_cast<int>(i),
-                                      ui.model_list_widget->currentRow(),
+                                      ui.model_list_widget->currentIndex().row(),
                                       *loaded_poses[i]);
         }
     }
-    if (ui.image_list_widget->currentRow() >= 0) {
+    if (ui.image_list_widget->currentIndex().row() >= 0) {
         Point6D loaded_pose = model_locations_.GetPose(
-            ui.image_list_widget->currentRow(),
+            ui.image_list_widget->currentIndex().row(),
             session_state_.GetPrimaryModelIndex());
         vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
                                         loaded_pose.x, loaded_pose.y,
@@ -1638,7 +1661,7 @@ void MainScreen::segmentHelperFunction(
      * Image*/
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         cv::Mat unpadded = segment_image(
             loaded_frames[i].GetOriginalImage(),
             black_sil_used,
@@ -1686,7 +1709,7 @@ void MainScreen::segmentHelperFunction(
 
         ui.pose_progress->setValue(
             20 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
+                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -1699,7 +1722,7 @@ void MainScreen::segmentHelperFunction(
 }
 
 void MainScreen::on_actionReset_Remove_All_Segmentation_triggered() {
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         loaded_frames[i].ResetFromOriginal();
     }
 
@@ -1832,7 +1855,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         torch::zeros(
             {1, 1, input_height, input_width},
             device(torch::kCUDA).dtype(torch::kByte)));
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
         cv::Mat padded;
         if (orig_inverted.cols > orig_inverted.rows) {
@@ -2022,11 +2045,11 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         /*Update Model Pose*/
         model_locations_.SavePose(
             i,
-            ui.model_list_widget->currentRow(),
+            ui.model_list_widget->currentIndex().row(),
             Point6D(x, y, z, xa, ya, za));
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
+                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -2049,7 +2072,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 
     /*Update Model*/
     Point6D loaded_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
+        ui.image_list_widget->currentIndex().row(), selected[0].row());
     model_actor_list[selected[0].row()]->SetPosition(
         loaded_pose.x, loaded_pose.y, loaded_pose.z);
     model_actor_list[selected[0].row()]->SetOrientation(
@@ -2194,7 +2217,7 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
         torch::zeros(
             {1, 1, input_height, input_width},
             device(torch::kCUDA).dtype(torch::kByte)));
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         cv::Mat orig_inverted = loaded_frames[i].GetInvertedImage();
         cv::Mat padded;
         if (orig_inverted.cols > orig_inverted.rows) {
@@ -2357,11 +2380,11 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 
         model_locations_.SavePose(
             i,
-            ui.model_list_widget->currentRow(),
+            ui.model_list_widget->currentIndex().row(),
             Point6D(x, y, z, xa, ya, za));
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->count()));
+                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -2384,7 +2407,7 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 
     /*Update Model*/
     Point6D loaded_pose = model_locations_.GetPose(
-        ui.image_list_widget->currentRow(), selected[0].row());
+        ui.image_list_widget->currentIndex().row(), selected[0].row());
     model_actor_list[selected[0].row()]->SetPosition(
         loaded_pose.x, loaded_pose.y, loaded_pose.z);
     model_actor_list[selected[0].row()]->SetOrientation(
@@ -2732,7 +2755,7 @@ void MainScreen::on_load_image_button_clicked() {
             // Add to Loaded Frames
             loaded_frames.push_back(new_frame);
             // Populate Frame List Widget
-            ui.image_list_widget->addItem(
+            frame_list_model_.AppendFrame(
                 QFileInfo(
                     QString::fromStdString(TiffFileExtensions[i].toStdString()))
                     .baseName());
@@ -2744,9 +2767,12 @@ void MainScreen::on_load_image_button_clicked() {
         vw->set_loaded_frames(loaded_frames);
 
         // If No Loaded Frames, Default Select First
-        if (ui.image_list_widget->currentRow() < 0 &&
+        if (ui.image_list_widget->currentIndex().row() < 0 &&
             loaded_frames.size() > 0) {
-            ui.image_list_widget->setCurrentRow(0);
+            ui.image_list_widget->selectionModel()->setCurrentIndex(
+                ui.image_list_widget->model()->index(0, 0),
+                QItemSelectionModel::SelectCurrent |
+                    QItemSelectionModel::Rows);
         }
 
         // this->vw->set_loaded_frames(loaded_frames);
@@ -2834,7 +2860,7 @@ void MainScreen::on_load_image_button_clicked() {
             loaded_frames.push_back(new_frame_A);
             loaded_frames_B.push_back(new_frame_B);
             // Populate Frame List Widget
-            ui.image_list_widget->addItem(
+            frame_list_model_.AppendFrame(
                 "A: " +
                 QFileInfo(
                     QString::fromStdString(
@@ -2852,9 +2878,12 @@ void MainScreen::on_load_image_button_clicked() {
     stop_biplane:;
 
         // If No Loaded Frames, Default Select First
-        if (ui.image_list_widget->currentRow() < 0 &&
+        if (ui.image_list_widget->currentIndex().row() < 0 &&
             loaded_frames.size() > 0) {
-            ui.image_list_widget->setCurrentRow(0);
+            ui.image_list_widget->selectionModel()->setCurrentIndex(
+                ui.image_list_widget->model()->index(0, 0),
+                QItemSelectionModel::SelectCurrent |
+                    QItemSelectionModel::Rows);
         }
         vw->set_loaded_frames(loaded_frames);
         vw->set_loaded_frames_b(loaded_frames_B);
@@ -2879,27 +2908,22 @@ void MainScreen::on_load_model_button_clicked() {
         this, tr("Load Implant Model(s)"), ".", tr("CAD File(s) (*.stl)"));
 
     /*For Each Cad File Extension Create Model Name -- unique display names
-     * built by the pure ModelListBuilder (plan U7, U10 / R10; R15: reproduces
-     * the original two-pass dedup exactly).*/
-    std::vector<std::string> existing_names;
-    existing_names.reserve(loaded_models.size());
-    for (int i = 0; i < loaded_models.size(); i++) {
-        existing_names.push_back(loaded_models[i].model_name_);
-    }
-    std::vector<std::string> new_base_names;
-    new_base_names.reserve(CADFileExtensions.size());
+     * built by ModelListModel via the pure ModelListBuilder (plan 004 U2,
+     * R5; R15: reproduces the original two-pass dedup exactly). The model
+     * owns the names now; the returned display names drive the VTK binding
+     * below.*/
+    QVector<QString> base_names;
+    base_names.reserve(CADFileExtensions.size());
     for (int i = 0; i < CADFileExtensions.size(); i++) {
-        new_base_names.push_back(
-            QFileInfo(CADFileExtensions[i]).baseName().toStdString());
+        base_names.push_back(QFileInfo(CADFileExtensions[i]).baseName());
     }
-    std::vector<std::string> unique_names =
-        jta::ModelListBuilder::UniquifyModelNames(new_base_names,
-                                                  existing_names);
+    const QVector<QString> unique_names =
+        model_list_model_.AppendModels(base_names);
 
     QStringList CADModelNames;
     CADModelNames.reserve(static_cast<int>(unique_names.size()));
     for (const auto& n : unique_names) {
-        CADModelNames.push_back(QString::fromStdString(n));
+        CADModelNames.push_back(n);
     }
 
     // for (int i = 0; i < CADFileExtensions.size(); i++)
@@ -2929,10 +2953,8 @@ void MainScreen::on_load_model_button_clicked() {
         }
     }
 
-    // Populate Model List Widget
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        ui.model_list_widget->addItem(CADModelNames[i]);
-    }
+    // Model list populated by ModelListModel::AppendModels above (plan 004
+    // U2: the view no longer addItem()s into the list).
 
     /*Load Blank Poses for Available Frames (and Default Blank Poses even if
      * no frames for viewing without frame)*/
@@ -2946,7 +2968,10 @@ void MainScreen::on_load_model_button_clicked() {
     vw->load_model_actors_and_mappers_with_3d_data();
     // If No Loaded Models, Default Select First
     if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
-        ui.model_list_widget->setCurrentRow(0);
+        ui.model_list_widget->selectionModel()->setCurrentIndex(
+            ui.model_list_widget->model()->index(0, 0),
+            QItemSelectionModel::SelectCurrent |
+                QItemSelectionModel::Rows);
     }
     if (calibration_file_.type_ == "UF") {
         vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
@@ -3510,8 +3535,13 @@ QModelIndexList MainScreen::selected_model_indices() {
     return ui.model_list_widget->selectionModel()->selectedRows();
 }
 void MainScreen::remove_background_highlights_from_model_list_widget() {
+    /*Dead code (never called; removed in plan 004 U9). Kept compiling
+     * post-swap via the model API.*/
     for (int i = 0; i < loaded_models.size(); i++) {
-        ui.model_list_widget->item(i)->setBackground(Qt::transparent);
+        ui.model_list_widget->model()->setData(
+            ui.model_list_widget->model()->index(i, 0),
+            QBrush(Qt::transparent),
+            Qt::BackgroundRole);
     }
 }
 void MainScreen::print_selected_item() {
@@ -3544,9 +3574,13 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
     if (selected.size() == 0) {
         actor_text->VisibilityOff();
         if (ui.model_list_widget->currentIndex().row() >= 0) {
-            ui.model_list_widget
-                ->item(ui.model_list_widget->currentIndex().row())
-                ->setSelected(true);
+            /*Empty-selection fallback: re-select the current row,
+             * synchronous-direct (same re-entrant handler chain as today's
+             * item()->setSelected(true)).*/
+            ui.model_list_widget->selectionModel()->select(
+                ui.model_list_widget->model()->index(
+                    ui.model_list_widget->currentIndex().row(), 0),
+                QItemSelectionModel::Select | QItemSelectionModel::Rows);
             return;
         }
     } else {
@@ -3699,12 +3733,19 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
 
     for (int i = 0; i < selected.size(); i++) {
         if (selected[i].row() != index_new_principal) {
-            ui.model_list_widget->item(selected[i].row())->setSelected(false);
+            /*Per-item unbatched Deselect/Select, same order as today's
+             * item()->setSelected(false/true) (intermediate re-entrant
+             * states are R13-visible).*/
+            ui.model_list_widget->selectionModel()->select(
+                ui.model_list_widget->model()->index(selected[i].row(), 0),
+                QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
         }
     }
     for (int i = 0; i < selected.size(); i++) {
         if (selected[i].row() != index_new_principal) {
-            ui.model_list_widget->item(selected[i].row())->setSelected(true);
+            ui.model_list_widget->selectionModel()->select(
+                ui.model_list_widget->model()->index(selected[i].row(), 0),
+                QItemSelectionModel::Select | QItemSelectionModel::Rows);
         }
     }
     if (ui.original_model_radio_button->isChecked()) {
@@ -3817,7 +3858,11 @@ void MainScreen::on_single_model_radio_button_clicked() {
     /*If Multiple Selections Choose First One Selected*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (selected.size() > 0) ui.model_list_widget->setCurrentIndex(selected[0]);
+    if (selected.size() > 0)
+        ui.model_list_widget->selectionModel()->setCurrentIndex(
+            selected[0],
+            QItemSelectionModel::ClearAndSelect |
+                QItemSelectionModel::Rows);
 };
 
 void MainScreen::on_multiple_model_radio_button_clicked() {
@@ -4650,7 +4695,10 @@ void MainScreen::LaunchOptimizer(QString directive) {
 
     /*Start*/
     if (directive == "Each" || directive == "All") {
-        ui.image_list_widget->setCurrentRow(0);
+        ui.image_list_widget->selectionModel()->setCurrentIndex(
+            ui.image_list_widget->model()->index(0, 0),
+            QItemSelectionModel::SelectCurrent |
+                QItemSelectionModel::Rows);
     }
     actor_text->GetTextProperty()->SetColor(
         214.0 / 255.0,
@@ -4672,8 +4720,8 @@ void MainScreen::updateOrientationSymTrap_MS(
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
     model_locations_.SavePose(
-        ui.image_list_widget->currentRow(),
-        ui.model_list_widget->currentRow(),
+        ui.image_list_widget->currentIndex().row(),
+        ui.model_list_widget->currentIndex().row(),
         new_orientation);
     vw->set_model_position_at_index(
         selected[0].row(),
@@ -4781,7 +4829,11 @@ void MainScreen::onOptimizedFrame(
 
     if (optimizer_directive == "Backward") {
         if (move_next_frame && current_frame_index > 0) {
-            ui.image_list_widget->setCurrentRow(current_frame_index - 1);
+            ui.image_list_widget->selectionModel()->setCurrentIndex(
+                ui.image_list_widget->model()->index(current_frame_index - 1,
+                                                     0),
+                QItemSelectionModel::SelectCurrent |
+                    QItemSelectionModel::Rows);
             model_locations_.SavePose(
                 current_frame_index,
                 primary_model_index,
@@ -4808,9 +4860,14 @@ void MainScreen::onOptimizedFrame(
     } else {
         /*If Commanded to Move To Next Frame Do So*/
         if (move_next_frame &&
-            current_frame_index + 1 < ui.image_list_widget->count()) {
+            current_frame_index + 1 <
+                ui.image_list_widget->model()->rowCount()) {
             /*Bring Up Next Frame*/
-            ui.image_list_widget->setCurrentRow(current_frame_index + 1);
+            ui.image_list_widget->selectionModel()->setCurrentIndex(
+                ui.image_list_widget->model()->index(current_frame_index + 1,
+                                                     0),
+                QItemSelectionModel::SelectCurrent |
+                    QItemSelectionModel::Rows);
             /*Save Pose To Storage*/
             model_locations_.SavePose(
                 current_frame_index,
@@ -5668,7 +5725,7 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
     std::vector<int> selected_models =
         session_state_.GetSelectedModels();
 
-    for (int i = 0; i < ui.image_list_widget->count(); i++) {
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         Point6D fem_pose = model_locations_.GetPose(i, selected_models[1]);
         Point6D tib_pose_orig =
             model_locations_.GetPose(i, selected_models[0]);

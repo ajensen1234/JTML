@@ -196,21 +196,20 @@ recipes) fully cover this work; Qt view-model patterns are standard.
   connects to `selectionModel()->selectionChanged` — and *only* that signal (connecting
   `currentChanged` too would change MultiSelection arrow-key behavior). The seven
   programmatic current-write sites — image-load default-select (2749, 2857), model-load
-  (2949), single-model radio `setCurrentIndex(selected[0])` (3820), LaunchOptimizer
-  (4653), onOptimizedFrame prev/next (4784, 4813) — become explicit
-  `selectionModel()->setCurrentIndex(index, SelectCurrent|Rows)`. `SelectCurrent|Rows`
-  is the R13-preserving command: it matches today's `QListWidget::setCurrentRow`
-  behavior in every selection mode (additive `SelectCurrent` in ExtendedSelection,
-  collapsing in Single/MultiSelection), whereas a blanket `ClearAndSelect|Rows` would
-  silently collapse multi-selected frames in the ExtendedSelection image list. (A plain
-  one-arg `setCurrentIndex` does NOT default to `NoUpdate` in Qt 6 — that was Qt 5
-  behavior; it routes through `selectionCommand()` → `ClearAndSelect` in
-  SingleSelection. The explicit rewrite is still required to keep every selection write
-  on the model API.) `VTKMakePrincipalSignal`'s per-item Deselect/Select loops stay
-  unbatched and direct-connected (intermediate re-entrant renders are R13-visible). The
-  `.ui`'s 8 `QListWidget::item:selected` selector blocks (6 active; 2 commented out at
-  lines 363, 3794) gain `QListView::item:selected` alongside (image-list highlight
-  parity).
+  (2949), LaunchOptimizer (4653), onOptimizedFrame prev/next (4784, 4813) — become
+  explicit `selectionModel()->setCurrentIndex(index, SelectCurrent|Rows)`;
+  `SelectCurrent|Rows` matches today's `QListWidget::setCurrentRow` behavior in every
+  selection mode (additive in Extended/Multi, collapsing in SingleSelection). The one
+  exception is the single-model radio (3820), which today calls the one-arg
+  `setCurrentIndex` → `selectionCommand()` → **ClearAndSelect** (collapses the
+  multi-selection to the first row): that site uses `ClearAndSelect|Rows` to preserve
+  the collapse. (A plain one-arg `setCurrentIndex` does NOT default to `NoUpdate` in
+  Qt 6 — that was Qt 5 behavior. The explicit rewrite is still required to keep every
+  selection write on the model API.) `VTKMakePrincipalSignal`'s per-item
+  Deselect/Select loops stay unbatched and direct-connected (intermediate re-entrant
+  renders are R13-visible). The `.ui`'s 8 `QListWidget::item:selected` selector blocks
+  (6 active; 2 commented out at lines 363, 3794) gain `QListView::item:selected`
+  alongside (image-list highlight parity).
 - **Model owns selection; the view writes through the model API.** Every programmatic
   selection write (load slots, optimizer navigation, empty-selection fallback,
   `VTKMakePrincipalSignal`, single-model radio) goes through the model/selection-model,
@@ -358,7 +357,7 @@ principal loops) stays synchronous-direct.
 
 ## Implementation Units
 
-- [ ] U1. **Baseline and per-cut verification harness**
+- [x] U1. **Baseline and per-cut verification harness**
 
 **Goal:** Establish the pre-refactor baseline and the per-cut verification procedure
 before any code moves.
@@ -394,7 +393,7 @@ before any code moves.
 
 ---
 
-- [ ] U2. **FrameListModel + ModelListModel view-models (QListView swap)**
+- [x] U2. **FrameListModel + ModelListModel view-models (QListView swap)**
 
 **Goal:** Replace both `QListWidget`s with passive `QListView`s over headless-testable
 `QAbstractListModel` classes; delete MainScreen's list bookkeeping.
@@ -875,7 +874,7 @@ header, and record the phase evidence.
 | Risk | Mitigation |
 |------|------------|
 | U2: auto-connected selection handlers silently die on `QListView` (no `itemSelectionChanged`) — whole selection pipeline dead | Explicit `selectionModel()->selectionChanged` connects (only that signal); manual-visual checklist includes selection interactions; render smoke after the swap |
-| U2: `setCurrentIndex` semantics are mode-dependent (additive `SelectCurrent` in ExtendedSelection vs collapsing in SingleSelection) — a blanket `ClearAndSelect|Rows` would collapse multi-selected frames | `SelectCurrent|Rows` at the seven sites (R13-preserving, per Key Technical Decisions); selection tests pin the coupling |
+| U2: `setCurrentIndex` semantics are mode-dependent (additive `SelectCurrent` in Extended/Multi vs collapsing `ClearAndSelect` in SingleSelection) — the single-model radio must collapse (today's behavior) | `SelectCurrent|Rows` at six navigation sites; `ClearAndSelect|Rows` at the single-model radio (per Key Technical Decisions); selection tests pin the coupling |
 | U3: registry drift (org/app/group/key, frame-sourced edge values) changes restart behavior | Parity table in the unit; round-trip PBT with fractional/negative draws; manual restart check |
 | PBT surfaces a latent bug in relocated code (R13 vs learning #5) | Land the relocation cut as-is; file the fix as a separate gated cut with its own `jj diff`; never weaken an invariant to pass |
 | U6: `interactor.h` file-scope globals duplicated if a second TU includes it | One-TU rule stated in the unit; grep-guard in verification |
