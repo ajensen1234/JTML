@@ -444,6 +444,48 @@ target_link_options(jtml_test_pose_copy_props PRIVATE
 add_test(NAME jtml.pose_copy_props COMMAND jtml_test_pose_copy_props)
 set_tests_properties(jtml.pose_copy_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# EdgeProcessor tests (plan 004 U5, R7/R13/R14/R15). The processor compiles
+# against the real Frame API (include/compute/frame.h) and calls only the
+# existing Frame methods; the production Frame impl is compute-layer
+# (src/compute/frame.cu -- nvcc + torch/CUDA-linked), so the headless targets
+# compile the pure-OpenCV Frame twin (test/unit/frame_headless.cpp, mirrors
+# frame.cu's edge-relevant methods against the same header) alongside
+# edge_processor.cpp. OpenCV-only: no Qt, no VTK, no CUDA.
+add_executable(jtml_test_edge_processor
+    unit/edge_processor_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/edge_processor.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+)
+target_include_directories(jtml_test_edge_processor PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_edge_processor PRIVATE
+    Catch2::Catch2WithMain ${OpenCV_LIBRARIES})
+add_test(NAME jtml.edge_processor COMMAND jtml_test_edge_processor)
+set_tests_properties(jtml.edge_processor PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Hegel PBT twin (plan 004 U5): the reset/restore + per-frame-consistency +
+# apply-all-equals-per-frame invariants, with the standard hegel link/rpath
+# recipe.
+add_executable(jtml_test_edge_processor_props
+    unit/edge_processor_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/edge_processor.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+)
+target_include_directories(jtml_test_edge_processor_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_edge_processor_props PRIVATE
+    Catch2::Catch2WithMain hegel dl ${OpenCV_LIBRARIES})
+target_link_options(jtml_test_edge_processor_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.edge_processor_props COMMAND jtml_test_edge_processor_props)
+set_tests_properties(jtml.edge_processor_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.

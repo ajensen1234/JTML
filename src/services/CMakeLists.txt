@@ -17,18 +17,22 @@ add_library(jtml_services STATIC
     settings_service.cpp
     stl_reader.cpp
     STLReader.cpp
+    edge_processor.cpp
     ${HEADER_FILES}
 )
 
 # Downward dep on the pure core.
 target_link_libraries(jtml_services PUBLIC jtml_domain)
 # Qt (model.cpp QString, optimizer_settings.h QMetaType, stl QtCore) + VTK
-# (model.h vtkSTLReader/vtkSmartPointer).
-target_link_libraries(jtml_services PRIVATE ${REQUIRED_LIBS_QUALIFIED} ${VTK_LIBRARIES})
+# (model.h vtkSTLReader/vtkSmartPointer) + OpenCV (edge_processor.cpp calls the
+# Frame methods; frame.h needs the OpenCV headers).
+target_link_libraries(jtml_services PRIVATE ${REQUIRED_LIBS_QUALIFIED} ${VTK_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Adding Include Directories. include/compute is PUBLIC because calibration.h -> the
 # bare camera_calibration.h include (in include/compute) is consumed through
-# location_storage.h by any jtml_services consumer.
+# location_storage.h by any jtml_services consumer. OpenCV include dirs are PUBLIC
+# because edge_processor.h (a public header) pulls compute/frame.h -> OpenCV.
 target_include_directories(jtml_services PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/compute)
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS})

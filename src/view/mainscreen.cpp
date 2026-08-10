@@ -52,6 +52,7 @@
 
 /*STL Reader*/
 #include "services/STLReader.h"
+#include "services/edge_processor.h"
 
 /* PyTorch 1.0 CPP Torch Script*/
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -4144,26 +4145,29 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
                                    .getParameterValue();
             }
         }
-        if (dilation_val < 0) {
-            dilation_val = 0;
-        }
+        /*The dilation-constant decision (raw-value clamp + the DIRECT_MAHFOUZ
+         * override) lives in the processor (plan 004 U5); the view passes the
+         * raw "Dilation" int-parameter value and the active cost function's
+         * name. The camera-dependent application target stays view-side.*/
+        jta::EdgeProcessingParams edge_params{
+            ui.aperture_spin_box->value(),
+            low_val,
+            high_val,
+            dilation_val,
+            trunk_manager_.getActiveCostFunction()};
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
             ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        ui.aperture_spin_box->value(), low_val, high_val);
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames[ui.image_list_widget->currentIndex().row()]);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
                 calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        ui.aperture_spin_box->value(), low_val, high_val);
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
             }
         }
 
@@ -4231,26 +4235,29 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
                                    .getParameterValue();
             }
         }
-        if (dilation_val < 0) {
-            dilation_val = 0;
-        }
+        /*The dilation-constant decision (raw-value clamp + the DIRECT_MAHFOUZ
+         * override) lives in the processor (plan 004 U5); the view passes the
+         * raw "Dilation" int-parameter value and the active cost function's
+         * name. The camera-dependent application target stays view-side.*/
+        jta::EdgeProcessingParams edge_params{
+            aperture,
+            ui.low_threshold_slider->value(),
+            high_val,
+            dilation_val,
+            trunk_manager_.getActiveCostFunction()};
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
             ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        aperture, ui.low_threshold_slider->value(), high_val);
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames[ui.image_list_widget->currentIndex().row()]);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
                 calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        aperture, ui.low_threshold_slider->value(), high_val);
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
             }
         }
         /*   Update image based on selected radio button   */
@@ -4317,26 +4324,29 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
                                    .getParameterValue();
             }
         }
-        if (dilation_val < 0) {
-            dilation_val = 0;
-        }
+        /*The dilation-constant decision (raw-value clamp + the DIRECT_MAHFOUZ
+         * override) lives in the processor (plan 004 U5); the view passes the
+         * raw "Dilation" int-parameter value and the active cost function's
+         * name. The camera-dependent application target stays view-side.*/
+        jta::EdgeProcessingParams edge_params{
+            aperture,
+            low_val,
+            ui.high_threshold_slider->value(),
+            dilation_val,
+            trunk_manager_.getActiveCostFunction()};
 
         if (ui.image_list_widget->currentIndex().row() >= 0 &&
             ui.image_list_widget->currentIndex().row() < loaded_frames.size()) {
             if (ui.camera_A_radio_button->isChecked()) {
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        aperture, low_val, ui.high_threshold_slider->value());
-                loaded_frames[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames[ui.image_list_widget->currentIndex().row()]);
             } else if (
                 ui.camera_B_radio_button->isChecked() &&
                 calibrated_for_biplane_viewport_) {
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetEdgeImage(
-                        aperture, low_val, ui.high_threshold_slider->value());
-                loaded_frames_B[ui.image_list_widget->currentIndex().row()]
-                    .SetDilatedImage(dilation_val);
+                jta::EdgeProcessor::ApplyToFrame(
+                    edge_params,
+                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
             }
         }
         /*   Update image based on selected radio button   */
@@ -4378,26 +4388,21 @@ void MainScreen::on_apply_all_edge_button_clicked() {
                                .getParameterValue();
         }
     }
-    if (dilation_val < 0) {
-        dilation_val = 0;
-    }
+    /*The dilation-constant decision (raw-value clamp + the DIRECT_MAHFOUZ
+     * override) lives in the processor (plan 004 U5); the view passes the raw
+     * "Dilation" int-parameter value and the active cost function's name. The
+     * A/B target sets stay view-side.*/
+    jta::EdgeProcessingParams edge_params{
+        ui.aperture_spin_box->value(),
+        ui.low_threshold_slider->value(),
+        ui.high_threshold_slider->value(),
+        dilation_val,
+        trunk_manager_.getActiveCostFunction()};
 
     /*Apply Edge Detect to All Images*/
-    for (int i = 0; i < loaded_frames.size(); i++) {
-        loaded_frames[i].SetEdgeImage(
-            ui.aperture_spin_box->value(),
-            ui.low_threshold_slider->value(),
-            ui.high_threshold_slider->value());
-        loaded_frames[i].SetDilatedImage(dilation_val);
-    }
+    jta::EdgeProcessor::ApplyToFrames(edge_params, loaded_frames);
     if (calibrated_for_biplane_viewport_) {
-        for (int i = 0; i < loaded_frames_B.size(); i++) {
-            loaded_frames_B[i].SetEdgeImage(
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value());
-            loaded_frames_B[i].SetDilatedImage(dilation_val);
-        }
+        jta::EdgeProcessor::ApplyToFrames(edge_params, loaded_frames_B);
     }
     /*   Update image based on selected radio button   */
     if (ui.image_list_widget->currentIndex().row() >= 0) {
