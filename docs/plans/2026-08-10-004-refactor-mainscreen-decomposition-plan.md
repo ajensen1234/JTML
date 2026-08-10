@@ -478,7 +478,7 @@ is the final step of the unit, gated by compile + scheduled manual-visual check.
 
 ---
 
-- [ ] U3. **SettingsService (QSettings parity)**
+- [x] U3. **SettingsService (QSettings parity)**
 
 **Goal:** Extract `LoadSettingsBetweenSessions` (470 lines) + `onSaveSettings` + the
 four inline edge-slot QSettings writes into a widget-free `SettingsService`.
@@ -534,7 +534,7 @@ silent-narrowing invariant shape); deterministic parity test second.
 
 ---
 
-- [ ] U4. **Pose save/load/copy thinning + domain pose-copy seam**
+- [x] U4. **Pose save/load/copy thinning + domain pose-copy seam**
 
 **Goal:** Thin the seven pose slots over the existing `pose_file_io`; move
 copy-prev/next boundary + index-split logic to a pure domain seam.
@@ -595,7 +595,7 @@ invariants (row 0, last row, single/multi selection).
 
 ---
 
-- [ ] U5. **EdgeProcessor**
+- [x] U5. **EdgeProcessor**
 
 **Goal:** Extract aperture/low-threshold/high-threshold application, apply-all, and
 reset-edge over `Frame` data into a headless `EdgeProcessor`.
@@ -646,7 +646,7 @@ per frame".
 
 ---
 
-- [ ] U6. **SessionController (load path + camera A/B state)**
+- [x] U6. **SessionController (load path + camera A/B state)**
 
 **Goal:** Extract the load path (calibration/images/models) and camera A/B switching
 state into a headless `SessionController`.
@@ -700,7 +700,7 @@ handoff)
 
 ---
 
-- [ ] U7. **Optimizer binding thinning**
+- [x] U7. **Optimizer binding thinning**
 
 **Goal:** Complete the thinning of optimizer entry/result binding onto
 `OptimizeIntentController` + `OptimizeCoordinator`; verify directive coverage.
@@ -742,7 +742,7 @@ found directive gap produces new tests.
 
 ---
 
-- [ ] U8. **SegmentationController + ImplantEstimator (GPU-gated)**
+- [x] U8. **SegmentationController + ImplantEstimator (GPU-gated)**
 
 **Goal:** Extract the segment/estimate/DRR block (~880 lines) into a
 `SegmentationController` (services) + `ImplantEstimator` (compute or services,
@@ -801,7 +801,7 @@ oracle label on the GPU machine; the baseline tolerance is the gate.
 
 ---
 
-- [ ] U9. **Final consolidation and evidence**
+- [x] U9. **Final consolidation and evidence**
 
 **Goal:** Remove the dead code the extraction exposed, state MainScreen's role in the
 header, and record the phase evidence.

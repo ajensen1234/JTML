@@ -32,8 +32,6 @@
 #include <qfiledialog.h>
 #include <qtextstream.h>
 
-#include "view/interactor.h"
-
 /*Messages*/
 #include <qmessagebox.h>
 
@@ -2170,26 +2168,6 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     ui.pose_label->setVisible(false);
 }
 
-// void MainScreen::on_actionNFD_Pose_Estimate_triggered() {
-//     JTML_NFD nfd_obj;
-//     QModelIndexList selected =
-//         ui.model_list_widget->selectionModel()->selectedRows();
-//     if (selected.size() == 0 || previous_frame_index_ < 0 ||
-//         ui.image_list_widget->currentIndex().row() != previous_frame_index_
-//         || ui.image_list_widget->currentIndex().row() >= loaded_frames.size()
-//         || ui.model_list_widget->currentIndex().row() >=
-//         loaded_models.size()) { QMessageBox::critical(this, "Error!", "Select
-//         Frame and Model First!",
-//                               QMessageBox::Ok);
-//         return;
-//     }
-//     QString error_mess;
-//     nfd_obj.Initialize(calibration_file_, loaded_models, loaded_frames,
-//                        selected, ui.image_list_widget->currentIndex().row(),
-//                        error_mess);
-//     nfd_obj.Run();
-// }
-
 /*Viewing Controls*/
 void MainScreen::on_actionControls_triggered() {
     // Open Viewing Window Controls Window
@@ -3191,22 +3169,6 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
 QModelIndexList MainScreen::selected_model_indices() {
     return ui.model_list_widget->selectionModel()->selectedRows();
 }
-void MainScreen::remove_background_highlights_from_model_list_widget() {
-    /*Dead code (never called; removed in plan 004 U9). Kept compiling
-     * post-swap via the model API.*/
-    for (int i = 0; i < loaded_models.size(); i++) {
-        ui.model_list_widget->model()->setData(
-            ui.model_list_widget->model()->index(i, 0),
-            QBrush(Qt::transparent),
-            Qt::BackgroundRole);
-    }
-}
-void MainScreen::print_selected_item() {
-    QModelIndexList selected =
-        ui.model_list_widget->selectionModel()->selectedRows();
-    for (int i = 0; i < selected.size(); i++) {
-    }
-}
 
 /*Model Widget*/
 void MainScreen::on_model_list_widget_itemSelectionChanged() {
@@ -3624,9 +3586,19 @@ void MainScreen::on_transparent_model_radio_button_clicked() {
 void MainScreen::on_wireframe_model_radio_button_clicked() {
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
+    QModelIndexList frame_selection =
+        ui.image_list_widget->selectionModel()->selectedRows();
+    /*UB guard (plan 004 U9): both derefs below are unguarded today —
+     * loaded_models[selected[0].row()] and loaded_frames[frame_idx] crash
+     * when either list has no selection (e.g. wireframe radio after
+     * calibration+images but before models). Guard lands as its own
+     * sub-commit, excluded from the relocation-only diff (plan guard
+     * exemption).*/
+    if (selected.size() == 0 || frame_selection.size() == 0) {
+        return;
+    }
     Model model = loaded_models[selected[0].row()];
-    int frame_idx =
-        ui.image_list_widget->selectionModel()->selectedRows()[0].row();
+    int frame_idx = frame_selection[0].row();
     Point6D point6d = model_locations_.GetPose(frame_idx, selected[0].row());
     Pose pose = Pose(
         point6d.x, point6d.y, point6d.z, point6d.xa, point6d.ya, point6d.za);

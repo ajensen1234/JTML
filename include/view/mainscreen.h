@@ -113,6 +113,15 @@
 /**
  * @brief The MainScreen object that inherits the QMainWindow object type. This
  * object serves as the class hosting all the items on the main window.
+ *
+ * Role (plan 004, R2): View + composition root. Widget wiring, VTK render
+ * binding, layout/resize, and the irreducible view-only slots (display-mode
+ * radios, interaction modes, reset view, key handling) stay here; everything
+ * else lives in the extracted seams: view-models (FrameListModel /
+ * ModelListModel), services (SessionController, SettingsService, EdgeProcessor,
+ * SegmentationController, ImplantEstimator), domain (pose_copy, pose_file_io,
+ * SessionState, OptimizeIntentController, ModelListBuilder,
+ * ambiguous_pose_processing), coordinator (OptimizeCoordinator).
  */
 class MainScreen : public QMainWindow {
     Q_OBJECT
@@ -150,12 +159,9 @@ private:
     double UF_BLUE[3] = {0, 72, 204};
     double UF_ORANGE[3] = {255, 77, 0};
 
-    void print_selected_item();
-
     int curr_frame();
 
     float start_time;
-    void remove_background_highlights_from_model_list_widget();
 
     /*GUI FUNCTIONS*/
     /*Arrange Layout (Do this in code so scales across different DPI monitors
@@ -422,8 +428,6 @@ public Q_SLOTS:
     void on_actionEstimate_Femoral_Implant_s_triggered();
 
     void on_actionEstimate_Tibial_Implant_s_triggered();
-
-    // void on_actionNFD_Pose_Estimate_triggered();
 
     void on_actionCopy_Next_Pose_triggered();
 

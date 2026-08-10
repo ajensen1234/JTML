@@ -63,4 +63,4 @@ design it properly.
 - `docs/solutions/conventions/jtml-layered-lib-split-2026-08-08.md` — lib/layer conventions.
 - `docs/solutions/logic-errors/cost-function-parameter-double-truncation-2026-08-08.md` — PBT-found-bug pattern.
 - `docs/solutions/tooling-decisions/jtml-rendering-runtime-xcb-qvtk-2026-08-10.md` — rendering runtime.
-- `test/HEGEL-PBT-GUIDE.md` — PBT authoring (9 targets already exist).
+- `test/HEGEL-PBT-GUIDE.md` — PBT authoring (9 targets already exist; *stale — post-MainScreen-decomposition the count is 13 PBT targets + 1 hegel smoke*, per plan 004 U9).
