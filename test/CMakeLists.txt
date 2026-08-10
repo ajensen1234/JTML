@@ -486,6 +486,44 @@ target_link_options(jtml_test_edge_processor_props PRIVATE
 add_test(NAME jtml.edge_processor_props COMMAND jtml_test_edge_processor_props)
 set_tests_properties(jtml.edge_processor_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# SessionController tests (plan 004 U6, R6/R10/R13/R14). The controller .cpp
+# compiles directly against the headless Frame twin (test/unit/
+# frame_headless.cpp, pure OpenCV) + the real LocationStorage / Model /
+# stl_reader / ModelListBuilder services: QtCore for QString/QFile/QTextStream,
+# OpenCV for the Frame twin (imread), VTK for Model's vtkSTLReader (no render
+# window, no GPU -- same direct-compile pattern as the other unit targets).
+# The golden calibration fixture is read via a repo-root WORKING_DIRECTORY
+# (like jtml.pose_file_io); image fixtures are temp PNGs written at runtime.
+add_executable(jtml_test_session_controller
+    unit/session_controller_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/session_controller.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/model.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/stl_reader.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_session_controller PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
+target_link_libraries(jtml_test_session_controller PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    Catch2::Catch2WithMain
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath) -- same recipe as the oracle targets:
+# VTK lives in _deps/vtk/install/lib(64), conda libs in the pixi env.
+target_link_options(jtml_test_session_controller PRIVATE
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.session_controller COMMAND jtml_test_session_controller)
+set_tests_properties(jtml.session_controller PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.

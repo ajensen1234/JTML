@@ -2534,133 +2534,62 @@ void MainScreen::on_load_calibration_button_clicked() {
     QString calibration_file_extension = QFileDialog::getOpenFileName(
         this, tr("Load Calibration"), ".", tr("Calibration File (*.txt)"));
 
-    QFile inputFile(calibration_file_extension);
-    if (inputFile.open(QIODevice::ReadOnly)) {
-        QTextStream in(&inputFile);
-        QStringList InputList =
-            in.readAll().split(QRegularExpression("[\\r\\n]|,|\\t| "),
-                               Qt::SkipEmptyParts);
+    /*Parse the calibration file (plan 004 U6 / R6): the inline QTextStream +
+     * QRegularExpression parsing moved to SessionController verbatim; the
+     * view keeps the dialogs, the error boxes, the interactor.h global
+     * writes, and the VTK setup below.*/
+    const jta::CalibrationParseResult parse_result =
+        session_controller_.ParseCalibration(calibration_file_extension);
 
-        /*Valid Code for Monoplane*/
-        if (InputList[0] == "JT_INTCALIB" || InputList[0] == "JTA_INTCALIB") {
-            /*Error Check*/
-            if (InputList[4].toDouble() == 0) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Pixel size (the last number in the calibration "
-                    "file) is specified as 0! This is impossible.",
-                    QMessageBox::Ok);
-                calibrated_for_monoplane_viewport_ = false;
-                calibrated_for_biplane_viewport_ = false;
-                inputFile.close();
-                return;
-            }
-
-            /*Initialize Calibration*/
-            calibrated_for_monoplane_viewport_ = true;
-            calibrated_for_biplane_viewport_ = false;
-            CameraCalibration principal_calibration_file(
-                InputList[1].toDouble(),
-                -1 * InputList[2].toDouble(),
-                // Negative For Offsets to make consistent with JointTrack
-                -1 * InputList[3].toDouble(),
-                InputList[4].toDouble());
-            float* prin_dist_ = &principal_calibration_file.principal_distance_;
-            calibration_file_ = Calibration(principal_calibration_file);
-            /*Update Interactor Calibration For Converting Text in Camera B
-             * View*/
-            interactor_calibration = calibration_file_;
-            Calibration* cal_pointer_ = &calibration_file_;
-
-            // interactor_calibration.camera_A_principal_.principal_distance_
-            // - should return 1198
-            interactor_camera_B = false;
-        }
-        /*Valid Code for Biplane*/
-        /*NOT WORKING, BUT GOOD STARTING PLACE*/
-        else if (InputList[0] == "JTA_INTCALIB_BIPLANE") {
-            /*Convert and Do PIX MM Error CHECK*/
-            /*Error Check*/
-            if (InputList[4].toDouble() == 0 || InputList[8].toDouble() == 0) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Pixel size (the last number in the calibration "
-                    "file) is specified as 0! This is impossible.",
-                    QMessageBox::Ok);
-                calibrated_for_monoplane_viewport_ = false;
-                calibrated_for_biplane_viewport_ = false;
-                inputFile.close();
-                return;
-            }
-            /*Initialize Calibrations*/
-            calibrated_for_monoplane_viewport_ = false;
-            calibrated_for_biplane_viewport_ = true;
-            /*Calibrate for Main View (A) and alternate view (B).
-            Read in (x,y,z) displacement vector from origin (where A is) to
-            origin of camera B. Read in othroogonal axis matrix for camera B
-            (A is taken to be standard basis vectors)*/
-            CameraCalibration principal_calibration_file_A(
-                InputList[1].toDouble(),
-                -1 * InputList[2].toDouble(),
-                -1 * InputList[3].toDouble(),
-                InputList[4].toDouble());
-            // Negatives to make consistent with JT
-            CameraCalibration principal_calibration_file_B(
-                InputList[5].toDouble(),
-                -1 * InputList[6].toDouble(),
-                -1 * InputList[7].toDouble(),
-                InputList[8].toDouble());
-            Vect_3 origin_B(
-                InputList[9].toDouble(),
-                InputList[10].toDouble(),
-                InputList[11].toDouble());
-            Matrix_3_3 orthogonal_axes_B(
-                InputList[12].toDouble(),
-                InputList[13].toDouble(),
-                InputList[14].toDouble(),
-                InputList[15].toDouble(),
-                InputList[16].toDouble(),
-                InputList[17].toDouble(),
-                InputList[18].toDouble(),
-                InputList[19].toDouble(),
-                InputList[20].toDouble());
-            calibration_file_ = Calibration(
-                principal_calibration_file_A,
-                principal_calibration_file_B,
-                origin_B,
-                orthogonal_axes_B);
-
-            /*Update Interactor Calibration For Converting Text in Camera B
-             * View*/
-            interactor_calibration = calibration_file_;
-        } else if (InputList[0] == "image") { // Would need a way to distinguish
-                                              // Denver single plane from
-                                              // biplane
-            CameraCalibration denver_calibration_A(
-                InputList[6].toDouble(),
-                InputList[7].toDouble(),
-                InputList[8].toDouble(),
-                InputList[10].toDouble(),
-                InputList[11].toDouble());
-
-            calibrated_for_monoplane_viewport_ = true;
-            calibrated_for_biplane_viewport_ = false;
-            calibration_file_ = Calibration(denver_calibration_A, "Denver");
-            inputFile.close();
-        }
-        /*Invalid Code*/
-        else {
-            QMessageBox::critical(
-                this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
-            calibrated_for_monoplane_viewport_ = false;
-            calibrated_for_biplane_viewport_ = false;
-            inputFile.close();
-            return;
-        }
-        inputFile.close();
+    /*Valid Code for Monoplane -- Error Check*/
+    if (parse_result.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
+        QMessageBox::critical(
+            this,
+            "Error!",
+            "Pixel size (the last number in the calibration "
+            "file) is specified as 0! This is impossible.",
+            QMessageBox::Ok);
+        calibrated_for_monoplane_viewport_ = false;
+        calibrated_for_biplane_viewport_ = false;
+        return;
     }
+    /*Invalid Code*/
+    if (parse_result.error == jta::CalibrationParseResult::Error::InvalidCode) {
+        QMessageBox::critical(
+            this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
+        calibrated_for_monoplane_viewport_ = false;
+        calibrated_for_biplane_viewport_ = false;
+        return;
+    }
+    /*File open failure shows no box and changes nothing (the slot's silent
+     * open guard, preserved).*/
+    if (!parse_result.ok) {
+        return;
+    }
+
+    /*Initialize Calibration*/
+    calibration_file_ = parse_result.calibration;
+    calibrated_for_monoplane_viewport_ =
+        parse_result.calibrated_for_monoplane_viewport;
+    calibrated_for_biplane_viewport_ =
+        parse_result.calibrated_for_biplane_viewport;
+    /*Update Interactor Calibration For Converting Text in Camera B View
+     * (branch-dependent writes preserved verbatim: Monoplane writes both
+     * globals, Biplane writes interactor_calibration only, Denver writes
+     * neither -- the parse result carries the branch kind).*/
+    if (parse_result.kind == jta::CalibrationParseResult::Kind::Monoplane ||
+        parse_result.kind == jta::CalibrationParseResult::Kind::Biplane) {
+        interactor_calibration = calibration_file_;
+    }
+    if (parse_result.kind == jta::CalibrationParseResult::Kind::Monoplane) {
+        // interactor_calibration.camera_A_principal_.principal_distance_
+        // - should return 1198
+        interactor_camera_B = false;
+    }
+    /*The camera A radio is checked after any valid calibration (active-
+     * camera mirror, R10).*/
+    session_controller_.SetActiveCamera(jta::ActiveCamera::CameraA);
+
     /*Set Up QVTK Widget For Calibration*/
     /*Monoplane (Left Viewport)*/
     vw->load_renderers_into_render_window(calibration_file_);
@@ -2672,10 +2601,17 @@ void MainScreen::on_load_calibration_button_clicked() {
         coronal_vw->setup_camera_coronal_plane();
         /*Set Checked To Monoplane but disable from further clicking*/
         ui.camera_A_radio_button->setChecked(true);
-        ui.camera_A_radio_button->setDisabled(true);
+        /*Camera radio enable/disable decision (plan 004 U6 / R10): pure
+         * function of the calibrated flags, decided by the controller.*/
+        const jta::CameraRadioActions radio_actions =
+            session_controller_.DecideCameraRadios(
+                jta::CameraRadioEvent::CalibrationLoaded,
+                calibrated_for_monoplane_viewport_,
+                calibrated_for_biplane_viewport_);
+        ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
 
         /*Disable Biplane*/
-        ui.camera_B_radio_button->setDisabled(true);
+        ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
 
         /*If Already loaded images CANT HAPPEN ANYMORE AS CALIBRATION IS ONE
          * USE BUTTON*/
@@ -2722,8 +2658,15 @@ void MainScreen::on_load_calibration_button_clicked() {
 
         /*Set Checked To Biplane A (aka Monoplane) and Change Text Boxes*/
         ui.camera_A_radio_button->setChecked(true);
-        ui.camera_A_radio_button->setEnabled(true);
-        ui.camera_B_radio_button->setEnabled(true);
+        /*Camera radio enable/disable decision (plan 004 U6 / R10): pure
+         * function of the calibrated flags, decided by the controller.*/
+        const jta::CameraRadioActions radio_actions =
+            session_controller_.DecideCameraRadios(
+                jta::CameraRadioEvent::CalibrationLoaded,
+                calibrated_for_monoplane_viewport_,
+                calibrated_for_biplane_viewport_);
+        ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
+        ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
 
         /*Disable Reloading Calibration File*/
         ui.load_calibration_button->setDisabled(true);
@@ -2771,43 +2714,31 @@ void MainScreen::on_load_image_button_clicked() {
             tr("Load Image(s)"),
             ".",
             tr("Image File(s) (*.tif *.tiff *.png)"));
-        for (int i = 0; i < TiffFileExtensions.size(); i++) {
-            auto new_frame = Frame(
-                TiffFileExtensions[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            /*Check That All Frames Are The Same Size and Not Empty*/
-            int width = new_frame.GetEdgeImage().cols;
-            int height = new_frame.GetEdgeImage().rows;
-            std::vector<std::pair<int, int>> loaded_sizes;
-            loaded_sizes.reserve(loaded_frames.size());
-            for (auto& f : loaded_frames) {
-                loaded_sizes.emplace_back(f.GetEdgeImage().cols,
-                                          f.GetEdgeImage().rows);
-            }
-            if (!jta::ModelListBuilder::AllSameSize(width, height,
-                                                    loaded_sizes)) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Images Loaded Must Be The Same Size!",
-                    QMessageBox::Ok);
-                goto stop;
-            }
-            // Add to Loaded Frames
-            loaded_frames.push_back(new_frame);
-            // Populate Frame List Widget
-            frame_list_model_.AppendFrame(
-                QFileInfo(
-                    QString::fromStdString(TiffFileExtensions[i].toStdString()))
-                    .baseName());
-            /*Add Blank Model Locations for Loaded Models*/
-            model_locations_.LoadNewFrame();
+        /*Parse + populate (plan 004 U6 / R6): the Frame construction,
+         * all-same-size check, append, and LoadNewFrame sizing moved to
+         * SessionController verbatim (goto stop semantics: on a size
+         * mismatch the frames appended so far persist; the box is shown
+         * after the call, same as the in-loop box).*/
+        const jta::ImageLoadResult load_result = session_controller_.ParseImages(
+            TiffFileExtensions,
+            jta::ImageLoadParams{ui.aperture_spin_box->value(),
+                                 ui.low_threshold_slider->value(),
+                                 ui.high_threshold_slider->value(),
+                                 dilation_val},
+            loaded_frames,
+            model_locations_);
+        /*Populate Frame List Widget*/
+        for (const auto& frame_name : load_result.frame_names) {
+            frame_list_model_.AppendFrame(frame_name);
+        }
+        if (load_result.status == jta::ImageLoadStatus::SizeMismatchAborted) {
+            QMessageBox::critical(
+                this,
+                "Error!",
+                "Images Loaded Must Be The Same Size!",
+                QMessageBox::Ok);
         }
         /*Exit Label*/
-    stop:;
         vw->set_loaded_frames(loaded_frames);
 
         // If No Loaded Frames, Default Select First
@@ -2839,9 +2770,23 @@ void MainScreen::on_load_image_button_clicked() {
             ".",
             tr("Image File(s) (*.tif *.tiff)"));
 
+        /*Parse + populate (plan 004 U6 / R6): the A/B same-count gate, Frame
+         * construction, per-list all-same-size checks, append, and
+         * LoadNewFrame sizing moved to SessionController verbatim (goto
+         * stop_biplane semantics: frames appended so far persist).*/
+        const jta::ImageLoadResult load_result =
+            session_controller_.ParseBiplaneImages(
+                TiffFileExtensionsCamera_A,
+                TiffFileExtensionsCamera_B,
+                jta::ImageLoadParams{ui.aperture_spin_box->value(),
+                                     ui.low_threshold_slider->value(),
+                                     ui.high_threshold_slider->value(),
+                                     dilation_val},
+                loaded_frames,
+                loaded_frames_B,
+                model_locations_);
         /*Check Same Amount of Loaded Images*/
-        if (TiffFileExtensionsCamera_A.size() !=
-            TiffFileExtensionsCamera_B.size()) {
+        if (load_result.status == jta::ImageLoadStatus::CameraCountMismatch) {
             QMessageBox::critical(
                 this,
                 "Error!",
@@ -2849,77 +2794,18 @@ void MainScreen::on_load_image_button_clicked() {
                 QMessageBox::Ok);
             return;
         }
-
-        for (int i = 0; i < TiffFileExtensionsCamera_A.size(); i++) {
-            auto new_frame_A = Frame(
-                TiffFileExtensionsCamera_A[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            auto new_frame_B = Frame(
-                TiffFileExtensionsCamera_B[i].toStdString(),
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val);
-            /*Check That All Camera-A Frames Are The Same Size and Not Empty*/
-            int widthA = new_frame_A.GetEdgeImage().cols;
-            int heightA = new_frame_A.GetEdgeImage().rows;
-            std::vector<std::pair<int, int>> sizesA;
-            sizesA.reserve(loaded_frames.size());
-            for (auto& f : loaded_frames) {
-                sizesA.emplace_back(f.GetEdgeImage().cols,
-                                    f.GetEdgeImage().rows);
-            }
-            if (!jta::ModelListBuilder::AllSameSize(widthA, heightA,
-                                                    sizesA)) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Images Loaded Must Be The Same Size!",
-                    QMessageBox::Ok);
-                goto stop_biplane;
-            }
-            /*Camera-B frames must also match the loaded B list.*/
-            int widthB = new_frame_B.GetEdgeImage().cols;
-            int heightB = new_frame_B.GetEdgeImage().rows;
-            std::vector<std::pair<int, int>> sizesB;
-            sizesB.reserve(loaded_frames_B.size());
-            for (auto& f : loaded_frames_B) {
-                sizesB.emplace_back(f.GetEdgeImage().cols,
-                                    f.GetEdgeImage().rows);
-            }
-            if (!jta::ModelListBuilder::AllSameSize(widthB, heightB,
-                                                    sizesB)) {
-                QMessageBox::critical(
-                    this,
-                    "Error!",
-                    "Images Loaded Must Be The Same Size!",
-                    QMessageBox::Ok);
-                goto stop_biplane;
-            }
-
-            // Add to Loaded Frames
-            loaded_frames.push_back(new_frame_A);
-            loaded_frames_B.push_back(new_frame_B);
-            // Populate Frame List Widget
-            frame_list_model_.AppendFrame(
-                "A: " +
-                QFileInfo(
-                    QString::fromStdString(
-                        TiffFileExtensionsCamera_A[i].toStdString()))
-                    .baseName() +
-                "\nB: " +
-                QFileInfo(
-                    QString::fromStdString(
-                        TiffFileExtensionsCamera_B[i].toStdString()))
-                    .baseName());
-            /*Add Blank Model Locations for Loaded Models*/
-            model_locations_.LoadNewFrame();
+        /*Populate Frame List Widget*/
+        for (const auto& frame_name : load_result.frame_names) {
+            frame_list_model_.AppendFrame(frame_name);
+        }
+        if (load_result.status == jta::ImageLoadStatus::SizeMismatchAborted) {
+            QMessageBox::critical(
+                this,
+                "Error!",
+                "Images Loaded Must Be The Same Size!",
+                QMessageBox::Ok);
         }
         /*Exit Label*/
-    stop_biplane:;
 
         // If No Loaded Frames, Default Select First
         if (ui.image_list_widget->currentIndex().row() < 0 &&
@@ -2955,11 +2841,14 @@ void MainScreen::on_load_model_button_clicked() {
      * built by ModelListModel via the pure ModelListBuilder (plan 004 U2,
      * R5; R15: reproduces the original two-pass dedup exactly). The model
      * owns the names now; the returned display names drive the VTK binding
-     * below.*/
+     * below. The base-name computation (path parsing) moved to
+     * SessionController (plan 004 U6 / R6); the view feeds the dedup.*/
+    const std::vector<jta::ParsedModel> parsed_models =
+        session_controller_.ParseModels(CADFileExtensions);
     QVector<QString> base_names;
-    base_names.reserve(CADFileExtensions.size());
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        base_names.push_back(QFileInfo(CADFileExtensions[i]).baseName());
+    base_names.reserve(static_cast<int>(parsed_models.size()));
+    for (const auto& parsed_model : parsed_models) {
+        base_names.push_back(parsed_model.base_name);
     }
     const QVector<QString> unique_names =
         model_list_model_.AppendModels(base_names);
@@ -2978,12 +2867,12 @@ void MainScreen::on_load_model_button_clicked() {
         CADModelNames); // Need to change this logic so it only
                         // has the new files
     coronal_vw->load_models(CADFileExtensions, CADModelNames);
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        loaded_models.push_back(Model(
-            CADFileExtensions[i].toStdString(),
-            CADModelNames[i].toStdString(),
-            "BLANK"));
-    }
+    /*Dataset population (plan 004 U6 / R6): Model construction (the STL
+     * parse) + LocationStorage sizing via LoadNewModel moved to
+     * SessionController verbatim.*/
+    session_controller_.PopulateModels(
+        parsed_models, CADModelNames, calibration_file_, loaded_models,
+        model_locations_);
     for (int i = 0; i < CADFileExtensions.size(); i++) {
         if (vw->are_models_loaded_incorrectly(i)) {
             QMessageBox::warning(
@@ -3000,13 +2889,6 @@ void MainScreen::on_load_model_button_clicked() {
     // Model list populated by ModelListModel::AppendModels above (plan 004
     // U2: the view no longer addItem()s into the list).
 
-    /*Load Blank Poses for Available Frames (and Default Blank Poses even if
-     * no frames for viewing without frame)*/
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
-        // model_locations_.LoadNewModel(calibration_file_.camera_A_principal_.principal_distance_,
-        //` calibration_file_.camera_A_principal_.pixel_pitch_);
-        model_locations_.LoadNewModel(calibration_file_);
-    }
     vw->load_3d_models_into_actor_and_mapper_list();
     coronal_vw->load_3d_models_into_actor_and_mapper_list();
     vw->load_model_actors_and_mappers_with_3d_data();
@@ -3018,6 +2900,13 @@ void MainScreen::on_load_model_button_clicked() {
                 QItemSelectionModel::Rows);
     }
     if (calibration_file_.type_ == "UF") {
+        /*UB guard (plan 004 U6, Key Technical Decisions): this branch reads
+         * loaded_frames[0]; with no frames loaded (models loaded before any
+         * image) that dereference was undefined behavior. Early return -- the
+         * empty-list case had no defined behavior to preserve.*/
+        if (loaded_frames.empty()) {
+            return;
+        }
         vw->set_vtk_camera_from_calibration_and_image_size_if_jta(
             calibration_file_,
             loaded_frames[0].GetOriginalImage().cols,
@@ -3026,6 +2915,11 @@ void MainScreen::on_load_model_button_clicked() {
         //     calibration_file_, loaded_frames[0].GetOriginalImage().cols,
         //     loaded_frames[0].GetOriginalImage().rows);
     } else if (calibration_file_.type_ == "Denver") {
+        /*UB guard (plan 004 U6): same empty-frame-list guard as the UF
+         * branch above.*/
+        if (loaded_frames.empty()) {
+            return;
+        }
         vw->set_vtk_camera_from_calibration_and_image_if_camera_matrix(
             calibration_file_,
             loaded_frames[0].GetOriginalImage().cols,
@@ -3044,6 +2938,9 @@ void MainScreen::on_camera_A_radio_button_clicked() {
     /*Interactor Boolean For Text Display (Convert to Camera A
      * Coordinates)*/
     interactor_camera_B = false;
+    /*Active-camera mirror (plan 004 U6 / R10): the radio remains the source
+     * of truth; the controller mirrors it for the headless tests.*/
+    session_controller_.SetActiveCamera(jta::ActiveCamera::CameraA);
 
     /*Load Models Selected Indices*/
     QModelIndexList selected =
@@ -3053,8 +2950,16 @@ void MainScreen::on_camera_A_radio_button_clicked() {
     if (ui.image_list_widget->currentIndex().row() >= 0) {
         /*Disable Checking if biplane and save pose*/
         if (calibrated_for_biplane_viewport_) {
-            ui.camera_A_radio_button->setDisabled(true);
-            ui.camera_B_radio_button->setDisabled(false);
+            /*Camera radio enable/disable decision (plan 004 U6 / R10): pure
+             * function of the calibrated flags, decided by the controller;
+             * applied under the slot's biplane guard, as today.*/
+            const jta::CameraRadioActions radio_actions =
+                session_controller_.DecideCameraRadios(
+                    jta::CameraRadioEvent::SwitchToCameraA,
+                    calibrated_for_monoplane_viewport_,
+                    calibrated_for_biplane_viewport_);
+            ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
+            ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
 
             /*Save Last Pair Pose*/
             for (int r = 0; r < selected.size(); r++) {
@@ -3195,6 +3100,9 @@ void MainScreen::on_camera_B_radio_button_clicked() {
     /*Interactor Boolean For Text Display (Convert to Camera A
      * Coordinates)*/
     interactor_camera_B = true;
+    /*Active-camera mirror (plan 004 U6 / R10): the radio remains the source
+     * of truth; the controller mirrors it for the headless tests.*/
+    session_controller_.SetActiveCamera(jta::ActiveCamera::CameraB);
 
     /*Load Models Selected Indices*/
     QModelIndexList selected =
@@ -3203,8 +3111,16 @@ void MainScreen::on_camera_B_radio_button_clicked() {
     /*Make Sure A Row is Selected*/
     if (ui.image_list_widget->currentIndex().row() >= 0) {
         /*Disable Checking*/
-        ui.camera_B_radio_button->setDisabled(true);
-        ui.camera_A_radio_button->setDisabled(false);
+        /*Camera radio enable/disable decision (plan 004 U6 / R10): pure
+         * function of the calibrated flags, decided by the controller;
+         * applied unconditionally, as today.*/
+        const jta::CameraRadioActions radio_actions =
+            session_controller_.DecideCameraRadios(
+                jta::CameraRadioEvent::SwitchToCameraB,
+                calibrated_for_monoplane_viewport_,
+                calibrated_for_biplane_viewport_);
+        ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
+        ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
 
         /*Save Last Pair Pose*/
         for (int r = 0; r < selected.size(); r++) {

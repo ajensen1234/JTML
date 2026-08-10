@@ -62,6 +62,12 @@
  * round-trip for cost-function/optimizer/edge settings; widget-free.*/
 #include "services/settings_service.h"
 
+/*Session controller (plan 004 U6 / R6+R10): owns the load path (calibration/
+ * image/model parsing + dataset population) and the camera A/B switching
+ * state; widget-free and headless-testable (it never touches interactor.h's
+ * file-scope globals -- this TU is the only interactor.h includer).*/
+#include "services/session_controller.h"
+
 /*Optimizer Manager*/
 #include "coordinator/optimizer_manager.h"
 
@@ -214,6 +220,14 @@ private:
      * render binding, so it is headless-testable. NOT an observable
      * ViewModel (R12: no binding framework).*/
     jta::SessionState session_state_;
+
+    /*Session controller (plan 004 U6 / R6+R10): owns the load path
+     * (calibration/image/model parsing + dataset population) and the camera
+     * A/B switching state. Operates on the view's dataset
+     * (loaded_frames/loaded_models/model_locations_) by reference; the view
+     * keeps ownership + the dialogs, view-model insertion, interactor.h
+     * global writes, and VTK wiring.*/
+    jta::SessionController session_controller_;
 
     /*Pull the current widget state into session_state_. Called wherever the
      * model/frame lists or their selection/current rows change.*/

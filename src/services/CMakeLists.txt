@@ -14,6 +14,7 @@ add_library(jtml_services STATIC
     location_storage.cpp
     model.cpp
     optimizer_settings.cpp
+    session_controller.cpp
     settings_service.cpp
     stl_reader.cpp
     STLReader.cpp
