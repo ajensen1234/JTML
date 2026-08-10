@@ -388,6 +388,9 @@ before any code moves.
 **Verification:**
 - Baseline commit recorded; headless suite + render smoke green at baseline; checklist
   template exists for later units.
+- Baseline recorded 2026-08-10: docs change `ypuqpnyt f63b5639`; headless suite 24/24
+  green; `ctest -L render`: `jtml.render_smoke` passed, `jtml.probe_vtk` failed as
+  expected (VTK-standalone limitation — baseline behavior, not a regression).
 
 ---
 
