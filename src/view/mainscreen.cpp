@@ -4551,6 +4551,12 @@ void MainScreen::LaunchOptimizer(QString directive) {
 
     /*If Didnt't Initialize Correctly DESTROY*/
     if (!initialized_correctly) {
+        /*R13-preserved quirk (plan 004 U7): the thread is started BEFORE the
+         * error box and early return, so a failed Initialize leaks BOTH
+         * optimizer_manager (never deleted) and optimizer_thread (started,
+         * never quit/waited; MainScreen's destructor has no cleanup for
+         * either). Behavior preserved deliberately; the fix is a separately
+         * gated deferred cut (plan "Deferred to Follow-Up Work").*/
         optimizer_thread->start();
         QMessageBox::critical(this, "Error!", error_mess, QMessageBox::Ok);
         return;
