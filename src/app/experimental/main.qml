@@ -1,28 +1,21 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
-import QtQuick.Window 2.15
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Window
 import QtQuick.Dialogs
+import "."  // qmldir: singleton Theme
 import jtml.experimental 1.0
 
-// 005 U2/U4: the jtml_experimental shell. All v1 surfaces (R17) are
-// allocated:
-//  - left column: study load buttons (U4 — three-action mirror of the
-//    widgets buttons: calibration → images → models) + the study lists
-//    (frame list over model list, direct-compiled FrameListModel/
-//    ModelListModel owned by StudyBridge) + the ML controls strip (U7);
-//  - center: the single main viewport — QmlVtkRenderer (QQuickVTKItem, U3)
-//    renders the models at pose over the fluoro background; a placeholder
-//    overlay covers it until a study loads (U4 pre-load shell state, R17);
-//    the small red badge shows the last applied pose of model 0 (debug
-//    readout only — the real pose table is U8).
-//  - right panel: settings area (U5) stacked over the pose-table area (U8);
-//  - bottom: progress bar + run placeholder (U6).
-// Functional, not polished (v1). AppBridge is the QML-exposed hub (counts +
-// placeholder signals); StudyBridge (U4) drives the study load + the
-// delegate-based selection contract (no QItemSelectionModel): frame list =
-// currentIndex, model list = multi-select set owned by the bridge (primary =
-// first selected).
+// 005 U2/U4/U5 shell — plan-005 feedback restructure (#5): the main screen
+// holds only the study lists + viewport + progress; optimizer settings and
+// the pose table live in button-opened Dialogs (nothing permanent on the
+// right edge). Interaction mode toggle (Camera/Model, #1/#4) sits in the
+// toolbar. Versionless QML imports (Qt 6 form — context7-verified).
+//
+// Surfaces (R17): left column = study lists (frame over model) + ML strip
+// (U7); center = the single QmlVtkRenderer viewport; bottom = progress (U6);
+// toolbar = load actions + interaction mode + dialog openers.
 
 Window {
     id: root
@@ -30,7 +23,9 @@ Window {
     width: 1280
     height: 800
     title: qsTr("JTML experimental (QML)")
-    color: "#14161a"
+    color: Theme.bg
+    Material.theme: Material.Dark
+    Material.accent: Theme.accent
 
     // ---- Study load + replace confirm + error dialogs (U4) ------------
     FileDialog {
@@ -41,16 +36,15 @@ Window {
     }
     FileDialog {
         id: imageFileDialog
-        title: qsTr("Load Image(s)")
+        title: qsTr("Load Images")
         nameFilters: [
             "Image Files (*.tif *.tiff *.TIF *.TIFF *.png *.PNG)",
             "All files (*)"
         ]
+        // OpenFiles = multi-select (Qt 6.7 verified via context7); a second
+        // image set is a new study: confirm, then replace the dataset.
         fileMode: FileDialog.OpenFiles
         onAccepted: {
-            // A second image set is a new study: confirm, then replace the
-            // dataset before loading (review fix; the widgets app appends —
-            // the experimental app deliberately replaces).
             if (studyBridge.frameCount > 0) {
                 replaceDialog.pendingPaths = selectedFiles
                 replaceDialog.open()
@@ -61,7 +55,7 @@ Window {
     }
     FileDialog {
         id: modelFileDialog
-        title: qsTr("Load Implant Model(s)")
+        title: qsTr("Load Implant Models")
         nameFilters: ["CAD File (*.stl *.STL)", "All files (*)"]
         fileMode: FileDialog.OpenFiles
         onAccepted: studyBridge.loadModels(selectedFiles)
@@ -71,7 +65,7 @@ Window {
         property var pendingPaths: []
         title: qsTr("Replace dataset?")
         modal: true
-        implicitWidth: 420  // break the contentItem implicitWidth loop
+        implicitWidth: 420
         standardButtons: Dialog.Yes | Dialog.No
         contentItem: Label {
             text: qsTr("Loading a new image set replaces the current dataset "
@@ -102,14 +96,50 @@ Window {
         messageDialog.open()
     }
 
-    // ---- Bridge → view glue (U4): scene signals drive the renderer's
-    // GUI-thread slots; dataset changes re-point the frame selection.
+    // ---- Optimizer settings + pose table live in Dialogs (#5) ----------
+    Dialog {
+        id: settingsDialog
+        title: qsTr("Optimizer Settings")
+        modal: false
+        width: 560
+        height: 680
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        contentItem: SettingsPanel {
+            width: settingsDialog.availableWidth
+            height: settingsDialog.availableHeight
+        }
+    }
+    Dialog {
+        id: poseDialog
+        title: qsTr("Poses")
+        modal: false
+        width: 560
+        height: 420
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        contentItem: ColumnLayout {
+            spacing: 6
+            Label {
+                text: qsTr("Pose table (U8)")
+                color: Theme.fgDim
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: Theme.surface
+                border.color: Theme.border
+                Label {
+                    anchors.centerIn: parent
+                    text: qsTr("pose rows (U8)")
+                    color: Theme.fgDim
+                }
+            }
+        }
+    }
+
+    // ---- Bridge → view glue (U4) ---------------------------------------
     Connections {
         target: studyBridge
         function onDatasetChanged() {
-            // The list models may be fresh instances (dataset replace):
-            // re-sync the frame highlight to the bridge's current frame.
-            // Deferred so the model bindings re-evaluate first.
             Qt.callLater(function() {
                 frameList.currentIndex = studyBridge.currentFrame
             })
@@ -132,16 +162,111 @@ Window {
         anchors.fill: parent
         spacing: 4
 
+        // ---- Toolbar: study actions + interaction mode + dialog openers
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            color: Theme.panel
+            radius: 4
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 6
+                spacing: 6
+
+                Button {
+                    text: qsTr("Calibration")
+                    enabled: !studyBridge.hasCalibration
+                    onClicked: calibrationFileDialog.open()
+                }
+                Button {
+                    text: qsTr("Images")
+                    onClicked: {
+                        if (!studyBridge.hasCalibration) {
+                            showMessage(qsTr("Error!"),
+                                        qsTr("Load Calibration First!"))
+                        } else {
+                            imageFileDialog.open()
+                        }
+                    }
+                }
+                Button {
+                    text: qsTr("Models")
+                    onClicked: {
+                        if (!studyBridge.hasCalibration) {
+                            showMessage(qsTr("Error!"),
+                                        qsTr("Load Calibration First!"))
+                        } else {
+                            modelFileDialog.open()
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    color: "transparent"
+                }
+
+                Label {
+                    text: studyBridge.hasCalibration
+                          ? (studyBridge.calibratedForBiplane
+                             ? qsTr("Calibrated (biplane)")
+                             : qsTr("Calibrated (monoplane)"))
+                          : qsTr("No calibration")
+                    color: studyBridge.hasCalibration ? Theme.ok : Theme.fgMuted
+                    font.pixelSize: 11
+                }
+
+                // Interaction mode (#1/#4): camera-centric (trackball camera,
+                // pivots at the primary model) vs model-centric (rotates the
+                // primary model about its center — the widgets app's
+                // trackball-actor mode).
+                Label {
+                    text: qsTr("Interact:")
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                ButtonGroup {
+                    id: interactGroup
+                    buttons: [cameraModeButton, modelModeButton]
+                }
+                Button {
+                    id: cameraModeButton
+                    text: qsTr("Camera")
+                    checkable: true
+                    checked: viewport.interactionMode === 0
+                    onClicked: viewport.setInteractionMode(0)
+                }
+                Button {
+                    id: modelModeButton
+                    text: qsTr("Model")
+                    checkable: true
+                    checked: viewport.interactionMode === 1
+                    onClicked: viewport.setInteractionMode(1)
+                }
+
+                Button {
+                    text: qsTr("Optimizer Settings…")
+                    onClicked: settingsDialog.open()
+                }
+                Button {
+                    text: qsTr("Poses…")
+                    onClicked: poseDialog.open()
+                }
+            }
+        }
+
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 4
 
-            // ---- Left column: load buttons + study lists + ML strip -----
+            // ---- Left column: study lists + ML strip -------------------
             Rectangle {
                 Layout.preferredWidth: 240
                 Layout.fillHeight: true
-                color: "#1b1e24"
+                color: Theme.panel
                 radius: 4
 
                 ColumnLayout {
@@ -149,59 +274,11 @@ Window {
                     anchors.margins: 6
                     spacing: 6
 
-                    // Study load (U4): three-action mirror of the widgets
-                    // buttons. Load Calibration is one-use (disabled once
-                    // calibrated, widgets parity); Load Images / Load Models
-                    // guard on calibration with the widgets "Load Calibration
-                    // First!" prompt.
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Button {
-                            text: qsTr("Calibration")
-                            enabled: !studyBridge.hasCalibration
-                            onClicked: calibrationFileDialog.open()
-                        }
-                        Button {
-                            text: qsTr("Images")
-                            Layout.fillWidth: true
-                            onClicked: {
-                                if (!studyBridge.hasCalibration) {
-                                    showMessage(qsTr("Error!"),
-                                                qsTr("Load Calibration First!"))
-                                } else {
-                                    imageFileDialog.open()
-                                }
-                            }
-                        }
-                        Button {
-                            text: qsTr("Models")
-                            Layout.fillWidth: true
-                            onClicked: {
-                                if (!studyBridge.hasCalibration) {
-                                    showMessage(qsTr("Error!"),
-                                                qsTr("Load Calibration First!"))
-                                } else {
-                                    modelFileDialog.open()
-                                }
-                            }
-                        }
-                    }
-                    Label {
-                        text: studyBridge.hasCalibration
-                              ? (studyBridge.calibratedForBiplane
-                                 ? qsTr("Calibrated (biplane)")
-                                 : qsTr("Calibrated (monoplane)"))
-                              : qsTr("No calibration")
-                        color: studyBridge.hasCalibration ? "#5a8a5f" : "#8b929c"
-                        font.pixelSize: 11
-                    }
-
                     // Frame list (delegate selection contract: currentIndex
                     // drives the bridge — no QItemSelectionModel).
                     Label {
                         text: qsTr("Frames (%1)").arg(appBridge.frameCount)
-                        color: "#cfd3da"
+                        color: Theme.fg
                         font.bold: true
                     }
                     ListView {
@@ -214,12 +291,12 @@ Window {
                             width: frameList.width
                             height: 22
                             color: frameList.currentIndex === index
-                                   ? "#2a3f5f" : "transparent"
+                                   ? Theme.selection : "transparent"
                             Text {
                                 anchors.fill: parent
                                 anchors.leftMargin: 4
                                 verticalAlignment: Text.AlignVCenter
-                                color: "#cfd3da"
+                                color: Theme.fg
                                 text: model.display
                                 elide: Text.ElideRight
                             }
@@ -234,12 +311,10 @@ Window {
                         highlightFollowsCurrentItem: true
                     }
 
-                    // Model list (multi-select via the bridge-owned set —
-                    // toggle on click; the delegate highlight follows
-                    // studyBridge.selectedModels).
+                    // Model list (multi-select via the bridge-owned set).
                     Label {
                         text: qsTr("Models (%1)").arg(appBridge.modelCount)
-                        color: "#cfd3da"
+                        color: Theme.fg
                         font.bold: true
                     }
                     ListView {
@@ -252,12 +327,12 @@ Window {
                             width: modelList.width
                             height: 22
                             color: studyBridge.selectedModels.indexOf(index) !== -1
-                                   ? "#2a3f5f" : "transparent"
+                                   ? Theme.selection : "transparent"
                             Text {
                                 anchors.fill: parent
                                 anchors.leftMargin: 4
                                 verticalAlignment: Text.AlignVCenter
-                                color: "#cfd3da"
+                                color: Theme.fg
                                 text: model.display
                                 elide: Text.ElideRight
                             }
@@ -273,7 +348,7 @@ Window {
                                     .arg(studyBridge.selectedModelCount)
                                     .arg(studyBridge.primaryModelIndex)
                               : qsTr("No model selected")
-                        color: "#8b929c"
+                        color: Theme.fgMuted
                         font.pixelSize: 11
                     }
 
@@ -288,19 +363,13 @@ Window {
                     }
                     Label {
                         text: qsTr("ML path (U7)")
-                        color: "#6b7280"
+                        color: Theme.fgDim
                         font.pixelSize: 11
                     }
                 }
             }
 
-            // ---- Center: the single main viewport -----------------------
-            // U3: QmlVtkRenderer drives the app-owned ExperimentalScene via
-            // its GUI-thread slots (dispatch_async to the Qt Quick render
-            // thread). U4: StudyBridge populates the scene (background =
-            // current frame's original image, models at stored poses) and
-            // signals the renderer slots through the Connections above; the
-            // readout badge mirrors the last applied pose of model 0.
+            // ---- Center: the single main viewport ----------------------
             QmlVtkRenderer {
                 id: viewport
                 Layout.fillWidth: true
@@ -311,7 +380,7 @@ Window {
                 Rectangle {
                     visible: appBridge.frameCount === 0
                     anchors.fill: parent
-                    color: "#101216"
+                    color: Theme.surface
                     Label {
                         anchors.centerIn: parent
                         width: parent.width - 40
@@ -319,17 +388,19 @@ Window {
                         wrapMode: Text.Wrap
                         text: qsTr("No study loaded — load a calibration, "
                                    + "then images and models.")
-                        color: "#6b7280"
+                        color: Theme.fgDim
                     }
                 }
 
+                // Debug readout (U3): last applied pose of model 0. The real
+                // pose table lives in the Poses dialog (U8).
                 Rectangle {
                     visible: viewport.poseReadout.length > 0
                     z: 1
                     width: 260
                     height: 18
                     radius: 3
-                    color: "#c0392b"
+                    color: Theme.badge
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.margins: 6
@@ -345,57 +416,13 @@ Window {
                     }
                 }
             }
-
-            // ---- Right panel: settings over pose table ------------------
-            Rectangle {
-                Layout.preferredWidth: 300
-                Layout.fillHeight: true
-                color: "#1b1e24"
-                radius: 4
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    spacing: 6
-
-                    // Settings area (U5): the experiment knobs — per-stage
-                    // ranges/budgets/dilation backed by OptimizerSettings +
-                    // settings_constants.h, cost-variant combo per stage via
-                    // CostFunctionManager, explicit save via SettingsService
-                    // (session-local edits; Reset restores the defaults).
-                    SettingsPanel {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                    }
-
-                    // Pose-table area placeholder (U8): editable per-frame
-                    // pose rows over LocationStorage + pose_file_io +
-                    // pose_copy, disabled during an optimizer run.
-                    Label {
-                        text: qsTr("Pose table (U8)")
-                        color: "#cfd3da"
-                        font.bold: true
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 120
-                        color: "#14161a"
-                        border.color: "#2a2f38"
-                        Label {
-                            anchors.centerIn: parent
-                            text: qsTr("pose rows (U8)")
-                            color: "#6b7280"
-                        }
-                    }
-                }
-            }
         }
 
         // ---- Bottom: progress bar + run placeholder ---------------------
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
-            color: "#1b1e24"
+            color: Theme.panel
             radius: 4
 
             RowLayout {
@@ -403,15 +430,10 @@ Window {
                 anchors.margins: 6
                 spacing: 8
 
-                // Run placeholder (U6 wires the optimizer; R17: run controls
-                // stay disabled until a dataset loads — the placeholder is
-                // disabled regardless).
                 Button {
                     text: qsTr("Run (U6)")
                     enabled: false
                 }
-                // Progress placeholder (U6): stage / calls / current min /
-                // pose updates from the OptimizerManager signal binds.
                 ProgressBar {
                     id: progress
                     Layout.fillWidth: true
@@ -421,7 +443,7 @@ Window {
                 }
                 Label {
                     text: qsTr("Progress (U6)")
-                    color: "#6b7280"
+                    color: Theme.fgDim
                     font.pixelSize: 11
                 }
             }

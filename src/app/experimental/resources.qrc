@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>SettingsPanel.qml</file>
+        <file>Theme.qml</file>
+        <file>qmldir</file>
     </qresource>
 </RCC>

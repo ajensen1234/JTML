@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
 
 // 005 U5: SettingsPanel — the experiment knobs (R4, R5, R10, R17).
 // A scrollable form over the SettingsBridge session-local editor state:

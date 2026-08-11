@@ -55,7 +55,19 @@ class QmlVtkRenderer : public QQuickVTKItem {
     // the GUI thread in the update slots (main.qml binds a small readout).
     Q_PROPERTY(QString poseReadout READ poseReadout NOTIFY sceneChanged)
 
+    // Interaction mode (plan 005 feedback): CameraMode = trackball camera
+    // (rotates the camera about the focal point, which we pin at the primary
+    // model so the view pivots around the model); ModelMode = rotate the
+    // primary model about its own center (the widgets app's trackball-actor
+    // mode, without the picking dependency — the primary model is rotated
+    // directly, sidestepping the QQuickVTKItem pick-position bug tail).
+    Q_PROPERTY(int interactionMode READ interactionMode WRITE setInteractionMode
+                   NOTIFY interactionModeChanged)
+
 public:
+    enum InteractionMode { CameraMode = 0, ModelMode = 1 };
+    Q_ENUM(InteractionMode)
+
     explicit QmlVtkRenderer(QQuickItem* parent = nullptr);
 
     // --- Render-thread contract (see file comment) ----------------------
@@ -80,10 +92,17 @@ public:
     Q_INVOKABLE void updateModels();
     Q_INVOKABLE void updateCamera();
 
+    // Interaction mode switch (CameraMode / ModelMode). Applied on the
+    // render thread via dispatch_async (the interactor is render-thread
+    // owned — created by QQuickVTKItem's own initializeVTK wrapper).
+    Q_INVOKABLE void setInteractionMode(int mode);
+    int interactionMode() const;
+
     QString poseReadout() const;
 
 signals:
     void sceneChanged();
+    void interactionModeChanged();
 
 private:
     void copySceneMirror();
@@ -95,4 +114,5 @@ private:
     ExperimentalScene scene_mirror_;
     ExperimentalScene* bound_scene_ = nullptr;
     QString pose_readout_;
+    int interaction_mode_ = CameraMode;
 };

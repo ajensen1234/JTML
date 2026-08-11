@@ -14,14 +14,18 @@
 
 // VTK
 #include <vtkActor.h>
+#include <vtkCallbackCommand.h>  // complete type for GrabFocus (EventCallbackCommand is vtkCallbackCommand*)
 #include <vtkCamera.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
 #include <vtkImageImport.h>
+#include <vtkInteractorStyleTrackballActor.h>
+#include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkNew.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkSTLReader.h>
 
@@ -33,6 +37,49 @@
 #include "services/model.h"
 
 namespace {
+
+// Model-centric interaction (plan 005 feedback): a trackball-actor style
+// whose picked actor IS the primary model — no hardware picking (the
+// QQuickVTKItem pick-position bug tail: devicePixelRatio is never set on
+// the QVTKInteractorAdapter in the pinned 9.3 integration, so pick
+// positions can mis-locate). The widgets app's trackball-actor mode
+// rotates the picked actor about its center; here the primary model is the
+// implicit pick (FindPickedActor is non-virtual in VTK 9.3, so
+// OnLeftButtonDown is overridden to mimic the base's successful-pick path).
+class PrimaryModelStyle : public vtkInteractorStyleTrackballActor {
+public:
+    static PrimaryModelStyle* New();
+    vtkTypeMacro(PrimaryModelStyle, vtkInteractorStyleTrackballActor);
+
+    void SetPrimaryActor(vtkActor* actor) { primary_actor_ = actor; }
+
+protected:
+    void OnLeftButtonDown() override {
+        if (!primary_actor_) {
+            return;
+        }
+        this->FindPokedRenderer(
+            this->Interactor->GetEventPosition()[0],
+            this->Interactor->GetEventPosition()[1]);
+        this->InteractionProp = primary_actor_;  // the implicit pick
+        if (this->CurrentRenderer == nullptr) {
+            return;
+        }
+        this->GrabFocus(this->EventCallbackCommand);
+        if (this->Interactor->GetShiftKey()) {
+            this->StartPan();
+        } else if (this->Interactor->GetControlKey()) {
+            this->StartSpin();
+        } else {
+            this->StartRotate();
+        }
+    }
+
+private:
+    vtkActor* primary_actor_ = nullptr;
+};
+
+vtkStandardNewMacro(PrimaryModelStyle);
 
 // The vtkUserData returned by initializeVTK: owns every VTK object in the
 // pipeline, all of it render-thread-only. The QML SceneGraph can delete the
@@ -66,6 +113,12 @@ struct QmlVtkData : vtkObject {
         vtkSmartPointer<vtkActor> actor;
     };
     std::vector<ModelActor> models;
+
+    // Interactor styles (plan 005 feedback): camera-centric trackball
+    // (QQuickVTKItem's default) and model-centric (rotates the primary
+    // model). Swapped by setInteractionMode on the render thread.
+    vtkNew<vtkInteractorStyleTrackballCamera> cameraStyle;
+    vtkSmartPointer<PrimaryModelStyle> modelStyle;
 };
 
 vtkStandardNewMacro(QmlVtkData);
@@ -134,6 +187,16 @@ void ApplyCameraParams(
         0.1 * focalLengthPx, 1.75 * focalLengthPx);
 }
 
+// Camera-centric rotation pivots at the scene camera's focal point — pin it
+// at the PRIMARY model so the view rotates around the model (the widgets
+// app's camera mode uses a near-origin focal; the plan-005 feedback made
+// the off-model pivot explicit: rotate about the model).
+void ApplyCameraFocus(QmlVtkData* data, const std::vector<SceneModel>& models) {
+    const double z =
+        models.empty() ? -1.0 : models[0].pose.z;
+    data->sceneRenderer->GetActiveCamera()->SetFocalPoint(0, 0, z);
+}
+
 // Viewer::load_3d_models_into_actor_and_mapper_list mirror: rebuild the
 // model actor list from the scene descriptors (STL path + pose). Called
 // from initializeVTK and from the updateModels dispatch body — both on the
@@ -163,6 +226,12 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
         ma.actor->PickableOff();
         data->sceneRenderer->AddActor(ma.actor);
         data->models.push_back(std::move(ma));
+    }
+    // Keep the model-centric style's implicit pick in sync (harmless in
+    // camera mode).
+    if (data->modelStyle) {
+        data->modelStyle->SetPrimaryActor(
+            data->models.empty() ? nullptr : data->models[0].actor);
     }
 }
 
@@ -202,6 +271,22 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     ApplyCameraPlacement(
         data, scene_mirror_.backgroundImage(), scene_mirror_.focalLengthPx());
     RebuildModels(data, scene_mirror_.models());
+    ApplyCameraFocus(data, scene_mirror_.models());
+
+    // Interactor styles (plan 005 feedback): QQuickVTKItem's own wrapper
+    // created the QVTKInteractor + a default trackball-camera style before
+    // this override ran — swap in our two styles and apply the current
+    // mode (RebuildModels above already re-pointed the model style's
+    // implicit pick).
+    data->modelStyle = vtkSmartPointer<PrimaryModelStyle>::New();
+    vtkRenderWindowInteractor* iren = renderWindow->GetInteractor();
+    if (iren) {
+        iren->SetInteractorStyle(
+            interaction_mode_ == ModelMode
+                ? static_cast<vtkInteractorStyle*>(
+                      data->modelStyle.Get())
+                : static_cast<vtkInteractorStyle*>(data->cameraStyle.Get()));
+    }
 
     return data;
 }
@@ -252,6 +337,7 @@ void QmlVtkRenderer::applyScene() {
             ApplyCameraPlacement(data, bg, focal);
             ApplyCameraParams(data, viewAngle, focal);
             RebuildModels(data, models);
+            ApplyCameraFocus(data, models);
             renderWindow->Render();
         });
 }
@@ -298,6 +384,11 @@ void QmlVtkRenderer::updatePose(int modelIndex) {
             vtkActor* actor = data->models[static_cast<size_t>(modelIndex)].actor;
             actor->SetPosition(pose.x, pose.y, pose.z);
             actor->SetOrientation(pose.xa, pose.ya, pose.za);
+            // The rotation pivot follows the primary model (camera mode).
+            if (modelIndex == 0) {
+                data->sceneRenderer->GetActiveCamera()->SetFocalPoint(
+                    0, 0, pose.z);
+            }
             renderWindow->Render();
         });
 }
@@ -316,8 +407,41 @@ void QmlVtkRenderer::updateModels() {
                 return;
             }
             RebuildModels(data, models);
+            ApplyCameraFocus(data, models);
             renderWindow->Render();
         });
+}
+
+void QmlVtkRenderer::setInteractionMode(int mode) {
+    const int clamped =
+        (mode == ModelMode) ? ModelMode : CameraMode;
+    if (clamped == interaction_mode_) {
+        return;
+    }
+    interaction_mode_ = clamped;
+    emit interactionModeChanged();
+    dispatch_async(
+        [clamped](vtkRenderWindow* renderWindow, vtkUserData userData) {
+            auto* data = QmlVtkData::SafeDownCast(userData);
+            if (!data) {
+                return;
+            }
+            vtkRenderWindowInteractor* iren = renderWindow->GetInteractor();
+            if (!iren) {
+                return;
+            }
+            iren->SetInteractorStyle(
+                clamped == ModelMode
+                    ? static_cast<vtkInteractorStyle*>(
+                          data->modelStyle.Get())
+                    : static_cast<vtkInteractorStyle*>(
+                          data->cameraStyle.Get()));
+            renderWindow->Render();
+        });
+}
+
+int QmlVtkRenderer::interactionMode() const {
+    return interaction_mode_;
 }
 
 void QmlVtkRenderer::updateCamera() {

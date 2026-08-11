@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
+import QtQuick
+import QtQuick.Window
 import jtml.experimental 1.0
 
 // 005 U3: the QML render smoke scene — one QmlVtkRenderer filling the
