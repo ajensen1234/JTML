@@ -388,6 +388,53 @@ TEST_CASE("ml_bridge: a stale-frame seed never overrides another frame",
     REQUIRE(f.session()->model_locations.GetPose(0, 0).x != Approx(1.0));
 }
 
+TEST_CASE("ml_bridge: a failed segment aborts the estimate (P2-3)",
+          "[ml_bridge]") {
+    /*Review fix P2-3: the estimate segments FIRST; a segment failure must
+     * abort the estimate BEFORE the estimate-model load — the regression
+     * would otherwise run on the stale inverted image (saving a bogus
+     * pose + seeding the optimizer) and overwrite the 'Segmentation
+     * failed.' status. Headless-reachable failure leg: the torch load of
+     * a bogus .pt path (the throw/empty-result legs are pinned at the
+     * orchestrator level in ml_orchestrator_test.cpp). Observable pins:
+     * ONE message (the segment load error, no second estimate-model
+     * message), the segment-failure status SURVIVES, no estimate display,
+     * no estimateChanged emission, no seed set on the optimizer.*/
+    MlFixture f;
+    f.loadWithSelection();
+    f.ml()->setSegmentFemPt(QStringLiteral("/nonexistent/seg_fem.pt"));
+    f.ml()->setEstimatePt(QStringLiteral("/nonexistent/est_fem.pt"));
+    int estimate_changed = 0;
+    QObject::connect(
+        f.ml(), &MlBridge::estimateChanged,
+        [&estimate_changed]() { ++estimate_changed; });
+
+    f.ml()->estimateCurrentFrame();
+
+    /*Only the segment failure surfaced (the OLD flow continued into the
+     * estimate-model load and emitted a second message + overwrote the
+     * status).*/
+    REQUIRE(f.messages.titles.size() == 1);
+    REQUIRE(
+        f.messages.texts.front() ==
+        QStringLiteral("Cannot load PyTorch Torch Script model at: "
+                       "/nonexistent/seg_fem.pt"));
+    REQUIRE(
+        f.ml()->statusText() ==
+        QStringLiteral("Segmentation model failed to load."));
+    REQUIRE(!f.ml()->hasEstimate());
+    REQUIRE(f.ml()->estimateText().isEmpty());
+    REQUIRE(estimate_changed == 0);
+    /*The pending optimizer seed stays unset (the estimate never
+     * completed): applySeedPose is a no-op and the storage pose is
+     * untouched.*/
+    const Point6D pose_before = f.session()->model_locations.GetPose(0, 0);
+    f.optimizer()->applySeedPose();
+    const Point6D pose_after = f.session()->model_locations.GetPose(0, 0);
+    REQUIRE(pose_after.x == Approx(pose_before.x));
+    REQUIRE(pose_after.za == Approx(pose_before.za));
+}
+
 TEST_CASE("ml_bridge: clearEstimate is a safe no-op without an estimate",
           "[ml_bridge]") {
     /*The stale-display cleanup (selection-change slot + QML button): with

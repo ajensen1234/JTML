@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "id": "11efc798-be17-4015-afef-9272439700e3",
+  "title": "You are a specialist document reviewer:",
+  "objective": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-coherence-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (coherence):\nCheck internal consistency: contradictions between sections, terminology drift, structural issues, ambiguity where readers would diverge. Does the plan contradict itself anywhere (unit dependencies vs the dependency graph, decision table vs units, scope boundaries vs unit file lists)?",
+  "status": "completed",
+  "createdAt": "2026-08-12T13:38:14.461Z",
+  "updatedAt": "2026-08-12T13:46:48.141Z",
+  "runs": [
+    {
+      "runId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "status": "complete",
+      "startedAt": "2026-08-12T13:38:14.464Z",
+      "completedAt": "2026-08-12T13:46:48.141Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "coherence",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.511Z",
+      "updatedAt": "2026-08-12T13:46:26.982Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/b608c94e/run-0/session.jsonl"
+      ],
+      "runId": "b608c94e",
+      "agent": "ce-coherence-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-coherence-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (coherence):\nCheck internal consistency: contradictions between sections, terminology drift, structural issues, ambiguity where readers would diverge. Does the plan contradict itself anywhere (unit dependencies vs the dependency graph, decision table vs units, scope boundaries vs unit file lists)?",
+      "completedAt": "2026-08-12T13:46:26.981Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/b608c94e/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:46:26.982Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "feasibility",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.579Z",
+      "updatedAt": "2026-08-12T13:45:40.475Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/0dea37a5/run-0/session.jsonl"
+      ],
+      "runId": "0dea37a5",
+      "agent": "ce-feasibility-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-feasibility-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (feasibility):\nWill the technical approach survive contact with reality? Check architecture conflicts, dependency gaps, migration risks, implementability. Key questions: is the QuickTest-offscreen-qrc approach sound for Qt 6.7? Are the bridge additive changes truly additive vs the pinned bridge tests and qml_parity_check? Is the U3 empirical-verification-first stance workable? Any unit that cannot be completed as written?",
+      "completedAt": "2026-08-12T13:45:40.475Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/0dea37a5/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:45:40.475Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "scope",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.613Z",
+      "updatedAt": "2026-08-12T13:41:07.374Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/963c25ca/run-0/session.jsonl"
+      ],
+      "runId": "963c25ca",
+      "agent": "ce-scope-guardian-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-scope-guardian-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (scope):\nScope alignment: 8 units + 12 decisions + 9 requirements. Does the plan exceed the owner mandate (experimental app only, breaking changes allowed there, historical code untouched)? Are the deferred items correctly placed? Does every unit map to a requirement? Unjustified complexity or scope creep anywhere?",
+      "completedAt": "2026-08-12T13:41:07.374Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/963c25ca/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:41:07.374Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "design",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.645Z",
+      "updatedAt": "2026-08-12T13:41:45.397Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/033b86b4/run-0/session.jsonl"
+      ],
+      "runId": "033b86b4",
+      "agent": "ce-design-lens-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-design-lens-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (design):\nUI/UX design decisions: typography scale plan (TypeScale, base 16 vs dense data tool), keyboard navigation contract, accessibility roles, contrast targets, the run-lock matrix UX, dialog patterns, hit targets. Are the design decisions in the plan complete and coherent for a dark-theme dense desktop medical tool at DPR 2? Missing interaction states or user flows?",
+      "completedAt": "2026-08-12T13:41:45.397Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/033b86b4/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:41:45.397Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "adversarial",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.679Z",
+      "updatedAt": "2026-08-12T13:46:48.072Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/5bdcfc8e/run-0/session.jsonl"
+      ],
+      "runId": "5bdcfc8e",
+      "agent": "ce-adversarial-document-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-adversarial-document-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (adversarial):\nStress-test the decisions: challenge premises (is the whole pass worth it vs the widgets app? does D2 commit contract actually hold under ListView recycling? is D4 seed invalidation correct vs plan-006 stale-seed guard? does the U2 extraction wiring contract survive the 5-Connections/3-region-viewport reality? are the test pins in U6 genuinely headless-verifiable?), surface unstated assumptions, construct failure scenarios.",
+      "completedAt": "2026-08-12T13:46:48.072Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/5bdcfc8e/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:46:48.072Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "c9a530c1-b9e0-48cf-83a4-3f862de8f91a",
+      "key": "product",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:38:14.715Z",
+      "updatedAt": "2026-08-12T13:41:29.492Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/e4f1ca3b/run-0/session.jsonl"
+      ],
+      "runId": "e4f1ca3b",
+      "agent": "ce-product-lens-reviewer",
+      "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-product-lens-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (product):\nStrategic lens for a solo-researcher dev tool: is improving the experimental QML front-end the right investment vs algorithm work (panoptes synthesis items) or the widgets app? Are the prioritization decisions (torch freeze deferred, shell dirty indicator deferred, no qt_add_qml_module) sensible? Does the plan over- or under-commit relative to the owner framing (free sandbox, polish pass)?",
+      "completedAt": "2026-08-12T13:41:29.492Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/e4f1ca3b/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:41:29.492Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/c9a530c1-b9e0-48cf-83a4-3f862de8f91a/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/c9a530c1-b9e0-48cf-83a4-3f862de8f91a/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/b608c94e/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/0dea37a5/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/963c25ca/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/033b86b4/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/5bdcfc8e/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/e4f1ca3b/run-0/session.jsonl"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 6 child run(s). Return: {\n  \"coherence\": \"All verification complete. I've read the full plan, cross-checked every internal reference, and verified the plan's file/line claims against the working tree (`main.qml`, `SettingsPanel.qml`, `PoseCell.qml`, `Theme.qml`, `pixi.toml`, `test/CMakeLists.txt`, plans 005/006). Key verified facts: the document cites \\\"R11\\\" and \\\"U9\\\" which don't exist in this plan; the dependency graph omits U2→U5 and U2→U6 edges that both units' Dependencies fields and the graph rationale require; the \\\"5 glue blocks (main.qml:417-461)\\\" / \\\"4 glue blocks + ML strip\\\" inventory is stale (actual: 6 `Connections` blocks at lines 419-525, all referencing the viewport; the ML strip at 721-860 never references it); and U7 references a \\\"U5's report\\\" and a \\\"pre-U5 baseline\\\" that cannot exist (U5 produces no report; U7 runs after U5).\\n\\n```json\\n{\\n  \\\"reviewer\\\": \\\"ce-coherence-reviewer\\\",\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"U2 cites undefined requirement R11\\\",\\n      \\\"severity\\ Trace: 12 event(s)."
+}

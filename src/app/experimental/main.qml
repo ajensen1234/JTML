@@ -452,6 +452,19 @@ Window {
         }
     }
 
+    // Which model the interactor moves (owner feedback 2026-08-11): the
+    // model-centric mode follows the session's PRIMARY selection — select
+    // a model row and that model becomes the one you can drag. Also keeps
+    // the camera-mode pivot on the selected model. Fires on load (the
+    // sync tail emits selectionChanged after populate) and on every
+    // selection toggle.
+    Connections {
+        target: studyBridge
+        function onSelectionChanged() {
+            viewport.setActiveModel(studyBridge.primaryModelIndex)
+        }
+    }
+
     // ---- Bridge → view glue (U6) ---------------------------------------
     // Optimizer run: the bridge already wrote the scene poses; the glue
     // forwards the pose relays to the renderer's GUI-thread slots, and the

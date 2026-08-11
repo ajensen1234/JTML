@@ -33,6 +33,17 @@ MlSegmentStatus MlOrchestrator::SegmentFrame(
         return MlSegmentStatus::SegmentFailed;
     }
 
+    /*Empty-result guard (owner feedback 2026-08-11): a segmentation that
+     * produced NO contours must not run the post-processing tail — the
+     * GPU curvature heatmaps only exist when the ML contours exist, and
+     * edge/dilation/distance on an empty Mat is garbage-in-garbage-out.
+     * The Frame methods are additionally self-guarded (setCurvatureHeatmaps
+     * no-ops on an empty inverted image), so this is the semantic gate,
+     * not the only crash fence.*/
+    if (segmented.empty()) {
+        return MlSegmentStatus::SegmentFailed;
+    }
+
     /*The per-frame tail (segmentHelperFunction / runSegmentOnCurrentFrame
      * verbatim): the segmented result replaces the inverted image, then
      * the Frame post-processing. The widgets mono path + the QML bridge run

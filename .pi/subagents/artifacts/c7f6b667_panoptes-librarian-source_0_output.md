@@ -1,0 +1,15 @@
+The Round 2 section was appended successfully to `angles/05-compute-perf.org` (confirmed saved; angle now marked done).
+
+## Summary of work
+
+**Deliverable:** Appended a `## Round 2` section to `angles/05-compute-perf.org` converting round 1's structural claims into measured, ordered cut recipes — every claim re-verified against source at exact file:line before writing.
+
+**What was verified fresh this round (source-reading, not round-1 reuse):**
+- Zero `cudaEvent`/`cudaStreamCreate`/`cudaMemcpyAsync`/`nvtx` anywhere in `src/` (grep-confirmed) — Cut 1's "3 terminal copies → async" is a genuinely green-field change.
+- **New finding (R2-1, severity medium-high):** the ms/call meter has a 1000× unit error on Linux — no `CLOCKS_PER_SEC` division exists in `src/`, glibc `clock()` returns µs, the value is labeled ms/call, and the UI's "Iterations Per Second" (`mainscreen.cpp:4654-4655`) and ETA (`:4598/:4659`) are off by that factor on top of the CPU-time blind spot.
+- **New finding (R2-2):** there are *two* meter sites (`optimizer_manager.cpp:1197-1203` and `:1272-1279`, the dispatch's `:1274-1281`), and the QML bridge relays no speed property at all — `MainScreen::onUpdateDisplay` is the only consumer.
+- **New finding (R2-3):** Cut 3's fixed-grid arithmetic is now exact — stride-prefix capacity caps fragment fill at 2.55e9 (`render_engine.cu:795-800`), and both fill kernels guard their *entire* body (incl. shared-mem load + `__syncthreads`, `:628-641`) behind `i < total`, so the clamp is a host-side grid change with **no kernel-source modification**; the tail-fallback is mandatory (analytic worst case 1.3e10 > capacity).
+- **R2-4:** Cut 2's double-buffer ownership pinned: `RenderEngine::renderer_output_` (GPUImage ctor, `gpu_image.cu:13-40`), `GPUMetrics` score buffers (`gpu_metrics.cu:7-65`), manager constructs GPUMetrics at `:818` — matching angle 04's R2-4 contract (compute owns state, manager owns graph, one optional batch `std::function` sibling).
+- **R2-5 correction:** `costFunctionDIRECT_DILATION` spans `DIRECT_DILATION.cpp:58-107` (round 1 said :67-106); nvtx3 must not enter jtml_domain (layer purity `direct_optimizer.h:11-13`), so the per-iteration range lives in the coordinator's iteration callback.
+
+**Cut specs delivered (all in the appended section):** Cut 0 instrumentation protocol (nvtx3 placement table with file:line, cudaEvent placements, nsys/ncu recipes, 8-item first-run record replacing the 20-60 evals/s estimate); Cut 1 (3 async terminal copies, one event wait, bit-identity argument, `:713` deletion, biplane freebie); Cut 2 (batch seam, buffer/allocator spec, enqueue-before-wait, headless Tier-0 determinism test); Cut 3 (two-condition trigger, clamp design, safe fallback); Cut 4 (steady_clock wall + cudaEvent GPU time, unit fix, UI read path); per-cut gate protocol (a–d) with the revert rule.

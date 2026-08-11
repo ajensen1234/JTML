@@ -272,8 +272,13 @@ void MlBridge::estimateCurrentFrame() {
     }
 
     /*Segment the current frame first (the widgets estimate-slot flow:
-     * on_actionSegment_*_triggered() before the pose regression).*/
-    runSegmentOnCurrentFrame();
+     * on_actionSegment_*_triggered() before the pose regression). A failed
+     * segment ABORTS the estimate — the regression would otherwise run on
+     * the stale inverted image and overwrite the segment-failure status
+     * (review fix P2-3).*/
+    if (!runSegmentOnCurrentFrame()) {
+        return;
+    }
 
     const int frame = study_bridge_->currentFrame();
     const QString est_path = estimate_pt_;
@@ -488,7 +493,7 @@ bool MlBridge::guardStudyReady() {
     return true;
 }
 
-void MlBridge::runSegmentOnCurrentFrame() {
+bool MlBridge::runSegmentOnCurrentFrame() {
     const int frame = study_bridge_->currentFrame();
     const QString pt_path = activeSegmentModelPath();
 
@@ -503,7 +508,7 @@ void MlBridge::runSegmentOnCurrentFrame() {
             QStringLiteral("Cannot load PyTorch Torch Script model at: ") +
                 pt_path);
         setStatus(QStringLiteral("Segmentation model failed to load."));
-        return;
+        return false;
     }
     torch::jit::Module* model = &module;
 
@@ -541,7 +546,7 @@ void MlBridge::runSegmentOnCurrentFrame() {
             QStringLiteral("Error!"),
             QStringLiteral("Segmentation failed."));
         setStatus(QStringLiteral("Segmentation failed."));
-        return;
+        return false;
     }
 
     /*The segmented view: the frame's inverted image now holds the
@@ -550,6 +555,7 @@ void MlBridge::runSegmentOnCurrentFrame() {
     setBackgroundMode(1);  // BackgroundMode::Inverted
     emit sceneBackgroundChanged();
     setStatus(QStringLiteral("Segmented frame %1.").arg(frame));
+    return true;
 }
 
 void MlBridge::setStatus(const QString& text) {

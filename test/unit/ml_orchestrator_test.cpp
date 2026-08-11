@@ -173,6 +173,29 @@ TEST_CASE("ml_orchestrator: segment failure — status surfaced, frame "
     REQUIRE(frame.GetAperture() == aperture_before);
 }
 
+TEST_CASE("ml_orchestrator: segment empty result — no tail, status "
+          "surfaced",
+          "[ml_orchestrator]") {
+    /*Owner feedback 2026-08-11: a segmentation that produced NO contours
+     * (empty Mat) must not run the post-processing tail — the GPU
+     * curvature heatmaps only exist when the ML contours exist. Status
+     * surfaced, frame untouched (no inverted copy, no edge re-run).*/
+    jta::MlOrchestrator orch;
+    Frame frame = MakeFrame();
+    const cv::Mat inverted_before = frame.GetInvertedImage();
+    const cv::Mat edge_before = frame.GetEdgeImage();
+
+    const jta::MlSegmentStatus status = orch.SegmentFrame(
+        frame,
+        /*aperture=*/5, /*low=*/40, /*high=*/120, /*dilation=*/2,
+        /*full_postprocessing=*/true,
+        [](const cv::Mat&) -> cv::Mat { return cv::Mat(); });
+
+    REQUIRE(status == jta::MlSegmentStatus::SegmentFailed);
+    REQUIRE(MatsEqual(frame.GetInvertedImage(), inverted_before));
+    REQUIRE(MatsEqual(frame.GetEdgeImage(), edge_before));
+}
+
 TEST_CASE("ml_orchestrator: estimate happy path — op input, save once, seed "
           "returned",
           "[ml_orchestrator]") {

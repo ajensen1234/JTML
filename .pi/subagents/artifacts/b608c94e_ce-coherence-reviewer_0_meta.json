@@ -1,0 +1,173 @@
+{
+  "runId": "b608c94e",
+  "agent": "ce-coherence-reviewer",
+  "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-coherence-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (coherence):\nCheck internal consistency: contradictions between sections, terminology drift, structural issues, ambiguity where readers would diverge. Does the plan contradict itself anywhere (unit dependencies vs the dependency graph, decision table vs units, scope boundaries vs unit file lists)?",
+  "exitCode": 0,
+  "usage": {
+    "input": 44301,
+    "output": 59985,
+    "cacheRead": 1038976,
+    "cacheWrite": 0,
+    "cost": 0.0129535364,
+    "turns": 16
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 44301,
+        "output": 59985,
+        "cacheRead": 1038976,
+        "cacheWrite": 0,
+        "cost": 0.0129535364,
+        "turns": 16
+      }
+    }
+  ],
+  "durationMs": 492406,
+  "toolCount": 25,
+  "launchContractDigest": "e703606a3eee5f5b56cec01f65012e0b202c4617e636207fcd4f6fa3656600bf",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 10 concrete findings, each with severity (P2/P3), section, evidence quotes from docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md, and repo verification against src/app/experimental/main.qml, SettingsPanel.qml, PoseCell.qml, Theme.qml, test/CMakeLists.txt, pixi.toml, and plans 005/006."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "grep -n 'R1[0-9]|U9|U10' docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md",
+          "result": "passed",
+          "summary": "Confirmed R11 (U2) and U9 (Risks) appear exactly once each; both are undefined in this plan"
+        },
+        {
+          "command": "grep/read src/app/experimental/main.qml (Connections, viewport, FileDialog, callLater, dirty-badge, Run-onClick regions)",
+          "result": "passed",
+          "summary": "6 Connections blocks at 419-525 (5 bridge-targeting); all 6 glue blocks reference viewport id; ML strip 721-860 has no viewport reference; 8 FileDialogs + 2 Dialogs; callLater at 422; dialogs closed at ~981"
+        },
+        {
+          "command": "ls profiler/ && grep profiler .gitignore",
+          "result": "passed",
+          "summary": "profiler/ directory does not exist and is not gitignored — U7's artifacts would create a new top-level dir outside R9's carve-out"
+        },
+        {
+          "command": "grep pixi.toml QT_QPA_PLATFORM; grep test/CMakeLists.txt qml_parity_check; ls .pixi/envs/default/bin qml*",
+          "result": "passed",
+          "summary": "pixi test task sets offscreen; jtml.qml_parity_check exists; qmllint/qmlprofiler/qmltestrunner/qmlformat present"
+        },
+        {
+          "command": "read SettingsPanel.qml / PoseCell.qml / Theme.qml imports",
+          "result": "passed",
+          "summary": "Verified: tested components import only QtQuick/Controls/Layouts (no Material, no Theme), matching Q10/U6; Theme has fg/fgMuted/fgDim; SettingsPanel hardcodes #cfd3da/#8b929c"
+        },
+        {
+          "command": "grep plan-005/006 docs for R11, U9, islands",
+          "result": "passed",
+          "summary": "Plan-005 R11 is the QmlVtkRenderer seam (unrelated); plan-005/006 establish 'QML islands' as a prior deferred item (U8 reference coherent; suppressed)"
+        }
+      ],
+      "validationOutput": [
+        "Coherence pass complete: 10 findings (8 error, 2 omission) — 5 at P2 with safe_auto fixes (R11→D11, U9→R9, graph edges U2→U5/U2→U6), remainder manual rewording or advisory. All repo-verifiable claims double-checked against the working tree."
+      ],
+      "residualRisks": [
+        "Repo line numbers verified at review time; may drift during implementation",
+        "F4 pre-U5 baseline expectation unmeasurable as written — needs author intent confirmation",
+        "F7 center-region component question unresolved in the document"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files modified — read-only coherence review of the plan document with repo verification",
+      "reviewFindings": [
+        "P2: U2 Requirements cites undefined R11 — fix to D11 (safe_auto)",
+        "P2: Risks table cites nonexistent unit U9 — fix to R9 (safe_auto)",
+        "P2: dependency graph omits U2→U5 and U2→U6 edges stated in unit Dependencies fields (safe_auto)",
+        "P2: U7 cites 'pre-U5 baseline' and 'U5's report' — U5 has no report and U7 runs after U5 (manual)",
+        "P2: 'never new logic in the bridges'/'pass-throughs' contradicts D3/D4 bridge-side refresh+seed behavior (manual)",
+        "P2: glue-block inventory stale — 6 Connections at 419-525 vs cited '5 at 417-461'; viewport refs from all 6 glue blocks, not '4 + ML strip' (manual)",
+        "P2: center-region component mandated by wiring contract but absent from target file structure and U2 Create list (manual)",
+        "P3: U6 'deliberately last among code units' contradicted by U7's post-U6 component modifications (advisory)",
+        "P3: D3 'runStateChanged (completed)' vs U3 '(completed/error)' trigger-set drift (advisory)",
+        "P2: U7 profiler/traces + profiler/reports outside R9's 'only ... new docs' carve-out (manual)"
+      ],
+      "manualNotes": "Suppressed as pedantic/other-persona: 'plain QObjects' wording in FakeBridges.qml (technical accuracy), 'cellHeight' on a ListView (qt-qml correctness), precedent target named jtml_test_render_smoke vs plan's 'jtml_test_qml_render_smoke' (findable, no consequence), and U8's 'widgets-app QML islands' (established deferred item in plan 005). Suppressed the 'plan fixes role set, not numbers' vs U4 recommended TypeScale values — 'recommended' hedge keeps it coherent."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": false
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/b608c94e_ce-coherence-reviewer_0_transcript.jsonl",
+  "timestamp": 1786542386977
+}

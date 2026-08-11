@@ -1,0 +1,12 @@
+Round 2 append written successfully to `angles/02-cost-path-foundation.org` (run phase now shows cost-path-foundation: done).
+
+**What was delivered** — the `## Round 2` section executes all six open items with source-grounded findings:
+
+1. **NaN/Inf audit** — DIRECT_DILATION is structurally incapable of emitting NaN/Inf (all-int composition; the one division is guarded by `+0.1` with a non-negative numerator). The GLh trigger lives in DIRECT_MAHFOUZ (0/0 pointer-guard, production-reachable), DD min_dist UB, and a new find: sym_trap's `asin(fem2tib[2][1])`. Finite-check design: wrap at `DirectOptimizer::EvaluateCostFunction` (direct_optimizer.cpp:205) — the shared chokepoint for production/oracle/coordinator — with a CUDA-free headless probe and an oracle-labeled adversarial GPU probe that also traps swallowed cudaErrors. Plus a correction to angle 01: NaN boxes don't immediately poison the hull (column sort puts them at the front, never read); they accumulate as dead weight with delayed, conditional column poisoning.
+2. **Distance-map index impact** — exactly one reader (distance_map_metric.cu:27 → DIRECT_DILATION.cpp:80); corruption = top ~64 crop rows never sampled + middle band multiplicity-weighted → the term is flatter in z than the honest chamfer complement; expected direction: recovered z moves toward fem.jts, the 6.31 mm gap shrinks (all three baseline z values sit 4.4–6.3 mm closer to the source).
+3. **Backface evidence checks** — mechanism correction (backface triangles get size 1 speckle, bbox identical ON/OFF → clean same-crop IoU protocol); STL verified ASCII/MATLAB-origin with exactly 12,412 facets; executable manifoldness spec + ON-vs-OFF protocol with thresholds.
+4. **Mahfouz** — Zotero target identified (TMI 22(12):1561–1574, DOI 10.1109/TMI.2003.820027); the 2.55/×255/−2.67 chain decoded (2.55 = 255/100 scale normalization); kernel-as-spec fallback decision rule with three override conditions.
+5. **Curvature de-scope** — exact removal surface (DIRECT_DILATION.cpp:42-43 + gpu_metrics.cu:97-111), banner wording, heatmap-upload disposition, plus a new silent `cudaMalloc(0)` error path that flips `initialized_correctly_` on 0-keypoint frames.
+6. **Tier-0 inventory** — concrete targets (`jtml_test_metric_semantics` + `_props`), per-metric CPU reference cases + hegel PBT invariants with red/spec status per test.
+
+Ends with the structured `acceptance-report` JSON (criterion-1 satisfied; commands marked not-run since this session has no exec tool; residual risks and review findings listed).

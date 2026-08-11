@@ -92,6 +92,13 @@ public:
     Q_INVOKABLE void updateModels();
     Q_INVOKABLE void updateCamera();
 
+    // Which scene model the model-centric interactor moves (owner feedback
+    // 2026-08-11): the movable actor follows the session's PRIMARY model
+    // selection instead of being pinned to scene model 0. Negative/out-of-
+    // range indices clear the implicit pick (nothing movable). Applied on
+    // the render thread via dispatch_async.
+    Q_INVOKABLE void setActiveModel(int sceneIndex);
+
     // Interaction mode switch (CameraMode / ModelMode). Applied on the
     // render thread via dispatch_async (the interactor is render-thread
     // owned — created by QQuickVTKItem's own initializeVTK wrapper).

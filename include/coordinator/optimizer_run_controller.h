@@ -88,7 +88,6 @@ public:
     using RunState = jta::OptimizerRunControllerCore::RunState;
     using Severity = jta::OptimizerRunControllerCore::Severity;
     using Directive = jta::OptimizerRunControllerCore::Directive;
-    using RunRequest = OptimizerRunRequest;
     /*The per-run driver factory (default: the production adapter). Tests
      * inject a fake driver factory. Shared ownership: a finished run's
      * driver is released at the next start(); its connections stay alive
@@ -109,7 +108,7 @@ public:
      * Initialize-failure quirk + seed restore are applied inside; state
      * unchanged on gate rejection, seed NOT consumed). Rejected while a run
      * is in flight or a previous thread is still alive (H1/M6).*/
-    bool start(const RunRequest& req);
+    bool start(const OptimizerRunRequest& req);
     /*Emergency stop (widgets action / QML button): emits StopOptimizer (the
      * per-run DirectConnection reverse bind) + Stopping; the run completes
      * through the normal terminal-frame/finished path. No-op outside a
@@ -147,8 +146,6 @@ public:
     void applySeedPose(
         LocationStorage* storage, int current_frame, int primary_model_index,
         int model_count);
-
-    jta::OptimizerRunControllerCore& core() { return core_; }
 
 signals:
     void runStateChanged();

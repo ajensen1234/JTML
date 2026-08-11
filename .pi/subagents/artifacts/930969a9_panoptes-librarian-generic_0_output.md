@@ -1,0 +1,11 @@
+Append verified: the `## Round 2` section (lines 128–end) landed intact with all five findings, while Round 1 (lines 1–127) is untouched. The deliverable is written and the angle is marked done.
+
+## Round 2 complete — measurement-apparatus deepening
+
+**The write succeeded** (`append=true`, `angles/03-measurement-apparatus.org`, now flagged `done`). Highlights from the deepened section:
+
+- **R2-1 Perturbation suite** — two halves (per-variant IoU-vs-Δ transfer-function grid + targeted injections NEG/INJ-BUDGET/INJ-DILATION/INJ-LABEL/INJ-BACKFACE/INJ-EDGE/INJ-VARIANT), deliverable = the minimal-detectable-regression table per axis. Key reasoning from measured data: z ≤ 6.31 mm is invisible to the 0.85 gate by design (pinned as a *characteristic*, not a failure); structural regressions trip it hard (stage-range displacements); cost-value regressions (the live distance-map bug) are invisible to it — which is why Tier-0/ablation exist.
+- **R2-2 z-profile probe executable spec** — 31-render Δz sweep on the source-verified lambda (optimizer_manager.cpp:1235-1246), valley-depth metric, dilations {6,3,1,4} (lets data arbitrate the 6/3/1-vs-6/4/1 contradiction), and the ranking hypothesis mapped onto *verified* metric composition (DIRECT_DILATION.cpp:73-83 chamfer vs DIRECT_DILATION_T1.cpp:64-79 pure overlap).
+- **R2-3 Round-1 correction (key discovery)** — `Directive::SymTrap` **already exists** (optimizer_run_controller_core.h:60-63 → "Sym_Trap" → manager parse at :177-185, CalculateSymTrap at :1294+). The seam addition Round 1 flagged is stale; the work is now three cheap pins (launch.directive == "Sym_Trap", sym-trap relay count == 60, costCalls() at trunk cap 20000 not 35000) + the concrete tibia-after-femur drive sequence past the bridge-only SingleModelOnly pre-check (OptimizerBridge.cpp:44-51).
+- **R2-4 ablation.json** — complete typed field list grounded in verified registry data, ci/nightly profile split (Moré & Wild data-profile for the reduced shape), additive `gpu` label design with target/timeout table.
+- **R2-5 noise-floor plan** — banded-L1 preconditions (per-GPU N≥5 μ/σ, pooled σ, band in baseline.json), IoU retune as a re-baseline event only, and the today-on-the-3090 protocol (seed determinism, N=5 run-to-run variance, probe noise floor, transfer function).

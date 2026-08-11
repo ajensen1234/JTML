@@ -215,6 +215,11 @@ private slots:
     void StaleEpochRelaysAreDropped();
     void SeedRestoredOnInitializeFailure();
     void DestructorMidRunStopsAndWaits();
+    void AllEachTrackedFrameStartsAtZero();
+    void SeedReachesLaunchPayload();
+    void StoppingStateRerunRejectedWithDistinctMessage();
+    void OutOfBoundsTerminalFrameSkipsStorage();
+    void MoveNextFrameAdvancesTrackedFrame();
 };
 
 void OptimizerRunControllerTest::HappyPathDriveSequence() {
@@ -698,9 +703,15 @@ void OptimizerRunControllerTest::SeedRestoredOnInitializeFailure() {
     QCOMPARE(restored.at(0).at(1).toInt(), 0);
     emit fake1->finished();
 
-    /*A subsequent successful run starts from the restored (estimate) pose.*/
+    /*A subsequent successful run starts from the restored (estimate) pose
+     * — with the P1-2 payload refresh the launch matrix is re-copied AFTER
+     * the SaveLastPose mirror (the pre-refactor order), so run 2's mirror
+     * source (the scene, which holds the estimate) is what Initialize
+     * consumes.*/
     FakeDriver* fake2 = rig.Prepare();
-    QVERIFY(c.start(f.MakeRequest()));
+    OptimizerRunRequest req2 = f.MakeRequest();
+    req2.save_pose_source = [](int) { return P6(4, 4, 4, 4, 4, 4); };
+    QVERIFY(c.start(req2));
     QVERIFY(SamePose(
         fake2->last_launch_.pose_matrix.GetPose(0, 0), pre_seed));
 }
@@ -721,6 +732,210 @@ void OptimizerRunControllerTest::DestructorMidRunStopsAndWaits() {
     QVERIFY(fake->stop_calls_ >= 1);  // cooperative stop requested
     QVERIFY(fake->wait_calls_ >= 1);  // bounded wait
     QVERIFY(!fake->thread_active_);
+}
+
+void OptimizerRunControllerTest::AllEachTrackedFrameStartsAtZero() {
+    /*P1-1: for All/Each the manager's frame sequence starts at 0
+     * (optimizer_manager start_frame_index_ = 0) and the widgets view
+     * reset its selection to 0 BEFORE start() (M11 two-phase), so the
+     * controller's tracked frame must start at 0 — NOT the pre-reset
+     * current_frame — or the terminal OptimizedFrame results persist at
+     * the wrong LocationStorage rows (past-end rows silently dropped).*/
+    RunFixture f;
+    OptimizerRunRequest req = f.MakeRequest(/*current_frame=*/2);
+    req.directive = OptimizerRunController::Directive::All;
+    FakeDriverRig rig;
+    FakeDriver* fake = rig.Prepare();
+    OptimizerRunController c([&rig] { return rig.MakeDriver(); });
+    QSignalSpy relays(&c, &OptimizerRunController::optimizedFrameRelayed);
+    QVERIFY(c.start(req));
+
+    /*The manager emits one OptimizedFrame per frame 0..2; each result must
+     * persist at the row it was optimized for. The OLD behavior started
+     * the tracked frame at 2 — rows 2/3 would hold the results and rows
+     * 0/1 would stay at the mirror value (the test then fails).*/
+    emit fake->OptimizedFrame(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                              QStringLiteral("All"));
+    emit fake->OptimizedFrame(2.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                              QStringLiteral("All"));
+    emit fake->OptimizedFrame(3.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0, false,
+                              QStringLiteral("All"));
+    QCOMPARE(relays.count(), 3);
+
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(1, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(1, 0), P6(2, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(2, 0), P6(3, 0, 0, 0, 0, 0)));
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Completed);
+    emit fake->finished();
+}
+
+void OptimizerRunControllerTest::SeedReachesLaunchPayload() {
+    /*P1-2: the seed (and the SaveLastPose mirror) must reach the by-value
+     * launch payload the manager's Initialize consumes — the view's
+     * snapshot predates start()'s mirror + seed writes. A pre-run storage
+     * drift must be overridden by the seed in the PAYLOAD, not only in the
+     * live storage.*/
+    RunFixture f;
+    const Point6D drift = P6(9, 9, 9, 9, 9, 9);  // stale/drifted pose
+    f.storage.SavePose(0, 0, drift);
+    OptimizerRunRequest req = f.MakeRequest();
+    /*Mirror target row 1, so the mirror's value stays distinguishable from
+     * the seed's (both must land in the payload).*/
+    req.save_frame = 1;
+    req.save_rows = {1};
+    req.save_pose_source = [](int) { return P6(7, 0, 0, 0, 0, 0); };
+    FakeDriverRig rig;
+    FakeDriver* fake = rig.Prepare();
+    OptimizerRunController c([&rig] { return rig.MakeDriver(); });
+    c.setSeedPose(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 0, 0);
+
+    QVERIFY(c.start(req));
+
+    /*The payload reflects the mirror (row 1) AND the seed (row 0) — the
+     * old flow's payload predated both (the seed never reached the run).*/
+    QVERIFY(SamePose(
+        fake->last_launch_.pose_matrix.GetPose(0, 0), P6(1, 2, 3, 4, 5, 6)));
+    QVERIFY(SamePose(
+        fake->last_launch_.pose_matrix.GetPose(1, 1), P6(7, 0, 0, 0, 0, 0)));
+    /*The drift was overridden in the payload (estimate wins over drift).*/
+    QVERIFY(!SamePose(
+        fake->last_launch_.pose_matrix.GetPose(0, 0), drift));
+    /*And the live storage agrees.*/
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(1, 2, 3, 4, 5, 6)));
+    emit fake->OptimizedFrame(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0, false,
+                              QStringLiteral("Single"));
+    emit fake->finished();
+}
+
+void OptimizerRunControllerTest::StoppingStateRerunRejectedWithDistinctMessage() {
+    /*S1: a Run click while the cooperative stop drains (Stopping) is
+     * rejected with the DISTINCT still-stopping message — not the generic
+     * re-run-rejected text — and no driver is created; once the run
+     * completes through the terminal frame, the re-run opens.*/
+    RunFixture f;
+    FakeDriverRig rig;
+    FakeDriver* fake1 = rig.Prepare();
+    OptimizerRunController c([&rig] { return rig.MakeDriver(); });
+    MessageRecorder messages;
+    connect(&c, &OptimizerRunController::messageRequested,
+            [&messages](const QString& title, const QString& message,
+                        OptimizerRunController::Severity) {
+                messages.titles.push_back(title);
+                messages.texts.push_back(message);
+            });
+
+    QVERIFY(c.start(f.MakeRequest()));
+    c.stop();
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Stopping);
+
+    /*Re-run rejected while stopping: distinct message, no driver.*/
+    QVERIFY(!c.start(f.MakeRequest()));
+    QCOMPARE(rig.fakes.size(), 1u);
+    QCOMPARE(messages.titles.back(), QStringLiteral("Warning!"));
+    QCOMPARE(messages.texts.back(),
+             QStringLiteral("Optimizer is still stopping..."));
+
+    /*The run completes through the normal terminal-frame path; the
+     * re-run then opens.*/
+    emit fake1->OptimizedFrame(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0, false,
+                               QStringLiteral("Single"));
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Completed);
+    emit fake1->finished();
+    FakeDriver* fake2 = rig.Prepare();
+    QVERIFY(c.start(f.MakeRequest()));
+    QCOMPARE(fake2->initialize_calls_, 1);
+}
+
+void OptimizerRunControllerTest::OutOfBoundsTerminalFrameSkipsStorage() {
+    /*S5: an out-of-bounds terminal OptimizedFrame (primary_model_index
+     * past the loaded model count) must not write the storage (the old
+     * unconditional SavePose on an out-of-range row was the documented
+     * never-occur crash path — LocationStorage drops it, but the skip is
+     * the contract), the relay carries the OOB status, and nothing
+     * crashes.*/
+    RunFixture f;
+    OptimizerRunRequest req = f.MakeRequest();
+    FakeDriverRig rig;
+    FakeDriver* fake = rig.Prepare();
+    OptimizerRunController c([&rig] { return rig.MakeDriver(); });
+    QSignalSpy relays(&c, &OptimizerRunController::optimizedFrameRelayed);
+    QVERIFY(c.start(req));
+
+    /*The mirror wrote the pre-run pose at (0,0).*/
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(7, 0, 0, 0, 0, 0)));
+
+    emit fake->OptimizedFrame(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, false,
+                              /*primary_model_index=*/5, false,
+                              QStringLiteral("Single"));
+    QCOMPARE(relays.count(), 1);
+    /*The relay carries the out-of-bounds status (the widgets view boxes).*/
+    QCOMPARE(relays.at(0).at(9).toBool(), true);
+    /*No storage write (the tracked row keeps the mirror's value).*/
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(7, 0, 0, 0, 0, 0)));
+    /*Terminal state still advances normally.*/
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Completed);
+    emit fake->finished();
+}
+
+void OptimizerRunControllerTest::MoveNextFrameAdvancesTrackedFrame() {
+    /*S6: the tracked frame advances exactly per the :270-276 condition —
+     * move_next_frame AND in-bounds in the directive's direction. Forward
+     * (All, tracked starts at 0): advances 0->1->2, blocked at the last
+     * frame. Backward (From-style keep of current_frame): 2->1->0,
+     * blocked at frame 0. move_next_frame=false never advances.*/
+    RunFixture f;
+    OptimizerRunRequest req = f.MakeRequest();
+    req.directive = OptimizerRunController::Directive::All;
+    FakeDriverRig rig;
+    FakeDriver* fake = rig.Prepare();
+    OptimizerRunController c([&rig] { return rig.MakeDriver(); });
+    QSignalSpy relays(&c, &OptimizerRunController::optimizedFrameRelayed);
+    QVERIFY(c.start(req));
+
+    /*Forward: advance on move_next_frame, stop at the last frame. The
+     * no-advance emission comes LAST at its tracked row — the write
+     * always lands at the TRACKED frame, so the final value at each row
+     * proves the advance decisions (the blocked last-frame advance and the
+     * move_next_frame=false write both stay at the same tracked row).*/
+    emit fake->OptimizedFrame(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                              QStringLiteral("All"));
+    emit fake->OptimizedFrame(2.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                              QStringLiteral("All"));
+    emit fake->OptimizedFrame(3.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                              QStringLiteral("All"));  // blocked: last frame
+    emit fake->OptimizedFrame(4.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0, false,
+                              QStringLiteral("All"));  // no advance
+    QCOMPARE(relays.count(), 4);
+    /*Row 0 = frame 0 (advance from the first frame); row 1 = frame 1;
+     * row 2 = the LAST emission — both the blocked last-frame advance
+     * (3.0) and the no-advance write (4.0) landed at tracked frame 2 (a
+     * buggy advance would have written row 3, which LocationStorage
+     * silently drops — the assertion would fail).*/
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(1, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(1, 0), P6(2, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(2, 0), P6(4, 0, 0, 0, 0, 0)));
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Completed);
+    emit fake->finished();
+
+    /*Backward: advances 2->1->0, blocked at frame 0.*/
+    OptimizerRunRequest req_b = f.MakeRequest(/*current_frame=*/2);
+    req_b.directive = OptimizerRunController::Directive::Backward;
+    FakeDriver* fake_b = rig.Prepare();
+    QVERIFY(c.start(req_b));
+    emit fake_b->OptimizedFrame(10.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                                QStringLiteral("Backward"));
+    emit fake_b->OptimizedFrame(11.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                                QStringLiteral("Backward"));
+    emit fake_b->OptimizedFrame(12.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, 0, false,
+                                QStringLiteral("Backward"));  // blocked at 0
+    emit fake_b->OptimizedFrame(13.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0, false,
+                                QStringLiteral("Backward"));  // no advance
+    QCOMPARE(relays.count(), 8);
+    QVERIFY(SamePose(f.storage.GetPose(2, 0), P6(10, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(1, 0), P6(11, 0, 0, 0, 0, 0)));
+    QVERIFY(SamePose(f.storage.GetPose(0, 0), P6(13, 0, 0, 0, 0, 0)));
+    QCOMPARE(c.runState(), OptimizerRunController::RunState::Completed);
+    emit fake_b->finished();
 }
 
 QTEST_GUILESS_MAIN(OptimizerRunControllerTest)

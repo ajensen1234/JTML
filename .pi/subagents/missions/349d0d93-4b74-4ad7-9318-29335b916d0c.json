@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "id": "349d0d93-4b74-4ad7-9318-29335b916d0c",
+  "title": "Scope: technology, architecture, patterns. Planning context: we are planning an improvement pass ...",
+  "objective": "Scope: technology, architecture, patterns. Planning context: we are planning an improvement pass over the experimental QML front-end of this repo (JTML, a Qt6 + VTK9.3 + CUDA knee-implant registration app). The app lives in src/app/experimental/ (jtml_experimental target): QML shell main.qml (~700 lines: toolbar, 8 dialogs, 2 ListViews, ML strip, progress), SettingsPanel.qml, PoseCell.qml, Theme.qml (pragma Singleton + qmldir), renderer.qml (smoke scene); C++ side: AppBridge hub owning StudyBridge/SettingsBridge/OptimizerBridge/MlBridge/PoseBridge + FileDialogBridge + QmlVtkRenderer (QQuickVTKItem subclass, render-thread contract) + ExperimentalScene/ExperimentalSession; FrameListModel/ModelListModel direct-compiled from src/view. Bridges are exposed to QML via rootContext()->setContextProperty in main.cpp. CMake uses add_executable + resources.qrc (no qt_add_qml_module). Planned work tracks: (1) structured QML review + best-practice fixes (file structure, bindings, layouts, Theme token compliance), (2) UI/UX audit+polish (typography scale, keyboard nav, accessibility), (3) Qt Quick Test coverage (tst_*.qml + CMake/ctest wiring; repo rule: headless tests must not touch GPU/VTK/widgets), (4) qmlprofiler performance profiling of the 2D chrome. Research: repo structure and conventions, how QML files are built/shipped, existing test registration patterns in test/CMakeLists.txt (labels, WORKING_DIRECTORY, AUTOMOC gotchas), whether Qt6::QuickTest is available in the pixi env, existing docs conventions (docs/plans, docs/solutions, docs/handoff), AGENTS.md guidance that materially affects the plan, the layered-lib rules (domain/services/coordinator/compute/view), and the QML decision record at src/view/CMakeLists.txt:6. Report concrete file paths and patterns.",
+  "status": "completed",
+  "createdAt": "2026-08-12T13:22:08.083Z",
+  "updatedAt": "2026-08-12T13:24:56.893Z",
+  "runs": [
+    {
+      "runId": "36354fc3-dacb-40e3-8c49-0f204cab76a0",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/36354fc3-dacb-40e3-8c49-0f204cab76a0",
+      "status": "complete",
+      "startedAt": "2026-08-12T13:22:08.086Z",
+      "completedAt": "2026-08-12T13:24:56.892Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "36354fc3-dacb-40e3-8c49-0f204cab76a0",
+      "key": "repo",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:22:08.130Z",
+      "updatedAt": "2026-08-12T13:24:56.824Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/502439a0/run-0/session.jsonl"
+      ],
+      "runId": "502439a0",
+      "agent": "ce-repo-research-analyst",
+      "task": "Scope: technology, architecture, patterns. Planning context: we are planning an improvement pass over the experimental QML front-end of this repo (JTML, a Qt6 + VTK9.3 + CUDA knee-implant registration app). The app lives in src/app/experimental/ (jtml_experimental target): QML shell main.qml (~700 lines: toolbar, 8 dialogs, 2 ListViews, ML strip, progress), SettingsPanel.qml, PoseCell.qml, Theme.qml (pragma Singleton + qmldir), renderer.qml (smoke scene); C++ side: AppBridge hub owning StudyBridge/SettingsBridge/OptimizerBridge/MlBridge/PoseBridge + FileDialogBridge + QmlVtkRenderer (QQuickVTKItem subclass, render-thread contract) + ExperimentalScene/ExperimentalSession; FrameListModel/ModelListModel direct-compiled from src/view. Bridges are exposed to QML via rootContext()->setContextProperty in main.cpp. CMake uses add_executable + resources.qrc (no qt_add_qml_module). Planned work tracks: (1) structured QML review + best-practice fixes (file structure, bindings, layouts, Theme token compliance), (2) UI/UX audit+polish (typography scale, keyboard nav, accessibility), (3) Qt Quick Test coverage (tst_*.qml + CMake/ctest wiring; repo rule: headless tests must not touch GPU/VTK/widgets), (4) qmlprofiler performance profiling of the 2D chrome. Research: repo structure and conventions, how QML files are built/shipped, existing test registration patterns in test/CMakeLists.txt (labels, WORKING_DIRECTORY, AUTOMOC gotchas), whether Qt6::QuickTest is available in the pixi env, existing docs conventions (docs/plans, docs/solutions, docs/handoff), AGENTS.md guidance that materially affects the plan, the layered-lib rules (domain/services/coordinator/compute/view), and the QML decision record at src/view/CMakeLists.txt:6. Report concrete file paths and patterns.",
+      "completedAt": "2026-08-12T13:24:56.824Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/502439a0/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:24:56.824Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "36354fc3-dacb-40e3-8c49-0f204cab76a0",
+      "key": "learnings",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:22:08.181Z",
+      "updatedAt": "2026-08-12T13:23:25.049Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/1035dcd5/run-0/session.jsonl"
+      ],
+      "runId": "1035dcd5",
+      "agent": "ce-learnings-researcher",
+      "task": "Planning context: we are planning an improvement pass over the experimental QML front-end (src/app/experimental/, jtml_experimental) of a Qt6+VTK9.3+CUDA desktop app: structured QML review + best-practice fixes, UI/UX audit, Qt Quick Test coverage, and qmlprofiler profiling. Search docs/solutions/ for institutional learnings that apply: QML-specific conventions and bugs (e.g. jtml-qml-experimental-frontend-2026-08-11.md, jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md, jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md), CMake/AUTOMOC/test conventions (jtml-testability-and-cmake-conventions-2026-08-07.md), rendering/xcb learnings (jtml-rendering-runtime-xcb-qvtk-2026-08-10.md), layered-lib split conventions, and anything about testing QML, qmllint, Qt Quick Test, or UI styling. Report each relevant learning with its doc path and a one-line summary of how it constrains or informs the plan.",
+      "completedAt": "2026-08-12T13:23:25.049Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/1035dcd5/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:23:25.049Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/36354fc3-dacb-40e3-8c49-0f204cab76a0/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/36354fc3-dacb-40e3-8c49-0f204cab76a0/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/502439a0/run-0/session.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/1035dcd5/run-0/session.jsonl"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 2 child run(s). Return: {\n  \"repo\": \"All research phases complete. Here is the full report for the scoped phases (`technology`, `architecture`, `patterns`).\\n\\n---\\n\\n## Repository Research Summary\\n\\n**Repo:** JTML — Qt6 + VTK 9.3 + CUDA 12.4 knee-implant registration app. This is a research-only pass; no files were modified.\\n\\n### Technology & Infrastructure\\n\\n**Stack (from `AGENTS.md`, `pixi.toml`, root `CMakeLists.txt`):**\\n- C++20 + CUDA 20; Qt **6.7.2** (`qt6-main`/`qt6-wayland`, conda-forge via pixi); VTK **9.3 built in-tree against Qt6** (`_deps/vtk/install/` via `vtk_installer.sh`, `GUISupportQtQuick` included); CUDA 12.4, OpenCV, Torch, Eigen3, Catch2 3.x, hegel PBT (FetchContent).\\n- All build/test entry points are pixi tasks (`pixi run configure/build/test/run`) — never raw cmake. `pixi run test` = `ctest --test-dir .build --output-on-failure --timeout 600 -L headless` with `QT_QPA_PLATFORM=offscreen` (pixi.toml `[tasks.test]`). `pixi run run` forces `QT_QPA_PLATFORM=xcb`.\\n- **Qt6::QuickTest av Trace: 4 event(s)."
+}

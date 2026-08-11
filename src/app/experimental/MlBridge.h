@@ -197,7 +197,11 @@ private:
     // loaded dataset. Returns false + a typed message when blocked.
     bool guardStudyReady();
     // The torch/GPU segment core (only called with a valid .pt path).
-    void runSegmentOnCurrentFrame();
+    // Returns false on failure (torch load error OR the orchestrator's
+    // SegmentFailed — the typed message + status are surfaced inside);
+    // estimateCurrentFrame aborts on false so the regression never runs
+    // on the stale inverted image (P2-3).
+    bool runSegmentOnCurrentFrame();
     void setStatus(const QString& text);
 
     AppBridge* hub_;

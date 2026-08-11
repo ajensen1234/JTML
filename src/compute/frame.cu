@@ -136,6 +136,18 @@ std::vector<uchar> Frame::getCurvatureHeatmaps() {
     return curvature_heatmap_chars_;
 };
 void Frame::setCurvatureHeatmaps() {
+    /*Self-guard (owner feedback 2026-08-11): the GPU heatmaps are derived
+     * from ML segmentation contours — with no segmented/inverted image
+     * there is nothing to derive, so skip (no contours, no heatmaps, no
+     * crash). The orchestrator also gates the whole post-processing tail
+     * on a non-empty segmentation result; this makes every other caller
+     * safe too.*/
+    if (inverted_image_.empty()) {
+        curvature_heatmaps_.clear();
+        curvature_heatmap_chars_.clear();
+        num_curvature_keypoints_ = 0;
+        return;
+    }
     curvature_heatmaps_ = generate_curvature_heatmaps(inverted_image_);
     int H = height_, W = width_;
     num_curvature_keypoints_ = curvature_heatmaps_.size();

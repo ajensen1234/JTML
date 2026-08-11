@@ -23,13 +23,13 @@
 //
 // Registry mapping (parity contract, plan C4): Save() writes the
 // CostFunctionSettings entries produced by buildCostFunctionRegistryEntries()
-// — a verbatim replication of the widgets reference
-// MainScreen::BuildCostFunctionRegistryEntries (mainscreen.cpp:4895, a
-// private jtml_view member; jtml_view is not linked, R1). Keys
-// (STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE with DOUBLE/INT/BOOL type
-// suffixes) and values (lossless doubles — the truncation-bug lesson) MUST
-// stay identical to the widgets output or the two apps fight over the
-// registry; the parity pin lives in test/unit/experimental_settings_test.cpp.
+// — a DELEGATE to the shared jta::BuildCostFunctionRegistryEntries
+// (plan 006 U1: the widgets MainScreen calls the SAME shared function —
+// there is no replication). Keys (STAGE@ACTIVE_CF /
+// STAGE@CFname@ParamName@TYPE with DOUBLE/INT/BOOL type suffixes) and
+// values (lossless doubles — the truncation-bug lesson) MUST stay
+// identical to the widgets output or the two apps fight over the registry;
+// the parity pin lives in test/unit/experimental_settings_test.cpp.
 //
 // Dilation semantics (widgets parity): per-stage dilation is the "Dilation"
 // int parameter of the stage's ACTIVE cost function. The getters read the
@@ -235,10 +235,12 @@ public:
     jta_cost_function::CostFunctionManager* branchManager() const;
     jta_cost_function::CostFunctionManager* leafManager() const;
 
-    /*The replicated registry mapping (parity pin, see file header): raw
+    /*The shared registry mapping (parity pin, see file header): raw
      * CostFunctionSettings entries for the current manager state, in the
      * exact widgets order (ACTIVE_CF first, then per available cost function
-     * the double/int/bool parameter groups).*/
+     * the double/int/bool parameter groups) — a thin wrapper over
+     * jta::BuildCostFunctionRegistryEntries (plan 006 U1), the SAME shared
+     * function the widgets MainScreen calls.*/
     std::vector<jta::RegistryEntry> buildCostFunctionRegistryEntries() const;
 
 signals:

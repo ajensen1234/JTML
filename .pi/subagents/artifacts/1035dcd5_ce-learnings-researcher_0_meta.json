@@ -1,0 +1,157 @@
+{
+  "runId": "1035dcd5",
+  "agent": "ce-learnings-researcher",
+  "task": "Planning context: we are planning an improvement pass over the experimental QML front-end (src/app/experimental/, jtml_experimental) of a Qt6+VTK9.3+CUDA desktop app: structured QML review + best-practice fixes, UI/UX audit, Qt Quick Test coverage, and qmlprofiler profiling. Search docs/solutions/ for institutional learnings that apply: QML-specific conventions and bugs (e.g. jtml-qml-experimental-frontend-2026-08-11.md, jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md, jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md), CMake/AUTOMOC/test conventions (jtml-testability-and-cmake-conventions-2026-08-07.md), rendering/xcb learnings (jtml-rendering-runtime-xcb-qvtk-2026-08-10.md), layered-lib split conventions, and anything about testing QML, qmllint, Qt Quick Test, or UI styling. Report each relevant learning with its doc path and a one-line summary of how it constrains or informs the plan.",
+  "exitCode": 0,
+  "usage": {
+    "input": 43372,
+    "output": 9339,
+    "cacheRead": 177280,
+    "cacheWrite": 0,
+    "cost": 0.004591692,
+    "turns": 6
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 43372,
+        "output": 9339,
+        "cacheRead": 177280,
+        "cacheWrite": 0,
+        "cost": 0.004591692,
+        "turns": 6
+      }
+    }
+  ],
+  "durationMs": 76836,
+  "toolCount": 19,
+  "launchContractDigest": "fb9784dc8dd8290d59adaa892f41335a92f0ac9a7e53c60cc1876280045ade21",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned 5 detailed findings + 4 brief additional matches, each with repo-relative doc path and frontmatter severity: jtml-qml-experimental-frontend-2026-08-11.md (medium), jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md (high), jtml-shared-vm-layer-2026-08-11.md (medium), jtml-testability-and-cmake-conventions-2026-08-07.md (medium), jtml-rendering-runtime-xcb-qvtk-2026-08-10.md (high); plus jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md, jtml-layered-lib-split-2026-08-08.md, jtml-mainscreen-decomposition-patterns-2026-08-10.md, qt6-hegel-oracle-tooling-recipes-2026-08-08.md; 1 file (cost-function-parameter-double-truncation) explicitly excluded as irrelevant"
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "ls docs/solutions/ docs/solutions/{conventions,ui-bugs,build-errors,tooling-decisions,logic-errors}",
+          "result": "passed",
+          "summary": "Probed 5 subdirectories; 10 learning files total; no patterns/ directory (critical-patterns.md absent)"
+        },
+        {
+          "command": "grep -i 'qml|qt.?quick|qmllint|qmlprofiler' docs/solutions/",
+          "result": "passed",
+          "summary": "Found QML/Quick entries across conventions, ui-bugs, tooling-decisions; no qmllint/qmlprofiler entries exist"
+        },
+        {
+          "command": "grep -i 'automoc|qmltest|quick.?test|moc' docs/solutions/",
+          "result": "passed",
+          "summary": "Confirmed AUTOMOC/moc trap entries and absence of Qt Quick Test (qmltest) learnings"
+        },
+        {
+          "command": "read (9 files: frontmatter + full content of all candidates)",
+          "result": "passed",
+          "summary": "Scored 9/10 files as relevant; read full content of 5 primary + 4 secondary; 1 excluded as unrelated"
+        }
+      ],
+      "validationOutput": [
+        "All 10 docs/solutions/ files accounted for; every caller-named file located and reviewed; problem_type values passed through verbatim (convention, ui_bug, build_error, tooling_decision, tooling)"
+      ],
+      "residualRisks": [
+        "No prior learnings exist for qmllint, Qt Quick Test (qmltest), or qmlprofiler — plan proceeds on new territory for those tools; capture learnings after the pass",
+        "All learnings dated 2026-08-07..2026-08-11 (recent, current repo state); the DPI-bug-tail (QQuickVTKItem SetDevicePixelRatio) is pinned to the in-tree VTK 9.3 and may reappear as a 'fix candidate' — verify against current VTK source before treating it as a bug",
+        "No cross-check performed against live source code (read-only learning search per role); if a learning conflicts with current code, present evidence wins"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files modified — institutional-knowledge research task (search + distill only)",
+      "reviewFindings": [
+        "info: docs/solutions/conventions/jtml-qml-experimental-frontend-2026-08-11.md - charter doc for the reviewed module; render-thread contract is the load-bearing constraint",
+        "info: docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md - high-severity QML bug: queued invokeMethod functor silently never delivered; use direct by-value emit; instrument receiver side",
+        "info: docs/solutions/tooling-decisions/jtml-rendering-runtime-xcb-qvtk-2026-08-10.md - xcb required; standalone vtkRenderWindow/grabWindow-only capture constraints apply to profiling and render tests",
+        "info: no blockers found in knowledge base for the planned pass; gaps identified: qmllint, Qt Quick Test, qmlprofiler are uncaptured territory"
+      ],
+      "manualNotes": "Read-only research task; no edits, no tests, no staged files. Search was exhaustive: all 10 files in docs/solutions/ were probed (grep pre-filter + full reads of 9 candidates); only the cost-function numeric logic error was excluded as irrelevant. Recommend the parent folds the 'pin, don't unify' and xcb-run conventions into the review brief, and schedules capturing qmllint/Qt Quick Test/qmlprofiler learnings after the pass lands."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/1035dcd5_ce-learnings-researcher_0_transcript.jsonl",
+  "timestamp": 1786541005044
+}

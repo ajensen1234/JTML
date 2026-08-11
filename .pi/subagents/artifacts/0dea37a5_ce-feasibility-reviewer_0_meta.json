@@ -1,0 +1,170 @@
+{
+  "runId": "0dea37a5",
+  "agent": "ce-feasibility-reviewer",
+  "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-feasibility-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (feasibility):\nWill the technical approach survive contact with reality? Check architecture conflicts, dependency gaps, migration risks, implementability. Key questions: is the QuickTest-offscreen-qrc approach sound for Qt 6.7? Are the bridge additive changes truly additive vs the pinned bridge tests and qml_parity_check? Is the U3 empirical-verification-first stance workable? Any unit that cannot be completed as written?",
+  "exitCode": 0,
+  "usage": {
+    "input": 58863,
+    "output": 48019,
+    "cacheRead": 1619200,
+    "cacheWrite": 0,
+    "cost": 0.01310995,
+    "turns": 24
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 58863,
+        "output": 48019,
+        "cacheRead": 1619200,
+        "cacheWrite": 0,
+        "cost": 0.01310995,
+        "turns": 24
+      }
+    }
+  ],
+  "durationMs": 445865,
+  "toolCount": 33,
+  "launchContractDigest": "5162eb486795857fa819905df256c400647b4403aae8b1dd068a447dfff4e940",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "One P1 finding delivered with concrete file paths (.pixi/envs/default/bin/qmllint, .pixi/envs/default/bin/qmlprofiler, .pixi/envs/default/bin/qmltestrunner, pixi.lock, pixi.toml) and severity; three residual risks; every finding backed by direct plan quotes plus binary-level verification (ldd, --version, --help, qml6 runtime probe)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "ldd .pixi/envs/default/bin/qmltestrunner .pixi/envs/default/bin/qmlprofiler .pixi/envs/default/bin/qmllint .pixi/envs/default/bin/qmlformat | grep -iE 'Qt5|Qt6'",
+          "result": "passed",
+          "summary": "All four QML CLI tools link libQt5* (Qt 5.15.8 from qt-main, opencv-qt5 dep) — not Qt 6.7.2 as the plan claims"
+        },
+        {
+          "command": ".pixi/envs/default/bin/qmlprofiler --version",
+          "result": "passed",
+          "summary": "Prints 'qmlprofiler 5.15.8' — no Qt6 qmlprofiler exists in the env"
+        },
+        {
+          "command": ".pixi/envs/default/bin/qmllint --help",
+          "result": "passed",
+          "summary": "No --json option (Qt 5.15-era option set); U1 Phase 1b / U2 gate as written cannot run"
+        },
+        {
+          "command": "grep -c 'qt6-tools' pixi.lock",
+          "result": "passed",
+          "summary": "0 — Qt 6.7.2 qmllint/qmlformat/qmlprofiler/qmltestrunner package not installed"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen .pixi/envs/default/bin/qml6 /tmp/t_window.qml",
+          "result": "passed",
+          "summary": "Window resolves from import QtQuick alone on Qt 6.7.2 — U2's 'drop the redundant QtQuick.Window import' conditional confirmed true"
+        },
+        {
+          "command": "ls .pixi/envs/default/lib/libQt6QuickTest.so* .pixi/envs/default/lib/qt6/plugins/platforms/libqoffscreen.so",
+          "result": "passed",
+          "summary": "Qt6 QuickTest lib (6.7.2) + Qt6 offscreen platform plugin present — U6 ctest-target path is viable"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen timeout 30 .pixi/envs/default/bin/qmltestrunner -help",
+          "result": "passed",
+          "summary": "Qt5 runner starts successfully under offscreen — confirms the silent wrong-engine test-run risk in U6's fallback"
+        }
+      ],
+      "validationOutput": [
+        "Verified against repo + env: Qt 6.7.2 qt6-main present (libQt6QuickTest.so.6.7.2, Qt6QuickTestConfig.cmake, lib/qt6/plugins/platforms/libqoffscreen.so) but qt6-tools absent; bin/qmllint|qmlformat|qmlprofiler|qmltestrunner are all Qt 5.15.8 (qt-main, pulled by opencv-qt5). Code claims checked: PoseCell C1/C2 (onEditingFinished commits reading studyBridge.primaryModelIndex; plain-assignment restore kills the storedValue binding), main.qml 5 bridge-targeted Connections (419-518; callLater at 421-424, dirty hexes 221-227, Run-closes-dialogs ~978-981, Repeater-in-Column-in-ScrollView table 343-359), block-scoped find_package(Qt6 COMPONENTS Quick Qml Test) at test/CMakeLists.txt:1393, qml_parity_check LABELS oracle TIMEOUT 3600 (1331-1332), pixi test task sets QT_QPA_PLATFORM=offscreen (pixi.toml:104), AppBridge exposes optimizerBridge()/poseBridge() (D3 wiring implementable inside PoseBridge.cpp), MlBridge hasSegmentModel + stale-seed guard present (D4/D6 hedges accurate), SettingsPanel hexes #cfd3da/#8b929c confirmed, QmlVtkRenderer is QQuickVTKItem (D5 enabled:false blocks mouse — sound), docs/reviews exists."
+      ],
+      "residualRisks": [
+        "qt6-tools vs qt-main bin/qmllint + bin/qmlformat path collision needs a signed-off resolution before U1",
+        "PATH shadowing can still resolve Qt5 tools after install — units must pin explicit Qt6 paths",
+        "First-ever QuickTest run in this repo (no offscreen QuickTest precedent) may need a debug cycle",
+        "Parity gate costs ~1h per run (TIMEOUT 3600, oracle label) if re-run per unit"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Review only — no files changed (read-only feasibility review of docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md)",
+      "reviewFindings": [
+        "P1: docs/plans/2026-08-12-007...md + .pixi/envs/default/bin/{qmllint,qmlprofiler,qmltestrunner} + pixi.lock - the plan's 'verified' QML toolchain is Qt 5.15.8, not Qt 6.7.2: U1 Phase 1b (qmllint --json) and U2's jtml.qml_lint gate fail as written (gate blocks pixi run test), U7 has no Qt6 qmlprofiler, and U6's qmltestrunner fallback silently runs tests on the Qt5 engine; fix = install qt6-tools with a signed-off conflict resolution, pin Qt6 paths, make the ctest target the sole run mechanism. Everything else checked (QuickTest-offscreen-qrc approach, additive bridge changes vs pinned tests + parity, U3 verify-first stance, D5 enabled:false, D7/D6/D3 wiring) is sound and implementable."
+      ],
+      "manualNotes": "Answers to the scope questions: (1) QuickTest-offscreen-qrc approach is sound for Qt 6.7 — Qt6QuickTestConfig.cmake, libQt6QuickTest.so.6.7.2, Qt6 offscreen plugin, offscreen test task env, block-scoped find_package precedent, and VTK-free tested components all verified; the only flaw is the qmltestrunner binary fallback. (2) Bridge additive changes are truly additive — existing suites direct-compile bridge .cpp files (additive signals/properties cannot break them), parity is oracle-labeled and drives the optimizer path only; D3 wiring is implementable inside PoseBridge.cpp via its existing hub_/study_bridge_ pointers. (3) U3's empirical-verification-first stance is workable — every hedged premise (stale-table persistence, plan-006 stale-seed guard, hasSegmentModel exposure) checks out against current code. (4) One unit family cannot be completed as written: U1 Phase 1b, U2's gate, U7 (toolchain finding). Not flagged (verified sound or suppressed per rubric): Window-in-QtQuick conditional (runtime-proven true), TableView rejection rationale, U7's whole-row dataChanged expectation (PoseTableModel::notifyCellChanged already per-cell, plan hedges 'if confirmed'), line-range drift in the Connections references (key anchors 421-424/980-981/221-227 are exact), mid-edit pool/editingFinished ordering (D2 + U5 pins cover it)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/0dea37a5_ce-feasibility-reviewer_0_transcript.jsonl",
+  "timestamp": 1786542340471
+}

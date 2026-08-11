@@ -1,5 +1,19 @@
 # Handoff — next phase: shared VM-layer extraction (brainstorm → plan)
 
+> **PHASE COMPLETE (2026-08-11).** Executed by
+> `docs/plans/2026-08-11-006-refactor-shared-vm-layer-extraction-plan.md`
+> (U1–U10, all landed): MainScreen 5,115 → 4,987 lines of view-only residue;
+> the shared layer (OptimizerRunController + drive seam, SessionStateController,
+> SaveLastPoseToStorage, StudyLoadController, MlOrchestrator, registry mapping,
+> render-pipeline builder) is live under both front-ends; headless 46/46,
+> oracle + qml_parity_check (IoU 0.993627) + render smokes green; `probe_vtk`
+> GLX failure is pre-existing/environmental. Conventions:
+> `docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md`. Manual-visual
+> checklists (widgets run directives, selection flows, camera A/B, ML) remain
+> for a human GPU session. NEXT: the Follow-On Optimization Phase (plan 006's
+> Scope Boundaries) — deferred quirk cuts, then synthesis items 1 → 3 → 2 → 5
+> → 8; the multi-stage oracle consumes the `OptimizerRunDriver` seam.
+
 **Read first:** `AGENTS.md` (build/test/jj conventions + layered layout), then
 `docs/plans/2026-08-11-005-feat-qml-experimental-frontend-plan.md` (all 9 units
 landed), `docs/solutions/conventions/jtml-qml-experimental-frontend-2026-08-11.md`

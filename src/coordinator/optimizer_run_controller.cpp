@@ -24,6 +24,7 @@ const char* kPoseDimensionMismatchText =
     "Please Contact Support!";
 const char* kReRunRejectedText =
     "Optimizer is still finishing the previous run!";
+const char* kStillStoppingText = "Optimizer is still stopping...";
 
 }  // namespace
 
@@ -32,9 +33,18 @@ const char* kReRunRejectedText =
 bool OptimizerRunController::start(const OptimizerRunRequest& req) {
     /*Start gate (H1/M6): no run in flight + no previous thread alive (covers
      * the Initialize-failure ghost + the widgets' terminal-frame -> thread-
-     * death window — the acknowledged re-run rejection delta).*/
+     * death window — the acknowledged re-run rejection delta). A run still
+     * draining its cooperative stop gets its OWN distinct message (the user
+     * pressed Run while Stop was in flight — review fix S1); the re-run
+     * rejection text is reserved for a live thread outside the Stopping
+     * drain (Running / Completed / Error with a thread still finishing).*/
+    if (core_.state() == RunState::Stopping) {
+        emit messageRequested(
+            QStringLiteral("Warning!"),
+            QString::fromLatin1(kStillStoppingText), Severity::Warning);
+        return false;
+    }
     if (core_.state() == RunState::Running ||
-        core_.state() == RunState::Stopping ||
         (driver_ && driver_->ThreadActive())) {
         emit messageRequested(
             QStringLiteral("Warning!"), QString::fromLatin1(kReRunRejectedText),
@@ -102,11 +112,31 @@ bool OptimizerRunController::start(const OptimizerRunRequest& req) {
         emit seedApplied(seed.frame, seed.model);
     }
 
+    /*Payload refresh (review fix P1-2): the SaveLastPose mirror AND the
+     * seed write above both landed in req.storage — the manager's
+     * Initialize consumes launch.pose_matrix (the by-value copy the view
+     * captured BEFORE start()), so the payload is refreshed here. Without
+     * it the seed never reached the run (the manager started from the
+     * stale/drifted pose) and the mirror's persistence missed the payload
+     * vs the pre-refactor flow — the estimate-wins-over-drift guarantee
+     * was false.*/
+    if (req.storage) {
+        launch.pose_matrix = *req.storage;
+    }
+
     /*Run state + epoch, then a fresh driver per run (M12/Q8).*/
     core_.onRunStarted();
     emit runStateChanged();
     run_epoch_ = core_.epoch();
-    current_frame_ = req.current_frame;
+    /*Tracked frame (review fix P1-1): the manager's frame sequence starts
+     * at 0 for All/Each (start_frame_index_ = 0, and the widgets view
+     * reset its selection to 0 BEFORE start() — M11 two-phase), so the
+     * terminal-frame persistence rows start at 0 there; the other
+     * directives keep the run's current frame.*/
+    current_frame_ =
+        (req.directive == Directive::All || req.directive == Directive::Each)
+            ? 0
+            : req.current_frame;
     frame_count_ = req.frame_count;
     model_count_ = req.model_count;
     storage_ = req.storage;

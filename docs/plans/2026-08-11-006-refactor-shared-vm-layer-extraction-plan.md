@@ -455,7 +455,7 @@ compile.
 
 ---
 
-- [ ] U2. **[SessionState previous-selection mirrors]**
+- [x] U2. **[SessionState previous-selection mirrors]**
 
 **Goal:** Extend `jta::SessionState` with previous-selection mirrors + helpers
 — the pure foundation for save-last-pose and the session-state controller.
@@ -495,7 +495,7 @@ compile.
 
 ---
 
-- [ ] U3. **[SaveLastPose shared core]**
+- [x] U3. **[SaveLastPose shared core]**
 
 **Goal:** One parameterized save-last-pose core in services; the four
 divergent call-site behaviors relocate onto it **preserved verbatim**, pinned
@@ -559,7 +559,7 @@ widgets manual-visual selection/save flow unchanged.
 
 ---
 
-- [ ] U4. **[Render pipeline builder]**
+- [x] U4. **[Render pipeline builder]**
 
 **Goal:** A widget-free, value-parameterized VTK pipeline recipe in services
 that `Viewer` and `QmlVtkRenderer` both call — removing the 1:1 mirror and the
@@ -625,7 +625,7 @@ and `matToVTK` deleted; QML render parity unchanged.
 
 ---
 
-- [ ] U5. **[OptimizerRunController]**
+- [x] U5. **[OptimizerRunController]**
 
 **Goal:** The shared run controller — gate, drive sequence, run-state
 machine, progress, stop, seed, epoch/thread lifecycle, destructor contract.
@@ -745,7 +745,7 @@ green.
 
 ---
 
-- [ ] U6. **[SessionStateController + MainScreen bookkeeping removal]**
+- [x] U6. **[SessionStateController + MainScreen bookkeeping removal]**
 
 **Goal:** The QObject notification shell over SessionState; MainScreen's
 private session bookkeeping deleted; both views write through the one core.
@@ -807,7 +807,7 @@ identical; QML app unchanged; `jj diff` shows relocation + deletions.
 
 ---
 
-- [ ] U7. **[Study-load orchestration]**
+- [x] U7. **[Study-load orchestration]**
 
 **Goal:** One shared load path over `SessionController` parsing +
 caller-owned containers; the widgets load slots and `StudyBridge` thin onto
@@ -857,7 +857,7 @@ manual-visual identical; `jj diff` relocation.
 
 ---
 
-- [ ] U8. **[ML orchestration]**
+- [x] U8. **[ML orchestration]**
 
 **Goal:** One shared segment/estimate orchestration over
 `SegmentationController`/`ImplantEstimator`; MainScreen's segment/estimate
@@ -918,7 +918,7 @@ manual-visual; `jj diff` relocation.
 
 ---
 
-- [ ] U9. **[Camera A/B orchestration]**
+- [x] U9. **[Camera A/B orchestration]**
 
 **Goal:** The VM slice of the camera slots — active-camera state via the
 session core and the two inline save-last-pose copies onto the U3 core —
@@ -964,7 +964,7 @@ extracted; display-only blocks stay in the view.
 
 ---
 
-- [ ] U10. **[End-state verification]**
+- [x] U10. **[End-state verification]**
 
 **Goal:** Prove the sweep: MainScreen residue is view-only, line counts
 reported, R15 grep-gate holds, full suite + parity green.

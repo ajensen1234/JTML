@@ -1,0 +1,152 @@
+{
+  "runId": "5bdcfc8e",
+  "agent": "ce-adversarial-document-reviewer",
+  "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-adversarial-document-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (adversarial):\nStress-test the decisions: challenge premises (is the whole pass worth it vs the widgets app? does D2 commit contract actually hold under ListView recycling? is D4 seed invalidation correct vs plan-006 stale-seed guard? does the U2 extraction wiring contract survive the 5-Connections/3-region-viewport reality? are the test pins in U6 genuinely headless-verifiable?), surface unstated assumptions, construct failure scenarios.",
+  "exitCode": 0,
+  "usage": {
+    "input": 101021,
+    "output": 52369,
+    "cacheRead": 800896,
+    "cacheWrite": 0,
+    "cost": 0.0155243844,
+    "turns": 15
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 101021,
+        "output": 52369,
+        "cacheRead": 800896,
+        "cacheWrite": 0,
+        "cost": 0.0155243844,
+        "turns": 15
+      }
+    }
+  ],
+  "durationMs": 513360,
+  "toolCount": 21,
+  "launchContractDigest": "f8f0b4a34f2471af612a3eee2465eb691a2e8e3b364cc4affe255d50471d18df",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "6 findings returned with file paths (docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md; code cross-referenced at src/app/experimental/main.qml, PoseCell.qml, PoseBridge.h, MlBridge.cpp, OptimizerBridge.h, StudyBridge.cpp) and severities P1-P3, each with >=1 direct quote from the plan, plus residual_risks and deferred_questions arrays."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (full, 881 lines)",
+          "result": "passed",
+          "summary": "Full plan read; all decisions, units, and verification claims captured"
+        },
+        {
+          "command": "grep/read src/app/experimental/main.qml (Connections blocks, locks, dialogs, viewport refs)",
+          "result": "passed",
+          "summary": "Verified 6 Connections blocks (419/447/461/472/493/510), run-lock bindings, Run closes dialogs at 980-981, frame list at 646-675, 240px column at 631, Material pin at 27-28"
+        },
+        {
+          "command": "grep/read PoseBridge.h/.cpp, MlBridge.cpp/.h, OptimizerBridge.h, StudyBridge.cpp, QmlVtkRenderer.h/.cpp, SettingsPanel.qml, Theme.qml",
+          "result": "passed",
+          "summary": "Verified seed lives in OptimizerBridge (setSeedPose/clearSeedPose), plan-006 guard clears on selectionChanged only, copy/load write poses without selection change, notifyCellChanged vs refresh paths, QQuickVTKItem renderer"
+        }
+      ],
+      "validationOutput": [
+        "Plan claims vs code: '5 glue blocks (417-461)' is false (6 blocks, 3 outside range, two target studyBridge); D5's enabled:false viewport lock is plausible (QQuickItem enabled gates QML event delivery); D4 triggers omit copy/load write paths; D7 index-sync unexamined against the model swap; U6 harness has no style pin. No files modified."
+      ],
+      "residualRisks": [
+        "P1 findings F1/F2 are the load-bearing ones: the extraction contract's inventory is factually wrong, and the pool-reset vs editingFinished ordering is unpinned at the data-integrity core. Both need author resolution before U2/U5 implementation."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Read-only adversarial review; no files changed.",
+      "reviewFindings": [
+        "P1: docs/plans/2026-08-12-007...md (Context/wiring contract) - Connections inventory wrong (6 blocks, not 5; range 417-461 excludes 472-516); single-owner rule unsatisfiable for studyBridge's two blocks",
+        "P1: docs/plans/2026-08-12-007...md (D8/U5) - mid-edit scroll-away pool reset vs editingFinished commit race unpinned; U5 pin scenario contradicts onPooled 'drop edit state'",
+        "P2: docs/plans/2026-08-12-007...md (D7/U3) - onCurrentIndexChanged fires setCurrentFrame during the dataset model swap the Qt.callLater deferral exists to outlast",
+        "P2: docs/plans/2026-08-12-007...md (D4/U3) - invalidation triggers omit copy-prev/next and pose-file loads; seed owner is OptimizerBridge, not MlBridge",
+        "P2: docs/plans/2026-08-12-007...md (U7) - no pass-level success criteria; U7 verification satisfiable with zero measured improvement",
+        "P3: docs/plans/2026-08-12-007...md (U6) - test harness omits the Material.Dark style pin; components tested under the default style"
+      ],
+      "manualNotes": "All findings verified against the actual source before reporting. No prior decisions existed (round 1). The plan is otherwise self-aware (I1 premise check, D3 debounce deferral, plan-006 guard verification are explicitly mandated). D5's viewport lock mechanism was checked and survives scrutiny (QQuickItem::enabled gates QML input delivery even for QQuickVTKItem), so it was not flagged."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": false
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/5bdcfc8e_ce-adversarial-document-reviewer_0_transcript.jsonl",
+  "timestamp": 1786542408068
+}

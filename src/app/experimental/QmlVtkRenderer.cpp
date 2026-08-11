@@ -151,6 +151,9 @@ struct QmlVtkData : vtkObject {
     // model). Swapped by setInteractionMode on the render thread.
     vtkNew<vtkInteractorStyleTrackballCamera> cameraStyle;
     vtkSmartPointer<PrimaryModelStyle> modelStyle;
+    // The scene index the model-centric style moves (setActiveModel); the
+    // camera-mode focal pivot follows it too. Survives RebuildModels.
+    int activeModelIndex = 0;
     // EndInteraction observer on the model style: reads the primary actor's
     // transform (render thread) and posts the queued pose sync to the GUI
     // thread (plan-005 feedback #2).
@@ -158,6 +161,21 @@ struct QmlVtkData : vtkObject {
 };
 
 vtkStandardNewMacro(QmlVtkData);
+
+/*The active-model clamp (review fix P2-5): every consumer (the camera
+ * focal pivot, the model style's implicit pick, the pose-update pivot
+ * compare) needs a VALID index, but a stale out-of-range activeModelIndex
+ * can outlive a RebuildModels that shrank the model list. Invariant: a
+ * negative index means "no primary selection" (the model style's implicit
+ * pick is cleared) and is preserved; any out-of-range POSITIVE index
+ * clamps to 0 (the pre-feedback default). RebuildModels writes the clamp
+ * back so the stored index always satisfies the invariant.*/
+int ClampedActiveIndex(const QmlVtkData* data, int size) {
+    if (data->activeModelIndex >= 0 && data->activeModelIndex < size) {
+        return data->activeModelIndex;
+    }
+    return data->activeModelIndex < 0 ? -1 : 0;
+}
 
 // Shared jta::render_pipeline::RefreshBackgroundImport (the matToVTK
 // semantics — zero-copy import config). `src` is the effective (possibly
@@ -219,8 +237,13 @@ void ApplyCameraParams(
 // the builder's focalZ parameter; the plan-005 feedback made the
 // off-model pivot explicit: rotate about the model).
 void ApplyCameraFocus(QmlVtkData* data, const std::vector<SceneModel>& models) {
-    const double z =
-        models.empty() ? -1.0 : models[0].pose.z;
+    /*The camera pivot follows the ACTIVE model (owner feedback 2026-08-11):
+     * with several models loaded, rotating the view around the model you
+     * selected beats always orbiting model 0.*/
+    const int active = ClampedActiveIndex(data, static_cast<int>(models.size()));
+    const double z = (models.empty() || active < 0)
+                         ? -1.0
+                         : models[static_cast<size_t>(active)].pose.z;
     jta::render_pipeline::SetupSceneCameraFocal(data->sceneRenderer, z);
 }
 
@@ -254,10 +277,21 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
         data->models.push_back(std::move(ma));
     }
     // Keep the model-centric style's implicit pick in sync (harmless in
-    // camera mode).
+    // camera mode). The active model follows the session's PRIMARY
+    // selection (setActiveModel) and survives rebuilds; falls back to
+    // model 0 (the pre-feedback default) until the app selects something.
+    // The clamp is WRITTEN BACK (review fix P2-5): a stale out-of-range
+    // index from a rebuild that shrank the model list is persisted as the
+    // clamped value, so every later consumer (updatePose's camera-pivot
+    // compare included) sees a valid index.
     if (data->modelStyle) {
+        const int active =
+            ClampedActiveIndex(data, static_cast<int>(data->models.size()));
+        data->activeModelIndex = active;  // pin the invariant
         data->modelStyle->SetPrimaryActor(
-            data->models.empty() ? nullptr : data->models[0].actor);
+            (active < 0 || data->models.empty())
+                ? nullptr
+                : data->models[static_cast<size_t>(active)].actor);
     }
 }
 
@@ -410,12 +444,42 @@ void QmlVtkRenderer::updatePose(int modelIndex) {
             }
             vtkActor* actor = data->models[static_cast<size_t>(modelIndex)].actor;
             jta::render_pipeline::ApplyActorPose(actor, pose);
-            // The rotation pivot follows the primary model (camera mode).
-            if (modelIndex == 0) {
+            // The rotation pivot follows the ACTIVE model (camera mode).
+            if (modelIndex == data->activeModelIndex) {
                 jta::render_pipeline::SetupSceneCameraFocal(
                     data->sceneRenderer, pose.z);
             }
             renderWindow->Render();
+        });
+}
+
+void QmlVtkRenderer::setActiveModel(int sceneIndex) {
+    /*Owner feedback 2026-08-11: the model-centric interactor moves the
+     * session's PRIMARY model, not scene model 0. Render-thread hop via
+     * dispatch_async (the style + actors are render-thread owned); a
+     * negative index clears the implicit pick (nothing movable — the app
+     * surfaces the selection state). The in-range selection goes through
+     * the shared clamp helper (review fix P2-5) and is written back so the
+     * stored index satisfies the invariant (the pick then always matches
+     * the stored index).*/
+    dispatch_async(
+        [sceneIndex](vtkRenderWindow* renderWindow, vtkUserData userData) {
+            auto* data = QmlVtkData::SafeDownCast(userData);
+            if (!data || !data->modelStyle) {
+                return;
+            }
+            data->activeModelIndex = sceneIndex;
+            vtkActor* actor = nullptr;
+            if (sceneIndex >= 0) {
+                const int active = ClampedActiveIndex(
+                    data, static_cast<int>(data->models.size()));
+                data->activeModelIndex = active;  // pin the invariant
+                if (!data->models.empty()) {
+                    actor = data->models[static_cast<size_t>(active)].actor;
+                }
+            }
+            data->modelStyle->SetPrimaryActor(actor);
+            (void)renderWindow;
         });
 }
 

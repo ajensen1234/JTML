@@ -1,0 +1,416 @@
+#+TITLE: Backend Architecture — the minimal surface for swappable parameters + cost + backend
+#+DATE: 2026-08-12
+#+PANOPTES_ANGLE: backend-architecture
+
+* Summary
+
+The optimizer "backend" is already a stack of three seams — the run-level
+OptimizerRunDriver (plan 006 U5), the stage loop inside OptimizerManager::Optimize,
+and DirectOptimizer's injected cost boundary. This session's job is to make the
+*middle* seam data-driven, not to add layers. Target shape: OptimizerRunLaunch stays
+the single by-value payload, additively gaining the DIRECT Options struct; the stage
+sequence (trunk → branch×N → leaf) becomes a StageScript (a vector of StageSpec) that
+the same Optimize() executor consumes; the dilation/dark-silhouette derivation and the
+GPU cost-adapter construction become named, unit-pinned pure functions; the
+DirectOptimizer boundary stays exactly std::function<double(const Point6D&)>. The
+"backend" is deliberately NOT an enum or interface: run-level backend = the injected
+driver (the fake driver already proves it), stage-level backend = the future StageKind
+switch, and a gradient-polish stage is one more script entry with its own runner — all
+in the same seam. Explicit non-moves: the frame loop, session state, and the 7+1 signal
+surface stay in the manager; the GPU cost path stays in compute; no new CMake target;
+no headless executor extraction until the multi-stage oracle (angle 03) demonstrates the
+driver seam insufficient.
+
+* Key Findings
+
+** Target shape: one by-value payload, three conceptual sections, the stage loop as data (Q1)
+
+- The current payload already separates most of the wanted surfaces: OptimizerSettings
+  (budgets/ranges/enables, include/services/optimizer_settings.h) is the optimizer-side
+  config and the three CostFunctionManagers (active variant + parameter values per stage,
+  include/compute/CostFunctionManager.h) are the cost config — both already travel by
+  value in OptimizerRunLaunch (include/coordinator/optimizer_run_driver.h). What is
+  missing is (a) the stage *sequence* as data, (b) a slot for the DIRECT variant Options,
+  and (c) a named derivation for the cost-derived loop inputs (dilation, dark silhouette).
+  [Source: include/coordinator/optimizer_run_driver.h; include/services/optimizer_settings.h]
+- Confidence: high. Relevance: the "RunSpec" the handoff deferred is mostly *naming and
+  flow*, not new structure — the three-way split (optimizer config / cost config /
+  backend) maps onto fields that already exist.
+- StageSpec data model: {StageKind kind, Point6D range, unsigned int budget,
+  unsigned int repeat, unsigned int cfm_index}, where repeat materializes
+  number_branches. The branch group dilates ONCE and emits UpdateDilationBackground once,
+  then re-seeds + budget-accumulates per repeat (optimizer_manager.cpp:1036-1080) — so
+  `repeat` is a property of the stage *group*, not per-iteration dilation, and the data
+  model must carry it that way or the emission sequence drifts. BuildStageScript(settings)
+  → {trunk(range, trunk_budget, 1, cfm 0), branch(range, branch_budget, number_branches,
+  cfm 1) if enable_branch_ && number_branches > 0, leaf(range, leaf_budget, 1, cfm 2) if
+  enable_leaf_}. [Source: src/coordinator/optimizer_manager.cpp:940-1215]
+- Confidence: high. Relevance: this is the single structural change that makes budget-shape
+  ablations (5k/2k/2k/2k from synthesis item 3) and dilation-schedule ablations (item 7)
+  a payload change instead of an editor session on Optimize().
+- Dilation stays COST-owned: today the manager reads the stage dilation ints and dark-
+  silhouette bools from each CFM's active cost-function parameters (the "Dilation" /
+  "dark_silhouette" name scan, optimizer_manager.cpp:237-345). The target keeps that
+  direction — cost config → DeriveStageCostParams(cfm) → loop — rather than moving
+  dilation into optimizer config, because the CFM parameter IS the single source of truth
+  (switch the active variant and the dilation follows). Moving it would fork the truth.
+  The seam is the named pure function, called once in Initialize, with the derived values
+  stored in the manager members exactly as today. [Source: src/coordinator/optimizer_manager.cpp:237-345]
+- Confidence: high. Relevance: answers the dispatch's "dilation under optimizer
+  configuration" framing with a deliberate counter: dilation is a *derived cost property*,
+  exposed to the optimizer loop through a pinned seam.
+- DIRECT Options placement: domain/direct_optimizer.h, next to the engine (domain is
+  Qt-free; the Options struct is plain data). Constructor evolution is additive —
+  `DirectOptimizer(cost, range, start, budget, Options opts = {})` — so the Tier-1 golden
+  call sites (test/unit/test_direct_optimizer.cpp) compile and behave unchanged; the
+  default must reproduce today's epsilon=0 / L2 size-measure / center-sampling behavior
+  bit-identically (R13, synthesis item 5's own requirement). Flow:
+  launch.direct_options → manager member → RunDirectStage → DirectOptimizer. Angle 01 owns
+  the struct's *contents*; this session owns where it lives and how it flows.
+  [Source: include/domain/direct_optimizer.h; .panoptes/jtml-research-horizons/synthesis.org item 5]
+- Confidence: high (mechanics), medium (future defaults — 01 owns them).
+- Backend selection: deliberately NO RunBackend enum on the spec today. The run-level
+  backend is already the driver — injected per run, and the fake driver in the lifecycle
+  test is proof it is swappable (test/lifecycle/optimizer_run_controller_test.cpp:51+).
+  The stage-level backend is the future StageKind switch inside the runner. An enum with
+  one value is exactly the speculative abstraction the stance rejects; the extension
+  points are named and left unbuilt. [Source: include/coordinator/optimizer_run_driver.h;
+  docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md item 1]
+- Confidence: high. Relevance: keeps the "no new layer / maximal reuse" leanings intact.
+
+** The stage loop stays in Optimize() but becomes script-driven; the injection boundary stays a std::function, its construction factored out (Q2)
+
+- Optimize() (L883-1215) interleaves three kinds of work per frame: session/GPU state
+  (seeding from pose storage or previous optimum, non-principal pose updates, CFM frame-
+  index, OpenCV dilation restores), the stage script (trunk → branch×N → leaf with per-
+  group CFM init/dilate/emit and per-iteration re-seed/range/budget accumulation), and
+  signal emission (UpdateDilationBackground, UpdateDisplay, UpdateOptimum, OptimizedFrame).
+  Only the middle one is algorithm policy; the other two are the manager's job and stay.
+  [Source: src/coordinator/optimizer_manager.cpp:883-1215]
+- Confidence: high. Relevance: answers "where does the stage loop move" — it does not
+  leave the manager; it becomes data-driven in place. The executor IS Optimize(), and it
+  stays the only executor (see non-goals on extraction).
+- Script-driven loop shape, preserving today's semantics exactly: `for (const StageSpec& s
+  : stage_script_) { CFM init + dilate + emit UpdateDilationBackground; for (i < s.repeat)
+  { re-seed from current_optimum_location_; SetSearchRange(s.range); budget_ += s.budget;
+  RunDirectStage(s); } CFM destruct; }` with the counters reset before the loop (today's
+  trunk preamble: budget_ = trunk_budget, cost_function_calls_ = 0 — i.e., the reset is a
+  loop-start property, not a per-kind special case; branch/leaf accumulate by design).
+  [Source: src/coordinator/optimizer_manager.cpp:976-1145]
+- Confidence: high (relocation claim; equivalence is pinned by parity + oracle, see the
+  pin gap below). Relevance: this is Cut B of the migration.
+- RunDirectStage (L1225-1296) stays the stage runner. Its injected lambda — set the GPU
+  principal-model pose from the denormalized physical point, biplane-convert via
+  calibration, call the stage manager's active cost — becomes a named adapter factory
+  (working name BuildGpuCostAdapter(principal_model, calibration, stage_manager)) in
+  coordinator. Three consumers converge on it: the production runner, the z-profile probe
+  (synthesis item 2 explicitly cites the injected-cost boundary at :1225-1246), and
+  oracle_test's hand-rolled twin (oracle_test.cpp:286-291, which today re-implements the
+  lambda with a comment "exactly as OptimizerManager::RunDirectStage does"). [Source:
+  src/coordinator/optimizer_manager.cpp:1225-1296; oracle/oracle_test.cpp:286-291;
+  .panoptes/jtml-research-horizons/synthesis.org item 2]
+- Confidence: high. Relevance: the "injection boundary becomes" answer — DirectOptimizer's
+  CostFunction stays std::function<double(const Point6D&)> with SetCallOffset, Stop, and
+  the iteration/improvement callbacks (include/domain/direct_optimizer.h); only the
+  construction of the GPU-bound lambda moves into the named adapter.
+- Future gradient-polish stage (angle 06): one StageSpec with a new StageKind, its own
+  runner branch (gradient optimizer over a DRR/differentiable silhouette cost), its own
+  cost adapter, same callbacks, same loop, same driver. No StageRunner interface is built
+  now — there is one runner today; the switch statement is the extension point.
+  [Source: .panoptes/jtml-research-horizons/synthesis.org item 3 (R15 stage-loop refactor
+  go/no-go), item 10 (differentiable refinement as nearest learned-refinement horizon)]
+- Confidence: high (design), medium (06's exact runner shape). Relevance: this is the
+  "multi-stage oracle + gradient polish plug into the same seam" requirement, satisfied
+  with the script + driver, not a plugin architecture.
+
+** What stays in OptimizerManager vs what becomes spec-driven; the R13 pin surface and its gaps (Q3)
+
+- STAYS: Initialize's payload capture + CUDA/GPU pipeline construction (L22-590), the
+  thread wiring + lifecycle (started→Optimize, finished→quit/deleteLater, H3 destructor
+  contract in the adapter), the frame loop + pose-storage session state + non-principal
+  pose updates, ALL 7+1 signal emissions (their signatures are pinned by the controller's
+  binds), the sym_trap path + CalculateSymTrap, ownership/restore of the OpenCV dilation
+  images, the cumulative budget_/cost_function_calls_ accounting as executor state, and
+  error propagation. MOVES to data/functions: the stage sequence (StageScript), the
+  dilation/dark-silhouette derivation (DeriveStageCostParams), the cost-adapter
+  construction (BuildGpuCostAdapter), and (Cut C) the Options plumbing.
+  [Source: include/coordinator/optimizer_manager.h; src/coordinator/optimizer_manager.cpp]
+- Confidence: high. Relevance: the manager is NOT hollowed out — it remains the executor +
+  session owner; only the algorithm policy becomes data. This is the "minimal surface"
+  answer: no new class owns the loop.
+- R13 pin surface, enumerated with what breaks each:
+  - test/lifecycle/optimizer_run_controller_test.cpp — the fake driver records last_launch_
+    by value and asserts launch fields (e.g. launch.settings.trunk_budget = 1000 at
+    MakeRequest). ADDITIVE payload changes (Cut C) break nothing. REGROUPING the launch
+    breaks the field accesses → one gated cut with the test updated in the same change
+    (R13 signature adaptation; the pinned behavior — values forwarded by value through
+    Initialize — is unchanged). [Source: test/lifecycle/optimizer_run_controller_test.cpp:51-128,150+]
+  - oracle/qml_parity_check.cpp — the REAL manager run path via OptimizerBridge (Kneel_1
+    frame 0, oracle config, backface OFF), IoU >= 0.85 band vs measured 0.9936. This is
+    the integrated pin for the loop relocation (Cut B). Caveat: the band is wide
+    (0.85 vs 0.9936), so it cannot see emission-order drift (an extra
+    UpdateDilationBackground, a wrong-stage dilation) that does not move IoU.
+    [Source: oracle/qml_parity_check.cpp:4-9; test/golden/baseline.json]
+  - oracle/oracle_test.cpp — pins DirectOptimizer + real GPU cost; Cut C's default Options
+    must keep it green. test/unit/test_direct_optimizer.cpp + _properties.cpp — Tier-1
+    golden + PBT pins (budget/determinism/offset pins, optimum-inside-cube); the defaulted
+    5th ctor arg keeps them compiling and bit-identical.
+  - test/unit/experimental_optimizer_gate_test.cpp — rejects BEFORE any driver/manager/
+    thread is created; unaffected by manager internals.
+  - GAP: Optimize()'s stage loop has NO headless emission-order pin today (the manager is
+    GPU-bound; the fake-driver test pins the *controller*, not the manager). Cut B's R13
+    evidence is therefore parity + oracle green + jj diff relocation, plus the new
+    pure-function pins (Cut A). A headless loop pin only becomes possible once a runner
+    seam exists — honest limitation, recorded, not a blocker.
+  [Source: test/CMakeLists.txt:365-407 (target recipes + pin descriptions)]
+- Confidence: high (what exists), high (the gap — verified by reading the test targets).
+- Relevance: answers "what breaks the R13 pin" — the answer is "almost nothing, if the
+  cuts are ordered additive-first; the real risks are the wide parity band and the absent
+  loop pin, both addressed by Cut A's characterization tests".
+
+** Payload evolution contract: additive first; regrouping is one gated signature-adaptation cut (Q4)
+
+- Invariants that cannot change: the driver interface (Manager/ThreadActive/Initialize/
+  Start/Stop/Wait), Initialize(const OptimizerRunLaunch&, QString&), by-value forwarding
+  (the fake records it), the 8 binds with finished bound BEFORE Initialize (M6), the
+  epoch/threadActive Start gate (H1/M6), and the field names the view/controller write
+  (launch.settings.trunk_budget and friends). [Source: include/coordinator/optimizer_run_driver.h;
+  include/coordinator/optimizer_run_controller.h:10-15, 47-82; test/lifecycle/optimizer_run_controller_test.cpp]
+- Confidence: high. Relevance: this is the contract that makes the payload evolution
+  non-breaking by construction.
+- Additive evolution is FREE: add `DirectOptimizer::Options direct_options` (default-
+  constructed = today's behavior) and, later, optional per-stage override knobs
+  (std::optional fields, default unset = settings win). The fake-driver test compiles
+  unchanged. [Source: test/lifecycle/optimizer_run_controller_test.cpp (records the whole
+  launch; new defaulted fields need no assertion changes)]
+- Regrouping into nested {session / optimizer-config / cost-config} sections inside the
+  launch: ONLY as one dedicated cut where the fake-driver field accesses, the controller's
+  launch assembly, and the view writers move in the same change. R13 characterization for
+  that cut: the by-value payload values are identical (the test's existing assertions are
+  the spec). Cosmetic; can be deferred indefinitely without blocking 01/03/06.
+  [Source: docs/plans/2026-08-11-006-refactor-shared-vm-layer-extraction-plan.md:70-75 (R13
+  per-cut-type rule)]
+- Do NOT move the 3 CFMs to pointers/shared_ptr in the launch: they are copied by value
+  today (pinned by the fake's by-value record + the adapter's verbatim forwarding). A move
+  is a perf decision that needs measurement first (angle 05 owns perf) and would change the
+  fake-driver copy semantics. [Source: src/coordinator/optimizer_run_driver.cpp
+  (Initialize forwards launch members verbatim)]
+- The directive QString and iter_count stay as-is; the parse block (Initialize L144-192)
+  is already a contained pure block and may become a named function (BuildFrameIndices) in
+  Cut B — optional, no behavioral change ("Unrecognized optimization directive" message is
+  pinned). [Source: src/coordinator/optimizer_manager.cpp:144-192]
+- Confidence: high. Relevance: answers "how does OptimizerRunLaunch evolve without breaking
+  the driver seam" — additive fields forever, restructuring once with the test in the same
+  change, invariants listed above never touched.
+
+** Explicit non-goals (Q5)
+
+- NO new layer: no new CMake target, no new directory; the spec/script/derivation
+  functions live in existing coordinator files (optimizer_run_driver.h /
+  optimizer_manager.cpp) and domain (direct_optimizer.h). This extends plan 006's posture
+  (extend coordinator/services, never add a layer). [Source:
+  docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md (layer map)]
+- NO compute rewrite: CostFunctionManager, the GPU kernels, and the GPU object graph stay
+  in compute; the manager keeps owning the GPU pipeline it builds in Initialize. The GPU
+  cost path stays in compute — the adapter factory calls it, never reimplements it.
+  [Source: include/compute/CostFunctionManager.h]
+- NO executor extraction / headless runner: the driver seam is the multi-stage oracle's
+  entry (convention doc item 1: "This is also the multi-stage oracle's future entry
+  point"). Extraction happens ONLY if angle 03 demonstrates the driver insufficient —
+  the script-as-data design keeps that door open without building it.
+  [Source: docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md:11-13]
+- NO StageKind interface today: one runner exists; the switch is the extension point.
+  NO RunBackend enum: the driver IS the run-level backend.
+- NO ML in the loop: no learned cost, no learned stage selection. Angle 06's
+  differentiable-polish is a future *stage*, not ML-in-the-loop.
+- NOT owned here: OptimizerSettings contents (angle 01), the DIRECT Options contents
+  (angle 01), the dilation-schedule VALUES reconciliation 6/3/1 vs 6/4/1 (angles 02/06),
+  the 7+1 signal signatures, the driver interface, the controller, perf work (angle 05).
+- Confidence: high. Relevance: keeps the session's scope the seam architecture, per the
+  handoff's "the optimizer-backend modularity is a LATER session" boundary now being
+  opened only as far as the seam allows.
+
+** Migration sketch: incremental cuts with pins (A–E)
+
+- Cut A (PIN, no production change): add BuildStageScript(OptimizerSettings) and
+  DeriveStageCostParams(CostFunctionManager) as pure functions + unit tests in test/unit/
+  (direct-compile pattern, no GPU) asserting they reproduce today's inline behavior for
+  default settings — script = trunk 35/20k, branch 15/5k x2, leaf 3/5k (baseline.json
+  shape); derived dilation matches the inline trunk/branch/leaf scans (L237-345). This is
+  the R13 characterization test the wide parity band cannot substitute for.
+  [Source: test/golden/baseline.json:13-18; src/coordinator/optimizer_manager.cpp:237-345]
+- Cut B (RELOCATION): replace the inline derivation in Initialize and the hard-coded
+  stage sequence in Optimize with the functions + script loop. Pins: full headless suite +
+  qml_parity_check (IoU band) + oracle_test green; jj diff shows relocation. Optional same-
+  cut: BuildFrameIndices for the directive parse.
+- Cut C (OPTIONS): add DirectOptimizer::Options with defaulted ctor arg, the launch field,
+  the manager member, and the RunDirectStage plumbing. Pins: test_direct_optimizer golden
+  bit-identical (unchanged), lifecycle fake-driver test unchanged (additive), parity green.
+  Contents land when angle 01 ships them.
+- Cut D (ADAPTER): factor BuildGpuCostAdapter out of RunDirectStage's lambda; switch
+  oracle_test's hand-rolled twin to it (removes the duplication at oracle_test.cpp:286-291).
+  Pin: oracle_test IoU identical (behavior-preserving).
+- Cut E (DEFERRED, gated on 03/06): StageKind dispatch when a second runner exists; a
+  headless executor ONLY if the oracle demonstrates the driver seam insufficient. Each of
+  A–D is a separate jj change per the repo convention.
+- Confidence: high (cuts A–D mechanics), medium (E's trigger — owned by 03/06).
+- Relevance: this is the executable plan the follow-on session can run; every cut has an
+  explicit pin and a jj diff story.
+
+* What Could Not Be Verified
+
+- Emission-order equivalence of the script-driven loop vs today's hard-coded loop: only
+  provable by running the parity + a new emission pin after Cut B; not executed here
+  (read-only research, no GPU run).
+- Whether the multi-stage oracle (angle 03) will actually need a headless executor beyond
+  the driver seam — the design keeps the door open (script is data) but does not build it;
+  the oracle's plan (driving the real production loop via the driver) suggests it will not.
+- The future Options defaults (angle 01 owns contents); the assumption is defaults
+  reproduce today's behavior per R13/synthesis item 5, which is the contract, not the
+  values.
+- The branch dilation contradiction (baseline.json records 3, settings_constants
+  reportedly 4): owned by angles 02/06; this session only requires DeriveStageCostParams
+  to return exactly what the manager derives today.
+- Whether CFM copy-by-value in the launch is measurably hot: no perf data; angle 05 owns
+  the measurement, and the payload contract keeps the copies until measured otherwise.
+- The exact future gradient-polish runner shape (angle 06): only its seam (StageKind +
+  script entry + adapter) is fixed here.
+
+* Sources
+
+- include/coordinator/optimizer_run_driver.h — OptimizerRunLaunch payload + OptimizerRunDriver seam, the boundary under evolution (by-value contract, Manager/Initialize/Start/Stop/Wait).
+- src/coordinator/optimizer_run_driver.cpp — production adapter wrapping OptimizerManager UNTOUCHED (verbatim forwarding, H3 destructor contract, 5 s bounded wait).
+- src/coordinator/optimizer_manager.cpp — Initialize (L22-590: payload capture, directive parse L144-192, dilation/dark-silhouette derivation L237-345, GPU pipeline), Optimize (L883-1215: frame loop + stage sequence + emissions), RunDirectStage (L1225-1296: the injected-cost boundary).
+- include/coordinator/optimizer_manager.h — Initialize signature, members (budget_, cost_function_calls_, dilation vals, stage managers), RunDirectStage decl.
+- include/domain/direct_optimizer.h — the pure engine; CostFunction = std::function<double(const Point6D&)>, SetCallOffset, Stop, callbacks — the boundary that does NOT change.
+- include/compute/CostFunctionManager.h — per-stage cost managers: active variant + parameter values (the dilation source of truth), per-stage init/destruct/call lifecycle.
+- include/services/optimizer_settings.h — budgets/ranges/enables/number_branches (optimizer-side config).
+- include/coordinator/optimizer_run_controller.h — OptimizerRunRequest embedding the launch; the pinned drive sequence comment (L10-15, L47-82).
+- test/lifecycle/optimizer_run_controller_test.cpp — the fake-driver pin: records last_launch_ by value, 8 binds, finished-before-Initialize, epoch/threadActive, M6/M10a/H3.
+- test/CMakeLists.txt:365-407 — jtml_test_optimizer_run_controller target + pin description; the direct-compile pattern for pure logic.
+- oracle/qml_parity_check.cpp — the real-manager parity pin (IoU >= 0.85 band vs 0.9936 measured) — the integrated pin for the loop relocation.
+- oracle/oracle_test.cpp:286-291 — DirectOptimizer + real GPU cost pin; the hand-rolled RunDirectStage twin that Cut D absorbs.
+- test/unit/test_direct_optimizer.cpp + test_direct_optimizer_properties.cpp — Tier-1 analytic golden + PBT pins (Cut C's bit-identical default requirement).
+- test/golden/baseline.json:13-18 — authoritative budget shape 20k/2x5k/5k, ranges 35/15(z25)/3(z15), dilation 6/3/1 (Cut A's expected script values).
+- docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md — the seam map, convention 1 (drive seam = oracle entry), R13 per-cut-type (item 7), R15 headless rule (item 9), Follow-on section (optimizer-backend = this session).
+- docs/plans/2026-08-11-006-refactor-shared-vm-layer-extraction-plan.md — R13/R15 definitions (L19-23, L70-79, L990-991), U5 (the driver seam), U10, Follow-On Optimization Phase (L131-150: recommended sequence, posture flip).
+- .panoptes/jtml-research-horizons/synthesis.org — item 2 (z-profile probe on the injected-cost boundary), item 3 (multi-stage oracle on the driver seam; R15 stage-loop refactor go/no-go), item 5 (DIRECT variant switch: Options struct with bit-identical defaults), item 7 (dilation ablation).
+
+## Round 2
+
+### Summary
+
+Round 1 left six open ends; this round closes each with a concrete seam-level answer: (1) Cut E's deferral gate is now falsifiable — one named perturbation, three named gates, decided by the multi-stage oracle's perturbation suite, with the counter-derived observation channel (stageText()/costCalls() are pure functions of the cumulative call count, optimizer_run_controller_core.h:159-165) as the structural reason the driver seam cannot see the failing class; (2) StageSpec is fully specified ({kind, range, budget, repeat, cfm_index}, repeat=0 expresses the Sym_Trap no-search leaf) with a term-for-term emit-order preservation argument, and DeriveStageCostParams/BuildStageScript get a dedicated direct-compile-testable TU in jtml_coordinator; (3) Cut B's pin strategy: the golden's end-to-end assertions stay verbatim, only the twin's body at oracle_test.cpp:286-291 moves into BuildGpuCostAdapter, and the adapter's honest pin surface (no headless surface exists) is enumerated; (4) the double-buffered eval-state contract: compute owns the buffer state, the manager owns the object graph, the domain sees only two std::function shapes; (5) contradiction 5's situs is exact — torch PUBLIC on jtml_compute (src/compute/CMakeLists.txt:67) + an unused ATen include in CostFunctionManager.h:28 — with a gated two-move fix (Cut F); (6) the Options defaults map line-by-line onto today's ε=0/Jarvis/one-side-trisection/L2 code with a guarded-divergence proof strategy, and the launch plumbing is traced end-to-end with every DirectOptimizer call site verified. One new finding surfaced: an error-path asymmetry (leaf DestructActiveCostFunction is error-gated, trunk's is not, optimizer_manager.cpp:1144-1148) that Cut B must transcribe verbatim and angle 02 should inspect as a narrow GPU-resource-leak candidate.
+
+### Key Findings
+
+#### R2-1 — Cut E's deferral gate made falsifiable: one named perturbation, three named gates, decided by the oracle's perturbation suite
+
+- The gate is now a decision procedure, not a vibe. The multi-stage oracle (angle 03) gains a perturbation arm: inject a wrong-stage dilation emit into the production stage loop — the branch group dilates its comparison image with `trunk_dilation_val_` instead of `branch_dilation_val_` at the branch transition (optimizer_manager.cpp:1040-1058), or equivalently swap the branch/leaf group order in the script. The trigger fires iff ALL of the driver-seam-observable gates stay green: (a) per-frame IoU ≥ 0.85, (b) costCalls() landing on 20k/25k/30k/35k (the stage-bookkeeping gate), (c) qml_parity IoU unchanged. If any gate trips → the seam is sufficient at stage granularity → Cut E stays deferred and the trip is recorded as checked-coverage evidence (angle 03's oracle-of-the-oracle). If none trips → the driver seam is demonstrated insufficient for the measurement mission → StageKind dispatch + headless executor are sanctioned, and the multi-stage oracle moves to the headless executor.
+- Why the failing class is exactly the emission/dilation class — structural, source-verified: the controller's observation channel is entirely counter-derived. `stageText()` = `StageLabel(ProgressBudgets, calls)` is a pure function of the cumulative call count (optimizer_run_controller_core.h:159-165,189-192); `UpdateDisplay(double,int,double,unsigned int)` (optimizer_manager.h) carries ms/calls/minimum/model-index but NO stage identity; the OptimizerRunDriver interface (include/coordinator/optimizer_run_driver.h) exposes Manager/ThreadActive/Initialize/Start/Stop/Wait and nothing mid-run. A wrong-dilation emit changes no counter, no pose value that the 0.85-vs-0.9936 band can see, and no relay payload. Cost-budget breaks, by contrast, ARE caught (costCalls on caps) — they are the perturbation suite's negative control, proving the seam can see the counter class and is blind specifically to the emission class.
+- Why the wrong dilation plausibly passes (the hypothesis the suite must measure): branch dilation (4 or 3 per contradiction 1) is ≤ trunk (6), so the branch's dilated comparison image is a strict subset of the trunk's — the dilated-overlap family is near-flat in z and wide in-plane (angle 03's magnification arithmetic), so the recovered optimum and its IoU are nearly unchanged; the flat-3000 oracle never even reaches branch/leaf today, so no existing pin covers this class (Round 1's recorded R13 gap, now given a concrete instrument).
+- Explicit non-triggers (the negatives matter as much as the positive): the z-profile probe does NOT demonstrate insufficiency — after Cut D it consumes BuildGpuCostAdapter directly in its own test process, never through the driver seam; and the stage-bookkeeping gate's existence means the oracle already covers the budget class through the seam. Only the emission/dilation perturbation can fire the trigger.
+- New evidence that sharpens the calculus: `OptimizeCoordinator` + `OptimizeWorker` (src/coordinator/optimize_coordinator.cpp:12-65, DirectOptimizer constructed at :36) is ALREADY a headless single-stage DirectOptimizer executor — plan-U4, real QThread, injected std::function cost, cooperative stop, state machine, pinned by test/lifecycle/coordinator_test.cpp. So "headless executor" is not missing machinery; Cut E is specifically stage-level dispatch over the GPU-bound stage loop. The precedent lowers E's cost but does not justify building it early — the gate stands.
+- Confidence: high (mechanism, interface surface, and channel derivation all source-verified); medium on the "passes" half (the perturbation's gate-trip outcome is exactly what the suite measures — that is the falsifiability).
+- Relevance: this is the deliverable the handoff asked for — "what specific evidence of 'the driver seam insufficient' would trigger StageKind dispatch + headless executor" — one injection, three gates, one owner (angle 03's perturbation suite), and a defined consequence either way.
+
+#### R2-2 — StageScript-as-data: exact schema, the bit-identical emit-order argument, and where the derivation functions live
+
+- Exact schema (coordinator layer, plain data):
+  ```cpp
+  enum class StageKind : unsigned char { Trunk = 0, Branch = 1, Leaf = 2 };  // future: Polish
+  struct StageSpec {
+      StageKind kind;            // the stage's search flavor (Round 1's StageKind dispatch point)
+      Point6D range;             // SetSearchRange input, applied per repeat iteration
+      unsigned int budget;       // per-repeat accumulator: budget_ += budget (cumulative semantics preserved)
+      unsigned int repeat;       // RunDirectStage invocations; branch = number_branches (materialized);
+                                 // trunk/leaf = 1; 0 = init+dilate+emit with NO search (the Sym_Trap leaf)
+      unsigned int cfm_index;    // 0/1/2 -> trunk_manager_/branch_manager_/leaf_manager_
+  };
+  using StageScript = std::vector<StageSpec>;
+  ```
+- Repeat semantics for the branch group, pinned to the code: the group's CFM init + dilate + UpdateDilationBackground emit happen ONCE before the repeat loop (optimizer_manager.cpp:1040-1058), and the per-repeat body is exactly {search_stage_flag_=Branch (:1078); SetStartingPoint(current_optimum_location_); SetSearchRange(branch_range); budget_ += branch_budget; RunDirectStage} with `if (error_occurrred_) break;` per iteration (:1074-1075). Trunk resets budget_=trunk_budget and cost_function_calls_=0 BEFORE the whole sequence (:986-987) — a loop-start property, not a per-kind special case; branch/leaf accumulate by design. `repeat=0` is not speculative: under the Sym_Trap directive the leaf group's init+dilate+emit still runs and only the search is suppressed (leaf init block is outside the `!sym_trap_call` guard; CalculateSymTrap sits at :1110-1112 between the group's emit and the search; the search itself is gated `enable_leaf_ && !error_occurrred_ && !sym_trap_call` at :1130-1131). So BuildStageScript(settings, directive) yields [{Trunk, trunk_range, trunk_budget, 1, 0}, {Branch, branch_range, branch_budget, number_branches, 1} if enabled, {Leaf, leaf_range, leaf_budget, 1, 2} if enabled] for normal directives and [{Leaf, leaf_range, leaf_budget, 0, 2}] for "Sym_Trap".
+- Bit-identical emit-order argument (term-for-term): today's sequence is [trunk] init (error recorded but dilate+emit still runs, :1002-1016) → dilate(trunk val, both cameras) → emit UpdateDilationBackground → RunDirectStage gated on !error → destruct; [branch] init → dilate(branch val) → emit → repeat-loop (no per-repeat emit!); [leaf] init → dilate(leaf val) → emit → search (gated) → destruct; [epilogue] dilate(trunk val) → emit, then OptimizedFrame (:1148-1160). The script executor's group body is a literal transcription of these blocks; for default settings the group list and repeat counts ARE today's runtime conditionals (enable_branch_ && number_branches>0, enable_leaf_), so the emission sequence — including the single branch emit, the epilogue trunk-restore emit, and the error-path gating — is identical in kind, order, and count. The one quirk to transcribe, not fix: the leaf DestructActiveCostFunction is gated on `!error_occurrred_` (:1144-1148) while the trunk destruct is unconditional — an asymmetry that is likely a narrow GPU-resource leak on the leaf-search-failure path (RunDirectStage failure sets error before the leaf destruct) and is a genuine R13 transcription hazard; flag to angle 02's bug list, do not normalize in Cut B.
+- Where DeriveStageCostParams lives — refinement of Round 1's placement: a new header include/coordinator/optimizer_stage_script.h + src/coordinator/optimizer_stage_script.cpp, added to jtml_coordinator's EXPLICIT source list (src/coordinator/CMakeLists.txt:22-27 — one line; headers are already globbed). This is NOT a new layer or target (Round 1 non-goal preserved); the dedicated TU exists because the direct-compile test pattern (test/CMakeLists.txt:365-407) must compile the pure functions WITHOUT pulling optimizer_manager.cpp's Qt/CUDA surface. The signature is pure over the parameter registry, not over the CFM: `StageCostParams DeriveStageCostParams(std::string_view cost_function_name, const std::vector<jta_cost_function::Parameter<int>>&, const std::vector<jta_cost_function::Parameter<bool>>&)` returning `{int dilation, bool dark_silhouette}` — reproducing the inline scan exactly (the "Dilation"/"DILATION"/"dilation" name match, the ≤0→0 clamp, the DIRECT_MAHFOUZ → 3 special case, and the six dark-silhouette name variants, optimizer_manager.cpp:237-345). The manager calls it per stage with getActiveCostFunction()/getIntParameters()/getBoolParameters() and stores the results in the existing members, so the derivation is a literal relocation; dilation stays cost-owned (the CFM parameter remains the single source of truth, Round 1's counter to the dispatch framing). BuildStageScript(OptimizerSettings, QString directive) is likewise pure — both are unit-pinned by Cut A against baseline.json's default shape.
+- Confidence: high (every ordering claim verified against the inline code; repeat=0 semantics verified against the Sym_Trap path).
+- Relevance: this is the schema angle 01's Options and angle 03's manifest consume, and it closes Round 1's one unstated case (the no-search leaf).
+
+#### R2-3 — Cut B's pin strategy: which oracle_test assertions move, which stay
+
+- The golden's CONTRACT assertions stay verbatim: the empirical label-correspondence loop (`best_iou > 0.50`, oracle_test.cpp:261-278), the recovered-pose IoU gate (`REQUIRE(iou > kIouGate)` at :333), the L1/per-px/z-gap prints, kBudget=3000, and the per-frame pipeline construction. None of these assert anything about the optimizer's internals — the golden is end-to-end (DirectOptimizer → GPU cost → render → IoU), so a behavior-preserving relocation cannot touch them and none moves.
+- What moves (and only this): the hand-rolled cost lambda at oracle_test.cpp:286-291 (`SetCurrentPrimaryCameraPose(ToPose(physical)); return p.trunk->callActiveCostFunction();`) becomes a call to the named factory — `BuildGpuCostAdapter(p.model, Calibration{}, *p.trunk)` — the same pose-set/score-call body relocated. The DirectOptimizer construction line (:292) is untouched: the defaulted 5th ctor arg (R2-6) keeps it compiling with four arguments. The multi-stage oracle is a NEW target (jtml.oracle_multistage) that drives the real Optimize() loop through the driver seam; it does not modify the golden, which remains the Tier-2 pin for the flat-3000 shape forever.
+- Which assertions are ADDED (in the new target, not the golden): the stage-bookkeeping caps (costCalls on 20/25/30/35k), the per-stage CFM dilation manifest match, and the tibia-after-femur/sym_trap pass (angle 03's spec). The golden neither gains nor loses assertions.
+- The adapter's pin surface, stated honestly: there is NO headless pin surface for BuildGpuCostAdapter today — GPUModel is GPU-bound and CostFunctionManager is concrete, so no pure-function characterization exists (same family as Round 1's "no headless loop pin"). Its pins are (a) oracle_test IoU bit-identical after Cut D (the golden's own gate; a literal relocation gives bit-identical cost values by construction — same pose calls, same callActiveCostFunction, same return), (b) the z-profile probe consuming the same factory (synthesis item 2's second consumer — the probe's "replicates exactly that lambda body" becomes "calls the factory"), and (c) the multi-stage oracle's stage bookkeeping. R13's signature-adaptation rule applies (convention doc item 7: verbatim-behavior extraction with signature adaptation, gated by characterization test + behavior diff — here: oracle green + parity green + jj diff relocation).
+- One design parameter the factory must carry: oracle_test's pipeline is monoplane with no Calibration, so BuildGpuCostAdapter takes the Calibration by value (default/empty = monoplane, no secondary-pose call) rather than reading the manager member — the biplane branch (`calibration_.biplane_calibration`, optimizer_manager.cpp:1239-1246) is selected inside the factory from that parameter.
+- Confidence: high (all assertion locations verified in oracle_test.cpp; the only design choice is the factory's calibration parameterization).
+- Relevance: answers the dispatch's "which assertions move, which stay" precisely — the golden's end-to-end gates stay, the twin's body moves, the new oracle adds its own, and the adapter's missing-headless-pin gap is recorded rather than papered over.
+
+#### R2-4 — The double-buffered eval-state seam contract: buffer ownership and how the injection boundary stays std::function
+
+- Who owns what today (verified): RenderEngine owns the render-output GPUImage per camera (gpu_model.cu:26-35; GetPrimaryCameraRenderedImage → `primary_cam_render_engine_->GetRenderOutput()`, :195-197); GPUMetrics owns the pinned host + device score buffers (gpu_metrics.cu:7-65); OptimizerManager owns the GPU object graph it builds in Initialize (gpu_principal_model_, gpu_metrics_, the per-stage dilated/intensity frame vectors); the eval path allocates nothing per call (angle 05's allocation-hoisting finding).
+- Who owns what in the target: compute owns the double-buffer STATE — a second render output (either a second RenderEngine or a second GPUImage inside RenderEngine) plus duplicate score buffers (a second GPUMetrics or buffer arrays, per angle 05's "either/or") — and the alternation logic lives inside the cost layer (compute: the DIRECT_DILATION implementation or a small eval-state holder in compute). The manager remains owner-by-construction of the GRAPH: Initialize already constructs every GPU object, so the batch cut merely constructs one more buffer pair. The coordinator layer (Optimize/RunDirectStage) owns neither buffer nor stream — it only registers the callback.
+- The seam contract (the "cost layer can enqueue before it waits" boundary, stated as clauses): (1) DirectOptimizer's injection boundary stays `std::function<double(const Point6D&)>` for the single-eval path and gains ONE optional sibling of the same type family, `std::function<std::vector<double>(const std::vector<Point6D>&)>` (or a deferred-result variant) — vector in, vector out, no CUDA types in the domain header (direct_optimizer.h:11-13 "zero Qt/VTK/CUDA" contract intact); (2) the batch callback's returned vector is in input order, and DirectOptimizer replays the per-eval bookkeeping (cost_function_calls_++, best-value update, AddHyperBox, improvement callback) in that order — so observable VALUES and callback ORDER are identical whether the cost layer batches or not (this is angle 05's "replay-order preserves observable behavior" restated at the seam); (3) all enqueue/wait/event machinery lives INSIDE the cost callback — the optimizer never sees a buffer, an event, or a stream; (4) the mid-eval fragment-fill sync stays inside compute (Cut 2 keeps it; double-buffering makes its wait overlap the previous eval's tail) — the seam does not care; (5) RunDirectStage selects the surface: if the manager flag (set from the launch when the perf cut lands) has a batch callback registered, enqueue per TrisectPotentiallyOptimal iteration; else the existing per-point path.
+- Why the boundary holds: DirectOptimizer is domain and std::function-in/values-out is the whole extraction contract; the batch sibling is the same shape. The only observable delta is wall-clock timing within an iteration (improvement callbacks fire after the terminal wait, in replay order) — no gate observes timing (IoU is timing-agnostic; the ms/call meter is fixed separately by angle 05's Cut 4 and is the only consumer that cares). The UI's UpdateDisplay/UpdateOptimum order is preserved by replay order.
+- Confidence: high (ownership verified in gpu_model.cu/gpu_metrics.cu; the contract is angle 05's Cut-2 design restated at the seam).
+- Relevance: answers "who owns the buffers" (compute owns state, manager owns graph, domain owns replay bookkeeping) and "how the boundary stays std::function" (one optional sibling of the same type family, with order/values pinned by replay semantics).
+
+#### R2-5 — The torch boundary (contradiction 5): exact situs of the linked-but-banned line and what would move it
+
+- Verified situs: `find_package(Torch REQUIRED)` at CMakeLists.txt:77; `${TORCH_LIBRARIES}` linked PUBLIC into jtml_compute (src/compute/CMakeLists.txt:67); the legitimate torch consumer `segment_image` (machine_learning_tools.cpp:7-71, torch::jit::Module forward) compiled INTO jtml_compute (src/compute/CMakeLists.txt:45); and the smell: CostFunctionManager.h:28 `#include <ATen/ops/div_native.h>` — grep of the header finds no at::/torch use anywhere, so the include is dead weight that (a) forces every TU including the cost header to compile ATen headers and (b) is the documented reason for the load-bearing include-order comment in optimizer_run_driver.h ("the header pulls CostFunctionManager.h (torch ATen headers)").
+- Where it sits in the target architecture: the DIRECT cost path (compute) must stay torch-free (angle 06's NO-GO on a torch bridge; the banned direction is design/convention, not dependency cost). The ML segmentation pathway is a services/app feature (the MlOrchestrator chain segment→estimate→SavePose→seed), not a cost feature — it merely lives in compute today. So the contradiction is a layer-map defect: a services feature squatting in compute, leaking torch's PUBLIC link into every consumer of jtml_compute (coordinator, both apps, and every test transitively link torch today).
+- What would move it (two moves, one gate — call it Cut F, outside cuts A–E): (1) delete the unused `<ATen/ops/div_native.h>` from CostFunctionManager.h (grep-verified unused; compile-level only, R13-safe); (2) change `${TORCH_LIBRARIES}` from PUBLIC to PRIVATE on jtml_compute — machine_learning_tools.cpp stays in place and still links torch, but consumers stop inheriting the link — or, layer-pure, move machine_learning_tools.{h,cpp} into services (which already hosts MlOrchestrator) with its own torch link and drop torch from jtml_compute entirely. The first is the minimal cut; the second is the layer-map-clean cut. Both are gated on: full headless build green, oracle green, and jj diff showing link/include-level change only (zero behavior change). Deleting the now-obsolete include-order comment in optimizer_run_driver.h is part of the cut.
+- What must NOT happen: no torch bridge in the cost path (angle 06 NO-GO stands); no include removal without the link change (that would only move the break to link time for consumers who still reference torch through compute's PUBLIC surface — the two moves ship together in one jj change).
+- Confidence: high (all locations grep-verified); medium on scheduling option (2) — it needs the segment_image consumer check (who calls it) before the move; option (1) is not gated on that.
+- Relevance: resolves contradiction 5 with a concrete, gated, two-move fix and names the cut's owner (this angle, Cut F), instead of leaving "flagged to angle 04" as a shrug.
+
+#### R2-6 — DirectOptimizer::Options cut: the bit-identical-defaults proof strategy and the launch plumbing, end to end
+
+- The defaults must reproduce today's search, verified line-by-line (src/domain/direct_optimizer.cpp): Jarvis gift-wrap hull with `slope >= highest_slope` and NO epsilon filter anywhere (the ε=0 regime, ConvexHull :93-141); all ties selected (equal slopes included); one-side trisection on the largest DENORMALIZED side (`DenormalizeRange(...).GetLargestDirection()`, TrisectPotentiallyOptimal :143-200); 2 changed-center evals + 1 unchanged box per potentially-optimal box; center sampling (seed = UnitCenter, :38); L2 size measure (data_structures_6D.cpp:107-128); cumulative-budget loop guard `(cost_function_calls_ + call_offset_) < budget_` (:44).
+- Options struct (domain, plain data, lives in include/domain/direct_optimizer.h next to the engine):
+  ```cpp
+  struct Options {
+      SelectionMode selection = SelectionMode::Original;   // today's hull
+      double epsilon = 0.0;                                // 0.0 disables the post-filter entirely
+      bool delta_limit = false; unsigned delta_limit_subdivisions = 0;
+      SizeMeasure size_measure = SizeMeasure::L2;
+      SplitRule split_rule = SplitRule::OneSide;
+      TieSelection ties = TieSelection::All;
+      bool hidden_constraints = false;                     // GLh surrogate, off
+      bool globally_biased = false;                        // gb phase switch, off (angle 01 owns params)
+  };
+  ```
+- Bit-identical-defaults mechanism (R13, constructive): every code path guards on "different from default" before diverging — the ε post-filter is `if (opts.epsilon > 0) { ... }` (with 0.0 the hull loop is literally today's code), ties=All keeps `slope >= highest_slope`, split_rule=OneSide keeps the denormalized GetLargestDirection, size L2 keeps the sqrt-norm. The proof is not by inspection: the Tier-1 golden (test/unit/test_direct_optimizer.cpp — analytic quadratic 6-D costs, budgets 1000-20000, determinism/offset/callback assertions whose numeric expectations ARE the spec) runs through the defaulted path and must produce identical values; the PBT twin (test_direct_optimizer_properties.cpp — optimum-inside-cube, budget/determinism/offset) likewise; oracle_test IoU unchanged; qml_parity IoU unchanged.
+- Launch plumbing (additive, traced): OptimizerRunLaunch gains `DirectOptimizer::Options direct_options;` (defaulted; the type is already visible in optimizer_run_driver.h via optimizer_manager.h → domain/direct_optimizer.h) → the production adapter forwards it verbatim in the existing member-by-member Initialize chain (src/coordinator/optimizer_run_driver.cpp:60-81) → OptimizerManager::Initialize stores it in a member (sibling of optimizer_settings_) → RunDirectStage constructs `DirectOptimizer(cost, range, starting_point_, budget_, direct_options_)` (:1234) → ConvexHull/Trisect/Evaluate read the member. DirectOptimizer's ctor gains `Options opts = {}` as a defaulted 5th argument; every existing call site compiles unchanged (verified: optimizer_manager.cpp:1234, oracle_test.cpp:292, optimize_coordinator.cpp:36, test_direct_optimizer.cpp ×12, test_direct_optimizer_properties.cpp ×3 — all four-argument today).
+- R13 pins for the cut, enumerated: lifecycle fake-driver test unchanged (additive launch field; the fake records the whole launch by value and asserts specific fields — new defaulted fields need no assertion changes); test_direct_optimizer golden bit-identical (compile + numeric); oracle green; parity green. One verification point for the cut's author: OptimizerManager::Initialize's signature gains the Options parameter — the only caller found by grep is the production adapter (optimizer_run_driver.cpp:60); if a legacy widgets path constructs the manager directly, a defaulted parameter keeps it compiling — check before landing.
+- Ownership boundary restated: this angle owns WHERE Options lives and HOW it flows; angle 01 owns the future variants' field VALUES and the analytic battery that scores them. The defaults are this angle's R13 contract; the variants are 01's.
+- Confidence: high (defaults mapped line-by-line; plumbing verified end-to-end; the Initialize-caller sweep is the one medium item).
+- Relevance: makes Cut C a mechanical, fully-pinned change whose "defaults reproduce today's behavior" requirement has a proof strategy (guarded divergence + golden-as-spec) rather than a hope.
+
+### What Could Not Be Verified
+
+- Whether the wrong-dilation perturbation actually passes all three gates (the "passes" half of the Cut-E trigger): mechanically plausible (wide IoU band, flat-in-z dilated-overlap family, counter-only stage channel) but requires the GPU run of the perturbation suite — which is precisely why the gate is falsifiable. The trigger's structure is verified; its outcome is a measurement.
+- Who calls segment_image (the ML consumer): needed before Cut F's layer-pure option (2) (move machine_learning_tools into services) can be scheduled; the minimal option (1) (PRIVATE link + include removal) is not gated on it.
+- Whether any legacy path constructs OptimizerManager directly (only the adapter was found by grep); the defaulted Initialize parameter is the safety, and the sweep is flagged to Cut C's author.
+- The leaf-destruct error-gating asymmetry (optimizer_manager.cpp:1144-1148) is a likely narrow GPU-resource leak on the leaf-search-failure path, but the CostFunctionManager destruct semantics (idempotence/ref-counting) were not audited — flag to angle 02's bug list; Cut B must transcribe the gating regardless.
+- The gb-phase parameter values (angle 01 owns them); the default here is off, which is the R13-safe position.
+- Whether the multi-stage oracle's perturbation arm can reuse the reduced CI budget shape for the gate-trip demonstration (the full 35k shape is hours) — angle 03's data-profile-reduced shape is the presumptive vehicle; unverified.
+
+### Sources (Round 2)
+
+- src/coordinator/optimizer_manager.cpp — Optimize stage sequence :986-1160 (budget reset, trunk/branch/leaf blocks, leaf-destruct error gating :1144-1148, epilogue restore), RunDirectStage :1225-1296 (injected-cost lambda :1234-1248), dilation/dark-silhouette derivation :237-345, EvaluateCostFunctionAtPoint's anonymous enum :1370.
+- include/coordinator/optimizer_run_controller_core.h — the counter-derived oracle channel: StageLabel :159, refreshProgress :160, stageText :161, costCalls :162, stage_text_ :189-192.
+- include/coordinator/optimizer_run_driver.h + src/coordinator/optimizer_run_driver.cpp — the driver interface surface (nothing mid-run), the verbatim Initialize forwarding :60-81, the include-order comment documenting the ATen pull.
+- src/domain/direct_optimizer.cpp + include/domain/direct_optimizer.h — ConvexHull :93-141 (ε=0, all ties), TrisectPotentiallyOptimal :143-200 (denormalized one-side), Run loop guard :44, seed :38; the "zero Qt/VTK/CUDA" contract :11-13.
+- src/domain/data_structures_6D.cpp:107-128 — L2 size measure.
+- test/oracle/oracle_test.cpp — the twin :286-291, DirectOptimizer construction :292, label-correspondence pin :261-278, IoU gate :333, kBudget=3000.
+- src/coordinator/optimize_coordinator.cpp:12-65 — the existing headless single-stage DirectOptimizer executor (plan U4), pinned by test/lifecycle/coordinator_test.cpp.
+- src/compute/CMakeLists.txt:45,67 + CMakeLists.txt:77 — machine_learning_tools.cpp in jtml_compute; ${TORCH_LIBRARIES} PUBLIC.
+- include/compute/CostFunctionManager.h:28 — the unused ATen include.
+- src/compute/machine_learning_tools.cpp:7-71 — the legit torch consumer (segment_image).
+- src/compute/gpu_model.cu:26-35,195-197 + src/compute/gpu_metrics.cu:7-65 — render-output and score-buffer ownership (double-buffer situs).
+- src/coordinator/CMakeLists.txt:22-27 — jtml_coordinator's explicit source list (one-line home for optimizer_stage_script.cpp).
+- test/CMakeLists.txt:365-407 — the direct-compile pattern that motivates the dedicated stage-script TU.
+- .panoptes/optimizer-deep-dive/angles/03-measurement-apparatus.org — the perturbation suite (oracle-of-the-oracle), the multi-stage oracle gates, the reduced CI budget shape.
+- .panoptes/optimizer-deep-dive/angles/05-compute-perf.org — Cut 2's double-buffered eval state and replay-order semantics.
+- .panoptes/optimizer-deep-dive/angles/01-direct-variants.org — the Options surface and variant values (ownership boundary).
+- .panoptes/optimizer-deep-dive/synthesis.org — contradiction 5 (torch linked-but-banned), item 2 (z-profile probe), item 3 (multi-stage oracle), R13 pin-first.

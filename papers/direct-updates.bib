@@ -1,0 +1,118 @@
+@article{stripinisEmpiricalStudyVarious2022,
+  title           = {An Empirical Study of Various Candidate Selection and Partitioning
+                  Techniques in the {{DIRECT}} Framework},
+  author          = {Stripinis, Linas and Paulavi{\v c}ius, Remigijus},
+  year            = 2022,
+  month           = jun,
+  journal         = {Journal of Global Optimization},
+  issn            = {0925-5001, 1573-2916},
+  doi             = {10.1007/s10898-022-01185-5},
+  urldate         = {2023-03-05},
+  abstract        = {Over the last three decades, many attempts have been made to improve
+                  the DIRECT (DIviding RECTangles) algorithm's efficiency. Various novel
+                  ideas and extensions have been suggested. The main two steps of
+                  DIRECT-type algorithms are selecting and partitioning potentially
+                  optimal rectangles. However, the most efficient combination of these two
+                  steps is an area that has not been investigated so far. This paper
+                  presents a study covering an extensive examination of various candidate
+                  selection and partitioning techniques within the same DIRECT algorithmic
+                  framework. Twelve DIRECT-type algorithmic variations are compared on 800
+                  randomly generated GKLS-type test problems and 96 box-constrained global
+                  optimization problems from DIRECTGOLib v1.1 with varying complexity.
+                  Based on these studies, we have identified the most efficient selection
+                  and partitioning combinations leading to new, more efficient,
+                  DIRECT-type algorithms. All these algorithms are included in the latest
+                  version of DIRECTGO v1.1.0 and are publicly available.},
+  langid          = {english},
+  file            = {/home/ajj/references/docs/S/Stripinis and Paulavičius - 2022 - An
+                  empirical study of various candidate selection and partitioning
+                  techniques in the DIRECT framewor.pdf}
+}
+
+@article{stripinisNewDIRECTGLhAlgorithm2021,
+  title           = {A New {{DIRECT-GLh}} Algorithm for Global Optimization with Hidden
+                  Constraints},
+  author          = {Stripinis, Linas and Paulavi{\v c}ius, Remigijus},
+  year            = 2021,
+  journal         = {Optimization Letters},
+  volume          = 15,
+  number          = 6,
+  pages           = {1--20},
+  doi             = {10.1007/s11590-021-01726-z},
+  abstract        = {In this paper, we consider the solution of global optimization
+                  problems involving hidden constraints. We present a novel deterministic
+                  derivative-free global optimization algorithm based on our recently
+                  introduced DIRECT-GL (Stripinis et al. in Optim Lett. 12(7):1699--1712,
+                  2018). The new algorithm (DIRECT-GLh) incorporates two additional
+                  techniques for faster feasibility detection and solution improvement,
+                  especially when the solution lies on the border of the a priori unknown
+                  feasible region. The algorithm's potential is demonstrated on 67
+                  problems from the current release of DIRECTLib and 100 Emmental-type
+                  test problems. The numerical comparison reveals the proposed algorithm's
+                  superiority to the considered DIRECT-type approaches for such problems.},
+  annotation      = {MAG ID: 3143082928},
+  file            = {/home/ajj/references/docs/S/Stripinis and Paulavičius - 2021 - A new
+                  DIRECT-GLh algorithm for global optimization with hidden
+                  constraints.pdf}
+}
+
+@inproceedings{laineHighperformanceSoftwareRasterization2011,
+  title           = {High-Performance Software Rasterization on {{GPUs}}},
+  booktitle       = {Proceedings of the {{ACM SIGGRAPH Symposium}} on {{High Performance
+                  Graphics}}},
+  author          = {Laine, Samuli and Karras, Tero},
+  year            = 2011,
+  month           = aug,
+  pages           = {79--88},
+  publisher       = {ACM},
+  address         = {Vancouver British Columbia Canada},
+  doi             = {10.1145/2018323.2018337},
+  urldate         = {2026-07-13},
+  abstract        = {In this paper, we implement an efficient, completely software-based
+                  graphics pipeline on a GPU. Unlike previous approaches, we obey ordering
+                  constraints imposed by current graphics APIs, guarantee hole-free
+                  rasterization, and support multisample antialiasing. Our goal is to
+                  examine the performance implications of not exploiting the
+                  fixed-function graphics pipeline, and to discern which additional
+                  hardware support would benefit software-based graphics the most.},
+  isbn            = {978-1-4503-0896-0},
+  langid          = {english},
+  file            = {/home/ajj/references/docs/L/Laine and Karras - 2011 -
+                  High-performance software rasterization on GPUs.pdf}
+}
+
+@misc{laineModularPrimitivesHighPerformance2020,
+  title           = {Modular {{Primitives}} for {{High-Performance Differentiable
+                  Rendering}}},
+  author          = {Laine, Samuli and Hellsten, Janne and Karras, Tero and Seol, Yeongho
+                  and Lehtinen, Jaakko and Aila, Timo},
+  year            = 2020,
+  month           = nov,
+  number          = {arXiv:2011.03277},
+  eprint          = {2011.03277},
+  primaryclass    = {cs.GR},
+  publisher       = {arXiv},
+  doi             = {10.48550/arXiv.2011.03277},
+  urldate         = {2026-07-10},
+  abstract        = {We present a modular differentiable renderer design that yields
+                  performance superior to previous methods by leveraging existing, highly
+                  optimized hardware graphics pipelines. Our design supports all crucial
+                  operations in a modern graphics pipeline: rasterizing large numbers of
+                  triangles, attribute interpolation, filtered texture lookups, as well as
+                  user-programmable shading and geometry processing, all in high
+                  resolutions. Our modular primitives allow custom, high-performance
+                  graphics pipelines to be built directly within automatic differentiation
+                  frameworks such as PyTorch or TensorFlow. As a motivating application,
+                  we formulate facial performance capture as an inverse rendering problem
+                  and show that it can be solved efficiently using our tools. Our results
+                  indicate that this simple and straightforward approach achieves
+                  excellent geometric correspondence between rendered results and
+                  reference imagery. CCS Concepts: {$\bullet$} Computing methodologies
+                  {$\rightarrow$} Rasterization; Shape inference.},
+  archiveprefix   = {arXiv},
+  langid          = {english},
+  keywords        = {Computer Science - Computer Vision and Pattern Recognition,Computer
+                  Science - Graphics,Computer Science - Machine Learning},
+  file            = {/home/ajj/references/docs/L/Laine et al. - 2020 - Modular Primitives
+                  for High-Performance Differentiable Rendering.pdf}
+}

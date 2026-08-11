@@ -1,0 +1,151 @@
+{
+  "runId": "963c25ca",
+  "agent": "ce-scope-guardian-reviewer",
+  "task": "You are a specialist document reviewer: \n\n<persona>\nAct as the ce-scope-guardian-reviewer (a configured reviewer agent with its own built-in persona and rubric).\n</persona>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md\nREAD THE FULL DOCUMENT FROM DISK FIRST (it is ~45KB; do not rely on summaries). You may also read repo files for feasibility context.\n\n<prior-decisions>\nRound 1 — no prior decisions.\n</prior-decisions>\n</review-context>\n\n<output-contract>\nReturn ONLY valid JSON matching: { reviewer, findings: [...], residual_risks: [...], deferred_questions: [...] }.\nEach finding: { title (<=10 words), severity (P0|P1|P2|P3), section, why_it_matters (2-4 sentences, lead with observable consequence), finding_type (error|omission), autofix_class (safe_auto|gated_auto|manual), suggested_fix (string or null), confidence (exactly 0|25|50|75|100), evidence (array of >=1 direct quotes from the document) }.\nConfidence anchors: 50 = verified real but advisory ('nothing breaks'); 75 = verified, implementers will concretely hit it (name the downstream consequence); 100 = airtight. Suppress anything below 50.\nsafe_auto = exactly one correct fix; gated_auto = concrete fix needing author sign-off; manual = genuine judgment call. Strawman alternatives do not downgrade.\nRules: you are a leaf reviewer — no compound skills, read-only (may read files for context), suppress pedantic style nitpicks, issues belonging to other personas, findings already resolved elsewhere in the document, speculative future-work, and theoretical concerns without baseline data. Every finding needs >=1 direct evidence quote from the document. If no issues: empty findings array.\n</output-contract>\n\nYOUR SCOPE DIRECTIONS (scope):\nScope alignment: 8 units + 12 decisions + 9 requirements. Does the plan exceed the owner mandate (experimental app only, breaking changes allowed there, historical code untouched)? Are the deferred items correctly placed? Does every unit map to a requirement? Unjustified complexity or scope creep anywhere?",
+  "exitCode": 0,
+  "usage": {
+    "input": 36931,
+    "output": 20183,
+    "cacheRead": 74624,
+    "cacheWrite": 0,
+    "cost": 0.0055152636000000005,
+    "turns": 3
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 36931,
+        "output": 20183,
+        "cacheRead": 74624,
+        "cacheWrite": 0,
+        "cost": 0.0055152636000000005,
+        "turns": 3
+      }
+    }
+  ],
+  "durationMs": 172730,
+  "toolCount": 3,
+  "launchContractDigest": "d0d67dd482caae5e2c1e60770c7888c3f3c5943383a943449d6d65bff3fc8118",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "5 concrete findings returned, each with severity (P2×3, P3×2), a named section, direct evidence quotes from docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (incl. line-anchored U2 line 397 and Risks table line 847), and autofix class; verified repo context for existing files (test/unit/experimental_pose_bridge_test.cpp and experimental_ml_bridge_test.cpp exist; profiler/ and test/qml do not)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "ls src/app/experimental docs/reviews profiler test/qml test/unit",
+          "result": "passed",
+          "summary": "Verified plan file claims: PoseBridge/MlBridge/PoseCell/Theme.qml exist; docs/reviews exists; profiler/ and test/qml do not exist yet; both U3 target test files exist"
+        },
+        {
+          "command": "grep -E 'R1[0-9]|U9\\b|U10' docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md",
+          "result": "passed",
+          "summary": "Confirmed dangling trace IDs: 'R11' at line 397, 'U9' at line 847"
+        }
+      ],
+      "validationOutput": [
+        "Requirement trace: R1–R9 all map to units; U2 cites non-existent R11 (parenthetical matches D11); Risks table cites non-existent U9 (guard is R9).",
+        "Unit sequencing: U7 depends on U5 yet requires a pre-U5 baseline trace; U5 has no report deliverable despite U7's attribution.",
+        "Scope-guard coverage: guard text (new test files / new docs only) excludes U3's modification of existing test/unit/*.cpp and U7's new profiler/ artifact directory.",
+        "Invariant consistency: D3 bridge refresh-owner vs stated pass-through/thinness invariant."
+      ],
+      "residualRisks": [
+        "M1/M3 flow-analysis findings lack documented disposition in the plan (U1 triage is the catch-all)",
+        "Stale-pose-table premise unverified; I1/I2 fix scope shrinks if the empirical check fails",
+        "D4 seed-invalidation depends on plan-006 stale-seed guard behavior to be verified at implementation"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Review-only task; no repository files modified (read-only reviewer).",
+      "reviewFindings": [
+        "p2: dangling trace IDs R11 (U2, line 397) and U9 (risks table, line 847) — safe_auto",
+        "p2: scope guard text excludes U3 existing test-file edits and U7 profiler/ outputs — gated_auto",
+        "p2: pre-U5 baseline profile uncapturable under U5→U7 dependency order — manual",
+        "p3: PoseBridge refresh-owner role (D3) conflicts with stated pass-through/thinness invariant — manual",
+        "p3: D10 merge documentation promise not reflected in U6 scenario list — gated_auto"
+      ],
+      "manualNotes": "Findings are scope-guardian domain only (requirement/unit trace mapping, scope-boundary coverage, unit sequencing, invariant consistency). No supervisor decision needed; F1 is safe_auto, F2/F5 gated_auto, F3/F4 manual."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/963c25ca_ce-scope-guardian-reviewer_0_transcript.jsonl",
+  "timestamp": 1786542067369
+}

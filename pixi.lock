@@ -328,6 +328,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/xz-tools-5.6.3-hb9d3cd8_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
+      - conda: https://prefix.dev/conda-forge/noarch/bibtexparser-1.4.4-pyhd8ed1ab_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-cccl_linux-64-12.4.99-ha770c72_1.conda
@@ -356,6 +357,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/noarch/libstdcxx-devel_linux-64-12.4.0-ha4f9413_101.conda
       - conda: https://prefix.dev/conda-forge/noarch/mpmath-1.3.0-pyhd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/networkx-3.4.2-pyh267e887_2.conda
+      - conda: https://prefix.dev/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/sympy-1.13.3-pyh2585a3b_105.conda
       - conda: https://prefix.dev/conda-forge/noarch/sysroot_linux-64-2.17-h0157908_18.conda
       - conda: https://prefix.dev/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_1.conda
@@ -678,6 +680,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/xz-tools-5.6.3-hb9d3cd8_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
+      - conda: https://prefix.dev/conda-forge/noarch/bibtexparser-1.4.4-pyhd8ed1ab_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-cccl_linux-64-12.4.99-ha770c72_1.conda
@@ -706,6 +709,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/noarch/libstdcxx-devel_linux-64-12.4.0-ha4f9413_101.conda
       - conda: https://prefix.dev/conda-forge/noarch/mpmath-1.3.0-pyhd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/networkx-3.4.2-pyh267e887_2.conda
+      - conda: https://prefix.dev/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/sympy-1.13.3-pyh2585a3b_105.conda
       - conda: https://prefix.dev/conda-forge/noarch/sysroot_linux-64-2.17-h0157908_18.conda
       - conda: https://prefix.dev/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_1.conda
@@ -1029,6 +1033,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/xz-tools-5.6.3-hb9d3cd8_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://prefix.dev/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
+      - conda: https://prefix.dev/conda-forge/noarch/bibtexparser-1.4.4-pyhd8ed1ab_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-12.4.0-ha804496_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/cuda-cccl_linux-64-12.4.99-ha770c72_1.conda
@@ -1057,6 +1062,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/noarch/libstdcxx-devel_linux-64-12.4.0-ha4f9413_101.conda
       - conda: https://prefix.dev/conda-forge/noarch/mpmath-1.3.0-pyhd8ed1ab_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/networkx-3.4.2-pyh267e887_2.conda
+      - conda: https://prefix.dev/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/sympy-1.13.3-pyh2585a3b_105.conda
       - conda: https://prefix.dev/conda-forge/noarch/sysroot_linux-64-2.17-h0157908_18.conda
       - conda: https://prefix.dev/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_1.conda
@@ -4992,6 +4998,16 @@ packages:
   license_family: BSD
   size: 554846
   timestamp: 1714722996770
+- conda: https://prefix.dev/conda-forge/noarch/bibtexparser-1.4.4-pyhd8ed1ab_0.conda
+  sha256: 9a1f36ee82e13ed471289fc632c726bd9e22b3cd2737290de48c912ee3f6a02f
+  md5: 85c34838529a0d22645270f39b9a2013
+  depends:
+  - pyparsing >=2.0.3
+  - python >=3.10
+  license: LGPL-3.0-only OR BSD-3-Clause
+  run_exports: {}
+  size: 42337
+  timestamp: 1770043317746
 - conda: https://prefix.dev/conda-forge/noarch/cpython-3.12.8-py312hd8ed1ab_1.conda
   noarch: generic
   sha256: 05413d84485086301e5bd7c03fca2caae91f75474d99d9fc815cec912332452b
@@ -5257,6 +5273,17 @@ packages:
   license_family: BSD
   size: 1265008
   timestamp: 1731521053408
+- conda: https://prefix.dev/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
+  sha256: 417fba4783e528ee732afa82999300859b065dc59927344b4859c64aae7182de
+  md5: 3687cc0b82a8b4c17e1f0eb7e47163d5
+  depends:
+  - python >=3.10
+  - python
+  license: MIT
+  license_family: MIT
+  run_exports: {}
+  size: 110893
+  timestamp: 1769003998136
 - conda: https://prefix.dev/conda-forge/noarch/sympy-1.13.3-pyh2585a3b_105.conda
   sha256: 929d939c5a8bcdc10a17501890918da68cf14a5883b36fddf77b8f0fbf040be2
   md5: 254cd5083ffa04d96e3173397a3d30f4

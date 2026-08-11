@@ -1,0 +1,174 @@
+{
+  "runId": "502439a0",
+  "agent": "ce-repo-research-analyst",
+  "task": "Scope: technology, architecture, patterns. Planning context: we are planning an improvement pass over the experimental QML front-end of this repo (JTML, a Qt6 + VTK9.3 + CUDA knee-implant registration app). The app lives in src/app/experimental/ (jtml_experimental target): QML shell main.qml (~700 lines: toolbar, 8 dialogs, 2 ListViews, ML strip, progress), SettingsPanel.qml, PoseCell.qml, Theme.qml (pragma Singleton + qmldir), renderer.qml (smoke scene); C++ side: AppBridge hub owning StudyBridge/SettingsBridge/OptimizerBridge/MlBridge/PoseBridge + FileDialogBridge + QmlVtkRenderer (QQuickVTKItem subclass, render-thread contract) + ExperimentalScene/ExperimentalSession; FrameListModel/ModelListModel direct-compiled from src/view. Bridges are exposed to QML via rootContext()->setContextProperty in main.cpp. CMake uses add_executable + resources.qrc (no qt_add_qml_module). Planned work tracks: (1) structured QML review + best-practice fixes (file structure, bindings, layouts, Theme token compliance), (2) UI/UX audit+polish (typography scale, keyboard nav, accessibility), (3) Qt Quick Test coverage (tst_*.qml + CMake/ctest wiring; repo rule: headless tests must not touch GPU/VTK/widgets), (4) qmlprofiler performance profiling of the 2D chrome. Research: repo structure and conventions, how QML files are built/shipped, existing test registration patterns in test/CMakeLists.txt (labels, WORKING_DIRECTORY, AUTOMOC gotchas), whether Qt6::QuickTest is available in the pixi env, existing docs conventions (docs/plans, docs/solutions, docs/handoff), AGENTS.md guidance that materially affects the plan, the layered-lib rules (domain/services/coordinator/compute/view), and the QML decision record at src/view/CMakeLists.txt:6. Report concrete file paths and patterns.",
+  "exitCode": 0,
+  "usage": {
+    "input": 90990,
+    "output": 15665,
+    "cacheRead": 1450240,
+    "cacheWrite": 0,
+    "cost": 0.010592736000000002,
+    "turns": 22
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 90990,
+        "output": 15665,
+        "cacheRead": 1450240,
+        "cacheWrite": 0,
+        "cost": 0.010592736000000002,
+        "turns": 22
+      }
+    }
+  ],
+  "durationMs": 168650,
+  "toolCount": 51,
+  "launchContractDigest": "189cc6eb4dfa6557708b64c838770543dd2473bfe03960160ae2e1ff3e0257cd",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Concrete findings with file paths, line numbers, and severity throughout: Qt6::QuickTest availability verified (pixi env cmake config + lib + qmltestrunner/offscreen plugin); QML decision record quoted from src/view/CMakeLists.txt:6-14; jtml_experimental target mechanics from src/app/experimental/CMakeLists.txt; test registration/AUTOMOC/rpath/WORKING_DIRECTORY patterns with exact examples from test/CMakeLists.txt; docs conventions from docs/plans, docs/brainstorms, docs/handoff, docs/solutions; Theme-compliance findings with hardcoded-color file:line evidence (SettingsPanel.qml '#cfd3da'/'#8b929c', dirty-badge palette duplicated in main.qml + SettingsPanel.qml); main.qml measured at 1016 lines (not ~700)"
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "ls/find repo root + src + docs trees",
+          "result": "passed",
+          "summary": "Mapped repo structure; located experimental QML app, layered libs, docs, test dirs"
+        },
+        {
+          "command": "read pixi.toml, AGENTS.md, CMakeLists.txt (root/src/app/src/app/experimental/src/view), test/CMakeLists.txt (1447 lines)",
+          "result": "passed",
+          "summary": "Extracted env, layered-lib rules, QML decision record, full test registration conventions"
+        },
+        {
+          "command": "ls .pixi/envs/default/lib/cmake/Qt6* + find Qt6QuickTest config + grep Qt6::QuickTest target",
+          "result": "passed",
+          "summary": "Qt6::QuickTest component + libQt6QuickTest.so.6.7.2 present; Qt5QuickTest also present (avoid)"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen .pixi/envs/default/bin/qmltestrunner -help; qmllint --version; qmlprofiler --help",
+          "result": "passed",
+          "summary": "qmltestrunner runs under offscreen; qmllint 1.0 and qmlprofiler available; libqoffscreen.so plugin present"
+        },
+        {
+          "command": "grep -rn QuickTest + find tst_* + grep qml in .memory-bank",
+          "result": "passed",
+          "summary": "No existing QuickTest usage or tst_*.qml anywhere — Qt Quick Test would be net-new; no memory-bank QML task context"
+        },
+        {
+          "command": "wc -l src/app/experimental/*.qml; jj log --no-graph -n 15",
+          "result": "passed",
+          "summary": "main.qml=1016 lines; commit conventions: fix(qml):/feat(coordinator):/refactor(services):/docs: with plan refs"
+        }
+      ],
+      "validationOutput": [
+        "All findings cross-checked against at least two sources (AGENTS.md, docs/solutions compounds, test/CMakeLists.txt comments, actual files). Tool availability claims verified by direct inspection of the pixi env rather than inferred from pixi.toml."
+      ],
+      "residualRisks": [
+        "qmltestrunner was invoked directly (not via pixi run); under `pixi run test` the QT_QPA_PLATFORM=offscreen env is set by the task, but a first QuickTest target has never been built in this repo — link-line details (AUTORCC of test qrc, import path for tst_*.qml, whether QuickTest needs the same block()-scoped find_package pattern) are unproven until a spike compiles",
+        "A headless QuickTest suite is only compliant with the repo's headless rule if it never instantiates QmlVtkRenderer or any VTK item; any test of the viewport itself must stay in the oracle;render bucket with forced xcb (precedent: jtml.qml_render_smoke)",
+        "qmlprofiler needs QML debugging enabled in the app (qmljsdebugger) and is an interactive/instrumented run, not a ctest — no precedent in repo for profiling harnesses",
+        "main.qml is 1016 lines and is the engine-root document (no inline components allowed there) — any file-structure refactor (track 1) must extract into separate .qml files + qmldir entries and update resources.qrc",
+        "Docs/solutions records were last updated 2026-08-11; the handoff says the Follow-On Optimization Phase is the stated NEXT arc — the QML polish pass must be sequenced/planned as its own plan 007 to avoid collision with synthesis items 1-3-2-5-8",
+        "Env contains both Qt5 and Qt6 cmake packages (Qt5QuickTest etc.) — wrong find_package could silently pick Qt5; always find_package(Qt6 ...)"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Research-only pass; no files modified (no diff)",
+      "reviewFindings": [
+        "info: src/app/experimental/main.qml - 1016 lines (planning estimate of ~700 is stale; shell has grown 9 dialogs + 5 Connections blocks)",
+        "medium: SettingsPanel.qml:15,28,33-34 + main.qml:141-144,154-155 - hardcoded colors bypass Theme.qml tokens ('#cfd3da' not a token; '#8b929c' duplicates Theme.fgMuted; dirty-badge palette '#e5b567'/'#3a4a3d'/'#2a2118'/'#8fbf96' duplicated verbatim in both files); main.qml readout uses color 'white'",
+        "medium: SettingsPanel.qml + main.qml - no typography scale; ~20+ inline font.pixelSize 10/11 sites instead of Theme font tokens",
+        "low: main.qml:451-490 - ListView delegates are Rectangle+MouseArea (no keyboard nav/focus); accessibility gap for the UI/UX track",
+        "low: SettingsPanel.qml:107 'width: root.width - 18' and main.qml:337 'width: poseScroll.availableWidth' - scrollbar-gutter magic numbers",
+        "info: test/CMakeLists.txt - no QuickTest usage exists; Qt6::QuickTest component verified available in pixi env (Qt6QuickTestConfig.cmake, libQt6QuickTest.so.6.7.2, qmltestrunner, libqoffscreen.so)",
+        "info: src/view/CMakeLists.txt:6-14 - QML decision record: full QML front-end deferred; experimental app is the sanctioned vehicle; improvement pass operates within it without reopening the record",
+        "no blockers"
+      ],
+      "manualNotes": "Scoped research only (technology/architecture/patterns). For the plan: register any new QuickTest target in the flat test/CMakeLists.txt with the jtml.<name> naming + headless label + WORKING_DIRECTORY recipe, list Q_OBJECT headers in add_executable, use block()-scoped find_package(Qt6 COMPONENTS QuickTest) (precedent: jtml_test_qml_render_smoke block), keep VTK/QmlVtkRenderer out of headless tests, and add any new .qml file to resources.qrc + qmldir. Docs: new plan = docs/plans/2026-08-1X-007-<type>-<name>-plan.md with requirements in docs/brainstorms; record outcomes in docs/solutions/conventions/."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/502439a0_ce-repo-research-analyst_0_transcript.jsonl",
+  "timestamp": 1786541096822
+}

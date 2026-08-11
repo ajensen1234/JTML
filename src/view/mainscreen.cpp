@@ -247,13 +247,9 @@ MainScreen::MainScreen(QWidget* parent)
         Qt::DirectConnection);
 
     /* SYM TRAP */
-    // Setup Sym Trap Window Obj
-    // this->sym_trap_control = new sym_trap();
-    // Connect signals for launching sym trap optimizer and updating progress
-    // bar connect(sym_trap_control->ui.optimize, SIGNAL(clicked()), this,
-    // SLOT(optimizer_launch_slot())); connect(this,
-    // SIGNAL(UpdateTimeRemaining(int)), sym_trap_control->ui.progressBar,
-    // SLOT(setValue(int)));
+    // The standalone sym-trap window was removed; the Sym_Trap directive
+    // runs through LaunchOptimizer (no UpdateTimeRemaining progress
+    // binding remains).
 
     /*Disable Stop Optimizer*/
     ui.actionStop_Optimizer->setDisabled(true);
@@ -1757,6 +1753,7 @@ void MainScreen::segmentHelperFunction(
                 input_width,
                 input_height);
         };
+    QList<int> failed_frames;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         int dilation_val = 0;
         trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
@@ -1764,8 +1761,10 @@ void MainScreen::segmentHelperFunction(
         /*Per-frame segment (plan 006 U8 / R12): the shared orchestrator
          * owns the segment op -> inverted copy -> post-processing chain
          * (edge/dilated/distance/curvature); the view keeps the dilation
-         * sourcing and the progress/render interleave.*/
-        ml_orchestrator_.SegmentFrame(
+         * sourcing and the progress/render interleave. A failure breaks
+         * the loop (the frame is left untouched) and surfaces ONE message
+         * below instead of completing silently (review fix P2-3).*/
+        const jta::MlSegmentStatus status = ml_orchestrator_.SegmentFrame(
             loaded_frames[i],
             ui.aperture_spin_box->value(),
             ui.low_threshold_slider->value(),
@@ -1773,18 +1772,27 @@ void MainScreen::segmentHelperFunction(
             dilation_val,
             /*full_postprocessing=*/true,
             segment_op);
+        if (status != jta::MlSegmentStatus::Ok) {
+            failed_frames.push_back(i);
+            break;
+        }
         if (calibrated_for_biplane_viewport_) {
             /*Per-frame segment (plan 006 U8 / R12): same shared op for the
              * camera-B frame (the biplane branch keeps edge + dilation
              * only — the mono distance/curvature tail is skipped).*/
-            ml_orchestrator_.SegmentFrame(
-                loaded_frames_B[i],
-                ui.aperture_spin_box->value(),
-                ui.low_threshold_slider->value(),
-                ui.high_threshold_slider->value(),
-                dilation_val,
-                /*full_postprocessing=*/false,
-                segment_op);
+            const jta::MlSegmentStatus status_b =
+                ml_orchestrator_.SegmentFrame(
+                    loaded_frames_B[i],
+                    ui.aperture_spin_box->value(),
+                    ui.low_threshold_slider->value(),
+                    ui.high_threshold_slider->value(),
+                    dilation_val,
+                    /*full_postprocessing=*/false,
+                    segment_op);
+            if (status_b != jta::MlSegmentStatus::Ok) {
+                failed_frames.push_back(i);
+                break;
+            }
         }
 
         ui.pose_progress->setValue(
@@ -1794,6 +1802,19 @@ void MainScreen::segmentHelperFunction(
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
         ui.qvtk_cpv->renderWindow()->Render();
+    }
+
+    if (!failed_frames.isEmpty()) {
+        QStringList indices;
+        for (int f : failed_frames) {
+            indices.push_back(QString::number(f));
+        }
+        QMessageBox::critical(
+            this,
+            "Error!",
+            "Segmentation failed on frame(s): " + indices.join(", ") + ".",
+            QMessageBox::Ok);
+        return;
     }
 
     if (ui.image_list_widget->currentIndex().row() >= 0) {
@@ -1965,16 +1986,24 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     const auto save_pose = [this](int frame, int model, const Point6D& pose) {
         model_locations_.SavePose(frame, model, pose);
     };
+    /*An estimate failure breaks the loop (the orchestrator saved nothing
+     * for that frame) and surfaces ONE message after the cleanup below
+     * instead of completing silently (review fix P2-3).*/
+    QList<int> failed_frames;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         /*Per-frame estimate (plan 006 U8 / R12): the shared orchestrator
          * owns the estimate op -> SavePose -> seed chain; the view keeps
          * the progress/render interleave.*/
-        ml_orchestrator_.EstimateFrame(
+        const jta::MlEstimateOutcome outcome = ml_orchestrator_.EstimateFrame(
             i,
             ui.model_list_widget->currentIndex().row(),
             loaded_frames[i].GetInvertedImage(),
             estimate_op,
             save_pose);
+        if (outcome.status != jta::MlEstimateStatus::Ok) {
+            failed_frames.push_back(i);
+            break;
+        }
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));
@@ -1997,6 +2026,20 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
 
     /*Free Array*/
     free(host_image);
+
+    if (!failed_frames.isEmpty()) {
+        QStringList indices;
+        for (int f : failed_frames) {
+            indices.push_back(QString::number(f));
+        }
+        QMessageBox::critical(
+            this,
+            "Error!",
+            "Pose estimation failed on frame(s): " + indices.join(", ") +
+                ".",
+            QMessageBox::Ok);
+        return;
+    }
 
     /*Update Model*/
     Point6D loaded_pose = model_locations_.GetPose(
@@ -2175,16 +2218,24 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     const auto save_pose = [this](int frame, int model, const Point6D& pose) {
         model_locations_.SavePose(frame, model, pose);
     };
+    /*An estimate failure breaks the loop (the orchestrator saved nothing
+     * for that frame) and surfaces ONE message after the cleanup below
+     * instead of completing silently (review fix P2-3).*/
+    QList<int> failed_frames;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         /*Per-frame estimate (plan 006 U8 / R12): the shared orchestrator
          * owns the estimate op -> SavePose -> seed chain; the view keeps
          * the progress/render interleave.*/
-        ml_orchestrator_.EstimateFrame(
+        const jta::MlEstimateOutcome outcome = ml_orchestrator_.EstimateFrame(
             i,
             ui.model_list_widget->currentIndex().row(),
             loaded_frames[i].GetInvertedImage(),
             estimate_op,
             save_pose);
+        if (outcome.status != jta::MlEstimateStatus::Ok) {
+            failed_frames.push_back(i);
+            break;
+        }
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));
@@ -2207,6 +2258,20 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
 
     /*Free Array*/
     free(host_image);
+
+    if (!failed_frames.isEmpty()) {
+        QStringList indices;
+        for (int f : failed_frames) {
+            indices.push_back(QString::number(f));
+        }
+        QMessageBox::critical(
+            this,
+            "Error!",
+            "Pose estimation failed on frame(s): " + indices.join(", ") +
+                ".",
+            QMessageBox::Ok);
+        return;
+    }
 
     /*Update Model*/
     Point6D loaded_pose = model_locations_.GetPose(
@@ -2694,29 +2759,35 @@ void MainScreen::on_camera_A_radio_button_clicked() {
             ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
             ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
 
-            /*Save Last Pair Pose*/
-            for (int r = 0; r < selected.size(); r++) {
-                if (selected.size() != 0 &&
-                    session_state_.GetPreviousFrame() != -1 &&
-                    !currently_optimizing_) {
-                    double* position_curr =
-                        model_actor_list[selected[r].row()]->GetPosition();
-                    double* orientation_curr =
-                        model_actor_list[selected[r].row()]->GetOrientation();
-                    Point6D last_pose(
-                        position_curr[0],
-                        position_curr[1],
-                        position_curr[2],
-                        orientation_curr[0],
-                        orientation_curr[1],
-                        orientation_curr[2]);
-                    /*Camera A View, Save in Camera A coordinates by
-                     * converting camera B*/
-                    model_locations_.SavePose(
-                        session_state_.GetPreviousFrame(),
-                        selected[r].row(),
-                        calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
+            /*Save Last Pair Pose (plan 006 U9 / R10, R12 part): the inline
+             * copy converges onto the shared save-last-pose core (U3) —
+             * CURRENT selection, previous frame, actor-list source, ALWAYS
+             * convert B->A (the pinned camera-A table row). The
+             * !currently_optimizing_ guard is view state and stays around
+             * the call, as before. Pre-existing re-click behavior (R13,
+             * unchanged): clicking the already-checked A radio re-runs this
+             * block and re-applies B->A on actors already in A coordinates
+             * (biplane) — preserved verbatim.*/
+            if (!currently_optimizing_) {
+                std::vector<int> rows;
+                rows.reserve(selected.size());
+                for (const auto& idx : selected) {
+                    rows.push_back(idx.row());
                 }
+                jta::SaveLastPoseToStorage(
+                    session_state_.GetPreviousFrame(), rows,
+                    [this](int row) {
+                        double* position =
+                            model_actor_list[row]->GetPosition();
+                        double* orientation =
+                            model_actor_list[row]->GetOrientation();
+                        return Point6D(
+                            position[0], position[1], position[2],
+                            orientation[0], orientation[1], orientation[2]);
+                    },
+                    /*camera_is_a=*/true, /* unused by ConvertBToA */
+                    jta::SavePoseConvertRule::ConvertBToA, calibration_file_,
+                    model_locations_);
             }
         }
 
@@ -2856,27 +2927,35 @@ void MainScreen::on_camera_B_radio_button_clicked() {
         ui.camera_B_radio_button->setEnabled(radio_actions.enable_camera_b);
         ui.camera_A_radio_button->setEnabled(radio_actions.enable_camera_a);
 
-        /*Save Last Pair Pose*/
-        for (int r = 0; r < selected.size(); r++) {
-            if (selected.size() != 0 &&
-                session_state_.GetPreviousFrame() != -1 &&
-                !currently_optimizing_) {
-                double* position_curr =
-                    vw->get_model_position_at_index(selected[r].row());
-                double* orientation_curr =
-                    vw->get_model_orientation_at_index(selected[r].row());
-                Point6D last_pose(
-                    position_curr[0],
-                    position_curr[1],
-                    position_curr[2],
-                    orientation_curr[0],
-                    orientation_curr[1],
-                    orientation_curr[2]);
-                /*If Camera B View, Save in Camera A coordinates*/
-                model_locations_.SavePose(
-                    session_state_.GetPreviousFrame(), selected[r].row(),
-                    last_pose);
+        /*Save Last Pair Pose (plan 006 U9 / R10, R12 part): the inline copy
+         * converges onto the shared save-last-pose core (U3) — current
+         * selection, previous frame, viewer source, NEVER convert (the
+         * pinned camera-B table row). The raw save is correct: the viewer
+         * source poses are already in camera-A coordinates (the B viewport
+         * displays the A->B-converted poses; storage is A-coords). (The old
+         * comment — "If Camera B View, Save in Camera A coordinates" —
+         * claimed a conversion this path never did; corrected.) The
+         * !currently_optimizing_ guard is view state and stays around the
+         * call, as before.*/
+        if (!currently_optimizing_) {
+            std::vector<int> rows;
+            rows.reserve(selected.size());
+            for (const auto& idx : selected) {
+                rows.push_back(idx.row());
             }
+            jta::SaveLastPoseToStorage(
+                session_state_.GetPreviousFrame(), rows,
+                [this](int row) {
+                    double* position = vw->get_model_position_at_index(row);
+                    double* orientation =
+                        vw->get_model_orientation_at_index(row);
+                    return Point6D(
+                        position[0], position[1], position[2],
+                        orientation[0], orientation[1], orientation[2]);
+                },
+                /*camera_is_a=*/false, /* unused by NeverConvert */
+                jta::SavePoseConvertRule::NeverConvert, calibration_file_,
+                model_locations_);
         }
         /*Update to that frame's canny values*/
         ui.aperture_spin_box->setValue(
@@ -4475,13 +4554,6 @@ void MainScreen::onOptimizedFrame(
     }
 }
 
-/*Uh oh There was an Error. The int is the code.
-1: Could not update comparison image
-2: no potentialy optimal hyper rectangles found
-3: Storage Matrix Empty!
-4: Renderering failure!
-5: Error: Negative Metric!
-*/
 /*The shared controller's severity-carrying message channel (L14): the
  * widgets preserves its box-type distinctions (the gate rejections,
  * Initialize failure, and OptimizerError all arrive here; the finished

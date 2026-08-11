@@ -33,7 +33,6 @@ class AppBridge;
 class ExperimentalScene;
 class ExperimentalSession;
 class OptimizerRunController;
-class QThread;
 class SettingsBridge;
 class StudyBridge;
 

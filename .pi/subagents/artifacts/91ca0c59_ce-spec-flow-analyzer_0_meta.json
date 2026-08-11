@@ -1,0 +1,196 @@
+{
+  "runId": "91ca0c59",
+  "agent": "ce-spec-flow-analyzer",
+  "task": "Analyze user-flow completeness and edge cases for a planned improvement pass over the experimental QML front-end of a Qt6.7 desktop app (src/app/experimental/).\nThe app: main.qml (~700 lines) = toolbar (calibration/images/models buttons + interaction-mode toggle + dialog openers),\nleft panel (frame ListView + model ListView with delegate selection + ML strip with .pt pickers/segment/estimate buttons),\ncenter QmlVtkRenderer viewport, bottom run bar (Run/Stop + progress).\nDialogs: FileDialogs (calibration/images/models/.pt/pose/kinematics), replace-dataset confirm, message dialog,\nsettings Dialog (SettingsPanel.qml form), poses Dialog (PoseCell.qml table, Repeater over all frames, 6 editable cells/row,\ndirty badge, copy-prev/next, save/load). Bridges (C++ QObjects exposed as context properties) hold all logic; QML is thin glue.\nPlanned changes: extract main.qml panels into component files; property injection for testability;\nTheme token/typography compliance; keyboard nav + accessibility; pose-table virtualization (Repeater -> ListView);\nPoseCell binding-fix; Qt Quick Test coverage; qmlprofiler pass.\nIdentify: (1) state-transition gaps in the view layer (e.g. dialogs open during optimizer run, dialog interplay,\nrun-state + dialog openers, empty states), (2) edge cases the new component extraction could break\n(id/scope references, anchors, Qt.callLater timing, Connections targets),\n(3) user-flow completeness gaps worth covering in tests (load flow ordering, ML degradation, pose edit validation, replace-dataset confirm),\n(4) handoff gaps between QML view and bridge signals.\nReport concrete findings with file/line references where possible; keep it tight and actionable.",
+  "exitCode": 0,
+  "usage": {
+    "input": 76413,
+    "output": 33477,
+    "cacheRead": 1723904,
+    "cacheWrite": 0,
+    "cost": 0.012449155600000003,
+    "turns": 27
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 76413,
+        "output": 33477,
+        "cacheRead": 1723904,
+        "cacheWrite": 0,
+        "cost": 0.012449155600000003,
+        "turns": 27
+      }
+    }
+  ],
+  "durationMs": 386003,
+  "toolCount": 39,
+  "launchContractDigest": "a7a563efd79ba8f8d147572385e03e85237fb648681e43c70ed6414bea5f726d",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "not-applicable",
+        "message": "changed-files evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "not-applicable",
+        "message": "tests-added evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Analysis-only task: no code changed, no tests added, scope confined to flow/edge-case analysis of src/app/experimental/ against the existing bridges and tests. Findings reference verified file:line sites (main.qml:48, 221-227, 359, 421-424, 820-850, 980-982; PoseCell.qml:37-49; PoseBridge.cpp:56-63; StudyBridge.cpp applyViewerPose; OptimizerBridge.cpp:211-213, 322-324; MlBridge.cpp:99-103, 264-271)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "ls/find/grep/read over src/app/experimental, test/unit, docs",
+          "result": "passed",
+          "summary": "Read main.qml (1020 lines), PoseCell.qml, SettingsPanel.qml, Theme.qml, qmldir, all 7 bridge headers, StudyBridge/PoseBridge/MlBridge/OptimizerBridge.cpp, main.cpp, CMakeLists, plan-005/006 + handoff docs, bridge unit tests; verified line refs and signal wiring."
+        },
+        {
+          "command": "jj st",
+          "result": "passed",
+          "summary": "Confirmed working copy contains only pre-existing panoptes workspace files; nothing under src/app/experimental modified."
+        }
+      ],
+      "validationOutput": [
+        "Cross-checked every claimed gap against bridge implementations: (1) optimizer persists storage with no table refresh (OptimizerBridge.cpp:322-324, PoseBridge refresh paths only on mutation/selection/dataset), (2) applyViewerPose emits viewerPoseApplied without table refresh, (3) ML seed cleared only on selectionChanged (MlBridge.cpp:99-103) and stale-guarded only on frame/model change, (4) Estimate button enablement omits hasSegmentModel (main.qml:808-813 vs MlBridge.cpp:264-271), (5) Black sil./Fem-Tib lack run-lock bindings (main.qml:820, 836-850), (6) storage access is GUI-thread-only, so drag-during-run is a semantic clobber, not a memory race."
+      ],
+      "residualRisks": [
+        "Stale-pose-table premise (I1/I2) rests on Qt Quick Controls Dialog content persisting across open/close and editingFinished firing on delegate destruction/recycling (C1/C2) — standard QQC2 behavior, but confirm empirically in the test harness before implementing the fix.",
+        "Seed-vs-drag interplay (I3) depends on controller takeSeedForRun semantics read from headers, not from the controller source, which was outside the reviewed surface.",
+        "Analysis is text-grounded; no runtime/QML scene was executed to observe the flows."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No diff — pure analysis task.",
+      "reviewFindings": [
+        "critical: main.qml:359 + PoseCell.qml:41-48 - ListView recycling re-binds frameRow before editingFinished commits; typed text commits to the wrong row; failed-commit assignment permanently breaks the storedValue binding",
+        "critical: PoseCell.qml:46 - commit reads studyBridge.primaryModelIndex at commit time; mid-edit selection change (delegate reset) can commit to the new primary",
+        "important: OptimizerBridge.cpp:322-324 + PoseBridge.cpp:56-63 - pose table not refreshed on run completion or viewer drags (I1/I2)",
+        "important: MlBridge.cpp:99-103 - pending ML seed survives a same-frame manual drag; next run silently overrides the user arrangement (I3)",
+        "important: main.qml:820, 836-850 - run-lock matrix incomplete; viewport drags not locked during run (I4)",
+        "important: main.qml:808-813 - Estimate enabled without segment .pt, click yields error message (I5)",
+        "important: main.qml:672, 707 - keyboard nav (planned) needs onCurrentIndexChanged-to-bridge wiring or view/bridge diverge (I6)",
+        "minor: orientationSymTrapUpdated unhandled in QML; Theme token duplication (main.qml:221-227 vs SettingsPanel); baseName Windows paths; GUI-thread torch freeze; models-only-then-images merge rule; no shell-level dirty indicator"
+      ],
+      "manualNotes": "Report contains 5 user flows, 2 critical / 6 important / 6 minor gaps, 10 prioritized questions, and 5 next steps. The two critical items are about the PLANNED virtualization change, not current behavior — they must be decided before the Repeater->ListView unit. Bridge-level unit tests are already strong (pose validation, ML degradation, gate, seed staleness); the Qt Quick Test layer is entirely absent and should pin the view-level flows listed in step 4."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/91ca0c59_ce-spec-flow-analyzer_0_transcript.jsonl",
+  "timestamp": 1786541624893
+}

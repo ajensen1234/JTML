@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "98616736-1514-45e4-bc40-51b3a7a6d1be",
+  "title": "Analyze user-flow completeness and edge cases for a planned improvement pass over the experimenta...",
+  "objective": "Analyze user-flow completeness and edge cases for a planned improvement pass over the experimental QML front-end of a Qt6.7 desktop app (src/app/experimental/).\nThe app: main.qml (~700 lines) = toolbar (calibration/images/models buttons + interaction-mode toggle + dialog openers),\nleft panel (frame ListView + model ListView with delegate selection + ML strip with .pt pickers/segment/estimate buttons),\ncenter QmlVtkRenderer viewport, bottom run bar (Run/Stop + progress).\nDialogs: FileDialogs (calibration/images/models/.pt/pose/kinematics), replace-dataset confirm, message dialog,\nsettings Dialog (SettingsPanel.qml form), poses Dialog (PoseCell.qml table, Repeater over all frames, 6 editable cells/row,\ndirty badge, copy-prev/next, save/load). Bridges (C++ QObjects exposed as context properties) hold all logic; QML is thin glue.\nPlanned changes: extract main.qml panels into component files; property injection for testability;\nTheme token/typography compliance; keyboard nav + accessibility; pose-table virtualization (Repeater -> ListView);\nPoseCell binding-fix; Qt Quick Test coverage; qmlprofiler pass.\nIdentify: (1) state-transition gaps in the view layer (e.g. dialogs open during optimizer run, dialog interplay,\nrun-state + dialog openers, empty states), (2) edge cases the new component extraction could break\n(id/scope references, anchors, Qt.callLater timing, Connections targets),\n(3) user-flow completeness gaps worth covering in tests (load flow ordering, ML degradation, pose edit validation, replace-dataset confirm),\n(4) handoff gaps between QML view and bridge signals.\nReport concrete findings with file/line references where possible; keep it tight and actionable.",
+  "status": "completed",
+  "createdAt": "2026-08-12T13:27:18.792Z",
+  "updatedAt": "2026-08-12T13:33:44.951Z",
+  "runs": [
+    {
+      "runId": "a4c10268-6b6c-4e96-bd15-46210715e2c6",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a4c10268-6b6c-4e96-bd15-46210715e2c6",
+      "status": "complete",
+      "startedAt": "2026-08-12T13:27:18.793Z",
+      "completedAt": "2026-08-12T13:33:44.950Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "a4c10268-6b6c-4e96-bd15-46210715e2c6",
+      "key": "flow",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:27:18.832Z",
+      "updatedAt": "2026-08-12T13:33:44.899Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/91ca0c59/run-0/session.jsonl"
+      ],
+      "runId": "91ca0c59",
+      "agent": "ce-spec-flow-analyzer",
+      "task": "Analyze user-flow completeness and edge cases for a planned improvement pass over the experimental QML front-end of a Qt6.7 desktop app (src/app/experimental/).\nThe app: main.qml (~700 lines) = toolbar (calibration/images/models buttons + interaction-mode toggle + dialog openers),\nleft panel (frame ListView + model ListView with delegate selection + ML strip with .pt pickers/segment/estimate buttons),\ncenter QmlVtkRenderer viewport, bottom run bar (Run/Stop + progress).\nDialogs: FileDialogs (calibration/images/models/.pt/pose/kinematics), replace-dataset confirm, message dialog,\nsettings Dialog (SettingsPanel.qml form), poses Dialog (PoseCell.qml table, Repeater over all frames, 6 editable cells/row,\ndirty badge, copy-prev/next, save/load). Bridges (C++ QObjects exposed as context properties) hold all logic; QML is thin glue.\nPlanned changes: extract main.qml panels into component files; property injection for testability;\nTheme token/typography compliance; keyboard nav + accessibility; pose-table virtualization (Repeater -> ListView);\nPoseCell binding-fix; Qt Quick Test coverage; qmlprofiler pass.\nIdentify: (1) state-transition gaps in the view layer (e.g. dialogs open during optimizer run, dialog interplay,\nrun-state + dialog openers, empty states), (2) edge cases the new component extraction could break\n(id/scope references, anchors, Qt.callLater timing, Connections targets),\n(3) user-flow completeness gaps worth covering in tests (load flow ordering, ML degradation, pose edit validation, replace-dataset confirm),\n(4) handoff gaps between QML view and bridge signals.\nReport concrete findings with file/line references where possible; keep it tight and actionable.",
+      "completedAt": "2026-08-12T13:33:44.899Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/91ca0c59/run-0/session.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:33:44.899Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a4c10268-6b6c-4e96-bd15-46210715e2c6/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a4c10268-6b6c-4e96-bd15-46210715e2c6/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967/91ca0c59/run-0/session.jsonl"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 1 child run(s). Return: Pre-existing panoptes workspace changes only — nothing in `src/app/experimental/` touched. Analysis complete.\n\n---\n\n# Spec/Flow Analysis: QML Front-End Improvement Pass\n\n**Scope reviewed:** `src/app/experimental/` (main.qml 1,020 lines, PoseCell.qml, SettingsPanel.qml, Theme.qml, 7 bridge headers/impls, main.cpp, qmldir) + bridge unit tests. All line refs verified against the current tree.\n\n## User Flows\n\n**F1 — Study load (calibration-first, one-use, replace-on-second-image-set)**\n\n```mermaid\nflowchart TD\n    A[Calibration…] -->|accepted| B[loadCalibration]\n    B -->|ok| C[Calibrated label; button disabled]\n    B -->|PixelSizeZero/InvalidCode| D[messageDialog]\n    A2[Images…] -->|no calibration| D\n    A2 -->|frameCount>0| E[replaceDialog Yes/No]\n    E -->|Yes| F[clearDataset → loadImages]\n    E -->|No/Esc| G[unchanged]\n    A2 -->|frameCount=0| F\n    A3[Models…] -->|no calibration| D\n    A3 -->|ok| H[append+dedup; scene update]\n```\n\n**F2 — Optimizer run (dialogs close, lock, gate, prog Trace: 2 event(s)."
+}

@@ -395,6 +395,12 @@ public Q_SLOTS:
     void on_load_model_button_clicked();       /*Load Models*/
 
     /*Biplane View Button (Monoplane is Biplane A, Biplans is Biplane B*/
+    /*Plan 006 U9: the VM slice of both camera slots is thinned onto the
+     * shared seams — the active-camera mirror write (SetActiveCamera on the
+     * shared SessionController; the radio stays the source of truth) and the
+     * inline save-last-pose copies (SaveLastPoseToStorage, the pinned
+     * camera-A/B table rows). Radio decisions (DecideCameraRadios) and the
+     * display-only blocks stay view-side (L16).*/
     void on_camera_A_radio_button_clicked();
 
     void on_single_model_radio_button_clicked();
