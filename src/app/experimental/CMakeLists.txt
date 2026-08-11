@@ -1,9 +1,10 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-# 005 U1: QML+VTK spike (go/no-go gate). Scratch target proving
-# QQuickVTKItem renders + interacts + captures under this box's
-# xcb + Qt 6.7.2 + VTK 9.3 before any real UI work (plan 005 U1).
+# 005 U2: jtml_experimental — the final QML app target. Replaces the U1
+# scratch target jtml_experimental_spike (spike_main.cpp is superseded by
+# main.cpp and removed). The U1 smoke keeps direct-compiling SpikeVtkItem.cpp
+# + spike.qrc, so its registration in test/CMakeLists.txt is untouched.
 #
 # GUISupportQtQuick is deliberately NOT in the root find_package COMPONENTS
 # list (root CMakeLists.txt stays untouched): this directory-scoped re-find
@@ -11,8 +12,18 @@
 # (and below), so the widgets app's link line in the parent scope is
 # unchanged. The autoinit MODULES must stay explicit against THIS scope's
 # VTK_LIBRARIES (the directory-scoped set), not the root one.
+#
+# Link set = the widgets-app set minus jtml_view (R1): jtml_coordinator
+# PUBLIC-pulls jtml_services -> jtml_domain + jtml_compute (JTA_LIBS).
+# FrameListModel/ModelListModel are widget-free QAbstractListModels
+# direct-compiled into the target (the established direct-compile pattern;
+# jtml_view is NOT linked). AUTOMOC: every Q_OBJECT header (AppBridge.h,
+# SpikeVtkItem.h, the two model headers) is in the add_executable source list
+# (repo gotcha: a globbed header without its impl in the target is an
+# undefined-vtable link error). AUTORCC is global (root CMakeLists.txt), so
+# listing resources.qrc in the sources is enough.
 
-find_package(Qt6 COMPONENTS Quick Qml REQUIRED)
+find_package(Qt6 COMPONENTS Quick Qml QuickControls2 REQUIRED)
 find_package(VTK 9.3 COMPONENTS
     GUISupportQtQuick
     GUISupportQt
@@ -25,16 +36,23 @@ find_package(VTK 9.3 COMPONENTS
     REQUIRED
 )
 
-add_executable(jtml_experimental_spike
-    spike_main.cpp
+add_executable(jtml_experimental
+    main.cpp
+    AppBridge.h
+    AppBridge.cpp
     SpikeVtkItem.h
     SpikeVtkItem.cpp
-    spike.qrc
+    resources.qrc
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
 )
 
-target_link_libraries(jtml_experimental_spike PRIVATE
+target_link_libraries(jtml_experimental PRIVATE
     Qt6::Quick
     Qt6::Qml
+    Qt6::QuickControls2
     jtml_coordinator
     ${JTA_LIBS}
     ${VTK_LIBRARIES}
@@ -46,25 +64,25 @@ target_link_libraries(jtml_experimental_spike PRIVATE
 # VTK 9 requires per-target factory registration: without vtk_module_autoinit,
 # vtkRenderWindow::New() returns the BASE class (no GL backend), vtkTextRenderer
 # returns null, and vtkWindowToImageFilter segfaults reading the framebuffer.
-vtk_module_autoinit(TARGETS jtml_experimental_spike MODULES ${VTK_LIBRARIES})
+vtk_module_autoinit(TARGETS jtml_experimental MODULES ${VTK_LIBRARIES})
 
 # CUDA Configuration for the executable (compute linkage).
-set_property(TARGET jtml_experimental_spike PROPERTY CUDA_ARCHITECTURES native)
+set_property(TARGET jtml_experimental PROPERTY CUDA_ARCHITECTURES native)
 
 # RPATH mirrors src/app/CMakeLists.txt (the conda toolchain overrides
 # BUILD_RPATH, so the explicit -rpath entries below are the actual link
 # recipe; GNU ld accumulates).
-set_target_properties(jtml_experimental_spike PROPERTIES
+set_target_properties(jtml_experimental PROPERTIES
     BUILD_RPATH "$ORIGIN/../lib:$ORIGIN/../lib/vtk:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
     INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/../lib/vtk:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
     INSTALL_RPATH_USE_LINK_PATH TRUE
 )
-target_link_options(jtml_experimental_spike PRIVATE
+target_link_options(jtml_experimental PRIVATE
     "-Wl,-rpath,$ORIGIN/../lib"
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
     "-Wl,-rpath,${VTK_LIB_DIR}")
 
-target_include_directories(jtml_experimental_spike PRIVATE
+target_include_directories(jtml_experimental PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${VTK_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
