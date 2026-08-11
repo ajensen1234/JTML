@@ -76,6 +76,14 @@ StudyBridge::StudyBridge(AppBridge* hub, ExperimentalSession* session,
       session_(session),
       scene_(scene),
       controller_(new jta::SessionController),
+      /*Plan 006 U7: the shared study-load controller wraps controller_ and
+       * consults the session-state controller's M7 run-in-flight probe at
+       * each load (L17 — the QML app has no load-time guard today; the
+       * shared check is defense-in-depth, rejection is silent). The lambda
+       * is invoked only at load time, never during construction.*/
+      study_load_controller_(
+          controller_,
+          [this] { return session_state_controller_->runInFlight(); }),
       session_state_controller_(session_state_controller),
       selection_(new DelegateSelection),
       frame_list_model_(new FrameListModel),
@@ -94,42 +102,44 @@ StudyBridge::~StudyBridge() {
 /*---- Load actions ----*/
 
 void StudyBridge::loadCalibration(const QString& file_path) {
-    /*One-use per session (widgets parity: the load-calibration button
-     * disables after a successful load).*/
-    if (hasCalibration()) {
+    /*One shared load path (plan 006 U7 / R11): the one-use-per-session
+     * rejection + parse + the caller-owned container writes (calibration +
+     * flags + the shared active-camera mirror) relocated into
+     * StudyLoadController.*/
+    const jta::StudyCalibrationLoadResult result =
+        study_load_controller_.LoadCalibration(
+            LocalPath(file_path),
+            session_->calibration_file,
+            session_->calibrated_for_monoplane_viewport,
+            session_->calibrated_for_biplane_viewport);
+    /*Policy rejections are silent (widgets parity: the load button disables
+     * after a successful load — one-use per session; the run-in-flight
+     * guard is defense-in-depth).*/
+    if (result.status == jta::StudyLoadStatus::RunInFlight ||
+        result.status == jta::StudyLoadStatus::CalibrationAlreadyLoaded) {
         return;
     }
-    const jta::CalibrationParseResult result =
-        jta::SessionController::ParseCalibration(LocalPath(file_path));
     /*Typed error mapping (widgets precedent): PixelSizeZero / InvalidCode
      * show the box; FileOpenFailed is silent and changes nothing.*/
-    if (result.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
+    if (result.parse.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
         emit messageRequested(
             QStringLiteral("Error!"),
             QStringLiteral("Pixel size (the last number in the calibration "
                            "file) is specified as 0! This is impossible."));
         return;
     }
-    if (result.error == jta::CalibrationParseResult::Error::InvalidCode) {
+    if (result.parse.error == jta::CalibrationParseResult::Error::InvalidCode) {
         emit messageRequested(QStringLiteral("Error!"),
                               QStringLiteral("Invalid Configuration File!"));
         return;
     }
-    if (!result.ok) {
+    if (!result.parse.ok) {
         return;  // FileOpenFailed: silent, state unchanged
     }
-    session_->calibration_file = result.calibration;
-    session_->calibrated_for_monoplane_viewport =
-        result.calibrated_for_monoplane_viewport;
-    session_->calibrated_for_biplane_viewport =
-        result.calibrated_for_biplane_viewport;
-    /*Active-camera mirror (widgets parity: camera A checked after any valid
-     * calibration).*/
-    controller_->SetActiveCamera(jta::ActiveCamera::CameraA);
-    /*Scene camera focal: mirror of Viewer::setup_camera_calibration — the
-     * renderer's clipping + image-plane Z use the principal distance. The
-     * view angle needs frame dims and is set at image load.*/
-    scene_->setFocalLengthPx(result.calibration.camera_A_principal_.principal_distance_);
+    /*The controller wrote the calibration + flags + the active-camera
+     * mirror; the scene focal is a view mapping (the widgets sets it inside
+     * Viewer::setup_camera_calibration).*/
+    scene_->setFocalLengthPx(result.parse.calibration.camera_A_principal_.principal_distance_);
     syncSessionState();
     emit datasetChanged();
     emit sceneCameraChanged();
@@ -146,13 +156,20 @@ void StudyBridge::loadImages(const QStringList& paths) {
      * edge controls yet (a later unit) — the session_controller_test
      * defaults ({3, 40, 120, 0}) stand in. They only feed the edge/dilation
      * images; the viewport background is the ORIGINAL frame image.*/
-    const jta::ImageLoadResult result = controller_->ParseImages(
+    /*One shared load path (plan 006 U7 / R11): the parse + populate +
+     * counts relocated into StudyLoadController. The run-in-flight
+     * rejection is silent (defense-in-depth — the shared check lands
+     * without new user-visible behavior).*/
+    const jta::StudyImageLoadResult result = study_load_controller_.LoadImages(
         LocalPaths(paths), jta::ImageLoadParams{3, 40, 120, 0},
         session_->loaded_frames, session_->model_locations);
+    if (result.status == jta::StudyLoadStatus::RunInFlight) {
+        return;
+    }
     for (const QString& name : result.frame_names) {
         frame_list_model_->AppendFrame(name);
     }
-    if (result.status == jta::ImageLoadStatus::SizeMismatchAborted) {
+    if (result.status == jta::StudyLoadStatus::SizeMismatchAborted) {
         /*goto-stop semantics: the frames appended so far persist; the box is
          * shown after the call, exactly like the widgets slot.*/
         emit messageRequested(
@@ -182,26 +199,21 @@ void StudyBridge::loadModels(const QStringList& paths) {
                               QStringLiteral("Load Calibration First!"));
         return;
     }
-    const std::vector<jta::ParsedModel> parsed_models =
-        jta::SessionController::ParseModels(LocalPaths(paths));
-    QVector<QString> base_names;
-    base_names.reserve(static_cast<int>(parsed_models.size()));
-    for (const auto& parsed_model : parsed_models) {
-        base_names.push_back(parsed_model.base_name);
+    /*One shared load path (plan 006 U7 / R11): parse -> dedup -> populate ->
+     * counts relocated into StudyLoadController; the two-pass dedup runs
+     * through this bridge's ModelListModel::AppendModels seam (the
+     * ModelListBuilder mutated-name-rescan quirk preserved — the returned
+     * unique names drive the Model names AND the renderer binding). The
+     * run-in-flight rejection is silent (defense-in-depth).*/
+    const jta::StudyModelLoadResult result = study_load_controller_.LoadModels(
+        LocalPaths(paths), session_->calibration_file,
+        session_->loaded_models, session_->model_locations,
+        [this](const QVector<QString>& base_names) {
+            return model_list_model_->AppendModels(base_names);
+        });
+    if (result.status == jta::StudyLoadStatus::RunInFlight) {
+        return;
     }
-    /*Two-pass dedup (ModelListBuilder quirk preserved — the returned unique
-     * names drive the Model names AND the renderer binding).*/
-    const QVector<QString> unique_names =
-        model_list_model_->AppendModels(base_names);
-    QStringList names;
-    names.reserve(static_cast<int>(unique_names.size()));
-    for (const QString& name : unique_names) {
-        names.push_back(name);
-    }
-    controller_->PopulateModels(parsed_models, names,
-                                session_->calibration_file,
-                                session_->loaded_models,
-                                session_->model_locations);
     /*STL-parse warnings: the widgets checks per-file
      * (vw->are_models_loaded_incorrectly); here the Model carries
      * initialized_correctly_ and the renderer logs failed loads

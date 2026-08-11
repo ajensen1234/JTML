@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 // 005 U4: StudyBridge — the thin study-load adapter (R3, R17). Pass-through
-// orchestration only: QML FileDialogs pick paths → SessionController parse/
-// populate calls → the app-owned dataset (ExperimentalSession) + the
-// direct-compiled FrameListModel/ModelListModel + the app-owned
-// ExperimentalScene. No behavior lives here beyond the orchestration order;
-// every semantic (partial loads, dedup, calibration formats, camera
-// decisions) comes from the seams it delegates to.
+// orchestration only: QML FileDialogs pick paths → the shared StudyLoadController
+// (plan 006 U7 / R11 — the ONE load path both front-ends call: calibration
+// one-use + dataset-replace policy, parse → populate → dedup → counts) over
+// the app-owned dataset (ExperimentalSession) + the direct-compiled
+// FrameListModel/ModelListModel + the app-owned ExperimentalScene. No behavior
+// lives here beyond the orchestration order; every semantic (partial loads,
+// dedup, calibration formats, camera decisions) comes from the seams it
+// delegates to.
 //
 // Ownership (plan 005 bridge decomposition): AppBridge (the hub) owns the
 // ExperimentalSession and creates this adapter; the list models are created
@@ -58,6 +60,12 @@ namespace jta {
 class SessionController;
 }
 struct ExperimentalSession;
+
+/*The shared study-load controller (plan 006 U7): wraps the bridge's
+ * SessionController (the parse seam + the shared active-camera/count
+ * mirrors) and consults the session-state controller's M7 run-in-flight
+ * probe at each load (L17). QtCore-only plain class — value member.*/
+#include "services/study_load_controller.h"
 
 class StudyBridge : public QObject {
     Q_OBJECT
@@ -151,6 +159,11 @@ private:
     ExperimentalSession* session_;
     ExperimentalScene* scene_;
     jta::SessionController* controller_;
+    /*Plan 006 U7: the shared study-load controller — the ONE load path both
+     * front-ends call. Wraps controller_ (declared before it) and probes
+     * session_state_controller_->runInFlight() (M7 → L17) at each load; the
+     * probe is invoked only at load time, never during construction.*/
+    jta::StudyLoadController study_load_controller_;
     /*Plan 006 U6: the shared session-state controller (owned by AppBridge,
      * the composition root — the hub wires the run-in-flight probe + the
      * seed-clear there). syncSessionState writes through it (the widgets

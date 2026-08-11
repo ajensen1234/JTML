@@ -644,6 +644,43 @@ add_test(NAME jtml.session_controller COMMAND jtml_test_session_controller)
 set_tests_properties(jtml.session_controller PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# StudyLoadController tests (plan 006 U7, R11/R13). The shared study-load
+# controller + the real SessionController direct-compile against the headless
+# Frame twin + the real LocationStorage/Model/stl_reader/ModelListBuilder
+# services; the dedup seam is the real ModelListModel (QtCore-only — the
+# AppendModels both views wire; the Q_OBJECT header is in the sources for
+# AUTOMOC, like jtml_test_experimental_selection). Same fixture recipe as
+# jtml.session_controller (repo-root WORKING_DIRECTORY).
+add_executable(jtml_test_study_load_controller
+    unit/study_load_controller_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/session_controller.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/model.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/stl_reader.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+)
+target_include_directories(jtml_test_study_load_controller PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
+target_link_libraries(jtml_test_study_load_controller PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    Catch2::Catch2WithMain
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES})
+target_link_options(jtml_test_study_load_controller PRIVATE
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.study_load_controller COMMAND jtml_test_study_load_controller)
+set_tests_properties(jtml.study_load_controller PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # StudyBridge + delegate-selection contract tests (plan 005 U4, R3/R17). The
 # bridge (AppBridge/StudyBridge/DelegateSelection/ExperimentalScene)
 # direct-compiles against the headless Frame twin + the real SessionController
@@ -668,6 +705,7 @@ add_executable(jtml_test_experimental_selection
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
@@ -872,6 +910,7 @@ add_executable(jtml_test_experimental_optimizer_gate
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
@@ -943,6 +982,7 @@ add_executable(jtml_test_experimental_ml_bridge
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
@@ -1020,6 +1060,7 @@ add_executable(jtml_test_experimental_pose_bridge
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
@@ -1213,6 +1254,7 @@ add_executable(jtml_test_qml_parity_check
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/study_load_controller.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h

@@ -139,7 +139,16 @@ MainScreen::MainScreen(QWidget* parent)
       session_state_controller_(
           &session_state_,
           [this] { return optimizer_run_controller_.running(); },
-          [this] { optimizer_run_controller_.clearSeedPose(); }) {
+          [this] { optimizer_run_controller_.clearSeedPose(); }),
+      /*Plan 006 U7: the shared study-load controller wraps session_controller_
+       * (declared before it in the header) and consults the session-state
+       * controller's M7 run-in-flight probe at each load (L17 — the widgets'
+       * DisableAll already covers the load buttons during a run; the shared
+       * check is defense-in-depth). The lambda is invoked only at load time,
+       * never during construction.*/
+      study_load_controller_(
+          &session_controller_,
+          [this] { return session_state_controller_.runInFlight(); }) {
     ui.setupUi(this);
 
     /*View-models (plan 004 U2): the lists are passive QListViews over
@@ -2240,61 +2249,67 @@ void MainScreen::on_load_calibration_button_clicked() {
     QString calibration_file_extension = QFileDialog::getOpenFileName(
         this, tr("Load Calibration"), ".", tr("Calibration File (*.txt)"));
 
-    /*Parse the calibration file (plan 004 U6 / R6): the inline QTextStream +
-     * QRegularExpression parsing moved to SessionController verbatim; the
-     * view keeps the dialogs, the error boxes, the interactor.h global
-     * writes, and the VTK setup below.*/
-    const jta::CalibrationParseResult parse_result =
-        session_controller_.ParseCalibration(calibration_file_extension);
+    /*One shared load path (plan 006 U7 / R11): the parse + one-use policy +
+     * the caller-owned container writes (calibration_file_, the calibrated
+     * flags, the active-camera mirror) relocated into StudyLoadController
+     * verbatim; the view keeps the dialogs, the error boxes, the
+     * interactor.h global writes, and the VTK setup below.*/
+    const jta::StudyCalibrationLoadResult load_result =
+        study_load_controller_.LoadCalibration(
+            calibration_file_extension,
+            calibration_file_,
+            calibrated_for_monoplane_viewport_,
+            calibrated_for_biplane_viewport_);
 
-    /*Valid Code for Monoplane -- Error Check*/
-    if (parse_result.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
+    /*Policy rejections are silent: the one-use rule is unreachable here (the
+     * button disables after a successful load) and the run-in-flight guard
+     * is defense-in-depth (DisableAll covers the button during a run).*/
+    if (load_result.status == jta::StudyLoadStatus::RunInFlight ||
+        load_result.status == jta::StudyLoadStatus::CalibrationAlreadyLoaded) {
+        return;
+    }
+
+    /*Valid Code for Monoplane -- Error Check (the PixelSizeZero/InvalidCode
+     * calibrated-flag writes relocated into the controller).*/
+    if (load_result.parse.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
         QMessageBox::critical(
             this,
             "Error!",
             "Pixel size (the last number in the calibration "
             "file) is specified as 0! This is impossible.",
             QMessageBox::Ok);
-        calibrated_for_monoplane_viewport_ = false;
-        calibrated_for_biplane_viewport_ = false;
         return;
     }
     /*Invalid Code*/
-    if (parse_result.error == jta::CalibrationParseResult::Error::InvalidCode) {
+    if (load_result.parse.error == jta::CalibrationParseResult::Error::InvalidCode) {
         QMessageBox::critical(
             this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
-        calibrated_for_monoplane_viewport_ = false;
-        calibrated_for_biplane_viewport_ = false;
         return;
     }
     /*File open failure shows no box and changes nothing (the slot's silent
      * open guard, preserved).*/
-    if (!parse_result.ok) {
+    if (!load_result.parse.ok) {
         return;
     }
 
-    /*Initialize Calibration*/
-    calibration_file_ = parse_result.calibration;
-    calibrated_for_monoplane_viewport_ =
-        parse_result.calibrated_for_monoplane_viewport;
-    calibrated_for_biplane_viewport_ =
-        parse_result.calibrated_for_biplane_viewport;
+    /*Initialize Calibration: calibration_file_ + the calibrated flags were
+     * already written into the caller-owned containers by the controller.*/
     /*Update Interactor Calibration For Converting Text in Camera B View
      * (branch-dependent writes preserved verbatim: Monoplane writes both
      * globals, Biplane writes interactor_calibration only, Denver writes
      * neither -- the parse result carries the branch kind).*/
-    if (parse_result.kind == jta::CalibrationParseResult::Kind::Monoplane ||
-        parse_result.kind == jta::CalibrationParseResult::Kind::Biplane) {
+    if (load_result.parse.kind == jta::CalibrationParseResult::Kind::Monoplane ||
+        load_result.parse.kind == jta::CalibrationParseResult::Kind::Biplane) {
         interactor_calibration = calibration_file_;
     }
-    if (parse_result.kind == jta::CalibrationParseResult::Kind::Monoplane) {
+    if (load_result.parse.kind == jta::CalibrationParseResult::Kind::Monoplane) {
         // interactor_calibration.camera_A_principal_.principal_distance_
         // - should return 1198
         interactor_camera_B = false;
     }
     /*The camera A radio is checked after any valid calibration (active-
-     * camera mirror, R10).*/
-    session_controller_.SetActiveCamera(jta::ActiveCamera::CameraA);
+     * camera mirror, R10 -- written by the controller on the shared
+     * SessionController instance).*/
 
     /*Set Up QVTK Widget For Calibration*/
     /*Monoplane (Left Viewport)*/
@@ -2420,24 +2435,25 @@ void MainScreen::on_load_image_button_clicked() {
             tr("Load Image(s)"),
             ".",
             tr("Image File(s) (*.tif *.tiff *.png)"));
-        /*Parse + populate (plan 004 U6 / R6): the Frame construction,
-         * all-same-size check, append, and LoadNewFrame sizing moved to
-         * SessionController verbatim (goto stop semantics: on a size
+        /*One shared load path (plan 006 U7 / R11): the parse + populate +
+         * counts relocated into StudyLoadController (the plan-004 U6
+         * SessionController primitives; goto stop semantics: on a size
          * mismatch the frames appended so far persist; the box is shown
          * after the call, same as the in-loop box).*/
-        const jta::ImageLoadResult load_result = session_controller_.ParseImages(
-            TiffFileExtensions,
-            jta::ImageLoadParams{ui.aperture_spin_box->value(),
-                                 ui.low_threshold_slider->value(),
-                                 ui.high_threshold_slider->value(),
-                                 dilation_val},
-            loaded_frames,
-            model_locations_);
+        const jta::StudyImageLoadResult load_result =
+            study_load_controller_.LoadImages(
+                TiffFileExtensions,
+                jta::ImageLoadParams{ui.aperture_spin_box->value(),
+                                     ui.low_threshold_slider->value(),
+                                     ui.high_threshold_slider->value(),
+                                     dilation_val},
+                loaded_frames,
+                model_locations_);
         /*Populate Frame List Widget*/
         for (const auto& frame_name : load_result.frame_names) {
             frame_list_model_.AppendFrame(frame_name);
         }
-        if (load_result.status == jta::ImageLoadStatus::SizeMismatchAborted) {
+        if (load_result.status == jta::StudyLoadStatus::SizeMismatchAborted) {
             QMessageBox::critical(
                 this,
                 "Error!",
@@ -2476,12 +2492,13 @@ void MainScreen::on_load_image_button_clicked() {
             ".",
             tr("Image File(s) (*.tif *.tiff)"));
 
-        /*Parse + populate (plan 004 U6 / R6): the A/B same-count gate, Frame
-         * construction, per-list all-same-size checks, append, and
-         * LoadNewFrame sizing moved to SessionController verbatim (goto
-         * stop_biplane semantics: frames appended so far persist).*/
-        const jta::ImageLoadResult load_result =
-            session_controller_.ParseBiplaneImages(
+        /*One shared load path (plan 006 U7 / R11): the parse + populate +
+         * counts relocated into StudyLoadController (the plan-004 U6
+         * SessionController primitives; goto stop_biplane semantics: on a
+         * size mismatch the frames appended so far persist; a count
+         * mismatch appends nothing).*/
+        const jta::StudyImageLoadResult load_result =
+            study_load_controller_.LoadBiplaneImages(
                 TiffFileExtensionsCamera_A,
                 TiffFileExtensionsCamera_B,
                 jta::ImageLoadParams{ui.aperture_spin_box->value(),
@@ -2492,7 +2509,7 @@ void MainScreen::on_load_image_button_clicked() {
                 loaded_frames_B,
                 model_locations_);
         /*Check Same Amount of Loaded Images*/
-        if (load_result.status == jta::ImageLoadStatus::CameraCountMismatch) {
+        if (load_result.status == jta::StudyLoadStatus::CameraCountMismatch) {
             QMessageBox::critical(
                 this,
                 "Error!",
@@ -2504,7 +2521,7 @@ void MainScreen::on_load_image_button_clicked() {
         for (const auto& frame_name : load_result.frame_names) {
             frame_list_model_.AppendFrame(frame_name);
         }
-        if (load_result.status == jta::ImageLoadStatus::SizeMismatchAborted) {
+        if (load_result.status == jta::StudyLoadStatus::SizeMismatchAborted) {
             QMessageBox::critical(
                 this,
                 "Error!",
@@ -2543,49 +2560,35 @@ void MainScreen::on_load_model_button_clicked() {
     QStringList CADFileExtensions = QFileDialog::getOpenFileNames(
         this, tr("Load Implant Model(s)"), ".", tr("CAD File(s) (*.stl)"));
 
-    /*For Each Cad File Extension Create Model Name -- unique display names
-     * built by ModelListModel via the pure ModelListBuilder (plan 004 U2,
-     * R5; R15: reproduces the original two-pass dedup exactly). The model
-     * owns the names now; the returned display names drive the VTK binding
-     * below. The base-name computation (path parsing) moved to
-     * SessionController (plan 004 U6 / R6); the view feeds the dedup.*/
-    const std::vector<jta::ParsedModel> parsed_models =
-        session_controller_.ParseModels(CADFileExtensions);
-    QVector<QString> base_names;
-    base_names.reserve(static_cast<int>(parsed_models.size()));
-    for (const auto& parsed_model : parsed_models) {
-        base_names.push_back(parsed_model.base_name);
-    }
-    const QVector<QString> unique_names =
-        model_list_model_.AppendModels(base_names);
+    /*One shared load path (plan 006 U7 / R11): parse -> dedup -> populate ->
+     * counts relocated into StudyLoadController (the plan-004 U6
+     * SessionController primitives). The two-pass dedup runs through the
+     * view's ModelListModel::AppendModels seam (the view-model owns the
+     * loaded display names; the ModelListBuilder mutated-name-rescan quirk
+     * is preserved inside it); the returned unique names + file paths drive
+     * the VTK binding below.*/
+    const jta::StudyModelLoadResult load_result =
+        study_load_controller_.LoadModels(
+            CADFileExtensions,
+            calibration_file_,
+            loaded_models,
+            model_locations_,
+            [this](const QVector<QString>& base_names) {
+                return model_list_model_.AppendModels(base_names);
+            });
 
-    QStringList CADModelNames;
-    CADModelNames.reserve(static_cast<int>(unique_names.size()));
-    for (const auto& n : unique_names) {
-        CADModelNames.push_back(n);
-    }
-
-    // for (int i = 0; i < CADFileExtensions.size(); i++)
-    // loaded_models.push_back(Model(CADFileExtensions[i].toStdString(),
-    // CADModelNames[i].toStdString(), "BLANK"));
     vw->load_models(
-        CADFileExtensions,
-        CADModelNames); // Need to change this logic so it only
-                        // has the new files
-    coronal_vw->load_models(CADFileExtensions, CADModelNames);
-    /*Dataset population (plan 004 U6 / R6): Model construction (the STL
-     * parse) + LocationStorage sizing via LoadNewModel moved to
-     * SessionController verbatim.*/
-    session_controller_.PopulateModels(
-        parsed_models, CADModelNames, calibration_file_, loaded_models,
-        model_locations_);
-    for (int i = 0; i < CADFileExtensions.size(); i++) {
+        load_result.file_paths,
+        load_result.unique_names); // Need to change this logic so it only
+                                   // has the new files
+    coronal_vw->load_models(load_result.file_paths, load_result.unique_names);
+    for (int i = 0; i < load_result.file_paths.size(); i++) {
         if (vw->are_models_loaded_incorrectly(i)) {
             QMessageBox::warning(
                 this,
                 "Warning!",
-                "It is Possible that " + CADModelNames[i] + " (" +
-                    CADFileExtensions[i] + ") " +
+                "It is Possible that " + load_result.unique_names[i] + " (" +
+                    load_result.file_paths[i] + ") " +
                     " is an invalid or corrupted STL file format. "
                     "Proceed with caution!",
                 QMessageBox::Ok);

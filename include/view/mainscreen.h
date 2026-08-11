@@ -67,6 +67,16 @@
  * file-scope globals -- this TU is the only interactor.h includer).*/
 #include "services/session_controller.h"
 
+/*Study-load controller (plan 006 U7 / R11): the ONE shared load path both
+ * front-ends call -- calibration one-use-per-session + dataset-replace
+ * policy, parse -> populate -> dedup -> counts relocated verbatim from the
+ * load slots (R13); the scene/background/VTK updates stay view-side. It
+ * wraps session_controller_ (declared before it) -- the shared active-
+ * camera / count mirrors stay on the one instance the camera slots use --
+ * and consults the injected run-in-flight probe (L17) at each load, wired
+ * from the session-state controller's M7 probe below.*/
+#include "services/study_load_controller.h"
+
 /*Optimizer Run Controller (plan 006 U5): the shared run controller — gate,
  * drive sequence, run-state machine, progress, stop, seed, epoch/thread
  * lifecycle, destructor contract. MainScreen's LaunchOptimizer + locking
@@ -260,6 +270,14 @@ private:
      * keeps ownership + the dialogs, view-model insertion, interactor.h
      * global writes, and VTK wiring.*/
     jta::SessionController session_controller_;
+
+    /*Shared study-load controller (plan 006 U7 / R11): the load slots thin
+     * onto it (calibration one-use + dataset-replace policy, parse ->
+     * populate -> dedup -> counts); it wraps session_controller_ (declared
+     * before it) and probes session_state_controller_.runInFlight() (M7 -
+     * L17) at each load. The camera slots keep using session_controller_
+     * directly (U9 thins them later).*/
+    jta::StudyLoadController study_load_controller_;
 
     /*Segmentation controller (plan 004 U8 / R12): per-frame segment +
      * implant-estimate operations (SegmentFrame / EstimateImplantPose). The

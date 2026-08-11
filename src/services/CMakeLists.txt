@@ -23,6 +23,7 @@ add_library(jtml_services STATIC
     optimizer_settings.cpp
     render_pipeline_builder.cpp
     session_controller.cpp
+    study_load_controller.cpp
     settings_service.cpp
     cost_function_registry.cpp
     save_last_pose.cpp
