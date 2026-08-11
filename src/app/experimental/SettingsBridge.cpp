@@ -8,6 +8,7 @@
 #include "compute/CostFunction.h"
 #include "compute/CostFunctionManager.h"
 #include "domain/settings_constants.h"
+#include "services/cost_function_registry.h"
 
 namespace {
 
@@ -49,7 +50,8 @@ SettingsBridge::~SettingsBridge() = default;
 void SettingsBridge::save() {
     /*Registry write (explicit save): the three settings groups the widgets
      * onSaveSettings + first-run write. The cost-function entries come from
-     * the replicated mapping (parity contract — see file header).*/
+     * the shared mapping (parity contract — the widgets MainScreen calls the
+     * same services function, plan 006 U1).*/
     settings_service_->SaveCostFunctionSettings(
         buildCostFunctionRegistryEntries());
     settings_service_->SaveOptimizerSettings(optimizer_);
@@ -451,144 +453,22 @@ jta_cost_function::CostFunctionManager* SettingsBridge::leafManager() const {
 }
 
 /*----------------------------------------------------------------------------
- * The replicated registry mapping (parity contract).
+ * The shared registry mapping (parity contract).
  *
- * Verbatim replication of MainScreen::BuildCostFunctionRegistryEntries
- * (mainscreen.cpp:4895): same key formats (STAGE@ACTIVE_CF /
- * STAGE@CFname@ParamName@TYPE), same entry order (ACTIVE_CF first, then per
- * available cost function the double/int/bool parameter groups), same value
- * types (double/int/bool QVariants — lossless, no narrowing). The parity pin
- * in experimental_settings_test.cpp compares this output against a golden
- * fixture captured from the REAL widgets method.
+ * Delegates to the shared services function jta::BuildCostFunctionRegistryEntries
+ * (plan 006 U1 — the widgets MainScreen calls the same function; the golden
+ * fixture in experimental_settings_test.cpp pins the output): same key formats
+ * (STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE), same entry order (ACTIVE_CF
+ * first, then per available cost function the double/int/bool parameter
+ * groups), same value types (double/int/bool QVariants — lossless, no
+ * narrowing). This bridge method is now a thin wrapper keeping the QML call
+ * site + the C++ test surface unchanged.
  *----------------------------------------------------------------------------*/
 
 std::vector<jta::RegistryEntry>
 SettingsBridge::buildCostFunctionRegistryEntries() const {
-    std::vector<jta::RegistryEntry> entries;
-
-    /*Cost Function Managers (Save All Values for Parameters and Active Cost
-     * Function)*/
-    /*Trunk*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("TRUNK@ACTIVE_CF"),
-        QString::fromStdString(trunk_manager_->getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-        trunk_manager_->getAvailableCostFunctions();
-    for (int i = 0; i < trunk_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            trunk_parameters_double =
-                trunk_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < trunk_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_double[j].getParameterName() + "@" +
-                    trunk_parameters_double[j].getParameterType()),
-                trunk_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> trunk_parameters_int =
-            trunk_cost_functions[i].getIntParameters();
-        for (int j = 0; j < trunk_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_int[j].getParameterName() + "@" +
-                    trunk_parameters_int[j].getParameterType()),
-                trunk_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> trunk_parameters_bool =
-            trunk_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
-                    "@" + trunk_parameters_bool[j].getParameterName() + "@" +
-                    trunk_parameters_bool[j].getParameterType()),
-                trunk_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    /*Branch*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("BRANCH@ACTIVE_CF"),
-        QString::fromStdString(branch_manager_->getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-        branch_manager_->getAvailableCostFunctions();
-    for (int i = 0; i < branch_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            branch_parameters_double =
-                branch_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < branch_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_double[j].getParameterName() + "@" +
-                    branch_parameters_double[j].getParameterType()),
-                branch_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> branch_parameters_int =
-            branch_cost_functions[i].getIntParameters();
-        for (int j = 0; j < branch_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_int[j].getParameterName() + "@" +
-                    branch_parameters_int[j].getParameterType()),
-                branch_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> branch_parameters_bool =
-            branch_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < branch_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
-                    "@" + branch_parameters_bool[j].getParameterName() + "@" +
-                    branch_parameters_bool[j].getParameterType()),
-                branch_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    /*Leaf*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("LEAF@ACTIVE_CF"),
-        QString::fromStdString(leaf_manager_->getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-        leaf_manager_->getAvailableCostFunctions();
-    for (int i = 0; i < leaf_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            leaf_parameters_double =
-                leaf_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < leaf_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_double[j].getParameterName() + "@" +
-                    leaf_parameters_double[j].getParameterType()),
-                leaf_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
-            leaf_cost_functions[i].getIntParameters();
-        for (int j = 0; j < leaf_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_int[j].getParameterName() + "@" +
-                    leaf_parameters_int[j].getParameterType()),
-                leaf_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> leaf_parameters_bool =
-            leaf_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_bool[j].getParameterName() + "@" +
-                    leaf_parameters_bool[j].getParameterType()),
-                leaf_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    return entries;
+    return jta::BuildCostFunctionRegistryEntries(
+        *trunk_manager_, *branch_manager_, *leaf_manager_);
 }
 
 /*----------------------------------------------------------------------------

@@ -23,6 +23,7 @@ add_library(jtml_services STATIC
     optimizer_settings.cpp
     session_controller.cpp
     settings_service.cpp
+    cost_function_registry.cpp
     stl_reader.cpp
     STLReader.cpp
     edge_processor.cpp

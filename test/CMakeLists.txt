@@ -606,6 +606,7 @@ add_executable(jtml_test_experimental_settings
     unit/experimental_settings_test.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/cost_function_registry.cpp
     ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
     ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
@@ -631,6 +632,44 @@ target_link_options(jtml_test_experimental_settings PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.experimental_settings COMMAND jtml_test_experimental_settings)
 set_tests_properties(jtml.experimental_settings PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Shared cost-function registry mapping tests (plan 006 U1, R8/AE3). The
+# shared jta::BuildCostFunctionRegistryEntries (services layer — the one
+# mapping both front-ends call) direct-compiles against the real
+# SettingsService (temp-ini isolated, never the real registry) + the real
+# CostFunctionManager/CostFunction linked from jtml_compute (constructor +
+# parameter surface only — CPU-only, no CUDA calls at runtime): pins the
+# golden 51-entry table (17 per stage, %.17g exact IEEE-754 round-trip) for
+# the widgets first-run manager configuration, the registry write/read-back
+# of the exact same entries, and the no-stage/empty-manager robustness. Same
+# fixture recipe (heavy include set, rpath) as jtml.experimental_settings.
+add_executable(jtml_test_cost_function_registry
+    unit/cost_function_registry_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/cost_function_registry.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_cost_function_registry PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_cost_function_registry PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    ${JTA_LIBS})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir; torch/cuda deps in the pixi env (the .so's own RUNPATH covers
+# them, this is belt-and-braces for the test binary).
+target_link_options(jtml_test_cost_function_registry PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.cost_function_registry COMMAND jtml_test_cost_function_registry)
+set_tests_properties(jtml.cost_function_registry PROPERTIES LABELS "headless" TIMEOUT 300)
 
 # OptimizerBridge gate + state-core tests (plan 005 U6, R6/R13). The bridge
 # direct-compiles against the U4/U5 bridges + the app-owned dataset and links

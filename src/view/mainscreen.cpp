@@ -50,6 +50,7 @@
 
 /*STL Reader*/
 #include "services/STLReader.h"
+#include "services/cost_function_registry.h"
 #include "services/edge_processor.h"
 
 /* PyTorch 1.0 CPP Torch Script*/
@@ -4887,146 +4888,17 @@ void MainScreen::onSaveSettings(
 
 /*Builds the raw CostFunctionSettings registry entries (key formats
  * STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE) from the three cost function
- * managers -- relocated verbatim from the first-run save and onSaveSettings
- * (plan 004 U3). The SettingsService round-trips the raw entries; the view
- * maps managers <-> entries because the GPU-linked CostFunctionManager must
- * not enter the QtCore-only service.*/
+ * managers. The mapping itself moved to the shared services layer (plan 006
+ * U1 — jta::BuildCostFunctionRegistryEntries in jtml_services, which the QML
+ * SettingsBridge calls too); this view method is now a thin wrapper keeping
+ * the widgets call sites unchanged.*/
 std::vector<jta::RegistryEntry>
 MainScreen::BuildCostFunctionRegistryEntries(
     jta_cost_function::CostFunctionManager& trunk_manager,
     jta_cost_function::CostFunctionManager& branch_manager,
     jta_cost_function::CostFunctionManager& leaf_manager) const {
-    std::vector<jta::RegistryEntry> entries;
-
-    /*Cost Function Managers (Save All Values for Parameters and Active Cost
-     * Function*/
-    /*Trunk*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("TRUNK@ACTIVE_CF"),
-        QString::fromStdString(trunk_manager.getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> trunk_cost_functions =
-        trunk_manager.getAvailableCostFunctions();
-    for (int i = 0; i < trunk_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            trunk_parameters_double =
-                trunk_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < trunk_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_double[j].getParameterName() + "@" +
-                    trunk_parameters_double[j].getParameterType()),
-                trunk_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> trunk_parameters_int =
-            trunk_cost_functions[i].getIntParameters();
-        for (int j = 0; j < trunk_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_int[j].getParameterName() + "@" +
-                    trunk_parameters_int[j].getParameterType()),
-                trunk_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> trunk_parameters_bool =
-            trunk_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < trunk_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_bool[j].getParameterName() + "@" +
-                    trunk_parameters_bool[j].getParameterType()),
-                trunk_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    /*Branch*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("BRANCH@ACTIVE_CF"),
-        QString::fromStdString(branch_manager.getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> branch_cost_functions =
-        branch_manager.getAvailableCostFunctions();
-    for (int i = 0; i < branch_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            branch_parameters_double =
-                branch_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < branch_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_double[j].getParameterName() + "@" +
-                    branch_parameters_double[j].getParameterType()),
-                branch_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> branch_parameters_int =
-            branch_cost_functions[i].getIntParameters();
-        for (int j = 0; j < branch_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_int[j].getParameterName() + "@" +
-                    branch_parameters_int[j].getParameterType()),
-                branch_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> branch_parameters_bool =
-            branch_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < branch_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_bool[j].getParameterName() + "@" +
-                    branch_parameters_bool[j].getParameterType()),
-                branch_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    /*Leaf*/
-    entries.push_back(jta::RegistryEntry{
-        QStringLiteral("LEAF@ACTIVE_CF"),
-        QString::fromStdString(leaf_manager.getActiveCostFunction())});
-    std::vector<jta_cost_function::CostFunction> leaf_cost_functions =
-        leaf_manager.getAvailableCostFunctions();
-    for (int i = 0; i < leaf_cost_functions.size(); i++) {
-        std::vector<jta_cost_function::Parameter<double>>
-            leaf_parameters_double =
-                leaf_cost_functions[i].getDoubleParameters();
-        for (int j = 0; j < leaf_parameters_double.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_double[j].getParameterName() + "@" +
-                    leaf_parameters_double[j].getParameterType()),
-                leaf_parameters_double[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<int>> leaf_parameters_int =
-            leaf_cost_functions[i].getIntParameters();
-        for (int j = 0; j < leaf_parameters_int.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_int[j].getParameterName() + "@" +
-                    leaf_parameters_int[j].getParameterType()),
-                leaf_parameters_int[j].getParameterValue()});
-        }
-        std::vector<jta_cost_function::Parameter<bool>> leaf_parameters_bool =
-            leaf_cost_functions[i].getBoolParameters();
-        for (int j = 0; j < leaf_parameters_bool.size(); j++) {
-            entries.push_back(jta::RegistryEntry{
-                QString::fromStdString(
-                    "LEAF@" + leaf_cost_functions[i].getCostFunctionName() +
-                    "@" + leaf_parameters_bool[j].getParameterName() + "@" +
-                    leaf_parameters_bool[j].getParameterType()),
-                leaf_parameters_bool[j].getParameterValue()});
-        }
-    }
-
-    return entries;
+    return jta::BuildCostFunctionRegistryEntries(
+        trunk_manager, branch_manager, leaf_manager);
 }
 
 /*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int

@@ -18,9 +18,11 @@
 //  (c) edge: fractional cost parameters round-trip bit-exact (double, no int
 //      narrowing — the pinned invariant from the Parameter<double>
 //      truncation bug);
-//  (d) integration: the replicated mapping produces IDENTICAL registry
-//      entries to the widgets reference for the same manager configuration
-//      (parity pin vs the golden fixture below).
+//  (d) integration: the shared mapping (jta::BuildCostFunctionRegistryEntries
+//      — the ONE mapping both front-ends call, plan 006 U1) produces
+//      IDENTICAL registry entries to the pre-extraction widgets reference for
+//      the same manager configuration (parity pin vs the golden fixture
+//      below).
 //
 // Golden fixture capture (documented procedure, plan 005 U5 "Parity pin
 // mechanism"): the widgets reference
@@ -37,9 +39,12 @@
 // The harness dumped the entries as (key, type, value) literals; the table
 // below is verbatim (doubles at %.17g — exact IEEE-754 round-trip). The
 // bridge's reset() reproduces that exact configuration, so test (d) compares
-// bridge output against the widgets output for the same input. Regenerate
-// the fixture after any cost-function parameter list or mapping change (or
-// after the extraction follow-up lands) and re-run the pin.
+// the shared mapping's output against the captured widgets output for the
+// same input. Since plan 006 U1 the mapping lives in jtml_services
+// (cost_function_registry.cpp) and test (d) calls it directly instead of the
+// bridge replication — the 51 VALUES are unchanged (verbatim relocation, R13).
+// Regenerate the fixture after any cost-function parameter list or mapping
+// change and re-run the pin.
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -55,6 +60,7 @@
 
 #include "SettingsBridge.h"
 #include "compute/CostFunctionManager.h"
+#include "services/cost_function_registry.h"
 #include "services/settings_service.h"
 
 namespace {
@@ -410,7 +416,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-    "settings_bridge: replicated mapping matches the widgets golden fixture "
+    "settings_bridge: shared registry mapping matches the golden fixture "
     "(parity pin)",
     "[settings_bridge]") {
     TempSettings tmp;
@@ -418,11 +424,15 @@ TEST_CASE(
     SettingsBridge bridge(&svc);
     requireWidgetsFirstRunConfiguration(&bridge);
 
-    /*The replicated mapping produces exactly the widgets entries, in the
-     * widgets order (ACTIVE_CF first, then per cost function the
-     * double/int/bool parameter groups).*/
+    /*The shared mapping (jta::BuildCostFunctionRegistryEntries — the one
+     * function both front-ends call, plan 006 U1) produces exactly the
+     * pre-extraction widgets entries, in the widgets order (ACTIVE_CF first,
+     * then per cost function the double/int/bool parameter groups).*/
     const std::vector<jta::RegistryEntry> entries =
-        bridge.buildCostFunctionRegistryEntries();
+        jta::BuildCostFunctionRegistryEntries(
+            *bridge.trunkManager(),
+            *bridge.branchManager(),
+            *bridge.leafManager());
     REQUIRE(entries.size() == kGoldenEntryCount);
     for (size_t i = 0; i < kGoldenEntryCount; ++i) {
         requireEntryMatches(entries[i], kGoldenCostFunctionEntries[i]);
