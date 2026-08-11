@@ -17,7 +17,6 @@
 // VTK
 #include <vtkActor.h>
 #include <vtkCallbackCommand.h>  // complete type for GrabFocus (EventCallbackCommand is vtkCallbackCommand*)
-#include <vtkCamera.h>
 #include <vtkCommand.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
@@ -36,8 +35,13 @@
 #include <opencv2/imgproc.hpp>
 
 // services (existing STL load path: Model wraps vtkSTLReader, stl_reader
-// validates binary/ascii — the widgets app loads models the same way).
+// validates binary/ascii — the widgets app loads models the same way) +
+// the shared widget-free pipeline recipe (plan 006 U4: the Viewer 1:1
+// mirror chains below now call these free functions; the render-thread
+// contract is unchanged — all VTK objects stay QmlVtkData-owned and are
+// touched only inside initializeVTK / destroyingVTK / dispatch_async).
 #include "services/model.h"
+#include "services/render_pipeline_builder.h"
 
 namespace {
 
@@ -116,9 +120,10 @@ struct QmlVtkData : vtkObject {
     static QmlVtkData* New();
     vtkTypeMacro(QmlVtkData, vtkObject);
 
-    // Background chain — Viewer::initialize_vtk_mappers mirror:
-    // vtkImageImport -> vtkImageData -> vtkDataSetMapper -> vtkActor
-    // (the widgets app uses vtkActor+vtkDataSetMapper, NOT vtkImageActor).
+    // Background chain — the shared jta::render_pipeline recipe
+    // (ConfigureBackgroundChain): vtkImageImport -> vtkImageData ->
+    // vtkDataSetMapper -> vtkActor (vtkActor+vtkDataSetMapper, NOT
+    // vtkImageActor — matches the widgets app).
     vtkNew<vtkRenderer> backgroundRenderer;
     vtkNew<vtkRenderer> sceneRenderer;
     vtkNew<vtkImageImport> importer;
@@ -132,8 +137,8 @@ struct QmlVtkData : vtkObject {
     // dispatch body).
     cv::Mat backgroundMat;
 
-    // Model chain — Viewer::load_3d_models_into_actor_and_mapper_list
-    // mirror: vtkSTLReader -> vtkPolyDataMapper -> vtkActor.
+    // Model chain — the shared jta::render_pipeline recipe
+    // (BuildModelActor): vtkSTLReader -> vtkPolyDataMapper -> vtkActor.
     struct ModelActor {
         vtkSmartPointer<vtkSTLReader> reader;
         vtkSmartPointer<vtkPolyDataMapper> mapper;
@@ -154,10 +159,12 @@ struct QmlVtkData : vtkObject {
 
 vtkStandardNewMacro(QmlVtkData);
 
-// matToVTK semantics copied from mainscreen.cpp:72 (the helper is
-// replicated in the experimental tree by design; mainscreen.cpp is
-// untouched). `src` is the effective (possibly inverted) frame image;
-// `data->backgroundMat` keeps the buffer alive for the importer.
+// Shared jta::render_pipeline::RefreshBackgroundImport (the matToVTK
+// semantics — zero-copy import config). `src` is the effective (possibly
+// inverted) frame image; `data->backgroundMat` keeps the buffer alive for
+// the importer (the builder wraps it without copying). The empty guard is
+// load-bearing HERE: with no frame it must keep the PREVIOUS background
+// (buffer + importer untouched), not swap in an empty Mat.
 void ApplyBackground(
     QmlVtkData* data, const cv::Mat& src, BackgroundMode mode) {
     if (src.empty()) {
@@ -170,68 +177,59 @@ void ApplyBackground(
         effective = src;
     }
     data->backgroundMat = effective;
-    data->importer->SetDataSpacing(1, 1, 1);
-    data->importer->SetDataOrigin(0, 0, 0);
-    data->importer->SetWholeExtent(
-        0, effective.cols - 1, 0, effective.rows - 1, 0, 0);
-    data->importer->SetDataExtentToWholeExtent();
-    data->importer->SetDataScalarTypeToUnsignedChar();
-    data->importer->SetNumberOfScalarComponents(effective.channels());
-    data->importer->SetImportVoidPointer(effective.data);
-    data->importer->Modified();
-    data->importer->Update();
+    jta::render_pipeline::RefreshBackgroundImport(data->importer, effective);
 }
 
-// Viewer::place_image_actors_according_to_calibration mirror: the image is
-// centered on the origin. Z = -focalLengthPx (the widgets app uses
-// -fy*pixel_pitch): under the parallel background camera the projection does
-// not depend on Z, but the image must sit inside the (0.1, 2*fy) clipping
-// range rather than at the camera origin (near-plane clipped). Parallel
-// scale = half the image height so the image fills the viewport height.
+// Shared jta::render_pipeline::PlaceBackgroundImage: the image is centered
+// on the origin at Z = -focalLengthPx (the widgets app passes
+// -fy*pixel_pitch — camera divergence (a) is the builder's zPlacement
+// parameter). Under the parallel background camera the projection does not
+// depend on Z, but the image must sit inside the (0.1, 2*fy) clipping range
+// rather than at the camera origin (near-plane clipped). Parallel scale =
+// half the image height so the image fills the viewport height.
 void ApplyCameraPlacement(
     QmlVtkData* data, const cv::Mat& src, double focalLengthPx) {
     if (src.empty()) {
         return;
     }
-    data->imageActor->SetPosition(
-        -0.5 * src.cols, -0.5 * src.rows, -focalLengthPx);
-    vtkCamera* bgCam = data->backgroundRenderer->GetActiveCamera();
-    bgCam->ParallelProjectionOn();
-    bgCam->SetParallelScale(0.5 * src.rows);
+    jta::render_pipeline::PlaceBackgroundImage(
+        data->imageActor, data->backgroundRenderer, src.cols, src.rows,
+        -focalLengthPx);
 }
 
-// Viewer::setup_camera_calibration + load_renderers_into_render_window +
-// calculate_and_set_viewing_angle_from_calibration mirror (single
-// viewport; window-center/aspect calibration plumbing lands with U4).
+// Shared jta::render_pipeline camera recipe (widgets setup_camera_
+// calibration + load_renderers_into_render_window + the scene view-angle/
+// clipping from set_vtk_camera_from_calibration_*; single viewport). The
+// window-center/aspect calibration plumbing is a QML-side camera-
+// calibration concern, NOT shared-builder scope — the pre-U4 "lands with
+// U4" expectation is STALE by design (camera divergence (c) stays
+// view-side).
 void ApplyCameraParams(
     QmlVtkData* data, double viewAngleDeg, double focalLengthPx) {
-    vtkCamera* bgCam = data->backgroundRenderer->GetActiveCamera();
-    bgCam->SetFocalPoint(0, 0, -1);
-    bgCam->SetPosition(0, 0, 0);
-    bgCam->SetClippingRange(0.1, 2.0 * focalLengthPx);
-
-    vtkCamera* sceneCam = data->sceneRenderer->GetActiveCamera();
-    sceneCam->SetPosition(0, 0, 0);
-    sceneCam->SetFocalPoint(0, 0, -1);
-    sceneCam->SetViewAngle(viewAngleDeg);
-    sceneCam->SetClippingRange(
-        0.1 * focalLengthPx, 1.75 * focalLengthPx);
+    jta::render_pipeline::SetupBackgroundCamera(
+        data->backgroundRenderer, focalLengthPx);
+    jta::render_pipeline::SetupSceneCameraFocal(data->sceneRenderer, -1.0);
+    jta::render_pipeline::ApplySceneCameraProjection(
+        data->sceneRenderer, viewAngleDeg, focalLengthPx);
 }
 
 // Camera-centric rotation pivots at the scene camera's focal point — pin it
 // at the PRIMARY model so the view rotates around the model (the widgets
-// app's camera mode uses a near-origin focal; the plan-005 feedback made
-// the off-model pivot explicit: rotate about the model).
+// app's camera mode uses a near-origin focal — camera divergence (b) is
+// the builder's focalZ parameter; the plan-005 feedback made the
+// off-model pivot explicit: rotate about the model).
 void ApplyCameraFocus(QmlVtkData* data, const std::vector<SceneModel>& models) {
     const double z =
         models.empty() ? -1.0 : models[0].pose.z;
-    data->sceneRenderer->GetActiveCamera()->SetFocalPoint(0, 0, z);
+    jta::render_pipeline::SetupSceneCameraFocal(data->sceneRenderer, z);
 }
 
-// Viewer::load_3d_models_into_actor_and_mapper_list mirror: rebuild the
-// model actor list from the scene descriptors (STL path + pose). Called
-// from initializeVTK and from the updateModels dispatch body — both on the
-// render thread, so the Model parse (vtkSTLReader) happens there too.
+// Shared jta::render_pipeline model chain (widgets
+// load_3d_models_into_actor_and_mapper_list): rebuild the model actor list
+// from the scene descriptors (STL path + pose). Called from initializeVTK
+// and from the updateModels dispatch body — both on the render thread, so
+// the Model parse (vtkSTLReader) happens there too. The reader/mapper/
+// actor wiring is BuildModelActor; color + pickable stay view-side.
 void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
     data->sceneRenderer->RemoveAllViewProps();
     data->models.clear();
@@ -246,16 +244,13 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
         }
         ma.reader = model.cad_reader_;
         ma.mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        ma.mapper->SetInputConnection(ma.reader->GetOutputPort());
         ma.actor = vtkSmartPointer<vtkActor>::New();
-        ma.actor->SetMapper(ma.mapper);
+        jta::render_pipeline::BuildModelActor(
+            ma.mapper, ma.actor, ma.reader->GetOutputPort(),
+            data->sceneRenderer);
         ma.actor->GetProperty()->SetColor(0.93, 0.86, 0.67);  // Bisque
-        ma.actor->SetPosition(
-            scene_model.pose.x, scene_model.pose.y, scene_model.pose.z);
-        ma.actor->SetOrientation(
-            scene_model.pose.xa, scene_model.pose.ya, scene_model.pose.za);
+        jta::render_pipeline::ApplyActorPose(ma.actor, scene_model.pose);
         ma.actor->PickableOff();
-        data->sceneRenderer->AddActor(ma.actor);
         data->models.push_back(std::move(ma));
     }
     // Keep the model-centric style's implicit pick in sync (harmless in
@@ -275,22 +270,17 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     vtkRenderWindow* renderWindow) {
     vtkNew<QmlVtkData> data;
 
-    // Background chain (Viewer::initialize_vtk_mappers).
-    data->importer->SetOutput(data->background);
-    data->imageMapper->SetInputData(data->background);
-    data->imageActor->SetMapper(data->imageMapper);
-    data->imageActor->SetPickable(0);
-    data->backgroundRenderer->AddActor(data->imageActor);
+    // Background chain via the shared builder (widgets
+    // initialize_vtk_mappers).
+    jta::render_pipeline::ConfigureBackgroundChain(
+        data->importer, data->background, data->imageMapper,
+        data->imageActor, data->backgroundRenderer);
 
-    // Layered renderers (Viewer::load_renderers_into_render_window):
-    // layer 0 = background (interactive off), layer 1 = scene (models).
-    data->backgroundRenderer->SetLayer(0);
-    data->backgroundRenderer->InteractiveOff();
-    data->sceneRenderer->SetLayer(1);
-    data->sceneRenderer->InteractiveOn();
-    renderWindow->SetNumberOfLayers(2);
-    renderWindow->AddRenderer(data->backgroundRenderer);
-    renderWindow->AddRenderer(data->sceneRenderer);
+    // Layered renderers via the shared builder (widgets
+    // load_renderers_into_render_window): layer 0 = background (interactive
+    // off), layer 1 = scene (models). The QML-only window setting stays.
+    jta::render_pipeline::SetupLayeredRenderers(
+        renderWindow, data->backgroundRenderer, data->sceneRenderer);
     renderWindow->SetMultiSamples(0);
 
     // Full pipeline from the app-thread mirror (safe: the GUI thread is
@@ -419,12 +409,11 @@ void QmlVtkRenderer::updatePose(int modelIndex) {
                 return;
             }
             vtkActor* actor = data->models[static_cast<size_t>(modelIndex)].actor;
-            actor->SetPosition(pose.x, pose.y, pose.z);
-            actor->SetOrientation(pose.xa, pose.ya, pose.za);
+            jta::render_pipeline::ApplyActorPose(actor, pose);
             // The rotation pivot follows the primary model (camera mode).
             if (modelIndex == 0) {
-                data->sceneRenderer->GetActiveCamera()->SetFocalPoint(
-                    0, 0, pose.z);
+                jta::render_pipeline::SetupSceneCameraFocal(
+                    data->sceneRenderer, pose.z);
             }
             renderWindow->Render();
         });

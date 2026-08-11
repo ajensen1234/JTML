@@ -692,6 +692,38 @@ target_link_libraries(jtml_test_save_last_pose PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.save_last_pose COMMAND jtml_test_save_last_pose)
 set_tests_properties(jtml.save_last_pose PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Render-pipeline builder pure-config tests (plan 006 U4, R9/AE4). The
+# shared widget-free VTK pipeline recipe (jta::render_pipeline, services
+# layer) is the ONE recipe both Viewer and QmlVtkRenderer drive — the
+# widget-free, value-parameterized extraction (R13 per-cut-type: the render
+# smokes are the behavior diff for the VTK-touching calls). The .cpp
+# direct-compiles against VTK + OpenCV (same pattern as
+# jtml.session_controller; no render window, no GPU): pins the pure
+# mat -> import-parameter derivation — gray vs color channel count, extent
+# from cols/rows, the spacing/origin recipe constants, and the
+# empty/zero-size degenerate (valid params, no crash).
+add_executable(jtml_test_render_pipeline_builder
+    unit/render_pipeline_builder_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/render_pipeline_builder.cpp
+)
+target_include_directories(jtml_test_render_pipeline_builder PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_render_pipeline_builder PRIVATE
+    Catch2::Catch2WithMain
+    ${VTK_LIBRARIES}
+    ${OpenCV_LIBRARIES})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath) — same recipe as
+# jtml.session_controller: VTK lives in _deps/vtk/install/lib(64), conda libs
+# in the pixi env.
+target_link_options(jtml_test_render_pipeline_builder PRIVATE
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.render_pipeline_builder COMMAND jtml_test_render_pipeline_builder)
+set_tests_properties(jtml.render_pipeline_builder PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # OptimizerBridge gate + state-core tests (plan 005 U6, R6/R13). The bridge
 # direct-compiles against the U4/U5 bridges + the app-owned dataset and links
 # jtml_coordinator (the REAL OptimizerManager lives there) — but never

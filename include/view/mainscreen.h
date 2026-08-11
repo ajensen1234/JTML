@@ -36,7 +36,6 @@
 #include <vtkCamera.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
-#include <vtkImageImport.h>
 #include <vtkInteractorStyleTrackballActor.h>
 #include <vtkInteractorStyleTrackballCamera.h> /*Alternate Camera*/
 #include <vtkPolyDataMapper.h>
@@ -194,7 +193,6 @@ private:
     vtkSmartPointer<vtkDataSetMapper> image_mapper;
     vtkSmartPointer<vtkActor> actor_image;
     vtkSmartPointer<vtkTextActor> actor_text;
-    vtkSmartPointer<vtkImageImport> importer;
     vtkSmartPointer<vtkInteractorStyleTrackballCamera> camera_style_interactor;
 
     /* VTK Variables for Coronal Plane Viewer*/
@@ -319,9 +317,6 @@ private:
         jta_cost_function::CostFunctionManager& trunk_manager,
         jta_cost_function::CostFunctionManager& branch_manager,
         jta_cost_function::CostFunctionManager& leaf_manager) const;
-
-    /*Mat to Vtk*/
-    void matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output);
 
     /*Optimizer Window Control*/
     SettingsControl* settings_control;

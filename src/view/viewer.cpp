@@ -3,7 +3,26 @@
 
 #include "view/viewer.h"
 
+#include <cmath>
+
 #include <vtkRendererCollection.h>
+
+#include "services/render_pipeline_builder.h"
+
+namespace {
+
+/*The widgets' scene view-angle derivation — the ex-Viewer::
+ * calculate_and_set_viewing_angle_from_calibration body, relocated verbatim
+ * into a file-local helper when the scene camera recipe moved to the shared
+ * jta::render_pipeline builder (006 U4): the formula is PINNED behavior,
+ * not to be "fixed". The builder's ApplySceneCameraProjection applies the
+ * angle + clipping; this helper only derives the angle (view-side math).*/
+double ViewingAngleFromCalibration(int h, int fy) {
+    const double pi = 3.14159265358979323846;
+    return (180.0 / pi) * 2 * atan2(h, 2 * fy);
+}
+
+}  // namespace
 
 Viewer::Viewer() {
     initialize_vtk_pointers();
@@ -38,14 +57,18 @@ void Viewer::initialize_vtk_pointers() {
 }
 
 void Viewer::initialize_vtk_mappers() {
-    image_mapper_->SetInputData(current_background_);
-    actor_image_->SetPickable(0);
+    // Shared pipeline recipe (006 U4): importer -> imageData -> mapper ->
+    // actor -> background renderer, incl. importer->SetOutput(imageData)
+    // (previously wired lazily on the first update_display_background —
+    // identical, since no Update runs before that) + SetPickable(0). The
+    // text actor stays view-side (the QML renderer has no text overlay).
+    jta::render_pipeline::ConfigureBackgroundChain(
+        importer_.Get(), current_background_.Get(), image_mapper_.Get(),
+        actor_image_.Get(), background_renderer_.Get());
     actor_text_->SetPickable(0);
-    actor_image_->SetMapper(image_mapper_);
 }
 
 void Viewer::initialize_vtk_renderers() {
-    background_renderer_->AddActor(actor_image_);
     background_renderer_->AddActor2D(actor_text_);
 }
 
@@ -87,28 +110,13 @@ vtkSmartPointer<vtkImageImport> Viewer::get_importer() {
 }
 
 void Viewer::update_display_background(cv::Mat desiredBackground) {
-    if (current_background_) {
-        this->set_importer_output_to_background();
-    }
-    importer_->SetDataSpacing(1, 1, 1);
-    importer_->SetDataOrigin(0, 0, 0);
-    importer_->SetWholeExtent(
-        0,
-        desiredBackground.size().width - 1,
-        0,
-        desiredBackground.size().height - 1,
-        0,
-        0);
-    importer_->SetDataExtentToWholeExtent();
-    importer_->SetDataScalarTypeToUnsignedChar();
-    importer_->SetNumberOfScalarComponents(desiredBackground.channels());
-    importer_->SetImportVoidPointer(desiredBackground.data);
-    importer_->Modified();
-    importer_->Update();
-}
-
-void Viewer::set_importer_output_to_background() {
-    importer_->SetOutput(current_background_);
+    // Shared pipeline recipe (006 U4): zero-copy import configuration
+    // (spacing/origin/extent/scalar-type/channels/SetImportVoidPointer/
+    // Modified/Update — the dead matToVTK semantics). The importer wraps
+    // the Mat buffer WITHOUT copying; the caller (MainScreen) keeps the
+    // owning Frame alive. Empty Mat -> no-op (keeps the current
+    // background).
+    jta::render_pipeline::RefreshBackgroundImport(importer_, desiredBackground);
 }
 
 void Viewer::make_image_invisible() {
@@ -157,11 +165,11 @@ void Viewer::update_display_background_to_inverted_image(
 }
 
 void Viewer::setup_camera_calibration(Calibration cal) {
-    (cal.type_ == "UF") ? background_camera_->SetFocalPoint(0, 0, -1)
-                        : background_camera_->SetFocalPoint(0, 0, -1);
-    background_camera_->SetPosition(0, 0, 0);
-    background_camera_->SetClippingRange(
-        0.1, 2.0 * cal.camera_A_principal_.fy());
+    // Shared pipeline recipe (006 U4): background camera focal (0,0,-1),
+    // position (0,0,0), clipping (0.1, 2*fy). The old no-op cal.type_
+    // ternary (both branches set (0,0,-1)) is gone with it.
+    jta::render_pipeline::SetupBackgroundCamera(
+        background_renderer_, cal.camera_A_principal_.fy());
 }
 
 void Viewer::setup_camera_coronal_plane() {
@@ -170,16 +178,14 @@ void Viewer::setup_camera_coronal_plane() {
 
 void Viewer::place_image_actors_according_to_calibration(
     Calibration cal, int img_w, int img_h) {
-    const float x_pos = -0.5 * img_w;
-    const float y_pos = -0.5 * img_h;
-    float z_pos;
-    (cal.type_ == "UF") ? z_pos = -cal.camera_A_principal_.fy()* cal
-                                       .camera_A_principal_.pixel_pitch_
-                        : z_pos = -cal.camera_A_principal_.fy() *
-                                  cal.camera_A_principal_.pixel_pitch_;
-    actor_image_->SetPosition(x_pos, y_pos, z_pos);
-    background_camera_->ParallelProjectionOn();
-    background_camera_->SetParallelScale(0.5 * img_h);
+    // Shared pipeline recipe (006 U4): actor at (-0.5w, -0.5h, z) with
+    // parallel scale 0.5h; z = -fy*pixel_pitch is the widgets' value of
+    // camera divergence (a) (the QML side passes -focalLengthPx). The old
+    // no-op cal.type_ ternary is gone with it.
+    const double z_pos = -cal.camera_A_principal_.fy() *
+                         cal.camera_A_principal_.pixel_pitch_;
+    jta::render_pipeline::PlaceBackgroundImage(
+        actor_image_, background_renderer_, img_w, img_h, z_pos);
 }
 
 void Viewer::load_3d_models_into_actor_and_mapper_list() {
@@ -187,12 +193,14 @@ void Viewer::load_3d_models_into_actor_and_mapper_list() {
         vtkSmartPointer<vtkActor> new_actor = vtkSmartPointer<vtkActor>::New();
         vtkSmartPointer<vtkPolyDataMapper> new_mapper =
             vtkSmartPointer<vtkPolyDataMapper>::New();
-        new_mapper->SetInputConnection(
-            loaded_models_->at(i).cad_reader_->GetOutputPort());
-        new_actor->SetMapper(new_mapper);
+        // Shared pipeline recipe (006 U4): reader output -> mapper -> actor
+        // -> scene renderer. The per-model bookkeeping stays view-side.
+        jta::render_pipeline::BuildModelActor(
+            new_mapper, new_actor,
+            loaded_models_->at(i).cad_reader_->GetOutputPort(),
+            scene_renderer_);
         model_actor_list_.push_back(new_actor);
         model_mapper_list_.push_back(new_mapper);
-        scene_renderer_->AddActor(new_actor);
         num_models_loaded_++;
     }
 }
@@ -363,20 +371,20 @@ std::shared_ptr<std::vector<Model>> Viewer::get_loaded_models() {
 }
 
 void Viewer::load_renderers_into_render_window(Calibration cal) {
-    background_renderer_->SetLayer(0);
-    background_renderer_->InteractiveOff();
-    scene_renderer_->SetLayer(1);
-    scene_renderer_->InteractiveOn();
+    // Shared pipeline recipe (006 U4): layered renderers (layer 0 =
+    // background, interactive off; layer 1 = scene, interactive on;
+    // 2 layers + AddRenderer x2) + the scene-camera position (0,0,0) and
+    // near-origin focal pivot (0,0,focal_dir) — the widgets' value of
+    // camera divergence (b) (the QML side pins the focal at the primary
+    // model's z).
+    jta::render_pipeline::SetupLayeredRenderers(
+        qvtk_render_window_, background_renderer_, scene_renderer_);
     float focal_dir;
     // This was setting focal_dir to 1 if cal.type_ was denver or any others -
     // decided to remove the dever else statement in response to that. Sets
     // focal_dir = -1 if "UF", else sets to 1
     focal_dir = (cal.type_ == "UF") ? -1 : 1;
-    scene_camera_->SetPosition(0, 0, 0);
-    scene_camera_->SetFocalPoint(0, 0, focal_dir);
-    qvtk_render_window_->SetNumberOfLayers(2);
-    qvtk_render_window_->AddRenderer(background_renderer_);
-    qvtk_render_window_->AddRenderer(scene_renderer_);
+    jta::render_pipeline::SetupSceneCameraFocal(scene_renderer_, focal_dir);
 }
 
 void Viewer::print_render_window() {
@@ -425,9 +433,13 @@ void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(
     std::cout << cx << ", " << cy << std::endl;
 
     calculate_and_set_window_center_from_calibration(w, h, cx, cy);
-    calculate_and_set_viewing_angle_from_calibration(h, fy);
+    // Shared pipeline recipe (006 U4): scene view angle + clipping
+    // (0.1*fx, 1.75*fx). The angle stays view-side math (the pinned atan2
+    // formula); window-center + aspect calibration plumbing stays view-side
+    // (camera divergence (c)).
+    jta::render_pipeline::ApplySceneCameraProjection(
+        scene_renderer_, ViewingAngleFromCalibration(h, fy), fx);
     calculate_and_set_camera_aspect_from_calibration(fx, fy);
-    scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
@@ -438,9 +450,9 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
     float fy = cal.camera_A_principal_.fy();
 
     calculate_and_set_window_center_from_calibration(w, h, cx, cy);
-    calculate_and_set_viewing_angle_from_calibration(h, fy);
+    jta::render_pipeline::ApplySceneCameraProjection(
+        scene_renderer_, ViewingAngleFromCalibration(h, fy), fx);
     calculate_and_set_camera_aspect_from_calibration(fx, fy);
-    scene_camera_->SetClippingRange(0.1 * fx, 1.75 * fx);
     scene_camera_->SetViewUp(0, -1, 0);
 }
 
@@ -466,12 +478,6 @@ void Viewer::update_window_center_on_resize() {
     rww > rwh
         ? scene_camera_->SetWindowCenter(this->wcx * (rwh / rww), this->wcy)
         : scene_camera_->SetWindowCenter(this->wcx, this->wcy * (rww / rwh));
-}
-
-void Viewer::calculate_and_set_viewing_angle_from_calibration(
-    const int h, const int fy) {
-    long double angle = (180.0 / pi) * 2 * atan2(h, 2 * fy);
-    scene_camera_->SetViewAngle(angle);
 }
 
 void Viewer::calculate_and_set_camera_aspect_from_calibration(

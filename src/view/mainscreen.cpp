@@ -69,26 +69,6 @@
 
 using namespace std;
 
-/*Temporary Functions to Ease VTK Interaction and STL Loading*/
-/*Mat to VTK Function*/
-void MainScreen::matToVTK(cv::Mat Input, vtkSmartPointer<vtkImageData> Output) {
-    // assert(Input.data != NULL);
-    // vtkImageImport *importer = vtkImageImport::New();
-    if (Output) {
-        importer->SetOutput(Output);
-    }
-    importer->SetDataSpacing(1, 1, 1);
-    importer->SetDataOrigin(0, 0, 0);
-    importer->SetWholeExtent(
-        0, Input.size().width - 1, 0, Input.size().height - 1, 0, 0);
-    importer->SetDataExtentToWholeExtent();
-    importer->SetDataScalarTypeToUnsignedChar();
-    importer->SetNumberOfScalarComponents(Input.channels());
-    importer->SetImportVoidPointer(Input.data);
-    importer->Modified();
-    importer->Update();
-}
-
 int MainScreen::curr_frame() {
     // Keep the service in sync and read the current frame from it (plan U7).
     SyncSessionState();
@@ -317,7 +297,6 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     model_actor_list = vw->get_model_actor_list();
     image_mapper = vw->get_image_mapper();
     actor_text = vw->get_actor_text();
-    importer = vw->get_importer();
     key_press_vtk =
         vtkSmartPointer<KeyPressInteractorStyle>::New(); /*Custom Interactor
                                                             from JTA*/

@@ -21,6 +21,7 @@ add_library(jtml_services STATIC
     location_storage.cpp
     model.cpp
     optimizer_settings.cpp
+    render_pipeline_builder.cpp
     session_controller.cpp
     settings_service.cpp
     cost_function_registry.cpp
