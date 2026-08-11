@@ -34,35 +34,31 @@ Window {
         nameFilters: ["Calibration File (*.txt)"]
         onAccepted: studyBridge.loadCalibration(selectedFile)
     }
-    // Multi-select pickers (plan-005 feedback — final fix): the native/portal
-    // and Qt built-in dialogs both failed to deliver multi-select on this
-    // box, so the image/model pickers are pure-QML checkbox pickers with
-    // identical behavior on every backend. Calibration stays native (single
-    // file — that path never misbehaved).
-    MultiFilePicker {
-        id: imagePicker
-        pickerTitle: qsTr("Load Images")
-        nameFilter: ["*.tif", "*.tiff", "*.png", "*.TIF", "*.TIFF", "*.PNG"]
-        startFolder: "file://" + studyBridge.homeDir()
-        onFilesSelected: function(urls) {
-            // A second image set is a new study: confirm, then replace the
-            // dataset before loading.
-            if (studyBridge.frameCount > 0) {
-                replaceDialog.pendingPaths = urls
-                replaceDialog.open()
-            } else {
-                studyBridge.loadImages(urls)
-            }
+    // Multi-select via the native Qt file dialog (FileDialogBridge — Qt's
+    // in-process dialog, DontUseNativeDialog: immune to the portal backend
+    // dispatch that breaks multi-select on this box; see FileDialogBridge.h).
+    function pickImages() {
+        const files = fileDialogBridge.getOpenFileNames(
+                    qsTr("Load Images"),
+                    "Image Files (*.tif *.tiff *.png *.TIF *.TIFF *.PNG)",
+                    "")
+        if (files.length === 0) return
+        // A second image set is a new study: confirm, then replace the
+        // dataset before loading.
+        if (studyBridge.frameCount > 0) {
+            replaceDialog.pendingPaths = files
+            replaceDialog.open()
+        } else {
+            studyBridge.loadImages(files)
         }
     }
-    MultiFilePicker {
-        id: modelPicker
-        pickerTitle: qsTr("Load Implant Models")
-        nameFilter: ["*.stl", "*.STL"]
-        startFolder: "file://" + studyBridge.homeDir()
-        onFilesSelected: function(urls) {
-            studyBridge.loadModels(urls)
-        }
+    function pickModels() {
+        const files = fileDialogBridge.getOpenFileNames(
+                    qsTr("Load Implant Models"),
+                    "CAD File (*.stl *.STL)",
+                    "")
+        if (files.length === 0) return
+        studyBridge.loadModels(files)
     }
     // ---- ML model pickers (U7): per-implant segment .pt + one estimate
     // .pt (the plan's review fix); the loaded path/state is shown in the
@@ -538,7 +534,7 @@ Window {
                             showMessage(qsTr("Error!"),
                                         qsTr("Load Calibration First!"))
                         } else {
-                            imagePicker.open()
+                            pickImages()
                         }
                     }
                 }
@@ -550,7 +546,7 @@ Window {
                             showMessage(qsTr("Error!"),
                                         qsTr("Load Calibration First!"))
                         } else {
-                            modelPicker.open()
+                            pickModels()
                         }
                     }
                 }

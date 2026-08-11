@@ -23,7 +23,7 @@
 //    replace) and main.qml binds studyBridge.frameListModel /
 //    modelListModel.
 
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickVTKItem.h>
@@ -33,6 +33,7 @@
 
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
+#include "FileDialogBridge.h"
 #include "MlBridge.h" // complete type: the setContextProperty QObject* overload needs it
 #include "OptimizerBridge.h"
 #include "PoseBridge.h" // complete type: the setContextProperty QObject* overload needs it
@@ -44,7 +45,8 @@ int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
     QQuickVTKItem::setGraphicsApi();
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);  // QApplication: QFileDialog (native
+                                   // multi-select bridge) requires QWidgets
 
     qmlRegisterType<QmlVtkRenderer>(
         "jtml.experimental", 1, 0, "QmlVtkRenderer");
@@ -64,8 +66,14 @@ int main(int argc, char* argv[]) {
     // LocationStorage/calibration, R3) + the StudyBridge adapter.
     AppBridge app_bridge(&scene);
 
+    // Native file-dialog bridge (multi-select; see FileDialogBridge.h — Qt's
+    // in-process dialog, kept off the xdg-desktop-portal path).
+    FileDialogBridge file_dialog_bridge;
+
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appBridge", &app_bridge);
+    engine.rootContext()->setContextProperty(
+        "fileDialogBridge", &file_dialog_bridge);
     engine.rootContext()->setContextProperty(
         "studyBridge", app_bridge.studyBridge());
     engine.rootContext()->setContextProperty(

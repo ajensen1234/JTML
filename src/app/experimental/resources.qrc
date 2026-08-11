@@ -3,7 +3,6 @@
         <file>main.qml</file>
         <file>SettingsPanel.qml</file>
         <file>Theme.qml</file>
-        <file>MultiFilePicker.qml</file>
         <file>PoseCell.qml</file>
         <file>qmldir</file>
     </qresource>

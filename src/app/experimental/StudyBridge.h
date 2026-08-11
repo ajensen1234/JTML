@@ -93,10 +93,6 @@ public:
     // calls this after the replace-confirm, before re-loading.
     Q_INVOKABLE void clearDataset();
 
-    // The user's home directory (QML has no QDir access) — the multi-file
-    // picker's start folder.
-    Q_INVOKABLE QString homeDir() const;
-
     // ---- Delegate selection contract ------------------------------------
     Q_INVOKABLE void setCurrentFrame(int index);  // -1 = none
     Q_INVOKABLE void toggleModelSelected(int row);  // out-of-range rows ignored

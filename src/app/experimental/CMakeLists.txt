@@ -67,6 +67,8 @@ add_executable(jtml_experimental
     QmlVtkRenderer.cpp
     ExperimentalScene.h
     ExperimentalScene.cpp
+    FileDialogBridge.h
+    FileDialogBridge.cpp
     resources.qrc
     ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
     ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
@@ -78,6 +80,7 @@ target_link_libraries(jtml_experimental PRIVATE
     Qt6::Quick
     Qt6::Qml
     Qt6::QuickControls2
+    Qt6::Widgets
     jtml_coordinator
     ${JTA_LIBS}
     ${VTK_LIBRARIES}
