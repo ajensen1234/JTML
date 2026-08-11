@@ -10,8 +10,9 @@
 //
 // The qrc-embedded shell (qrc:/main.qml) is loaded through
 // QQmlApplicationEngine. The QML-exposed surface:
-//  - "jtml.experimental" QML module: SpikeVtkItem (the U2 viewport
-//    placeholder; U3 replaces it with QmlVtkRenderer);
+//  - "jtml.experimental" QML module: QmlVtkRenderer (the U3 viewport
+//    render seam — models at pose over the fluoro background under
+//    QQuickVTKItem's render-thread contract);
 //  - root-context properties: appBridge (the hub — session/settings/pose
 //    surfaces; U2 exposes counts + placeholder signals, the thin per-seam
 //    adapters StudyBridge/OptimizerBridge/MlBridge/PoseBridge land in
@@ -27,7 +28,7 @@
 #include <QVTKOpenGLNativeWidget.h>
 
 #include "AppBridge.h"
-#include "SpikeVtkItem.h"
+#include "QmlVtkRenderer.h"
 #include "view/frame_list_model.h"
 #include "view/model_list_model.h"
 
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<SpikeVtkItem>("jtml.experimental", 1, 0, "SpikeVtkItem");
+    qmlRegisterType<QmlVtkRenderer>("jtml.experimental", 1, 0, "QmlVtkRenderer");
 
     // App-owned dataset view-models (R3): direct-compiled, jtml_view NOT
     // linked (R1). They outlive the engine (declared before it).

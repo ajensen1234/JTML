@@ -1,10 +1,12 @@
 # Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 # SPDX-License-Identifier: AGPL-3.0
 
-# 005 U2: jtml_experimental — the final QML app target. Replaces the U1
+# 005 U3: jtml_experimental — the final QML app target. Replaces the U1
 # scratch target jtml_experimental_spike (spike_main.cpp is superseded by
-# main.cpp and removed). The U1 smoke keeps direct-compiling SpikeVtkItem.cpp
-# + spike.qrc, so its registration in test/CMakeLists.txt is untouched.
+# main.cpp and removed). U3 replaced the U2 placeholder SpikeVtkItem with
+# QmlVtkRenderer + ExperimentalScene (the render seam); the U1 smoke in
+# test/oracle/ now drives the new renderer (its target compiles
+# QmlVtkRenderer.cpp + ExperimentalScene.cpp + renderer.qrc).
 #
 # GUISupportQtQuick is deliberately NOT in the root find_package COMPONENTS
 # list (root CMakeLists.txt stays untouched): this directory-scoped re-find
@@ -18,8 +20,8 @@
 # FrameListModel/ModelListModel are widget-free QAbstractListModels
 # direct-compiled into the target (the established direct-compile pattern;
 # jtml_view is NOT linked). AUTOMOC: every Q_OBJECT header (AppBridge.h,
-# SpikeVtkItem.h, the two model headers) is in the add_executable source list
-# (repo gotcha: a globbed header without its impl in the target is an
+# QmlVtkRenderer.h, the two model headers) is in the add_executable source
+# list (repo gotcha: a globbed header without its impl in the target is an
 # undefined-vtable link error). AUTORCC is global (root CMakeLists.txt), so
 # listing resources.qrc in the sources is enough.
 
@@ -40,8 +42,10 @@ add_executable(jtml_experimental
     main.cpp
     AppBridge.h
     AppBridge.cpp
-    SpikeVtkItem.h
-    SpikeVtkItem.cpp
+    QmlVtkRenderer.h
+    QmlVtkRenderer.cpp
+    ExperimentalScene.h
+    ExperimentalScene.cpp
     resources.qrc
     ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
     ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h

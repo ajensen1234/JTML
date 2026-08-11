@@ -7,9 +7,10 @@ import jtml.experimental 1.0
 // 005 U2: the jtml_experimental shell. All v1 surfaces (R17) are allocated:
 //  - left column: study lists (frame list over model list, direct-compiled
 //    FrameListModel/ModelListModel) + the ML controls strip (U7);
-//  - center: the single main viewport — SpikeVtkItem (QQuickVTKItem) is the
-//    U2 placeholder rendering the Kneel_1 femur silhouette; U3 replaces it
-//    with QmlVtkRenderer (silhouette at pose over the fluoro background);
+//  - center: the single main viewport — QmlVtkRenderer (QQuickVTKItem, U3)
+//    renders the models at pose over the fluoro background; the small red
+//    badge shows the last applied pose of model 0 (debug readout only — the
+//    real pose table is U8).
 //  - right panel: settings area (U5) stacked over the pose-table area (U8);
 //  - bottom: progress bar (U6).
 // Functional, not polished (v1). AppBridge is the QML-exposed hub (counts +
@@ -123,10 +124,37 @@ Window {
             }
 
             // ---- Center: the single main viewport -----------------------
-            SpikeVtkItem {
+            // U3: QmlVtkRenderer drives the app-owned ExperimentalScene via
+            // its GUI-thread slots (dispatch_async to the Qt Quick render
+            // thread). The scene is populated by the bridges in later units
+            // (StudyBridge U4, PoseBridge U8); the readout badge below
+            // mirrors the last applied pose of model 0 for debugging.
+            QmlVtkRenderer {
                 id: viewport
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+
+                Rectangle {
+                    visible: viewport.poseReadout.length > 0
+                    z: 1
+                    width: 260
+                    height: 18
+                    radius: 3
+                    color: "#c0392b"
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.margins: 6
+
+                    Text {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        verticalAlignment: Text.AlignVCenter
+                        color: "white"
+                        font.pixelSize: 11
+                        text: viewport.poseReadout
+                        elide: Text.ElideRight
+                    }
+                }
             }
 
             // ---- Right panel: settings over pose table ------------------

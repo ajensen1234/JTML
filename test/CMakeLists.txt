@@ -712,9 +712,11 @@ find_package(VTK 9.3 COMPONENTS
 )
 add_executable(jtml_test_qml_render_smoke
     oracle/qml_render_smoke.cpp
-    ${PROJECT_SOURCE_DIR}/src/app/experimental/SpikeVtkItem.h
-    ${PROJECT_SOURCE_DIR}/src/app/experimental/SpikeVtkItem.cpp
-    ${PROJECT_SOURCE_DIR}/src/app/experimental/spike.qrc
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/QmlVtkRenderer.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/QmlVtkRenderer.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/renderer.qrc
 )
 target_include_directories(jtml_test_qml_render_smoke PRIVATE
     ${PROJECT_SOURCE_DIR}/include

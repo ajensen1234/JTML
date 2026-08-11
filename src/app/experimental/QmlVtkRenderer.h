@@ -1,0 +1,98 @@
+// Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
+// SPDX-License-Identifier: AGPL-3.0
+
+// 005 U3: QmlVtkRenderer — the render seam (R7/R11). The minimal VTK
+// pipeline under QQuickVTKItem's render-thread contract: models at pose over
+// the fluoro background, pose updates via dispatch_async.
+//
+// Render-thread contract (QQuickVTKItem.h + QQuickVTKItem.cxx, VTK 9.3,
+// review-verified):
+//  - ALL VTK objects are created in initializeVTK(), stored in the returned
+//    vtkUserData, and reachable ONLY from initializeVTK / destroyingVTK /
+//    dispatch_async bodies. The item never touches VTK state anywhere else.
+//  - initializeVTK/destroyingVTK run inside QQuickVTKItem::updatePaintNode
+//    (Qt Quick render thread) with the GUI thread blocked at the scene-graph
+//    sync point — reading the app-thread-owned mirror members is safe there.
+//  - dispatch_async() lambdas ALSO run on the Qt Quick render thread (the
+//    queue is drained in updatePaintNode). The GUI-thread slots therefore
+//    copy scene state to locals and capture BY VALUE into the lambda — the
+//    lambda never reads app-owned mutable state (no `this`, no scene
+//    pointer, no member reads).
+//  - The scene-graph can delete the underlying node at any moment (window
+//    teardown, item removal), in which case initializeVTK runs again with a
+//    fresh render window: initializeVTK rebuilds the whole pipeline from the
+//    mirror copy kept on the app thread.
+//
+// Pipeline mirror (widgets Viewer, unchanged there):
+//  - background: vtkImageImport -> vtkImageData -> vtkDataSetMapper ->
+//    vtkActor (Viewer::initialize_vtk_mappers + update_display_background),
+//    non-pickable, added to the layer-0 background renderer;
+//  - models: vtkSTLReader -> vtkPolyDataMapper -> vtkActor
+//    (Viewer::load_3d_models_into_actor_and_mapper_list) in the layer-1
+//    scene renderer, pose applied as SetPosition/SetOrientation (the
+//    widgets set_model_position/orientation_at_index);
+//  - camera: background renderer = parallel, position (0,0,0), focal
+//    (0,0,-1), scale 0.5*image height, clipping (0.1, 2*fy)
+//    (Viewer::setup_camera_calibration + place_image_actors_according_to_
+//    calibration); scene renderer = perspective, position (0,0,0), focal
+//    (0,0,-1), view angle from the scene (mainscreen CalculateViewingAngle
+//    output), clipping (0.1*fy, 1.75*fy).
+
+#pragma once
+
+#include <QQuickVTKItem.h>
+#include <vtkSmartPointer.h>
+
+#include <vector>
+
+#include "ExperimentalScene.h"
+#include "domain/data_structures_6D.h"
+
+class QmlVtkRenderer : public QQuickVTKItem {
+    Q_OBJECT
+
+    // U3 debugging surface: the last pose applied to model 0, formatted on
+    // the GUI thread in the update slots (main.qml binds a small readout).
+    Q_PROPERTY(QString poseReadout READ poseReadout NOTIFY sceneChanged)
+
+public:
+    explicit QmlVtkRenderer(QQuickItem* parent = nullptr);
+
+    // --- Render-thread contract (see file comment) ----------------------
+    vtkUserData initializeVTK(vtkRenderWindow* renderWindow) override;
+    void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
+
+    // --- App-thread (GUI) entry points ----------------------------------
+    // Binds the app-owned scene. Non-owning: the scene must outlive this
+    // item (it is the app-owned state that makes dispatch_async after
+    // destruction safe). Call before the first update slot.
+    void setScene(ExperimentalScene* scene);
+    ExperimentalScene* scene() const;
+
+    // GUI-thread slots: copy the relevant scene state to locals, refresh
+    // the app-thread mirror (for initializeVTK re-runs), and dispatch a
+    // by-value lambda to the Qt Quick render thread. Safe to call at any
+    // time; a dispatch queued when the item is destroyed is dropped with
+    // the item (its captures are app-thread-owned values).
+    Q_INVOKABLE void applyScene();  // full resync (background + models + camera)
+    Q_INVOKABLE void updateBackground();  // frame image + display mode
+    Q_INVOKABLE void updatePose(int modelIndex);
+    Q_INVOKABLE void updateModels();
+    Q_INVOKABLE void updateCamera();
+
+    QString poseReadout() const;
+
+signals:
+    void sceneChanged();
+
+private:
+    void copySceneMirror();
+    void refreshPoseReadout();
+
+    // App-thread-owned mirror of the bound scene. Written only in the slots
+    // above (GUI thread); read by initializeVTK at the scene-graph sync
+    // point and by the by-value captures of the dispatch lambdas.
+    ExperimentalScene scene_mirror_;
+    ExperimentalScene* bound_scene_ = nullptr;
+    QString pose_readout_;
+};

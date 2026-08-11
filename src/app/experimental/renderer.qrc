@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>spike.qml</file>
+        <file>renderer.qml</file>
     </qresource>
 </RCC>
