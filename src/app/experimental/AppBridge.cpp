@@ -10,6 +10,7 @@
 #include "PoseBridge.h"
 #include "SettingsBridge.h"
 #include "StudyBridge.h"
+#include "coordinator/session_state_controller.h"
 #include "services/settings_service.h"
 
 AppBridge::AppBridge(
@@ -19,7 +20,26 @@ AppBridge::AppBridge(
     /*U4: the hub owns the app-owned dataset (R3) + the study-load adapter.
      * The list models are created inside StudyBridge (direct-compiled).*/
     session_ = new ExperimentalSession;
-    study_bridge_ = new StudyBridge(this, session_, scene, this);
+
+    /*Plan 006 U6: the shared session-state controller — wraps the
+     * dataset's SessionState (the hub owns the state; the controller is
+     * the diff + notification layer). The lambdas capture `this` and are
+     * invoked only after construction (by UpdateSession/runInFlight), so
+     * the not-yet-created optimizer bridge is guarded with null checks.*/
+    session_state_controller_ = new SessionStateController(
+        &session_->session_state,
+        [this] {
+            return optimizer_bridge_ != nullptr &&
+                   optimizer_bridge_->running();
+        },
+        [this] {
+            if (optimizer_bridge_ != nullptr) {
+                optimizer_bridge_->clearSeedPose();
+            }
+        },
+        this);
+    study_bridge_ =
+        new StudyBridge(this, session_, scene, session_state_controller_, this);
 
     /*U5: the settings surface — the registry service (default: the real
      * registry; tests inject an ini-backed one) + the session-local

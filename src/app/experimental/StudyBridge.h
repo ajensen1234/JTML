@@ -53,6 +53,7 @@ class DelegateSelection;
 class ExperimentalScene;
 class FrameListModel;
 class ModelListModel;
+class SessionStateController;
 namespace jta {
 class SessionController;
 }
@@ -81,7 +82,9 @@ class StudyBridge : public QObject {
 
 public:
     explicit StudyBridge(AppBridge* hub, ExperimentalSession* session,
-                         ExperimentalScene* scene, QObject* parent = nullptr);
+                         ExperimentalScene* scene,
+                         SessionStateController* session_state_controller,
+                         QObject* parent = nullptr);
     ~StudyBridge() override;
 
     // ---- Load actions (paths come from the QML FileDialogs) -------------
@@ -148,6 +151,12 @@ private:
     ExperimentalSession* session_;
     ExperimentalScene* scene_;
     jta::SessionController* controller_;
+    /*Plan 006 U6: the shared session-state controller (owned by AppBridge,
+     * the composition root — the hub wires the run-in-flight probe + the
+     * seed-clear there). syncSessionState writes through it (the widgets
+     * SyncSessionState tail relocated); the wrapped SessionState IS
+     * ExperimentalSession::session_state.*/
+    SessionStateController* session_state_controller_;
     DelegateSelection* selection_;
     FrameListModel* frame_list_model_;
     ModelListModel* model_list_model_;

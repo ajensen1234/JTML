@@ -76,15 +76,17 @@ int MainScreen::curr_frame() {
 }
 
 void MainScreen::SyncSessionState() {
-    /*Pull the current list state into session_state_. Model/frame counts
-     * come from the view-models, selection/current from the views'
-     * QItemSelectionModel (plan 004 U2: MainScreen's list bookkeeping is
-     * gone; model + selectionModel together are the headless-testable
-     * unit). Keep the VIEW (colors/opacity/VTK renders) in the slots;
-     * only the state moves.*/
-    session_state_.SetModelCount(ui.model_list_widget->model()->rowCount());
-    session_state_.SetFrameCount(ui.image_list_widget->model()->rowCount());
-
+    /*Write the current list state through the shared session controller
+     * (plan 006 U6: the widgets' session bookkeeping relocated — the
+     * controller diffs + emits; the previous-selection mirrors are moved
+     * by CommitSelection in the selection handlers AFTER the view's
+     * save-last-pose, exactly like the old previous_frame_index_ /
+     * previous_model_indices_ writes). Model/frame counts come from the
+     * view-models, selection/current from the views' QItemSelectionModel
+     * (plan 004 U2: MainScreen's list bookkeeping is gone; model +
+     * selectionModel together are the headless-testable unit). Keep the
+     * VIEW (colors/opacity/VTK renders) in the slots; only the state
+     * moves.*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
     std::vector<int> rows;
@@ -92,10 +94,11 @@ void MainScreen::SyncSessionState() {
     for (const auto& idx : selected) {
         rows.push_back(idx.row());
     }
-    session_state_.SetSelectedModels(rows);
-
-    session_state_.SetCurrentFrame(
-        ui.image_list_widget->currentIndex().row());
+    session_state_controller_.UpdateSession(
+        ui.image_list_widget->model()->rowCount(),
+        ui.model_list_widget->model()->rowCount(),
+        ui.image_list_widget->currentIndex().row(),
+        rows);
 }
 
 /*Global Interactor Variable*/
@@ -124,7 +127,19 @@ double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
 }
 
 /*Constructor*/
-MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
+MainScreen::MainScreen(QWidget* parent)
+    : QMainWindow(parent),
+      /*Plan 006 U6: the shared session-state controller wraps session_state_
+       * (declared before it in the header). The run-in-flight probe (M7) and
+       * the dataset-clear seed drop (H5/M10b) read the run controller via
+       * captured lambdas — invoked only after construction, so the member
+       * init order is safe. The previous-frame/model mirrors default to
+       * -1/empty inside session_state_ (the old previous_frame_index_ = -1
+       * line is gone).*/
+      session_state_controller_(
+          &session_state_,
+          [this] { return optimizer_run_controller_.running(); },
+          [this] { optimizer_run_controller_.clearSeedPose(); }) {
     ui.setupUi(this);
 
     /*View-models (plan 004 U2): the lists are passive QListViews over
@@ -318,9 +333,7 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
     calibrated_for_monoplane_viewport_ = false;
     calibrated_for_biplane_viewport_ = false;
 
-    /*Index of Previously Selected Frame/Models*/
-    previous_frame_index_ = -1;
-    ///*Set up VTK*/
+    /*Set up VTK*/
     vtkObject::GlobalWarningDisplayOff(); /*Turn off error display*/
     renderer = vw->get_renderer();
     coronal_renderer = renderer;
@@ -2656,7 +2669,8 @@ void MainScreen::on_camera_A_radio_button_clicked() {
 
             /*Save Last Pair Pose*/
             for (int r = 0; r < selected.size(); r++) {
-                if (selected.size() != 0 && previous_frame_index_ != -1 &&
+                if (selected.size() != 0 &&
+                    session_state_.GetPreviousFrame() != -1 &&
                     !currently_optimizing_) {
                     double* position_curr =
                         model_actor_list[selected[r].row()]->GetPosition();
@@ -2672,7 +2686,7 @@ void MainScreen::on_camera_A_radio_button_clicked() {
                     /*Camera A View, Save in Camera A coordinates by
                      * converting camera B*/
                     model_locations_.SavePose(
-                        previous_frame_index_,
+                        session_state_.GetPreviousFrame(),
                         selected[r].row(),
                         calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
                 }
@@ -2817,7 +2831,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
 
         /*Save Last Pair Pose*/
         for (int r = 0; r < selected.size(); r++) {
-            if (selected.size() != 0 && previous_frame_index_ != -1 &&
+            if (selected.size() != 0 &&
+                session_state_.GetPreviousFrame() != -1 &&
                 !currently_optimizing_) {
                 double* position_curr =
                     vw->get_model_position_at_index(selected[r].row());
@@ -2832,7 +2847,8 @@ void MainScreen::on_camera_B_radio_button_clicked() {
                     orientation_curr[2]);
                 /*If Camera B View, Save in Camera A coordinates*/
                 model_locations_.SavePose(
-                    previous_frame_index_, selected[r].row(), last_pose);
+                    session_state_.GetPreviousFrame(), selected[r].row(),
+                    last_pose);
             }
         }
         /*Update to that frame's canny values*/
@@ -2990,8 +3006,13 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
         SaveLastPose();
     }
 
-    /*Update Last Viewed Index as This One*/
-    previous_frame_index_ = ui.image_list_widget->currentIndex().row();
+    /*Advance the previous-selection mirrors + emit the deferred
+     * selectionChanged (plan 006 U6): the controller's CommitSelection
+     * replaces the old previous_frame_index_ write, keeping the handler
+     * order sync -> SaveLastPose -> mirrors (M9: emitted only after the
+     * mirrors are consistent — a consumer observing selectionChanged reads
+     * previous == current).*/
+    session_state_controller_.CommitSelection();
 
     /*Update to that frame's canny values*/
     if (ui.camera_A_radio_button->isChecked()) {
@@ -3198,9 +3219,12 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
     if (!currently_optimizing_) {
         SaveLastPose(); // Needs Work
     }
-    /*Update Last Viewed Index as This One*/
-    previous_model_indices_ =
-        ui.model_list_widget->selectionModel()->selectedRows();
+    /*Advance the previous-selection mirrors + emit the deferred
+     * selectionChanged (plan 006 U6): the controller's CommitSelection
+     * replaces the old previous_model_indices_ write (M9 ordering: after
+     * the view's SaveLastPose, before the re-entrant empty-selection
+     * fallback below).*/
+    session_state_controller_.CommitSelection();
 
     /*Load Models to Screen*/
     vw->make_all_models_invisible();
@@ -4119,16 +4143,14 @@ void MainScreen::EnableAll() {
 void MainScreen::SaveLastPose() {
     /*Save Last Pair Pose (plan 006 U3: shared parameterized core — the
      * widgets canonical row of the call-site table: previous selection,
-     * previous frame, viewer source, convert iff camera B checked).*/
-    std::vector<int> previous_rows;
-    previous_rows.reserve(
-        static_cast<size_t>(previous_model_indices_.size()));
-    for (const QModelIndex& index : previous_model_indices_) {
-        previous_rows.push_back(index.row());
-    }
+     * previous frame, viewer source, convert iff camera B checked). The
+     * previous-selection mirrors read from the shared session state (plan
+     * 006 U6): CommitSelection keeps them == current in steady state and
+     * pre-change inside the selection handlers, exactly like the old
+     * previous_frame_index_ / previous_model_indices_.*/
     jta::SaveLastPoseToStorage(
-        previous_frame_index_,
-        previous_rows,
+        session_state_.GetPreviousFrame(),
+        session_state_.GetPreviousModelRows(),
         [this](int row) {
             double* position_curr = vw->get_model_position_at_index(row);
             double* orientation_curr =
@@ -4175,14 +4197,11 @@ void MainScreen::LaunchOptimizer(OptimizerRunController::Directive directive) {
 
     /*SaveLastPose mirror (mainscreen.cpp:4137, widgets canonical row of
      * the U3 call-site table: previous selection, previous frame, viewer
-     * source, convert iff camera B checked).*/
-    std::vector<int> previous_rows;
-    previous_rows.reserve(static_cast<size_t>(previous_model_indices_.size()));
-    for (const QModelIndex& index : previous_model_indices_) {
-        previous_rows.push_back(index.row());
-    }
-    req.save_frame = previous_frame_index_;
-    req.save_rows = std::move(previous_rows);
+     * source, convert iff camera B checked). The mirrors live in the
+     * shared session state (plan 006 U6) — == current in steady state,
+     * exactly like the old previous_model_indices_ reads.*/
+    req.save_frame = session_state_.GetPreviousFrame();
+    req.save_rows = session_state_.GetPreviousModelRows();
     req.save_pose_source = [this](int row) {
         double* position_curr = vw->get_model_position_at_index(row);
         double* orientation_curr = vw->get_model_orientation_at_index(row);

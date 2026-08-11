@@ -75,6 +75,15 @@
  * (pinned unlock-after-error).*/
 #include "coordinator/optimizer_run_controller.h"
 
+/*Session-state controller (plan 006 U6): the QObject notification shell
+ * over jta::SessionState — MainScreen's SyncSessionState + the
+ * previous-frame/model bookkeeping relocate here (R5/R6/R10, AE2). The
+ * controller wraps session_state_ by pointer (declared before it) and
+ * diffs + emits; the selection handlers advance the mirrors through
+ * CommitSelection AFTER their save-last-pose, exactly like the old
+ * previous_frame_index_ / previous_model_indices_ writes (H2/M9).*/
+#include "coordinator/session_state_controller.h"
+
 /*Optimizer Settings Control Window*/
 #include "view/settings_control.h"
 
@@ -216,10 +225,6 @@ private:
 
     QModelIndexList selected_model_indices();
 
-    /*Index of Previously Selected Frame/Models*/
-    int previous_frame_index_;
-    QModelIndexList previous_model_indices_;
-
     /*List view-models (plan 004 U2): write-once display-name models behind
      * the two passive QListViews (ui.image_list_widget / model_list_widget).
      * MainScreen's list bookkeeping (addItem/count/currentRow) is gone; the
@@ -235,6 +240,18 @@ private:
      * render binding, so it is headless-testable. NOT an observable
      * ViewModel (R12: no binding framework).*/
     jta::SessionState session_state_;
+
+    /*Shared session-state controller (plan 006 U6): the diff + notification
+     * shell wrapping session_state_ (declared BEFORE it — the controller
+     * holds &session_state_). SyncSessionState writes through
+     * UpdateSession; the selection handlers call CommitSelection after
+     * their save-last-pose (the old previous_frame_index_ /
+     * previous_model_indices_ writes are gone — the mirrors live in the
+     * session state, H2). The injected run-in-flight probe (M7) reads the
+     * run controller; the seed-clear (H5/M10b) drops its pending seed on a
+     * dataset clear (the widgets app has no clear path today — the wiring
+     * keeps ResetForDatasetClear complete).*/
+    SessionStateController session_state_controller_;
 
     /*Session controller (plan 004 U6 / R6+R10): owns the load path
      * (calibration/image/model parsing + dataset population) and the camera

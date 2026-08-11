@@ -26,6 +26,8 @@
 #include "view/frame_list_model.h"
 #include "view/model_list_model.h"
 
+#include "coordinator/session_state_controller.h"
+
 #include <cmath>
 #include <vector>
 
@@ -66,12 +68,15 @@ double ViewingAngleForFrame(const Calibration& cal, int width, int height) {
 }  // namespace
 
 StudyBridge::StudyBridge(AppBridge* hub, ExperimentalSession* session,
-                         ExperimentalScene* scene, QObject* parent)
+                         ExperimentalScene* scene,
+                         SessionStateController* session_state_controller,
+                         QObject* parent)
     : QObject(parent),
       hub_(hub),
       session_(session),
       scene_(scene),
       controller_(new jta::SessionController),
+      session_state_controller_(session_state_controller),
       selection_(new DelegateSelection),
       frame_list_model_(new FrameListModel),
       model_list_model_(new ModelListModel) {}
@@ -211,6 +216,13 @@ void StudyBridge::loadModels(const QStringList& paths) {
 
 void StudyBridge::clearDataset() {
     session_->ClearDataset();
+    /*Cross-dataset state (plan 006 U6, H5/M10b): the shared controller
+     * resets the previous-selection mirrors (save-last-pose must never
+     * name the wiped dataset), drops the optimizer's pending seed (via the
+     * seed-clear wired in AppBridge), and emits its datasetChanged. The
+     * current values were already wiped by ClearDataset above — the
+     * subsequent syncSessionState diffs to no change.*/
+    session_state_controller_->ResetForDatasetClear();
     selection_->SetCurrentFrame(-1);
     selection_->ClearModelSelection();
     /*Fresh list models: the models are write-once with no reset API. The
@@ -354,14 +366,20 @@ ModelListModel* StudyBridge::modelListModel() {
 
 /*---- Private mirrors ----*/
 
-/*The widgets SyncSessionState() tail (mainscreen.cpp:96): the pure session
- * facts U6's optimizer wiring reads.*/
+/*The widgets SyncSessionState() tail (mainscreen.cpp:96) via the shared
+ * session controller (plan 006 U6): the controller diffs the plain facts
+ * and emits datasetChanged/selectionChanged only on actual change (M9);
+ * the previous mirrors advance to the now-current selection (H2 steady
+ * state) through CommitSelection. The QML side has no save-last-pose
+ * between the sync and the mirrors (its save-last-pose mirror lives in
+ * OptimizerBridge's run request), so the two calls are adjacent.*/
 void StudyBridge::syncSessionState() {
-    session_->session_state.SetModelCount(model_list_model_->rowCount());
-    session_->session_state.SetFrameCount(frame_list_model_->rowCount());
-    session_->session_state.SetSelectedModels(
+    session_state_controller_->UpdateSession(
+        frame_list_model_->rowCount(),
+        model_list_model_->rowCount(),
+        selection_->GetCurrentFrame(),
         selection_->GetSelectedModelRows());
-    session_->session_state.SetCurrentFrame(selection_->GetCurrentFrame());
+    session_state_controller_->CommitSelection();
 }
 
 /*The hub's headline counts (the QML "Frames (n) / Models (n)" labels).*/

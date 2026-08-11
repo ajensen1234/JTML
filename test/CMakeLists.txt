@@ -430,6 +430,58 @@ add_test(NAME jtml.optimizer_run_controller_core
 set_tests_properties(jtml.optimizer_run_controller_core PROPERTIES
     LABELS "headless" TIMEOUT 120)
 
+# Session-state controller lifecycle tests (plan 006 U6, R5/R6/R10, AE2).
+# QtTest over the QObject notification shell (diff-based grouped emission,
+# M9): scenarios (a)-(d) — dataset load -> datasetChanged; selection change
+# -> selectionChanged with correct rows/primary/mirrors; no actual value
+# change -> no signal (repeated syncs don't spam); mirrors consistent at
+# emission time (state advanced before the emit — previous == current — and
+# the payload's previous values are the PRE-CHANGE selection);
+# ResetForDatasetClear -> mirrors reset to -1/empty + injected seed-clear
+# (H5/M10b) + datasetChanged, with a pending deferred emission dropped. Plus
+# the M7 run-in-flight probe and the selection-only signal split. All
+# emissions are same-thread direct connections (no worker thread), so
+# QSignalSpy observes the controller directly (QTBUG-2842 does not apply).
+# Q_OBJECT header in the source list (AUTOMOC gotcha).
+add_executable(jtml_test_session_state_controller
+    lifecycle/session_state_controller_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/session_state_controller.cpp
+    ${PROJECT_SOURCE_DIR}/include/coordinator/session_state_controller.h
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+)
+target_include_directories(jtml_test_session_state_controller PRIVATE
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_session_state_controller PRIVATE
+    Qt6::Core Qt6::Test)
+add_test(NAME jtml.session_state_controller
+    COMMAND jtml_test_session_state_controller)
+set_tests_properties(jtml.session_state_controller PROPERTIES
+    LABELS "headless" TIMEOUT 120)
+
+# Session-state controller sync/diff logic tests (plan 006 U6). Catch2 over
+# the same shell (Qt6::Core only, direct lambda-connect counting — no event
+# loop): the normalization rules (out-of-range current frame -> -1, rows
+# pruned + sorted), the diff-vs-stored semantics (repeated identical syncs
+# are silent), the two-phase mirror contract (UpdateSession leaves the
+# pre-change selection readable for the view's save-last-pose;
+# CommitSelection advances the mirrors to the now-current selection, H2),
+# the count-shrink pruning interplay, ResetForDatasetClear (mirrors +
+# injected seed-clear), and the runInFlight probe (M7).
+add_executable(jtml_test_session_state_controller_unit
+    unit/session_state_controller_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/session_state_controller.cpp
+    ${PROJECT_SOURCE_DIR}/include/coordinator/session_state_controller.h
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+)
+target_include_directories(jtml_test_session_state_controller_unit PRIVATE
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_session_state_controller_unit PRIVATE
+    Catch2::Catch2WithMain Qt6::Core)
+add_test(NAME jtml.session_state_controller_unit
+    COMMAND jtml_test_session_state_controller_unit)
+set_tests_properties(jtml.session_state_controller_unit PROPERTIES
+    LABELS "headless" TIMEOUT 120)
+
 # Headless view-model tests (plan 004 U2, R4/R5/R14/R15). QtTest compiling the
 # two list-model .cpp files directly against Qt6::Core/Qt6::Test (no widgets,
 # no VTK). Q_OBJECT headers go in the add_executable source list (AUTOMOC

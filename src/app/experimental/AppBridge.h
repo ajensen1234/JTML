@@ -29,6 +29,7 @@
 
 class ExperimentalScene;
 class StudyBridge;
+class SessionStateController;
 struct ExperimentalSession;
 namespace jta {
 class SettingsService;
@@ -108,6 +109,12 @@ signals:
 
 private:
     ExperimentalSession* session_ = nullptr;
+    /*Plan 006 U6: the shared session-state controller (the diff +
+     * notification shell over ExperimentalSession::session_state). The hub
+     * wires its run-in-flight probe (M7 — the optimizer bridge's running())
+     * and its dataset-clear seed drop (H5/M10b — the optimizer bridge's
+     * clearSeedPose); StudyBridge writes through it.*/
+    SessionStateController* session_state_controller_ = nullptr;
     StudyBridge* study_bridge_ = nullptr;
     jta::SettingsService* settings_service_ = nullptr;
     bool owns_settings_service_ = false;
