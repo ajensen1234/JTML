@@ -3,7 +3,23 @@
 
 #include "AppBridge.h"
 
-AppBridge::AppBridge(QObject* parent) : QObject(parent) {}
+#include "ExperimentalScene.h"
+#include "ExperimentalSession.h"
+#include "StudyBridge.h"
+
+AppBridge::AppBridge(ExperimentalScene* scene, QObject* parent)
+    : QObject(parent) {
+    /*U4: the hub owns the app-owned dataset (R3) + the study-load adapter.
+     * The list models are created inside StudyBridge (direct-compiled).*/
+    session_ = new ExperimentalSession;
+    study_bridge_ = new StudyBridge(this, session_, scene, this);
+}
+
+AppBridge::~AppBridge() {
+    /*study_bridge_ is parented to this and dies with the QObject chain; the
+     * dataset is a plain struct.*/
+    delete session_;
+}
 
 int AppBridge::frameCount() const {
     return frame_count_;
@@ -27,4 +43,12 @@ void AppBridge::setModelCount(int count) {
     }
     model_count_ = count;
     emit sessionChanged();
+}
+
+ExperimentalSession* AppBridge::session() {
+    return session_;
+}
+
+StudyBridge* AppBridge::studyBridge() {
+    return study_bridge_;
 }

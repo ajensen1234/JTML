@@ -6,7 +6,9 @@
 # main.cpp and removed). U3 replaced the U2 placeholder SpikeVtkItem with
 # QmlVtkRenderer + ExperimentalScene (the render seam); the U1 smoke in
 # test/oracle/ now drives the new renderer (its target compiles
-# QmlVtkRenderer.cpp + ExperimentalScene.cpp + renderer.qrc).
+# QmlVtkRenderer.cpp + ExperimentalScene.cpp + renderer.qrc). U4 added
+# StudyBridge + DelegateSelection + ExperimentalSession (the study-load
+# adapter, the delegate selection contract, and the app-owned dataset).
 #
 # GUISupportQtQuick is deliberately NOT in the root find_package COMPONENTS
 # list (root CMakeLists.txt stays untouched): this directory-scoped re-find
@@ -42,6 +44,11 @@ add_executable(jtml_experimental
     main.cpp
     AppBridge.h
     AppBridge.cpp
+    StudyBridge.h
+    StudyBridge.cpp
+    DelegateSelection.h
+    DelegateSelection.cpp
+    ExperimentalSession.h
     QmlVtkRenderer.h
     QmlVtkRenderer.cpp
     ExperimentalScene.h

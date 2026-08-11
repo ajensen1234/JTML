@@ -524,6 +524,58 @@ add_test(NAME jtml.session_controller COMMAND jtml_test_session_controller)
 set_tests_properties(jtml.session_controller PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# StudyBridge + delegate-selection contract tests (plan 005 U4, R3/R17). The
+# bridge (AppBridge/StudyBridge/DelegateSelection/ExperimentalScene)
+# direct-compiles against the headless Frame twin + the real SessionController
+# + LocationStorage/Model/stl_reader/ModelListBuilder services + the
+# direct-compiled FrameListModel/ModelListModel: pins the three-action load
+# flow on the real Kneel_1 fixtures, the models-before-calibration guard, the
+# typed calibration-error mapping, partial-load + dataset-replace semantics,
+# and the delegate selection contract (current frame, multi-select set,
+# primary = first selected, empty states) incl. the SessionState mirror.
+# Same fixture recipe as jtml.session_controller (repo-root WORKING_DIRECTORY).
+add_executable(jtml_test_experimental_selection
+    unit/experimental_selection_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/session_controller.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/model.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/stl_reader.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+)
+target_include_directories(jtml_test_experimental_selection PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
+target_link_libraries(jtml_test_experimental_selection PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    Catch2::Catch2WithMain
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES})
+target_link_options(jtml_test_experimental_selection PRIVATE
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.experimental_selection COMMAND jtml_test_experimental_selection)
+set_tests_properties(jtml.experimental_selection PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
 # The coordinator tests run headless under QCoreApplication; no display needed.
