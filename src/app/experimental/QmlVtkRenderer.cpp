@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QMetaObject>
 #include <QString>
+#include <QThread>
 
 // VTK
 #include <vtkActor.h>
@@ -101,7 +102,10 @@ void OnModelStyleEndInteraction(
     double orient[3];
     actor->GetPosition(pos);
     actor->GetOrientation(orient);
-    renderer->queueModelPoseSync(pos, orient);
+    // Emit from whichever thread the observer runs on: the connections have
+    // GUI-thread affinity, so AutoConnection queues the delivery.
+    renderer->reportModelPoseAdjusted(
+        0, pos[0], pos[1], pos[2], orient[0], orient[1], orient[2]);
 }
 
 // The vtkUserData returned by initializeVTK: owns every VTK object in the
@@ -477,17 +481,13 @@ int QmlVtkRenderer::interactionMode() const {
     return interaction_mode_;
 }
 
-void QmlVtkRenderer::queueModelPoseSync(double pos[3], double orient[3]) {
-    // Called on the RENDER thread (the observer). Only captures values and
-    // posts a queued invocation — the emit happens on the GUI thread.
-    QMetaObject::invokeMethod(
-        this,
-        [this, p0 = pos[0], p1 = pos[1], p2 = pos[2], o0 = orient[0],
-         o1 = orient[1], o2 = orient[2]] {
-            // The model style rotates scene index 0 (the primary).
-            emit modelPoseAdjusted(0, p0, p1, p2, o0, o1, o2);
-        },
-        Qt::QueuedConnection);
+void QmlVtkRenderer::reportModelPoseAdjusted(int sceneModelIndex, double x,
+                                              double y, double z, double xa,
+                                              double ya, double za) {
+    // May be called from the render thread (the style's EndInteraction
+    // observer): emit with by-value data; receivers with GUI-thread affinity
+    // get queued delivery via AutoConnection. No VTK state is touched.
+    emit modelPoseAdjusted(sceneModelIndex, x, y, z, xa, ya, za);
 }
 
 void QmlVtkRenderer::updateCamera() {

@@ -100,12 +100,12 @@ public:
 
     // Model-centric interaction pose sync (plan-005 feedback #2): after an
     // EndInteractionEvent on the model style, the render-thread observer
-    // reads the primary actor's transform and posts a QUEUED invocation to
-    // the GUI thread that emits modelPoseAdjusted. The app writes the pose
-    // into LocationStorage + the scene, so the optimizer starts from the
-    // visually arranged pose (the widgets app's SaveLastPose equivalent,
-    // but live per interaction).
-    void queueModelPoseSync(double pos[3], double orient[3]);
+    // reads the primary actor's transform and reports it here; the signal is
+    // emitted with by-value data (AutoConnection queues delivery to
+    // GUI-thread receivers — the app writes the pose into LocationStorage +
+    // the scene, so the optimizer starts from the visually arranged pose).
+    void reportModelPoseAdjusted(int sceneModelIndex, double x, double y,
+                                 double z, double xa, double ya, double za);
 
     QString poseReadout() const;
 
@@ -127,5 +127,8 @@ private:
     ExperimentalScene scene_mirror_;
     ExperimentalScene* bound_scene_ = nullptr;
     QString pose_readout_;
-    int interaction_mode_ = CameraMode;
+    // Default = Model mode: the owner's workflow is "line up the model, let
+    // the optimizer refine" (plan-005 feedback) — the drag rotates the MODEL
+    // and the pose syncs live. Camera mode is the secondary view-orbit mode.
+    int interaction_mode_ = ModelMode;
 };

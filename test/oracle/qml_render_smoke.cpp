@@ -342,6 +342,67 @@ int main(int argc, char** argv) {
     }
     std::cout << "[qml-render-smoke] leg3 background swap: RE-RENDERED (ok)\n";
 
+    // ---- Leg 3.5: model-centric drag syncs the pose (plan-005 feedback) --
+    // The default interaction is Model mode (the owner's workflow: line up
+    // the model, let the optimizer refine). Switch explicitly, drag in the
+    // viewport, and assert the EndInteraction observer reported the rotated
+    // pose on the GUI thread. (The bridge side — storage + scene write — is
+    // pinned headlessly by experimental_selection_test; the app's QML glue
+    // is the 4-line Connections hop.)
+    renderer->setInteractionMode(QmlVtkRenderer::ModelMode);
+    if (!WaitForRenderedFrames(window, 2)) {
+        std::cerr << "[qml-render-smoke] FAIL: no frame after switching to "
+                     "model mode within timeout\n";
+        return 1;
+    }
+    app.processEvents();
+    const Point6D baselinePose = scene.models().at(0).pose;
+    struct SyncCapture {
+        int count = 0;
+        Point6D pose;
+    } cap;
+    QObject::connect(renderer, &QmlVtkRenderer::modelPoseAdjusted, &app,
+                     [&cap](int, double x, double y, double z, double xa,
+                            double ya, double za) {
+                         ++cap.count;
+                         cap.pose = Point6D(x, y, z, xa, ya, za);
+                     });
+    const QPoint center(window->width() / 2, window->height() / 2);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, center, 10);
+    QTest::mouseMove(window, center + QPoint(30, -15), 20);
+    QTest::mouseMove(window, center + QPoint(60, -35), 20);
+    QTest::mouseMove(window, center + QPoint(90, -60), 20);
+    QTest::mouseRelease(
+        window, Qt::LeftButton, Qt::NoModifier, center + QPoint(90, -60), 10);
+    for (int i = 0; i < 30; ++i) {  // queued pose sync + render settle
+        app.processEvents();
+        QTest::qWait(5);
+    }
+    const auto maxDelta = [](const Point6D& a, const Point6D& b) {
+        const double d[6] = {std::abs(a.x - b.x), std::abs(a.y - b.y),
+                             std::abs(a.z - b.z), std::abs(a.xa - b.xa),
+                             std::abs(a.ya - b.ya), std::abs(a.za - b.za)};
+        return *std::max_element(d, d + 6);
+    };
+    std::cout << "[qml-render-smoke] leg3.5 model drag: syncCount="
+              << cap.count << " poseDelta="
+              << maxDelta(baselinePose, cap.pose) << " baseline=("
+              << baselinePose.x << "," << baselinePose.y << ","
+              << baselinePose.z << ") synced=(" << cap.pose.x << ","
+              << cap.pose.y << "," << cap.pose.z << ")\n";
+    if (cap.count == 0) {
+        std::cerr << "[qml-render-smoke] FAIL: model-centric drag produced no "
+                     "pose sync (interactor style not active?)";
+        return 1;
+    }
+    if (maxDelta(baselinePose, cap.pose) < 0.01) {
+        std::cerr << "[qml-render-smoke] FAIL: model-centric drag did not "
+                     "rotate the model (pose unchanged)\n";
+        return 1;
+    }
+    std::cout << "[qml-render-smoke] leg3.5 model drag: POSE SYNCED (ok)\n";
+
+
     // ---- Leg 4: destroying the item mid-update does not crash -------------
     // The renderer is a QML-created item (JavaScriptOwnership — the QML
     // engine's GC owns it, so C++-side deleteLater never completes in this
