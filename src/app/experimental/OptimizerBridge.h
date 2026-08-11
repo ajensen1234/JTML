@@ -124,6 +124,27 @@ public:
     // No-op unless a run is in flight.
     Q_INVOKABLE void stop();
 
+    // ---- U7: ML-estimate starting-pose seed ------------------------------
+    // The one-shot starting-pose seed the ML estimate sets before a run
+    // (R8 — the estimate seeds the optimizer). run() applies it (session
+    // storage + scene) AFTER the gate passes, so the estimate wins over the
+    // SaveLastPose scene-drift mirror and a rejected run never consumes it.
+    // The widgets equivalent is the estimate slots' SavePose into
+    // model_locations_ feeding LaunchOptimizer's by-value pose matrix — the
+    // manager's Optimize() reads the starting point from that matrix.
+    Q_INVOKABLE void setSeedPose(double x, double y, double z, double xa,
+                                 double ya, double za);
+    // Drop the pending seed (MlBridge clears it on a selection change — a
+    // stale-frame seed must never override a different frame's pose).
+    Q_INVOKABLE void clearSeedPose();
+    // Headless-testable core (plan 005 U7): applies the pending seed to the
+    // seeded frame's model in the session storage + scene, then clears it.
+    // Stale guards: the seed applies only when the current frame is still
+    // the seeded frame and the seeded model is still the primary selection;
+    // otherwise it is dropped. run() calls this after the gate passes,
+    // before Initialize.
+    void applySeedPose();
+
     // ---- State + progress reads ------------------------------------------
     RunState runState() const;
     bool running() const;
@@ -207,4 +228,11 @@ private:
     int cost_calls_ = 0;
     double current_minimum_ = 0.0;
     double progress_ = 0.0;
+
+    // U7 seed state: pending pose + the frame/model it was estimated for
+    // (stale guards in applySeedPose).
+    bool has_seed_pose_ = false;
+    Point6D seed_pose_;
+    int seed_frame_ = -1;
+    int seed_model_ = -1;
 };

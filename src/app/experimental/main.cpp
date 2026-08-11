@@ -33,6 +33,7 @@
 
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
+#include "MlBridge.h" // complete type: the setContextProperty QObject* overload needs it
 #include "OptimizerBridge.h"
 #include "QmlVtkRenderer.h"
 #include "SettingsBridge.h" // complete type: the setContextProperty QObject* overload needs it
@@ -70,6 +71,8 @@ int main(int argc, char* argv[]) {
         "settingsBridge", app_bridge.settingsBridge());
     engine.rootContext()->setContextProperty(
         "optimizerBridge", app_bridge.optimizerBridge());
+    engine.rootContext()->setContextProperty(
+        "mlBridge", app_bridge.mlBridge());
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty()) {

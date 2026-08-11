@@ -139,6 +139,14 @@ void OptimizerBridge::run() {
         return;
     }
 
+    /*U7: the ML-estimate starting-pose seed (R8 — the estimate seeds the
+     * optimizer). Applied AFTER the gate so a rejected run never consumes
+     * it, and after the SaveLastPose mirror so the estimate wins over scene
+     * drift; the manager's Optimize() reads its starting point from the
+     * by-value pose matrix Initialize copies below (the widgets equivalent:
+     * the estimate slots' SavePose feeding LaunchOptimizer).*/
+    applySeedPose();
+
     /*Thread lifecycle (mirror of mainscreen.cpp:4186-4189): a fresh manager
      * + thread per run. Initialize() (called below, before the start — the
      * plan's pinned order) wires started->Optimize and the finished->
@@ -248,6 +256,42 @@ void OptimizerBridge::stop() {
         emit StopOptimizer();
     }
     setState(RunState::Stopping);
+}
+
+/*---- U7: ML-estimate starting-pose seed ----*/
+
+void OptimizerBridge::setSeedPose(
+    double x, double y, double z, double xa, double ya, double za) {
+    seed_pose_ = Point6D(x, y, z, xa, ya, za);
+    seed_frame_ = study_bridge_->currentFrame();
+    seed_model_ = study_bridge_->primaryModelIndex();
+    has_seed_pose_ = true;
+}
+
+void OptimizerBridge::clearSeedPose() {
+    has_seed_pose_ = false;
+}
+
+void OptimizerBridge::applySeedPose() {
+    if (!has_seed_pose_) {
+        return;
+    }
+    /*One-shot + stale guards: the seed applies only when the run's frame is
+     * still the seeded frame and the seeded model is still the primary
+     * selection (MlBridge clears the seed on any selection change, but the
+     * guard keeps the contract self-contained). Any other state drops the
+     * seed silently — a stale-frame estimate must never override a
+     * different frame's pose.*/
+    if (study_bridge_->currentFrame() != seed_frame_ ||
+        study_bridge_->primaryModelIndex() != seed_model_ ||
+        seed_model_ < 0 ||
+        seed_model_ >= static_cast<int>(session_->loaded_models.size())) {
+        clearSeedPose();
+        return;
+    }
+    session_->model_locations.SavePose(seed_frame_, seed_model_, seed_pose_);
+    scene_->setModelPose(seed_model_, seed_pose_);
+    has_seed_pose_ = false;
 }
 
 /*---- State + progress reads ----*/

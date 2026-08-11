@@ -60,6 +60,27 @@ Window {
         fileMode: FileDialog.OpenFiles
         onAccepted: studyBridge.loadModels(selectedFiles)
     }
+    // ---- ML model pickers (U7): per-implant segment .pt + one estimate
+    // .pt (the plan's review fix); the loaded path/state is shown in the
+    // ML strip. The bridge normalizes file:// URLs to local paths.
+    FileDialog {
+        id: segFemPtDialog
+        title: qsTr("Load Femur Segmentation Model (.pt)")
+        nameFilters: ["Torch File (*.pt)", "All files (*)"]
+        onAccepted: mlBridge.setSegmentFemPt(selectedFile)
+    }
+    FileDialog {
+        id: segTibPtDialog
+        title: qsTr("Load Tibia Segmentation Model (.pt)")
+        nameFilters: ["Torch File (*.pt)", "All files (*)"]
+        onAccepted: mlBridge.setSegmentTibPt(selectedFile)
+    }
+    FileDialog {
+        id: estimatePtDialog
+        title: qsTr("Load Pose Estimation Model (.pt)")
+        nameFilters: ["Torch File (*.pt)", "All files (*)"]
+        onAccepted: mlBridge.setEstimatePt(selectedFile)
+    }
     Dialog {
         id: replaceDialog
         property var pendingPaths: []
@@ -94,6 +115,14 @@ Window {
         messageDialog.title = title
         messageDialog.messageText = text
         messageDialog.open()
+    }
+
+    // Loaded-.pt label helper: the last path segment (the full path is in
+    // the bridge's property; the strip shows the basename to fit the
+    // 240px column).
+    function baseName(path) {
+        var parts = String(path).split('/')
+        return parts[parts.length - 1]
     }
 
     // ---- Optimizer settings + pose table live in Dialogs (#5) ----------
@@ -175,6 +204,24 @@ Window {
         }
         function onDilationBackgroundRequested() {
             // v1 relay: no dilation display mode yet (U7+) — ignored.
+        }
+    }
+
+    // ---- Bridge → view glue (U7) ---------------------------------------
+    // ML strip: the bridge wrote the scene (background mode after a
+    // segment, model pose after an estimate); the glue forwards the scene
+    // relays to the renderer's GUI-thread slots; the error/notice channel
+    // reuses the single QML Dialog.
+    Connections {
+        target: mlBridge
+        function onMessageRequested(title, message) {
+            showMessage(title, message)
+        }
+        function onSceneBackgroundChanged() {
+            viewport.updateBackground()
+        }
+        function onPoseEstimated(modelIndex) {
+            viewport.updatePose(modelIndex)
         }
     }
 
@@ -379,19 +426,189 @@ Window {
                         font.pixelSize: 11
                     }
 
-                    // ML controls strip placeholder (U7 wires the .pt
-                    // pickers + segment/estimate buttons + estimate
-                    // display; graceful degradation without models).
+                    // ---- ML controls strip (U7) ------------------------
+                    // Per-implant .pt pickers (femur/tibia segment + one
+                    // estimate model — the plan's review fix) with loaded-
+                    // path labels; Segment/Estimate act on the CURRENT
+                    // frame only (v1 loop scope); the estimate seeds the
+                    // optimizer; graceful degradation without models
+                    // (AE4 — buttons disabled with a hint label, clear
+                    // message if invoked anyway, plain-optimize path
+                    // untouched). Disabled-during-run respects the U6
+                    // locking.
+                    Label {
+                        text: qsTr("ML models")
+                        color: Theme.fg
+                        font.bold: true
+                    }
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 4
-                        Button { text: qsTr("Segment"); enabled: false; Layout.fillWidth: true }
-                        Button { text: qsTr("Estimate"); enabled: false; Layout.fillWidth: true }
+                        Button {
+                            text: qsTr("Femur…")
+                            enabled: !optimizerBridge.running
+                            onClicked: segFemPtDialog.open()
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideMiddle
+                            color: mlBridge.segmentFemPt.length > 0
+                                   ? Theme.fg : Theme.fgMuted
+                            font.pixelSize: 10
+                            text: mlBridge.segmentFemPt.length > 0
+                                  ? baseName(mlBridge.segmentFemPt)
+                                  : qsTr("not set")
+                        }
                     }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Button {
+                            text: qsTr("Tibia…")
+                            enabled: !optimizerBridge.running
+                            onClicked: segTibPtDialog.open()
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideMiddle
+                            color: mlBridge.segmentTibPt.length > 0
+                                   ? Theme.fg : Theme.fgMuted
+                            font.pixelSize: 10
+                            text: mlBridge.segmentTibPt.length > 0
+                                  ? baseName(mlBridge.segmentTibPt)
+                                  : qsTr("not set")
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Button {
+                            text: qsTr("Estimate…")
+                            enabled: !optimizerBridge.running
+                            onClicked: estimatePtDialog.open()
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideMiddle
+                            color: mlBridge.estimatePt.length > 0
+                                   ? Theme.fg : Theme.fgMuted
+                            font.pixelSize: 10
+                            text: mlBridge.estimatePt.length > 0
+                                  ? baseName(mlBridge.estimatePt)
+                                  : qsTr("not set")
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Button {
+                            text: qsTr("Segment")
+                            Layout.fillWidth: true
+                            enabled: !optimizerBridge.running
+                                     && studyBridge.hasDataset
+                                     && studyBridge.currentFrame >= 0
+                                     && mlBridge.hasSegmentModel
+                            onClicked: mlBridge.segmentCurrentFrame()
+                        }
+                        Button {
+                            text: qsTr("Estimate")
+                            Layout.fillWidth: true
+                            enabled: !optimizerBridge.running
+                                     && studyBridge.hasDataset
+                                     && studyBridge.currentFrame >= 0
+                                     && studyBridge.primaryModelIndex >= 0
+                                     && mlBridge.hasEstimateModel
+                            onClicked: mlBridge.estimateCurrentFrame()
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        CheckBox {
+                            text: qsTr("Black sil.")
+                            font.pixelSize: 10
+                            checked: mlBridge.blackSilhouette
+                            onToggled: mlBridge.blackSilhouette = checked
+                        }
+                        Label {
+                            text: qsTr("Implant:")
+                            color: Theme.fgMuted
+                            font.pixelSize: 10
+                        }
+                        ButtonGroup {
+                            id: implantGroup
+                            buttons: [femurKindButton, tibiaKindButton]
+                        }
+                        Button {
+                            id: femurKindButton
+                            text: qsTr("Fem")
+                            checkable: true
+                            checked: mlBridge.implantKind === 0
+                            font.pixelSize: 10
+                            implicitWidth: 40
+                            onClicked: mlBridge.implantKind = 0
+                        }
+                        Button {
+                            id: tibiaKindButton
+                            text: qsTr("Tib")
+                            checkable: true
+                            checked: mlBridge.implantKind === 1
+                            font.pixelSize: 10
+                            implicitWidth: 40
+                            onClicked: mlBridge.implantKind = 1
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Label {
+                            text: qsTr("View:")
+                            color: Theme.fgMuted
+                            font.pixelSize: 10
+                        }
+                        ButtonGroup {
+                            id: viewGroup
+                            buttons: [origViewButton, segViewButton]
+                        }
+                        Button {
+                            id: origViewButton
+                            text: qsTr("Orig")
+                            checkable: true
+                            checked: mlBridge.backgroundMode === 0
+                            enabled: !optimizerBridge.running
+                            font.pixelSize: 10
+                            implicitWidth: 44
+                            onClicked: mlBridge.setBackgroundMode(0)
+                        }
+                        Button {
+                            id: segViewButton
+                            text: qsTr("Seg")
+                            checkable: true
+                            checked: mlBridge.backgroundMode === 1
+                            enabled: !optimizerBridge.running
+                            font.pixelSize: 10
+                            implicitWidth: 44
+                            onClicked: mlBridge.setBackgroundMode(1)
+                        }
+                    }
+                    // Estimate result display (the pose that seeds the
+                    // optimizer).
                     Label {
-                        text: qsTr("ML path (U7)")
+                        Layout.fillWidth: true
+                        visible: mlBridge.hasEstimate
+                        elide: Text.ElideMiddle
+                        color: Theme.ok
+                        font.pixelSize: 10
+                        text: mlBridge.estimateText
+                    }
+                    // Status/hint label (the AE4 degradation surface).
+                    Label {
+                        Layout.fillWidth: true
+                        visible: mlBridge.statusText.length > 0
                         color: Theme.fgDim
-                        font.pixelSize: 11
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
+                        text: mlBridge.statusText
                     }
                 }
             }

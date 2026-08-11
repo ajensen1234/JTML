@@ -5,6 +5,7 @@
 
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
+#include "MlBridge.h"
 #include "OptimizerBridge.h"
 #include "SettingsBridge.h"
 #include "StudyBridge.h"
@@ -36,6 +37,15 @@ AppBridge::AppBridge(
      * (StudyBridge) + the settings surface (SettingsBridge).*/
     optimizer_bridge_ = new OptimizerBridge(
         this, session_, scene, study_bridge_, settings_bridge_, this);
+
+    /*U7: the ML adapter — per-implant .pt pickers (femur/tibia segment + one
+     * estimate model) with env fallback, per-frame segment/estimate on the
+     * current frame (v1 loop scope), the estimate seeding the optimizer
+     * (OptimizerBridge::setSeedPose), and graceful degradation without .pt
+     * models (AE4).*/
+    ml_bridge_ = new MlBridge(
+        this, session_, scene, study_bridge_, settings_bridge_,
+        optimizer_bridge_, this);
 }
 
 AppBridge::~AppBridge() {
@@ -85,4 +95,8 @@ SettingsBridge* AppBridge::settingsBridge() {
 
 OptimizerBridge* AppBridge::optimizerBridge() {
     return optimizer_bridge_;
+}
+
+MlBridge* AppBridge::mlBridge() {
+    return ml_bridge_;
 }
