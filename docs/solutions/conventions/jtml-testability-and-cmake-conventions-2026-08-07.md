@@ -80,6 +80,8 @@ set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 
 
 AUTOMOC does **not** auto-moc an included shared header. If a Q_OBJECT class lives in a header you only `#include`, its moc is never generated → undefined-symbol link error. Fix: list the header in the target's sources. See the `jtml_test_coordinator` target (`test/CMakeLists.txt`) — note `include/coordinator/optimize_coordinator.h` explicitly listed.
 
+**Sibling trap (disambiguation, 2026-08-11):** a `multiple definition of <Class>::<accessor>` between a `.cpp.o` and `mocs_compilation.cpp.o` is a DIFFERENT moc failure — a `signals:` section placed mid-class turns every following accessor into a signal (moc generates emitter bodies for them). Undefined symbol = header never moc'd (this section); duplicate definition = mis-scoped `signals:` region (see `docs/solutions/build-errors/jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md`).
+
 ### 3. The `file(GLOB)` trap in the layered lib `CMakeLists.txt`
 
 Each layered lib (`src/{domain,services,coordinator,view}/CMakeLists.txt` — the former

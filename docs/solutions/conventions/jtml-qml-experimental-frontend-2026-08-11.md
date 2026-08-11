@@ -1,5 +1,6 @@
 ---
 date: 2026-08-11
+last_updated: 2026-08-11
 module: jtml_view
 tags: [qml, qtquick, qquickvtkitem, architecture, view-model]
 problem_type: convention
@@ -47,6 +48,37 @@ app-thread mirror.
   `FindPickedActor` is non-virtual in 9.3 — override `OnLeftButtonDown`
   mimicking the base's successful-pick path). Note: `vtkCallbackCommand.h`
   must be included for the complete type (`GrabFocus` conversion).
+- **Default is Model mode** (the owner's workflow: line up the model, let the
+  optimizer refine). Camera mode is the secondary view-orbit toggle.
+- Rotation application verified against pinned VTK 9.3 source: with no user
+  matrix, `Prop3DTransform` falls back to `SetPosition`/`SetOrientation` —
+  `GetPosition`/`GetOrientation` DO reflect trackball-actor interaction (the
+  `SetUserMatrix` path only applies when a user matrix is set).
+
+## Model pose sync-back (the interaction → storage round trip)
+
+The pattern that makes "drag the model, the optimizer starts from your
+arrangement" work:
+
+1. **Render-thread observer** (vtkCallbackCommand on the model style's
+   `EndInteractionEvent`) reads the primary actor's `GetPosition`/`GetOrientation`.
+2. **Plain thread-safe reporter method** on the renderer calls
+   `emit modelPoseAdjusted(sceneIndex, x, y, z, xa, ya, za)` with by-value
+   data — `emit` is thread-safe; **AutoConnection queues delivery** to
+   GUI-thread receivers (Direct same-thread, Queued cross-thread).
+3. **QML glue** (a ~4-line `Connections` hop): `viewport.onModelPoseAdjusted`
+   → `studyBridge.applyViewerPose`.
+4. **The bridge writes** `LocationStorage::SavePose` (the optimizer's starting
+   point — `OptimizerBridge` passes the storage by value into `Initialize`) +
+   the scene pose, then `viewport.updatePose` refreshes the readout
+   (idempotent re-apply).
+
+**The delivery mechanism matters:** `QMetaObject::invokeMethod(this, functor,
+Qt::QueuedConnection)` **silently failed** in this context — posted (returned
+true) but the functor never executed; the direct by-value signal emit works.
+See `docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md`
+for the full debug trail (including the disproved user-matrix hypothesis and
+the stale-binary trap).
 
 ## The view-model layer (the architecture lesson)
 
@@ -76,9 +108,14 @@ destruction. Register `LABELS "oracle;render"`, xcb env, repo-root cwd.
 `libqxdgdesktopportal.so` ships in the pixi env; under xcb Qt defaults to the
 built-in dialog. Force the portal theme:
 `QT_QPA_PLATFORM=xcb QT_QPA_PLATFORMTHEME=xdgdesktopportal` — routes
-`FileDialog` through `org.freedesktop.portal.FileChooser` (multi-select
-native). `FileDialog.OpenFiles` is the correct multi-select fileMode per Qt
-6.7 docs regardless.
+`FileDialog` through `org.freedesktop.portal.FileChooser`. **Verified in the
+Qt 6.7 sources** (the xdgdesktopportal plugin + QML `FileDialog`):
+`FileDialog.OpenFiles → QFileDialogOptions::ExistingFiles → multiple:true` is
+passed to the portal end-to-end. If multi-select still fails in the native
+dialog, the remaining variable is the **portal backend implementation** (try
+ctrl+click in GNOME's chooser; check which portal you run). Fallbacks:
+`QFileDialog::getOpenFileNames` (same theme, different code path) or
+`FileDialog.DontUseNativeDialog` (Qt's own dialog, reliable multi-select).
 
 ## Other conventions
 
@@ -96,3 +133,5 @@ native). `FileDialog.OpenFiles` is the correct multi-select fileMode per Qt
 - `docs/solutions/tooling-decisions/jtml-rendering-runtime-xcb-qvtk-2026-08-10.md`
 - `.panoptes/jtml-research-horizons/angles/04-qml-vs-widgets.org` (the evidence base)
 - Plan: `docs/plans/2026-08-11-005-feat-qml-experimental-frontend-plan.md`
+- `docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md`
+- `docs/solutions/build-errors/jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md`
