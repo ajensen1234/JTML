@@ -5,9 +5,17 @@
 # optimizer_manager). It consumes the single jtml_compute SHARED lib (via JTA_LIBS) --
 # the compute sources moved out of the coordinator into jtml_compute in U4.
 #
-# AUTOMOC: the Q_OBJECT headers (optimize_coordinator.h, optimizer_manager.h)
-# MUST be in the source list (via the coordinator header GLOB below) or AUTOMOC
-# never mocs them -> undefined-vtable link error.
+# Plan 006 U5 (the shared VM layer): the OptimizerRunController surface joins this
+# layer -- optimizer_run_controller_core.cpp (Qt/GPU-free run core: gate, run-state
+# machine, epoch, progress mapping, seed lifecycle) + optimizer_run_driver.cpp (the
+# OptimizerRunDriver seam + the production adapter wrapping OptimizerManager
+# UNTOUCHED) + optimizer_run_controller.cpp (the QObject shell: the drive sequence,
+# thread lifecycle + destructor contract, the 8 by-value relay binds). Both
+# front-ends drive the controller; the view-specific mappers stay view-side.
+#
+# AUTOMOC: the Q_OBJECT headers (optimize_coordinator.h, optimizer_manager.h,
+# optimizer_run_controller.h) MUST be in the source list (via the coordinator
+# header GLOB below) or AUTOMOC never mocs them -> undefined-vtable link error.
 set(CMAKE_AUTOMOC ON)
 
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS
@@ -17,6 +25,9 @@ file(GLOB HEADER_FILES CONFIGURE_DEPENDS
 add_library(jtml_coordinator STATIC
     optimize_coordinator.cpp
     optimizer_manager.cpp
+    optimizer_run_controller_core.cpp
+    optimizer_run_driver.cpp
+    optimizer_run_controller.cpp
     ${HEADER_FILES}
 )
 

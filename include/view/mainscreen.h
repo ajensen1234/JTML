@@ -67,8 +67,13 @@
  * file-scope globals -- this TU is the only interactor.h includer).*/
 #include "services/session_controller.h"
 
-/*Optimizer Manager*/
-#include "coordinator/optimizer_manager.h"
+/*Optimizer Run Controller (plan 006 U5): the shared run controller — gate,
+ * drive sequence, run-state machine, progress, stop, seed, epoch/thread
+ * lifecycle, destructor contract. MainScreen's LaunchOptimizer + locking
+ * thin onto it; the 16-control DisableAll/EnableAll stays a view-side
+ * mapper with EnableAll driven by the controller's terminal-frame relay
+ * (pinned unlock-after-error).*/
+#include "coordinator/optimizer_run_controller.h"
 
 /*Optimizer Settings Control Window*/
 #include "view/settings_control.h"
@@ -143,12 +148,6 @@ public:
 Q_SIGNALS:
     /*Update Whether To Write TO Text Display*/
     void UpdateDisplayText(bool);
-
-    /*Stop Optimizer*/
-    void StopOptimizer();
-
-    // [SYM TRAP] Send out optimizer time remaining
-    void UpdateTimeRemaining(int);
 
 private:
     double pi = 3.14159265358979323846;
@@ -291,12 +290,14 @@ private:
     /*Launch Optimizer*/
 
     void LaunchOptimizer(
-        QString directive); // Directive Says whether it is Optimize Single,
-                            // From, All, or Each (or Sym_Trap)
+        OptimizerRunController::Directive
+            directive); // Directive Says whether it is Optimize Single,
+                        // From, All, or Each (or Sym_Trap)
 
-    /*Optimizer Thread and Manager*/
-    QThread* optimizer_thread;
-    OptimizerManager* optimizer_manager;
+    /*The shared optimizer-run controller (plan 006 U5): owns the drive
+     * sequence + thread lifecycle; the view maps the relays onto the
+     * widgets (actors, selection advance, DisableAll/EnableAll mapper).*/
+    OptimizerRunController optimizer_run_controller_;
 
     /*Disable and Enable MainScreen During and After Optimization*/
     void DisableAll();
@@ -446,7 +447,10 @@ public Q_SLOTS:
     void onUpdateOptimum(
         double, double, double, double, double, double, unsigned int);
 
-    /*Finished Optimizing Frame, Send Optimum to MainScreen*/
+    /*Finished Optimizing Frame, Send Optimum to MainScreen (the shared
+     * controller's terminal-frame relay; the out-of-bounds status travels
+     * on the relay so the view can box — L14). The controller already
+     * persisted the pose at its tracked current frame.*/
     void onOptimizedFrame(
         double,
         double,
@@ -457,11 +461,14 @@ public Q_SLOTS:
         bool,
         unsigned int,
         bool,
-        QString);
+        QString,
+        bool);
 
-    /*Uh oh There was an Error. String contains the message
-     */
-    void onOptimizerError(QString error_message);
+    /*The shared controller's severity-carrying message channel (L14): the
+     * widgets preserves its box-type distinctions.*/
+    void onControllerMessage(
+        const QString& title, const QString& message,
+        OptimizerRunController::Severity severity);
 
     /*Update Display with Speed, Cost Function Calls, Current Minimum*/
     void onUpdateDisplay(double, int, double, unsigned int);

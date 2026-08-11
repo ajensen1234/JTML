@@ -149,6 +149,40 @@ MainScreen::MainScreen(QWidget* parent) : QMainWindow(parent) {
         this,
         &MainScreen::on_model_list_widget_itemSelectionChanged);
 
+    /*Plan 006 U5: the shared optimizer-run controller's relays -> the
+     * widgets mappers (the controller re-emits the manager's worker-thread
+     * signals by-value on its own thread — QTBUG-2842).*/
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::messageRequested,
+        this,
+        &MainScreen::onControllerMessage);
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::updateDisplayRelayed,
+        this,
+        &MainScreen::onUpdateDisplay);
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::poseUpdated,
+        this,
+        &MainScreen::onUpdateOptimum);
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::optimizedFrameRelayed,
+        this,
+        &MainScreen::onOptimizedFrame);
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::dilationBackgroundRequested,
+        this,
+        &MainScreen::onUpdateDilationBackground);
+    connect(
+        &optimizer_run_controller_,
+        &OptimizerRunController::orientationSymTrapUpdated,
+        this,
+        &MainScreen::updateOrientationSymTrap_MS);
+
     this->start_time = -1;
     sym_trap_running = false;
 
@@ -1442,14 +1476,17 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
 // Start Symtrap Optimizer
 void MainScreen::optimizer_launch_slot() {
     if (!sym_trap_running) {
-        LaunchOptimizer("Sym_Trap");
+        LaunchOptimizer(OptimizerRunController::Directive::SymTrap);
     }
 }
 
 /*Stop Optimizer*/
 void MainScreen::on_actionStop_Optimizer_triggered() {
     if (ui.actionStop_Optimizer->isEnabled()) {
-        emit StopOptimizer();
+        /*The shared controller's cooperative stop (the app -> manager
+         * reverse bind; the run completes through the normal
+         * terminal-frame/finished path).*/
+        optimizer_run_controller_.stop();
         QMessageBox::warning(
             this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
     }
@@ -3603,7 +3640,7 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
     /*Stop Optimizer*/
     if (event->key() == Qt::Key_Escape) {
         if (ui.actionStop_Optimizer->isEnabled()) {
-            emit StopOptimizer();
+            optimizer_run_controller_.stop();
             QMessageBox::warning(
                 this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
         }
@@ -3669,7 +3706,7 @@ void MainScreen::keyPressEvent(QKeyEvent* event) {
 
 void MainScreen::VTKEscapeSignal() {
     if (ui.actionStop_Optimizer->isEnabled()) {
-        emit StopOptimizer();
+        optimizer_run_controller_.stop();
         QMessageBox::warning(
             this, "Warning!", "Optimizer stopped!", QMessageBox::Ok);
     }
@@ -4006,26 +4043,26 @@ void MainScreen::on_reset_edge_button_clicked() {
 /*Optimize Buttons*/
 /*Optimize Buttons*/
 void MainScreen::on_optimize_button_clicked() {
-    LaunchOptimizer("Single");
+    LaunchOptimizer(OptimizerRunController::Directive::Single);
 }
 
 /*Optimize All Button*/
 void MainScreen::on_optimize_all_button_clicked() {
-    LaunchOptimizer("All");
+    LaunchOptimizer(OptimizerRunController::Directive::All);
 }
 
 /*Optimize Each Button*/
 void MainScreen::on_optimize_each_button_clicked() {
-    LaunchOptimizer("Each");
+    LaunchOptimizer(OptimizerRunController::Directive::Each);
 }
 
 /*Optimize From Button*/
 void MainScreen::on_optimize_from_button_clicked() {
-    LaunchOptimizer("From");
+    LaunchOptimizer(OptimizerRunController::Directive::From);
 }
 
 void MainScreen::on_actionOptimize_Backward_triggered() {
-    LaunchOptimizer("Backward");
+    LaunchOptimizer(OptimizerRunController::Directive::Backward);
 }
 
 /*Disable/Enable During Optimization*/
@@ -4112,187 +4149,104 @@ void MainScreen::SaveLastPose() {
 
 /*Optimization Function: Packages Off The Optimization process in
 a new thread*/
-/*Launch Optimizer*/
-void MainScreen::LaunchOptimizer(QString directive) {
-    /*Save Last Pair Pose*/
-    SaveLastPose();
-    int iter_count;
-
-    if (directive == "Sym_Trap") {
+/*Launch Optimizer — plan 006 U5: the drive sequence lives in the shared
+ * OptimizerRunController (SaveLastPose mirror -> gate -> seed -> fresh
+ * manager + thread -> finished bound before Initialize -> the 7 binds ->
+ * Initialize by value -> thread start, incl. the Initialize-failure quirk);
+ * this view builds the request (capturing the save-last-pose + gate pieces
+ * BEFORE the directive reset — M11) and maps the controller relays onto
+ * the widgets.*/
+void MainScreen::LaunchOptimizer(OptimizerRunController::Directive directive) {
+    /*Sym-Trap flag (view-side presentation state; the run itself still goes
+     * through the controller). iter_count is 0 for every directive — the
+     * old code left it indeterminate for Sym_Trap (dead path), initialized
+     * here for sanitizer-cleanliness.*/
+    int iter_count = 0;
+    if (directive == OptimizerRunController::Directive::SymTrap) {
         sym_trap_running = true;
-        // iter_count = sym_trap_control->getIterCount();
-    } else {
-        iter_count = 0;
     }
-    /*Can Only Optimize If Chosen Frame and Model -- decided by the widget-free
-     * OptimizeIntentController (plan U7, AE4); the view keeps only the error
-     * presentation + the GPU Initialize binding (R15).*/
+
+    /*Build the request BEFORE the directive reset (M11): the launch's
+     * SaveLastPose mirror + gate see the user's pre-reset mirrors exactly
+     * like the old LaunchOptimizer order (SaveLastPose :4137 -> gate ->
+     * reset -> thread start).*/
+    OptimizerRunRequest req;
+    req.directive = directive;
+
+    /*SaveLastPose mirror (mainscreen.cpp:4137, widgets canonical row of
+     * the U3 call-site table: previous selection, previous frame, viewer
+     * source, convert iff camera B checked).*/
+    std::vector<int> previous_rows;
+    previous_rows.reserve(static_cast<size_t>(previous_model_indices_.size()));
+    for (const QModelIndex& index : previous_model_indices_) {
+        previous_rows.push_back(index.row());
+    }
+    req.save_frame = previous_frame_index_;
+    req.save_rows = std::move(previous_rows);
+    req.save_pose_source = [this](int row) {
+        double* position_curr = vw->get_model_position_at_index(row);
+        double* orientation_curr = vw->get_model_orientation_at_index(row);
+        return Point6D(
+            position_curr[0],
+            position_curr[1],
+            position_curr[2],
+            orientation_curr[0],
+            orientation_curr[1],
+            orientation_curr[2]);
+    };
+    req.camera_is_a = ui.camera_A_radio_button->isChecked();
+    req.save_convert_rule = jta::SavePoseConvertRule::ConvertWhenCameraB;
+
+    /*Gate input (mirror of mainscreen.cpp:4147-4160; the shared core
+     * assembles the OptimizeIntentController::Input with previous ==
+     * current — H2).*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    std::vector<int> selected_rows;
-    selected_rows.reserve(selected.size());
+    req.selected_model_rows.reserve(static_cast<size_t>(selected.size()));
     for (const auto& idx : selected) {
-        selected_rows.push_back(idx.row());
+        req.selected_model_rows.push_back(idx.row());
     }
-    jta::OptimizeIntentController::Input in;
-    in.selected_model_rows = std::move(selected_rows);
-    in.previous_frame_index = previous_frame_index_;
-    in.current_frame = ui.image_list_widget->currentIndex().row();
-    in.frame_count = static_cast<int>(loaded_frames.size());
-    in.model_current_index = ui.model_list_widget->currentIndex().row();
-    in.model_count = static_cast<int>(loaded_models.size());
-    in.pose_frame_count = model_locations_.GetFrameCount();
-    in.pose_model_count = model_locations_.GetModelCount();
-    jta::OptimizeIntentController::Intent intent =
-        jta::OptimizeIntentController::Evaluate(in);
-    if (intent.status ==
-        jta::OptimizeIntentController::Status::SelectFrameAndModel) {
-        QMessageBox::critical(
-            this, "Error!", "Select Frame and Model First!", QMessageBox::Ok);
-        return;
-    }
-    if (intent.status ==
-        jta::OptimizeIntentController::Status::PoseMatrixDimensionMismatch) {
-        QMessageBox::critical(
-            this,
-            "Critical Error!",
-            "Pose Dimension Matrix Differs in Size from Frame "
-            "and Models Loaded! Please Contact Support!",
-            QMessageBox::Ok);
-        return;
-    }
+    req.current_frame = ui.image_list_widget->currentIndex().row();
+    req.frame_count = static_cast<int>(loaded_frames.size());
+    req.model_current_index = ui.model_list_widget->currentIndex().row();
+    req.model_count = static_cast<int>(loaded_models.size());
+    req.pose_frame_count = model_locations_.GetFrameCount();
+    req.pose_model_count = model_locations_.GetModelCount();
+    req.storage = &model_locations_;
 
-    /*Initialize Thread*/
-    /*Set Up Connections*/
-    // Master Thread to Carry Optimizer
-    optimizer_manager = new OptimizerManager();        // Create Master
-    optimizer_thread = new QThread();                  // Create QThread
-    optimizer_manager->moveToThread(optimizer_thread); // Move Master to QThread
+    /*Initialize payload (BY VALUE, mirror of mainscreen.cpp:4184-4202).*/
+    req.launch.calibration = calibration_file_;
+    req.launch.camera_a_frames = loaded_frames;
+    req.launch.camera_b_frames = loaded_frames_B;
+    req.launch.models = loaded_models;
+    req.launch.selected_model_indexes = selected;
+    req.launch.pose_matrix = model_locations_;
+    req.launch.settings = optimizer_settings_;
+    req.launch.trunk_manager = trunk_manager_;
+    req.launch.branch_manager = branch_manager_;
+    req.launch.leaf_manager = leaf_manager_;
+    req.launch.iter_count = iter_count;
 
-    /*Send the Following Information to the Optimizer Thread:
-    0). Calibration Class
-    1). Frame List(s)
-    2). Selected Models List and Primary Model
-    3). Current Pose Matrix
-    4). Optimizer Settings Class
-    5). The Three Cost Function Manager Classes
-    6). Optimization Directives (All, From, Each, Single)
-    7). Error Message Reference*/
-    /*Initialze the Optimizer by Sending All the Previous Information and
-     * Setting Up/Checking the CUDA Connecitons*/
-    QString error_mess;
-    bool initialized_correctly = optimizer_manager->Initialize(
-        *optimizer_thread,
-        calibration_file_,
-        loaded_frames,
-        loaded_frames_B,
-        intent.current_frame,
-        loaded_models,
-        selected,
-        intent.primary_model_index,
-        model_locations_,
-        optimizer_settings_,
-        trunk_manager_,
-        branch_manager_,
-        leaf_manager_,
-        directive,
-        error_mess,
-        iter_count);
-
-    /*If Didnt't Initialize Correctly DESTROY*/
-    if (!initialized_correctly) {
-        /*R13-preserved quirk (plan 004 U7): the thread is started BEFORE the
-         * error box and early return, so a failed Initialize leaks BOTH
-         * optimizer_manager (never deleted) and optimizer_thread (started,
-         * never quit/waited; MainScreen's destructor has no cleanup for
-         * either). Behavior preserved deliberately; the fix is a separately
-         * gated deferred cut (plan "Deferred to Follow-Up Work").*/
-        optimizer_thread->start();
-        QMessageBox::critical(this, "Error!", error_mess, QMessageBox::Ok);
-        return;
-    }
-
-    /*Connect Optimizer Threads*/
-    connect(
-        optimizer_manager,
-        SIGNAL(UpdateDisplay(double, int, double, unsigned int)),
-        this,
-        SLOT(onUpdateDisplay(
-            double,
-            int,
-            double,
-            unsigned int))); // Update Display
-    connect(
-        optimizer_manager,
-        SIGNAL(OptimizerError(QString)),
-        this,
-        SLOT(onOptimizerError(QString)));
-    // Optimizer Error Check
-    connect(
-        optimizer_manager,
-        SIGNAL(UpdateOptimum(
-            double, double, double, double, double, double, unsigned int)),
-        this,
-        SLOT(onUpdateOptimum(
-            double, double, double, double, double, double, unsigned int)));
-    // Update Guess Connection
-    connect(
-        optimizer_manager,
-        SIGNAL(OptimizedFrame(
-            double,
-            double,
-            double,
-            double,
-            double,
-            double,
-            bool,
-            unsigned int,
-            bool,
-            QString)),
-        this,
-        SLOT(onOptimizedFrame(
-            double,
-            double,
-            double,
-            double,
-            double,
-            double,
-            bool,
-            unsigned int,
-            bool,
-            QString)));
-    // Update Optimized Frame/View
-    connect(
-        this,
-        SIGNAL(StopOptimizer()),
-        optimizer_manager,
-        SLOT(onStopOptimizer()),
-        Qt::DirectConnection);
-    /*Stops Optimizer*/
-    connect(
-        optimizer_manager,
-        SIGNAL(UpdateDilationBackground()),
-        this,
-        SLOT(onUpdateDilationBackground()));
-    /*UPDATE DILATION BACKGROUND	*/
-    connect(
-        optimizer_manager,
-        SIGNAL(onUpdateOrientationSymTrap(
-            double, double, double, double, double, double)),
-        this,
-        SLOT(updateOrientationSymTrap_MS(
-            double, double, double, double, double, double)));
-
-    // Connect sym trap progress bar to thread
-    // connect(optimizer_manager, SIGNAL(onProgressBarUpdate(int)),
-    // sym_trap_control->ui.progressBar, SLOT(setValue(int)));
-
-    /*Start*/
-    if (directive == "Each" || directive == "All") {
+    /*View-side directive reset (M11, two-phase contract): the All/Each
+     * index-0 selection reset happens BEFORE the controller's Start() so
+     * the selection handler's guards behave identically (currently
+     * optimizing is still false; the reset's SyncSessionState + SaveLastPose
+     * fire exactly as before — the launch's own mirror above already
+     * captured the pre-reset state).*/
+    if (directive == OptimizerRunController::Directive::Each ||
+        directive == OptimizerRunController::Directive::All) {
         ui.image_list_widget->selectionModel()->setCurrentIndex(
             ui.image_list_widget->model()->index(0, 0),
             QItemSelectionModel::SelectCurrent |
                 QItemSelectionModel::Rows);
+    }
+
+    /*The shared drive sequence. Gate rejections + the Initialize-failure
+     * quirk surface through the controller's message channel (the view's
+     * box mapper); the view-side disable runs only when the run actually
+     * starts.*/
+    if (!optimizer_run_controller_.start(req)) {
+        return;
     }
     actor_text->GetTextProperty()->SetColor(
         214.0 / 255.0,
@@ -4301,7 +4255,6 @@ void MainScreen::LaunchOptimizer(QString directive) {
     currently_optimizing_ = true;
     DisableAll();
     display_optimizer_settings_ = optimizer_settings_;
-    optimizer_thread->start();
 }
 
 void MainScreen::updateOrientationSymTrap_MS(
@@ -4372,7 +4325,12 @@ void MainScreen::onUpdateOptimum(
     }
 }
 
-/*Finished Optimizing Frame, Send Optimum to MainScreen*/
+/*Finished Optimizing Frame, Send Optimum to MainScreen — plan 006 U5:
+ * the shared controller's terminal-frame relay mapper. The controller
+ * already persisted the result pose at its tracked current frame and
+ * moved the run to its terminal state; this view maps the actors, the
+ * frame advance, the unlock (EnableAll at the terminal frame even with
+ * the error bit set — pinned unlock-after-error, M8), and the boxes.*/
 void MainScreen::onOptimizedFrame(
     double x,
     double y,
@@ -4383,15 +4341,15 @@ void MainScreen::onOptimizedFrame(
     bool move_next_frame,
     unsigned int primary_model_index,
     bool error_occurred,
-    QString optimizer_directive) {
-    /*Update Actor*/
+    QString optimizer_directive,
+    bool model_out_of_bounds) {
+    /*Update Actor (L15: the A<->B display conversion stays view-side; the
+     * storage keeps the raw A-coord pose the controller persisted).*/
     auto CurrentPose = Point6D(x, y, z, xa, ya, za);
     if (ui.camera_B_radio_button->isChecked()) {
         CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
     }
-    if (primary_model_index <
-        loaded_models.size()) { // todo: Find a better way to get size of
-                                // model_actor_list
+    if (!model_out_of_bounds) {
         vw->set_model_position_at_index(
             primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
         vw->set_model_orientation_at_index(
@@ -4411,11 +4369,12 @@ void MainScreen::onOptimizedFrame(
         ui.qvtk_cpv->update();
         ui.qvtk_cpv->renderWindow()->Render();
     } else {
-        /*Display Finished*/
+        /*Display Finished (the out-of-bounds status travels on the relay —
+         * L14). The controller skips the pose persistence on this path (the
+         * old unconditional SavePose on an out-of-range row was the
+         * documented never-occur crash path).*/
         QMessageBox::critical(
             this, "Error!", "Model index out of bounds!", QMessageBox::Ok);
-        /*Program Will Crash after this message but that is fine, this
-         * should never ever occurr...*/
     }
 
     /*Save Indices*/
@@ -4428,16 +4387,7 @@ void MainScreen::onOptimizedFrame(
                                                      0),
                 QItemSelectionModel::SelectCurrent |
                     QItemSelectionModel::Rows);
-            model_locations_.SavePose(
-                current_frame_index,
-                primary_model_index,
-                Point6D(x, y, z, xa, ya, za));
         } else {
-            /*Save Pose To Storage*/
-            model_locations_.SavePose(
-                current_frame_index,
-                primary_model_index,
-                Point6D(x, y, z, xa, ya, za));
             /*Not Currently Optimzing*/
             currently_optimizing_ = false;
             EnableAll();
@@ -4462,17 +4412,7 @@ void MainScreen::onOptimizedFrame(
                                                      0),
                 QItemSelectionModel::SelectCurrent |
                     QItemSelectionModel::Rows);
-            /*Save Pose To Storage*/
-            model_locations_.SavePose(
-                current_frame_index,
-                primary_model_index,
-                Point6D(x, y, z, xa, ya, za));
         } else {
-            /*Save Pose To Storage*/
-            model_locations_.SavePose(
-                current_frame_index,
-                primary_model_index,
-                Point6D(x, y, z, xa, ya, za));
             /*Not Currently Optimzing*/
             currently_optimizing_ = false;
             EnableAll();
@@ -4496,8 +4436,28 @@ void MainScreen::onOptimizedFrame(
 4: Renderering failure!
 5: Error: Negative Metric!
 */
-void MainScreen::onOptimizerError(QString error_message) {
-    QMessageBox::critical(this, "Error!", error_message, QMessageBox::Ok);
+/*The shared controller's severity-carrying message channel (L14): the
+ * widgets preserves its box-type distinctions (the gate rejections,
+ * Initialize failure, and OptimizerError all arrive here; the finished
+ * box stays in the terminal-frame mapper above).*/
+void MainScreen::onControllerMessage(
+    const QString& title,
+    const QString& message,
+    OptimizerRunController::Severity severity) {
+    switch (severity) {
+        case OptimizerRunController::Severity::Info:
+            QMessageBox::information(
+                this, title, message, QMessageBox::Ok);
+            break;
+        case OptimizerRunController::Severity::Warning:
+            QMessageBox::warning(
+                this, title, message, QMessageBox::Ok);
+            break;
+        case OptimizerRunController::Severity::Critical:
+            QMessageBox::critical(
+                this, title, message, QMessageBox::Ok);
+            break;
+    }
 }
 
 /*Update Display with Speed, Cost Function Calls, Current Minimum*/

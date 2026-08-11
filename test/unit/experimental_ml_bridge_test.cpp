@@ -240,10 +240,9 @@ TEST_CASE("ml_bridge: missing models degrade cleanly — clear messages, no "
     REQUIRE(f.optimizer()->canRun());
     /*And the gate itself still accepts the controller-test runnable shape
      * (identical semantics to the U6 pins — the ML surface adds no gate
-     * coupling).*/
-    jta::OptimizeIntentController::Input in;
+     * coupling; the shared core's GateInput shape, plan 006 U5).*/
+    jta::OptimizerRunControllerCore::GateInput in;
     in.selected_model_rows = {0};
-    in.previous_frame_index = 0;
     in.current_frame = 0;
     in.frame_count = 3;
     in.model_current_index = 0;

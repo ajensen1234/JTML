@@ -362,6 +362,74 @@ target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test)
 add_test(NAME jtml.coordinator COMMAND jtml_test_coordinator)
 set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Shared optimizer-run controller lifecycle tests (plan 006 U5, R7/R13/R15/
+# R16, F1, AE1). QtTest with a FAKE OptimizerRunDriver implementing the
+# drive seam (the controller depends on the narrow interface —
+# OptimizerManager::Initialize is non-virtual, so the seam is the driver,
+# not the manager): records Initialize args + drive calls and emits the
+# manager's 7+1 signals, so the controller's by-value relays are observed
+# on the controller/test thread (QTBUG-2842). Pins the full drive sequence
+# (save-last-pose mirror before the gate, seed ordering, Initialize args by
+# value, bind set + finished-before-Initialize), the H2 gate-input rule,
+# the H1 epoch drops + threadActive Start gate (incl. the widgets
+# terminal-frame -> thread-death window rejection), the M6 ghost reaping,
+# the M10a seed restore, the gate-rejection statuses + severity, the
+# OptimizerError -> terminal-frame unlock pin, the H3 destructor contract,
+# and cooperative stop. Same heavy link recipe as
+# jtml.experimental_optimizer_gate (the controller header pulls
+# optimizer_manager.h -> torch/CUDA).
+add_executable(jtml_test_optimizer_run_controller
+    lifecycle/optimizer_run_controller_test.cpp
+)
+target_include_directories(jtml_test_optimizer_run_controller PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
+target_link_libraries(jtml_test_optimizer_run_controller PRIVATE
+    Qt6::Core
+    Qt6::Test
+    jtml_coordinator
+    ${REQUIRED_LIBS_QUALIFIED}
+    ${JTA_LIBS}
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${CUDA_LIBRARIES})
+target_link_options(jtml_test_optimizer_run_controller PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.optimizer_run_controller
+    COMMAND jtml_test_optimizer_run_controller)
+set_tests_properties(jtml.optimizer_run_controller PROPERTIES
+    LABELS "headless" TIMEOUT 300)
+
+# Shared optimizer-run controller CORE tests (plan 006 U5). Ports the pure
+# cases of jtml.experimental_optimizer_gate against the Qt/GPU-free core
+# (the SingleModelOnly bridge policy stays in the bridge test): the gate
+# Input assembly with previous == current (H2), the two rejection statuses,
+# the run-state machine + epoch, the widgets stage-math progress mapping,
+# and the seed lifecycle (one-shot, stale guards). Direct-compile pattern
+# like jtml.optimize_intent — no Qt, no GPU.
+add_executable(jtml_test_optimizer_run_controller_core
+    unit/optimizer_run_controller_core_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/optimizer_run_controller_core.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/optimize_intent_controller.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_optimizer_run_controller_core PRIVATE
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_optimizer_run_controller_core PRIVATE
+    Catch2::Catch2WithMain)
+add_test(NAME jtml.optimizer_run_controller_core
+    COMMAND jtml_test_optimizer_run_controller_core)
+set_tests_properties(jtml.optimizer_run_controller_core PROPERTIES
+    LABELS "headless" TIMEOUT 120)
+
 # Headless view-model tests (plan 004 U2, R4/R5/R14/R15). QtTest compiling the
 # two list-model .cpp files directly against Qt6::Core/Qt6::Test (no widgets,
 # no VTK). Q_OBJECT headers go in the add_executable source list (AUTOMOC
@@ -724,18 +792,19 @@ target_link_options(jtml_test_render_pipeline_builder PRIVATE
 add_test(NAME jtml.render_pipeline_builder COMMAND jtml_test_render_pipeline_builder)
 set_tests_properties(jtml.render_pipeline_builder PROPERTIES LABELS "headless" TIMEOUT 120)
 
-# OptimizerBridge gate + state-core tests (plan 005 U6, R6/R13). The bridge
-# direct-compiles against the U4/U5 bridges + the app-owned dataset and links
-# jtml_coordinator (the REAL OptimizerManager lives there) — but never
-# touches the GPU: the gate rejects BEFORE any manager/thread is created, so
-# run()'s rejection paths are headless-safe, and the state + persistence
-# core (applyOptimizedFrame/refreshProgress) is exercised directly. Pins:
-# the gate inputs mirror OptimizeIntentController's tested semantics
-# (reusing the intent tests' RunnableInput shape), no-selection/multi-mode/
-# dimension-mismatch rejections (typed messages, state untouched, no thread
-# starts), and OptimizedFrame handling -> SavePose lands in LocationStorage
-# + scene + completed/re-runnable state. The GPU run itself is manual-\
-# visual under xcb / oracle-arbitrated by U9. Same fixture recipe as
+# OptimizerBridge QML-policy pins (plan 005 U6 + 006 U5, R6/R13). The
+# bridge direct-compiles against the U4/U5 bridges + the app-owned dataset
+# and links jtml_coordinator (the REAL seams live there — OptimizerRunController
+# + OptimizerManager symbols are pulled through the coordinator) — but never
+# touches the GPU: every rejection happens BEFORE any driver/manager/thread
+# is created, so run()'s rejection paths are headless-safe. Pins: the
+# SingleModelOnly pre-check (after the shared gate's first guard — a QML
+# policy, NOT in the controller), the run() rejection message paths against
+# the real study fixture (state untouched, no driver created), the stop()
+# no-op, and the buildGateInput assembly (previous == current, H2). The
+# shared-core cases (gate evaluation, state machine, progress mapping,
+# OptimizedFrame handling) live in jtml.optimizer_run_controller_core +
+# jtml.optimizer_run_controller (plan 006 U5 port). Same fixture recipe as
 # jtml.experimental_selection (repo-root WORKING_DIRECTORY).
 add_executable(jtml_test_experimental_optimizer_gate
     unit/experimental_optimizer_gate_test.cpp
