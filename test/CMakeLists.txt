@@ -973,6 +973,85 @@ set_tests_properties(jtml.oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
+# U9 parity gate (plan 005 U9, R13): the app's OWN optimizer run path
+# (OptimizerBridge: OptimizeIntentController gate -> OptimizerManager +
+# QThread -> Initialize with the app's containers by value + a
+# QModelIndexList -> the 7 binds -> OptimizedFrame) on Kneel_1 frame 0 with
+# the oracle config (trunk budget 3000, branch/leaf budgets 0, ranges
+# (12,12,15,15,15,15), DIRECT_DILATION, dilation 6, Canny 3/0/150, start pose
+# from fem.jts via pose_file_io) must land within the oracle's band: rendered
+# silhouette IoU >= 0.85 vs the empirically pinned label
+# (AT_K1_V1_0160_label_fem.tif), backface culling OFF, the label TIFF
+# vertical flip -- oracle_test.cpp's render + IoU mechanics. GPU-only: NEVER
+# in the headless default. Same registration recipe as jtml.oracle: `oracle`
+# label, repo-root WORKING_DIRECTORY, TIMEOUT 3600; xcb env mirrors the
+# render smokes (inert for QCoreApplication, pinned for consistency).
+add_executable(jtml_test_qml_parity_check
+    oracle/qml_parity_check.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/pose_file_io.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+)
+target_include_directories(jtml_test_qml_parity_check PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS})
+target_link_libraries(jtml_test_qml_parity_check PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+    ${CUDA_LIBRARIES}
+    Catch2::Catch2
+)
+set_property(TARGET jtml_test_qml_parity_check PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_qml_parity_check PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
+)
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir, VTK + conda libs in their install dirs.
+target_link_options(jtml_test_qml_parity_check PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.qml_parity_check COMMAND jtml_test_qml_parity_check)
+set_tests_properties(jtml.qml_parity_check PROPERTIES LABELS "oracle" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ENVIRONMENT "QT_QPA_PLATFORM=xcb")
+
+# ---------------------------------------------------------------------------
 # Tier-2 GPU oracle: segmentation + implant estimate path (plan 004 U8).
 # Gates the U8 extraction (SegmentationController + ImplantEstimator) by the
 # appearance contract (silhouette IoU vs Labels/ -- golden_oracle.org), never

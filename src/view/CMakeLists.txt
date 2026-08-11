@@ -6,6 +6,13 @@
 # QML-swappable later; the thin composition root (main.cpp) + Study2Grid live in
 # src/app and link this lib. .ui/.qrc/Resources are co-located under include/view
 # and consumed atomically (AUTOUIC/AUTORCC/AUTOMOC).
+#
+# QML DECISION RECORD (2026-08-11, plan 005 / panoptes angle 04): the seams are
+# QML-ready (models/services/domain widget-free; VTK 9.3 GUISupportQtQuick built
+# in-tree; the QML spike passed its go/no-go gate). The full QML front-end is
+# DEFERRED — the experimental app (src/app/experimental, jtml_experimental) is
+# the sanctioned parallel vehicle. Revisit a full QML front-end on a concrete UI
+# need QWidgets cannot deliver, or Qt 6.8+/VTK 9.4+ integration maturity.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)

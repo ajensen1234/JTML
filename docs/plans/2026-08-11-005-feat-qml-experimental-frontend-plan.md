@@ -710,7 +710,18 @@ settings persistence (`SettingsService`) round out the experiment loop.
 
 ---
 
-- [ ] U9. **Render smoke, parity, decision record**
+- [x] U9. **Render smoke, parity, decision record**
+
+**VERDICT (2026-08-11):** parity gate PASS — recovered IoU **0.993627 ≥ 0.85**,
+digit-for-digit identical to `test/golden/baseline.json`'s captured 0.993627,
+and the pose gap vs `fem.jts` (-0.048, +0.004, -0.905, +0.042, +0.002, -0.135)
+exactly matches the baseline's measured gap. The app's `OptimizerBridge`
+wiring (gate → Initialize → trunk-3000 run from `fem.jts` start poses →
+`SavePose`) produces the same deterministic result as the oracle's own
+`DirectOptimizer` run — R13/R2-validated end-to-end. Registered as
+`jtml.qml_parity_check` (oracle label, 1.15s). Decision record landed at
+`src/view/CMakeLists.txt:6` (QML deferred; experimental app sanctioned).
+Compound entry: `docs/solutions/conventions/jtml-qml-experimental-frontend-2026-08-11.md`.
 
 **Goal:** The QML render smoke (R15), the oracle-arbitrated parity run (R13),
 and the QML decision record replacing the "QML-swappable later" comment.
