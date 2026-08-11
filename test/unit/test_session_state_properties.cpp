@@ -10,6 +10,9 @@
 //   - IsSingleSelection() agrees with the selection cardinality, and
 //   - SetModelCount on a narrower list prunes any selection row it can no
 //     longer hold.
+// Plus the previous-selection mirror (plan-006 U2) invariants: the mirror
+// stays sorted/in-range after arbitrary writes, round-trips valid row sets
+// exactly, and HasPreviousSelection() agrees with the stored mirrors.
 // R2-safe: purely structural (order/bounds/count), no re-derivation.
 
 #include <algorithm>
@@ -76,4 +79,63 @@ TEST_CASE("session_state[PBT]: SetModelCount prunes out-of-range selection",
             }
         },
         hegel::Settings{.test_cases = 300});
+}
+
+TEST_CASE("session_state[PBT]: previous-model mirror is well-formed after "
+          "SetPreviousModelRows",
+          "[session_state][pbt]") {
+    hegel::test(
+        [&](hegel::TestCase& tc) {
+            auto model_count =
+                tc.draw(gs::integers<int>({.min_value = 0, .max_value = 20}));
+            // Draw rows from a range that includes negatives and >model_count
+            // values, so out-of-range indices are frequent (forces pruning).
+            auto rows = tc.draw(gs::vectors(
+                gs::integers<int>({.min_value = -5,
+                                   .max_value = model_count + 5}),
+                {.min_size = 0, .max_size = 12}));
+
+            jta::SessionState s;
+            s.SetModelCount(model_count);
+            s.SetPreviousModelRows(rows);
+
+            const auto& prev = s.GetPreviousModelRows();
+            REQUIRE(std::is_sorted(prev.begin(), prev.end()));
+            for (int r : prev) {
+                REQUIRE(r >= 0);
+                REQUIRE(r < model_count);
+            }
+
+            // Determinism: re-applying the same rows yields the same mirror.
+            s.SetPreviousModelRows(rows);
+            REQUIRE(s.GetPreviousModelRows() == prev);
+        },
+        hegel::Settings{.test_cases = 400});
+}
+
+TEST_CASE("session_state[PBT]: previous-model mirror round-trips valid row sets "
+          "and HasPreviousSelection agrees",
+          "[session_state][pbt]") {
+    hegel::test(
+        [&](hegel::TestCase& tc) {
+            auto model_count =
+                tc.draw(gs::integers<int>({.min_value = 1, .max_value = 20}));
+            // Rows drawn from the valid range: the mirror round-trips exactly
+            // (sorted, nothing pruned).
+            auto rows = tc.draw(gs::vectors(
+                gs::integers<int>({.min_value = 0, .max_value = model_count - 1}),
+                {.min_size = 0, .max_size = 12}));
+            auto have_frame = tc.draw(gs::booleans());
+
+            jta::SessionState s;
+            s.SetModelCount(model_count);
+            s.SetPreviousFrame(have_frame ? 0 : -1);
+            s.SetPreviousModelRows(rows);
+
+            auto expected = rows;
+            std::sort(expected.begin(), expected.end());
+            REQUIRE(s.GetPreviousModelRows() == expected);
+            REQUIRE(s.HasPreviousSelection() == (have_frame && !rows.empty()));
+        },
+        hegel::Settings{.test_cases = 400});
 }

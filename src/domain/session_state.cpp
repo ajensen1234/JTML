@@ -60,4 +60,33 @@ void SessionState::SetFrameCount(int count) {
 
 int SessionState::GetFrameCount() const { return frame_count_; }
 
+void SessionState::SetPreviousFrame(int frame) {
+    // Mirror of the last-selected frame. Negative resolves to -1 (none), like
+    // SetCurrentFrame; not validated against frame_count_ because the mirror
+    // is "last-selected" (the session-state controller resets it on dataset
+    // clear).
+    previous_frame_ = frame >= 0 ? frame : -1;
+}
+
+int SessionState::GetPreviousFrame() const { return previous_frame_; }
+
+void SessionState::SetPreviousModelRows(const std::vector<int>& rows) {
+    // Same rule as SetSelectedModels: keep rows valid (>= 0, < model_count_)
+    // and sorted; pass an empty vector to clear.
+    std::vector<int> kept;
+    for (int r : rows) {
+        if (r >= 0 && r < model_count_) kept.push_back(r);
+    }
+    std::sort(kept.begin(), kept.end());
+    previous_model_rows_.swap(kept);
+}
+
+const std::vector<int>& SessionState::GetPreviousModelRows() const {
+    return previous_model_rows_;
+}
+
+bool SessionState::HasPreviousSelection() const {
+    return previous_frame_ != -1 && !previous_model_rows_.empty();
+}
+
 }  // namespace jta

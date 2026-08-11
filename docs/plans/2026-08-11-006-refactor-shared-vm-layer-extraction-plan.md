@@ -403,7 +403,7 @@ run there).
 
 ## Implementation Units
 
-- [ ] U1. **[Registry mapping extraction]**
+- [x] U1. **[Registry mapping extraction]**
 
 **Goal:** One shared `BuildCostFunctionRegistryEntries` in services; both apps
 call it; the golden fixture re-pins onto the shared function (its own

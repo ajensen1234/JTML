@@ -10,10 +10,11 @@
 //
 // SessionState owns the pure, widget-free session facts the view and the
 // command/coordinator layers both depend on: the model list, which models are
-// selected, the primary model identity, and current frame navigation. It holds
-// NO widgets, NO Qt event loop, and NO render binding, so it is unit-testable
-// headless. MainScreen keeps it current from widget events; the rest of the app
-// reads it instead of reaching into the UI.
+// selected, the primary model identity, current frame navigation, and the
+// previous-selection mirrors that feed save-last-pose. It holds NO widgets,
+// NO Qt event loop, and NO render binding, so it is unit-testable headless.
+// MainScreen keeps it current from widget events; the rest of the app reads it
+// instead of reaching into the UI.
 //
 // Deliberately NOT an observable ViewModel: this is a Qt Widgets app with no
 // data-binding framework, so this is a plain state holder (the plan's lesson,
@@ -47,11 +48,38 @@ public:
     void SetFrameCount(int count);
     int GetFrameCount() const;
 
+    // ---- Previous-selection mirror (save-last-pose) -----------------------
+    // The last-selected frame/model set — equals the current selection in
+    // steady state; consumed by save-last-pose only, never fed to the
+    // optimizer gate (the run controller always builds gate input with
+    // previous == current). Mirrors the widgets' previous_frame_index_ /
+    // previous_model_indices_ bookkeeping. Purely additive: no consumer in
+    // this unit; the session-state controller writes both mirrors together
+    // and resets them on dataset clear.
+    //
+    // SetPreviousFrame: negative resolves to -1 (none), like SetCurrentFrame.
+    // The value is not validated against frame_count_ — the mirror is
+    // "last-selected", and it may name a frame of the pre-change dataset
+    // state until the controller resets it.
+    void SetPreviousFrame(int frame);
+    int GetPreviousFrame() const;
+
+    // SetPreviousModelRows: same rule as SetSelectedModels — rows are pruned
+    // to [0, model_count_) and sorted on write; pass an empty vector to
+    // clear.
+    void SetPreviousModelRows(const std::vector<int>& rows);
+    const std::vector<int>& GetPreviousModelRows() const;
+
+    // True iff a previous frame AND at least one previous row are recorded.
+    bool HasPreviousSelection() const;
+
 private:
     int model_count_ = 0;
     int frame_count_ = 0;
     int current_frame_ = -1;
     std::vector<int> selected_models_;
+    int previous_frame_ = -1;
+    std::vector<int> previous_model_rows_;
 };
 
 }  // namespace jta
