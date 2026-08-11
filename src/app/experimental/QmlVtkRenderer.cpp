@@ -10,12 +10,14 @@
 
 // Qt
 #include <QDebug>
+#include <QMetaObject>
 #include <QString>
 
 // VTK
 #include <vtkActor.h>
 #include <vtkCallbackCommand.h>  // complete type for GrabFocus (EventCallbackCommand is vtkCallbackCommand*)
 #include <vtkCamera.h>
+#include <vtkCommand.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
 #include <vtkImageImport.h>
@@ -52,6 +54,7 @@ public:
     vtkTypeMacro(PrimaryModelStyle, vtkInteractorStyleTrackballActor);
 
     void SetPrimaryActor(vtkActor* actor) { primary_actor_ = actor; }
+    vtkActor* primaryActor() const { return primary_actor_; }
 
 protected:
     void OnLeftButtonDown() override {
@@ -80,6 +83,26 @@ private:
 };
 
 vtkStandardNewMacro(PrimaryModelStyle);
+
+// Model-style EndInteraction observer (render thread): read the primary
+// actor's transform and post a QUEUED invocation to the GUI thread (the
+// renderer's queueModelPoseSync emits modelPoseAdjusted there — the app
+// writes the pose into LocationStorage + the scene so the optimizer starts
+// from the visually arranged pose). Never touches app state here.
+void OnModelStyleEndInteraction(
+    vtkObject* caller, unsigned long, void* clientData, void*) {
+    auto* style = static_cast<PrimaryModelStyle*>(caller);
+    auto* renderer = static_cast<QmlVtkRenderer*>(clientData);
+    vtkActor* actor = style->primaryActor();
+    if (!actor || !renderer) {
+        return;
+    }
+    double pos[3];
+    double orient[3];
+    actor->GetPosition(pos);
+    actor->GetOrientation(orient);
+    renderer->queueModelPoseSync(pos, orient);
+}
 
 // The vtkUserData returned by initializeVTK: owns every VTK object in the
 // pipeline, all of it render-thread-only. The QML SceneGraph can delete the
@@ -119,6 +142,10 @@ struct QmlVtkData : vtkObject {
     // model). Swapped by setInteractionMode on the render thread.
     vtkNew<vtkInteractorStyleTrackballCamera> cameraStyle;
     vtkSmartPointer<PrimaryModelStyle> modelStyle;
+    // EndInteraction observer on the model style: reads the primary actor's
+    // transform (render thread) and posts the queued pose sync to the GUI
+    // thread (plan-005 feedback #2).
+    vtkNew<vtkCallbackCommand> styleEndObserver;
 };
 
 vtkStandardNewMacro(QmlVtkData);
@@ -279,6 +306,12 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     // mode (RebuildModels above already re-pointed the model style's
     // implicit pick).
     data->modelStyle = vtkSmartPointer<PrimaryModelStyle>::New();
+    // Pose sync observer (plan-005 feedback #2): EndInteraction on the
+    // model style → render-thread transform read → queued GUI-thread emit.
+    data->styleEndObserver->SetCallback(OnModelStyleEndInteraction);
+    data->styleEndObserver->SetClientData(this);
+    data->modelStyle->AddObserver(
+        vtkCommand::EndInteractionEvent, data->styleEndObserver);
     vtkRenderWindowInteractor* iren = renderWindow->GetInteractor();
     if (iren) {
         iren->SetInteractorStyle(
@@ -442,6 +475,19 @@ void QmlVtkRenderer::setInteractionMode(int mode) {
 
 int QmlVtkRenderer::interactionMode() const {
     return interaction_mode_;
+}
+
+void QmlVtkRenderer::queueModelPoseSync(double pos[3], double orient[3]) {
+    // Called on the RENDER thread (the observer). Only captures values and
+    // posts a queued invocation — the emit happens on the GUI thread.
+    QMetaObject::invokeMethod(
+        this,
+        [this, p0 = pos[0], p1 = pos[1], p2 = pos[2], o0 = orient[0],
+         o1 = orient[1], o2 = orient[2]] {
+            // The model style rotates scene index 0 (the primary).
+            emit modelPoseAdjusted(0, p0, p1, p2, o0, o1, o2);
+        },
+        Qt::QueuedConnection);
 }
 
 void QmlVtkRenderer::updateCamera() {

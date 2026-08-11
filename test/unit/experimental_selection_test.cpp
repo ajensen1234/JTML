@@ -434,3 +434,38 @@ TEST_CASE("study_bridge: selection contract through the bridge + "
     REQUIRE(bridge->currentFrame() == -1);
     REQUIRE(f.session()->session_state.GetSelectedModels().empty());
 }
+
+TEST_CASE("study_bridge: viewer pose sync writes LocationStorage + scene "
+          "(plan-005 feedback #2)", "[study_bridge]") {
+    BridgeFixture f;
+    StudyBridge* bridge = f.bridge();
+    load_kneel_1(bridge);
+    bridge->setCurrentFrame(0);
+    bridge->toggleModelSelected(0);
+
+    /*A model-centric drag ends: the renderer reports the arranged pose.*/
+    bridge->applyViewerPose(0, 1.0, 2.0, -800.0, 5.0, -6.0, 7.0);
+
+    /*The stored pose (the optimizer's starting point) is the arranged pose,
+     * at the current frame + the name-matched model index.*/
+    const Point6D stored = f.session()->model_locations.GetPose(0, 0);
+    REQUIRE(stored.x == 1.0);
+    REQUIRE(stored.y == 2.0);
+    REQUIRE(stored.z == -800.0);
+    REQUIRE(stored.xa == 5.0);
+    REQUIRE(stored.ya == -6.0);
+    REQUIRE(stored.za == 7.0);
+
+    /*The scene pose mirrors it (the readout + re-apply source).*/
+    const std::vector<SceneModel> scene_models = f.scene.models();
+    REQUIRE(scene_models.size() == 1);
+    REQUIRE(scene_models[0].pose.x == 1.0);
+    REQUIRE(scene_models[0].pose.z == -800.0);
+
+    /*Guards: no frame / out-of-range index are no-ops.*/
+    bridge->applyViewerPose(5, 0, 0, 0, 0, 0, 0);  // out of range
+    REQUIRE(f.session()->model_locations.GetPose(0, 0).x == 1.0);
+    bridge->setCurrentFrame(-1);
+    bridge->applyViewerPose(0, 9, 9, 9, 9, 9, 9);  // no current frame
+    REQUIRE(f.session()->model_locations.GetPose(0, 0).x == 1.0);
+}

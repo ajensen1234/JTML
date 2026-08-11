@@ -98,11 +98,24 @@ public:
     Q_INVOKABLE void setInteractionMode(int mode);
     int interactionMode() const;
 
+    // Model-centric interaction pose sync (plan-005 feedback #2): after an
+    // EndInteractionEvent on the model style, the render-thread observer
+    // reads the primary actor's transform and posts a QUEUED invocation to
+    // the GUI thread that emits modelPoseAdjusted. The app writes the pose
+    // into LocationStorage + the scene, so the optimizer starts from the
+    // visually arranged pose (the widgets app's SaveLastPose equivalent,
+    // but live per interaction).
+    void queueModelPoseSync(double pos[3], double orient[3]);
+
     QString poseReadout() const;
 
 signals:
     void sceneChanged();
     void interactionModeChanged();
+    // (sceneModelIndex, x, y, z, xa, ya, za) — emitted on the GUI thread
+    // after a model-centric drag ends.
+    void modelPoseAdjusted(int sceneModelIndex, double x, double y, double z,
+                           double xa, double ya, double za);
 
 private:
     void copySceneMirror();

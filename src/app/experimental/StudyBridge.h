@@ -99,6 +99,15 @@ public:
     Q_INVOKABLE void clearModelSelection();
     Q_INVOKABLE bool isModelSelected(int row) const;
 
+    // Model-centric pose sync (plan-005 feedback #2): called from QML when
+    // the renderer reports an EndInteraction on the model style. Writes the
+    // visually arranged pose into LocationStorage (so the optimizer starts
+    // from it) + the scene, then emits viewerPoseApplied for the viewport
+    // readout refresh. The scene model index is name-matched to loaded_models
+    // (fallback: index).
+    Q_INVOKABLE void applyViewerPose(int sceneModelIndex, double x, double y,
+                                     double z, double xa, double ya, double za);
+
     // ---- Reads ----------------------------------------------------------
     bool hasCalibration() const;
     bool calibratedForMonoplane() const;
@@ -116,6 +125,10 @@ public:
 signals:
     void datasetChanged();
     void selectionChanged();
+    // The viewer finished a model-centric drag; the arranged pose is written
+    // to the storage + scene. QML forwards to viewport.updatePose(index) for
+    // the readout refresh (idempotent re-apply).
+    void viewerPoseApplied(int sceneModelIndex);
     // Error/notice mapping (widgets QMessageBox precedents); QML shows one
     // Dialog for these.
     void messageRequested(const QString& title, const QString& message);

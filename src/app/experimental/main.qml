@@ -435,6 +435,21 @@ Window {
         function onSceneCameraChanged() {
             viewport.updateCamera()
         }
+        function onViewerPoseApplied(sceneModelIndex) {
+            // Refresh the readout + idempotently re-apply the synced pose.
+            viewport.updatePose(sceneModelIndex)
+        }
+    }
+
+    // Model-centric pose sync (plan-005 feedback #2): the renderer reports
+    // the interaction-end transform; the bridge writes it into the storage
+    // + scene (the optimizer starts from the visually arranged pose).
+    Connections {
+        target: viewport
+        function onModelPoseAdjusted(sceneModelIndex, x, y, z, xa, ya, za) {
+            studyBridge.applyViewerPose(
+                        sceneModelIndex, x, y, z, xa, ya, za)
+        }
     }
 
     // ---- Bridge → view glue (U6) ---------------------------------------

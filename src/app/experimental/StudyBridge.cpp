@@ -262,6 +262,41 @@ bool StudyBridge::isModelSelected(int row) const {
     return selection_->IsModelSelected(row);
 }
 
+void StudyBridge::applyViewerPose(int sceneModelIndex, double x, double y,
+                                  double z, double xa, double ya, double za) {
+    // Plan-005 feedback #2: the model-centric drag ended — sync the visually
+    // arranged pose into LocationStorage (the optimizer's starting point:
+    // OptimizerBridge::run passes the storage by value into Initialize) and
+    // into the scene. Pure orchestration around the seams.
+    if (!scene_ || !session_ || sceneModelIndex < 0) {
+        return;
+    }
+    const std::vector<SceneModel> scene_models = scene_->models();
+    if (sceneModelIndex >= static_cast<int>(scene_models.size())) {
+        return;
+    }
+    const int frame = currentFrame();
+    if (frame < 0) {
+        return;
+    }
+    // Name-match the scene model to loaded_models (both are built from the
+    // same parse in order; the match is defensive) — the primary may not be
+    // scene index 0 once multi-model selection lands.
+    int model_index = sceneModelIndex;
+    const std::string& scene_name = scene_models[static_cast<size_t>(sceneModelIndex)].name;
+    for (int i = 0; i < static_cast<int>(session_->loaded_models.size()); ++i) {
+        if (session_->loaded_models[static_cast<size_t>(i)].model_name_ ==
+            scene_name) {
+            model_index = i;
+            break;
+        }
+    }
+    const Point6D pose(x, y, z, xa, ya, za);
+    session_->model_locations.SavePose(frame, model_index, pose);
+    scene_->setModelPose(sceneModelIndex, pose);
+    emit viewerPoseApplied(sceneModelIndex);
+}
+
 /*---- Reads ----*/
 
 bool StudyBridge::hasCalibration() const {
