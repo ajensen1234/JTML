@@ -681,3 +681,72 @@ target_link_options(jtml_test_segmentation_oracle PRIVATE
 add_test(NAME jtml.segmentation_oracle COMMAND jtml_test_segmentation_oracle)
 set_tests_properties(jtml.segmentation_oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# ---------------------------------------------------------------------------
+# QML render smoke (plan 005 U1 spike gate / R15): loads spike.qml through
+# QQmlApplicationEngine (type registration, qrc/import resolution,
+# QQuickVTKItem ownership in a QML scene) and captures via
+# QQuickWindow::grabWindow (vtkWindowToImageFilter is a documented segfault
+# on this build). Prototype of the U9 smoke, registered at U1 so the gate's
+# ctest verification is real. Same registration pattern as jtml.render_smoke:
+# `oracle;render` label (never headless), forced xcb, repo-root cwd, TIMEOUT.
+# ---------------------------------------------------------------------------
+# GUISupportQtQuick is deliberately absent from the root find_package
+# COMPONENTS list (root CMakeLists.txt stays untouched): this block() scoped
+# re-find adds it here only. find_package sets VTK_LIBRARIES in THIS scope,
+# so other targets' link lines are unchanged; the autoinit MODULES stay
+# explicit against this scope's set. The spike's SpikeVtkItem.cpp + qrc are
+# direct-compiled into the smoke (the established direct-compile pattern).
+block()
+find_package(Qt6 COMPONENTS Quick Qml Test REQUIRED)
+find_package(VTK 9.3 COMPONENTS
+    GUISupportQtQuick
+    GUISupportQt
+    RenderingCore
+    RenderingOpenGL2
+    InteractionStyle
+    InteractionWidgets
+    IOCore
+    IOGeometry
+    REQUIRED
+)
+add_executable(jtml_test_qml_render_smoke
+    oracle/qml_render_smoke.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SpikeVtkItem.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SpikeVtkItem.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/spike.qrc
+)
+target_include_directories(jtml_test_qml_render_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_qml_render_smoke PRIVATE
+    Qt6::Quick
+    Qt6::Qml
+    Qt6::Test
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+)
+# VTK 9 requires per-target factory registration (same failure modes as the
+# render smoke: base-class vtkRenderWindow::New(), null vtkTextRenderer).
+vtk_module_autoinit(TARGETS jtml_test_qml_render_smoke MODULES ${VTK_LIBRARIES})
+set_property(TARGET jtml_test_qml_render_smoke PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_qml_render_smoke PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.qml_render_smoke COMMAND jtml_test_qml_render_smoke)
+# Renders from the repo root so example_studies/Kneel_1 + the output dir
+# resolve. Force xcb: same rationale as jtml.render_smoke.
+set_tests_properties(jtml.qml_render_smoke PROPERTIES LABELS "oracle;render" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ENVIRONMENT "QT_QPA_PLATFORM=xcb")
+endblock()

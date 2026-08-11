@@ -211,8 +211,13 @@ docs, VTK/Slicer discourse, Qt docs — all cited in the angle file).
   applied to the app itself.
 - **Minimal named modification set** (AE1 honesty): `src/app/CMakeLists.txt`
   (one `add_subdirectory` line), the new `src/app/experimental/` tree, the
-  decision-record comment edit at `src/view/CMakeLists.txt:6`, and the smoke
-  registration in `test/CMakeLists.txt`. Everything else is added files.
+  decision-record comment edit at `src/view/CMakeLists.txt:6`, the smoke
+  registration in `test/CMakeLists.txt`, and — landed with U1 — the additive
+  `Qt6 COMPONENTS ... OpenGL Quick Qml` line in the root `CMakeLists.txt`
+  (behavior-neutral for all existing targets; the directory-scoped VTK
+  `GUISupportQtQuick` re-find from the plan's decision was superseded by this
+  simpler root-components addition — both approaches keep existing link lines
+  unchanged). Everything else is added files.
 
 ---
 
@@ -307,7 +312,9 @@ pose updates (`dispatch_async` into `QmlVtkRenderer`) → `OptimizedFrame` →
 
 ## Implementation Units
 
-- [ ] U1. **Spike gate — QML + VTK viability**
+- [x] U1. **Spike gate — QML + VTK viability**
+
+**VERDICT (2026-08-11): GO** — `QQuickVTKItem` renders + interacts + captures under this box's xcb + Qt 6.7.2 + VTK 9.3. Evidence: `ctest -R qml_render_smoke` passes (render non-blank: gray stddev 43.5 / center 66.3; dispatch_async pose update re-renders: 18.8% pixels differ; QTest drag moves the camera: camera x -52.2; PNG artifacts in `qml-render-smoke-output/`). Manual leg: real XTEST-injected X11 drags rotate the camera (2-3% pixel diff per drag, app stable). No factory errors. Notes: DPR≈2 box; the pinned QQuickVTKItem never calls `QVTKInteractorAdapter::SetDevicePixelRatio` (bug tail active — halves drag sensitivity at DPR 2; the deprecated QQuickVTKRenderWindow path does call it) — interaction still correct. Pre-existing `jtml.probe_vtk` expected-fail (standalone GLX symbol resolution) unrelated. One interactive spike launch exited silently mid-test once (no coredump/stderr); relaunch stable. U2+ proceed.
 
 **Goal:** Prove `QQuickVTKItem` renders and captures under this box's
 xcb + Qt 6.7.2 + VTK 9.3 before any real UI work. **This unit's result is the

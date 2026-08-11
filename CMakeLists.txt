@@ -72,7 +72,7 @@ set(CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS})
 #=============================
 # Find Required Packages
 #=============================
-find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL Quick Qml REQUIRED)
 #find_package(CUDA REQUIRED)
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)

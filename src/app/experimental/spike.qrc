@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>spike.qml</file>
+    </qresource>
+</RCC>

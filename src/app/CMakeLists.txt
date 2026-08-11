@@ -8,6 +8,11 @@
 # Study2Grid: self-contained tool, relocated verbatim into app/Study2Grid.
 add_subdirectory(Study2Grid)
 
+# 005 U1: QML+VTK spike (go/no-go gate for the experimental QML front-end).
+# Scratch target, isolated in its own directory scope (directory-scoped VTK
+# re-find for GUISupportQtQuick; the widgets app's link line is untouched).
+add_subdirectory(experimental)
+
 # Principal GUI executable (composition root).
 add_executable(${PROJECT_NAME}
     main.cpp
