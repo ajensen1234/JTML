@@ -12,6 +12,9 @@
 # added SettingsBridge (the session-local settings adapter: OptimizerSettings
 # + three per-stage CostFunctionManager(Stage) instances + the replicated
 # registry mapping; Save/Load/Reset through SettingsService) + SettingsPanel.qml.
+# U6 added OptimizerBridge (the optimizer-run adapter: entry gate + thread
+# lifecycle + the 7 signal binds + run-state machine; drives the real
+# OptimizerManager from QML).
 #
 # GUISupportQtQuick is deliberately NOT in the root find_package COMPONENTS
 # list (root CMakeLists.txt stays untouched): this directory-scoped re-find
@@ -49,6 +52,8 @@ add_executable(jtml_experimental
     AppBridge.cpp
     SettingsBridge.h
     SettingsBridge.cpp
+    OptimizerBridge.h
+    OptimizerBridge.cpp
     StudyBridge.h
     StudyBridge.cpp
     DelegateSelection.h

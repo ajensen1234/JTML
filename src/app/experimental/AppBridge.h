@@ -22,6 +22,7 @@
 
 #include <QObject>
 
+#include "OptimizerBridge.h" // Q_PROPERTY pointer type must be complete for moc
 #include "SettingsBridge.h" // Q_PROPERTY pointer type must be complete for moc
 
 class ExperimentalScene;
@@ -42,6 +43,10 @@ class AppBridge : public QObject {
     // Settings surface (U5): the session-local settings adapter (panel
     // form + explicit save/load/reset).
     Q_PROPERTY(SettingsBridge* settingsBridge READ settingsBridge CONSTANT)
+
+    // U6: the optimizer-run adapter (entry gate + thread lifecycle + the 7
+    // signal binds + run-state machine; drives the real OptimizerManager).
+    Q_PROPERTY(OptimizerBridge* optimizerBridge READ optimizerBridge CONSTANT)
 
 public:
     // The app-owned scene (R7/R11) is bound by the composition root and
@@ -71,6 +76,9 @@ public:
     // U5: the settings adapter (+ the registry service it saves through).
     SettingsBridge* settingsBridge();
 
+    // U6: the optimizer-run adapter.
+    OptimizerBridge* optimizerBridge();
+
 signals:
     // Placeholder surface-change signals (U2). Later units refine these into
     // the per-surface signals QML binds to (settings panel, pose table,
@@ -85,6 +93,7 @@ private:
     jta::SettingsService* settings_service_ = nullptr;
     bool owns_settings_service_ = false;
     SettingsBridge* settings_bridge_ = nullptr;
+    OptimizerBridge* optimizer_bridge_ = nullptr;
     int frame_count_ = 0;
     int model_count_ = 0;
 };

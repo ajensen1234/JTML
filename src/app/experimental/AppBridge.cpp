@@ -5,6 +5,7 @@
 
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
+#include "OptimizerBridge.h"
 #include "SettingsBridge.h"
 #include "StudyBridge.h"
 #include "services/settings_service.h"
@@ -28,6 +29,13 @@ AppBridge::AppBridge(
         owns_settings_service_ ? new jta::SettingsService : settings_service;
     settings_bridge_ = new SettingsBridge(settings_service_, this);
     settings_bridge_->load();
+
+    /*U6: the optimizer-run adapter — the thin pass-through that drives the
+     * real OptimizerManager (entry gate + thread lifecycle + the 7 signal
+     * binds + run-state machine), reading the app dataset + selection
+     * (StudyBridge) + the settings surface (SettingsBridge).*/
+    optimizer_bridge_ = new OptimizerBridge(
+        this, session_, scene, study_bridge_, settings_bridge_, this);
 }
 
 AppBridge::~AppBridge() {
@@ -73,4 +81,8 @@ StudyBridge* AppBridge::studyBridge() {
 
 SettingsBridge* AppBridge::settingsBridge() {
     return settings_bridge_;
+}
+
+OptimizerBridge* AppBridge::optimizerBridge() {
+    return optimizer_bridge_;
 }

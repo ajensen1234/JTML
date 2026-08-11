@@ -538,6 +538,8 @@ add_executable(jtml_test_experimental_selection
     unit/experimental_selection_test.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
@@ -576,6 +578,7 @@ target_link_libraries(jtml_test_experimental_selection PRIVATE
     Catch2::Catch2WithMain
     ${OpenCV_LIBRARIES}
     ${VTK_LIBRARIES}
+    jtml_coordinator
     ${JTA_LIBS})
 target_link_options(jtml_test_experimental_selection PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
@@ -624,6 +627,71 @@ target_link_options(jtml_test_experimental_settings PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.experimental_settings COMMAND jtml_test_experimental_settings)
 set_tests_properties(jtml.experimental_settings PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# OptimizerBridge gate + state-core tests (plan 005 U6, R6/R13). The bridge
+# direct-compiles against the U4/U5 bridges + the app-owned dataset and links
+# jtml_coordinator (the REAL OptimizerManager lives there) — but never
+# touches the GPU: the gate rejects BEFORE any manager/thread is created, so
+# run()'s rejection paths are headless-safe, and the state + persistence
+# core (applyOptimizedFrame/refreshProgress) is exercised directly. Pins:
+# the gate inputs mirror OptimizeIntentController's tested semantics
+# (reusing the intent tests' RunnableInput shape), no-selection/multi-mode/
+# dimension-mismatch rejections (typed messages, state untouched, no thread
+# starts), and OptimizedFrame handling -> SavePose lands in LocationStorage
+# + scene + completed/re-runnable state. The GPU run itself is manual-\
+# visual under xcb / oracle-arbitrated by U9. Same fixture recipe as
+# jtml.experimental_selection (repo-root WORKING_DIRECTORY).
+add_executable(jtml_test_experimental_optimizer_gate
+    unit/experimental_optimizer_gate_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+)
+target_include_directories(jtml_test_experimental_optimizer_gate PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS})
+target_link_libraries(jtml_test_experimental_optimizer_gate PRIVATE
+    Catch2::Catch2WithMain
+    jtml_coordinator
+    ${REQUIRED_LIBS_QUALIFIED}
+    ${JTA_LIBS}
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${CUDA_LIBRARIES})
+target_link_options(jtml_test_experimental_optimizer_gate PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.experimental_optimizer_gate
+    COMMAND jtml_test_experimental_optimizer_gate)
+set_tests_properties(jtml.experimental_optimizer_gate PROPERTIES
+    LABELS "headless" TIMEOUT 300
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.

@@ -158,6 +158,26 @@ Window {
         }
     }
 
+    // ---- Bridge → view glue (U6) ---------------------------------------
+    // Optimizer run: the bridge already wrote the scene poses; the glue
+    // forwards the pose relays to the renderer's GUI-thread slots, and the
+    // error/notice channel reuses the single QML Dialog.
+    Connections {
+        target: optimizerBridge
+        function onPoseUpdated(modelIndex) {
+            viewport.updatePose(modelIndex)
+        }
+        function onFrameOptimized(frameIndex, modelIndex) {
+            viewport.updatePose(modelIndex)
+        }
+        function onMessageRequested(title, message) {
+            showMessage(title, message)
+        }
+        function onDilationBackgroundRequested() {
+            // v1 relay: no dilation display mode yet (U7+) — ignored.
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 4
@@ -177,10 +197,12 @@ Window {
                 Button {
                     text: qsTr("Calibration")
                     enabled: !studyBridge.hasCalibration
+                             && !optimizerBridge.running
                     onClicked: calibrationFileDialog.open()
                 }
                 Button {
                     text: qsTr("Images")
+                    enabled: !optimizerBridge.running
                     onClicked: {
                         if (!studyBridge.hasCalibration) {
                             showMessage(qsTr("Error!"),
@@ -192,6 +214,7 @@ Window {
                 }
                 Button {
                     text: qsTr("Models")
+                    enabled: !optimizerBridge.running
                     onClicked: {
                         if (!studyBridge.hasCalibration) {
                             showMessage(qsTr("Error!"),
@@ -248,10 +271,12 @@ Window {
 
                 Button {
                     text: qsTr("Optimizer Settings…")
+                    enabled: !optimizerBridge.running
                     onClicked: settingsDialog.open()
                 }
                 Button {
                     text: qsTr("Poses…")
+                    enabled: !optimizerBridge.running
                     onClicked: poseDialog.open()
                 }
             }
@@ -286,6 +311,7 @@ Window {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
+                        enabled: !optimizerBridge.running
                         model: studyBridge.frameListModel
                         delegate: Rectangle {
                             width: frameList.width
@@ -322,6 +348,7 @@ Window {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
+                        enabled: !optimizerBridge.running
                         model: studyBridge.modelListModel
                         delegate: Rectangle {
                             width: modelList.width
@@ -418,10 +445,15 @@ Window {
             }
         }
 
-        // ---- Bottom: progress bar + run placeholder ---------------------
+        // ---- Bottom: run/stop + live progress (U6) ----------------------
+        // Run-state machine drives the buttons: Run enabled in
+        // idle/completed/error, Stop while running/stopping (the widgets
+        // DisableAll mirror — everything else on the shell is locked while
+        // optimizerBridge.running). Progress is driven by the manager's
+        // UpdateDisplay bind (stage/calls/min + calls vs cumulative budget).
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 40
+            Layout.preferredHeight: 44
             color: Theme.panel
             radius: 4
 
@@ -431,18 +463,41 @@ Window {
                 spacing: 8
 
                 Button {
-                    text: qsTr("Run (U6)")
-                    enabled: false
+                    text: qsTr("Run")
+                    enabled: optimizerBridge.canRun
+                    onClicked: {
+                        // DisableAll mirror: close the edit dialogs so a
+                        // mid-run settings/pose edit cannot race the run.
+                        settingsDialog.close()
+                        poseDialog.close()
+                        optimizerBridge.run()
+                    }
+                }
+                Button {
+                    text: qsTr("Stop")
+                    enabled: optimizerBridge.running
+                    onClicked: optimizerBridge.stop()
                 }
                 ProgressBar {
                     id: progress
                     Layout.fillWidth: true
                     from: 0
                     to: 100
-                    value: 0
+                    value: optimizerBridge.progress * 100
                 }
                 Label {
-                    text: qsTr("Progress (U6)")
+                    text: optimizerBridge.stageText
+                    color: Theme.fg
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("calls %1").arg(optimizerBridge.costCalls)
+                    color: Theme.fgDim
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("min %1")
+                              .arg(optimizerBridge.currentMinimum.toFixed(3))
                     color: Theme.fgDim
                     font.pixelSize: 11
                 }

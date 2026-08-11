@@ -33,6 +33,7 @@
 
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
+#include "OptimizerBridge.h"
 #include "QmlVtkRenderer.h"
 #include "SettingsBridge.h" // complete type: the setContextProperty QObject* overload needs it
 #include "StudyBridge.h" // complete type: the setContextProperty QObject* overload needs it
@@ -45,6 +46,11 @@ int main(int argc, char* argv[]) {
 
     qmlRegisterType<QmlVtkRenderer>(
         "jtml.experimental", 1, 0, "QmlVtkRenderer");
+    /*U6: registered (uncreatable — the hub owns the instance) so QML can
+     * reference the run-state enum values (OptimizerBridge.Completed etc.).*/
+    qmlRegisterUncreatableType<OptimizerBridge>(
+        "jtml.experimental", 1, 0, "OptimizerBridge",
+        "OptimizerBridge is created by AppBridge");
 
     // App-owned scene (R7/R11): outlives the engine; the QML-created
     // renderer binds to it after load (U4).
@@ -62,6 +68,8 @@ int main(int argc, char* argv[]) {
         "studyBridge", app_bridge.studyBridge());
     engine.rootContext()->setContextProperty(
         "settingsBridge", app_bridge.settingsBridge());
+    engine.rootContext()->setContextProperty(
+        "optimizerBridge", app_bridge.optimizerBridge());
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty()) {
