@@ -13,6 +13,13 @@
  * references them. This pins the PROCESSOR's parameter flow (the subject of
  * U5), not Frame's internals (those stay covered by the GPU/oracle path).*/
 
+/* Plan 006 U8: MlOrchestrator::SegmentFrame calls setCurvatureHeatmaps as
+ * part of the mono post-processing tail (the segmentHelperFunction / QML
+ * bridge parity). The real method is CUDA-side (frame.cu); the orchestrator
+ * only needs the CALL to be well-defined, so the twin provides a no-op. The
+ * orchestrator's pins cover the chain flow (op -> inverted copy ->
+ * edge/dilated/distance/curvature calls), not the heatmap math (GPU path).*/
+
 #include "compute/frame.h"
 
 #include <opencv2/imgcodecs.hpp>
@@ -141,3 +148,8 @@ int Frame::GetHighThreshold() {
 int Frame::GetLowThreshold() {
     return low_threshold_;
 };
+
+/*No-op (plan 006 U8): the CUDA curvature-heatmap math stays in frame.cu; the
+ * headless twin defines the call so the shared MlOrchestrator chain is
+ * compileable headless (see the header note above).*/
+void Frame::setCurvatureHeatmaps() {};

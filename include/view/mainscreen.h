@@ -124,6 +124,7 @@
  * coordinator/view headers that use the raw `public slots:` keyword
  * (optimizer_manager.h / settings_control.h / drr_tool.h) -- same constraint
  * as the torch-bearing machine_learning_tools.h include above.*/
+#include "services/ml_orchestrator.h"
 #include "services/segmentation_controller.h"
 #include "view/viewer.h"
 
@@ -285,6 +286,15 @@ private:
      * interleave, and the Frame post-processing; the controller wraps the
      * GPU/torch calls verbatim (per-frame API -- no controller-owned loop).*/
     jta::SegmentationController segmentation_controller_;
+
+    /*Shared ML orchestrator (plan 006 U8 / R12 part): the per-frame
+     * segment -> estimate -> SavePose -> seed chain. The slots inject the
+     * torch/CUDA ops (wrapping segmentation_controller_ above) and keep
+     * the .pt loads, the per-frame loops, the dilation/edge parameter
+     * sourcing and the progress/render interleave. The estimate's
+     * SavePose into model_locations_ IS the widgets seed (LaunchOptimizer
+     * copies the storage by value — no explicit run-controller seed).*/
+    jta::MlOrchestrator ml_orchestrator_;
 
     /*Pull the current widget state into session_state_. Called wherever the
      * model/frame lists or their selection/current rows change.*/

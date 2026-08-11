@@ -1744,45 +1744,47 @@ void MainScreen::segmentHelperFunction(
      * Image*/
     bool black_sil_used =
         ui.actionBlack_Implant_Silhouettes_in_Original_Image_s->isChecked();
-    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        /*Per-frame segment (plan 004 U8 / R12): SegmentationController owns
-         * segment_image + the CUDA cache clear verbatim; the view keeps the
-         * Frame post-processing and the progress/render interleave.*/
-        cv::Mat unpadded = segmentation_controller_.SegmentFrame(
-            loaded_frames[i].GetOriginalImage(),
-            black_sil_used,
-            model,
-            input_width,
-            input_height);
-        unpadded.copyTo(loaded_frames[i].GetInvertedImage());
-        int dilation_val = 0;
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
-            "Dilation", dilation_val);
-        loaded_frames[i].SetEdgeImage(
-            ui.aperture_spin_box->value(),
-            ui.low_threshold_slider->value(),
-            ui.high_threshold_slider->value(),
-            true);
-        loaded_frames[i].SetDilatedImage(dilation_val);
-        loaded_frames[i].SetDistanceMap();
-        loaded_frames[i].setCurvatureHeatmaps();
-        //  generate_curvature_heatmaps(loaded_frames[i].GetInvertedImage());
-        if (calibrated_for_biplane_viewport_) {
-            /*Per-frame segment (plan 004 U8 / R12): same controller op for
-             * the camera-B frame (the biplane emptyCache call moved with it).*/
-            cv::Mat unpadded_biplane = segmentation_controller_.SegmentFrame(
-                loaded_frames_B[i].GetOriginalImage(),
+    /*Per-frame segment op (plan 006 U8 / R12): the injected seam wrapping
+     * the torch module + the SegmentationController per-frame op; the
+     * shared orchestrator runs it + the Frame post-processing tail.*/
+    const auto segment_op =
+        [this, model, black_sil_used, input_width, input_height](
+            const cv::Mat& original) {
+            return segmentation_controller_.SegmentFrame(
+                original,
                 black_sil_used,
                 model,
                 input_width,
                 input_height);
-            unpadded_biplane.copyTo(loaded_frames_B[i].GetInvertedImage());
-            loaded_frames_B[i].SetEdgeImage(
+        };
+    for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
+        int dilation_val = 0;
+        trunk_manager_.getActiveCostFunctionClass()->getIntParameterValue(
+            "Dilation", dilation_val);
+        /*Per-frame segment (plan 006 U8 / R12): the shared orchestrator
+         * owns the segment op -> inverted copy -> post-processing chain
+         * (edge/dilated/distance/curvature); the view keeps the dilation
+         * sourcing and the progress/render interleave.*/
+        ml_orchestrator_.SegmentFrame(
+            loaded_frames[i],
+            ui.aperture_spin_box->value(),
+            ui.low_threshold_slider->value(),
+            ui.high_threshold_slider->value(),
+            dilation_val,
+            /*full_postprocessing=*/true,
+            segment_op);
+        if (calibrated_for_biplane_viewport_) {
+            /*Per-frame segment (plan 006 U8 / R12): same shared op for the
+             * camera-B frame (the biplane branch keeps edge + dilation
+             * only — the mono distance/curvature tail is skipped).*/
+            ml_orchestrator_.SegmentFrame(
+                loaded_frames_B[i],
                 ui.aperture_spin_box->value(),
                 ui.low_threshold_slider->value(),
                 ui.high_threshold_slider->value(),
-                true);
-            loaded_frames_B[i].SetDilatedImage(dilation_val);
+                dilation_val,
+                /*full_postprocessing=*/false,
+                segment_op);
         }
 
         ui.pose_progress->setValue(
@@ -1948,20 +1950,31 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     estimate_ctx.input_height = input_height;
     estimate_ctx.orig_width = orig_width;
     estimate_ctx.orig_height = orig_height;
+    /*Per-frame estimate op (plan 006 U8 / R12): the injected seam wrapping
+     * the estimate math; the shared orchestrator runs it + the SavePose ->
+     * seed chain per frame. clamp_z_to_principal preserves the femoral
+     * slot's z clamp.*/
+    const auto estimate_op = [this, &estimate_ctx](const cv::Mat& inverted) {
+        return segmentation_controller_.EstimateImplantPose(
+            estimate_ctx, inverted, /*clamp_z_to_principal=*/true);
+    };
+    /*The widgets seed wiring (plan 006 U8): the SavePose inside
+     * EstimateFrame writes model_locations_, which LaunchOptimizer copies
+     * by value — the estimate IS the run's starting pose (no explicit
+     * run-controller seed; QML wires the returned seed via setSeedPose).*/
+    const auto save_pose = [this](int frame, int model, const Point6D& pose) {
+        model_locations_.SavePose(frame, model, pose);
+    };
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        /*Per-frame estimate (plan 004 U8 / R12): the estimate math for one
-         * frame moved to the ImplantEstimator (reached through the
-         * SegmentationController); the view keeps the pose save and the
-         * progress/render interleave. clamp_z_to_principal preserves the
-         * femoral slot's z clamp.*/
-        Point6D estimated_pose = segmentation_controller_.EstimateImplantPose(
-            estimate_ctx,
-            loaded_frames[i].GetInvertedImage(),
-            /*clamp_z_to_principal=*/true);
-        model_locations_.SavePose(
+        /*Per-frame estimate (plan 006 U8 / R12): the shared orchestrator
+         * owns the estimate op -> SavePose -> seed chain; the view keeps
+         * the progress/render interleave.*/
+        ml_orchestrator_.EstimateFrame(
             i,
             ui.model_list_widget->currentIndex().row(),
-            estimated_pose);
+            loaded_frames[i].GetInvertedImage(),
+            estimate_op,
+            save_pose);
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));
@@ -2147,20 +2160,31 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     estimate_ctx.input_height = input_height;
     estimate_ctx.orig_width = orig_width;
     estimate_ctx.orig_height = orig_height;
+    /*Per-frame estimate op (plan 006 U8 / R12): the injected seam wrapping
+     * the estimate math; the shared orchestrator runs it + the SavePose ->
+     * seed chain per frame. clamp_z_to_principal stays false: the tibial
+     * slot had no z clamp (preserved).*/
+    const auto estimate_op = [this, &estimate_ctx](const cv::Mat& inverted) {
+        return segmentation_controller_.EstimateImplantPose(
+            estimate_ctx, inverted, /*clamp_z_to_principal=*/false);
+    };
+    /*The widgets seed wiring (plan 006 U8): the SavePose inside
+     * EstimateFrame writes model_locations_, which LaunchOptimizer copies
+     * by value — the estimate IS the run's starting pose (no explicit
+     * run-controller seed; QML wires the returned seed via setSeedPose).*/
+    const auto save_pose = [this](int frame, int model, const Point6D& pose) {
+        model_locations_.SavePose(frame, model, pose);
+    };
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        /*Per-frame estimate (plan 004 U8 / R12): the estimate math for one
-         * frame moved to the ImplantEstimator (reached through the
-         * SegmentationController); the view keeps the pose save and the
-         * progress/render interleave. clamp_z_to_principal stays false: the
-         * tibial slot had no z clamp (preserved).*/
-        Point6D estimated_pose = segmentation_controller_.EstimateImplantPose(
-            estimate_ctx,
-            loaded_frames[i].GetInvertedImage(),
-            /*clamp_z_to_principal=*/false);
-        model_locations_.SavePose(
+        /*Per-frame estimate (plan 006 U8 / R12): the shared orchestrator
+         * owns the estimate op -> SavePose -> seed chain; the view keeps
+         * the progress/render interleave.*/
+        ml_orchestrator_.EstimateFrame(
             i,
             ui.model_list_widget->currentIndex().row(),
-            estimated_pose);
+            loaded_frames[i].GetInvertedImage(),
+            estimate_op,
+            save_pose);
         ui.pose_progress->setValue(
             65 + 30 * static_cast<double>(i + 1) /
                      static_cast<double>(ui.image_list_widget->model()->rowCount()));

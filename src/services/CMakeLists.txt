@@ -32,6 +32,7 @@ add_library(jtml_services STATIC
     edge_processor.cpp
     segmentation_controller.cpp
     implant_estimator.cpp
+    ml_orchestrator.cpp
     ${HEADER_FILES}
 )
 

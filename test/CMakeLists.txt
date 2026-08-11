@@ -681,6 +681,33 @@ add_test(NAME jtml.study_load_controller COMMAND jtml_test_study_load_controller
 set_tests_properties(jtml.study_load_controller PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# MlOrchestrator tests (plan 006 U8, R12 part/R13/F3/AE4). The shared
+# segment/estimate orchestrator direct-compiles against the headless Frame
+# twin (the orchestrator is plain C++/OpenCV — no Qt/torch/GPU; the injected
+# SegmentOp/EstimateOp/SavePoseFn callables are the torch/CUDA seams, so the
+# happy path + segment/estimate-failure scenarios are headless-testable; the
+# .pt-load and real CUDA estimate paths stay manual-visual). The missing-.pt
+# degradation pins live in the existing jtml.experimental_ml_bridge suite
+# (kept green); the stale-seed drop is the run controller's U5 guard
+# (optimizer_run_controller_core_test). Same fixture recipe as
+# jtml.session_controller (repo-root WORKING_DIRECTORY).
+add_executable(jtml_test_ml_orchestrator
+    unit/ml_orchestrator_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/ml_orchestrator.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_ml_orchestrator PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_ml_orchestrator PRIVATE
+    Catch2::Catch2WithMain
+    ${OpenCV_LIBRARIES})
+add_test(NAME jtml.ml_orchestrator COMMAND jtml_test_ml_orchestrator)
+set_tests_properties(jtml.ml_orchestrator PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # StudyBridge + delegate-selection contract tests (plan 005 U4, R3/R17). The
 # bridge (AppBridge/StudyBridge/DelegateSelection/ExperimentalScene)
 # direct-compiles against the headless Frame twin + the real SessionController

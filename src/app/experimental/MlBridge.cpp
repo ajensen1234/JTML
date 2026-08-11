@@ -1,12 +1,12 @@
 // Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 // SPDX-License-Identifier: AGPL-3.0
 
-// 005 U7: MlBridge implementation — see the header for the contract. The
-// segment/estimate construction mirrors the widgets MainScreen slots
-// (mainscreen.cpp:1650-2073 — segmentHelperFunction + the two estimate
-// slots) with the R13 duplication residue documented in the plan; the
-// seams (SegmentationController / ImplantEstimator / GPUModel /
-// machine_learning_tools) are untouched.
+// 005 U7 / 006 U8: MlBridge implementation — see the header for the
+// contract. The segment/estimate chain now lives once in the shared
+// jta::MlOrchestrator (services); this bridge keeps the view-side surface
+// (.pt pickers, availability/status flags, guards, seed wiring) and injects
+// the torch/CUDA ops wrapping the seams (SegmentationController /
+// ImplantEstimator / GPUModel / machine_learning_tools — untouched).
 
 #include "MlBridge.h"
 
@@ -31,6 +31,7 @@
 #include "compute/CostFunctionManager.h"  // dilation param (widgets parity)
 #include "compute/gpu_model.cuh"          // GPUModel (estimate context)
 #include "domain/data_structures_6D.h"
+#include "services/ml_orchestrator.h"
 #include "services/segmentation_controller.h"
 
 namespace {
@@ -366,27 +367,59 @@ void MlBridge::estimateCurrentFrame() {
      * principal-distance z clamp; Tibia = false — the tibial slot's direct
      * z.*/
     const bool clamp_z_to_principal = (implant_kind_ == 0);
-    Point6D estimated_pose = segmentation_controller_->EstimateImplantPose(
-        ctx, frame_data.GetInvertedImage(), clamp_z_to_principal);
+    /*The shared orchestrator (plan 006 U8 / R12 part): the per-frame
+     * estimate op -> SavePose -> seed chain. The op wraps the estimate
+     * math (this controller's per-frame op with the built context); the
+     * save writes the session storage (the by-value matrix Initialize
+     * copies — the widgets equivalent is the estimate slots' SavePose
+     * feeding LaunchOptimizer); the RETURNED seed is wired below (R8).*/
+    const auto estimate_op =
+        [this, &ctx, clamp_z_to_principal](const cv::Mat& inverted) {
+            return segmentation_controller_->EstimateImplantPose(
+                ctx, inverted, clamp_z_to_principal);
+        };
+    const auto save_pose = [this](int f, int m, const Point6D& pose) {
+        session_->model_locations.SavePose(f, m, pose);
+    };
+    jta::MlEstimateOutcome outcome = ml_orchestrator_.EstimateFrame(
+        frame,
+        primary,
+        frame_data.GetInvertedImage(),
+        estimate_op,
+        save_pose);
 
     /*Cleanup (the estimate slots' tail: delete GPU model, free scratch).*/
     delete gpu_mod;
     free(host_image);
     delete[] orientation;
 
-    /*The estimate seeds the optimizer (R8): the pose lands in the session
-     * storage (the by-value matrix Initialize copies — the widgets
-     * equivalent is the estimate slots' SavePose feeding LaunchOptimizer),
-     * in the scene (viewport re-render at the estimated pose), and in the
+    /*Degradation (AE4): an estimate-op failure surfaces a typed message
+     * and leaves the display + seed untouched (the storage was not
+     * written; the plain-optimize path is unaffected).*/
+    if (outcome.status != jta::MlEstimateStatus::Ok) {
+        emit messageRequested(
+            QStringLiteral("Error!"),
+            QStringLiteral("Pose estimation failed."));
+        setStatus(QStringLiteral("Pose estimation failed."));
+        return;
+    }
+
+    /*The estimate seeds the optimizer (R8): the orchestrator saved the
+     * pose into the session storage; the bridge maps the returned seed
+     * onto the scene (viewport re-render at the estimated pose) and the
      * OptimizerBridge one-shot seed (applied by the next run(), winning
-     * over scene drift).*/
-    session_->model_locations.SavePose(frame, primary, estimated_pose);
-    scene_->setModelPose(primary, estimated_pose);
+     * over scene drift). The stale guards for a frame/model change between
+     * estimate and run live in the run controller (U5 takeSeedForRun).*/
+    scene_->setModelPose(primary, outcome.pose);
     optimizer_bridge_->setSeedPose(
-        estimated_pose.x, estimated_pose.y, estimated_pose.z,
-        estimated_pose.xa, estimated_pose.ya, estimated_pose.za);
+        outcome.seed.pose.x,
+        outcome.seed.pose.y,
+        outcome.seed.pose.z,
+        outcome.seed.pose.xa,
+        outcome.seed.pose.ya,
+        outcome.seed.pose.za);
     has_estimate_ = true;
-    estimate_text_ = FormatPose(estimated_pose);
+    estimate_text_ = FormatPose(outcome.pose);
     emit estimateChanged();
     emit poseEstimated(primary);
     setStatus(QStringLiteral("Estimated pose for frame %1 (model %2).")
@@ -474,32 +507,42 @@ void MlBridge::runSegmentOnCurrentFrame() {
     }
     torch::jit::Module* model = &module;
 
-    /*Per-frame segment (plan 004 U8): SegmentationController owns
-     * segment_image + the CUDA cache clear verbatim; the bridge keeps the
-     * Frame post-processing (segmentHelperFunction parity — edge/dilated/
-     * distance/curvature).*/
+    /*Per-frame segment (plan 006 U8 / R12 part): the shared orchestrator
+     * owns the segment op -> inverted copy -> post-processing chain
+     * (segmentHelperFunction parity — edge/dilated/distance/curvature);
+     * the bridge keeps the .pt load + the dilation sourcing.*/
     Frame& frame_data = session_->loaded_frames[static_cast<size_t>(frame)];
-    cv::Mat unpadded = segmentation_controller_->SegmentFrame(
-        frame_data.GetOriginalImage(),
-        black_sil_used_,
-        model,
-        kInputWidth,
-        kInputHeight);
-    unpadded.copyTo(frame_data.GetInvertedImage());
     /*Dilation from the active trunk cost function (the widgets
      * segmentHelperFunction reads ui/trunk_manager_ the same way).*/
     int dilation_val = 0;
     settings_bridge_->trunkManager()
         ->getActiveCostFunctionClass()
         ->getIntParameterValue("Dilation", dilation_val);
-    frame_data.SetEdgeImage(
+    const auto segment_op = [this, model](const cv::Mat& original) {
+        return segmentation_controller_->SegmentFrame(
+            original,
+            black_sil_used_,
+            model,
+            kInputWidth,
+            kInputHeight);
+    };
+    const jta::MlSegmentStatus status = ml_orchestrator_.SegmentFrame(
+        frame_data,
         frame_data.GetAperture(),
         frame_data.GetLowThreshold(),
         frame_data.GetHighThreshold(),
-        /*use_reverse=*/true);
-    frame_data.SetDilatedImage(dilation_val);
-    frame_data.SetDistanceMap();
-    frame_data.setCurvatureHeatmaps();
+        dilation_val,
+        /*full_postprocessing=*/true,
+        segment_op);
+    if (status != jta::MlSegmentStatus::Ok) {
+        /*Degradation (AE4): a segment failure surfaces a typed message and
+         * leaves the frame + viewport untouched.*/
+        emit messageRequested(
+            QStringLiteral("Error!"),
+            QStringLiteral("Segmentation failed."));
+        setStatus(QStringLiteral("Segmentation failed."));
+        return;
+    }
 
     /*The segmented view: the frame's inverted image now holds the
      * silhouette; the viewport re-renders (the mode flip + the content

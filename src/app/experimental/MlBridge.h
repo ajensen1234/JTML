@@ -1,9 +1,9 @@
 // Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
 // SPDX-License-Identifier: AGPL-3.0
 
-// 005 U7: MlBridge — the thin ML adapter (R8, R16). Per-implant .pt pickers
-// (segment femur / segment tibia / ONE estimate model — the plan's review
-// fix), the loaded .pt path/state shown in the UI, per-frame segment +
+// 005 U7 / 006 U8: MlBridge — the thin ML adapter (R8, R16). Per-implant .pt
+// pickers (segment femur / segment tibia / ONE estimate model — the plan's
+// review fix), the loaded .pt path/state shown in the UI, per-frame segment +
 // estimate ops on the CURRENT frame only (v1 loop scope: the all-frames
 // deferral keeps the progress/cancel surface simple), the estimate seeds
 // OptimizerBridge, and graceful degradation without .pt models (AE4:
@@ -15,9 +15,12 @@
 // ImplantEstimator stay per-frame/stateless. There is NO loop here — v1
 // scope is the current frame.
 //
-// Construction mirror (R13 duplication residue — the widgets slots
-// mainscreen.cpp:1650-2073 build the same chain inline; the experimental
-// tree replicates it; the extraction is the deferred follow-up):
+// Shared orchestration (plan 006 U8 / R12 part, R13): the per-frame
+// segment -> estimate -> SavePose -> seed CHAIN now lives once in the
+// jta::MlOrchestrator (services); this bridge keeps the view-side surface
+// (.pt pickers, the availability/status flags, the guards, the seed
+// wiring) and injects the torch/CUDA ops. The chain (the old widgets
+// segmentHelperFunction / estimate slots + this bridge's mirror):
 //  - segment: torch::jit::load(seg .pt, kCUDA) -> SegmentFrame(original,
 //    black_sil_used, model, 1024, 1024) -> copyTo(inverted) + the Frame
 //    post-processing (edge/dilated/distance/curvature — segmentHelperFunction
@@ -38,13 +41,19 @@
 // run arbitrates numerically).
 //
 // torch #undef slots rule: this header is Qt-object + plain-data only (no
-// torch includes); the torch-bearing includes live in the .cpp AFTER the
-// Qt-object headers (the repo's documented rule).
+// torch includes; ml_orchestrator.h is torch-free too); the torch-bearing
+// includes live in the .cpp AFTER the Qt-object headers (the repo's
+// documented rule).
 
 #pragma once
 
 #include <QObject>
 #include <QString>
+
+/*Shared segment/estimate orchestrator (plan 006 U8 / R12 part): torch-free
+ * header (OpenCV + domain only) — safe before any Qt-object include; the
+ * torch-bearing includes stay in the .cpp AFTER the Qt-object headers.*/
+#include "services/ml_orchestrator.h"
 
 class AppBridge;
 class ExperimentalScene;
@@ -200,6 +209,14 @@ private:
     /*Owned per-frame controller (stateless; the header stays torch-free —
      * the complete type + torch headers live in the .cpp only).*/
     jta::SegmentationController* segmentation_controller_ = nullptr;
+
+    /*Shared ML orchestrator (plan 006 U8 / R12 part): the per-frame
+     * segment -> estimate -> SavePose -> seed chain; the bridge injects
+     * the torch/CUDA ops (wrapping segmentation_controller_ above) and
+     * keeps the .pt pickers, the guards/status surface and the seed
+     * wiring. Torch-free header (the torch includes stay in the .cpp
+     * after the Qt-object headers).*/
+    jta::MlOrchestrator ml_orchestrator_;
 
     QString segment_fem_pt_;
     QString segment_tib_pt_;
