@@ -8,6 +8,7 @@
 #include "StudyBridge.h"
 
 // Qt
+#include <QStandardPaths>
 #include <QUrl>
 #include <QVector>
 
@@ -228,6 +229,10 @@ void StudyBridge::clearDataset() {
     emit datasetChanged();
     emit sceneBackgroundChanged();
     emit sceneModelsChanged();
+}
+
+QString StudyBridge::homeDir() const {
+    return QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 }
 
 /*---- Delegate selection contract ----*/

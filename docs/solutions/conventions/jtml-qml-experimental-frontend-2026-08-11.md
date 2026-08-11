@@ -106,16 +106,18 @@ destruction. Register `LABELS "oracle;render"`, xcb env, repo-root cwd.
 ## Native file dialogs (xdg portal)
 
 `libqxdgdesktopportal.so` ships in the pixi env; under xcb Qt defaults to the
-built-in dialog. Force the portal theme:
-`QT_QPA_PLATFORM=xcb QT_QPA_PLATFORMTHEME=xdgdesktopportal` — routes
-`FileDialog` through `org.freedesktop.portal.FileChooser`. **Verified in the
-Qt 6.7 sources** (the xdgdesktopportal plugin + QML `FileDialog`):
-`FileDialog.OpenFiles → QFileDialogOptions::ExistingFiles → multiple:true` is
-passed to the portal end-to-end. If multi-select still fails in the native
-dialog, the remaining variable is the **portal backend implementation** (try
-ctrl+click in GNOME's chooser; check which portal you run). Fallbacks:
-`QFileDialog::getOpenFileNames` (same theme, different code path) or
-`FileDialog.DontUseNativeDialog` (Qt's own dialog, reliable multi-select).
+built-in dialog. Forcing the portal theme
+(`QT_QPA_PLATFORM=xcb QT_QPA_PLATFORMTHEME=xdgdesktopportal`) routes
+`FileDialog` through `org.freedesktop.portal.FileChooser`, and the Qt 6.7
+sources verify `multiple=true` is passed for `OpenFiles` end-to-end — **yet on
+this box (xdg-desktop-portal-gnome) neither the portal dialog nor the Qt
+built-in delivered multi-select in practice.** **Final resolution (2026-08-11):
+the image/model pickers are now a pure-QML checkbox picker
+(`src/app/experimental/MultiFilePicker.qml`, FolderListModel + explicit
+checkboxes) — identical behavior on every backend, zero native/portal
+variance. The calibration picker stays native (single file). Note: the
+built-in dialog's ExtendedSelection requires ctrl/shift-click, which users
+may not discover; checkboxes are unambiguous.
 
 ## Other conventions
 
