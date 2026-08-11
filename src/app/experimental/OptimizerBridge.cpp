@@ -17,6 +17,7 @@
 // The real optimizer seam (coordinator lib). Included first: the header
 // pulls CostFunctionManager.h (torch ATen headers).
 #include "coordinator/optimizer_manager.h"
+#include "services/save_last_pose.h"
 
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
@@ -463,10 +464,14 @@ void OptimizerBridge::setState(RunState state) {
     emit runStateChanged();
 }
 
-/*SaveLastPose mirror (mainscreen.cpp:4101-4117): persist the scene poses of
- * the current frame's selected models into the storage so the optimizer
- * initializes from the live view (ModelMode interaction can drift the scene
- * ahead of the storage). No-op with no current frame.*/
+/*SaveLastPose mirror (mainscreen.cpp:4101-4117 -> shared core, plan 006
+ * U3): persist the scene poses of the current frame's selected models into
+ * the storage so the optimizer initializes from the live view (ModelMode
+ * interaction can drift the scene ahead of the storage). No-op with no
+ * current frame. QML call-site table row: current selection, current frame,
+ * scene source, never convert. The old row-range guard (model_row >= 0 &&
+ * < models.size()) now lives in the lambda as the all-zero sentinel the
+ * core skips.*/
 void OptimizerBridge::saveScenePosesForCurrentSelection() {
     const int frame = study_bridge_->currentFrame();
     if (frame < 0) {
@@ -474,13 +479,27 @@ void OptimizerBridge::saveScenePosesForCurrentSelection() {
     }
     const std::vector<SceneModel> models = scene_->models();
     const QVariantList selected = study_bridge_->selectedModels();
+    std::vector<int> rows;
+    rows.reserve(static_cast<size_t>(selected.size()));
     for (const QVariant& row : selected) {
-        const int model_row = row.toInt();
-        if (model_row >= 0 && model_row < static_cast<int>(models.size())) {
-            session_->model_locations.SavePose(
-                frame, model_row, models[static_cast<size_t>(model_row)].pose);
-        }
+        rows.push_back(row.toInt());
     }
+    jta::SaveLastPoseToStorage(
+        frame,
+        rows,
+        [&models](int model_row) {
+            if (model_row >= 0 &&
+                model_row < static_cast<int>(models.size())) {
+                return models[static_cast<size_t>(model_row)].pose;
+            }
+            return Point6D(); /* out-of-range -> core skips the row */
+        },
+        /*camera_is_a: monoplane v1 — camera A is the only camera; unused by
+         * NeverConvert.*/
+        true,
+        jta::SavePoseConvertRule::NeverConvert,
+        session_->calibration_file,
+        session_->model_locations);
 }
 
 /*The QModelIndexList for Initialize, built from the direct-compiled model

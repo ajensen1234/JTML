@@ -671,6 +671,27 @@ target_link_options(jtml_test_cost_function_registry PRIVATE
 add_test(NAME jtml.cost_function_registry COMMAND jtml_test_cost_function_registry)
 set_tests_properties(jtml.cost_function_registry PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Save-last-pose shared-core tests (plan 006 U3, R10 part/R13, H4). The
+# parameterized jta::SaveLastPoseToStorage (services layer — the one core all
+# four save-last-pose call sites drive) direct-compiles against the real
+# LocationStorage + the header-only Calibration: pins the four-row call-site
+# table (widgets canonical / camera-A inline / camera-B inline / QML mirror),
+# the no-previous-selection no-op, the convert-rule matrix, the
+# out-of-range/zero pose-source skip, and the pre-cut storage-dump
+# equivalence (characterization oracle). Pure logic: no Qt, no GPU.
+add_executable(jtml_test_save_last_pose
+    unit/save_last_pose_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/save_last_pose.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_save_last_pose PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_save_last_pose PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.save_last_pose COMMAND jtml_test_save_last_pose)
+set_tests_properties(jtml.save_last_pose PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # OptimizerBridge gate + state-core tests (plan 005 U6, R6/R13). The bridge
 # direct-compiles against the U4/U5 bridges + the app-owned dataset and links
 # jtml_coordinator (the REAL OptimizerManager lives there) — but never

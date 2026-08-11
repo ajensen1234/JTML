@@ -52,6 +52,7 @@
 #include "services/STLReader.h"
 #include "services/cost_function_registry.h"
 #include "services/edge_processor.h"
+#include "services/save_last_pose.h"
 
 /* PyTorch 1.0 CPP Torch Script*/
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -4100,34 +4101,34 @@ void MainScreen::EnableAll() {
 /*Save Last Pose (Do this when optimizing or when chaninging the list
  * widgets*/
 void MainScreen::SaveLastPose() {
-    /*Save Last Pair Pose*/
-    if (previous_model_indices_.size() > 0 && previous_frame_index_ != -1) {
-        for (int i = 0; i < previous_model_indices_.size(); i++) {
-            double* position_curr = vw->get_model_position_at_index(
-                previous_model_indices_[i].row());
-            double* orientation_curr = vw->get_model_orientation_at_index(
-                previous_model_indices_[i].row());
-            Point6D last_pose(
+    /*Save Last Pair Pose (plan 006 U3: shared parameterized core — the
+     * widgets canonical row of the call-site table: previous selection,
+     * previous frame, viewer source, convert iff camera B checked).*/
+    std::vector<int> previous_rows;
+    previous_rows.reserve(
+        static_cast<size_t>(previous_model_indices_.size()));
+    for (const QModelIndex& index : previous_model_indices_) {
+        previous_rows.push_back(index.row());
+    }
+    jta::SaveLastPoseToStorage(
+        previous_frame_index_,
+        previous_rows,
+        [this](int row) {
+            double* position_curr = vw->get_model_position_at_index(row);
+            double* orientation_curr =
+                vw->get_model_orientation_at_index(row);
+            return Point6D(
                 position_curr[0],
                 position_curr[1],
                 position_curr[2],
                 orientation_curr[0],
                 orientation_curr[1],
                 orientation_curr[2]);
-            /*If Camera B View, Save in Camera A coordinates*/
-            if (ui.camera_A_radio_button->isChecked()) {
-                model_locations_.SavePose(
-                    previous_frame_index_,
-                    previous_model_indices_[i].row(),
-                    last_pose);
-            } else {
-                model_locations_.SavePose(
-                    previous_frame_index_,
-                    previous_model_indices_[i].row(),
-                    calibration_file_.convert_Pose_B_to_Pose_A(last_pose));
-            }
-        }
-    }
+        },
+        ui.camera_A_radio_button->isChecked(),
+        jta::SavePoseConvertRule::ConvertWhenCameraB,
+        calibration_file_,
+        model_locations_);
 }
 
 /*Optimization Function: Packages Off The Optimization process in

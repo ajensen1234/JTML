@@ -24,6 +24,7 @@ add_library(jtml_services STATIC
     session_controller.cpp
     settings_service.cpp
     cost_function_registry.cpp
+    save_last_pose.cpp
     stl_reader.cpp
     STLReader.cpp
     edge_processor.cpp
