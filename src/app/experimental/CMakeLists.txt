@@ -8,7 +8,10 @@
 # test/oracle/ now drives the new renderer (its target compiles
 # QmlVtkRenderer.cpp + ExperimentalScene.cpp + renderer.qrc). U4 added
 # StudyBridge + DelegateSelection + ExperimentalSession (the study-load
-# adapter, the delegate selection contract, and the app-owned dataset).
+# adapter, the delegate selection contract, and the app-owned dataset). U5
+# added SettingsBridge (the session-local settings adapter: OptimizerSettings
+# + three per-stage CostFunctionManager(Stage) instances + the replicated
+# registry mapping; Save/Load/Reset through SettingsService) + SettingsPanel.qml.
 #
 # GUISupportQtQuick is deliberately NOT in the root find_package COMPONENTS
 # list (root CMakeLists.txt stays untouched): this directory-scoped re-find
@@ -22,8 +25,8 @@
 # FrameListModel/ModelListModel are widget-free QAbstractListModels
 # direct-compiled into the target (the established direct-compile pattern;
 # jtml_view is NOT linked). AUTOMOC: every Q_OBJECT header (AppBridge.h,
-# QmlVtkRenderer.h, the two model headers) is in the add_executable source
-# list (repo gotcha: a globbed header without its impl in the target is an
+# SettingsBridge.h, QmlVtkRenderer.h, the two model headers) is in the
+# add_executable source list (repo gotcha: a globbed header without its impl in the target is an
 # undefined-vtable link error). AUTORCC is global (root CMakeLists.txt), so
 # listing resources.qrc in the sources is enough.
 
@@ -44,6 +47,8 @@ add_executable(jtml_experimental
     main.cpp
     AppBridge.h
     AppBridge.cpp
+    SettingsBridge.h
+    SettingsBridge.cpp
     StudyBridge.h
     StudyBridge.cpp
     DelegateSelection.h

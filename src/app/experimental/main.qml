@@ -42,7 +42,10 @@ Window {
     FileDialog {
         id: imageFileDialog
         title: qsTr("Load Image(s)")
-        nameFilters: ["Image File(s) (*.tif *.tiff *.png)"]
+        nameFilters: [
+            "Image Files (*.tif *.tiff *.TIF *.TIFF *.png *.PNG)",
+            "All files (*)"
+        ]
         fileMode: FileDialog.OpenFiles
         onAccepted: {
             // A second image set is a new study: confirm, then replace the
@@ -59,7 +62,7 @@ Window {
     FileDialog {
         id: modelFileDialog
         title: qsTr("Load Implant Model(s)")
-        nameFilters: ["CAD File(s) (*.stl)"]
+        nameFilters: ["CAD File (*.stl *.STL)", "All files (*)"]
         fileMode: FileDialog.OpenFiles
         onAccepted: studyBridge.loadModels(selectedFiles)
     }
@@ -345,7 +348,7 @@ Window {
 
             // ---- Right panel: settings over pose table ------------------
             Rectangle {
-                Layout.preferredWidth: 260
+                Layout.preferredWidth: 300
                 Layout.fillHeight: true
                 color: "#1b1e24"
                 radius: 4
@@ -355,26 +358,15 @@ Window {
                     anchors.margins: 6
                     spacing: 6
 
-                    // Settings area placeholder (U5): per-stage
+                    // Settings area (U5): the experiment knobs — per-stage
                     // ranges/budgets/dilation backed by OptimizerSettings +
-                    // settings_constants.h, cost-variant combo per stage
-                    // via CostFunctionManager, explicit save via
-                    // SettingsService.
-                    Label {
-                        text: qsTr("Settings (U5)")
-                        color: "#cfd3da"
-                        font.bold: true
-                    }
-                    ColumnLayout {
+                    // settings_constants.h, cost-variant combo per stage via
+                    // CostFunctionManager, explicit save via SettingsService
+                    // (session-local edits; Reset restores the defaults).
+                    SettingsPanel {
                         Layout.fillWidth: true
-                        spacing: 4
-                        Label { text: qsTr("Trunk range"); color: "#8b929c" }
-                        TextField { text: "35,35,35,35,35,35"; enabled: false; Layout.fillWidth: true }
-                        Label { text: qsTr("Trunk budget"); color: "#8b929c" }
-                        TextField { text: "20000"; enabled: false; Layout.fillWidth: true }
+                        Layout.fillHeight: true
                     }
-
-                    Item { Layout.fillHeight: true }
 
                     // Pose-table area placeholder (U8): editable per-frame
                     // pose rows over LocationStorage + pose_file_io +
@@ -386,7 +378,7 @@ Window {
                     }
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: 120
                         color: "#14161a"
                         border.color: "#2a2f38"
                         Label {

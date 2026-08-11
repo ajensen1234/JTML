@@ -15,11 +15,13 @@
 //    QQuickVTKItem's render-thread contract);
 //  - root-context properties: appBridge (the hub — owns the app dataset
 //    ExperimentalSession + the thin per-seam adapters; U2 exposes counts +
-//    placeholder signals, StudyBridge lands in U4, OptimizerBridge/MlBridge/
-//    PoseBridge in U6/U7/U8), studyBridge (the U4 study-load adapter + the
-//    delegate selection contract). The list models are NOT context
-//    properties: StudyBridge owns them (fresh instances on dataset replace)
-//    and main.qml binds studyBridge.frameListModel / modelListModel.
+//    placeholder signals, StudyBridge lands in U4, SettingsBridge in U5,
+//    OptimizerBridge/MlBridge/PoseBridge in U6/U7/U8), studyBridge (the U4
+//    study-load adapter + the delegate selection contract), settingsBridge
+//    (the U5 session-local settings adapter). The list models are NOT
+//    context properties: StudyBridge owns them (fresh instances on dataset
+//    replace) and main.qml binds studyBridge.frameListModel /
+//    modelListModel.
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -32,7 +34,8 @@
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
 #include "QmlVtkRenderer.h"
-#include "StudyBridge.h"  // complete type: the setContextProperty QObject* overload needs it
+#include "SettingsBridge.h" // complete type: the setContextProperty QObject* overload needs it
+#include "StudyBridge.h" // complete type: the setContextProperty QObject* overload needs it
 
 int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
@@ -40,7 +43,8 @@ int main(int argc, char* argv[]) {
 
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<QmlVtkRenderer>("jtml.experimental", 1, 0, "QmlVtkRenderer");
+    qmlRegisterType<QmlVtkRenderer>(
+        "jtml.experimental", 1, 0, "QmlVtkRenderer");
 
     // App-owned scene (R7/R11): outlives the engine; the QML-created
     // renderer binds to it after load (U4).
@@ -56,6 +60,8 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("appBridge", &app_bridge);
     engine.rootContext()->setContextProperty(
         "studyBridge", app_bridge.studyBridge());
+    engine.rootContext()->setContextProperty(
+        "settingsBridge", app_bridge.settingsBridge());
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty()) {

@@ -29,6 +29,7 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QSettings>
 #include <QStringList>
 #include <QTemporaryDir>
 #include <QUrl>
@@ -40,6 +41,7 @@
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
 #include "StudyBridge.h"
+#include "services/settings_service.h"
 #include "view/frame_list_model.h"
 #include "view/model_list_model.h"
 
@@ -94,13 +96,21 @@ void connect_messages(StudyBridge* bridge, MessageRecorder* recorder) {
 }
 
 /*The U4 fixture: a bridge wired to an app-owned scene + hub, with the
- * message recorder connected.*/
+ * message recorder connected. The hub's U5 settings surface is injected
+ * with an ini-backed SettingsService (isolated to a temp dir — the real
+ * registry is never touched by headless tests).*/
 struct BridgeFixture {
+    QTemporaryDir dir;
+    jta::SettingsService settings_service{
+        dir.filePath("settings.ini"), QSettings::IniFormat};
     ExperimentalScene scene;
-    AppBridge hub{&scene};
+    AppBridge hub{&scene, &settings_service};
     MessageRecorder messages;
 
-    BridgeFixture() { connect_messages(hub.studyBridge(), &messages); }
+    BridgeFixture() {
+        REQUIRE(dir.isValid());
+        connect_messages(hub.studyBridge(), &messages);
+    }
 
     StudyBridge* bridge() { return hub.studyBridge(); }
     ExperimentalSession* session() { return hub.session(); }

@@ -538,6 +538,8 @@ add_executable(jtml_test_experimental_selection
     unit/experimental_selection_test.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
@@ -553,6 +555,8 @@ add_executable(jtml_test_experimental_selection
     ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
     ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
     ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
     ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
@@ -563,18 +567,63 @@ target_include_directories(jtml_test_experimental_selection PRIVATE
     ${PROJECT_SOURCE_DIR}/include/compute
     ${PROJECT_SOURCE_DIR}/src/app/experimental
     ${OpenCV_INCLUDE_DIRS}
-    ${VTK_INCLUDE_DIRS})
+    ${VTK_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS})
 target_link_libraries(jtml_test_experimental_selection PRIVATE
     ${REQUIRED_LIBS_QUALIFIED}
     Catch2::Catch2WithMain
     ${OpenCV_LIBRARIES}
-    ${VTK_LIBRARIES})
+    ${VTK_LIBRARIES}
+    ${JTA_LIBS})
 target_link_options(jtml_test_experimental_selection PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
-    "-Wl,-rpath,${VTK_LIB_DIR}")
+    "-Wl,-rpath,${VTK_LIB_DIR}"
+    "-Wl,-rpath,$ORIGIN/../lib")
 add_test(NAME jtml.experimental_selection COMMAND jtml_test_experimental_selection)
 set_tests_properties(jtml.experimental_selection PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# SettingsBridge + replicated registry mapping tests (plan 005 U5, R4/R5/
+# R10/R17). The bridge direct-compiles against the real SettingsService
+# (temp-ini isolated, never the real registry) + the real
+# CostFunctionManager/CostFunction linked from jtml_compute (constructor +
+# parameter surface only — CPU-only, no CUDA calls at runtime): pins the
+# cost-variant selection, the save->load round-trip, the lossless-double
+# invariant, and the registry-mapping parity pin vs the widgets golden
+# fixture embedded in the test. The heavy include set mirrors
+# SettingsBridge.cpp's TU (CostFunctionManager.h pulls torch/cuda/opencv
+# headers).
+add_executable(jtml_test_experimental_settings
+    unit/experimental_settings_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_experimental_settings PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_experimental_settings PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    ${JTA_LIBS})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir; torch/cuda deps in the pixi env (the .so's own RUNPATH covers
+# them, this is belt-and-braces for the test binary).
+target_link_options(jtml_test_experimental_settings PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.experimental_settings COMMAND jtml_test_experimental_settings)
+set_tests_properties(jtml.experimental_settings PROPERTIES LABELS "headless" TIMEOUT 300)
 
 # ---------------------------------------------------------------------------
 # (Placeholder) QtTest lifecycle / coordinator seam, added at U4.
