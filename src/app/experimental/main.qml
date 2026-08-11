@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Window
 import QtQuick.Dialogs
-import "."  // qmldir: singleton Theme
+import "."  // qmldir: singleton Theme + the U8 PoseCell type
 import jtml.experimental 1.0
 
 // 005 U2/U4/U5 shell — plan-005 feedback restructure (#5): the main screen
@@ -81,6 +81,43 @@ Window {
         nameFilters: ["Torch File (*.pt)", "All files (*)"]
         onAccepted: mlBridge.setEstimatePt(selectedFile)
     }
+    // ---- Pose/kinematics file actions (U8): the pose_file_io wrappers
+    // surface false returns (unwritable path) + parse failures through the
+    // single QML Dialog; the bridge keeps the in-memory state.
+    FileDialog {
+        id: savePoseFileDialog
+        title: qsTr("Save Pose")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["JTA Pose File (*.jtap)", "Pose File (*.txt)"]
+        onAccepted: poseBridge.savePoseFile(selectedFile)
+    }
+    FileDialog {
+        id: loadPoseFileDialog
+        title: qsTr("Load Pose")
+        nameFilters: [
+            "JTA Pose File (*.jtap)",
+            "JointTrack Pose File (*.jtp)",
+            "Pose File (*.txt)"
+        ]
+        onAccepted: poseBridge.loadPoseFile(selectedFile)
+    }
+    FileDialog {
+        id: saveKinematicsFileDialog
+        title: qsTr("Save Kinematics")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["JTA Kinematics File (*.jtak)", "Kinematics File (*.txt)"]
+        onAccepted: poseBridge.saveKinematics(selectedFile)
+    }
+    FileDialog {
+        id: loadKinematicsFileDialog
+        title: qsTr("Load Kinematics")
+        nameFilters: [
+            "JTA Kinematics File (*.jtak)",
+            "JointTrack Kinematics File (*.jts)",
+            "Kinematics File (*.txt)"
+        ]
+        onAccepted: poseBridge.loadKinematics(selectedFile)
+    }
     Dialog {
         id: replaceDialog
         property var pendingPaths: []
@@ -142,25 +179,238 @@ Window {
         id: poseDialog
         title: qsTr("Poses")
         modal: false
-        width: 560
-        height: 420
+        width: 660
+        height: 460
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        // U8 pose table (net-new UI — the widgets app never numerically
+        // edits poses; review-fixed semantics): rows = frames, 6 editable
+        // cells per row (x/y/z/xa/ya/za) for the PRIMARY model's stored
+        // poses; each cell commits immediately through SavePose on
+        // editingFinished; non-numeric input is rejected with an inline
+        // message (the field reverts to the stored value); the dirty badge
+        // shows unsaved in-memory edits (cleared by a successful save);
+        // copy-prev/next delegate to the pose_copy seam; save/load wrap
+        // pose_file_io. Every control is disabled during an optimizer run
+        // (the U6 locking — the Run button also closes this dialog; the
+        // toolbar opener is disabled too).
+        property bool canEditPoses: poseBridge.rowCount > 0
+                                    && studyBridge.primaryModelIndex >= 0
+                                    && !optimizerBridge.running
+
         contentItem: ColumnLayout {
             spacing: 6
-            Label {
-                text: qsTr("Pose table (U8)")
-                color: Theme.fgDim
+
+            // ---- Header: model context + dirty badge -------------------
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                Label {
+                    text: studyBridge.primaryModelIndex >= 0
+                          ? qsTr("Model %1 · %2 frames")
+                                .arg(studyBridge.primaryModelIndex)
+                                .arg(poseBridge.rowCount)
+                          : qsTr("%1 frames").arg(poseBridge.rowCount)
+                    color: Theme.fg
+                    font.bold: true
+                }
+                Item { Layout.fillWidth: true }
+                Rectangle {
+                    Layout.preferredHeight: 14
+                    radius: 7
+                    color: poseBridge.dirty ? "#e5b567" : "#3a4a3d"
+                    Label {
+                        anchors.centerIn: parent
+                        text: poseBridge.dirty ? qsTr("● unsaved")
+                                               : qsTr("saved")
+                        color: poseBridge.dirty ? "#2a2118" : "#8fbf96"
+                        font.pixelSize: 10
+                    }
+                }
             }
-            Rectangle {
+
+            // ---- Actions: copy-prev/next + save/load -------------------
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                Button {
+                    text: qsTr("◀ Copy Prev")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: poseBridge.copyPrevious()
+                }
+                Button {
+                    text: qsTr("Copy Next ▶")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: poseBridge.copyNext()
+                }
+                Item { Layout.fillWidth: true }
+                Button {
+                    text: qsTr("Save Pose…")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: savePoseFileDialog.open()
+                }
+                Button {
+                    text: qsTr("Load Pose…")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: loadPoseFileDialog.open()
+                }
+                Button {
+                    text: qsTr("Save Kin…")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: saveKinematicsFileDialog.open()
+                }
+                Button {
+                    text: qsTr("Load Kin…")
+                    enabled: poseDialog.canEditPoses
+                    onClicked: loadKinematicsFileDialog.open()
+                }
+            }
+
+            // ---- Column header (fixed widths match the cell fields) ----
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                Label {
+                    text: qsTr("Frame")
+                    width: 44
+                    horizontalAlignment: Text.AlignRight
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("X")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("Y")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("Z")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("XA")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("YA")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+                Label {
+                    text: qsTr("ZA")
+                    width: 78
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.fgMuted
+                    font.pixelSize: 11
+                }
+            }
+
+            // ---- Empty states -------------------------------------------
+            Label {
+                Layout.fillWidth: true
+                visible: poseBridge.rowCount === 0
+                color: Theme.fgDim
+                wrapMode: Text.Wrap
+                text: qsTr("No frames loaded — load a study first.")
+            }
+            Label {
+                Layout.fillWidth: true
+                visible: poseBridge.rowCount > 0
+                         && studyBridge.primaryModelIndex < 0
+                color: Theme.fgDim
+                wrapMode: Text.Wrap
+                text: qsTr("Select a model in the model list to edit its "
+                           + "poses (v1: pose ops edit the primary model).")
+            }
+
+            // ---- The editable table (scrolls when the column is short) --
+            ScrollView {
+                id: poseScroll
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Theme.surface
-                border.color: Theme.border
-                Label {
-                    anchors.centerIn: parent
-                    text: qsTr("pose rows (U8)")
-                    color: Theme.fgDim
+                clip: true
+                // Hidden only without a dataset + primary model; during an
+                // optimizer run it stays visible but disabled (the U6
+                // locking — the Run button also closes this dialog).
+                visible: poseBridge.rowCount > 0
+                         && studyBridge.primaryModelIndex >= 0
+                enabled: !optimizerBridge.running
+
+                Column {
+                    width: poseScroll.availableWidth
+                    spacing: 2
+
+                    Repeater {
+                        model: poseBridge.tableModel
+                        delegate: RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Label {
+                                text: qsTr("F%1").arg(model.frameIndex)
+                                width: 44
+                                horizontalAlignment: Text.AlignRight
+                                color: Theme.fgMuted
+                                font.pixelSize: 11
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 0
+                                storedValue: model.x
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 1
+                                storedValue: model.y
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 2
+                                storedValue: model.z
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 3
+                                storedValue: model.xa
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 4
+                                storedValue: model.ya
+                            }
+                            PoseCell {
+                                frameRow: model.frameIndex
+                                axisIndex: 5
+                                storedValue: model.za
+                            }
+                        }
+                    }
                 }
+            }
+
+            // ---- Inline validation message (review fix) -----------------
+            Label {
+                Layout.fillWidth: true
+                visible: poseBridge.validationMessage.length > 0
+                color: Theme.badge
+                font.pixelSize: 11
+                wrapMode: Text.Wrap
+                text: poseBridge.validationMessage
             }
         }
     }
@@ -221,6 +471,20 @@ Window {
             viewport.updateBackground()
         }
         function onPoseEstimated(modelIndex) {
+            viewport.updatePose(modelIndex)
+        }
+    }
+
+    // ---- Bridge → view glue (U8) ---------------------------------------
+    // Pose table: the bridge wrote the scene pose for a mutation on the
+    // current frame; the glue forwards the relay to the renderer's GUI-
+    // thread slot; the error/notice channel reuses the single QML Dialog.
+    Connections {
+        target: poseBridge
+        function onMessageRequested(title, message) {
+            showMessage(title, message)
+        }
+        function onScenePoseChanged(modelIndex) {
             viewport.updatePose(modelIndex)
         }
     }

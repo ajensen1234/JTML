@@ -540,6 +540,8 @@ add_executable(jtml_test_experimental_selection
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
@@ -651,6 +653,8 @@ add_executable(jtml_test_experimental_optimizer_gate
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
@@ -716,6 +720,8 @@ add_executable(jtml_test_experimental_ml_bridge
     unit/experimental_ml_bridge_test.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
     ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
     ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
@@ -769,6 +775,83 @@ target_link_options(jtml_test_experimental_ml_bridge PRIVATE
 add_test(NAME jtml.experimental_ml_bridge
     COMMAND jtml_test_experimental_ml_bridge)
 set_tests_properties(jtml.experimental_ml_bridge PROPERTIES
+    LABELS "headless" TIMEOUT 300
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# PoseBridge pins (plan 005 U8, R9/R10). The bridge direct-compiles against
+# the U4-U7 bridges + the app-owned dataset and links jtml_coordinator (the
+# REAL seam symbols — LocationStorage/pose_copy/pose_file_io live in
+# jtml_services/jtml_domain through the coordinator's PUBLIC link). The
+# fixture builds a SYNTHETIC dataset (storage matrix + frame list model
+# driven directly — no images/STLs parsed), so the suite is fast and the
+# selection contract is driven through StudyBridge's public delegate API.
+# Pins: immediate per-cell SavePose read-back + single-axis semantics + the
+# scene-pose sync tail, the pinned pose_copy delegation (no-image fallback
+# at frame 0 / the last frame, primary-row writes in v1 multi-select),
+# non-numeric/NaN/infinite rejection with the inline message + unchanged
+# state, WritePoseFile/WriteKinematicsFile false returns (message + state +
+# dirty kept), the save->reload round-trip (pose + kinematics), the real
+# golden kinematics fixture (test/golden/fem_oracle_captured.jtak) read
+# through loadKinematics, and the guard + typed-file-error messages.
+add_executable(jtml_test_experimental_pose_bridge
+    unit/experimental_pose_bridge_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/PoseBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/AppBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/MlBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/OptimizerBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/SettingsBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/StudyBridge.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/DelegateSelection.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalSession.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/ExperimentalScene.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/session_controller.cpp
+    ${PROJECT_SOURCE_DIR}/test/unit/frame_headless.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/location_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/model.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/stl_reader.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/model_list_builder.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/session_state.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/settings_service.cpp
+    ${PROJECT_SOURCE_DIR}/src/view/frame_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/frame_list_model.h
+    ${PROJECT_SOURCE_DIR}/src/view/model_list_model.cpp
+    ${PROJECT_SOURCE_DIR}/include/view/model_list_model.h
+)
+target_include_directories(jtml_test_experimental_pose_bridge PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+    ${OpenCV_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS})
+target_link_libraries(jtml_test_experimental_pose_bridge PRIVATE
+    Catch2::Catch2WithMain
+    jtml_coordinator
+    ${REQUIRED_LIBS_QUALIFIED}
+    ${JTA_LIBS}
+    ${OpenCV_LIBRARIES}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${CUDA_LIBRARIES})
+target_link_options(jtml_test_experimental_pose_bridge PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.experimental_pose_bridge
+    COMMAND jtml_test_experimental_pose_bridge)
+set_tests_properties(jtml.experimental_pose_bridge PROPERTIES
     LABELS "headless" TIMEOUT 300
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 

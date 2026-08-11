@@ -25,6 +25,7 @@
 #include "OptimizerBridge.h" // Q_PROPERTY pointer type must be complete for moc
 #include "SettingsBridge.h" // Q_PROPERTY pointer type must be complete for moc
 #include "MlBridge.h" // Q_PROPERTY pointer type must be complete for moc
+#include "PoseBridge.h" // Q_PROPERTY pointer type must be complete for moc
 
 class ExperimentalScene;
 class StudyBridge;
@@ -53,6 +54,12 @@ class AppBridge : public QObject {
     // current frame + the estimate -> optimizer seed; graceful degradation
     // without .pt models, AE4).
     Q_PROPERTY(MlBridge* mlBridge READ mlBridge CONSTANT)
+
+    // U8: the pose-editing adapter (editable pose table over the primary
+    // model's LocationStorage poses, copy-prev/next via pose_copy, pose +
+    // kinematics file save/load via pose_file_io; dirty + inline
+    // validation surface).
+    Q_PROPERTY(PoseBridge* poseBridge READ poseBridge CONSTANT)
 
 public:
     // The app-owned scene (R7/R11) is bound by the composition root and
@@ -88,6 +95,9 @@ public:
     // U7: the ML adapter.
     MlBridge* mlBridge();
 
+    // U8: the pose-editing adapter.
+    PoseBridge* poseBridge();
+
 signals:
     // Placeholder surface-change signals (U2). Later units refine these into
     // the per-surface signals QML binds to (settings panel, pose table,
@@ -104,6 +114,7 @@ private:
     SettingsBridge* settings_bridge_ = nullptr;
     OptimizerBridge* optimizer_bridge_ = nullptr;
     MlBridge* ml_bridge_ = nullptr;
+    PoseBridge* pose_bridge_ = nullptr;
     int frame_count_ = 0;
     int model_count_ = 0;
 };

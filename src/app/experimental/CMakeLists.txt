@@ -56,6 +56,8 @@ add_executable(jtml_experimental
     OptimizerBridge.cpp
     MlBridge.h
     MlBridge.cpp
+    PoseBridge.h
+    PoseBridge.cpp
     StudyBridge.h
     StudyBridge.cpp
     DelegateSelection.h

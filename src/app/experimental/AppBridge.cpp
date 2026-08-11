@@ -7,6 +7,7 @@
 #include "ExperimentalSession.h"
 #include "MlBridge.h"
 #include "OptimizerBridge.h"
+#include "PoseBridge.h"
 #include "SettingsBridge.h"
 #include "StudyBridge.h"
 #include "services/settings_service.h"
@@ -46,6 +47,15 @@ AppBridge::AppBridge(
     ml_bridge_ = new MlBridge(
         this, session_, scene, study_bridge_, settings_bridge_,
         optimizer_bridge_, this);
+
+    /*U8: the pose-editing adapter — the pose table over the primary model's
+     * LocationStorage poses (PoseTableModel), per-cell SavePose commits,
+     * copy-prev/next via pose_copy, pose + kinematics file save/load via
+     * pose_file_io (false returns surface + keep in-memory state), the
+     * dirty + inline-validation surface. Reads the dataset + selection
+     * through the session/study bridge and refreshes the table on their
+     * signals.*/
+    pose_bridge_ = new PoseBridge(this, session_, scene, study_bridge_, this);
 }
 
 AppBridge::~AppBridge() {
@@ -99,4 +109,8 @@ OptimizerBridge* AppBridge::optimizerBridge() {
 
 MlBridge* AppBridge::mlBridge() {
     return ml_bridge_;
+}
+
+PoseBridge* AppBridge::poseBridge() {
+    return pose_bridge_;
 }
