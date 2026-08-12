@@ -5,6 +5,8 @@
 
 #include <cfloat>
 #include <climits>
+#include <cmath>
+#include <optional>
 #include <utility>
 
 namespace {
@@ -36,7 +38,12 @@ bool DirectOptimizer::Run() {
         return false;
     }
 
-    current_optimum_value_ = EvaluateCostFunction(UnitCenter());
+    std::optional<double> seed_result = EvaluateCostFunction(UnitCenter());
+    // A non-finite seed eval leaves the optimum at a finite "no finite
+    // optimum yet" sentinel (DBL_MAX): every later finite eval is an
+    // improvement and wins, and the seed box in the storage stays finite by
+    // construction (never store a non-finite result -- plan 008 U3).
+    current_optimum_value_ = seed_result.has_value() ? *seed_result : DBL_MAX;
     current_optimum_location_ = starting_point_;
     data_ = DirectDataStorage(current_optimum_value_);
 
@@ -179,9 +186,17 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 changed_hyperbox_a->GetSides().GetDirection(
                     largest_direction));
         changed_hyperbox_a->SetCenter(updated_center);
-        changed_hyperbox_a->value_ =
+        std::optional<double> eval_a =
             EvaluateCostFunction(changed_hyperbox_a->GetCenter());
-        data_.AddHyperBox(changed_hyperbox_a);
+        if (eval_a.has_value()) {
+            changed_hyperbox_a->value_ = *eval_a;
+            data_.AddHyperBox(changed_hyperbox_a);
+        } else {
+            // Infeasible eval (plan 008 U3): the box is never stored -- a
+            // stored NaN would accumulate as dead weight and could poison the
+            // column minimum once all finite boxes in the column are gone.
+            delete changed_hyperbox_a;
+        }
 
         /*Changed-center hyperbox B.*/
         auto changed_hyperbox_b = new HyperBox6D();
@@ -194,17 +209,49 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 changed_hyperbox_b->GetSides().GetDirection(
                     largest_direction));
         changed_hyperbox_b->SetCenter(updated_center);
-        changed_hyperbox_b->value_ =
+        std::optional<double> eval_b =
             EvaluateCostFunction(changed_hyperbox_b->GetCenter());
-        data_.AddHyperBox(changed_hyperbox_b);
+        if (eval_b.has_value()) {
+            changed_hyperbox_b->value_ = *eval_b;
+            data_.AddHyperBox(changed_hyperbox_b);
+        } else {
+            // Infeasible eval (plan 008 U3): never stored (see box A above).
+            delete changed_hyperbox_b;
+        }
     }
 }
 
-double DirectOptimizer::EvaluateCostFunction(Point6D unit_point) {
+unsigned int DirectOptimizer::GetNonFiniteCount() const {
+    return non_finite_count_;
+}
+
+std::optional<double> DirectOptimizer::EvaluateCostFunction(
+    Point6D unit_point) {
     Point6D denormalized_point = DenormalizeFromCenter(unit_point);
     double result = cost_(denormalized_point);
 
     cost_function_calls_++;
+
+    // Finite-check at the one shared eval chokepoint (plan 008 U3; panoptes
+    // angle 02 Round 2). A non-finite (NaN/Inf) cost is INFEASIBLE: it is
+    // never stored, never wins the optimum (the finite-only optimum update
+    // below), and is surfaced to callers via the counter and one
+    // iteration-callback fire. Behavior-neutral for all finite evals
+    // (DIRECT_DILATION is provably finite -- no oracle impact).
+    //
+    // GLh surrogate hook (RESERVED -- documented extension point, NOT wired in
+    // this unit; the algorithm plan owns the semantics): when DIRECT-GLh
+    // lands, substitute
+    //   result = current_optimum_value_ + ||denormalized_point - current_optimum_location_||
+    // here, making the eval FINITE so it flows through the store/optimum path
+    // below. Until then a non-finite eval stays infeasible.
+    if (!std::isfinite(result)) {
+        non_finite_count_++;
+        if (iteration_callback_) {
+            iteration_callback_();
+        }
+        return std::nullopt;
+    }
 
     /*Store optimum (mirrors the original, without the GUI signal).*/
     if (result < current_optimum_value_) {

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 #include "domain/data_structures_6D.h"
@@ -36,6 +37,16 @@ public:
 
     // Number of cost-function calls so far, including the seed evaluation.
     unsigned int GetCostFunctionCalls() const;
+
+    // Number of cost evaluations that returned a non-finite (NaN/Inf) result
+    // (plan 008 U3). The finite-check lives at the single shared eval
+    // chokepoint (EvaluateCostFunction), so every injected-cost variant is
+    // covered regardless of the cost implementation. A non-finite eval is
+    // INFEASIBLE: it is never stored, never updates the optimum, and is
+    // surfaced here (plus one iteration-callback fire). Always 0 on the
+    // all-finite path (DIRECT_DILATION is provably finite), so production
+    // behavior is bit-identical to the pre-check code.
+    unsigned int GetNonFiniteCount() const;
 
     // Best location (physical/denormalized) and cost found so far.
     Point6D GetOptimumLocation() const;
@@ -71,7 +82,13 @@ public:
 private:
     void ConvexHull();
     void TrisectPotentiallyOptimal();
-    double EvaluateCostFunction(Point6D unit_point);
+    // Evaluates the injected cost at the given unit point. Returns the cost,
+    // or std::nullopt when the cost returned a non-finite (NaN/Inf) result --
+    // the eval is then infeasible and the caller must not store it. The GLh
+    // surrogate hook (the point where DIRECT-GLh would substitute
+    // phi = f_min + ||x - x_min|| and treat the eval as finite) is RESERVED
+    // here -- plan 008 U3 does not wire it.
+    std::optional<double> EvaluateCostFunction(Point6D unit_point);
     Point6D DenormalizeRange(Point6D unit_point) const;
     Point6D DenormalizeFromCenter(Point6D unit_point) const;
 
@@ -84,6 +101,10 @@ private:
     unsigned int budget_ = 0;
     unsigned int cost_function_calls_ = 0;
     unsigned int call_offset_ = 0;
+    // Zero-initialized at construction (guard-precondition lesson: a guard's
+    // precondition must itself be initialized -- see docs/solutions/logic-errors/
+    // jtml-heatmap-guard-allocator-preconditions-2026-08-12.md).
+    unsigned int non_finite_count_ = 0;
 
     IterationCallback iteration_callback_;
     ImprovementCallback improvement_callback_;
