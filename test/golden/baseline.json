@@ -1,93 +1,280 @@
 {
   "oracle": "JTML Kneel_1 femoral golden oracle",
   "spec_source": "golden_oracle.org",
-  "description": "Behavior-preservation (golden-master) gate. Tier-2 (GPU): recovered per-frame pose vs fem.jts within tolerance; projected silhouette vs Labels within pixel threshold. Tolerance finalized from the one-time Qt5/GPU capture (fem_oracle.jtak). RE-BASELINED 2026-08-12 (plan 008 U4, Finding 1/12): the one live kernel bug (distance-map grid index, src/compute/distance_map_metric.cu:27) is fixed and the Tier-2 oracle re-run is recorded as the new reference — expected_pose_per_frame now holds the POST-FIX recovered poses; the fem.jts golden seeds live in start_pose_per_frame; the pre-fix poses and the per-axis delta are recorded in rebaseline_2026-08-12.",
-
+  "description": "Behavior-preservation (golden-master) gate. Tier-2 (GPU): recovered per-frame pose vs fem.jts within tolerance; projected silhouette vs Labels within pixel threshold. Tolerance finalized from the one-time Qt5/GPU capture (fem_oracle.jtak). RE-BASELINED 2026-08-12 (plan 008 U4, Finding 1/12): the one live kernel bug (distance-map grid index, src/compute/distance_map_metric.cu:27) is fixed and the Tier-2 oracle re-run is recorded as the new reference \u2014 expected_pose_per_frame now holds the POST-FIX recovered poses; the fem.jts golden seeds live in start_pose_per_frame; the pre-fix poses and the per-axis delta are recorded in rebaseline_2026-08-12.",
   "compare_reference": {
     "tier1": "CI headless CPU: DirectOptimizer converges on analytic cost (test/unit/test_direct_optimizer.cpp)",
     "tier2": "GPU (robust, appearance-based): project the implant (DRR) at the final optimized pose and compare the rendered silhouette to Labels/fem/ within a pixel-diff / IoU threshold. Pose-vs-fem.jts is informational only, because DIRECT numeric convergence is noisy."
   },
-
   "settings": {
     "cost_function": "DIRECT_DILATION",
     "stages": "trunk / 2-branch / 1-leaf",
-    "budget_per_stage": { "trunk": 20000, "branch": 5000, "leaf": 5000, "number_branches": 2 },
-    "budget_cumulative_effective": [20000, 25000, 30000, 35000],
+    "budget_per_stage": {
+      "trunk": 20000,
+      "branch": 5000,
+      "leaf": 5000,
+      "number_branches": 2
+    },
+    "budget_cumulative_effective": [
+      20000,
+      25000,
+      30000,
+      35000
+    ],
     "budget_note": "Production cumulative caps from src/services/optimizer_settings.cpp defaults + Optimize(): trunk 20000, +2 branches 5000 each, +leaf 5000. The Tier-2 oracle run was reduced to a flat 3000 for run time and is NOT the production budget shape.",
-    "ranges": { "trunk": 35, "branch": 15, "branch_z": 25, "leaf": 3, "leaf_z": 15 },
-    "dilation_px": { "trunk": 6, "branch": 3, "leaf": 1 }
+    "ranges": {
+      "trunk": 35,
+      "branch": 15,
+      "branch_z": 25,
+      "leaf": 3,
+      "leaf_z": 15
+    },
+    "dilation_px": {
+      "trunk": 6,
+      "branch": 3,
+      "leaf": 1
+    }
   },
-
   "fixtures": {
     "base_images": "example_studies/Kneel_1/1024/*.tif",
     "fem_stl": "example_studies/Kneel_1/KR_right_7_fem.stl",
     "labels": "example_studies/Kneel_1/Labels/fem/",
     "calibration": "example_studies/Kneel_1/calibration.txt"
   },
-
-  "golden_units": "fem.jts (3 frames, JT_EULER_312: x_tran,y_tran,z_tran,z_rot,x_rot,y_rot) — the optimizer SEED poses and the pose-gap reference, recorded in start_pose_per_frame. Since the 2026-08-12 re-baseline, expected_pose_per_frame holds the POST-FIX RECOVERED poses (the engine's actual optima on the fixed kernel), not fem.jts.",
-
+  "golden_units": "fem.jts (3 frames, JT_EULER_312: x_tran,y_tran,z_tran,z_rot,x_rot,y_rot) \u2014 the optimizer SEED poses and the pose-gap reference, recorded in start_pose_per_frame. Since the 2026-08-12 re-baseline, expected_pose_per_frame holds the POST-FIX RECOVERED poses (the engine's actual optima on the fixed kernel), not fem.jts.",
   "start_pose_per_frame": [
-    { "frame": 0, "x_tran": 18.52191, "y_tran": 19.69514, "z_tran": -1027.713, "z_rot": -26.69708, "x_rot": -7.419319, "y_rot": -0.2587041 },
-    { "frame": 1, "x_tran": 19.01747, "y_tran": 20.15555, "z_tran": -1026.732, "z_rot": -27.37827, "x_rot": -7.56846, "y_rot": -0.2358893 },
-    { "frame": 2, "x_tran": 16.4709, "y_tran": 16.4248, "z_tran": -1028.69, "z_rot": -24.12223, "x_rot": -7.678545, "y_rot": 0.3264978 }
+    {
+      "frame": 0,
+      "x_tran": 18.52191,
+      "y_tran": 19.69514,
+      "z_tran": -1027.713,
+      "z_rot": -26.69708,
+      "x_rot": -7.419319,
+      "y_rot": -0.2587041
+    },
+    {
+      "frame": 1,
+      "x_tran": 19.01747,
+      "y_tran": 20.15555,
+      "z_tran": -1026.732,
+      "z_rot": -27.37827,
+      "x_rot": -7.56846,
+      "y_rot": -0.2358893
+    },
+    {
+      "frame": 2,
+      "x_tran": 16.4709,
+      "y_tran": 16.4248,
+      "z_tran": -1028.69,
+      "z_rot": -24.12223,
+      "x_rot": -7.678545,
+      "y_rot": 0.3264978
+    }
   ],
-
   "expected_pose_per_frame": [
-    { "frame": 0, "x_tran": 18.4902, "y_tran": 19.7061, "z_tran": -1028.6, "z_rot": -26.8388, "x_rot": -7.39188, "y_rot": -0.263277 },
-    { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
-    { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
+    {
+      "frame": 0,
+      "x_tran": 18.4902,
+      "y_tran": 19.7061,
+      "z_tran": -1028.6,
+      "z_rot": -26.8388,
+      "x_rot": -7.39188,
+      "y_rot": -0.263277
+    },
+    {
+      "frame": 1,
+      "x_tran": 19.0175,
+      "y_tran": 20.1556,
+      "z_tran": -1027.93,
+      "z_rot": -27.0856,
+      "x_rot": -7.60047,
+      "y_rot": -0.318194
+    },
+    {
+      "frame": 2,
+      "x_tran": 16.4705,
+      "y_tran": 16.4248,
+      "z_tran": -1027.21,
+      "z_rot": -24.1217,
+      "x_rot": -7.55972,
+      "y_rot": 0.306176
+    }
   ],
-
   "captured_baseline": {
     "source_file": "example_studies/Kneel_1/fem_oracle.jtak",
     "capture_ready": true,
     "captured_per_frame": [
-      { "frame": 0, "x_tran": 18.3984, "y_tran": 19.6297, "z_tran": -1022.93, "z_rot": -27.0152, "x_rot": -7.79231, "y_rot": -0.227713 },
-      { "frame": 1, "x_tran": 18.8612, "y_tran": 20.1056, "z_tran": -1020.42, "z_rot": -27.8138, "x_rot": -7.95082, "y_rot": -0.260229 },
-      { "frame": 2, "x_tran": 16.3709, "y_tran": 16.3502, "z_tran": -1024.28, "z_rot": -24.4668, "x_rot": -8.04481, "y_rot": 0.424626 }
+      {
+        "frame": 0,
+        "x_tran": 18.3984,
+        "y_tran": 19.6297,
+        "z_tran": -1022.93,
+        "z_rot": -27.0152,
+        "x_rot": -7.79231,
+        "y_rot": -0.227713
+      },
+      {
+        "frame": 1,
+        "x_tran": 18.8612,
+        "y_tran": 20.1056,
+        "z_tran": -1020.42,
+        "z_rot": -27.8138,
+        "x_rot": -7.95082,
+        "y_rot": -0.260229
+      },
+      {
+        "frame": 2,
+        "x_tran": 16.3709,
+        "y_tran": 16.3502,
+        "z_tran": -1024.28,
+        "z_rot": -24.4668,
+        "x_rot": -8.04481,
+        "y_rot": 0.424626
+      }
     ],
-    "notes": "Direct comparative output of the Qt5/GPU pipeline on Kneel_1 (pre-fix kernel, production-shaped run). Historical reference only since the 2026-08-12 re-baseline (rebaseline_2026-08-12 below): its frame-1 z gap (6.31 mm) was the plan's ORIGINAL direction-prediction basis, but it was measured on a DIFFERENT pipeline than the Tier-2 oracle — the oracle's own pre-fix frame-1 z gap was 1.19 mm (see the rebaseline verdict)."
+    "notes": "Direct comparative output of the Qt5/GPU pipeline on Kneel_1 (pre-fix kernel, production-shaped run). Historical reference only since the 2026-08-12 re-baseline (rebaseline_2026-08-12 below): its frame-1 z gap (6.31 mm) was the plan's ORIGINAL direction-prediction basis, but it was measured on a DIFFERENT pipeline than the Tier-2 oracle \u2014 the oracle's own pre-fix frame-1 z gap was 1.19 mm (see the rebaseline verdict)."
   },
-
   "rebaseline_2026-08-12": {
-    "event": "The ONE re-baseline (plan 008 U4, Findings 1/12): the distance-map kernel index fix (src/compute/distance_map_metric.cu:27 — blockIdx.y + gridDim.x -> blockIdx.y * gridDim.x) + a Tier-2 oracle re-run, SINGLE-VARIABLE (Canny pinned 3/0/150; dilation 6; backface culling OFF; flat budget 3000; search range (12,12,15,15,15,15) — run_config unchanged; nothing else bundled). Both the pre-fix and post-fix oracle runs below were executed on THIS pipeline (test/oracle/oracle_test.cpp on the RTX 3090), so the delta is a same-pipeline comparison. Deterministic: the pre-fix frame-0 numbers reproduce the originally recorded measured block bit-for-bit (IoU 0.993627, L1 21675).",
+    "event": "The ONE re-baseline (plan 008 U4, Findings 1/12): the distance-map kernel index fix (src/compute/distance_map_metric.cu:27 \u2014 blockIdx.y + gridDim.x -> blockIdx.y * gridDim.x) + a Tier-2 oracle re-run, SINGLE-VARIABLE (Canny pinned 3/0/150; dilation 6; backface culling OFF; flat budget 3000; search range (12,12,15,15,15,15) \u2014 run_config unchanged; nothing else bundled). Both the pre-fix and post-fix oracle runs below were executed on THIS pipeline (test/oracle/oracle_test.cpp on the RTX 3090), so the delta is a same-pipeline comparison. Deterministic: the pre-fix frame-0 numbers reproduce the originally recorded measured block bit-for-bit (IoU 0.993627, L1 21675).",
     "pre_fix_recovered_per_frame": [
-      { "frame": 0, "x_tran": 18.4744, "y_tran": 19.6988, "z_tran": -1028.62, "z_rot": -26.8322, "x_rot": -7.37766, "y_rot": -0.256672 },
-      { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
-      { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
+      {
+        "frame": 0,
+        "x_tran": 18.4744,
+        "y_tran": 19.6988,
+        "z_tran": -1028.62,
+        "z_rot": -26.8322,
+        "x_rot": -7.37766,
+        "y_rot": -0.256672
+      },
+      {
+        "frame": 1,
+        "x_tran": 19.0175,
+        "y_tran": 20.1556,
+        "z_tran": -1027.93,
+        "z_rot": -27.0856,
+        "x_rot": -7.60047,
+        "y_rot": -0.318194
+      },
+      {
+        "frame": 2,
+        "x_tran": 16.4705,
+        "y_tran": 16.4248,
+        "z_tran": -1027.21,
+        "z_rot": -24.1217,
+        "x_rot": -7.55972,
+        "y_rot": 0.306176
+      }
     ],
     "post_fix_recovered_per_frame": [
-      { "frame": 0, "x_tran": 18.4902, "y_tran": 19.7061, "z_tran": -1028.6, "z_rot": -26.8388, "x_rot": -7.39188, "y_rot": -0.263277 },
-      { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
-      { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
+      {
+        "frame": 0,
+        "x_tran": 18.4902,
+        "y_tran": 19.7061,
+        "z_tran": -1028.6,
+        "z_rot": -26.8388,
+        "x_rot": -7.39188,
+        "y_rot": -0.263277
+      },
+      {
+        "frame": 1,
+        "x_tran": 19.0175,
+        "y_tran": 20.1556,
+        "z_tran": -1027.93,
+        "z_rot": -27.0856,
+        "x_rot": -7.60047,
+        "y_rot": -0.318194
+      },
+      {
+        "frame": 2,
+        "x_tran": 16.4705,
+        "y_tran": 16.4248,
+        "z_tran": -1027.21,
+        "z_rot": -24.1217,
+        "x_rot": -7.55972,
+        "y_rot": 0.306176
+      }
     ],
     "delta_post_minus_pre_per_frame_mm_deg": [
-      { "frame": 0, "x_tran": 0.0159, "y_tran": 0.0073, "z_tran": 0.0137, "z_rot": -0.0066, "x_rot": -0.0142, "y_rot": -0.0066 },
-      { "frame": 1, "x_tran": 0, "y_tran": 0, "z_tran": 0, "z_rot": 0, "x_rot": 0, "y_rot": 0 },
-      { "frame": 2, "x_tran": 0, "y_tran": 0, "z_tran": 0, "z_rot": 0, "x_rot": 0, "y_rot": 0 }
+      {
+        "frame": 0,
+        "x_tran": 0.0159,
+        "y_tran": 0.0073,
+        "z_tran": 0.0137,
+        "z_rot": -0.0066,
+        "x_rot": -0.0142,
+        "y_rot": -0.0066
+      },
+      {
+        "frame": 1,
+        "x_tran": 0,
+        "y_tran": 0,
+        "z_tran": 0,
+        "z_rot": 0,
+        "x_rot": 0,
+        "y_rot": 0
+      },
+      {
+        "frame": 2,
+        "x_tran": 0,
+        "y_tran": 0,
+        "z_tran": 0,
+        "z_rot": 0,
+        "x_rot": 0,
+        "y_rot": 0
+      }
     ],
     "pre_fix_measured_per_frame": {
-      "recovered_pose_iou": [0.993627, 0.991038, 0.994568],
-      "recovered_pose_L1_pixel_diff": [21675, 30855, 18615],
-      "recovered_pose_per_px_L1": [0.0206709, 0.0294256, 0.0177526],
-      "z_gap_vs_fem_jts_mm": [0.905, 1.193, 1.481]
+      "recovered_pose_iou": [
+        0.993627,
+        0.991038,
+        0.994568
+      ],
+      "recovered_pose_L1_pixel_diff": [
+        21675,
+        30855,
+        18615
+      ],
+      "recovered_pose_per_px_L1": [
+        0.0206709,
+        0.0294256,
+        0.0177526
+      ],
+      "z_gap_vs_fem_jts_mm": [
+        0.905,
+        1.193,
+        1.481
+      ]
     },
     "post_fix_measured_per_frame": {
-      "recovered_pose_iou": [0.993779, 0.991038, 0.994568],
-      "recovered_pose_L1_pixel_diff": [21165, 30855, 18615],
-      "recovered_pose_per_px_L1": [0.0201845, 0.0294256, 0.0177526],
-      "z_gap_vs_fem_jts_mm": [0.892, 1.193, 1.481]
+      "recovered_pose_iou": [
+        0.993779,
+        0.991038,
+        0.994568
+      ],
+      "recovered_pose_L1_pixel_diff": [
+        21165,
+        30855,
+        18615
+      ],
+      "recovered_pose_per_px_L1": [
+        0.0201845,
+        0.0294256,
+        0.0177526
+      ],
+      "z_gap_vs_fem_jts_mm": [
+        0.892,
+        1.193,
+        1.481
+      ]
     },
     "direction_claim": "Finding 12 / angle 02 pre-registration: post-fix recovered z moves TOWARD fem.jts (-1027.713) and the 6.31 mm frame-1 gap shrinks materially.",
-    "verdict": "PARTIALLY CONFIRMED on the same-pipeline data, REFUTED as a material move: (a) the only frame the fix moved was frame 0 — recovered z moved toward fem.jts by 0.014 mm (|z gap| 0.9054 -> 0.8916 mm), direction CONFIRMED, magnitude negligible; (b) frames 1 and 2 recovered bit-identically pre/post (DIRECT's discrete partition did not move) — no gap shrink; (c) the 6.31 mm frame-1 gap was the Qt5 fem_oracle.jtak capture's number (a DIFFERENT pipeline, captured_baseline above); THIS oracle's frame-1 z gap was already 1.19 mm pre-fix, so 'shrinks materially' is refuted as a claim about this pipeline. Net: the fix's recovered-pose impact is tiny (frame-0 z +0.014 mm; IoU 0.993627 -> 0.993779; per-px L1 0.020671 -> 0.020185), far inside the 15 mm z informational band — the trustworthy baseline is the post-fix reference above, and later gates cite these numbers.",
+    "verdict": "PARTIALLY CONFIRMED on the same-pipeline data, REFUTED as a material move: (a) the only frame the fix moved was frame 0 \u2014 recovered z moved toward fem.jts by 0.014 mm (|z gap| 0.9054 -> 0.8916 mm), direction CONFIRMED, magnitude negligible; (b) frames 1 and 2 recovered bit-identically pre/post (DIRECT's discrete partition did not move) \u2014 no gap shrink; (c) the 6.31 mm frame-1 gap was the Qt5 fem_oracle.jtak capture's number (a DIFFERENT pipeline, captured_baseline above); THIS oracle's frame-1 z gap was already 1.19 mm pre-fix, so 'shrinks materially' is refuted as a claim about this pipeline. Net: the fix's recovered-pose impact is tiny (frame-0 z +0.014 mm; IoU 0.993627 -> 0.993779; per-px L1 0.020671 -> 0.020185), far inside the 15 mm z informational band \u2014 the trustworthy baseline is the post-fix reference above, and later gates cite these numbers.",
     "adversarial_probe": {
-      "sweep": "14 poses over DIRECT_DILATION: ±200 mm off-axis (x/y/z), behind camera (z = +200/+500), 90/180-degree rotations about each axis",
-      "result": "all 14 evals FINITE and cudaGetLastError() == cudaSuccess after each, pre-fix and post-fix identically (the sticky-error trap at render_engine.cu:713 stays closed; it is NOT deleted here — that is the perf plan's Cut 1)",
-      "direct_mahfouz_at_empty_silhouette": "-nan (isfinite=0) with clean cudaGetLastError — the Bug-6 0/0 via the always-true pointer guard at implant_mahfouz_metric.cu:324/:446, RECORDED only (not asserted); the value guards are the deferred hygiene pass"
+      "sweep": "14 poses over DIRECT_DILATION: \u00b1200 mm off-axis (x/y/z), behind camera (z = +200/+500), 90/180-degree rotations about each axis",
+      "result": "all 14 evals FINITE and cudaGetLastError() == cudaSuccess after each, pre-fix and post-fix identically (the sticky-error trap at render_engine.cu:713 stays closed; it is NOT deleted here \u2014 that is the perf plan's Cut 1)",
+      "direct_mahfouz_at_empty_silhouette": "-nan (isfinite=0) with clean cudaGetLastError \u2014 the Bug-6 0/0 via the always-true pointer guard at implant_mahfouz_metric.cu:324/:446, RECORDED only (not asserted); the value guards are the deferred hygiene pass"
     }
   },
-
   "tolerances": {
     "silhouette_iou_threshold": 0.85,
     "silhouette_pixel_diff_threshold": 0.021,
@@ -106,7 +293,7 @@
       "z_rot": 0.29,
       "x_rot": 0.12,
       "y_rot": 0.08,
-      "note": "Post-fix Tier-2 oracle maxima (2026-08-12, per-frame |gap| vs fem.jts across the 3 Kneel_1 frames). The pre-re-baseline values (x 0.16 / y 0.08 / z 6.31 / z_rot 0.44 / x_rot 0.38 / y_rot 0.10) were the Qt5 fem_oracle.jtak capture's — see rebaseline_2026-08-12.verdict."
+      "note": "Post-fix Tier-2 oracle maxima (2026-08-12, per-frame |gap| vs fem.jts across the 3 Kneel_1 frames). The pre-re-baseline values (x 0.16 / y 0.08 / z 6.31 / z_rot 0.44 / x_rot 0.38 / y_rot 0.10) were the Qt5 fem_oracle.jtak capture's \u2014 see rebaseline_2026-08-12.verdict."
     },
     "measured": {
       "note": "POST-FIX reference (2026-08-12 re-baseline, plan 008 U4) measured via test/oracle/oracle_test.cpp on the RTX 3090. The legacy singular keys below keep frame 0 for backward readability; the per-frame rows are the reference every later gate cites.",
@@ -114,15 +301,427 @@
       "recovered_pose_L1_pixel_diff": 21165,
       "recovered_pose_per_px_L1": 0.0201845,
       "start_pose_iou_correspondence": 1.0,
-      "recovered_pose_vs_fem_jts_gap_mm_deg": [-0.0317025, 0.0109739, -0.891632, 0.0274348, -0.00457247, -0.141747],
-      "per_frame": [
-        { "frame": 0, "iou": 0.993779, "l1_pixel_diff": 21165, "per_px_l1": 0.0201845, "gap_mm_deg": [-0.0317025, 0.0109739, -0.891632, 0.0274348, -0.00457247, -0.141747] },
-        { "frame": 1, "iou": 0.991038, "l1_pixel_diff": 30855, "per_px_l1": 0.0294256, "gap_mm_deg": [0, 0, -1.19342, -0.0320073, -0.0823045, 0.292638] },
-        { "frame": 2, "iou": 0.994568, "l1_pixel_diff": 18615, "per_px_l1": 0.0177526, "gap_mm_deg": [-0.000406442, 0, 1.48148, 0.118828, -0.0203221, 0.000508053] }
+      "recovered_pose_vs_fem_jts_gap_mm_deg": [
+        -0.0317025,
+        0.0109739,
+        -0.891632,
+        0.0274348,
+        -0.00457247,
+        -0.141747
       ],
-      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts start pose; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid); distance-map kernel index FIXED at src/compute/distance_map_metric.cu:27 (plan 008 U4 — the one re-baseline, single-variable)",
+      "per_frame": [
+        {
+          "frame": 0,
+          "iou": 0.993779,
+          "l1_pixel_diff": 21165,
+          "per_px_l1": 0.0201845,
+          "gap_mm_deg": [
+            -0.0317025,
+            0.0109739,
+            -0.891632,
+            0.0274348,
+            -0.00457247,
+            -0.141747
+          ]
+        },
+        {
+          "frame": 1,
+          "iou": 0.991038,
+          "l1_pixel_diff": 30855,
+          "per_px_l1": 0.0294256,
+          "gap_mm_deg": [
+            0,
+            0,
+            -1.19342,
+            -0.0320073,
+            -0.0823045,
+            0.292638
+          ]
+        },
+        {
+          "frame": 2,
+          "iou": 0.994568,
+          "l1_pixel_diff": 18615,
+          "per_px_l1": 0.0177526,
+          "gap_mm_deg": [
+            -0.000406442,
+            0,
+            1.48148,
+            0.118828,
+            -0.0203221,
+            0.000508053
+          ]
+        }
+      ],
+      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts start pose; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid); distance-map kernel index FIXED at src/compute/distance_map_metric.cu:27 (plan 008 U4 \u2014 the one re-baseline, single-variable)",
       "frame_label_mapping": "1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif; 1024/2807.tif <-> Labels/fem/AT_K1_V1_0170_label_fem.tif; 1024/2808.tif <-> Labels/fem/AT_K1_V1_0180_label_fem.tif (resolved empirically per frame: start-pose render IoU == 1.0; the binary label TIFFs use a bottom-left y-origin, so the oracle vertically flips the label)"
     },
-    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9938-0.9946); per-px L1 and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by start-pose IoU == 1.0 per frame. Post-fix measurements recorded on the RTX 3090 (2026-08-12 re-baseline); other GPU hardware may vary slightly. The distance-map index fix moved only frame 0's recovery (z +0.014 mm toward fem.jts; frames 1/2 bit-identical) — see rebaseline_2026-08-12 for the full delta record."
+    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9938-0.9946); per-px L1 and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by start-pose IoU == 1.0 per frame. Post-fix measurements recorded on the RTX 3090 (2026-08-12 re-baseline); other GPU hardware may vary slightly. The distance-map index fix moved only frame 0's recovery (z +0.014 mm toward fem.jts; frames 1/2 bit-identical) \u2014 see rebaseline_2026-08-12 for the full delta record."
+  },
+  "z_profiles": {
+    "schema_version": 1,
+    "recorded": "2026-08-12 plan-008 U5 run 2 (RTX 3090 Ti, test/oracle/z_profile_test.cpp jtml.z_profile; run 1 recorded, run 2 enforced the ranking pin-first \u2014 values re-recorded to the run-2 measurement)",
+    "off_axis_angle_deg_vs_camera_z": 1.08611,
+    "coupling_inplane_delta_mm": 2,
+    "coupling_delta_note": "proxy for the perturbation suite's minimal-detectable in-plane regression (dilation-6 absorption radius ~6 px ~1.9 mm at the model plane)",
+    "ranking_d6_f0": [
+      "DIRECT_DILATION",
+      "DIRECT_MAHFOUZ",
+      "DIRECT_DILATION_T1"
+    ],
+    "valley_depth_full_d6_f0": {
+      "DIRECT_DILATION": 0.999993,
+      "DIRECT_MAHFOUZ": 0.606675,
+      "DIRECT_DILATION_T1": 0.481132
+    },
+    "term_decomposition_finding": "chamfer vs dilated valley depth at leaf dilation 1 frame 0: vd_chamfer=0.9886, vd_dilated=0.9965 \u2014 the chamfer valley is NOT deeper than the dilated valley by the angle-06 G2 metric (G2 precondition vd(chamfer)-vd(dilated) >= 0.05 FAILS: -0.0079). Both terms are z-visible in the normalized sense (vd > 0.95) but the dilated term's min sits at dz=0 while the chamfer min sits at dz=-1 (the oracle's recovered z offset -0.892 mm).",
+    "z_profiles": [
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 6,
+        "frame": 0,
+        "valley_depth_full": 0.999993,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.4303,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 1,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": -0.4,
+        "poly_fit_residual_full_norm": 0.0181037,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 3,
+        "frame": 0,
+        "valley_depth_full": 0.996341,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.4711,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 7.27596e-12,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 0.996346,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": -0.45,
+        "poly_fit_residual_full_norm": 0.0118313,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 1,
+        "frame": 0,
+        "valley_depth_full": 0.996515,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.4242,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 0.99652,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": -0.69,
+        "poly_fit_residual_full_norm": 0.0100268,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 4,
+        "frame": 0,
+        "valley_depth_full": 0.995015,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.454,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 0.995019,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": -0.42,
+        "poly_fit_residual_full_norm": 0.0140729,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 10,
+        "frame": 0,
+        "valley_depth_full": 0.994884,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.5,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 0.994889,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": 0.28,
+        "poly_fit_residual_full_norm": 0.0301973,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 2,
+        "frame": 0,
+        "valley_depth_full": 0.996449,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.4398,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.988574,
+        "valley_depth_dilated": 0.996454,
+        "argmin_offset_chamfer_mm": -1,
+        "poly_argmin_full_mm": -0.56,
+        "poly_fit_residual_full_norm": 0.0110938,
+        "poly_argmin_chamfer_mm": 0.07
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 6,
+        "frame": 1,
+        "valley_depth_full": 0.981239,
+        "argmin_offset_full_mm": -3,
+        "plateau_halfwidth_full_mm": 14.3151,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.981243,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -2.09,
+        "poly_fit_residual_full_norm": 0.0155066,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 3,
+        "frame": 1,
+        "valley_depth_full": 0.986105,
+        "argmin_offset_full_mm": -3,
+        "plateau_halfwidth_full_mm": 14.3283,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 7.27596e-12,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.986111,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -2.22,
+        "poly_fit_residual_full_norm": 0.0149808,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 1,
+        "frame": 1,
+        "valley_depth_full": 0.984646,
+        "argmin_offset_full_mm": -1,
+        "plateau_halfwidth_full_mm": 14.3506,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.984647,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -2.41,
+        "poly_fit_residual_full_norm": 0.0157431,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 4,
+        "frame": 1,
+        "valley_depth_full": 0.984694,
+        "argmin_offset_full_mm": -3,
+        "plateau_halfwidth_full_mm": 14.3362,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.984699,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -2.19,
+        "poly_fit_residual_full_norm": 0.0140991,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 10,
+        "frame": 1,
+        "valley_depth_full": 0.950761,
+        "argmin_offset_full_mm": -4,
+        "plateau_halfwidth_full_mm": 14.233,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.95073,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -1.51,
+        "poly_fit_residual_full_norm": 0.0326261,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 2,
+        "frame": 1,
+        "valley_depth_full": 0.985426,
+        "argmin_offset_full_mm": -3,
+        "plateau_halfwidth_full_mm": 14.3589,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.975415,
+        "valley_depth_dilated": 0.985432,
+        "argmin_offset_chamfer_mm": -3,
+        "poly_argmin_full_mm": -2.32,
+        "poly_fit_residual_full_norm": 0.0140804,
+        "poly_argmin_chamfer_mm": -1.81
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 6,
+        "frame": 2,
+        "valley_depth_full": 0.976386,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 13.9697,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.976378,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": 0.46,
+        "poly_fit_residual_full_norm": 0.0323954,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 3,
+        "frame": 2,
+        "valley_depth_full": 0.977597,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 14.2001,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 7.27596e-12,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.977591,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": 0.31,
+        "poly_fit_residual_full_norm": 0.0286688,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 1,
+        "frame": 2,
+        "valley_depth_full": 0.985604,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 14.336,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.985602,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": -0.03,
+        "poly_fit_residual_full_norm": 0.0253158,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 4,
+        "frame": 2,
+        "valley_depth_full": 0.972192,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 14.1198,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.972182,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": 0.48,
+        "poly_fit_residual_full_norm": 0.0283339,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 10,
+        "frame": 2,
+        "valley_depth_full": 0.97684,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 14,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.976827,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": 0.83,
+        "poly_fit_residual_full_norm": 0.0337708,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_DILATION",
+        "dilation": 2,
+        "frame": 2,
+        "valley_depth_full": 0.981162,
+        "argmin_offset_full_mm": 1,
+        "plateau_halfwidth_full_mm": 14.2821,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "valley_depth_chamfer": 0.990841,
+        "valley_depth_dilated": 0.981157,
+        "argmin_offset_chamfer_mm": 1,
+        "poly_argmin_full_mm": 0.12,
+        "poly_fit_residual_full_norm": 0.0265844,
+        "poly_argmin_chamfer_mm": 1.84
+      },
+      {
+        "variant": "DIRECT_MAHFOUZ",
+        "dilation": 6,
+        "frame": 0,
+        "valley_depth_full": 0.606675,
+        "argmin_offset_full_mm": -7,
+        "plateau_halfwidth_full_mm": 10.9848,
+        "noise_floor": 0.451908,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "poly_argmin_full_mm": -4.46
+      },
+      {
+        "variant": "DIRECT_DILATION_T1",
+        "dilation": 6,
+        "frame": 0,
+        "valley_depth_full": 0.481132,
+        "argmin_offset_full_mm": 15,
+        "plateau_halfwidth_full_mm": 13.5,
+        "noise_floor": 0,
+        "z_blind": false,
+        "engine_max_abs_diff_vs_composed": 0,
+        "poly_argmin_full_mm": 15
+      }
+    ],
+    "coupling": [
+      {
+        "dilation": 6,
+        "argmin_minus_mm": -6,
+        "argmin_plus_mm": -15,
+        "dz_star_d_inplane_mm_per_mm": -2.25
+      },
+      {
+        "dilation": 1,
+        "argmin_minus_mm": -15,
+        "argmin_plus_mm": -15,
+        "dz_star_d_inplane_mm_per_mm": 0
+      }
+    ],
+    "finding_updateCostFunctionParameterValues_noop": "CostFunctionManager::updateCostFunctionParameterValues(int) writes to a COPY (getIntParameters returns by value) \u2014 a silent no-op; the oracle fixture only worked because its dilation 6 equals the registered default. Production uses setIntParameterValue on the active class; the probe uses the production path. Recorded here as a documented finding for the hygiene pass.",
+    "finding_mahfouz_noise_floor_nonzero": "DIRECT_MAHFOUZ noise_floor = 0.137 (run 1) / 0.329 (run 2) \u2014 NOT zero: DIRECT_MAHFOUZ is an intensity/float path (ImplantMahfouzMetric), NOT the int-atomic DIRECT_DILATION reduction, so the angle-05 'expect 0 variance on the int-atomic path' holds for DIRECT_DILATION + DIRECT_DILATION_T1 (noise_floor = 0 on all 18 DD sweeps) but NOT for DIRECT_MAHFOUZ. Its vd at d6 f0 jitters 0.61-0.65 between runs; the p3 ranking order (DD > MAHFOUZ > T1) is stable, but the enforcement band for MAHFOUZ is intentionally loose (0.05) and should be widened to ~0.08 for the intensity variant in future runs if it trips."
   }
 }

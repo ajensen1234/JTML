@@ -1329,6 +1329,51 @@ set_tests_properties(jtml.oracle PROPERTIES LABELS "oracle" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
+# Tier-2 z-profile probe (plan 008 U5). GPU-only: NEVER in the headless
+# default. The cheapest instrument that sees the z-weak axis: a 31-render Δz
+# sweep (±15 mm step 1) at fixed truth through the oracle-twin injected-cost
+# lambda, per (variant, dilation, frame), with term decomposition
+# (full/chamfer/dilated from the same render), yamazaki order-4 fit, and
+# coupling (in-plane ±Δ) — records test/golden/z_profiles.json; run 1 records
+# the valley metrics/ranking, later runs enforce against baseline.json's
+# z_profiles block (pin-first). Same registration recipe as jtml.oracle
+# (repo-root WORKING_DIRECTORY, `oracle;gpu` labels, TIMEOUT 3600 nightly-grade
+# — measure after run 1 and adjust).
+# ---------------------------------------------------------------------------
+add_executable(jtml_test_z_profile oracle/z_profile_test.cpp)
+target_include_directories(jtml_test_z_profile PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_z_profile PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+    Catch2::Catch2WithMain
+)
+set_property(TARGET jtml_test_z_profile PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_z_profile PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
+)
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir, VTK + conda libs in their install dirs.
+target_link_options(jtml_test_z_profile PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.z_profile COMMAND jtml_test_z_profile)
+set_tests_properties(jtml.z_profile PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# ---------------------------------------------------------------------------
 # U9 parity gate (plan 005 U9, R13): the app's OWN optimizer run path
 # (OptimizerBridge: OptimizeIntentController gate -> OptimizerManager +
 # QThread -> Initialize with the app's containers by value + a
