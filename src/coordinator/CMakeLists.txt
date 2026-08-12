@@ -17,6 +17,12 @@
 # drop, H5/M10b). Both front-ends drive the controllers; the view-specific
 # mappers stay view-side.
 #
+# Plan 008 U7 (Cut A): optimizer_stage_script.cpp -- the container's pure
+# surface (StageScript types, BuildStageScript / DeriveStageCostParams, the
+# jtml-production graph registry). NOT consumed by the manager yet (that is Cut
+# B / U9); the dedicated TU exists so the direct-compile tests can build the
+# pure builders without optimizer_manager.cpp's Qt/CUDA surface.
+#
 # AUTOMOC: the Q_OBJECT headers (optimize_coordinator.h, optimizer_manager.h,
 # optimizer_run_controller.h, session_state_controller.h) MUST be in the source
 # list (via the coordinator header GLOB below) or AUTOMOC never mocs them ->
@@ -32,6 +38,7 @@ add_library(jtml_coordinator STATIC
     optimizer_manager.cpp
     optimizer_run_controller_core.cpp
     optimizer_run_driver.cpp
+    optimizer_stage_script.cpp
     optimizer_run_controller.cpp
     session_state_controller.cpp
     ${HEADER_FILES}

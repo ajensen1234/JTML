@@ -598,8 +598,9 @@ the oracle's z expectations)
 **Files:**
 - Create: `test/oracle/multistage_oracle_test.cpp` (new
   `jtml.oracle_multistage` target, `oracle`/`gpu` label, TIMEOUT 7200 —
-  nightly-grade (the existing flat oracle already uses TIMEOUT 3600; the
-  production shape is ~10–30 min/frame × 3 frames + tibia)
+  nightly-grade (the existing flat oracle already uses TIMEOUT 3600;
+  MEASURED: ~15 s total at ~7k evals/s — U6 refutes the derived 20–60
+  evals/s; the generous TIMEOUT is kept per spec)
 - Modify: `test/CMakeLists.txt`, `test/golden/baseline.json` (z-profile +
   oracle records)
 
@@ -613,10 +614,12 @@ the oracle's z expectations)
   "Sym_Trap"; `orientationSymTrapUpdated` relay count ≥ 60 (the happy path
   emits 61: 60 sweep poses + 1 restore emit; a count of 0 catches
   CalculateSymTrap's zero-pose early return, ~:1304–1308); costCalls()
-  lands at **30000** — trunk (20000) + 2×branch (2×5000) run under
-  SymTrap, only the leaf SEARCH is skipped (the synthesis's "20000" pin
-  assumed a trunk-only drive; the engine runs branches unconditionally —
-  verified). The leaf init + CalculateSymTrap still run.
+  lands at **0** — U6-measured: the `if (!sym_trap_call)` guard at
+  optimizer_manager.cpp:927 wraps trunk AND branches, so under SymTrap only
+  the leaf-CFM init + CalculateSymTrap run (60 uncounted analysis evals;
+  stageText stays "Idle"; the early return at :1201 skips the final
+  UpdateDisplay). (Both the synthesis's "20000" and the review's "30000"
+  readings were wrong — the outer guard was missed.)
 - Side effects to plan for: CalculateSymTrap writes `Results.csv` /
   `Results.xyz` / `Results2D.xy` into the process CWD and sleeps ~5 s
   (60 × 5000/60 ms) + 60 extra leaf-cost evals. Run the oracle from a
@@ -648,9 +651,10 @@ expectations; assertions enforce from run 2.
   per-frame IoU ≥ 0.85 vs the re-baselined values; stageText reports
   Trunk → Branch 1/2 → Extra Z-Translation (the leaf; the channel never
   says "Leaf") → Finished.
-- Edge case: sym_trap directive — costCalls lands at 30000 (20000 trunk +
-  2×5000 branch; only the leaf search is skipped — the synthesis's "20000"
-  was trunk-only); relay count ≥ 60 (61 on the happy path).
+- Edge case: sym_trap directive — costCalls lands at 0 (U6-measured: the
+  outer `!sym_trap_call` guard skips trunk AND branches; only leaf init +
+  CalculateSymTrap run); relay count ≥ 60 (61 on the happy path); stageText
+  stays "Idle".
 - Edge case: `number_branches` = 0 or leaf disabled — the script's enabled
   flags map 1:1 (no phantom stages).
 - Error path: a run whose stage bookkeeping misses a cap fails the gate
@@ -686,9 +690,11 @@ behavior change.
 **Approach:**
 - `StageKind {Trunk, Branch, Leaf}` + `StageSpec {kind, range, budget,
   repeat, cfm_index}`; repeat=0 expresses the Sym_Trap no-search leaf;
-  the SymTrap script is `{Trunk, Branch×N, Leaf repeat=0}` — branches run
-  under SymTrap (verified engine behavior, costCalls 30000 at the
-  production shape), only the leaf search is suppressed;
+  the SymTrap script is `[{Leaf, repeat=0}]` — U6-measured: today's engine
+  skips trunk AND branches under SymTrap (the `if (!sym_trap_call)` guard at
+  optimizer_manager.cpp:927 wraps both; costCalls == 0, only
+  CalculateSymTrap's 60 uncounted analysis evals run). The script-driven
+  loop must reproduce this bit-identically;
   repeat=N expresses the branch group (dilate+emit once, re-seed per
   repeat).
 - `BuildStageScript(settings, directive)` reproduces the current loop's
@@ -846,7 +852,7 @@ the driver seam's by-value discipline.
 - Integration: frame-to-frame seed chaining (invariant 4) across the 3
   frames.
 - Edge case: Sym_Trap directive → repeat=0 leaf → no search, costCalls at
-  30000, relay ≥ 60 (pins from U6 stay green through the relocation).
+  0, relay ≥ 60 (pins from U6 stay green through the relocation).
 - Error path: a stage with a bad cfm_index fails fast with the manager's
   existing error path (no silent skip).
 - Parity: recorded pose→score diff empty between the pre-Cut-B and

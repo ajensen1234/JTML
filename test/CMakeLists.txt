@@ -359,6 +359,66 @@ target_link_options(jtml_test_metric_semantics_props PRIVATE
 add_test(NAME jtml.metric_semantics_props COMMAND jtml_test_metric_semantics_props)
 set_tests_properties(jtml.metric_semantics_props PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Plan 008 U7 (Cut A): the pure stage-script surface pins (StageScript types,
+# BuildStageScript, DeriveStageCostParams, CumulativeStageCaps, the
+# jtml-production graph registry). The builder TU direct-compiles against the
+# real OptimizerSettings (settings_constants.h defaults) + the real
+# CostFunctionManager/CostFunction linked from jtml_compute (constructor +
+# parameter surface only — CPU-only, no CUDA calls at runtime — the same
+# fixture recipe as jtml.cost_function_registry): the DeriveStageCostParams
+# integration feeds the manager's own getActiveCostFunctionClass()
+# ->getIntParameters()/getBoolParameters() vectors, proving the derivation
+# consumes the exact data shape the Optimize() loop's inline scan reads
+# (engine runtime dilation 6/4/1).
+add_executable(jtml_test_stage_script
+    unit/test_stage_script.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/optimizer_stage_script.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_stage_script PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_stage_script PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    ${JTA_LIBS})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir; torch/cuda deps in the pixi env (the .so's own RUNPATH covers
+# them, this is belt-and-braces for the test binary).
+target_link_options(jtml_test_stage_script PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.stage_script COMMAND jtml_test_stage_script)
+set_tests_properties(jtml.stage_script PROPERTIES LABELS "headless" TIMEOUT 300)
+
+# Hegel PBT twin for the stage-script surface (plan 008 U7): budget-sum /
+# order / positivity / directive-invariance / determinism invariants over
+# randomized settings + the U6-corrected Sym_Trap leaf-only shape (repeat=0,
+# empty caps). Pure: Qt only via the header-only QMetaType macro (the
+# services OptimizerSettings ctor compiles direct); same hegel link/rpath
+# recipe as the other props targets.
+add_executable(jtml_test_stage_script_props
+    unit/test_stage_script_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/optimizer_stage_script.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_stage_script_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_stage_script_props PRIVATE
+    Catch2::Catch2WithMain hegel dl Qt6::Core)
+target_link_options(jtml_test_stage_script_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.stage_script_props COMMAND jtml_test_stage_script_props)
+set_tests_properties(jtml.stage_script_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # Hegel PBT for the DIRECT container (src/domain): cached-min consistency with the
 # column tail box across random insertions.
 add_executable(jtml_test_direct_data_storage_props
