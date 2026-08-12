@@ -144,9 +144,20 @@ Dialog {
             }
         }
 
-        PosesTable {
+        // 007 U5 (D-04/D-05): Loader-gated table — the PosesTable (6
+        // PoseCell TextFields per row) is only built while the dialog is
+        // open. Closing destroys it (frees the delegates; reopen is a
+        // natural re-sync per D-05). The dirty badge, action row, and
+        // validation label stay alive above (they live in this dialog's
+        // contentItem, outside the Loader).
+        Loader {
+            id: poseTableLoader
             Layout.fillWidth: true
             Layout.fillHeight: true
+            active: root.visible
+            sourceComponent: PosesTable {
+                id: poseTable
+            }
         }
 
         // ---- Inline validation message (review fix) -----------------------
@@ -160,11 +171,16 @@ Dialog {
         }
     }
 
-    // Plan 007 U4: focus + dirty-guard lifecycle.
+    // Plan 007 U4: focus + dirty-guard lifecycle. U5: the table id lives
+    // inside the Loader's component scope — reach it via loader.item (the
+    // old direct `poseTable` reference was a dangling id, fixed here). The
+    // Loader creates the item synchronously on open; guard anyway.
     onOpened: {
         root.discardConfirmed = false
         // Initial focus lands on the first editable cell.
-        poseTable.focusFirstCell()
+        if (poseTableLoader.item) {
+            poseTableLoader.item.focusFirstCell()
+        }
     }
     onClosed: {
         if (poseBridge.dirty && !root.discardConfirmed) {

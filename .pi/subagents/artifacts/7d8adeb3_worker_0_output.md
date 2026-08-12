@@ -1,0 +1,8 @@
+All checks pass. The implementation is complete and verified:
+
+**Work item summary:**
+1. **Virtualization** — Repeater-in-Column-in-ScrollView → `ListView` with `reuseItems: true`, `required property` roles (DEL-1 satisfied), delegate rows at `width: ListView.view.width` (D-02/I-08 stretch fix), fixed column grid 44+6×78 via `Layout.preferredWidth`, shared trailing-gutter width authority (I-06: overlay scrollbar covers gutter, never the ZA column), `ScrollBar.vertical` attached; I-09 moot (no `availableWidth`-sized Column remains).
+2. **Commit-on-pool** — `onPooled` is empty *by design* with the ordering pinned in comments: focus loss on pooling fires `editingFinished` (commit reads live text against the U3-captured tuple) *before* the item is pooled — there is nothing to reset. `onReused` calls the new `PoseCell.resetDisplay()` on all 6 cells, which re-arms the `storedValue` binding via `Qt.binding` and clears the stale commit tuple (no live edit can survive pooling).
+3. **Loader gate (D-04/D-05)** — `PosesTable` now loads inside a `Loader` with `active: root.visible`: zero table instances while the dialog is closed; destruction on close = natural re-sync. **Bonus fix:** the U4 `poseTable.focusFirstCell()` referenced a dangling id (latent ReferenceError on dialog open) — now `poseTableLoader.item.focusFirstCell()` with a guard; `focusFirstCell` retargeted from `repeater.itemAt(0)` to `tableList.itemAtIndex(0)`.
+4. **Empty/disabled states** — empty labels + `visible`/`enabled` run-lock bindings preserved on the ListView.
+5. **Perf** — O(visible rows) documented; I-02 refresh-granularity note added.

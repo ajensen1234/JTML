@@ -1,0 +1,203 @@
+{
+  "runId": "7d8adeb3",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nImplement plan 007 U5 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U5 + decisions D2/D8 + the Open Questions), docs/reviews/2026-08-12-qml-experimental-review.md (D-02, D-04, D-05, D-06, I-02, I-06, I-08, I-09, and delegate findings F1-F3), and the current src/app/experimental/PosesTable.qml + PoseCell.qml + PosesDialog.qml (U3 already landed the capture-at-edit-start commit contract in PoseCell).\n\nU5 GOAL: virtualize the pose table. Currently PosesTable.qml has Repeater-in-Column-in-ScrollView — every frame row (1 Label + 6 PoseCell TextFields) is instantiated. Replace with a ListView + reuseItems, with the commit-on-pool contract.\n\nSCOPE: only src/app/experimental/** QML (PosesTable.qml, PoseCell.qml if needed, PosesDialog.qml if the loader gate needs it). NO C++ changes. NO test files in this unit (the test pins land in U6's test/qml/ harness per the plan — the orchestrator will pin them next). Do not run git/jj. Do not stage/commit. Run pixi run build + pixi run test (must stay 47/47 green incl. jtml.qml_lint).\n\nWORK:\n1. Replace the Repeater/Column/ScrollView with a ListView:\n   - fixed row height (24px rows — U4 set list rows to 24; match the table's existing cell height 26 via implicitHeight; keep column widths aligned with the header: 44 + 6x78);\n   - row delegates size from ListView.view.width (review D-02/I-08: the old Layout.fillWidth inside a plain Column was a no-op; the new delegate must actually stretch);\n   - header/table width alignment with the scrollbar (review I-06: header RowLayout spans full width while the table is availableWidth — decide one width authority and align).\n2. reuseItems: true with the commit-on-pool contract (D8, owner-confirmed):\n   - capture-at-edit-start already exists (U3/D2) — the captured tuple (frame, model, axis) makes recycling safe;\n   - onPooled must run AFTER the commit handler (Qt ordering: focus loss fires editingFinished before pooling; verify the order in your implementation and pin it with a comment — never reset text before the commit reads it);\n   - onReused must imperatively re-sync the cell text (the storedValue binding is dead after editing — a plain re-bind or explicit text assignment from the new row's storedValue);\n   - no stale text from the pooled instance (explicit reset in onReused).\n3. Loader gate (review D-04/D-05): wrap the table content so it is NOT built while the dialog is closed — bind a Loader's active to the dialog's open state (or create the PosesTable on demand). Verify the PosesDialog still opens focused on the first cell (U4 added focusFirstCell — check it still works through the Loader; adjust the focus path if the Loader defers creation).\n4. Empty/disabled states must survive: the 'No frames loaded' / 'Select a model' labels, the disabled-during-run behavior, and the validation message label keep working.\n5. Scroll behavior: boundsBehavior default; smooth scrolling with 100+ frames; the scrollbar-gutter jitter concern (I-09) — if availableWidth re-evaluates on scrollbar toggle, mitigate by sizing the header from the same authority as the table.\n6. Perf expectations to verify statically and document in comments: O(visible rows) delegates instead of O(frames); note the refresh-granularity re-check (I-02: PoseTableModel::refresh() full-resets on copy/load — acceptable for now, U7 may address notify granularity).\n7. Keep the qmllint gate green (run .pixi/envs/default/lib/qt6/bin/qmllint --json; no NEW non-accepted warnings).\n\nCONSTRAINTS:\n- Behavior identical for the user flows except the perf/robustness improvements: editing, commit-on-edit-end, validation revert, dirty badge, copy/load/save buttons all keep working.\n- Do not touch the C++ bridges (PoseBridge etc.). If you find a C++ change would be needed, STOP and report it — do not make it.\n- Report: implementation summary per work item, the pool-ordering verification (how you confirmed editingFinished-before-onPooled), Loader/focus interplay result, test results, residual risks for the U6 harness to pin.",
+  "exitCode": 0,
+  "usage": {
+    "input": 15062,
+    "output": 18369,
+    "cacheRead": 4405376,
+    "cacheWrite": 0,
+    "cost": 0.0097935264,
+    "turns": 14
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 15062,
+        "output": 18369,
+        "cacheRead": 4405376,
+        "cacheWrite": 0,
+        "cost": 0.0097935264,
+        "turns": 14
+      }
+    }
+  ],
+  "durationMs": 229690,
+  "toolCount": 15,
+  "launchContractDigest": "06abc760b2ec8c42df9365f045790304b47d4c6257ccac792b3faf2dbf751bcb",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "passed",
+        "message": "changed-files evidence present."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "not-applicable",
+        "message": "tests-added evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "PosesTable.qml rewritten to a reuseItems ListView (required-property roles, ListView.view.width stretch, shared 44+6x78 grid, ScrollBar.vertical); PoseCell gained resetDisplay() re-arming the storedValue binding via Qt.binding; PosesDialog Loader-gates the table on root.visible and fixes the dangling poseTable focus reference via poseTableLoader.item. Empty/disabled/validation states preserved. Only the 3 named QML files changed; no C++, no tests, no commits."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PosesDialog.qml"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": ".pixi/envs/default/lib/qt6/bin/qmllint --json -I src/app/experimental <3 touched files>",
+          "result": "passed",
+          "summary": "No non-accepted warnings (only env import noise + context-property unqualified, both in the gate's documented accepted set)"
+        },
+        {
+          "command": "pixi run build",
+          "result": "passed",
+          "summary": "AUTORCC recompiled resources.qrc + relinked jtml_experimental"
+        },
+        {
+          "command": "pixi run test",
+          "result": "passed",
+          "summary": "47/47 headless incl. jtml.qml_lint gate"
+        }
+      ],
+      "validationOutput": [
+        "Qt6 qmllint: zero new non-accepted warnings across the 3 touched files.",
+        "Build green; full headless suite 47/47 (includes the jtml.qml_lint gate which re-lints ALL app QML against the documented accepted-ids set).",
+        "Python qt_qml_lint on touched files: only pre-existing ORD-1 ordering nits (header labels carried over from U2) and the two deliberate BND-2 Qt.binding re-arm sites (the rule's own recommended restore); no new violation classes.",
+        "Stale-id grep: no poseScroll/repeater references remain; resources.qrc/qmldir unchanged (no new files)."
+      ],
+      "residualRisks": [
+        "Pool ordering (editingFinished-before-onPooled) is documented QQC2/ListView semantics, not runtime-observed — the U6 tst_PosesTable must pin scroll-away-mid-edit commits the typed value to the captured row, recycle leaves no stale text, and the failed-commit binding stays alive.",
+        "Dialog-close-while-editing commit semantics (focused TextField destroyed by the Loader gate) unverified at runtime — U6 pin.",
+        "focusFirstCell uses children[1] positional indexing of the row delegate — works today (matches U4's convention) but brittle; U6 may switch to objectName-based lookup.",
+        "U4's dangling poseTable reference was fixed here (loader.item); the U6 harness should assert first-cell focus on open to prevent regression.",
+        "PoseTableModel::refresh() full-reset on copy/load paths still flushes the pool (I-02 accepted for now; U7 may move to role-filtered notify)."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "PosesTable.qml: Repeater/Column/ScrollView -> reuseItems ListView with required-property delegate, stretch width, onPooled(empty-by-design, ordering comment)/onReused(resetDisplay x6), ScrollBar.vertical, focusFirstCell via itemAtIndex(0). PoseCell.qml: +resetDisplay() (Qt.binding re-arm + commit-tuple reset). PosesDialog.qml: PosesTable wrapped in Loader(active: root.visible); onOpened focus via poseTableLoader.item (fixes dangling poseTable id). ~339 insertions / ~64 deletions across the 3 files.",
+      "reviewFindings": [
+        "no blockers — gate green (build + 47/47 headless + qmllint); the one latent bug found and fixed in-scope is the U4 dangling poseTable reference"
+      ],
+      "manualNotes": "The orchestrator's U6 test/qml harness should pin, in tst_PosesTable.qml: (a) instantiation count with a large fake model (only visible rows), (b) Loader gate (no rows before first open; destroyed on close), (c) C1 recycle pins (edit row 3 -> scroll away -> commit lands on row 3), (d) binding-alive pin (failed commit -> typing works, no pooled stale text), (e) C2 pin (mid-edit selection change commits to captured primary), (f) dialog-close-while-editing commit, (g) first-cell focus on open."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/7d8adeb3_worker_0_transcript.jsonl",
+  "timestamp": 1786546039065
+}

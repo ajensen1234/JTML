@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "2895b309-4e8a-4eda-b835-f36cf08749c7",
+  "title": "Implement plan 007 U5 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/202...",
+  "objective": "Implement plan 007 U5 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U5 + decisions D2/D8 + the Open Questions), docs/reviews/2026-08-12-qml-experimental-review.md (D-02, D-04, D-05, D-06, I-02, I-06, I-08, I-09, and delegate findings F1-F3), and the current src/app/experimental/PosesTable.qml + PoseCell.qml + PosesDialog.qml (U3 already landed the capture-at-edit-start commit contract in PoseCell).\n\nU5 GOAL: virtualize the pose table. Currently PosesTable.qml has Repeater-in-Column-in-ScrollView — every frame row (1 Label + 6 PoseCell TextFields) is instantiated. Replace with a ListView + reuseItems, with the commit-on-pool contract.\n\nSCOPE: only src/app/experimental/** QML (PosesTable.qml, PoseCell.qml if needed, PosesDialog.qml if the loader gate needs it). NO C++ changes. NO test files in this unit (the test pins land in U6's test/qml/ harness per the plan — the orchestrator will pin them next). Do not run git/jj. Do not stage/commit. Run pixi run build + pixi run test (must stay 47/47 green incl. jtml.qml_lint).\n\nWORK:\n1. Replace the Repeater/Column/ScrollView with a ListView:\n   - fixed row height (24px rows — U4 set list rows to 24; match the table's existing cell height 26 via implicitHeight; keep column widths aligned with the header: 44 + 6x78);\n   - row delegates size from ListView.view.width (review D-02/I-08: the old Layout.fillWidth inside a plain Column was a no-op; the new delegate must actually stretch);\n   - header/table width alignment with the scrollbar (review I-06: header RowLayout spans full width while the table is availableWidth — decide one width authority and align).\n2. reuseItems: true with the commit-on-pool contract (D8, owner-confirmed):\n   - capture-at-edit-start already exists (U3/D2) — the captured tuple (frame, model, axis) makes recycling safe;\n   - onPooled must run AFTER the commit handler (Qt ordering: focus loss fires editingFinished before pooling; verify the order in your implementation and pin it with a comment — never reset text before the commit reads it);\n   - onReused must imperatively re-sync the cell text (the storedValue binding is dead after editing — a plain re-bind or explicit text assignment from the new row's storedValue);\n   - no stale text from the pooled instance (explicit reset in onReused).\n3. Loader gate (review D-04/D-05): wrap the table content so it is NOT built while the dialog is closed — bind a Loader's active to the dialog's open state (or create the PosesTable on demand). Verify the PosesDialog still opens focused on the first cell (U4 added focusFirstCell — check it still works through the Loader; adjust the focus path if the Loader defers creation).\n4. Empty/disabled states must survive: the 'No frames loaded' / 'Select a model' labels, the disabled-during-run behavior, and the validation message label keep working.\n5. Scroll behavior: boundsBehavior default; smooth scrolling with 100+ frames; the scrollbar-gutter jitter concern (I-09) — if availableWidth re-evaluates on scrollbar toggle, mitigate by sizing the header from the same authority as the table.\n6. Perf expectations to verify statically and document in comments: O(visible rows) delegates instead of O(frames); note the refresh-granularity re-check (I-02: PoseTableModel::refresh() full-resets on copy/load — acceptable for now, U7 may address notify granularity).\n7. Keep the qmllint gate green (run .pixi/envs/default/lib/qt6/bin/qmllint --json; no NEW non-accepted warnings).\n\nCONSTRAINTS:\n- Behavior identical for the user flows except the perf/robustness improvements: editing, commit-on-edit-end, validation revert, dirty badge, copy/load/save buttons all keep working.\n- Do not touch the C++ bridges (PoseBridge etc.). If you find a C++ change would be needed, STOP and report it — do not make it.\n- Report: implementation summary per work item, the pool-ordering verification (how you confirmed editingFinished-before-onPooled), Loader/focus interplay result, test results, residual risks for the U6 harness to pin.",
+  "status": "completed",
+  "createdAt": "2026-08-12T14:43:29.216Z",
+  "updatedAt": "2026-08-12T14:47:19.092Z",
+  "runs": [
+    {
+      "runId": "a691b328-7184-4b63-96e4-4ac18a776e1d",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a691b328-7184-4b63-96e4-4ac18a776e1d",
+      "status": "complete",
+      "startedAt": "2026-08-12T14:43:29.219Z",
+      "completedAt": "2026-08-12T14:47:19.092Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "a691b328-7184-4b63-96e4-4ac18a776e1d",
+      "key": "u5",
+      "status": "completed",
+      "startedAt": "2026-08-12T14:43:29.268Z",
+      "updatedAt": "2026-08-12T14:47:19.073Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T14-43-29-313Z_019ff66d-a7a1-70d4-8ea8-e0ca2df7f562.jsonl"
+      ],
+      "runId": "7d8adeb3",
+      "agent": "worker",
+      "task": "Implement plan 007 U5 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U5 + decisions D2/D8 + the Open Questions), docs/reviews/2026-08-12-qml-experimental-review.md (D-02, D-04, D-05, D-06, I-02, I-06, I-08, I-09, and delegate findings F1-F3), and the current src/app/experimental/PosesTable.qml + PoseCell.qml + PosesDialog.qml (U3 already landed the capture-at-edit-start commit contract in PoseCell).\n\nU5 GOAL: virtualize the pose table. Currently PosesTable.qml has Repeater-in-Column-in-ScrollView — every frame row (1 Label + 6 PoseCell TextFields) is instantiated. Replace with a ListView + reuseItems, with the commit-on-pool contract.\n\nSCOPE: only src/app/experimental/** QML (PosesTable.qml, PoseCell.qml if needed, PosesDialog.qml if the loader gate needs it). NO C++ changes. NO test files in this unit (the test pins land in U6's test/qml/ harness per the plan — the orchestrator will pin them next). Do not run git/jj. Do not stage/commit. Run pixi run build + pixi run test (must stay 47/47 green incl. jtml.qml_lint).\n\nWORK:\n1. Replace the Repeater/Column/ScrollView with a ListView:\n   - fixed row height (24px rows — U4 set list rows to 24; match the table's existing cell height 26 via implicitHeight; keep column widths aligned with the header: 44 + 6x78);\n   - row delegates size from ListView.view.width (review D-02/I-08: the old Layout.fillWidth inside a plain Column was a no-op; the new delegate must actually stretch);\n   - header/table width alignment with the scrollbar (review I-06: header RowLayout spans full width while the table is availableWidth — decide one width authority and align).\n2. reuseItems: true with the commit-on-pool contract (D8, owner-confirmed):\n   - capture-at-edit-start already exists (U3/D2) — the captured tuple (frame, model, axis) makes recycling safe;\n   - onPooled must run AFTER the commit handler (Qt ordering: focus loss fires editingFinished before pooling; verify the order in your implementation and pin it with a comment — never reset text before the commit reads it);\n   - onReused must imperatively re-sync the cell text (the storedValue binding is dead after editing — a plain re-bind or explicit text assignment from the new row's storedValue);\n   - no stale text from the pooled instance (explicit reset in onReused).\n3. Loader gate (review D-04/D-05): wrap the table content so it is NOT built while the dialog is closed — bind a Loader's active to the dialog's open state (or create the PosesTable on demand). Verify the PosesDialog still opens focused on the first cell (U4 added focusFirstCell — check it still works through the Loader; adjust the focus path if the Loader defers creation).\n4. Empty/disabled states must survive: the 'No frames loaded' / 'Select a model' labels, the disabled-during-run behavior, and the validation message label keep working.\n5. Scroll behavior: boundsBehavior default; smooth scrolling with 100+ frames; the scrollbar-gutter jitter concern (I-09) — if availableWidth re-evaluates on scrollbar toggle, mitigate by sizing the header from the same authority as the table.\n6. Perf expectations to verify statically and document in comments: O(visible rows) delegates instead of O(frames); note the refresh-granularity re-check (I-02: PoseTableModel::refresh() full-resets on copy/load — acceptable for now, U7 may address notify granularity).\n7. Keep the qmllint gate green (run .pixi/envs/default/lib/qt6/bin/qmllint --json; no NEW non-accepted warnings).\n\nCONSTRAINTS:\n- Behavior identical for the user flows except the perf/robustness improvements: editing, commit-on-edit-end, validation revert, dirty badge, copy/load/save buttons all keep working.\n- Do not touch the C++ bridges (PoseBridge etc.). If you find a C++ change would be needed, STOP and report it — do not make it.\n- Report: implementation summary per work item, the pool-ordering verification (how you confirmed editingFinished-before-onPooled), Loader/focus interplay result, test results, residual risks for the U6 harness to pin.",
+      "completedAt": "2026-08-12T14:47:19.073Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T14-43-29-313Z_019ff66d-a7a1-70d4-8ea8-e0ca2df7f562.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T14:47:19.073Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a691b328-7184-4b63-96e4-4ac18a776e1d/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/a691b328-7184-4b63-96e4-4ac18a776e1d/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T14-43-29-313Z_019ff66d-a7a1-70d4-8ea8-e0ca2df7f562.jsonl"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 1 child run(s). Return: All checks pass. The implementation is complete and verified:\n\n**Work item summary:**\n1. **Virtualization** — Repeater-in-Column-in-ScrollView → `ListView` with `reuseItems: true`, `required property` roles (DEL-1 satisfied), delegate rows at `width: ListView.view.width` (D-02/I-08 stretch fix), fixed column grid 44+6×78 via `Layout.preferredWidth`, shared trailing-gutter width authority (I-06: overlay scrollbar covers gutter, never the ZA column), `ScrollBar.vertical` attached; I-09 moot (no `availableWidth`-sized Column remains).\n2. **Commit-on-pool** — `onPooled` is empty *by design* with the ordering pinned in comments: focus loss on pooling fires `editingFinished` (commit reads live text against the U3-captured tuple) *before* the item is pooled — there is nothing to reset. `onReused` calls the new `PoseCell.resetDisplay()` on all 6 cells, which re-arms the `storedValue` binding via `Qt.binding` and clears the stale commit tuple (no live edit can survive pooling).\n3. **Loader gate Trace: 2 event(s)."
+}

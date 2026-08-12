@@ -61,4 +61,16 @@ TextField {
             text = Qt.binding(() => storedValue.toFixed(3))
         }
     }
+
+    // D8 (U5): pooled-delegate re-sync. After an edit the text binding is
+    // dead; a reused cell re-arms it from the (re-bound) storedValue and
+    // clears the stale commit tuple. No live edit survives pooling — the
+    // focus loss that preceded pooling already committed it (commit-on-pool
+    // ordering), so resetting here can never clobber a pending commit.
+    function resetDisplay() {
+        commitFrame = -1
+        commitModel = -1
+        commitAxis = -1
+        text = Qt.binding(() => storedValue.toFixed(3))
+    }
 }
