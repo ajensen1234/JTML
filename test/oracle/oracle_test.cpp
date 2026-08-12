@@ -412,12 +412,17 @@ TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
         REQUIRE(best_iou > 0.50);
 
         /*--- Optimize: DirectOptimizer bound to the real GPU DIRECT_DILATION
-         * cost, exactly as OptimizerManager::RunDirectStage does (U6). ---*/
+         * cost, exactly as OptimizerManager::RunDirectStage does (U6). Plan
+         * 008 U8: the Options slot defaults are passed EXPLICITLY -- the
+         * flat-3000 run is the parity instrument (the default path must be
+         * bit-identical to the pre-Options search: recovered pose / IoU / L1
+         * vs the recorded re-baselined values in baseline.json). ---*/
         auto cost = [&p](const Point6D& physical) -> double {
             p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
             return p.trunk->callActiveCostFunction();
         };
-        DirectOptimizer opt(cost, SearchRange(), start, kBudget);
+        DirectOptimizer opt(cost, SearchRange(), start, kBudget,
+                            DirectOptimizer::Options{});
         REQUIRE(opt.Run());
         Point6D recovered = opt.GetOptimumLocation();
 

@@ -11,6 +11,7 @@
 #include <cfloat>
 #include <cstddef>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 #include "domain/direct_optimizer.h"
@@ -312,4 +313,139 @@ TEST_CASE("DirectOptimizer fires the iteration callback per non-finite eval",
             REQUIRE(events[i + 1] == 'c');
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// U8 (plan 008): DirectOptimizer::Options with bit-identical defaults (Cut C,
+// origin R3). The slot's STRUCTURE and the default-path bit-identity are what
+// this unit proves; non-default fields are FAIL-FAST STUBS (review-resolved
+// scope boundary) -- the divergence branches land with the algorithm plan.
+//
+// The identity trace below records the full convergence + budget-accounting
+// surface (optimum value/location, call count, iteration count, improvement
+// sequence) for the 4-arg pre-Options form and the explicit-default Options
+// form on the same deterministic config and requires EXACT equality -- the
+// default path must not touch a single division or branch differently.
+// ---------------------------------------------------------------------------
+
+TEST_CASE("DirectOptimizer default Options reproduce the pre-Options search bit-identically",
+          "[direct_optimizer][options]") {
+    Point6D target(3, 3, 3, 3, 3, 3);
+    const unsigned int kBudget = 5000;
+
+    auto run_with = [&](const DirectOptimizer::Options& opts) {
+        std::vector<double> improvement_values;
+        std::vector<Point6D> improvement_locations;
+        unsigned int iterations = 0;
+        DirectOptimizer opt(QuadraticCost(target), UnitSideRange(10.0),
+                            Origin(), kBudget, opts);
+        opt.SetIterationCallback([&]() { iterations++; });
+        opt.SetImprovementCallback(
+            [&](const Point6D& loc, double v) {
+                improvement_values.push_back(v);
+                improvement_locations.push_back(loc);
+            });
+        REQUIRE(opt.Run());
+        return std::make_tuple(
+            opt.GetOptimumValue(), opt.GetOptimumLocation(),
+            opt.GetCostFunctionCalls(), opt.GetNonFiniteCount(), iterations,
+            improvement_values, improvement_locations);
+    };
+    auto run_pre_options = [&]() {
+        // The 4-arg pre-Options form must keep compiling (5th arg defaulted).
+        std::vector<double> improvement_values;
+        std::vector<Point6D> improvement_locations;
+        unsigned int iterations = 0;
+        DirectOptimizer opt(QuadraticCost(target), UnitSideRange(10.0),
+                            Origin(), kBudget);
+        opt.SetIterationCallback([&]() { iterations++; });
+        opt.SetImprovementCallback(
+            [&](const Point6D& loc, double v) {
+                improvement_values.push_back(v);
+                improvement_locations.push_back(loc);
+            });
+        REQUIRE(opt.Run());
+        return std::make_tuple(
+            opt.GetOptimumValue(), opt.GetOptimumLocation(),
+            opt.GetCostFunctionCalls(), opt.GetNonFiniteCount(), iterations,
+            improvement_values, improvement_locations);
+    };
+
+    auto with_opts = run_with(DirectOptimizer::Options{});
+    auto without_opts = run_pre_options();
+
+    // Exact (bit-for-bit) equality: the deterministic DIRECT loop over the
+    // pure quadratic cost is identical code on the default path, so any
+    // difference is a guarded-divergence failure.
+    REQUIRE(std::get<0>(with_opts) == std::get<0>(without_opts));
+    REQUIRE(std::get<1>(with_opts).GetDistanceFrom(std::get<1>(without_opts)) ==
+            Approx(0.0).margin(1e-12));
+    REQUIRE(std::get<2>(with_opts) == std::get<2>(without_opts));
+    REQUIRE(std::get<3>(with_opts) == std::get<3>(without_opts));
+    REQUIRE(std::get<4>(with_opts) == std::get<4>(without_opts));
+    REQUIRE(std::get<5>(with_opts) == std::get<5>(without_opts));
+    REQUIRE(std::get<6>(with_opts).size() ==
+            std::get<6>(without_opts).size());
+    for (std::size_t i = 0; i < std::get<6>(with_opts).size(); ++i) {
+        REQUIRE(std::get<6>(with_opts)[i].GetDistanceFrom(
+                    std::get<6>(without_opts)[i]) ==
+                Approx(0.0).margin(1e-12));
+    }
+    // The recorded trace must be non-trivial (the budget was actually
+    // consumed), so the equality above is meaningful.
+    REQUIRE(std::get<4>(with_opts) > 0u);
+    REQUIRE(std::get<5>(with_opts).size() > 0u);
+}
+
+TEST_CASE("DirectOptimizer non-default Options fields fail fast (plan-008 stub semantics)",
+          "[direct_optimizer][options]") {
+    using Options = DirectOptimizer::Options;
+
+    auto make = [](Options opts) {
+        return DirectOptimizer(QuadraticCost(Origin()), UnitSideRange(10.0),
+                               Origin(), 100, opts);
+    };
+
+    // Default Options construct fine (the happy path).
+    REQUIRE_NOTHROW(make(Options{}));
+
+    // Edge case (plan 008): each non-default field hits the fail-fast guard
+    // with a clear error. Stub semantics -- no variant behavior ships here.
+    Options o;
+    o.epsilon = 1e-9;  // any non-zero epsilon is a stub
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.delta_limit = true;
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.delta_limit_subdivisions = 1;
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.hidden_constraints = true;
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.globally_biased = true;
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    // Enum fields: only the default enumerator is accepted (defensive guard
+    // against a future variant's value leaking in before the algorithm plan).
+    o = Options{};
+    o.selection = static_cast<Options::SelectionMode>(1);
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.size_measure = static_cast<Options::SizeMeasure>(1);
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.split_rule = static_cast<Options::SplitRule>(1);
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
+
+    o = Options{};
+    o.ties = static_cast<Options::TieSelection>(1);
+    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
 }

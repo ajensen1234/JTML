@@ -73,7 +73,8 @@ public:
             launch.leaf_manager,
             launch.directive,
             error_message,
-            launch.iter_count);
+            launch.iter_count,
+            launch.direct_options);
     }
 
     void Start() override {

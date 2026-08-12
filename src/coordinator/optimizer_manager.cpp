@@ -35,7 +35,8 @@ bool OptimizerManager::Initialize(
     jta_cost_function::CostFunctionManager leaf_manager,
     QString opt_directive,
     QString& error_message,
-    int iter_count) {
+    int iter_count,
+    DirectOptimizer::Options direct_options) {
     /*Success?*/
     succesfull_initialization_ = true;
 
@@ -102,6 +103,10 @@ bool OptimizerManager::Initialize(
 
     /*Store Optimizer Settings Locally*/
     optimizer_settings_ = opt_settings;
+    /*Store the per-stage optimizer-variant slot (plan 008 U8) -- consumed by
+     * RunDirectStage's DirectOptimizer ctor; the defaults reproduce the
+     * pre-Options search bit-identically.*/
+    direct_options_ = direct_options;
 
     /*Store Cost Function Managers Locally*/
     trunk_manager_ = trunk_manager;
@@ -1260,7 +1265,7 @@ void OptimizerManager::RunDirectStage(
             }
             return stage_manager.callActiveCostFunction();
         },
-        range, starting_point_, budget_);
+        range, starting_point_, budget_, direct_options_);
 
     /*Cumulative budget semantics: this stage continues from the running call
      * count, so the extracted optimizer's loop guard uses call_offset_ + its

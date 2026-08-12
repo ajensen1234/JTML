@@ -74,7 +74,8 @@ public:
         jta_cost_function::CostFunctionManager leaf_manager,
         QString opt_directive,
         QString& error_message,
-        int iter_count);
+        int iter_count,
+        DirectOptimizer::Options direct_options = DirectOptimizer::Options());
     ~OptimizerManager();
 
     /* get cost numbers for symmetry plotting */
@@ -233,13 +234,20 @@ private:
 
     /*Budget*/
     unsigned int budget_;
+    /*Plan 008 U8: the per-stage optimizer-variant slot, stored from
+     * Initialize and consumed by RunDirectStage's DirectOptimizer ctor.
+     * Defaults = the bit-identical classic search (non-default fields are
+     * fail-fast stubs in this plan).*/
+    DirectOptimizer::Options direct_options_;
 
     /*Run one DIRECT stage (trunk/branch/leaf) using the extracted pure
      * DirectOptimizer with the real GPU eval (plan U6). `range` is the stage
      * search range (already applied to range_ by the caller), and
      * `stage_manager` is the stage's CostFunctionManager; starting_point_ and
      * the cumulative budget_ / cost_function_calls_ members are read by the
-     * caller before invoking and written back on return.*/
+     * caller before invoking and written back on return. The stage's Options
+     * slot (plan 008 U8: direct_options_) is passed to the DirectOptimizer
+     * ctor -- defaults reproduce the pre-Options search bit-identically.*/
     void RunDirectStage(
         Point6D range,
         jta_cost_function::CostFunctionManager& stage_manager);

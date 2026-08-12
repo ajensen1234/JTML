@@ -7,6 +7,7 @@
 #include <climits>
 #include <cmath>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 namespace {
@@ -14,14 +15,80 @@ namespace {
 Point6D UnitCenter() {
     return Point6D(.5, .5, .5, .5, .5, .5);
 }
+
+// Plan 008 U8 (Cut C): non-default Options fields are FAIL-FAST STUBS in this
+// unit (review-resolved scope boundary). Every field below maps line-by-line
+// onto today's code, so the default path needs NO divergence branch -- the
+// search code is byte-identical to the pre-Options code, which is the
+// bit-identical-defaults proof (R13). The divergence branches (each guarded
+// on "different from default") land with the algorithm plan (R9).
+void ValidateOptions(const DirectOptimizer::Options& opts) {
+    if (opts.selection !=
+        DirectOptimizer::Options::SelectionMode::Original) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: selection != Original is a plan-008 "
+            "fail-fast stub; variant semantics land with the algorithm plan");
+    }
+    if (opts.epsilon != 0.0) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: epsilon != 0.0 is a plan-008 fail-fast "
+            "stub; the epsilon post-filter lands with the algorithm plan");
+    }
+    if (opts.delta_limit) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: delta_limit is a plan-008 fail-fast "
+            "stub; the delta-limit refinement lands with the algorithm plan");
+    }
+    if (opts.delta_limit_subdivisions != 0) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: delta_limit_subdivisions != 0 is a "
+            "plan-008 fail-fast stub; the delta-limit refinement lands with "
+            "the algorithm plan");
+    }
+    if (opts.size_measure != DirectOptimizer::Options::SizeMeasure::L2) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: size_measure != L2 is a plan-008 "
+            "fail-fast stub; alternative size measures land with the "
+            "algorithm plan");
+    }
+    if (opts.split_rule != DirectOptimizer::Options::SplitRule::OneSide) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: split_rule != OneSide is a plan-008 "
+            "fail-fast stub; alternative partitioning lands with the "
+            "algorithm plan");
+    }
+    if (opts.ties != DirectOptimizer::Options::TieSelection::All) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: ties != All is a plan-008 fail-fast "
+            "stub; tie-selection variants land with the algorithm plan");
+    }
+    if (opts.hidden_constraints) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: hidden_constraints is a plan-008 "
+            "fail-fast stub; the GLh surrogate lands with the algorithm plan");
+    }
+    if (opts.globally_biased) {
+        throw std::invalid_argument(
+            "DirectOptimizer::Options: globally_biased is a plan-008 "
+            "fail-fast stub; the gb phase switch lands with the algorithm "
+            "plan");
+    }
+}
 }  // namespace
 
 DirectOptimizer::DirectOptimizer(CostFunction cost, Point6D range,
-                                 Point6D starting_point, unsigned int budget)
+                                 Point6D starting_point, unsigned int budget,
+                                 Options options)
     : cost_(std::move(cost)),
       range_(range),
       starting_point_(starting_point),
-      budget_(budget) {
+      budget_(budget),
+      options_(std::move(options)) {
+    // Fail fast at construction: a non-default Options field is a plan-008
+    // stub, not a silent behavior change (guarded divergence -- the defaults
+    // reproduce today's search bit-identically by construction).
+    ValidateOptions(options_);
+
     // Mirror OptimizerManager::SetSearchRange: a zero (or negative-total) range
     // marks the search as invalid.
     if (range.x + range.y + range.z + range.xa + range.ya + range.za > 0) {

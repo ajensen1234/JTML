@@ -27,8 +27,49 @@ class DirectOptimizer {
 public:
     using CostFunction = std::function<double(const Point6D&)>;
 
+    // Per-stage optimizer-variant slot (plan 008 U8, origin R3). Plain data
+    // whose defaults reproduce today's classic-DIRECT search BIT-IDENTICALLY:
+    // each field maps line-by-line onto the current code -- Original
+    // selection = the Jarvis gift-wrap hull with `slope >= highest_slope` and
+    // no epsilon filter anywhere; epsilon = 0.0 disables any post-filter
+    // entirely; delta_limit off; size_measure L2 = the sqrt-norm column size;
+    // split_rule OneSide = one-side trisection on the largest DENORMALIZED
+    // side; ties All = equal slopes included (no tie-breaking); center
+    // sampling; hidden_constraints off (GLh surrogate); globally_biased off
+    // (gb phase switch). Guarded-divergence contract (the run's R13 proof
+    // strategy): every future divergence branch MUST guard on "different from
+    // default" before diverging, so the defaults stay bit-identical.
+    //
+    // Scope boundary (plan 008, review-resolved): non-default fields are
+    // FAIL-FAST STUBS in this unit -- selecting one makes the constructor
+    // throw std::invalid_argument. No variant semantics ship here; the
+    // divergence branches land with the algorithm plan (R9).
+    struct Options {
+        enum class SelectionMode { Original };  // today's Jarvis gift-wrap hull
+        enum class SizeMeasure { L2 };  // sqrt-norm column size
+        enum class SplitRule { OneSide };  // largest-denormalized one-side trisection
+        enum class TieSelection { All };  // slope >= highest_slope keeps every tie
+
+        // User-provided (empty) so `Options()` is valid as the ctor's default
+        // argument below: a defaulted ctor would need this nested class's
+        // default member initializers before the end of the enclosing class
+        // (ill-formed). The per-field initializers still apply on every
+        // construction path (verified: default-init, value-init, list-init).
+        Options() {}
+
+        SelectionMode selection = SelectionMode::Original;
+        double epsilon = 0.0;  // 0.0 disables the post-filter entirely
+        bool delta_limit = false;
+        unsigned int delta_limit_subdivisions = 0;
+        SizeMeasure size_measure = SizeMeasure::L2;
+        SplitRule split_rule = SplitRule::OneSide;
+        TieSelection ties = TieSelection::All;
+        bool hidden_constraints = false;  // GLh surrogate, off
+        bool globally_biased = false;  // gb phase switch, off
+    };
+
     DirectOptimizer(CostFunction cost, Point6D range, Point6D starting_point,
-                    unsigned int budget);
+                    unsigned int budget, Options options = Options());
 
     // Run the DIRECT loop until the budget is consumed, a stop is requested, or
     // an internal error occurs. Returns false on error (e.g. an all-zero range
@@ -66,9 +107,10 @@ public:
 
     // Extend the cumulative budget by a fixed number of pre-consumed calls.
     // The production app runs one stage per DirectOptimizer instance while
-    // keeping a single running counter across stages (trunk 10k -> branch 20k
-    // -> leaf 30k). Setting the offset makes GetCostFunctionCalls() and the
-    // loop guard reflect the stage's position in that cumulative count.
+    // keeping a single running counter across stages (the canonical
+    // cumulative caps are trunk 20k -> 2x branch 25k/30k -> leaf 35k).
+    // Setting the offset makes GetCostFunctionCalls() and the loop guard
+    // reflect the stage's position in that cumulative count.
     void SetCallOffset(unsigned int offset);
 
     // Called after each ConvexHull + Trisect iteration (drives a ~30fps
@@ -101,6 +143,10 @@ private:
     unsigned int budget_ = 0;
     unsigned int cost_function_calls_ = 0;
     unsigned int call_offset_ = 0;
+    // Plan 008 U8: the per-stage optimizer-variant slot. Default-constructed
+    // to the bit-identical classic search (non-default fields are fail-fast
+    // stubs in this unit).
+    Options options_;
     // Zero-initialized at construction (guard-precondition lesson: a guard's
     // precondition must itself be initialized -- see docs/solutions/logic-errors/
     // jtml-heatmap-guard-allocator-preconditions-2026-08-12.md).
