@@ -10,7 +10,11 @@
 // spec the behavior-neutral fixes (U2) and the live distance-map index fix (U4)
 // must satisfy. Do NOT "fix" a test to match a bug — a RED pin flips green only
 // when the production fix lands (sym_trap + stage-guard flipped in U2, when the
-// transcriptions below were updated to the fixed calls at the same time).
+// transcriptions below were updated to the fixed calls at the same time; the
+// distance-map index pin flipped in U4 — the CORRECTED CropIndexToGlobal
+// reference is now the kernel's actual behavior at distance_map_metric.cu:27,
+// and the buggy-formula pin below is the historical RED characterization kept
+// as regression documentation, assertions unchanged).
 //
 // Pins in this file:
 //   - chamfer stage functions (edge / quadrant-only dilation / difference) +
@@ -202,12 +206,14 @@ double DistanceMapMetricReference(const std::vector<unsigned char>& projected,
 }
 
 // ---------------------------------------------------------------------------
-// Distance-map grid→pixel index mapping (Bug 5 — the ONE live kernel bug).
-// DistanceMapMetric_Kernel (src/compute/distance_map_metric.cu:27) computes a
-// global thread id i, then derives the crop pixel: bb_row = i/crop_w,
+// Distance-map grid→pixel index mapping (Bug 5 — the ONE live kernel bug;
+// FIXED in U4). DistanceMapMetric_Kernel (src/compute/distance_map_metric.cu:27)
+// computes a global thread id i, then derives the crop pixel: bb_row = i/crop_w,
 // bb_col = i%crop_w. The full-coverage invariant over the crop is: every crop
 // pixel is visited exactly once — i.e. the multiset of i values over the launch
-// geometry equals [0, crop_w*crop_h). CORRECTED formula (the fix U4 must land;
+// geometry equals [0, crop_w*crop_h). U4 landed the one-line fix
+// (`blockIdx.y + gridDim.x` -> `blockIdx.y * gridDim.x`), so CORRECTED formula
+// below is now the KERNEL'S SPEC (the CPU reference is the kernel's behavior;
 // matches the pattern already correct in iou.cu:37, l_1_1_matrix_diff_norm.cu:24,
 // fast_implant_dilation_metric.cu:129):
 // ---------------------------------------------------------------------------
@@ -619,10 +625,13 @@ TEST_CASE(
     "distance map: BUGGY index formula fails full coverage (RED pre-fix, "
     "src/compute/distance_map_metric.cu:27)",
     "[metric_semantics][distance_map][index][red]") {
-    // The formula as written today fails the bijectivity invariant — this is the
-    // RED characterization pin; U4's one-line fix (blockIdx.y + gridDim.x ->
-    // blockIdx.y * gridDim.x) is what makes the corrected pin above the kernel's
-    // behavior. Do NOT change this test to match the bug.
+    // The formula as written pre-U4 fails the bijectivity invariant — this was
+    // the RED characterization pin, and U4's one-line fix (blockIdx.y +
+    // gridDim.x -> blockIdx.y * gridDim.x at distance_map_metric.cu:27) made the
+    // corrected pin above the kernel's actual behavior. This pin is now the
+    // HISTORICAL characterization of the pre-fix bug, kept as regression
+    // documentation (the CPU reference CropIndexToGlobal is the kernel's spec).
+    // Do NOT change these assertions — the buggy formula is pure-function truth.
     REQUIRE_FALSE(IndexCoversCropExactlyOnce(BuggyCropIndexToGlobal, 64, 64,
                                              threads_per_block));
     // Concrete failure mode (the plan's arithmetic): block (bx,by) maps to

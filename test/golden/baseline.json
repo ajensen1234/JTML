@@ -1,7 +1,7 @@
 {
   "oracle": "JTML Kneel_1 femoral golden oracle",
   "spec_source": "golden_oracle.org",
-  "description": "Behavior-preservation (golden-master) gate. Tier-2 (GPU): recovered per-frame pose vs fem.jts within tolerance; projected silhouette vs Labels within pixel threshold. Tolerance finalized from the one-time Qt5/GPU capture (fem_oracle.jtak).",
+  "description": "Behavior-preservation (golden-master) gate. Tier-2 (GPU): recovered per-frame pose vs fem.jts within tolerance; projected silhouette vs Labels within pixel threshold. Tolerance finalized from the one-time Qt5/GPU capture (fem_oracle.jtak). RE-BASELINED 2026-08-12 (plan 008 U4, Finding 1/12): the one live kernel bug (distance-map grid index, src/compute/distance_map_metric.cu:27) is fixed and the Tier-2 oracle re-run is recorded as the new reference — expected_pose_per_frame now holds the POST-FIX recovered poses; the fem.jts golden seeds live in start_pose_per_frame; the pre-fix poses and the per-axis delta are recorded in rebaseline_2026-08-12.",
 
   "compare_reference": {
     "tier1": "CI headless CPU: DirectOptimizer converges on analytic cost (test/unit/test_direct_optimizer.cpp)",
@@ -25,12 +25,18 @@
     "calibration": "example_studies/Kneel_1/calibration.txt"
   },
 
-  "golden_units": "fem.jts (3 frames, JT_EULER_312: x_tran,y_tran,z_tran,z_rot,x_rot,y_rot)",
+  "golden_units": "fem.jts (3 frames, JT_EULER_312: x_tran,y_tran,z_tran,z_rot,x_rot,y_rot) — the optimizer SEED poses and the pose-gap reference, recorded in start_pose_per_frame. Since the 2026-08-12 re-baseline, expected_pose_per_frame holds the POST-FIX RECOVERED poses (the engine's actual optima on the fixed kernel), not fem.jts.",
 
-  "expected_pose_per_frame": [
+  "start_pose_per_frame": [
     { "frame": 0, "x_tran": 18.52191, "y_tran": 19.69514, "z_tran": -1027.713, "z_rot": -26.69708, "x_rot": -7.419319, "y_rot": -0.2587041 },
     { "frame": 1, "x_tran": 19.01747, "y_tran": 20.15555, "z_tran": -1026.732, "z_rot": -27.37827, "x_rot": -7.56846, "y_rot": -0.2358893 },
     { "frame": 2, "x_tran": 16.4709, "y_tran": 16.4248, "z_tran": -1028.69, "z_rot": -24.12223, "x_rot": -7.678545, "y_rot": 0.3264978 }
+  ],
+
+  "expected_pose_per_frame": [
+    { "frame": 0, "x_tran": 18.4902, "y_tran": 19.7061, "z_tran": -1028.6, "z_rot": -26.8388, "x_rot": -7.39188, "y_rot": -0.263277 },
+    { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
+    { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
   ],
 
   "captured_baseline": {
@@ -41,7 +47,45 @@
       { "frame": 1, "x_tran": 18.8612, "y_tran": 20.1056, "z_tran": -1020.42, "z_rot": -27.8138, "x_rot": -7.95082, "y_rot": -0.260229 },
       { "frame": 2, "x_tran": 16.3709, "y_tran": 16.3502, "z_tran": -1024.28, "z_rot": -24.4668, "x_rot": -8.04481, "y_rot": 0.424626 }
     ],
-    "notes": "Direct comparative output of the current Qt5/GPU pipeline on Kneel_1. Matches fem.jts within tolerance (gaps below)."
+    "notes": "Direct comparative output of the Qt5/GPU pipeline on Kneel_1 (pre-fix kernel, production-shaped run). Historical reference only since the 2026-08-12 re-baseline (rebaseline_2026-08-12 below): its frame-1 z gap (6.31 mm) was the plan's ORIGINAL direction-prediction basis, but it was measured on a DIFFERENT pipeline than the Tier-2 oracle — the oracle's own pre-fix frame-1 z gap was 1.19 mm (see the rebaseline verdict)."
+  },
+
+  "rebaseline_2026-08-12": {
+    "event": "The ONE re-baseline (plan 008 U4, Findings 1/12): the distance-map kernel index fix (src/compute/distance_map_metric.cu:27 — blockIdx.y + gridDim.x -> blockIdx.y * gridDim.x) + a Tier-2 oracle re-run, SINGLE-VARIABLE (Canny pinned 3/0/150; dilation 6; backface culling OFF; flat budget 3000; search range (12,12,15,15,15,15) — run_config unchanged; nothing else bundled). Both the pre-fix and post-fix oracle runs below were executed on THIS pipeline (test/oracle/oracle_test.cpp on the RTX 3090), so the delta is a same-pipeline comparison. Deterministic: the pre-fix frame-0 numbers reproduce the originally recorded measured block bit-for-bit (IoU 0.993627, L1 21675).",
+    "pre_fix_recovered_per_frame": [
+      { "frame": 0, "x_tran": 18.4744, "y_tran": 19.6988, "z_tran": -1028.62, "z_rot": -26.8322, "x_rot": -7.37766, "y_rot": -0.256672 },
+      { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
+      { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
+    ],
+    "post_fix_recovered_per_frame": [
+      { "frame": 0, "x_tran": 18.4902, "y_tran": 19.7061, "z_tran": -1028.6, "z_rot": -26.8388, "x_rot": -7.39188, "y_rot": -0.263277 },
+      { "frame": 1, "x_tran": 19.0175, "y_tran": 20.1556, "z_tran": -1027.93, "z_rot": -27.0856, "x_rot": -7.60047, "y_rot": -0.318194 },
+      { "frame": 2, "x_tran": 16.4705, "y_tran": 16.4248, "z_tran": -1027.21, "z_rot": -24.1217, "x_rot": -7.55972, "y_rot": 0.306176 }
+    ],
+    "delta_post_minus_pre_per_frame_mm_deg": [
+      { "frame": 0, "x_tran": 0.0159, "y_tran": 0.0073, "z_tran": 0.0137, "z_rot": -0.0066, "x_rot": -0.0142, "y_rot": -0.0066 },
+      { "frame": 1, "x_tran": 0, "y_tran": 0, "z_tran": 0, "z_rot": 0, "x_rot": 0, "y_rot": 0 },
+      { "frame": 2, "x_tran": 0, "y_tran": 0, "z_tran": 0, "z_rot": 0, "x_rot": 0, "y_rot": 0 }
+    ],
+    "pre_fix_measured_per_frame": {
+      "recovered_pose_iou": [0.993627, 0.991038, 0.994568],
+      "recovered_pose_L1_pixel_diff": [21675, 30855, 18615],
+      "recovered_pose_per_px_L1": [0.0206709, 0.0294256, 0.0177526],
+      "z_gap_vs_fem_jts_mm": [0.905, 1.193, 1.481]
+    },
+    "post_fix_measured_per_frame": {
+      "recovered_pose_iou": [0.993779, 0.991038, 0.994568],
+      "recovered_pose_L1_pixel_diff": [21165, 30855, 18615],
+      "recovered_pose_per_px_L1": [0.0201845, 0.0294256, 0.0177526],
+      "z_gap_vs_fem_jts_mm": [0.892, 1.193, 1.481]
+    },
+    "direction_claim": "Finding 12 / angle 02 pre-registration: post-fix recovered z moves TOWARD fem.jts (-1027.713) and the 6.31 mm frame-1 gap shrinks materially.",
+    "verdict": "PARTIALLY CONFIRMED on the same-pipeline data, REFUTED as a material move: (a) the only frame the fix moved was frame 0 — recovered z moved toward fem.jts by 0.014 mm (|z gap| 0.9054 -> 0.8916 mm), direction CONFIRMED, magnitude negligible; (b) frames 1 and 2 recovered bit-identically pre/post (DIRECT's discrete partition did not move) — no gap shrink; (c) the 6.31 mm frame-1 gap was the Qt5 fem_oracle.jtak capture's number (a DIFFERENT pipeline, captured_baseline above); THIS oracle's frame-1 z gap was already 1.19 mm pre-fix, so 'shrinks materially' is refuted as a claim about this pipeline. Net: the fix's recovered-pose impact is tiny (frame-0 z +0.014 mm; IoU 0.993627 -> 0.993779; per-px L1 0.020671 -> 0.020185), far inside the 15 mm z informational band — the trustworthy baseline is the post-fix reference above, and later gates cite these numbers.",
+    "adversarial_probe": {
+      "sweep": "14 poses over DIRECT_DILATION: ±200 mm off-axis (x/y/z), behind camera (z = +200/+500), 90/180-degree rotations about each axis",
+      "result": "all 14 evals FINITE and cudaGetLastError() == cudaSuccess after each, pre-fix and post-fix identically (the sticky-error trap at render_engine.cu:713 stays closed; it is NOT deleted here — that is the perf plan's Cut 1)",
+      "direct_mahfouz_at_empty_silhouette": "-nan (isfinite=0) with clean cudaGetLastError — the Bug-6 0/0 via the always-true pointer guard at implant_mahfouz_metric.cu:324/:446, RECORDED only (not asserted); the value guards are the deferred hygiene pass"
+    }
   },
 
   "tolerances": {
@@ -56,23 +100,29 @@
       "y_rot": 1.0
     },
     "observed_max_gap_vs_golden": {
-      "x_tran": 0.16,
-      "y_tran": 0.08,
-      "z_tran": 6.31,
-      "z_rot": 0.44,
-      "x_rot": 0.38,
-      "y_rot": 0.10
+      "x_tran": 0.03,
+      "y_tran": 0.01,
+      "z_tran": 1.48,
+      "z_rot": 0.29,
+      "x_rot": 0.12,
+      "y_rot": 0.08,
+      "note": "Post-fix Tier-2 oracle maxima (2026-08-12, per-frame |gap| vs fem.jts across the 3 Kneel_1 frames). The pre-re-baseline values (x 0.16 / y 0.08 / z 6.31 / z_rot 0.44 / x_rot 0.38 / y_rot 0.10) were the Qt5 fem_oracle.jtak capture's — see rebaseline_2026-08-12.verdict."
     },
     "measured": {
-      "note": "Measured at the first Tier-2 oracle run (RTX 3090) via test/oracle/oracle_test.cpp.",
-      "recovered_pose_iou": 0.993627,
-      "recovered_pose_L1_pixel_diff": 21675,
-      "recovered_pose_per_px_L1": 0.0206709,
+      "note": "POST-FIX reference (2026-08-12 re-baseline, plan 008 U4) measured via test/oracle/oracle_test.cpp on the RTX 3090. The legacy singular keys below keep frame 0 for backward readability; the per-frame rows are the reference every later gate cites.",
+      "recovered_pose_iou": 0.993779,
+      "recovered_pose_L1_pixel_diff": 21165,
+      "recovered_pose_per_px_L1": 0.0201845,
       "start_pose_iou_correspondence": 1.0,
-      "recovered_pose_vs_fem_jts_gap_mm_deg": [-0.048, 0.004, -0.905, 0.042, 0.002, -0.135],
-      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts frame 0; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid)",
-      "frame_label_mapping": "1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif (resolved empirically: start-pose render IoU==1.0; the binary label TIFFs use a bottom-left y-origin, so the oracle vertically flips the label)"
+      "recovered_pose_vs_fem_jts_gap_mm_deg": [-0.0317025, 0.0109739, -0.891632, 0.0274348, -0.00457247, -0.141747],
+      "per_frame": [
+        { "frame": 0, "iou": 0.993779, "l1_pixel_diff": 21165, "per_px_l1": 0.0201845, "gap_mm_deg": [-0.0317025, 0.0109739, -0.891632, 0.0274348, -0.00457247, -0.141747] },
+        { "frame": 1, "iou": 0.991038, "l1_pixel_diff": 30855, "per_px_l1": 0.0294256, "gap_mm_deg": [0, 0, -1.19342, -0.0320073, -0.0823045, 0.292638] },
+        { "frame": 2, "iou": 0.994568, "l1_pixel_diff": 18615, "per_px_l1": 0.0177526, "gap_mm_deg": [-0.000406442, 0, 1.48148, 0.118828, -0.0203221, 0.000508053] }
+      ],
+      "run_config": "DIRECT_DILATION; budget 3000 (reduced from cumulative 20k/25k/30k/35k for run time); search range (12,12,15,15,15,15) around fem.jts start pose; Canny 3/0/150; dilation 6; backface culling OFF (matches label generator Study2Grid); distance-map kernel index FIXED at src/compute/distance_map_metric.cu:27 (plan 008 U4 — the one re-baseline, single-variable)",
+      "frame_label_mapping": "1024/2806.tif <-> Labels/fem/AT_K1_V1_0160_label_fem.tif; 1024/2807.tif <-> Labels/fem/AT_K1_V1_0170_label_fem.tif; 1024/2808.tif <-> Labels/fem/AT_K1_V1_0180_label_fem.tif (resolved empirically per frame: start-pose render IoU == 1.0; the binary label TIFFs use a bottom-left y-origin, so the oracle vertically flips the label)"
     },
-    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9936); per-px L1 (0.0207 < 0.021 informational) and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by a start-pose IoU == 1.0. Thresholds measured on the RTX 3090; other GPU hardware may vary slightly."
+    "notes": "The HARD Tier-2 gate is the rendered-silhouette-vs-Labels IoU (>0.85, a healthy margin below the observed 0.9938-0.9946); per-px L1 and pose-vs-fem.jts are informational, because DIRECT numeric convergence is noisy. The frame<->label correspondence is pinned empirically by start-pose IoU == 1.0 per frame. Post-fix measurements recorded on the RTX 3090 (2026-08-12 re-baseline); other GPU hardware may vary slightly. The distance-map index fix moved only frame 0's recovery (z +0.014 mm toward fem.jts; frames 1/2 bit-identical) — see rebaseline_2026-08-12 for the full delta record."
   }
 }

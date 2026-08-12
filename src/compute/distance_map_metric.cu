@@ -24,7 +24,14 @@ __global__ void DistanceMapMetric_Kernel(
     int diff_kernel_bottom_y,
     int diff_kernel_cropped_width) {
     // Global Thread
-    int i = (blockIdx.y + gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    // Plan 008 U4 (the ONE live kernel bug, Finding 1): the grid->pixel index
+    // formula was (blockIdx.y + gridDim.x + blockIdx.x) * blockDim.x, which
+    // mis-maps every block row (crop rows 0..blockDim.x-1 never visited, the
+    // middle band visited with multiplicity). Corrected to the standard
+    // row-major block offset (matches iou.cu:37, l_1_1_matrix_diff_norm.cu:24,
+    // fast_implant_dilation_metric.cu:129). The CPU reference in
+    // test/unit/test_metric_semantics.cpp (CropIndexToGlobal) is the spec.
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
     // Now, we need to convert the threadIdx (from
     // 0->Num_pixels_in_bounding_box) into something that we can use relative to
     // our entire image array. First, note that for any global thread (i),

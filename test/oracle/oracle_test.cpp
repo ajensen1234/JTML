@@ -20,11 +20,24 @@
 // to a given 1024 frame is NOT name-aligned, so we resolve it by rendering the
 // femur at the fem.jts start pose and picking the label with the highest IOU
 // (diagnostic), then use that same label for the optimized-pose gate.
+//
+// RUN CONFIG PIN (plan 008 U4 — the one re-baseline event, recorded in
+// test/golden/baseline.json): Canny 3/0/150; dilation 6; backface culling OFF
+// (matches the Study2Grid label generator); flat budget 3000; search range
+// (12,12,15,15,15,15) around the fem.jts start poses; cost = DIRECT_DILATION.
+// U4 changes ONLY the distance-map kernel index
+// (src/compute/distance_map_metric.cu:27) — single-variable by construction;
+// nothing else in this configuration is allowed to move (Finding 12). The
+// adversarial finiteness probe below rides along with the re-run and asserts
+// the GPU cost path stays finite and CUDA-error-clean outside the search box.
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include <cuda_runtime.h>
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -224,6 +237,121 @@ Pipeline BuildFramePipeline(const std::string& base_image) {
 }
 
 }  // namespace
+
+TEST_CASE(
+    "Tier-2 GPU oracle: adversarial finiteness probe over DIRECT_DILATION (U4)",
+    "[oracle][gpu]") {
+    // Plan 008 U4 — rides the re-baseline oracle re-run. Sweeps poses far
+    // OUTSIDE the search box (±200 mm off-axis, behind camera, 90/180-degree
+    // rotations) over the REAL GPU DIRECT_DILATION cost and asserts every eval
+    // is finite AND cudaGetLastError() is clean after each. The sticky-error
+    // trap at render_engine.cu:713 (Render() resets the error once per render)
+    // must not hide a failing kernel; the sticky-error trap is NOT deleted here
+    // (that is the perf plan's Cut 1).
+    Pipeline p = BuildFramePipeline(kBaseImages[0]);
+    std::string err;
+    REQUIRE(p.trunk->InitializeActiveCostFunction(err));
+
+    // Identical to the search's cost lambda (optimize-then-gate path): set the
+    // pose, render, evaluate. The cost itself re-renders (the DIRECT_MAHFOUZ
+    // characterization below re-renders inside callActiveCostFunction too).
+    auto cost = [&p](const Point6D& physical) -> double {
+        p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
+        return p.trunk->callActiveCostFunction();
+    };
+    auto add_trans = [](const Point6D& q, double dx, double dy, double dz) {
+        return Point6D(q.x + dx, q.y + dy, q.z + dz, q.xa, q.ya, q.za);
+    };
+    auto add_rot = [](const Point6D& q, double dxa, double dya, double dza) {
+        return Point6D(q.x, q.y, q.z, q.xa + dxa, q.ya + dya, q.za + dza);
+    };
+
+    const Point6D start = StartPoses()[0];
+    std::vector<Point6D> adversarial = {
+        // ±200 mm off-axis (the search box is ±12/±15 mm; at 1027 mm source
+        // distance ±200 mm is ~626 px, so the silhouette stays partially
+        // on-screen — non-degenerate renders).
+        add_trans(start, 200, 0, 0),
+        add_trans(start, -200, 0, 0),
+        add_trans(start, 0, 200, 0),
+        add_trans(start, 0, -200, 0),
+        add_trans(start, 0, 0, 200),
+        add_trans(start, 0, 0, -200),
+        // Behind the camera: the detector plane is at z=0 and the model lives
+        // at z ≈ -1027; z >= 0 puts the model behind the detector. The renderer
+        // projects through tZ (render_engine.cu:443-444) so the silhouette
+        // re-appears MIRRORED — the eval must stay finite and CUDA-clean.
+        Point6D(start.x, start.y, 200.0, start.xa, start.ya, start.za),
+        Point6D(start.x, start.y, 500.0, start.xa, start.ya, start.za),
+        // 90/180-degree rotations about each axis.
+        add_rot(start, 90, 0, 0),
+        add_rot(start, 180, 0, 0),
+        add_rot(start, 0, 90, 0),
+        add_rot(start, 0, 180, 0),
+        add_rot(start, 0, 0, 90),
+        add_rot(start, 0, 0, 180),
+    };
+
+    for (size_t i = 0; i < adversarial.size(); ++i) {
+        const Point6D& pose = adversarial[i];
+        double c = cost(pose);
+        cudaError_t err_after = cudaGetLastError();
+        std::cout << "[oracle] adversarial[" << i << "] DIRECT_DILATION cost = "
+                  << c << ", cudaGetLastError = "
+                  << cudaGetErrorString(err_after) << std::endl;
+        CAPTURE(i, pose.x, pose.y, pose.z, c, cudaGetErrorString(err_after));
+        REQUIRE(std::isfinite(c));
+        REQUIRE(err_after == cudaSuccess);
+    }
+
+    // ---------------------------------------------------------------------
+    // DIRECT_MAHFOUZ at an empty-silhouette pose — expected NaN TODAY
+    // (characterization, record-only — the value guards at
+    // implant_mahfouz_metric.cu:324/:446 are the deferred hygiene pass). The
+    // pointer guard `if (pixel_score_ != 0)` checks the POINTER (never null),
+    // so an empty silhouette always divides 0.0/0.0 -> NaN. Not asserted green:
+    // the probe only RECORDS the value so the characterization is data.
+    // ---------------------------------------------------------------------
+    cudaError_t cuda_status = cudaSuccess;
+    Point6D empty_pose = start;
+    int white_pixels = -1;
+    // Fully off-screen candidates: x/y ≈ ±600 mm puts every projected vertex
+    // > 2500 px from the principal point (>> 1023), so nothing fills.
+    std::vector<Point6D> empty_candidates = {
+        add_trans(start, 600, 600, 0),
+        add_trans(start, -600, -600, 0),
+    };
+    for (const auto& cand : empty_candidates) {
+        REQUIRE(p.model->RenderPrimaryCamera(ToPose(cand)));
+        cudaGetLastError();  // normalize the sticky-error state before counting
+        white_pixels = p.metrics->ComputeSumWhitePixels(
+            p.model->GetPrimaryCameraRenderedImage(), &cuda_status);
+        REQUIRE(cuda_status == cudaSuccess);
+        std::cout << "[oracle] empty-silhouette candidate at (" << cand.x
+                  << ", " << cand.y << ") white pixels = " << white_pixels
+                  << std::endl;
+        if (white_pixels == 0) {
+            empty_pose = cand;
+            break;
+        }
+    }
+    // The Mahfouz characterization is only meaningful against a TRUE empty
+    // render; if no candidate empties the silhouette this gate trips loudly.
+    REQUIRE(white_pixels == 0);
+
+    p.trunk->setActiveCostFunction("DIRECT_MAHFOUZ");
+    REQUIRE(p.trunk->InitializeActiveCostFunction(err));
+    p.model->SetCurrentPrimaryCameraPose(ToPose(empty_pose));
+    cudaGetLastError();  // normalize before the eval
+    double mahfouz = p.trunk->callActiveCostFunction();
+    cudaError_t mahfouz_err = cudaGetLastError();
+    std::cout << "[oracle] DIRECT_MAHFOUZ at empty silhouette = " << mahfouz
+              << " (isfinite=" << std::isfinite(mahfouz)
+              << ", cudaGetLastError=" << cudaGetErrorString(mahfouz_err)
+              << ") — expected NaN (Bug-6 pointer-guard 0/0), record-only"
+              << std::endl;
+    CAPTURE(mahfouz, mahfouz_err);
+}
 
 TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
           "[oracle][gpu]") {
