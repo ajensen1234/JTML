@@ -1,0 +1,13 @@
+The file structure and all wave-2 content verified intact. The synthesis is complete.
+
+**File path:** `/home/ajj/repo/uf/JTML/.panoptes/optimizer-deep-dive/synthesis.org`
+
+**8-line final delta summary:**
+1. Overwrote `synthesis.org` via the sanctioned artifact path — all six angles' Round-2 sections now folded in; run marked round-2 (wave 2) complete; wave-1 content and structure preserved verbatim.
+2. **New Key Finding 11** — the ms/call meter has a 1000× unit error on Linux (zero CLOCKS_PER_SEC in src/; glibc `clock()` returns µs labeled "ms/call"; UI IPS/ETA at mainscreen.cpp:4654-4655/:4598/:4659 off ~1000×), on top of the CPU-time blind spot; two meter sites (:1197-1203, :1272-1279), one UI consumer, QML relays no speed — Cut 4 is now a correctness fix.
+3. Finding 5 extended — Cut 3 proven bit-safe by in-kernel guards (host-side `min(fragment_fill, GRID_CAP)` only, overflow fallback preserved), Cut 2's double-buffer ownership pinned to the code (second `renderer_output_b_` + GPUMetrics bank with `SetActiveBank`), Cut 0 instrumentation protocol fully specified (nvtx3 placements, cudaEvent timing, nsys recipe, 8-item first-run record).
+4. Finding 6 extended — polish is now an executable MVP: precondition gate G1–G4 (term-decomposed z-profile, leaf dilation 1), FD arm (7 renders/accepted step, calibration-derived h), analytic arm (barycentric staging kernel + 2×6 projection Jacobian + ordered two-pass float reduction), Zotero list with per-paper expected value.
+5. Contradiction 6 gained its arbitration instrument — three-arm paired study A@35k / B@34k (budget-gift control) / C@34k+polish@1000, N=12, C wins iff C > B AND C ≥ A; Contradiction 3 extended to the polish gradient (float-atomic would trip rerun_identical — ordered reduction mandatory).
+6. Round 2 Updates section extended with wave-2 delta blocks for angles 05/06, wave-2 resolutions (meter unit error, Cut 3 narrowed, Contradiction 6 instrument, G1–G4 gate), and "What wave 2 added" replacing the stale wave-1 plan.
+7. Dependency-ordered execution path finalized: step 2 (probe now arbitrates G1–G4), step 4 (ablation.json gains polish block + z_profiles term field), step 7 (cuts 0–4 as executable recipes with predictions/revert rules), step 8 (polish MVP + landing rule a–e); standing rules gained the determinism and meter rules.
+8. Per-angle summaries 5/6 and Methodology updated to wave-2-complete state; all citations, file links, and angle-file links preserved; no planned fold-ins remain.

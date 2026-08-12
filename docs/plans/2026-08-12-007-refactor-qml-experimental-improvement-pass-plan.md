@@ -471,6 +471,14 @@ sizes come from `Theme.qml`; Layout.* sizing and import rules are clean.
   drop the redundant `QtQuick.Window` import if `Window` resolves from
   `QtQuick` on Qt 6.7; keep the deliberate `Material` style import (the app
   pins Material Dark by design — comment it as such).
+- Review-fix additions (U1 report D-01/D-03/I-03/I-04): fix the invisible
+  dirty-badge pills (both dialogs — the background Rectangle collapses to
+  0 width in its RowLayout; give it a label-derived `Layout.preferredWidth`);
+  bind SettingsPanel's content width to the ScrollView's `availableWidth`
+  instead of `root.width - 18`; convert list-delegate root-id references
+  (`frameList.width` etc.) to `ListView.view` + required properties;
+  ViewportPanel gets a `Component.onCompleted` guard that surfaces a
+  missing renderer (silent dead-viewport failure mode).
 - Add the `jtml.qml_lint` ctest (headless, repo-root cwd) so lint is a
   repeatable gate, not a one-off.
 
@@ -543,13 +551,24 @@ run-lock completion, Estimate enablement, keyboard→bridge wiring.
   first; the invalidation routes through `OptimizerBridge::clearSeedPose`
   (the seed's owner — MlBridge already forwards there in clearEstimate).
   Each path is pinned in the extended pose/ml bridge suites.
-- **Run-lock matrix (I4, D5):** Black-sil. checkbox, Fem/Tib buttons, and
-  viewport interaction (`enabled: false`) join the existing
-  `!optimizerBridge.running` locks; the viewport shows the
-  "Running — interaction locked" overlay/dim while a run is active.
+- **Run-lock matrix (I4, D5):** Black-sil. checkbox, Fem/Tib buttons,
+  **the Camera/Model interaction-mode toggles (U1 review D-07 — they
+  escaped the original inventory)**, and viewport interaction
+  (`enabled: false`) join the existing `!optimizerBridge.running` locks;
+  the viewport shows the "Running — interaction locked" overlay/dim while
+  a run is active. Introduce a single `runLocked` readonly root property
+  and bind every locked control to it — the review found the spread
+  `!optimizerBridge.running` bindings are how controls keep escaping the
+  lock.
 - **Estimate enablement (I5):** add `hasSegmentModel` to the Estimate
   binding + a hint label (the AE4 degradation pattern the Segment button
   already follows).
+- **ButtonGroup `checked:` binding-kill (U1 review D-08):** the three
+  ButtonGroups pair `checked: bridge.x === N` with `onClicked: bridge.x =
+  N`; QQC2 writes `checked` imperatively on click, killing the binding on
+  the clicked button (masked by group exclusivity). U3 picks the
+  single-source pattern (e.g., checked bound to the bridge value with
+  onClicked setters only); U4 applies it to all three groups.
 - **Keyboard wiring (I6, D7):** `onCurrentIndexChanged → setCurrentFrame`
   for the frame list (view highlight and bridge state cannot diverge);
   Space/Enter model toggle; focusable rows; Up/Down via ListView.
@@ -678,7 +697,14 @@ rule-compliant.
   window/toolbar badge aggregating `settingsBridge.dirty` +
   `poseBridge.dirty` ("● unsaved" / "saved", reusing the dialog badge
   tokens from U2's Theme work) — the dirty-state plumbing already exists
-  in the bridges.
+  in the bridges. **Dirty-close guard (U1 review I-13):** the two
+  `modal: false` + `CloseOnPressOutside` dialogs silently discard dirty
+  edits on press-outside/Esc — add a "Discard unsaved changes?" confirm
+  when a dialog with dirty state closes that way (the Run-button close
+  stays unconditional).
+- **Debug pose readout (U1 review D-09g):** the permanent
+  `viewport.poseReadout` overlay is plan-005 residue now that the Poses
+  dialog exists — remove it or gate it behind a toggle.
 
 **Test scenarios:**
 - Edge case: every text/background pair in the Theme tokens meets 4.5:1
@@ -728,7 +754,25 @@ data-integrity prerequisite), U2 (PosesTable component)
 - Replace the `Repeater`-in-`Column`-in-`ScrollView` with a `ListView`
   (fixed `cellHeight`/row height, `boundsBehavior` default) inside the
   dialog; `reuseItems: true` with `onPooled` / `onReused` (re-bind
-  stored value) — reset per the qt-qml delegate rules.
+  stored value) — reset per the qt-qml delegate rules. Row delegates
+  size from `ListView.view.width`/cellWidth (the review confirmed the
+  current `Layout.fillWidth` inside a plain Column is a no-op); the
+  column-header row aligns to the table width (scrollbar-aware —
+  review I-06).
+- **Loader-gated dialog content (U1 review D-04/D-05):** the Poses
+  dialog content loads in a `Loader` whose `active` follows the dialog's
+  open state — the table currently builds 6 TextFields × every frame at
+  dataset load even while closed; deferring construction to first open
+  also makes open-time recreation a natural re-sync (the review
+  confirmed the I1/I2 staleness premise structurally: QQC2 Dialog never
+  destroys contentItem on close).
+- **onReused text re-sync (U1 review F2):** because the storedValue
+  binding is dead after editing, `onReused` must imperatively re-sync
+  the cell text; `onPooled` runs after the commit (commit-on-pool
+  ordering pin).
+- **Refresh granularity re-check (U1 review I-02):** `PoseTableModel::refresh()`
+  full-resets on copy/load paths — post-virtualization, verify reset-vs-
+  notify call sites so pooled state survives single-row operations.
 - **Mid-edit scroll-away is commit-on-pool (D8, owner-confirmed):**
   focus-out fires `editingFinished` before pooling; the commit handler
   reads the live text against the captured tuple; the `onPooled` reset
@@ -745,6 +789,9 @@ data-integrity prerequisite), U2 (PosesTable component)
 - Happy path: with a large fake model (e.g., 500 frames), only visible
   rows are instantiated (child-count assertion via `objectName` on the
   table).
+- Edge case (D-04 pin): with a large fake model, no table rows exist
+  until the Poses dialog first opens (Loader gate); closing the dialog
+  destroys them.
 - Edge case (C1 pin): edit row 3 → scroll far away mid-edit (the
   commit-on-pool path) → scroll back → the typed value committed to row
   3; no cross-row write, no lost text.
@@ -883,9 +930,14 @@ results — including measuring the known torch GUI-thread freeze.
   code fact; if a before-trace is wanted, capture it during U5's
   implementation with the profiling build BEFORE the ListView swap),
   whole-row `dataChanged` re-evaluation (U7's own before/after pair as
-  two standalone reports), per-frame `updatePose` render load, the M4
-  torch freeze (measure + document the GUI-thread stall duration; the fix
-  stays out of scope per D12).
+  two standalone reports — the review confirmed `notifyCellChanged`
+  emits role-less `dataChanged`, so all 6 cells re-read per single-axis
+  edit; Qt 6 supports role-filtered `dataChanged`), the full-reset
+  refresh paths (copy/load), `baseName()` function calls in text
+  bindings (cache as readonly property), missing `Text.PlainText` on
+  labels, per-frame `updatePose` render load, the M4 torch freeze
+  (measure + document the GUI-thread stall duration; the fix stays out
+  of scope per D12).
 - The profiler's 2D scope excludes the VTK renderer internals — note this
   in the report per the skill's guardrail.
 - Fix only the top project hotspots that are QML-view-layer issues;

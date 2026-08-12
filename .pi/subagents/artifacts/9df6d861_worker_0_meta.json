@@ -1,0 +1,199 @@
+{
+  "runId": "9df6d861",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nYou are Agent 4: ListView & Delegate Correctness. CHECK: model.roleName access without required properties (the ~20 DEL-1 sites in the pose-table Repeater delegate); Repeater-in-Column-in-ScrollView pose table (all rows instantiated — O(n) TextFields); the frame/model list delegates (Rectangle+MouseArea, width: frameList.width patterns); currentIndex usage; delegate reuse safety implications for the planned ListView virtualization. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+  "exitCode": 0,
+  "usage": {
+    "input": 251666,
+    "output": 9371,
+    "cacheRead": 752896,
+    "cacheWrite": 0,
+    "cost": 0.0199826144,
+    "turns": 4
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 251666,
+        "output": 9371,
+        "cacheRead": 752896,
+        "cacheWrite": 0,
+        "cost": 0.0199826144,
+        "turns": 4
+      }
+    }
+  ],
+  "durationMs": 108790,
+  "toolCount": 5,
+  "launchContractDigest": "d6dfc0bffcf9d1efc55c91bc232888debdedf198353ce502708d4d4f20688f04",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "not-applicable",
+        "message": "changed-files evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "not-applicable",
+        "message": "tests-added evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Read-only delegate/ListView review completed: traced the pose-table Repeater delegate (main.qml:363-399) against PoseTableModel roles (PoseBridge.h:67-94), the frame/model list delegates (main.qml:652-711) against StudyBridge models/selectedModels, and PoseCell.qml's commit path; reported 4 findings (>80 confidence: O(n) instantiation with 7 items/row, pooled-reuse display corruption via killed text binding, commit-time tuple reads, mouse-only delegates) and 4 investigation targets (60-79: model-reset vs pooling, delegate id refs vs extraction, no-op Layout.fillWidth, indexOf cost). Scope not widened; no files changed."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read main.qml (330-450, 620-730), PoseCell.qml, PoseBridge.h, StudyBridge.h",
+          "result": "passed",
+          "summary": "Traced the three delegate sites, the table model contract (roles + refresh/notifyCellChanged split), and the list-model surfaces"
+        },
+        {
+          "command": "grep activeFocus|KeyNavigation|Keys.|focus:|TapHandler|hoverEnabled in src/app/experimental/*.qml",
+          "result": "passed",
+          "summary": "Zero matches — the app's QML has no focus/keyboard constructs anywhere; lists + table are mouse-only"
+        }
+      ],
+      "validationOutput": [
+        "F1: Repeater+Column+ScrollView has no viewport recycling — every row materializes at dialog open (1 Label + 6 PoseCells per row).",
+        "F2: text binding killed by first keystroke (PoseCell.qml:37 BND-2, file comment confirms); required-property re-bind on reuse does not restore text.",
+        "F3: commit reads frameRow (re-binding required prop) + studyBridge.primaryModelIndex at editingFinished time.",
+        "F4: no activeFocus/KeyNavigation/Keys/TapHandler in any QML file; bridge sync only in MouseArea onClicked.",
+        "I1: PoseBridge.h:88-94 documents refresh() as full-reset and notifyCellChanged() as per-cell."
+      ],
+      "residualRisks": [
+        "F2/F3/I1 derived from Qt-standard ListView/QQC2 semantics + header contracts, not runtime observation (no headless view-layer run exists yet).",
+        "Line numbers will drift with the owner's in-flight plan-006 edits to main.qml/MlBridge."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No diff — read-only review task.",
+      "reviewFindings": [
+        "finding: main.qml:363-399 - pose table instantiates 7 items x N frames at dialog open (O(n), 6 TextFields/row)",
+        "finding: PoseCell.qml:37-49 - killed text binding + required-property re-bind means pooled reuse shows stale typed text; onReused needs imperative re-sync",
+        "finding: PoseCell.qml:46 + delegate props - commit reads re-binding frameRow + primaryModelIndex at commit time (C1/C2 class, needs capture-at-edit-start before any reuse)",
+        "finding: main.qml:652-711 - mouse-only delegates, zero focus/keyboard constructs in app QML (feeds D7)",
+        "investigate: PoseBridge refresh() full-reset vs pooled delegates (copy/load/selection paths after virtualization)",
+        "investigate: delegate id refs (frameList/modelList) break if delegates are extracted to files or ComponentBehavior: Bound is added",
+        "investigate: Layout.fillWidth no-op on pose-row RowLayout under plain Column",
+        "investigate: selectedModels.indexOf O(n) per delegate eval — cosmetic at current counts"
+      ],
+      "manualNotes": "Findings F2/F3/I1 directly feed the plan's U5 (virtualization) and D2 (commit contract) work — the delegate-level mechanisms behind C1/C2 are now confirmed against the actual delegate/model code. F4 confirms the plan's D7 keyboard contract needs delegate-structure changes, not just wiring."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": false
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/9df6d861_worker_0_transcript.jsonl",
+  "timestamp": 1786543180438
+}

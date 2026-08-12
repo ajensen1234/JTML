@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "id": "ff711b10-415f-4e29-a357-9c0d57e66bf9",
+  "title": "You are Agent 1: Bindings & Properties. CHECK: multi-cycle binding loops; property alias chains; ...",
+  "objective": "You are Agent 1: Bindings & Properties. CHECK: multi-cycle binding loops; property alias chains; unqualified property access with semantic context; Qt.binding() closures capturing loop vars; missing readonly on bound-never-assigned properties; the PoseCell text binding kill (C1) and commit-time primaryModelIndex read (C2) — verify and describe the exact failure mechanics. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+  "status": "completed",
+  "createdAt": "2026-08-12T13:57:51.270Z",
+  "updatedAt": "2026-08-12T14:01:03.348Z",
+  "runs": [
+    {
+      "runId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/693f397f-75a0-414a-a92e-55c5b9373829",
+      "status": "complete",
+      "startedAt": "2026-08-12T13:57:51.272Z",
+      "completedAt": "2026-08-12T14:01:03.348Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "bindings",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.316Z",
+      "updatedAt": "2026-08-12T14:00:34.457Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-365Z_019ff643-e085-7f9b-9c8d-fd0ebc916dec.jsonl"
+      ],
+      "runId": "a1afe149",
+      "agent": "worker",
+      "task": "You are Agent 1: Bindings & Properties. CHECK: multi-cycle binding loops; property alias chains; unqualified property access with semantic context; Qt.binding() closures capturing loop vars; missing readonly on bound-never-assigned properties; the PoseCell text binding kill (C1) and commit-time primaryModelIndex read (C2) — verify and describe the exact failure mechanics. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T14:00:34.457Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-365Z_019ff643-e085-7f9b-9c8d-fd0ebc916dec.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T14:00:34.457Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "layout",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.415Z",
+      "updatedAt": "2026-08-12T14:01:03.330Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-451Z_019ff643-e0db-7faa-bee2-ac4449c32171.jsonl"
+      ],
+      "runId": "ef2d9111",
+      "agent": "worker",
+      "task": "You are Agent 2: Layout & Anchoring. CHECK: anchoring to visible:false items; anchors across unrelated branches; items in Layouts using width/height directly (the LAY-2 sites 275-317 and any others); nested Layouts with ambiguous sizing; the pose table Column-in-ScrollView width: poseScroll.availableWidth pattern; the SettingsPanel width: root.width - 18 scrollbar gutter. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T14:01:03.330Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-451Z_019ff643-e0db-7faa-bee2-ac4449c32171.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T14:01:03.330Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "lifecycle",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.487Z",
+      "updatedAt": "2026-08-12T14:00:13.391Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-523Z_019ff643-e123-7481-80ff-74244d9e16fd.jsonl"
+      ],
+      "runId": "c342cc08",
+      "agent": "worker",
+      "task": "You are Agent 3: Component Loading & Lifecycle. CHECK: Loader patterns; Connections with dynamic targets; context-property usage in C++ integration (main.cpp) — ownership risks; the Qt.callLater datasetChanged deferral (main.qml ~421-424) vs the list-model swap; dialog lifetime (FileDialogs as Window children, Dialogs with contentItem components); image loading. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T14:00:13.391Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-523Z_019ff643-e123-7481-80ff-74244d9e16fd.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T14:00:13.391Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "delegates",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.560Z",
+      "updatedAt": "2026-08-12T13:59:40.442Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-595Z_019ff643-e16b-7807-8669-a5fef758e5d5.jsonl"
+      ],
+      "runId": "9df6d861",
+      "agent": "worker",
+      "task": "You are Agent 4: ListView & Delegate Correctness. CHECK: model.roleName access without required properties (the ~20 DEL-1 sites in the pose-table Repeater delegate); Repeater-in-Column-in-ScrollView pose table (all rows instantiated — O(n) TextFields); the frame/model list delegates (Rectangle+MouseArea, width: frameList.width patterns); currentIndex usage; delegate reuse safety implications for the planned ListView virtualization. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T13:59:40.442Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-595Z_019ff643-e16b-7807-8669-a5fef758e5d5.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:59:40.442Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "states",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.637Z",
+      "updatedAt": "2026-08-12T13:59:35.814Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-673Z_019ff643-e1b9-7489-bc89-8868cb8cf4ae.jsonl"
+      ],
+      "runId": "57fca674",
+      "agent": "worker",
+      "task": "You are Agent 5: States, Transitions & Structure. CHECK: state usage (interactionMode toggle buttons — checked bindings vs ButtonGroup); PropertyChanges syntax; transition from Qt 5 patterns; the ButtonGroup declarations (interactGroup, implantGroup, viewGroup); dialog closePolicy; the run-state locking pattern (enabled: !optimizerBridge.running spread across the file); structural issues (main.qml ~1020 lines — extraction opportunities ranked). READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T13:59:35.814Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-673Z_019ff643-e1b9-7489-bc89-8868cb8cf4ae.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:59:35.814Z",
+        "status": "completed"
+      }
+    },
+    {
+      "workflowRunId": "693f397f-75a0-414a-a92e-55c5b9373829",
+      "key": "perf",
+      "status": "completed",
+      "startedAt": "2026-08-12T13:57:51.715Z",
+      "updatedAt": "2026-08-12T13:59:44.206Z",
+      "artifactPaths": [
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-753Z_019ff643-e208-72d5-92eb-161ecd8834c1.jsonl"
+      ],
+      "runId": "f31d33bf",
+      "agent": "worker",
+      "task": "You are Agent 6: Performance & Code Quality. CHECK: expensive bindings (function calls in bindings); the whole-row dataChanged re-evaluation path (PoseBridge tableModel); Repeater pose table instantiation cost; Text.PlainText needs; TextField selectByMouse/font settings; signals-communicating-down vs functions; missing implicitWidth/implicitHeight on reusable components (PoseCell width:78); MouseArea vs TapHandler; transparent Rectangle spacers; clip:true sites (347,652,689); the debug pose readout Rectangle; opacity usage. READ the 5 QML files in src/app/experimental/ (main.qml ~1020 lines, SettingsPanel.qml, PoseCell.qml, Theme.qml, renderer.qml) plus the bridge headers (StudyBridge.h, SettingsBridge.h, OptimizerBridge.h, MlBridge.h, PoseBridge.h, AppBridge.h) as needed to trace symbols.\n\nCONTEXT: this is a Qt 6.7.2 QML app; bridges are QObjects exposed via rootContext()->setContextProperty in main.cpp (that is why qmllint reports Unqualified access everywhere — known, deliberate, and scheduled for property-injection). The app is experimental; findings feed an improvement plan. Report findings at confidence >80 only; 60-79 goes to investigation targets (max 10). Do NOT report findings already covered by this lint context.\n\nLINT SCRIPT FINDINGS (qt_qml_lint.py, deterministic):\nPoseCell.qml:37 BND-2 imperative '=' on text kills the storedValue binding (known C1).\nSettingsPanel.qml: PRF-1 transparent Rectangle (line 24), PRF-3 clip:true (59), BND-1 property var commit (71/105/133/135), JS-1 var (89), ~20 ORD-1 ordering nits.\nTheme.qml:7 STY-1 no id: root.\nmain.qml: IMP-3 plain QtQuick.Controls import (3), IMP-1 QtQuick.Window redundant (5), IMP-2 versioned import (8), BND-1 var (123), BND-2 imperative '=' on messageDialog.title (152), JS-1 var (161), LAY-2 width in RowLayout children (275,282,289,296,303,310,317), PRF-3 clip (347,652,689), PRF-1 transparent Rectangles (570,655,692), DEL-1 model.roleName without required property (~20 sites in the pose-table delegate), JS-2 loose equality (695), STY-3 anchors dot notation (940).\nrenderer.qml: IMP-1 (2), IMP-2 (3).\nQML LINT (Qt6 qmllint 6.7.2): main.qml 8x 'Detected width on an item that is managed by a layout' (275-366); ~150 'Unqualified access' warnings from rootContext property globals (studyBridge/settingsBridge/optimizerBridge/mlBridge/poseBridge/appBridge/fileDialogBridge); 'QmlVtkRenderer was not found' at 909/916 (C++-registered type, import-path gap, not a bug); SettingsPanel 3x 'Property commit is a variant property' + unqualified access; renderer.qml anchors unresolved in smoke scene; Theme 1 unqualified. Env noise: Qt5+Qt6 module ambiguity on QtQuick.Dialogs import.",
+      "completedAt": "2026-08-12T13:59:44.206Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-753Z_019ff643-e208-72d5-92eb-161ecd8834c1.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T13:59:44.206Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/693f397f-75a0-414a-a92e-55c5b9373829/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/693f397f-75a0-414a-a92e-55c5b9373829/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-365Z_019ff643-e085-7f9b-9c8d-fd0ebc916dec.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-451Z_019ff643-e0db-7faa-bee2-ac4449c32171.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-523Z_019ff643-e123-7481-80ff-74244d9e16fd.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-595Z_019ff643-e16b-7807-8669-a5fef758e5d5.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-673Z_019ff643-e1b9-7489-bc89-8868cb8cf4ae.jsonl"
+    },
+    {
+      "kind": "output",
+      "path": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-57-51-753Z_019ff643-e208-72d5-92eb-161ecd8834c1.jsonl"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 6 child run(s). Return: {\n  \"bindings\": \"All mechanics verified. I have a complete picture of the binding/state domain. Compiling the report.\\n\\n**Verified-clean:** no multi-cycle binding loops anywhere (all bindings are one-way or converge in a single re-evaluation — e.g., the `checked:`→`onToggled`→bridge→`checked` chain converges); no `Qt.binding()` closures anywhere (so no loop-var capture class); no property alias chains; Theme.qml is fully `readonly`. The `messageDialog.title/messageText` BND-2 flag is a semantic false positive (literal initializers, no binding exists to kill — noted for the record).\\n\\n**Confirmed findings (C1/C2 mechanics fully traced through the bridge code):**\",\n  \"layout\": \"I've completed the full review of all 5 QML files plus traced the layout context (bridges, dialog sizing). Here are my findings.\\n\\n## Layout & Anchoring Review — `src/app/experimental/`\\n\\n### Findings (confidence ≥ 80)\\n\\n**[D-1] Badge \\\"pill\\\" Rectangles collapse to 0 width in their RowLayouts — the pill back Trace: 12 event(s)."
+}
