@@ -44,6 +44,13 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+/*Plan 008 U9 (Cut B): the oracle's cost twin is now the shared
+ * jta::BuildGpuCostAdapter (optimizer_manager.h) — the monoplane
+ * specialization of the production RunDirectStage cost lambda. Include-order
+ * rule: optimizer_manager.h pulls CostFunctionManager.h (torch ATen headers)
+ * and must come first.*/
+#include "coordinator/optimizer_manager.h"
+
 #include "domain/data_structures_6D.h"
 #include "domain/direct_optimizer.h"
 #include "compute/frame.h"
@@ -144,6 +151,9 @@ struct Pipeline {
     std::vector<GPUHeatmap*> heatmaps;
     std::vector<GPUModel*> non_principal;
     jta_cost_function::CostFunctionManager* trunk = nullptr;
+    /*Plan 008 U9: the fixture's monoplane calibration, kept for the shared
+     * cost adapter (jta::BuildGpuCostAdapter carries Calibration by value).*/
+    Calibration calibration;
 
     ~Pipeline() {
         delete trunk;
@@ -216,6 +226,7 @@ Pipeline BuildFramePipeline(const std::string& base_image) {
 
     CameraCalibration cam(1198.0f, -1.0f * 0.0f, -1.0f * 0.0f, 0.373f);
     Calibration calib(cam);
+    p.calibration = calib;
     p.model = new GPUModel("femur", /*principal=*/true, kWidth, kHeight,
                            kDevice, /*use_backface_culling=*/false,
                            &femur.triangle_vertices_[0],
@@ -255,10 +266,10 @@ TEST_CASE(
     // Identical to the search's cost lambda (optimize-then-gate path): set the
     // pose, render, evaluate. The cost itself re-renders (the DIRECT_MAHFOUZ
     // characterization below re-renders inside callActiveCostFunction too).
-    auto cost = [&p](const Point6D& physical) -> double {
-        p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
-        return p.trunk->callActiveCostFunction();
-    };
+    // Plan 008 U9: this IS the production cost — jta::BuildGpuCostAdapter
+    // (the monoplane twin of RunDirectStage's injected cost).
+    auto cost =
+        jta::BuildGpuCostAdapter(p.model, p.calibration, *p.trunk);
     auto add_trans = [](const Point6D& q, double dx, double dy, double dz) {
         return Point6D(q.x + dx, q.y + dy, q.z + dz, q.xa, q.ya, q.za);
     };
@@ -416,11 +427,12 @@ TEST_CASE("Tier-2 GPU oracle: recovered femur silhouette matches the label",
          * 008 U8: the Options slot defaults are passed EXPLICITLY -- the
          * flat-3000 run is the parity instrument (the default path must be
          * bit-identical to the pre-Options search: recovered pose / IoU / L1
-         * vs the recorded re-baselined values in baseline.json). ---*/
-        auto cost = [&p](const Point6D& physical) -> double {
-            p.model->SetCurrentPrimaryCameraPose(ToPose(physical));
-            return p.trunk->callActiveCostFunction();
-        };
+         * vs the recorded re-baselined values in baseline.json). Plan 008
+         * U9: the cost IS jta::BuildGpuCostAdapter — the oracle twin body
+         * moved into the shared adapter (the golden assertions below stay
+         * verbatim). ---*/
+        auto cost =
+            jta::BuildGpuCostAdapter(p.model, p.calibration, *p.trunk);
         DirectOptimizer opt(cost, SearchRange(), start, kBudget,
                             DirectOptimizer::Options{});
         REQUIRE(opt.Run());

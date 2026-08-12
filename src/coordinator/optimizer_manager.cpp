@@ -8,6 +8,8 @@
 #include <stdlib.h>
 
 #include <chrono>
+#include <stdexcept>
+#include <string>
 #include <thread>
 
 #include "compute/gpu_heatmaps.cuh"
@@ -201,6 +203,24 @@ bool OptimizerManager::Initialize(
         end_frame_index_ = 0;
     } else {
         error_message = "Unrecognized optimization directive: " + opt_directive;
+        succesfull_initialization_ = false;
+        return succesfull_initialization_;
+    }
+
+    /*Plan 008 U9 (Cut B): build the run's StageScript ONCE from the settings
+     * + directive — the container's stage policy is DATA (U7's pure builder),
+     * and Optimize()'s per-frame loop iterates it. The manager's own
+     * directive validation above runs FIRST (its "Unrecognized optimization
+     * directive" error path is unchanged), so the builder's unknown-directive
+     * error is unreachable here; a NEGATIVE-budget settings corruption fails
+     * fast through the manager's existing error path (error_message + failed
+     * Initialize) instead of the engine's silent acceptance — the pure
+     * builder's documented strictness (U7), never hit by the tested shapes.*/
+    try {
+        stage_script_ = jta::BuildStageScript(
+            optimizer_settings_, optimization_directive_.toStdString());
+    } catch (const std::invalid_argument& e) {
+        error_message = QString::fromStdString(e.what());
         succesfull_initialization_ = false;
         return succesfull_initialization_;
     }
@@ -1012,169 +1032,285 @@ void OptimizerManager::Optimize() {
             /*Start Clock*/
             start_clock_ = clock();
             update_screen_clock_ = clock();
+        }
 
-            /*****************TRUNK SECTION BEGIN **********************/
-            /*Call Trunk Initializer*/
-            if (!trunk_manager_.InitializeActiveCostFunction(error_message)) {
-                emit OptimizerError(QString::fromStdString(error_message));
+        /*****************SCRIPT-DRIVEN STAGE LOOP (plan 008 U9) ******/
+        /*The run's stage policy is DATA — stage_script_, built once in
+         * Initialize from the settings + directive (U7's BuildStageScript; the
+         * Sym_Trap directive yields the leaf-only [{Leaf, repeat=0}]
+         * script, the normal directives the trunk/branch/leaf shape). The
+         * loop sits OUTSIDE the !sym_trap_call guard, mirroring the pre-Cut-B
+         * leaf section: under Sym_Trap the script holds only the leaf spec, so
+         * only leaf-init + dilate + emit + CalculateSymTrap run (no search;
+         * costCalls stays 0 — the U6 sym-trap pins). Each
+         * spec names its CostFunctionManager by cfm_index (0/1/2 -> the
+         * trunk/branch/leaf managers) and its cost parameters are derived
+         * from that manager's parameter registry via DeriveStageCostParams
+         * — the U7 pure relocation of the scan Initialize used to perform
+         * inline (same values: 6/4/1 dilation on the production shape).
+         * The emit order, the error gating, and the cumulative budget
+         * accounting are transcribed VERBATIM from the pre-Cut-B blocks:
+         *  - trunk: init + dilate + emit UNCONDITIONAL; search gated on
+         *    !error_occurrred_; destruct UNCONDITIONAL (the trunk side of
+         *    the leaf-destruct error-gating asymmetry, preserved verbatim
+         *    — flagged to the hygiene pass, NOT fixed);
+         *  - branch: init + dilate + emit ONCE PER GROUP (gated on
+         *    enable_branch_ && number_branches > 0 && !error_occurrred_ —
+         *    the group-once dilation pin); per-repeat re-seed from the
+         *    CURRENT optimum + budget_ += spec.budget (cumulative);
+         *  - leaf: init + dilate + emit gated on enable_leaf_ &&
+         *    !error_occurrred_; CalculateSymTrap under the Sym_Trap
+         *    directive (the repeat=0 no-search leaf); search gated on
+         *    enable_leaf_ && !error_occurrred_ && !sym_trap_call &&
+         *    repeat > 0; destruct gated on enable_leaf_ && !error_occurrred_
+         *    (the leaf side of the asymmetry, preserved verbatim);
+         *  - a cfm_index outside 0..2 fails fast through the manager's
+         *    existing error path (OptimizerError + error_occurrred_, no
+         *    silent stage skip).
+         * budget_ is NOT re-touched for the trunk spec (the pre-trunk
+         * block above already reset it to trunk_budget); branch/leaf
+         * accumulate so the caps gate stays on the cumulative
+         * 20/25/30/35k shape.*/
+        for (const jta::StageSpec& spec : stage_script_) {
+            /*cfm_index -> the three managers (fail fast on a bad index).*/
+            jta_cost_function::CostFunctionManager* stage_manager = nullptr;
+            switch (spec.cfm_index) {
+            case 0u:
+                stage_manager = &trunk_manager_;
+                break;
+            case 1u:
+                stage_manager = &branch_manager_;
+                break;
+            case 2u:
+                stage_manager = &leaf_manager_;
+                break;
+            default:
+                emit OptimizerError(QString::fromStdString(
+                    "OptimizerManager: stage cfm_index " +
+                    std::to_string(spec.cfm_index) +
+                    " out of range (valid 0..2); run aborted"));
                 error_occurrred_ = true;
+                break;
+            }
+            if (stage_manager == nullptr) {
+                break; /*bad cfm_index: the error was emitted above*/
             }
 
-            /*Seed + search loop now run inside RunDirectStage (plan U6), bound
-             * to the real GPU cost, using the trunk range/budget/start already
-             * set above.*/
-
-            /*Make Sure Dilation Image is Showing Trunk Value (Should be
-             * Unnecessary)*/
-            dilate(
-                frames_A_[frame_index].GetEdgeImage(),
-                frames_A_[frame_index].GetDilationImage(),
-                cv::Mat(),
-                cv::Point(-1, -1),
-                trunk_dilation_val_); /*Reset Dilation In That Image*/
-            if (calibration_.biplane_calibration) {
-                dilate(
-                    frames_B_[frame_index].GetEdgeImage(),
-                    frames_B_[frame_index].GetDilationImage(),
-                    cv::Mat(),
-                    cv::Point(-1, -1),
-                    trunk_dilation_val_); /*Reset Dilation In That Image*/
-            }
-            emit UpdateDilationBackground();
-
-            /*Run the trunk stage of DIRECT bound to the real GPU cost. The
-             * budget_ member was just reset to optimizer_settings_.trunk_budget
-             * and cost_function_calls_ to 0 above; RunDirectStage uses the
-             * cumulative call-offset and drives the live UpdateDisplay /
-             * UpdateOptimum signals.*/
-            if (!error_occurrred_) {
-                RunDirectStage(optimizer_settings_.trunk_range, trunk_manager_);
-            }
-
-            /*Destruct Trunk Manager Initialization*/
-            if (!trunk_manager_.DestructActiveCostFunction(error_message)) {
-                emit OptimizerError(QString::fromStdString(error_message));
-                error_occurrred_ = true;
-            }
-            /*****************TRUNK SECTION END **********************/
-
-            /*****************BRANCH SECTION BEGIN **********************/
-            /*Construct Branch Manager Initialization*/
-            if (optimizer_settings_.enable_branch_ &&
-                optimizer_settings_.number_branches > 0 && !error_occurrred_) {
-                if (!branch_manager_.InitializeActiveCostFunction(
+            switch (spec.kind) {
+            /**************TRUNK SPEC (cfm 0)**********************/
+            case jta::StageKind::Trunk: {
+                /*Call Trunk Initializer (unconditional — verbatim)*/
+                if (!stage_manager->InitializeActiveCostFunction(
                         error_message)) {
                     emit OptimizerError(QString::fromStdString(error_message));
                     error_occurrred_ = true;
                 }
 
-                /*Make Sure Dilation Image is Showing Branch Value */
+                const jta::StageCostParams trunk_params =
+                    jta::DeriveStageCostParams(
+                        stage_manager->getActiveCostFunction(),
+                        stage_manager->getActiveCostFunctionClass()
+                            ->getIntParameters(),
+                        stage_manager->getActiveCostFunctionClass()
+                            ->getBoolParameters());
+
+                /*Make Sure Dilation Image is Showing Trunk Value (Should be
+                 * Unnecessary)*/
                 dilate(
                     frames_A_[frame_index].GetEdgeImage(),
                     frames_A_[frame_index].GetDilationImage(),
                     cv::Mat(),
                     cv::Point(-1, -1),
-                    branch_dilation_val_); /*Reset Dilation In That Image*/
+                    trunk_params.dilation); /*Reset Dilation In That Image*/
                 if (calibration_.biplane_calibration) {
                     dilate(
                         frames_B_[frame_index].GetEdgeImage(),
                         frames_B_[frame_index].GetDilationImage(),
                         cv::Mat(),
                         cv::Point(-1, -1),
-                        branch_dilation_val_); /*Reset Dilation In That Image*/
+                        trunk_params.dilation); /*Reset Dilation In That
+                                                   Image*/
                 }
                 emit UpdateDilationBackground();
+
+                /*Run the trunk stage of DIRECT bound to the real GPU cost
+                 * (budget_ was just reset to trunk_budget and
+                 * cost_function_calls_ to 0 above; RunDirectStage uses the
+                 * cumulative call-offset and drives the live UpdateDisplay /
+                 * UpdateOptimum signals).*/
+                if (!error_occurrred_) {
+                    RunDirectStage(spec.range, *stage_manager);
+                }
+
+                /*Destruct Trunk Manager Initialization (unconditional —
+                 * verbatim)*/
+                if (!stage_manager->DestructActiveCostFunction(
+                        error_message)) {
+                    emit OptimizerError(QString::fromStdString(error_message));
+                    error_occurrred_ = true;
+                }
+                break;
             }
+            /**************BRANCH SPEC (cfm 1)*********************/
+            case jta::StageKind::Branch: {
+                /*Construct Branch Manager Initialization — the GROUP init +
+                 * dilate + emit fires exactly once per frame (the group-once
+                 * dilation pin).*/
+                if (optimizer_settings_.enable_branch_ &&
+                    optimizer_settings_.number_branches > 0 &&
+                    !error_occurrred_) {
+                    if (!stage_manager->InitializeActiveCostFunction(
+                            error_message)) {
+                        emit OptimizerError(
+                            QString::fromStdString(error_message));
+                        error_occurrred_ = true;
+                    }
 
-            /*Move to Branch If Necessary*/
-            for (int branch_index = 0;
-                 branch_index < optimizer_settings_.enable_branch_ *
-                                    optimizer_settings_.number_branches;
-                 branch_index++) {
-                /*If Error*/
-                if (error_occurrred_) break;
+                    const jta::StageCostParams branch_params =
+                        jta::DeriveStageCostParams(
+                            stage_manager->getActiveCostFunction(),
+                            stage_manager->getActiveCostFunctionClass()
+                                ->getIntParameters(),
+                            stage_manager->getActiveCostFunctionClass()
+                                ->getBoolParameters());
 
-                /*Update Search Stage Flag as Branch*/
-                search_stage_flag_ = Branch;
+                    /*Make Sure Dilation Image is Showing Branch Value */
+                    dilate(
+                        frames_A_[frame_index].GetEdgeImage(),
+                        frames_A_[frame_index].GetDilationImage(),
+                        cv::Mat(),
+                        cv::Point(-1, -1),
+                        branch_params.dilation); /*Reset Dilation In That
+                                                    Image*/
+                    if (calibration_.biplane_calibration) {
+                        dilate(
+                            frames_B_[frame_index].GetEdgeImage(),
+                            frames_B_[frame_index].GetDilationImage(),
+                            cv::Mat(),
+                            cv::Point(-1, -1),
+                            branch_params.dilation); /*Reset Dilation In That
+                                                        Image*/
+                    }
+                    emit UpdateDilationBackground();
+                }
 
-                /*Reset Storage, Starting Point, Range, new budget, comparison
-                 * image*/
-                /*Reset Starting Point*/
-                SetStartingPoint(current_optimum_location_);
-                /*Reset Range*/
-                SetSearchRange(optimizer_settings_.branch_range);
-                /*Reset Budget and Cost Function Calls*/
-                budget_ += optimizer_settings_.branch_budget;
-                /*Run this branch stage of DIRECT bound to the real GPU cost.
-                 * budget_ is cumulative (trunk + branch); RunDirectStage uses
-                 * it as the stage cap against the running cost_function_calls_
-                 * offset.*/
-                RunDirectStage(optimizer_settings_.branch_range,
-                               branch_manager_);
+                /*Move to Branch If Necessary: one search per repeat, each
+                 * re-seeded from the CURRENT optimum (the per-repeat re-seed
+                 * lineage invariant — reading current_optimum_location_,
+                 * never a captured one).*/
+                for (unsigned int branch_index = 0;
+                     branch_index < spec.repeat;
+                     branch_index++) {
+                    /*If Error*/
+                    if (error_occurrred_) break;
+
+                    /*Update Search Stage Flag as Branch*/
+                    search_stage_flag_ = Branch;
+
+                    /*Reset Storage, Starting Point, Range, new budget,
+                     * comparison image*/
+                    /*Reset Starting Point*/
+                    SetStartingPoint(current_optimum_location_);
+                    /*Reset Range*/
+                    SetSearchRange(spec.range);
+                    /*Reset Budget and Cost Function Calls*/
+                    budget_ += spec.budget;
+                    /*Run this branch stage of DIRECT bound to the real GPU
+                     * cost. budget_ is cumulative (trunk + branch);
+                     * RunDirectStage uses it as the stage cap against the
+                     * running cost_function_calls_ offset.*/
+                    RunDirectStage(spec.range, *stage_manager);
+                }
+                break;
+            }
+            /**************LEAF SPEC (cfm 2)***********************/
+            case jta::StageKind::Leaf: {
+                /*Construct Leaf Initialization*/
+                if (optimizer_settings_.enable_leaf_ &&
+                    !error_occurrred_) {
+                    if (!stage_manager->InitializeActiveCostFunction(
+                            error_message)) {
+                        emit OptimizerError(
+                            QString::fromStdString(error_message));
+                        error_occurrred_ = true;
+                    }
+
+                    const jta::StageCostParams leaf_params =
+                        jta::DeriveStageCostParams(
+                            stage_manager->getActiveCostFunction(),
+                            stage_manager->getActiveCostFunctionClass()
+                                ->getIntParameters(),
+                            stage_manager->getActiveCostFunctionClass()
+                                ->getBoolParameters());
+
+                    /*Make Sure Dilation Image is Showing Leaf Value */
+                    dilate(
+                        frames_A_[frame_index].GetEdgeImage(),
+                        frames_A_[frame_index].GetDilationImage(),
+                        cv::Mat(),
+                        cv::Point(-1, -1),
+                        leaf_params.dilation); /*Reset Dilation In That Image*/
+                    if (calibration_.biplane_calibration) {
+                        dilate(
+                            frames_B_[frame_index].GetEdgeImage(),
+                            frames_B_[frame_index].GetDilationImage(),
+                            cv::Mat(),
+                            cv::Point(-1, -1),
+                            leaf_params.dilation); /*Reset Dilation In That
+                                                      Image*/
+                    }
+                    emit UpdateDilationBackground();
+                }
+
+                /*Sym_Trap: the repeat=0 no-search leaf — init + dilate +
+                 * emit + CalculateSymTrap, NO search (gated ONLY on
+                 * sym_trap_call, verbatim — the engine runs CalculateSymTrap
+                 * even after a leaf-init error, a latent hazard preserved
+                 * here).*/
+                if (sym_trap_call) {
+                    CalculateSymTrap();
+                }
+
+                /*Move to Leaf Search If Necessary*/
+                if (optimizer_settings_.enable_leaf_ &&
+                    !error_occurrred_ && !sym_trap_call && spec.repeat > 0) {
+                    /*Update Search Stage Flag as Leaf*/
+                    search_stage_flag_ = Leaf;
+
+                    /*Reset Storage, Starting Point, Range, new budget,
+                     * comparison image*/
+                    /*Reset Starting Point*/
+                    SetStartingPoint(current_optimum_location_);
+                    /*Reset Range*/
+                    SetSearchRange(spec.range);
+                    /*Reset Budget and Cost Function Calls*/
+                    budget_ += spec.budget;
+                    /*Run the leaf stage of DIRECT bound to the real GPU cost.
+                     * budget_ is cumulative (trunk + branch + leaf);
+                     * RunDirectStage uses it as the stage cap against the
+                     * running cost_function_calls_ offset.*/
+                    RunDirectStage(spec.range, *stage_manager);
+                }
+
+                /*Destruct Leaf Initialization CFM — gated on
+                 * !error_occurrred_ (the leaf side of the leaf-destruct
+                 * error-gating asymmetry; preserved verbatim, flagged to the
+                 * hygiene pass).*/
+                if (optimizer_settings_.enable_leaf_ &&
+                    !error_occurrred_) {
+                    if (!stage_manager->DestructActiveCostFunction(
+                            error_message)) {
+                        emit OptimizerError(
+                            QString::fromStdString(error_message));
+                        error_occurrred_ = true;
+                    }
+                }
+                break;
+            }
             }
         }
 
-        /*****************BRANCH SECTION END **********************/
-
-        /*****************LEAF SECTION BEGIN **********************/
-        /*Construct Leaf Initialization*/
-
-        if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
-            if (!leaf_manager_.InitializeActiveCostFunction(error_message)) {
-                emit OptimizerError(QString::fromStdString(error_message));
-                error_occurrred_ = true;
-            }
-            /*Make Sure Dilation Image is Showing Leaf Value */
-            dilate(
-                frames_A_[frame_index].GetEdgeImage(),
-                frames_A_[frame_index].GetDilationImage(),
-                cv::Mat(),
-                cv::Point(-1, -1),
-                leaf_dilation_val_); /*Reset Dilation In That Image*/
-            if (calibration_.biplane_calibration) {
-                dilate(
-                    frames_B_[frame_index].GetEdgeImage(),
-                    frames_B_[frame_index].GetDilationImage(),
-                    cv::Mat(),
-                    cv::Point(-1, -1),
-                    leaf_dilation_val_); /*Reset Dilation In That Image*/
-            }
-            emit UpdateDilationBackground();
-        }
-
-        if (sym_trap_call) {
-            CalculateSymTrap();
-        }
-
-        /*Move to Leaf Search If Necessary*/
-        if (optimizer_settings_.enable_leaf_ && !error_occurrred_ &&
-            !sym_trap_call) {
-            /*Update Search Stage Flag as Leaf*/
-            search_stage_flag_ = Leaf;
-
-            /*Reset Storage, Starting Point, Range, new budget, comparison
-             * image*/
-            /*Reset Starting Point*/
-            SetStartingPoint(current_optimum_location_);
-            /*Reset Range*/
-            SetSearchRange(optimizer_settings_.leaf_range);
-            /*Reset Budget and Cost Function Calls*/
-            budget_ += optimizer_settings_.leaf_budget;
-            /*Run the leaf stage of DIRECT bound to the real GPU cost. budget_
-             * is cumulative (trunk + branch + leaf); RunDirectStage uses it as
-             * the stage cap against the running cost_function_calls_ offset.*/
-            RunDirectStage(optimizer_settings_.leaf_range, leaf_manager_);
-        }
-
-        /*Destruct Leaf Initialization CFM*/
-        if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
-            if (!leaf_manager_.DestructActiveCostFunction(error_message)) {
-                emit OptimizerError(QString::fromStdString(error_message));
-                error_occurrred_ = true;
-            }
-        }
-
-        /*****************LEAF SECTION END **********************/
+        /*****************STAGE LOOP END *****************************/
 
         /*Update Comparison Image in Dilation Metric and Dilation Metric
          * Dilation Level to Original*/
@@ -1249,22 +1385,15 @@ void OptimizerManager::RunDirectStage(
      * DirectOptimizer hands the injected lambda the *denormalized physical*
      * point, so set the GPU model poses from it directly (primary, + biplane
      * secondary via the calibration), then score the stage's cost function.
+     * The injected cost IS jta::BuildGpuCostAdapter (plan 008 U9) — the one
+     * shared lambda body the production runner, the Tier-2 oracle twin, and
+     * the z-profile probe converge on (set pose -> score the stage's active
+     * cost function; Calibration by value, monoplane default).
      * No here-optimum tracking: DirectOptimizer owns that internally and we
      * read it back after Run().*/
     DirectOptimizer opt(
-        [this, &stage_manager](const Point6D& physical) -> double {
-            Pose pose(physical.x, physical.y, physical.z, physical.xa,
-                      physical.ya, physical.za);
-            gpu_principal_model_->SetCurrentPrimaryCameraPose(pose);
-            if (calibration_.biplane_calibration) {
-                Point6D physical_B =
-                    calibration_.convert_Pose_A_to_Pose_B(physical);
-                gpu_principal_model_->SetCurrentSecondaryCameraPose(Pose(
-                    physical_B.x, physical_B.y, physical_B.z, physical_B.xa,
-                    physical_B.ya, physical_B.za));
-            }
-            return stage_manager.callActiveCostFunction();
-        },
+        jta::BuildGpuCostAdapter(gpu_principal_model_, calibration_,
+                                 stage_manager),
         range, starting_point_, budget_, direct_options_);
 
     /*Cumulative budget semantics: this stage continues from the running call
@@ -1490,3 +1619,39 @@ OptimizerManager::~OptimizerManager() {
         delete gpu_non_principal_models_[i];
     }
 };
+
+std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
+    gpu_cost_function::GPUModel* principal_model, Calibration calibration,
+    jta_cost_function::CostFunctionManager& stage_manager) {
+    /*Plan 008 U9 (Cut B): the shared GPU cost adapter — the pre-Cut-B
+     * RunDirectStage injected-cost lambda body (and the oracle twin's body,
+     * its monoplane specialization), transcribed verbatim: set the
+     * already-physical pose on the principal model (biplane: camera-A-to-B
+     * conversion), then score the stage's ACTIVE cost function. Calibration
+     * is carried BY VALUE (monoplane default — the future biplane consumer
+     * needs no signature change). Three consumers converge on this function:
+     * the production runner (OptimizerManager::RunDirectStage), the Tier-2
+     * oracle (test/oracle/oracle_test.cpp), and the z-profile probe's cost
+     * path. The caller owns `principal_model` and `stage_manager`; both must
+     * outlive the returned std::function (the DirectOptimizer runs
+     * synchronously inside RunDirectStage, so the reference capture is
+     * safe — identical to the pre-Cut-B lambda's capture).*/
+    return [principal_model, calibration, &stage_manager](
+               const Point6D& physical) mutable -> double {
+        Pose pose(physical.x, physical.y, physical.z, physical.xa, physical.ya,
+                  physical.za);
+        principal_model->SetCurrentPrimaryCameraPose(pose);
+        if (calibration.biplane_calibration) {
+            /*convert_Pose_A_to_Pose_B is a NON-const Calibration member (it
+             * builds local matrices only); `mutable` keeps the by-value
+             * capture writable without changing behavior (calibration is
+             * never modified).*/
+            Point6D physical_B =
+                calibration.convert_Pose_A_to_Pose_B(physical);
+            principal_model->SetCurrentSecondaryCameraPose(Pose(
+                physical_B.x, physical_B.y, physical_B.z, physical_B.xa,
+                physical_B.ya, physical_B.za));
+        }
+        return stage_manager.callActiveCostFunction();
+    };
+}

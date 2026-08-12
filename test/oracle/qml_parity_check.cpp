@@ -335,7 +335,13 @@ TEST_CASE(
      * budget 0 (RunDirectStage at budget 0 = one cost eval, no search, no
      * error, running optimum preserved — verified against direct_optimizer
      * .cpp's loop guard). Active cost function is DIRECT_DILATION in all
-     * three managers (the SettingsBridge constructor default).*/
+     * three managers (the SettingsBridge constructor default). Plan 008 U9:
+     * this degenerate 3000/0/0 shape runs through the script-driven loop —
+     * BuildStageScript(settings, "Single") yields [Trunk 3000, Branch x2
+     * budget 0, Leaf budget 0]; the budget-0 stages contribute exactly one
+     * seed eval each (the cumulative (calls + offset) < budget_ guard trips
+     * immediately), so the bridge run path must stay green through Cut B —
+     * this instrument is the proof.*/
     settings->setBranchBudget(0);
     settings->setLeafBudget(0);
     settings->setTrunkDilation(6);  // DIRECT_DILATION Dilation param (default)

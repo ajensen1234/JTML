@@ -42,6 +42,14 @@
 /*Optimizer Settings*/
 #include "services/optimizer_settings.h"
 
+/*Plan 008 U9 (Cut B): the pure stage-script surface (StageSpec/StageScript,
+ * BuildStageScript, DeriveStageCostParams) — Optimize() consumes the script
+ * built once per run in Initialize (the container's stage policy is data).*/
+#include "coordinator/optimizer_stage_script.h"
+
+/*std::function (the BuildGpuCostAdapter return type)*/
+#include <functional>
+
 /*Metric Types*/
 #include "domain/metric_enum.h"
 
@@ -271,8 +279,40 @@ private:
     /*Store Post Matrix on Cost Functions*/
     PoseMatrix pose_storage_;
 
+    /*Plan 008 U9 (Cut B): the run's stage script, built ONCE in Initialize
+     * from the settings + directive (jta::BuildStageScript, U7). Optimize()'s
+     * per-frame loop iterates it — the stage policy is data, not code (the
+     * pre-Cut-B trunk/branch/leaf blocks are transcribed verbatim into the
+     * per-spec cases).*/
+    jta::StageScript stage_script_;
+
     /*Flag For Being in Either Trunk, Branch, or Z*/
     unsigned int search_stage_flag_;
 };
+
+namespace jta {
+
+/*Plan 008 U9 (Cut B): the shared GPU cost adapter — the injected-cost lambda
+ * body of RunDirectStage (src/coordinator/optimizer_manager.cpp) and the
+ * Tier-2 oracle's twin (test/oracle/oracle_test.cpp) as one named free
+ * function. Three consumers converge on it: the production runner
+ * (OptimizerManager::RunDirectStage), the flat oracle, and the z-profile
+ * probe's cost path.
+ *
+ * Returns a std::function that (a) sets the already-physical pose on the
+ * principal GPU model (biplane: camera-A-to-B conversion via the calibration),
+ * then (b) scores the stage's ACTIVE cost function — the exact body of the
+ * pre-Cut-B RunDirectStage lambda, transcribed verbatim. Calibration is
+ * carried BY VALUE (monoplane default; the future biplane consumer needs no
+ * signature change — plan 008 Key Technical Decisions). The caller owns
+ * `principal_model` and `stage_manager`; both must outlive the returned
+ * std::function (RunDirectStage guarantees this: the search runs synchronously
+ * within the call).*/
+std::function<double(const Point6D&)> BuildGpuCostAdapter(
+    gpu_cost_function::GPUModel* principal_model,
+    Calibration calibration,
+    jta_cost_function::CostFunctionManager& stage_manager);
+
+}  // namespace jta
 
 #endif /* OPTIMIZER_MANAGER_H */
