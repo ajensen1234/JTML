@@ -28,6 +28,9 @@ QtObject {
     readonly property color badgeCleanBg: "#3a4a3d"
     readonly property color badgeCleanFg: "#8fbf96"
     readonly property color badgeText: "#ffffff"   // text on Theme.badge
+    // Run-lock overlay (plan 007 U3 D5): translucent dim over the viewport
+    // while an optimizer run is in flight.
+    readonly property color overlayDim: "#66101416"
 
     // ---- Type scale (pinned: major second 1.125 from base 16) ----------
     readonly property real caption: 12             // metadata / labels

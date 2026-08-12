@@ -15,9 +15,18 @@ Item {
 
     property alias viewport: viewportItem
 
+    // D5 (plan 007 U3): single run-lock source — every locked control on
+    // this panel binds to it (the review found the spread
+    // !optimizerBridge.running bindings are how controls keep escaping
+    // the lock).
+    readonly property bool runLocked: optimizerBridge.running
+
     QmlVtkRenderer {
         id: viewportItem
         anchors.fill: parent
+        // D5 (plan 007 U3): block mouse events during a run — a mid-run
+        // drag is a semantic clobber (the run would overwrite it).
+        enabled: !root.runLocked
 
         // Pre-load shell state (R17): the placeholder covers the viewport
         // until a study loads.
@@ -55,6 +64,37 @@ Item {
                 font.pixelSize: Theme.caption
                 text: viewportItem.poseReadout
                 elide: Text.ElideRight
+            }
+        }
+    }
+
+    // D5 (plan 007 U3): the run lock has a VISIBLE state — dead input on
+    // a live-looking scene is the same silent-failure class D4 exists to
+    // prevent. Dim + a centered "Running — interaction locked" pill while
+    // a run is in flight; clears automatically on completion.
+    Rectangle {
+        visible: root.runLocked
+        anchors.fill: parent
+        z: 2
+        color: Theme.overlayDim
+        radius: 4
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: label.implicitWidth + 32
+            height: label.implicitHeight + 16
+            radius: 6
+            color: Theme.panel
+            border.color: Theme.accent
+            border.width: 1
+
+            Label {
+                id: label
+                anchors.centerIn: parent
+                text: qsTr("Running — interaction locked")
+                color: Theme.fg
+                font.bold: true
+                font.pixelSize: Theme.body
             }
         }
     }

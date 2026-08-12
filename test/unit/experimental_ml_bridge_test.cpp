@@ -446,3 +446,28 @@ TEST_CASE("ml_bridge: clearEstimate is a safe no-op without an estimate",
     REQUIRE(f.ml()->estimateText().isEmpty());
     REQUIRE(f.ml()->statusText().isEmpty());
 }
+
+/*Plan 007 U3 (D4): a pose-table edit on the seeded frame+model drops the
+ * pending ML seed — wired in the hub (poseTableChanged ->
+ * OptimizerBridge::clearSeedPose). Integration via the REAL Kneel_1 load
+ * path (the pose suite covers the synthetic-dataset variants of the same
+ * wiring). Without this the next run() would silently apply the estimate
+ * over the user's arrangement (I3).*/
+TEST_CASE("ml_bridge: a pose-table edit drops the pending seed (D4 wiring)",
+          "[ml_bridge]") {
+    MlFixture f;
+    f.loadWithSelection();
+
+    f.optimizer()->setSeedPose(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+    REQUIRE(f.optimizer()->hasSeedPose());
+
+    /*The pose table's per-cell commit (frame 0, primary model 0).*/
+    REQUIRE(f.hub.poseBridge()->setPoseValue(
+        0, 0, 2, QStringLiteral("-4.0")));
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*The seed is really gone: a subsequent apply is a no-op — the edited
+     * pose stays, the estimate pose does not arrive.*/
+    f.optimizer()->applySeedPose();
+    REQUIRE(f.session()->model_locations.GetPose(0, 0).z == Approx(-4.0));
+}

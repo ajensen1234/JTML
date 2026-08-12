@@ -12,11 +12,19 @@ import "."  // Theme
 //    out-of-range) leaves the stored state unchanged: the field reverts to
 //    the stored value and the bridge's inline validation message shows.
 //
-// Inline components are not supported in engine-root documents (main.qml is
-// loaded by URL), so this is a regular QML file registered via qmldir.
 // 007 U2: explicit width/height -> implicitWidth/implicitHeight (LAY-2:
 // the cell is consumed inside a RowLayout; explicit width on a
 // layout-managed item is undefined behavior per qmllint).
+//
+// 007 U3 (D2, C1/C2): the commit tuple is CAPTURED when editing starts
+// (focus-in), never read at commit time:
+//  - a mid-edit selection change cannot commit to the new primary (C2);
+//  - a delegate recycle cannot re-bind frameRow under a pending commit
+//    (C1) — the captured row travels with the edit.
+// A failed commit re-syncs the display with Qt.binding() so the storedValue
+// binding is ALIVE again (a one-shot assignment would leave the cell stale
+// after a recycle — the old "full table refreshes recreate this delegate"
+// recovery is gone once U5 virtualizes the table).
 TextField {
     id: root
 
@@ -31,15 +39,26 @@ TextField {
     horizontalAlignment: Text.AlignRight
     selectByMouse: true
 
+    // D2 capture tuple: (frame, model, axis) at edit start.
+    property int commitFrame: -1
+    property int commitModel: -1
+    property int commitAxis: -1
+
+    onActiveFocusChanged: {
+        if (activeFocus) {
+            commitFrame = frameRow
+            commitModel = studyBridge.primaryModelIndex
+            commitAxis = axisIndex
+        }
+    }
+
     onEditingFinished: {
-        // The user's typing has broken the text binding; a rejected commit
-        // restores the stored value with a plain assignment (the stored
-        // value is current — full table refreshes recreate this delegate).
-        // 007 U3 replaces this with the capture-at-edit-start contract.
-        if (!poseBridge.setPoseValue(frameRow,
-                                     studyBridge.primaryModelIndex,
-                                     axisIndex, text)) {
-            text = storedValue.toFixed(3)
+        if (!poseBridge.setPoseValue(commitFrame, commitModel,
+                                     commitAxis, text)) {
+            // Rejected commit: re-arm the storedValue binding (C1). The
+            // stored value is current — the display shows it again and
+            // further edits keep working.
+            text = Qt.binding(() => storedValue.toFixed(3))
         }
     }
 }

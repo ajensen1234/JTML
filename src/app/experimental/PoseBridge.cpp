@@ -395,6 +395,14 @@ void PoseBridge::clearDirty() {
     clearDirtyInternal();
 }
 
+void PoseBridge::refreshTable() {
+    /*D3 (plan 007 U3): full reset — small tables, the write-once list
+     * models' full-reset style. The QML bindings re-read every row's
+     * roles, so values changed by a run or a viewer drag become visible
+     * without reopening the dialog.*/
+    table_model_->refresh();
+}
+
 int PoseBridge::rowCount() const {
     return table_model_->rowCount();
 }

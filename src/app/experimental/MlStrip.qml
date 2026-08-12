@@ -15,6 +15,13 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 6
 
+    // D5 (plan 007 U3): single run-lock source for this panel — every
+    // locked control binds to it (Black-sil., Fem/Tib, and the view
+    // toggles joined the matrix in U3; the review found the spread
+    // !optimizerBridge.running bindings are how controls keep escaping
+    // the lock).
+    readonly property bool runLocked: optimizerBridge.running
+
     // Loaded-.pt label helper: the last path segment (the full path is in
     // the bridge's property; the strip shows the basename to fit the
     // 240px column).
@@ -64,7 +71,7 @@ ColumnLayout {
         spacing: 4
         Button {
             text: qsTr("Femur…")
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
             onClicked: segFemPtDialog.open()
         }
         Label {
@@ -83,7 +90,7 @@ ColumnLayout {
         spacing: 4
         Button {
             text: qsTr("Tibia…")
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
             onClicked: segTibPtDialog.open()
         }
         Label {
@@ -102,7 +109,7 @@ ColumnLayout {
         spacing: 4
         Button {
             text: qsTr("Estimate…")
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
             onClicked: estimatePtDialog.open()
         }
         Label {
@@ -122,7 +129,7 @@ ColumnLayout {
         Button {
             text: qsTr("Segment")
             Layout.fillWidth: true
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
                      && studyBridge.hasDataset
                      && studyBridge.currentFrame >= 0
                      && mlBridge.hasSegmentModel
@@ -131,13 +138,30 @@ ColumnLayout {
         Button {
             text: qsTr("Estimate")
             Layout.fillWidth: true
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
                      && studyBridge.hasDataset
                      && studyBridge.currentFrame >= 0
                      && studyBridge.primaryModelIndex >= 0
                      && mlBridge.hasEstimateModel
+                     // D6 (plan 007 U3, I5): the widgets estimate actions
+                     // segment first and REQUIRE the segment model — the
+                     // button reflects that (the bridge guard already
+                     // messages; the view disables first).
+                     && mlBridge.hasSegmentModel
             onClicked: mlBridge.estimateCurrentFrame()
         }
+    }
+    // D6 hint (plan 007 U3, I5): when an estimate .pt is set but no
+    // segment .pt is, the Estimate button is disabled — the hint explains
+    // why (mirrors the bridge's guard message).
+    Label {
+        Layout.fillWidth: true
+        visible: mlBridge.hasEstimateModel && !mlBridge.hasSegmentModel
+        color: Theme.fgDim
+        font.pixelSize: Theme.caption
+        wrapMode: Text.Wrap
+        text: qsTr("Estimate needs a segmentation model too — pick a "
+                   + "femur or tibia .pt first.")
     }
     RowLayout {
         Layout.fillWidth: true
@@ -146,6 +170,9 @@ ColumnLayout {
             text: qsTr("Black sil.")
             font.pixelSize: Theme.caption
             checked: mlBridge.blackSilhouette
+            // D5 (plan 007 U3, I4): locked during a run — a mid-run
+            // black-silhouette toggle races the segmentation pipeline.
+            enabled: !root.runLocked
             onToggled: mlBridge.blackSilhouette = checked
         }
         Label {
@@ -161,19 +188,35 @@ ColumnLayout {
             id: femurKindButton
             text: qsTr("Fem")
             checkable: true
-            checked: mlBridge.implantKind === 0
+            // D5 (plan 007 U3, I4): locked during a run (review D-07 —
+            // the implant-kind toggle escaped the original inventory).
+            enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 40
             onClicked: mlBridge.implantKind = 0
+        }
+        // D-08 (plan 007 U3): Binding re-asserts from the bridge value —
+        // an inline `checked:` binding dies on the first click (see the
+        // toolbar comment).
+        Binding {
+            target: femurKindButton
+            property: "checked"
+            value: mlBridge.implantKind === 0
         }
         Button {
             id: tibiaKindButton
             text: qsTr("Tib")
             checkable: true
-            checked: mlBridge.implantKind === 1
+            // D5 (plan 007 U3, I4): locked during a run (review D-07).
+            enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 40
             onClicked: mlBridge.implantKind = 1
+        }
+        Binding {
+            target: tibiaKindButton
+            property: "checked"
+            value: mlBridge.implantKind === 1
         }
     }
     RowLayout {
@@ -192,21 +235,33 @@ ColumnLayout {
             id: origViewButton
             text: qsTr("Orig")
             checkable: true
-            checked: mlBridge.backgroundMode === 0
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 44
             onClicked: mlBridge.setBackgroundMode(0)
+        }
+        // D-08 (plan 007 U3): the segment flow calls setBackgroundMode(1)
+        // programmatically (MlBridge.cpp), so the buttons MUST re-assert
+        // from the bridge — an inline `checked:` binding dies on the first
+        // click and would leave the toggle stale after a segment.
+        Binding {
+            target: origViewButton
+            property: "checked"
+            value: mlBridge.backgroundMode === 0
         }
         Button {
             id: segViewButton
             text: qsTr("Seg")
             checkable: true
-            checked: mlBridge.backgroundMode === 1
-            enabled: !optimizerBridge.running
+            enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 44
             onClicked: mlBridge.setBackgroundMode(1)
+        }
+        Binding {
+            target: segViewButton
+            property: "checked"
+            value: mlBridge.backgroundMode === 1
         }
     }
     // Estimate result display (the pose that seeds the optimizer).

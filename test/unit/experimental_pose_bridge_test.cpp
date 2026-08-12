@@ -128,6 +128,11 @@ struct PoseFixture {
     StudyBridge* study() { return hub.studyBridge(); }
     ExperimentalSession* session() { return hub.session(); }
     PoseBridge* poses() { return hub.poseBridge(); }
+    OptimizerBridge* optimizer() { return hub.optimizerBridge(); }
+    QAbstractItemModel* table() {
+        return static_cast<QAbstractItemModel*>(
+            hub.poseBridge()->tableModel());
+    }
 
     Point6D stored(int frame, int model) {
         return session()->model_locations.GetPose(frame, model);
@@ -443,4 +448,112 @@ TEST_CASE("pose_bridge: invalid pose/kinematics files surface the widgets' "
 
     /*State untouched throughout.*/
     REQUIRE(f.stored(0, 0).z == Approx(-2500.0));
+}
+
+/*Plan 007 U3 (D3): the pose table re-reads storage after a viewer drag
+ * applied a pose. The refresh is wired in the hub (viewerPoseApplied ->
+ * PoseBridge::refreshTable); applyViewerPose writes storage + emits, and
+ * the table model must show the dragged value — without the hub wiring
+ * the table would keep the stale value (QQC2 Dialog keeps its contentItem
+ * across open/close, U1 review D-05).*/
+TEST_CASE("pose_bridge: a viewer drag refreshes the table (D3 wiring)",
+          "[pose_bridge]") {
+    PoseFixture f;
+
+    /*The observable of the refresh relay is the modelReset notification —
+     * the QML bindings re-read the roles only when the model announces a
+     * change (the model's data() reads storage live; the reset is what
+     * makes the table re-evaluate).*/
+    int resets = 0;
+    QObject::connect(f.table(), &QAbstractItemModel::modelReset,
+                     [&resets]() { ++resets; });
+
+    /*A model-centric drag end on the current frame + primary model.*/
+    f.study()->applyViewerPose(0, 42.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    REQUIRE(f.stored(0, 0).x == Approx(42.0));
+    /*The hub wiring (viewerPoseApplied -> refreshTable) fired exactly one
+     * reset — without it the table would keep showing the pre-drag value
+     * (QQC2 Dialog keeps its contentItem across open/close, U1 D-05).*/
+    REQUIRE(resets == 1);
+}
+
+/*Plan 007 U3 (D3): the refresh relay itself — an external storage write
+ * becomes visible after refreshTable() (the run-state leg of D3 calls the
+ * same relay; the terminal-state transition itself is not drivable
+ * headlessly — the GPU run is oracle/manual-visual).*/
+TEST_CASE("pose_bridge: refreshTable announces a model reset (D3 relay)",
+          "[pose_bridge]") {
+    PoseFixture f;
+    int resets = 0;
+    QObject::connect(f.table(), &QAbstractItemModel::modelReset,
+                     [&resets]() { ++resets; });
+
+    /*The relay announces the change so QML re-reads the roles (the model's
+     * data() reads storage live — the reset is the notification, and the
+     * run-state leg of D3 calls the same relay; the terminal-state
+     * transition itself is not drivable headlessly — the GPU run is
+     * oracle/manual-visual).*/
+    f.poses()->refreshTable();
+    REQUIRE(resets == 1);
+
+    /*An external storage write is visible after the reset re-evaluation
+     * (the run's terminal-frame SavePose path).*/
+    f.session()->model_locations.SavePose(1, 0, Point6D(1, 2, 3, 4, 5, 6));
+    f.poses()->refreshTable();
+    REQUIRE(resets == 2);
+    REQUIRE(f.table()->data(f.table()->index(1, 0), PoseTableModel::XRole)
+                .toDouble() == Approx(1.0));
+    REQUIRE(f.table()->data(f.table()->index(1, 0), PoseTableModel::ZaRole)
+                .toDouble() == Approx(6.0));
+}
+
+/*Plan 007 U3 (D4): every manual pose write drops the pending ML seed —
+ * viewer drags, pose-table edits, copy-prev/next, and pose/kinematics
+ * loads (wired in the hub: viewerPoseApplied / poseTableChanged ->
+ * OptimizerBridge::clearSeedPose). Without this the next run() would
+ * silently apply the estimate over the user's arrangement (I3). A SAVE is
+ * not a pose write — the seed survives it (only mutations clear).*/
+TEST_CASE("pose_bridge: manual pose writes drop the pending ML seed (D4)",
+          "[pose_bridge]") {
+    PoseFixture f;
+
+    /*Baseline: no seed -> clears are no-ops.*/
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+    f.optimizer()->clearSeedPose();
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*Drag path: viewerPoseApplied -> clearSeedPose.*/
+    f.optimizer()->setSeedPose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    REQUIRE(f.optimizer()->hasSeedPose());
+    f.study()->applyViewerPose(0, 42.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*Table-edit path: poseTableChanged -> clearSeedPose.*/
+    f.optimizer()->setSeedPose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    REQUIRE(f.poses()->setPoseValue(0, 0, 2, QStringLiteral("-4.0")));
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*Copy path: copyNext writes the current frame + emits poseTableChanged.*/
+    f.optimizer()->setSeedPose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    f.poses()->copyNext();
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*Load-pose path: loadPoseFile emits poseTableChanged.*/
+    f.optimizer()->setSeedPose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    const QString pose_path = f.dir.filePath("pose.jtap");
+    f.poses()->savePoseFile(pose_path);
+    /*A SAVE is not a pose write — the seed survives.*/
+    REQUIRE(f.optimizer()->hasSeedPose());
+    f.poses()->loadPoseFile(pose_path);
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*Load-kinematics path (the golden fixture).*/
+    f.optimizer()->setSeedPose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    f.poses()->loadKinematics(
+        QStringLiteral("test/golden/fem_oracle_captured.jtak"));
+    REQUIRE_FALSE(f.optimizer()->hasSeedPose());
+
+    /*A fresh seed still applies normally after all the clears.*/
+    f.optimizer()->setSeedPose(9.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    REQUIRE(f.optimizer()->hasSeedPose());
 }

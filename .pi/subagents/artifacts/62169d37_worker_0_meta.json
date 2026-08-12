@@ -1,0 +1,214 @@
+{
+  "runId": "62169d37",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nImplement plan 007 U3 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U3 section + Key Technical Decisions D1-D8 + the Open Questions), docs/reviews/2026-08-12-qml-experimental-review.md (findings D-07 run-lock, D-08 ButtonGroup, I-05 keyboard), and the current state of src/app/experimental/ (U2 just extracted: main.qml bootstrap + StudyPanel/MlStrip/RunBar/ViewportPanel/PosesDialog/PosesTable/PoseCell).\n\nU3 GOAL: fix the view-layer state gaps with data-integrity consequences. This unit TOUCHES C++ BRIDGES — the first unit to do so. Owner constraint: only src/app/experimental/** + additive test/unit suite extensions + additive test/CMakeLists.txt registrations. NEVER touch backend seams (domain/services/coordinator/compute), src/view, or anything else.\n\nWORK ITEMS (each maps to a plan decision):\n\n1. POSE-CELL COMMIT CONTRACT (D2, fixes C1/C2): PoseCell.qml currently commits on onEditingFinished reading frameRow/axisIndex props + studyBridge.primaryModelIndex AT COMMIT TIME. Rework: capture (frameRow, axisIndex, primaryModelIndex) when editing starts (onActiveFocusChanged entering focus, or editingStarted); commit against the CAPTURED values; a failed commit must restore the display WITHOUT killing the binding (use a Binding re-sync or Qt.binding() — never a one-shot text = assignment). The capture tuple must survive delegate recycling (U5 prerequisite).\n2. POSE-TABLE REFRESH OWNER (D3, fixes I1/I2): PoseBridge.h/.cpp — connect optimizerBridge.runStateChanged (completed AND error states) + the viewerPoseApplied / scenePoseChanged paths → refresh the table model (single refresh owner; relay plumbing only, no policy). First verify the stale-on-reopen premise empirically per the plan: write the U6-style reasoning in a comment, but the fix is unconditional (the review confirmed QQC2 Dialog never destroys contentItem).\n3. ML-SEED INVALIDATION (D4, fixes I3): any manual pose write on the seeded frame+model drops the pending seed — viewer drags (applyViewerPose), pose-table edits (setPoseValue), copy-prev/next (copyPrevious/copyNext), pose + kinematics file loads (loadPoseFile/loadKinematics). The pending seed lives in OptimizerBridge (setSeedPose/clearSeedPose — verify by reading OptimizerBridge.h/.cpp and MlBridge.h/.cpp; the seed may currently be cleared only on selectionChanged). Route invalidation through OptimizerBridge::clearSeedPose (or whatever the actual seed-clear seam is). Additive signals/relays only.\n4. RUN-LOCK MATRIX (D5 + review D-07, fixes I4): extend !optimizerBridge.running locks to: Black-sil. checkbox, Fem/Tib buttons, AND the Camera/Model interaction-mode toggles (review D-07 — they escaped the original inventory). Introduce a single readonly runLocked property in the QML shell root (or per-component) and bind every locked control to it. The viewport lock gets a VISIBLE state: when optimizerBridge.running, ViewportPanel shows a 'Running — interaction locked' overlay/dim over the renderer (and the renderer's mouse events are blocked — enabled: false on the QmlVtkRenderer item).\n5. ESTIMATE ENABLEMENT (D6, fixes I5): MlStrip's Estimate button binding gains mlBridge.hasSegmentModel (check MlBridge exposes it or add the enablement state additively); add/keep the hint label for the disabled case.\n6. BUTTONGROUP SINGLE-SOURCE (review D-08): the three ButtonGroups (interactGroup in main.qml toolbar, implantGroup + viewGroup in MlStrip) pair checked: bridge.x === N with onClicked: bridge.x = N — QQC2 ButtonGroup writes checked imperatively on click, killing the binding on the clicked button. Fix: keep checked bound to the bridge value and make onClicked the only writer (verify the group exclusivity still works; if the imperative check-kill persists, use the group's checkedButton instead of per-button checked bindings).\n7. KEYBOARD WIRING (D7, fixes I6): StudyPanel frame list — wire onCurrentIndexChanged to studyBridge.setCurrentFrame (single source of truth) with a DATASET-SWAP GUARD: suppress the sync while a dataset replace is in flight (clearDataset model swap) so a transient -1/0 index never reaches the bridge. Model list — Space/Enter toggles the row (Keys handler on the delegate or ListView). Rows get activeFocusOnTab + a visible focus indicator (bound to activeFocus). Note: this is the wiring — the full keyboard audit is U4.\n8. EXTEND THE BRIDGE SUITES (additive): test/unit/experimental_pose_bridge_test.cpp + experimental_ml_bridge_test.cpp — add cases pinning: (a) commit contract paths (the pose table refresh fires on runStateChanged completed/error + viewerPoseApplied), (b) seed invalidation on copy/load/edit/drag paths, (c) hasSegmentModel-aware enablement state if it landed in the bridge. Follow the existing test style exactly (Catch2, repo-root fixtures).\n\nCONSTRAINTS:\n- Bridge changes are ADDITIVE RELAYS ONLY: new signals/relays/enablement state; no behavior changes to existing paths or APIs. Read the existing bridge tests first and keep them green.\n- Follow the plan's thinness rule: no logic in bridges beyond relay plumbing.\n- Do not run git/jj commands; do not stage or commit. The orchestrator handles jj.\n- Run pixi run build and the headless test suite (pixi run test) — the experimental bridge tests (jtml.experimental_pose_bridge, jtml.experimental_ml_bridge, jtml.experimental_optimizer_gate, jtml.experimental_selection, jtml.experimental_settings) must pass. Do NOT run oracle-labeled tests (jtml.qml_parity_check is ~1h; the orchestrator runs it after this unit).\n- If a design decision is genuinely ambiguous (e.g., where the dataset-swap guard lives), make the minimal choice consistent with the plan and document it in your report.\n- Report: files changed, each work item's implementation summary, test results, deviations with reasons, and anything needing owner manual-visual verification.",
+  "exitCode": 0,
+  "usage": {
+    "input": 203254,
+    "output": 50883,
+    "cacheRead": 15600512,
+    "cacheWrite": 0,
+    "cost": 0.04319211679999999,
+    "turns": 47
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 203254,
+        "output": 50883,
+        "cacheRead": 15600512,
+        "cacheWrite": 0,
+        "cost": 0.04319211679999999,
+        "turns": 47
+      }
+    }
+  ],
+  "durationMs": 665138,
+  "toolCount": 50,
+  "launchContractDigest": "619ad1f7529fd0ea7db07250a2f25b67402f9ca13eaf8aafbfa4349f3fc9ba96",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "passed",
+        "message": "changed-files evidence present."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "passed",
+        "message": "tests-added evidence present."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "All changes confined to src/app/experimental/** + additive test/unit additions (verified by jj diff --name-only scope check: no file outside the allowed set). Bridge changes are additive relays only (new refreshTable method, new hasSeedPose read, hub-level connects); no backend seam, src/view, or other historical file touched."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PoseBridge.h",
+        "src/app/experimental/PoseBridge.cpp",
+        "src/app/experimental/OptimizerBridge.h",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/Theme.qml"
+      ],
+      "testsAddedOrUpdated": [
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "test/unit/experimental_ml_bridge_test.cpp"
+      ],
+      "commandsRun": [
+        {
+          "command": "pixi run build",
+          "result": "passed",
+          "summary": "Full build green (app + all test targets incl. jtml_experimental, jtml_test_experimental_*)."
+        },
+        {
+          "command": "pixi run test",
+          "result": "passed",
+          "summary": "47/47 headless tests passed incl. jtml.qml_lint, jtml.experimental_pose_bridge (133 assertions/12 cases), jtml.experimental_ml_bridge (91/11)."
+        },
+        {
+          "command": "qmllint (Qt6 lib/qt6/bin) on changed QML files",
+          "result": "passed",
+          "summary": "Only accepted warning ids (import env noise, unqualified context-property coupling, unresolved C++-registered QmlVtkRenderer); no unaccepted ids."
+        }
+      ],
+      "validationOutput": [
+        "D3 drag wiring pinned end-to-end headlessly: applyViewerPose -> viewerPoseApplied -> hub -> refreshTable -> exactly one modelReset (test asserts the reset count, since data() reads storage live).",
+        "D4 all five invalidation paths pinned: drag, table edit, copyNext, loadPoseFile, loadKinematics all clear hasSeedPose(); a savePoseFile does not.",
+        "D-08 fixed against a real programmatic writer: MlBridge segment flow calls setBackgroundMode(1) (MlBridge.cpp:555) — the Binding-object pattern keeps Orig/Seg tracking the bridge after manual clicks.",
+        "qmllint gate (jtml.qml_lint) green in the headless suite."
+      ],
+      "residualRisks": [
+        "D3 run-state leg (runStateChanged terminal transition) is not drivable headlessly — the GPU run is oracle/manual-visual; the relay itself is pinned via the drag wiring + direct refreshTable reset test.",
+        "D4 clears the seed unconditionally on any pose write (the seed's frame/model is not readable without touching the coordinator seam — forbidden); over-clearing only drops a seed the user has already overridden.",
+        "The estimate flow writes storage directly (MlBridge -> orchestrator) without emitting poseTableChanged, so the pose table is not refreshed after an estimate — pre-existing gap, out of U3 scope; candidate for U5/U7.",
+        "Keyboard/overlay/lock visuals need the owner's manual-visual xcb pass (I4/I6 scenarios); runLocked is per-component rather than a shared singleton (U4 may consolidate).",
+        "Parity check (jtml.qml_parity_check, ~1h) not run — per plan it re-runs once after this unit, on the orchestrator side."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "11 experimental-app files modified (+/reworked: D2 commit contract, D3 refreshTable relay + hub wiring, D4 seed invalidation wiring, D5 run-lock matrix + viewport overlay, D6 Estimate enablement, D-08 ButtonGroup Binding fix, D7 keyboard wiring + dataset-swap guard), 2 test suites extended with 4 new headless TEST_CASEs (128 new assertions total). ~748 insertions.",
+      "reviewFindings": [
+        "no blockers"
+      ],
+      "manualNotes": "Deviation 1: D4 unconditional seed-clear (no readable seed frame/model without a backend touch). Deviation 2: D-08 applied to all three ButtonGroups in U3 (not split U3/U4) because the segment flow is an active programmatic writer — partial fix would leave Orig/Seg stale. Deviation 3: dataset-swap guard lives in StudyPanel QML (suppress flag around the existing Qt.callLater deferral). Owner manual-visual checklist (xcb): run-lock overlay appears/clears, Camera/Model + Black-sil + Fem/Tib inert during a run, keyboard Tab/Up-Down/Space-Enter on the lists, Estimate disabled-with-hint without a segment .pt, pose table fresh after a completed run."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/62169d37_worker_0_transcript.jsonl",
+  "timestamp": 1786545130900
+}

@@ -112,6 +112,11 @@ public:
     // Drop the pending seed (MlBridge clears it on a selection change — a
     // stale-frame seed must never override a different frame's pose).
     Q_INVOKABLE void clearSeedPose();
+    // D4 (plan 007 U3): observable pending-seed state — lets the
+    // view-layer invalidation tests pin that a manual pose write drops the
+    // seed. Additive read of the controller's core state; no behavior
+    // change.
+    Q_INVOKABLE bool hasSeedPose() const;
     // Headless-testable core delegate: applies the pending seed to the
     // session storage + scene (one-shot; stale guards live in the shared
     // core). run() applies it via the controller after the gate passes.

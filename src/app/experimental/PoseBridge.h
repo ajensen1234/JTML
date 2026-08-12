@@ -179,6 +179,15 @@ public:
     // panel's explicit-save pattern).
     Q_INVOKABLE void clearDirty();
 
+    // D3 (plan 007 U3): the single pose-table refresh owner's relay — the
+    // table re-reads storage. Called by the hub (AppBridge) when a run
+    // reaches a terminal state (Completed/Error) and when a viewer drag
+    // applied a pose (viewerPoseApplied). QQC2 Dialog never destroys its
+    // contentItem on close, so without this the table would keep showing
+    // stale values after runs and drags (U1 review D-05 confirmed the
+    // premise structurally). Relay plumbing only — no policy.
+    void refreshTable();
+
     // ---- Reads -----------------------------------------------------------
     int rowCount() const;
     QObject* tableModel() const;

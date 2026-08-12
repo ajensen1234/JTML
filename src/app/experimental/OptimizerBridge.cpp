@@ -217,6 +217,10 @@ void OptimizerBridge::clearSeedPose() {
     controller_->clearSeedPose();
 }
 
+bool OptimizerBridge::hasSeedPose() const {
+    return controller_->hasSeedPose();
+}
+
 void OptimizerBridge::applySeedPose() {
     controller_->applySeedPose(
         &session_->model_locations, study_bridge_->currentFrame(),

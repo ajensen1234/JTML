@@ -76,6 +76,34 @@ AppBridge::AppBridge(
      * through the session/study bridge and refreshes the table on their
      * signals.*/
     pose_bridge_ = new PoseBridge(this, session_, scene, study_bridge_, this);
+
+    /*Plan 007 U3 (D3): single pose-table refresh owner — the table
+     * re-reads storage when a run reaches a terminal state and after a
+     * viewer drag applied a pose. QQC2 Dialog never destroys its
+     * contentItem on close (U1 review D-05 confirmed the stale-on-reopen
+     * premise structurally), so without this the table would keep showing
+     * pre-run / pre-drag values. Relay plumbing only — no policy.*/
+    connect(optimizer_bridge_, &OptimizerBridge::runStateChanged,
+            this, [this] {
+        const auto state = optimizer_bridge_->runState();
+        if (state == OptimizerBridge::RunState::Completed ||
+            state == OptimizerBridge::RunState::Error) {
+            pose_bridge_->refreshTable();
+        }
+    });
+    connect(study_bridge_, &StudyBridge::viewerPoseApplied,
+            pose_bridge_, &PoseBridge::refreshTable);
+
+    /*Plan 007 U3 (D4): any manual pose write drops the pending ML seed —
+     * viewer drags (viewerPoseApplied), pose-table edits / copy-prev-next
+     * / pose+kinematics loads (poseTableChanged fires on every mutation).
+     * Without this the next run() would silently apply the estimate over
+     * the user's arrangement (I3). The selection-change stale guard stays
+     * in MlBridge (plan 006). Relay plumbing only.*/
+    connect(study_bridge_, &StudyBridge::viewerPoseApplied,
+            optimizer_bridge_, &OptimizerBridge::clearSeedPose);
+    connect(pose_bridge_, &PoseBridge::poseTableChanged,
+            optimizer_bridge_, &OptimizerBridge::clearSeedPose);
 }
 
 AppBridge::~AppBridge() {

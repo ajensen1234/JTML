@@ -31,6 +31,13 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Theme.accent
 
+    // D5 (plan 007 U3): single run-lock source for the shell root — every
+    // toolbar control binds to it (the review D-07 found the Camera/Model
+    // toggles escaped the original inventory; the spread
+    // !optimizerBridge.running bindings are how controls keep escaping
+    // the lock).
+    readonly property bool runLocked: optimizerBridge.running
+
     // ---- Study load + replace confirm + error dialogs (U4) ------------
     FileDialog {
         id: calibrationFileDialog
@@ -189,12 +196,12 @@ Window {
                 Button {
                     text: qsTr("Calibration")
                     enabled: !studyBridge.hasCalibration
-                             && !optimizerBridge.running
+                             && !root.runLocked
                     onClicked: calibrationFileDialog.open()
                 }
                 Button {
                     text: qsTr("Images")
-                    enabled: !optimizerBridge.running
+                    enabled: !root.runLocked
                     onClicked: {
                         if (!studyBridge.hasCalibration) {
                             showMessage(qsTr("Error!"),
@@ -206,7 +213,7 @@ Window {
                 }
                 Button {
                     text: qsTr("Models")
-                    enabled: !optimizerBridge.running
+                    enabled: !root.runLocked
                     onClicked: {
                         if (!studyBridge.hasCalibration) {
                             showMessage(qsTr("Error!"),
@@ -249,25 +256,44 @@ Window {
                     id: cameraModeButton
                     text: qsTr("Camera")
                     checkable: true
-                    checked: viewportPanel.viewport.interactionMode === 0
+                    // D5 (plan 007 U3, I4): locked during a run (review
+                    // D-07 — the mode toggles escaped the inventory).
+                    enabled: !root.runLocked
                     onClicked: viewportPanel.viewport.setInteractionMode(0)
+                }
+                // D-08 (plan 007 U3): an inline `checked:` binding dies on
+                // the first click (AbstractButton + ButtonGroup write the
+                // property imperatively), so programmatic bridge changes
+                // would leave the toggle stale. A Binding object re-asserts
+                // from the bridge value (the single source); the group
+                // keeps click exclusivity.
+                Binding {
+                    target: cameraModeButton
+                    property: "checked"
+                    value: viewportPanel.viewport.interactionMode === 0
                 }
                 Button {
                     id: modelModeButton
                     text: qsTr("Model")
                     checkable: true
-                    checked: viewportPanel.viewport.interactionMode === 1
+                    // D5 (plan 007 U3, I4): locked during a run.
+                    enabled: !root.runLocked
                     onClicked: viewportPanel.viewport.setInteractionMode(1)
+                }
+                Binding {
+                    target: modelModeButton
+                    property: "checked"
+                    value: viewportPanel.viewport.interactionMode === 1
                 }
 
                 Button {
                     text: qsTr("Optimizer Settings…")
-                    enabled: !optimizerBridge.running
+                    enabled: !root.runLocked
                     onClicked: settingsDialog.open()
                 }
                 Button {
                     text: qsTr("Poses…")
-                    enabled: !optimizerBridge.running
+                    enabled: !root.runLocked
                     onClicked: poseDialog.open()
                 }
             }
