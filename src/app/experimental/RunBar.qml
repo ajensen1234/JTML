@@ -23,11 +23,14 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 6
-        spacing: 8
+        anchors.margins: Theme.spacingSm
+        spacing: Theme.spacingSm
 
+        // Plan 007 U4: Run is the app's primary action (CTA hierarchy) —
+        // the accent highlight marks it; Stop stays secondary.
         Button {
             text: qsTr("Run")
+            highlighted: true
             enabled: optimizerBridge.canRun
             onClicked: root.runRequested()
         }

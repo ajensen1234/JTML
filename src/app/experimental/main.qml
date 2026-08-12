@@ -37,6 +37,10 @@ Window {
     // !optimizerBridge.running bindings are how controls keep escaping
     // the lock).
     readonly property bool runLocked: optimizerBridge.running
+    // Plan 007 U4: shell-level unsaved indicator (M6 fold-in) — any dirty
+    // settings or pose state shows in the toolbar pill.
+    readonly property bool shellDirty: settingsBridge.dirty
+                                       || poseBridge.dirty
 
     // ---- Study load + replace confirm + error dialogs (U4) ------------
     FileDialog {
@@ -107,6 +111,35 @@ Window {
         messageDialog.open()
     }
 
+    // Plan 007 U4 (I-13): dirty-close guard. When a dialog with unsaved
+    // state closes via Esc/press-outside, this confirm asks before the
+    // close stands; No reopens the dialog. The Run-button close is
+    // unconditional (the run handler sets discardConfirmed first).
+    Dialog {
+        id: discardDialog
+        title: qsTr("Discard unsaved changes?")
+        modal: true
+        implicitWidth: 420
+        // The dialog whose close triggered this confirm; Yes leaves it
+        // closed, No reopens it.
+        property var pendingDialog: null
+        standardButtons: Dialog.Yes | Dialog.No
+        contentItem: Label {
+            text: qsTr("This dialog has unsaved changes. "
+                       + "Discard them?")
+            wrapMode: Text.Wrap
+        }
+        onAccepted: {
+            discardDialog.pendingDialog = null
+        }
+        onRejected: {
+            if (discardDialog.pendingDialog) {
+                discardDialog.pendingDialog.open()
+            }
+            discardDialog.pendingDialog = null
+        }
+    }
+
     // ---- Optimizer settings + pose table live in Dialogs (#5) ----------
     Dialog {
         id: settingsDialog
@@ -115,13 +148,43 @@ Window {
         width: 560
         height: 680
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        // Plan 007 U4 (I-13): set before the Run-button close so the
+        // dirty-close guard does not fire for the deliberate close; reset
+        // on every open.
+        property bool discardConfirmed: false
         contentItem: SettingsPanel {
+            id: settingsPanelContent
             width: settingsDialog.availableWidth
             height: settingsDialog.availableHeight
+        }
+        onOpened: {
+            settingsDialog.discardConfirmed = false
+            // Plan 007 U4: initial focus lands on the first field.
+            settingsPanelContent.focusFirstField()
+        }
+        onClosed: {
+            // Plan 007 U4 (I-13): Esc/press-outside on dirty state asks
+            // first; the Run close (discardConfirmed) and a clean dialog
+            // close without a guard.
+            if (settingsBridge.dirty && !settingsDialog.discardConfirmed) {
+                discardDialog.pendingDialog = settingsDialog
+                discardDialog.open()
+            }
+            // Plan 007 U4: focus returns to the opener.
+            if (!root.runLocked) settingsOpenButton.forceActiveFocus()
         }
     }
     PosesDialog {
         id: poseDialog
+        onDiscardRequested: {
+            discardDialog.pendingDialog = poseDialog
+            discardDialog.open()
+        }
+        onClosed: {
+            // Plan 007 U4: focus returns to the opener (the run-close
+            // path skips it — the Run button keeps focus during a run).
+            if (!root.runLocked) posesOpenButton.forceActiveFocus()
+        }
     }
 
     // ---- Bridge → view glue -------------------------------------------
@@ -179,7 +242,7 @@ Window {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 4
+        spacing: Theme.spacingXs
 
         // ---- Toolbar: study actions + interaction mode + dialog openers
         Rectangle {
@@ -190,111 +253,170 @@ Window {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 6
-                spacing: 6
+                anchors.margins: Theme.spacingSm
+                spacing: Theme.spacingXs
 
-                Button {
-                    text: qsTr("Calibration")
-                    enabled: !studyBridge.hasCalibration
-                             && !root.runLocked
-                    onClicked: calibrationFileDialog.open()
-                }
-                Button {
-                    text: qsTr("Images")
-                    enabled: !root.runLocked
-                    onClicked: {
-                        if (!studyBridge.hasCalibration) {
-                            showMessage(qsTr("Error!"),
-                                        qsTr("Load Calibration First!"))
-                        } else {
-                            pickImages()
+                // ---- Cluster 1: study load actions --------------------
+                RowLayout {
+                    spacing: Theme.spacingXs
+                    Button {
+                        text: qsTr("Calibration")
+                        enabled: !studyBridge.hasCalibration
+                                 && !root.runLocked
+                        onClicked: calibrationFileDialog.open()
+                    }
+                    Button {
+                        text: qsTr("Images")
+                        enabled: !root.runLocked
+                        onClicked: {
+                            if (!studyBridge.hasCalibration) {
+                                showMessage(qsTr("Error!"),
+                                            qsTr("Load Calibration First!"))
+                            } else {
+                                pickImages()
+                            }
+                        }
+                    }
+                    Button {
+                        text: qsTr("Models")
+                        enabled: !root.runLocked
+                        onClicked: {
+                            if (!studyBridge.hasCalibration) {
+                                showMessage(qsTr("Error!"),
+                                            qsTr("Load Calibration First!"))
+                            } else {
+                                pickModels()
+                            }
                         }
                     }
                 }
-                Button {
-                    text: qsTr("Models")
-                    enabled: !root.runLocked
-                    onClicked: {
-                        if (!studyBridge.hasCalibration) {
-                            showMessage(qsTr("Error!"),
-                                        qsTr("Load Calibration First!"))
-                        } else {
-                            pickModels()
-                        }
-                    }
+
+                // ---- Cluster separators (visual grouping) --------------
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 18
+                    color: Theme.border
+                    Accessible.ignored: true
                 }
 
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 1
-                }
-
+                // ---- Cluster 2: calibration status ---------------------
                 Label {
                     text: studyBridge.hasCalibration
                           ? (studyBridge.calibratedForBiplane
                              ? qsTr("Calibrated (biplane)")
                              : qsTr("Calibrated (monoplane)"))
                           : qsTr("No calibration")
-                    color: studyBridge.hasCalibration ? Theme.ok : Theme.fgMuted
+                    color: studyBridge.hasCalibration
+                           ? Theme.ok : Theme.fgMuted
                     font.pixelSize: Theme.caption
                 }
 
-                // Interaction mode (#1/#4): camera-centric (trackball camera,
-                // pivots at the primary model) vs model-centric (rotates the
-                // primary model about its center — the widgets app's
-                // trackball-actor mode).
-                Label {
-                    text: qsTr("Interact:")
-                    color: Theme.fgMuted
-                    font.pixelSize: Theme.caption
-                }
-                ButtonGroup {
-                    id: interactGroup
-                    buttons: [cameraModeButton, modelModeButton]
-                }
-                Button {
-                    id: cameraModeButton
-                    text: qsTr("Camera")
-                    checkable: true
-                    // D5 (plan 007 U3, I4): locked during a run (review
-                    // D-07 — the mode toggles escaped the inventory).
-                    enabled: !root.runLocked
-                    onClicked: viewportPanel.viewport.setInteractionMode(0)
-                }
-                // D-08 (plan 007 U3): an inline `checked:` binding dies on
-                // the first click (AbstractButton + ButtonGroup write the
-                // property imperatively), so programmatic bridge changes
-                // would leave the toggle stale. A Binding object re-asserts
-                // from the bridge value (the single source); the group
-                // keeps click exclusivity.
-                Binding {
-                    target: cameraModeButton
-                    property: "checked"
-                    value: viewportPanel.viewport.interactionMode === 0
-                }
-                Button {
-                    id: modelModeButton
-                    text: qsTr("Model")
-                    checkable: true
-                    // D5 (plan 007 U3, I4): locked during a run.
-                    enabled: !root.runLocked
-                    onClicked: viewportPanel.viewport.setInteractionMode(1)
-                }
-                Binding {
-                    target: modelModeButton
-                    property: "checked"
-                    value: viewportPanel.viewport.interactionMode === 1
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 18
+                    color: Theme.border
+                    Accessible.ignored: true
                 }
 
-                Button {
-                    text: qsTr("Optimizer Settings…")
-                    enabled: !root.runLocked
-                    onClicked: settingsDialog.open()
+                // ---- Cluster 3: interaction mode -----------------------
+                // Interaction mode (#1/#4): camera-centric (trackball
+                // camera, pivots at the primary model) vs model-centric
+                // (rotates the primary model about its center — the
+                // widgets app's trackball-actor mode).
+                RowLayout {
+                    spacing: Theme.spacingXs
+                    Label {
+                        text: qsTr("Interact:")
+                        color: Theme.fgMuted
+                        font.pixelSize: Theme.caption
+                    }
+                    ButtonGroup {
+                        id: interactGroup
+                        buttons: [cameraModeButton, modelModeButton]
+                    }
+                    Button {
+                        id: cameraModeButton
+                        text: qsTr("Camera")
+                        checkable: true
+                        // D5 (plan 007 U3, I4): locked during a run (review
+                        // D-07 — the mode toggles escaped the inventory).
+                        enabled: !root.runLocked
+                        Accessible.name: qsTr("Camera interaction mode")
+                        onClicked: viewportPanel.viewport.setInteractionMode(0)
+                    }
+                    // D-08 (plan 007 U3): an inline `checked:` binding dies on
+                    // the first click (AbstractButton + ButtonGroup write the
+                    // property imperatively), so programmatic bridge changes
+                    // would leave the toggle stale. A Binding object re-asserts
+                    // from the bridge value (the single source); the group
+                    // keeps click exclusivity. A re-click on the active toggle
+                    // re-sets the same bridge value (idempotent — I-12).
+                    Binding {
+                        target: cameraModeButton
+                        property: "checked"
+                        value: viewportPanel.viewport.interactionMode === 0
+                    }
+                    Button {
+                        id: modelModeButton
+                        text: qsTr("Model")
+                        checkable: true
+                        // D5 (plan 007 U3, I4): locked during a run.
+                        enabled: !root.runLocked
+                        Accessible.name: qsTr("Model interaction mode")
+                        onClicked: viewportPanel.viewport.setInteractionMode(1)
+                    }
+                    Binding {
+                        target: modelModeButton
+                        property: "checked"
+                        value: viewportPanel.viewport.interactionMode === 1
+                    }
                 }
-                Button {
-                    text: qsTr("Poses…")
-                    enabled: !root.runLocked
-                    onClicked: poseDialog.open()
+
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 18
+                    color: Theme.border
+                    Accessible.ignored: true
+                }
+
+                // ---- Cluster 4: dialog openers -------------------------
+                RowLayout {
+                    spacing: Theme.spacingXs
+                    Button {
+                        id: settingsOpenButton
+                        text: qsTr("Optimizer Settings…")
+                        enabled: !root.runLocked
+                        onClicked: settingsDialog.open()
+                    }
+                    Button {
+                        id: posesOpenButton
+                        text: qsTr("Poses…")
+                        enabled: !root.runLocked
+                        onClicked: poseDialog.open()
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // ---- Shell unsaved indicator (plan 007 U4, M6) ---------
+                Rectangle {
+                    id: shellDirtyBadge
+                    Layout.preferredHeight: 14
+                    Layout.preferredWidth:
+                        Math.max(shellDirtyLabel.implicitWidth + 12, 28)
+                    radius: 7
+                    color: root.shellDirty ? Theme.badgeDirtyBg
+                                           : Theme.badgeCleanBg
+                    Accessible.role: Accessible.StatusBar
+                    Label {
+                        id: shellDirtyLabel
+                        anchors.centerIn: parent
+                        text: root.shellDirty ? qsTr("● unsaved")
+                                              : qsTr("saved")
+                        color: root.shellDirty ? Theme.badgeDirtyFg
+                                               : Theme.badgeCleanFg
+                        font.pixelSize: Theme.caption
+                    }
                 }
             }
         }
@@ -302,7 +424,7 @@ Window {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 4
+            spacing: Theme.spacingXs
 
             // ---- Left column: study lists + ML strip -------------------
             Rectangle {
@@ -313,8 +435,8 @@ Window {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 6
-                    spacing: 6
+                    anchors.margins: Theme.spacingSm
+                    spacing: Theme.spacingSm
 
                     StudyPanel {
                         Layout.fillWidth: true
@@ -333,7 +455,6 @@ Window {
                 Layout.fillHeight: true
             }
         }
-
         // ---- Bottom: run/stop + live progress (U6) ----------------------
         // Run-state machine drives the buttons: Run enabled in
         // idle/completed/error, Stop while running/stopping (the widgets
@@ -343,6 +464,11 @@ Window {
         RunBar {
             Layout.fillWidth: true
             onRunRequested: {
+                // DisableAll mirror: close the edit dialogs so a mid-run
+                // settings/pose edit cannot race the run. The close is
+                // deliberate — the dirty-close guard must not fire.
+                settingsDialog.discardConfirmed = true
+                poseDialog.discardConfirmed = true
                 settingsDialog.close()
                 poseDialog.close()
                 optimizerBridge.run()

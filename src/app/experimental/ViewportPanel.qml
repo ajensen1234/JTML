@@ -29,7 +29,8 @@ Item {
         enabled: !root.runLocked
 
         // Pre-load shell state (R17): the placeholder covers the viewport
-        // until a study loads.
+        // until a study loads. (Plan 007 U4: the debug pose readout overlay
+        // was removed — the Poses dialog is the real surface.)
         Rectangle {
             visible: appBridge.frameCount === 0
             anchors.fill: parent
@@ -42,28 +43,7 @@ Item {
                 text: qsTr("No study loaded — load a calibration, "
                            + "then images and models.")
                 color: Theme.fgDim
-            }
-        }
-
-        // Debug readout (U3): last applied pose of model 0. The real pose
-        // table lives in the Poses dialog (U8).
-        Rectangle {
-            visible: viewportItem.poseReadout.length > 0
-            z: 1
-            width: 260
-            height: 18
-            radius: 3
-            color: Theme.badge
-            anchors { top: parent.top; left: parent.left; margins: 6 }
-
-            Text {
-                anchors.fill: parent
-                anchors.leftMargin: 6
-                verticalAlignment: Text.AlignVCenter
-                color: Theme.badgeText
-                font.pixelSize: Theme.caption
-                text: viewportItem.poseReadout
-                elide: Text.ElideRight
+                font.pixelSize: Theme.body
             }
         }
     }
@@ -85,7 +65,9 @@ Item {
             height: label.implicitHeight + 16
             radius: 6
             color: Theme.panel
-            border.color: Theme.accent
+            // One-accent discipline (plan 007 U4): the lock pill is
+            // non-interactive — neutral border, not Theme.accent.
+            border.color: Theme.border
             border.width: 1
 
             Label {
@@ -112,7 +94,7 @@ Item {
             viewportItem.updateCamera()
         }
         function onViewerPoseApplied(sceneModelIndex) {
-            // Refresh the readout + idempotently re-apply the synced pose.
+            // Idempotently re-apply the synced pose.
             viewportItem.updatePose(sceneModelIndex)
         }
     }

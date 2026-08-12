@@ -28,14 +28,15 @@ Item {
     id: root
 
     ColumnLayout {
+        id: formRoot
         anchors.fill: parent
-        anchors.margins: 6
-        spacing: 6
+        anchors.margins: Theme.spacingSm
+        spacing: Theme.spacingSm
 
         // ---- Header: title + dirty/unsaved badge ------------------------
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: Theme.spacingXs
             Label {
                 text: qsTr("Settings")
                 color: Theme.fg
@@ -49,6 +50,7 @@ Item {
                 radius: 7
                 color: settingsBridge.dirty ? Theme.badgeDirtyBg
                                             : Theme.badgeCleanBg
+                Accessible.role: Accessible.StatusBar
                 Label {
                     id: dirtyLabel
                     anchors.centerIn: parent
@@ -61,6 +63,7 @@ Item {
             }
         }
 
+
         // ---- The form (scrolls when the column is short) -----------------
         ScrollView {
             id: settingsScroll
@@ -69,8 +72,9 @@ Item {
             clip: true
 
             ColumnLayout {
+                id: formColumn
                 width: settingsScroll.availableWidth
-                spacing: 8
+                spacing: Theme.spacingSm
 
                 // ---- Reusable widgets ----------------------------------
                 // 2-decimal range field over a ×100 SpinBox.
@@ -356,7 +360,7 @@ Item {
                 // ---- Save / Reset --------------------------------------------
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.spacingXs
                     Button {
                         text: qsTr("Reset")
                         onClicked: settingsBridge.reset()
@@ -370,5 +374,21 @@ Item {
                 }
             }
         }
+    }
+
+    // Plan 007 U4: the settings dialog focuses the first field on open.
+    // The first focusable in the form is the trunk cost-variant combo.
+    function focusFirstField() {
+        const first = findFocusable(formColumn)
+        if (first) first.forceActiveFocus()
+    }
+    function findFocusable(item) {
+        if (!item) return null
+        if (item instanceof SpinBox || item instanceof ComboBox) return item
+        for (let i = 0; i < item.children.length; i++) {
+            const hit = findFocusable(item.children[i])
+            if (hit) return hit
+        }
+        return null
     }
 }

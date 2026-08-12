@@ -13,12 +13,12 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
     Layout.fillHeight: true
-    spacing: 4
+    spacing: Theme.spacingXs
 
     // ---- Column header (fixed widths match the cell fields) -------------
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Label {
             text: qsTr("Frame")
             Layout.preferredWidth: 44
@@ -73,15 +73,19 @@ ColumnLayout {
     // ---- Empty states -----------------------------------------------------
     Label {
         Layout.fillWidth: true
+        Layout.topMargin: Theme.spacingSm
         visible: poseBridge.rowCount === 0
+        horizontalAlignment: Text.AlignHCenter
         color: Theme.fgDim
         wrapMode: Text.Wrap
         text: qsTr("No frames loaded — load a study first.")
     }
     Label {
         Layout.fillWidth: true
+        Layout.topMargin: Theme.spacingSm
         visible: poseBridge.rowCount > 0
                  && studyBridge.primaryModelIndex < 0
+        horizontalAlignment: Text.AlignHCenter
         color: Theme.fgDim
         wrapMode: Text.Wrap
         text: qsTr("Select a model in the model list to edit its "
@@ -106,10 +110,11 @@ ColumnLayout {
             spacing: 2
 
             Repeater {
+                id: repeater
                 model: poseBridge.tableModel
                 delegate: RowLayout {
                     Layout.fillWidth: true
-                    spacing: 4
+                    spacing: Theme.spacingXs
                     Label {
                         text: qsTr("F%1").arg(model.frameIndex)
                         Layout.preferredWidth: 44
@@ -149,6 +154,17 @@ ColumnLayout {
                     }
                 }
             }
+        }
+    }
+
+    // Plan 007 U4: the Poses dialog focuses the first editable cell on
+    // open. Row delegates are [Frame label, 6 PoseCells] — the first cell
+    // is child 1 of the first row.
+    function focusFirstCell() {
+        const row = repeater.itemAt(0)
+        if (row && row.children.length > 1) {
+            const cell = row.children[1]
+            if (cell) cell.forceActiveFocus()
         }
     }
 }

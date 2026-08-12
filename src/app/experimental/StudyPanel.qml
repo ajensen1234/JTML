@@ -26,7 +26,7 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
     Layout.fillHeight: true
-    spacing: 6
+    spacing: Theme.spacingSm
 
     // D5 (plan 007 U3): single run-lock source for this panel.
     readonly property bool runLocked: optimizerBridge.running
@@ -60,7 +60,7 @@ ColumnLayout {
         delegate: Rectangle {
             required property string display
             width: ListView.view.width
-            height: 22
+            height: 24
             color: ListView.view.currentIndex === index
                    ? Theme.selection : "transparent"
             // D7: rows are reachable by keyboard (Tab in, arrows move).
@@ -74,6 +74,10 @@ ColumnLayout {
                 border.color: Theme.accent
                 border.width: 1
             }
+            // Plan 007 U4: screen-reader surface (the row is a custom
+            // item built from primitives).
+            Accessible.role: Accessible.ListItem
+            Accessible.name: display
             Text {
                 anchors.fill: parent
                 anchors.leftMargin: 4
@@ -107,7 +111,7 @@ ColumnLayout {
         delegate: Rectangle {
             required property string display
             width: ListView.view.width
-            height: 22
+            height: 24
             color: studyBridge.selectedModels.indexOf(index) !== -1
                    ? Theme.selection : "transparent"
             // D7: rows are reachable by keyboard; Space/Enter toggles the
@@ -122,6 +126,10 @@ ColumnLayout {
                 border.color: Theme.accent
                 border.width: 1
             }
+            // Plan 007 U4: screen-reader surface (the row is a custom
+            // item built from primitives).
+            Accessible.role: Accessible.ListItem
+            Accessible.name: display
             Text {
                 anchors.fill: parent
                 anchors.leftMargin: 4

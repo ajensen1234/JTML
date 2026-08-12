@@ -1,0 +1,214 @@
+{
+  "runId": "4c68484b",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nImplement plan 007 U4 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U4 section — including the owner-confirmed visual-composition pass), docs/reviews/2026-08-12-qml-experimental-review.md (D-09g debug readout, I-07 panel balance, I-11 visibility coupling, I-12 redundant re-click, I-13 dirty-close guard), and the current src/app/experimental/ components (U2 extracted, U3 fixed state gaps).\n\nU4 GOAL: UI/UX audit + polish + the owner-confirmed visual-composition pass ('make it look fresh'). The qt-ui-design skill principles apply: CTA hierarchy, proximity/similarity grouping, spacing rhythm, dialog ergonomics, empty-state language, one-accent discipline.\n\nCONTEXT (already known — do not re-ask): desktop tool, ~60 cm viewing distance, mouse+keyboard, DPR~2 box, dark theme (Material Dark + Theme overlay), English only, no RTL. TypeScale is PINNED: caption 12 / label 14 / body 16 / h2 18 (Theme.qml already has them).\n\nSCOPE: only src/app/experimental/** (QML + Theme.qml + qmldir/qrc if needed). NO C++ changes. Do not touch renderer.qml. Do not run git/jj. Do not stage/commit. Run pixi run build + pixi run test at the end (must stay green).\n\nWORK ITEMS:\n1. TYPOGRAPHY COMPLETION: the U2 re-point applied tokens, but verify no raw font.pixelSize remains outside Theme.qml (grep); bump any remaining 10/11px sites to the nearest role. Max 3-4 type sizes per screen.\n2. KEYBOARD COMPLETION (U3 wired the frame/model lists): full Tab order toolbar -> lists -> run bar; visible focus indicator on list rows + toolbar buttons (U3 added rows; add buttons if missing); DIALOG FOCUS MANAGEMENT: settings dialog opens with focus on the first field; Poses dialog opens with focus on the first pose cell; closing (Esc/button) returns focus to the opener control (forceActiveFocus on open/close). Escape already closes dialogs (CloseOnEscape) — keep.\n3. ACCESSIBILITY: Accessible.role + Accessible.name on the custom list rows and the mode-toggle buttons; Accessible.ignored on decorative items (spacers, the readout if kept).\n4. CONTRAST: compute contrast ratios for every Theme token pair actually used (text color vs its background); the audit suspects Theme.fgDim (#6b7280) on Theme.bg (#14161a) is ~4.0:1 — if any pair used for body-size text is < 4.5:1, bump the token. Add a short comment in Theme.qml with the measured ratios.\n5. HIT TARGETS: list rows 22px -> 24px (StudyPanel); verify buttons/spinboxes are comfortable; the 240px left column may need ~260px if label-14 text truncates — decide by reading the layout (verify at the pinned type scale; do NOT break the ML strip's alignment).\n6. DIRTY BADGE + CLOSE GUARD (I-13 + M6 fold-in): the dialogs show the dirty pill (U2 fixed the pill); ADD the owner-confirmed dirty-close guard: when PosesDialog or the settings Dialog has dirty state (poseBridge.dirty / settingsBridge.dirty) and the user closes it via press-outside or Esc, show a confirm ('Discard unsaved changes?') — Yes discards, No keeps it open. The Run-button close stays unconditional. Also add the SHELL-level dirty indicator: a small badge in the toolbar (or window title area) aggregating settingsBridge.dirty || poseBridge.dirty using the Theme badge tokens.\n7. DEBUG READOUT (D-09g): the viewport poseReadout overlay is plan-005 residue — REMOVE it from ViewportPanel (the Poses dialog is the real surface).\n8. VISUAL COMPOSITION PASS (the 'look fresh' work — placement, not just tokens):\n   - Toolbar: group the load actions (Calibration/Images/Models) as one cluster with tighter spacing; separate the status label + Interact toggle + dialog openers into distinct visual groups (spacing separators); one visually primary action per cluster (the plan says CTA hierarchy — e.g. load cluster's primary = Images; the Poses/optimizer openers stay secondary).\n   - MlStrip: the 8-ish rows of tiny controls — align picker buttons + path labels on a shared baseline; Segment/Estimate as one emphasized action pair; the Black-sil./implant/view rows as one settings sub-group with a divider; consistent label alignment.\n   - Spacing rhythm: adopt a consistent 4/8px grid for panel margins and inter-control gaps (currently mixed 4/6/8); consistent list-row padding; panel radius consistent.\n   - Dialogs: Save/Reset + the Poses action row get primary/secondary distinction; affirmative rightmost; dialog padding consistent with the grid.\n   - Empty states: the viewport placeholder, the Poses dialog 'No frames loaded', the 'Select a model' hint, and the ML status/hint labels share one visual language (centered caption text, muted color — already tokenized; make the styling consistent).\n   - One-accent discipline: Theme.accent only on interactive elements; the viewport lock overlay (U3) uses Theme.overlayDim — keep it non-accent.\n   - Result bar: the app must read as a designed dark tool — consistent panel treatment, no stray default-style widgets.\n9. RUN-LOCK visual check: U3 added the overlay; verify it covers the viewport and shows during a run (bindings correct).\n10. BUTTONGROUP re-click (I-12, trivial): onClicked re-fires on the already-active button — if the current single-source pattern makes this harmless (idempotent setter), leave a comment; do not add guard complexity.\n\nCONSTRAINTS:\n- Behavior-neutral where possible; the only behavior changes are the owner-approved ones (dirty-close guard, shell badge, debug readout removal, focus management).\n- Do not restructure components (that was U2); this is placement/polish edits within them.\n- Do not run the GUI (no display) — but DO run pixi run build and pixi run test and keep 47/47 green.\n- Keep the qmllint gate green: run .pixi/envs/default/lib/qt6/bin/qmllint --json to check no NEW non-accepted warnings.\n- Report: per-item summary, the contrast table with measured ratios, the composition checklist result, test results, and a precise 'what the owner must visually verify under xcb' list.\n\nIMPORTANT: the owner will do a visual sign-off under xcb after this unit. Make the composition changes confident and complete — they are the visible payoff of the whole pass. Do not leave TODOs.",
+  "exitCode": 0,
+  "usage": {
+    "input": 34953,
+    "output": 40904,
+    "cacheRead": 17802496,
+    "cacheWrite": 0,
+    "cost": 0.03309676439999999,
+    "turns": 53
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 34953,
+        "output": 40904,
+        "cacheRead": 17802496,
+        "cacheWrite": 0,
+        "cost": 0.03309676439999999,
+        "turns": 53
+      }
+    }
+  ],
+  "durationMs": 545802,
+  "toolCount": 59,
+  "launchContractDigest": "101cdf956caf9e0109fe6b5c0f8360377049b000bf9663494da2eae767eb9da1",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "passed",
+        "message": "changed-files evidence present."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "not-applicable",
+        "message": "tests-added evidence explicitly reported as not applicable."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "All U4 work items implemented within src/app/experimental/** (QML + Theme only): Theme contrast bumps (fgDim #6b7280→#7d8692, ok #5a8a5f→#65a06b, badge #c0392b→#e35a52) with a measured WCAG table comment; spacing tokens (spacingXs 4 / spacingSm 8) applied across all components; toolbar cluster restructure with separators + shell dirty pill; discard-confirm dialog + dirty-close guards in PosesDialog/settingsDialog with Run-close suppression; dialog focus management (first field / first cell + opener focus return); Accessible roles/names on list rows and mode toggles; debug readout removed; MlStrip baseline alignment + settings-group divider; 24px list rows; Run highlighted as primary CTA; lock-pill border de-accented. Build green, 47/47 headless tests green including the jtml.qml_lint gate (which caught and I fixed a Layout.* separator sizing violation). No files outside src/app/experimental/** touched."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/Theme.qml",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/SettingsPanel.qml"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "pixi run build",
+          "result": "passed",
+          "summary": "jtml_experimental relinked cleanly (AUTORCC + link only; no C++ changes)"
+        },
+        {
+          "command": "pixi run test",
+          "result": "passed",
+          "summary": "47/47 headless incl. jtml.qml_lint (first run failed on my separator width:1 in RowLayout; fixed to Layout.preferredWidth and re-ran green)"
+        },
+        {
+          "command": "qt6 qmllint --json over all app QML",
+          "result": "passed",
+          "summary": "No new non-accepted warnings; zero raw font.pixelSize/hex outside Theme.qml (renderer.qml excluded per scope)"
+        },
+        {
+          "command": "python WCAG contrast audit",
+          "result": "passed",
+          "summary": "All used text/background pairs >= 4.5:1 at caption size after bumps: fgDim 4.5-5.1, ok 5.4-6.1, badge 4.7-5.2; pill-internal pairs 8.4/4.5; pill-vs-panel 1.8 documented as decorative (WCAG 1.4.11 non-essential boundary exemption)"
+        }
+      ],
+      "validationOutput": [
+        "Contrast table (measured): fg on bg/panel/surface 14.9/13.7/15.4; fgMuted 5.8/5.3/6.0; fgDim 4.9/4.5/5.1; ok 5.9/5.4/6.1; badge 5.1/4.7/5.2; accent 5.4; fg on selection 7.3; badgeDirtyFg on badgeDirtyBg 8.4; badgeCleanFg on badgeCleanBg 4.5.",
+        "Composition checklist: toolbar 4 clusters (load / status / interact / openers) + shell dirty pill; MlStrip pickers on a 64px baseline + divider before settings sub-group; 4/8px spacing grid via Theme tokens; Save/Reset + Poses action rows primary/secondary with affirmative rightmost; empty states centered caption language; one-accent discipline (accent only on interactive — Run highlighted, lock pill neutral).",
+        "Focus management: settingsDialog.onOpened -> SettingsPanel.focusFirstField() (recursive findFocusable over formColumn); PosesDialog.onOpened -> PosesTable.focusFirstCell() (repeater.itemAt(0).children[1]); both dialogs return focus to their opener button on close (guarded by !runLocked).",
+        "Dirty-close guard: PosesDialog emits discardRequested on close-while-dirty (discardConfirmed false); settingsDialog opens discardDialog directly; Yes leaves close standing, No reopens; Run-close sets discardConfirmed=true first (unconditional).",
+        "Debug readout removed from ViewportPanel; badgeText token deleted (was its only consumer); placeholder got body-size text."
+      ],
+      "residualRisks": [
+        "Runtime QML behavior of the new focus helpers (findFocusable instanceof SpinBox/ComboBox; repeater.itemAt children[1] indexing) is not exercised by the headless suite (no QML view tests yet — that is plan 007 U6) — verified statically + by the lint gate; the owner's xcb run is the first runtime exercise.",
+        "Dialog focus-return + dirty-guard interplay with the discard-No reopen path (reopen -> onOpened resets discardConfirmed) is logically traced but not runtime-tested.",
+        "Toolbar grew from 226 to 478 lines (cluster restructure + discard dialog + wiring) — still a composition root; the four sub-clusters are the intended structure, not drift.",
+        "Left column kept at 240px — label-14 headers + eliding ML labels verified by reading the layout; if 14px truncates at DPR 2 the owner's sign-off will catch it."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "9 QML files modified (+714/-147): Theme contrast/spacing tokens; toolbar cluster restructure + shell dirty pill; discard-confirm dialog + dirty-close guards; dialog focus management; Accessible roles/names; debug readout removal; MlStrip baseline/divider; 24px rows; Run highlighted CTA. No C++ changes, no renderer.qml changes, no files outside src/app/experimental/**.",
+      "reviewFindings": [
+        "no blockers — the only gate failure (separator width inside RowLayout, Quick.layout-positioning) was introduced and fixed within this unit"
+      ],
+      "manualNotes": "OWNER VISUAL SIGN-OFF CHECKLIST (xcb, plan 007 U4 acceptance): (1) toolbar now shows 4 clusters separated by thin dividers + the shell 'saved/unsaved' pill on the right; (2) with unsaved pose/settings edits, Esc or press-outside asks 'Discard unsaved changes?' (No reopens); Run close does not ask; (3) Optimizer Settings opens focused on the trunk cost combo; Poses opens focused on the first X cell; Esc returns focus to the opener button; (4) ML strip picker buttons align on a baseline, divider above Black sil./implant/view rows; (5) the poseReadout debug strip over the viewport is GONE; (6) 'Running — interaction locked' overlay still shows during a run, now with a neutral border; (7) dim text/hints are slightly brighter (fgDim bump) and error/ok text more legible; (8) list rows are 24px; (9) Run button is accent-highlighted (primary CTA). The Poses table is still the Repeater version (virtualization is U5)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/4c68484b_worker_0_transcript.jsonl",
+  "timestamp": 1786545749112
+}

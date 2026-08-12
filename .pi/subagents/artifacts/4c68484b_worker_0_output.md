@@ -1,0 +1,1 @@
+All checks pass. Final verification complete — writing the acceptance report:

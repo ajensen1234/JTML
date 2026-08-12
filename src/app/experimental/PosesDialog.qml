@@ -72,12 +72,12 @@ Dialog {
     }
 
     contentItem: ColumnLayout {
-        spacing: 6
+        spacing: Theme.spacingSm
 
         // ---- Header: model context + dirty badge -------------------------
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: Theme.spacingXs
             Label {
                 text: studyBridge.primaryModelIndex >= 0
                       ? qsTr("Model %1 · %2 frames")
@@ -110,7 +110,7 @@ Dialog {
         // ---- Actions: copy-prev/next + save/load -------------------------
         RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Theme.spacingXs
             Button {
                 text: qsTr("◀ Copy Prev")
                 enabled: root.canEditPoses
@@ -157,6 +157,18 @@ Dialog {
             font.pixelSize: Theme.caption
             wrapMode: Text.Wrap
             text: poseBridge.validationMessage
+        }
+    }
+
+    // Plan 007 U4: focus + dirty-guard lifecycle.
+    onOpened: {
+        root.discardConfirmed = false
+        // Initial focus lands on the first editable cell.
+        poseTable.focusFirstCell()
+    }
+    onClosed: {
+        if (poseBridge.dirty && !root.discardConfirmed) {
+            root.discardRequested()
         }
     }
 }

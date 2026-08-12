@@ -13,7 +13,7 @@ import "."  // Theme
 ColumnLayout {
     id: root
     Layout.fillWidth: true
-    spacing: 6
+    spacing: Theme.spacingXs
 
     // D5 (plan 007 U3): single run-lock source for this panel — every
     // locked control binds to it (Black-sil., Fem/Tib, and the view
@@ -68,9 +68,10 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Button {
             text: qsTr("Femur…")
+            Layout.preferredWidth: 64
             enabled: !root.runLocked
             onClicked: segFemPtDialog.open()
         }
@@ -87,9 +88,10 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Button {
             text: qsTr("Tibia…")
+            Layout.preferredWidth: 64
             enabled: !root.runLocked
             onClicked: segTibPtDialog.open()
         }
@@ -106,9 +108,10 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Button {
             text: qsTr("Estimate…")
+            Layout.preferredWidth: 64
             enabled: !root.runLocked
             onClicked: estimatePtDialog.open()
         }
@@ -125,7 +128,7 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Button {
             text: qsTr("Segment")
             Layout.fillWidth: true
@@ -163,9 +166,17 @@ ColumnLayout {
         text: qsTr("Estimate needs a segmentation model too — pick a "
                    + "femur or tibia .pt first.")
     }
+    // Plan 007 U4: visual divider between the action pair and the
+    // settings sub-group (Black sil. / implant / view).
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.border
+        Accessible.ignored: true
+    }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         CheckBox {
             text: qsTr("Black sil.")
             font.pixelSize: Theme.caption
@@ -193,6 +204,7 @@ ColumnLayout {
             enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 40
+            Accessible.name: qsTr("Femur implant kind")
             onClicked: mlBridge.implantKind = 0
         }
         // D-08 (plan 007 U3): Binding re-asserts from the bridge value —
@@ -211,6 +223,7 @@ ColumnLayout {
             enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 40
+            Accessible.name: qsTr("Tibia implant kind")
             onClicked: mlBridge.implantKind = 1
         }
         Binding {
@@ -221,7 +234,7 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        spacing: 4
+        spacing: Theme.spacingXs
         Label {
             text: qsTr("View:")
             color: Theme.fgMuted
@@ -238,6 +251,7 @@ ColumnLayout {
             enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 44
+            Accessible.name: qsTr("Original view")
             onClicked: mlBridge.setBackgroundMode(0)
         }
         // D-08 (plan 007 U3): the segment flow calls setBackgroundMode(1)
@@ -256,6 +270,7 @@ ColumnLayout {
             enabled: !root.runLocked
             font.pixelSize: Theme.caption
             implicitWidth: 44
+            Accessible.name: qsTr("Segmented view")
             onClicked: mlBridge.setBackgroundMode(1)
         }
         Binding {
