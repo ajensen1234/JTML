@@ -25,7 +25,6 @@
 #include "compute/gpu_heatmaps.cuh"
 
 /*Standard Library*/
-#include <ATen/ops/div_native.h>
 
 #include <vector>
 

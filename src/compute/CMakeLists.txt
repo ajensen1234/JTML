@@ -64,11 +64,12 @@ set_target_properties(jtml_compute PROPERTIES
 
 target_link_libraries(jtml_compute
     PUBLIC
-        ${TORCH_LIBRARIES}
         ${OpenCV_LIBRARIES}
         CUDA::cublas
         CUDA::cudart
         CUDA::curand
+    PRIVATE
+        ${TORCH_LIBRARIES}
 )
 
 target_include_directories(jtml_compute
