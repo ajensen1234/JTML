@@ -1,12 +1,12 @@
 import QtQuick
-import QtQuick.Window
 import jtml.experimental 1.0
 
 // 005 U3: the QML render smoke scene — one QmlVtkRenderer filling the
 // window. The C++ driver (test/oracle/qml_render_smoke.cpp) binds the
 // app-owned ExperimentalScene and drives the renderer's GUI-thread slots
 // (applyScene/updatePose/updateBackground) through the dispatch_async
-// render-thread contract.
+// render-thread contract. 007 U2: QtQuick.Window import dropped (Window
+// resolves from QtQuick in Qt 6).
 
 Window {
     id: root

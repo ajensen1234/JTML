@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "."  // Theme
 
 // 005 U5: SettingsPanel — the experiment knobs (R4, R5, R10, R17).
 // A scrollable form over the SettingsBridge session-local editor state:
@@ -18,10 +19,13 @@ import QtQuick.Controls
 // field binds a property and commits through its setter. Range fields use a
 // SpinBox scaled ×100 (2-decimal knob precision; the bridge keeps the full
 // double — lossless persistence is pinned in experimental_settings_test.cpp).
+// 007 U2: theme import + token re-point (colors + pinned type scale), the
+// invisible-badge-pill fix (review D-01: the pill Rectangle collapsed to
+// 0 width in its RowLayout), and the scrollbar-gutter width fix (review
+// D-03: availableWidth instead of root.width - 18).
 
-Rectangle {
+Item {
     id: root
-    color: "transparent"
 
     ColumnLayout {
         anchors.fill: parent
@@ -34,32 +38,38 @@ Rectangle {
             spacing: 6
             Label {
                 text: qsTr("Settings")
-                color: "#cfd3da"
+                color: Theme.fg
                 font.bold: true
+                font.pixelSize: Theme.label
             }
             Item { Layout.fillWidth: true }
             Rectangle {
                 Layout.preferredHeight: 14
+                Layout.preferredWidth: Math.max(dirtyLabel.implicitWidth + 12, 28)
                 radius: 7
-                color: settingsBridge.dirty ? "#e5b567" : "#3a4a3d"
+                color: settingsBridge.dirty ? Theme.badgeDirtyBg
+                                            : Theme.badgeCleanBg
                 Label {
+                    id: dirtyLabel
                     anchors.centerIn: parent
                     text: settingsBridge.dirty ? qsTr("● unsaved")
                                                : qsTr("saved")
-                    color: settingsBridge.dirty ? "#2a2118" : "#8fbf96"
-                    font.pixelSize: 10
+                    color: settingsBridge.dirty ? Theme.badgeDirtyFg
+                                                : Theme.badgeCleanFg
+                    font.pixelSize: Theme.caption
                 }
             }
         }
 
         // ---- The form (scrolls when the column is short) -----------------
         ScrollView {
+            id: settingsScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
 
             ColumnLayout {
-                width: root.width - 18  // scrollbar gutter
+                width: settingsScroll.availableWidth
                 spacing: 8
 
                 // ---- Reusable widgets ----------------------------------
@@ -73,8 +83,8 @@ Rectangle {
                     spacing: 1
                     Label {
                         text: rangeField.fieldLabel
-                        color: "#8b929c"
-                        font.pixelSize: 10
+                        color: Theme.fgMuted
+                        font.pixelSize: Theme.caption
                     }
                     SpinBox {
                         id: rangeSpin
@@ -86,7 +96,7 @@ Rectangle {
                         value: Math.round(rangeField.fieldValue * 100)
                         textFromValue: function(v) { return (v / 100).toFixed(2) }
                         valueFromText: function(t) {
-                            var n = parseFloat(t)
+                            let n = parseFloat(t)
                             return isNaN(n) ? rangeSpin.value : Math.round(n * 100)
                         }
                         onValueModified: {
@@ -109,8 +119,8 @@ Rectangle {
                     spacing: 1
                     Label {
                         text: intField.fieldLabel
-                        color: "#8b929c"
-                        font.pixelSize: 10
+                        color: Theme.fgMuted
+                        font.pixelSize: Theme.caption
                     }
                     SpinBox {
                         Layout.fillWidth: true
@@ -137,8 +147,8 @@ Rectangle {
                     spacing: 1
                     Label {
                         text: qsTr("Cost variant")
-                        color: "#8b929c"
-                        font.pixelSize: 10
+                        color: Theme.fgMuted
+                        font.pixelSize: Theme.caption
                     }
                     ComboBox {
                         Layout.fillWidth: true
@@ -155,8 +165,9 @@ Rectangle {
                 // ---- Trunk -------------------------------------------------
                 Label {
                     text: qsTr("Trunk")
-                    color: "#cfd3da"
+                    color: Theme.fg
                     font.bold: true
+                    font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
                     model: settingsBridge.trunkCostFunctions
@@ -212,8 +223,9 @@ Rectangle {
                 // ---- Branch ------------------------------------------------
                 Label {
                     text: qsTr("Branch")
-                    color: "#cfd3da"
+                    color: Theme.fg
                     font.bold: true
+                    font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
                     model: settingsBridge.branchCostFunctions
@@ -281,8 +293,9 @@ Rectangle {
                 // ---- Leaf ---------------------------------------------------
                 Label {
                     text: qsTr("Leaf")
-                    color: "#cfd3da"
+                    color: Theme.fg
                     font.bold: true
+                    font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
                     model: settingsBridge.leafCostFunctions

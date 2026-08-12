@@ -1,2 +1,8 @@
 singleton Theme 1.0 Theme.qml
 PoseCell 1.0 PoseCell.qml
+StudyPanel 1.0 StudyPanel.qml
+MlStrip 1.0 MlStrip.qml
+RunBar 1.0 RunBar.qml
+ViewportPanel 1.0 ViewportPanel.qml
+PosesTable 1.0 PosesTable.qml
+PosesDialog 1.0 PosesDialog.qml

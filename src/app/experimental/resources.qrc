@@ -4,6 +4,12 @@
         <file>SettingsPanel.qml</file>
         <file>Theme.qml</file>
         <file>PoseCell.qml</file>
+        <file>StudyPanel.qml</file>
+        <file>MlStrip.qml</file>
+        <file>RunBar.qml</file>
+        <file>ViewportPanel.qml</file>
+        <file>PosesTable.qml</file>
+        <file>PosesDialog.qml</file>
         <file>qmldir</file>
     </qresource>
 </RCC>

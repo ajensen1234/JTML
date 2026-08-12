@@ -1444,3 +1444,27 @@ set_tests_properties(jtml.qml_render_smoke PROPERTIES LABELS "oracle;render" TIM
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     ENVIRONMENT "QT_QPA_PLATFORM=xcb")
 endblock()
+
+# Plan 007 U2: Qt6 qmllint gate over the experimental app's QML files.
+# Pins $CONDA_PREFIX/lib/qt6/bin/qmllint (the Qt 6.7.2 binary — the bare
+# `qmllint` on PATH is Qt 5.15.8 from opencv's qt5 build and lacks --json).
+# Fails on warnings outside the documented accepted set (see
+# test/qml_lint.cmake for the accepted ids + their removal paths).
+if(EXISTS "$ENV{CONDA_PREFIX}/lib/qt6/bin/qmllint")
+    set(QML_LINT_QT6 "$ENV{CONDA_PREFIX}/lib/qt6/bin/qmllint")
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/qt6/bin/qmllint")
+    set(QML_LINT_QT6 "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/qt6/bin/qmllint")
+else()
+    set(QML_LINT_QT6 "")
+endif()
+if(QML_LINT_QT6)
+    add_test(NAME jtml.qml_lint
+        COMMAND ${CMAKE_COMMAND}
+            -D QML_LINT=${QML_LINT_QT6}
+            -D QML_DIR=${CMAKE_SOURCE_DIR}/src/app/experimental
+            -D QML_OUT=${CMAKE_CURRENT_BINARY_DIR}/qml-lint-out.json
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/qml_lint.cmake)
+    set_tests_properties(jtml.qml_lint PROPERTIES
+        LABELS "headless" TIMEOUT 120
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
