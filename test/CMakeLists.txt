@@ -1374,6 +1374,56 @@ set_tests_properties(jtml.z_profile PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
+# Tier-2 multi-stage oracle (plan 008 U6). GPU-only: NEVER in the headless
+# default. Drives OptimizerRunController with the PRODUCTION driver factory
+# (real OptimizerManager + QThread per run) at the production shape
+# (trunk 20000 -> 2x branch 5000 -> leaf 5000; cumulative caps
+# 20/25/30/35k; per-stage dilation 6/4/1; Canny 3/0/150) on all 3
+# Kneel_1 frames, plus the tibia-after-femur SymTrap pass (the three sym-trap
+# pins: directive, 61 relays, costCalls 0 + stageText Idle), the edge shapes
+# (branches=0 / leaf disabled — no phantom stages), and the caps-gate error
+# path. Records test/golden/oracle_multistage.json (+_tibia.json) and prints
+# the condensed block for baseline.json's oracle_multistage key (run 1
+# records; later runs enforce against the recorded band). MEASURED wall time
+# on the RTX 3090 Ti (2026-08-12): ~15 s for the whole binary — the plan's
+# 10-30 min/frame estimate was conservative; TIMEOUT 7200 is kept as the
+# plan-spec bound + headroom for slower GPUs. Same registration recipe as
+# jtml.oracle (repo-root WORKING_DIRECTORY, rpath).
+# ---------------------------------------------------------------------------
+add_executable(jtml_test_oracle_multistage oracle/multistage_oracle_test.cpp)
+target_include_directories(jtml_test_oracle_multistage PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+)
+target_link_libraries(jtml_test_oracle_multistage PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+    Catch2::Catch2
+)
+set_property(TARGET jtml_test_oracle_multistage PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_oracle_multistage PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}"
+)
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir, VTK + conda libs in their install dirs.
+target_link_options(jtml_test_oracle_multistage PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.oracle_multistage COMMAND jtml_test_oracle_multistage)
+set_tests_properties(jtml.oracle_multistage PROPERTIES LABELS "oracle;gpu"
+    TIMEOUT 7200 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# ---------------------------------------------------------------------------
 # U9 parity gate (plan 005 U9, R13): the app's OWN optimizer run path
 # (OptimizerBridge: OptimizeIntentController gate -> OptimizerManager +
 # QThread -> Initialize with the app's containers by value + a

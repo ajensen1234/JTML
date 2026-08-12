@@ -723,5 +723,289 @@
     ],
     "finding_updateCostFunctionParameterValues_noop": "CostFunctionManager::updateCostFunctionParameterValues(int) writes to a COPY (getIntParameters returns by value) \u2014 a silent no-op; the oracle fixture only worked because its dilation 6 equals the registered default. Production uses setIntParameterValue on the active class; the probe uses the production path. Recorded here as a documented finding for the hygiene pass.",
     "finding_mahfouz_noise_floor_nonzero": "DIRECT_MAHFOUZ noise_floor = 0.137 (run 1) / 0.329 (run 2) \u2014 NOT zero: DIRECT_MAHFOUZ is an intensity/float path (ImplantMahfouzMetric), NOT the int-atomic DIRECT_DILATION reduction, so the angle-05 'expect 0 variance on the int-atomic path' holds for DIRECT_DILATION + DIRECT_DILATION_T1 (noise_floor = 0 on all 18 DD sweeps) but NOT for DIRECT_MAHFOUZ. Its vd at d6 f0 jitters 0.61-0.65 between runs; the p3 ranking order (DD > MAHFOUZ > T1) is stable, but the enforcement band for MAHFOUZ is intentionally loose (0.05) and should be widened to ~0.08 for the intensity variant in future runs if it trips."
+  },
+  "oracle_multistage": {
+    "schema_version": 1,
+    "event": "plan 008 U6 multi-stage oracle run 1 (characterization-first) \u2014 production shape (20k->25k->30k->35k, per-stage dilation 6/4/1) driven through OptimizerRunController + the real OptimizerManager driver seam (jtml.oracle_multistage), 2026-08-12 on the RTX 3090 Ti (CUDA 12.4). The four lineage invariants asserted; the SymTrap pins recorded (relay 61, costCalls 0, stageText Idle \u2014 the pre-Cut-B engine characterization; the U9 script-driven shape must reproduce 0 DIRECT search calls bit-identically). Pin-first: later runs enforce the recorded caps + IoU band + sym-trap pins.",
+    "instrument": "test/oracle/multistage_oracle_test.cpp (jtml.oracle_multistage)",
+    "manifest": {
+      "shape": "trunk 20000 -> 2x branch 5000 -> leaf 5000; cumulative caps [20000, 25000, 30000, 35000]",
+      "directive_femur": "All (3 Kneel_1 frames; init_prev_frame chaining)",
+      "directive_tibia": "Sym_Trap (frame 0; tibia primary; femur row = femur-run frame-0 recovery)",
+      "ranges": {
+        "trunk": [
+          35,
+          35,
+          35,
+          35,
+          35,
+          35
+        ],
+        "branch": [
+          15,
+          15,
+          25,
+          25,
+          25,
+          25
+        ],
+        "leaf": [
+          3,
+          3,
+          15,
+          3,
+          3,
+          3
+        ]
+      },
+      "dilation_per_stage": {
+        "trunk": 6,
+        "branch": 4,
+        "leaf": 1
+      },
+      "canny": [
+        3,
+        0,
+        150
+      ],
+      "backface_culling": false,
+      "cost_function": "DIRECT_DILATION",
+      "z_leaf_budget": 5000,
+      "z_leaf_range_mm": 15,
+      "z_leaf_ablation_axis": {
+        "z_leaf_budget": [
+          5000,
+          20000,
+          50000
+        ],
+        "z_range_mm": [
+          15,
+          20
+        ],
+        "note": "first-class ablation axis (Flood lineage, angle 03 R3-1): JTML default 5000/15 measured here; 20000 = trunk parity, 50000 = Flood parity are manifest fields, not runs"
+      }
+    },
+    "caps_gate": {
+      "expected_cumulative_caps": [
+        20000,
+        25000,
+        30000,
+        35000
+      ],
+      "band_calls": 500,
+      "per_frame": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "gate_result": "PASS",
+      "final_cost_calls": 35008,
+      "note": "final calls = 35000 cap + 8 DIRECT one-iteration overshoot (the guard checks at the loop top; qml_parity observed the same class at 3026 vs 3000)"
+    },
+    "stage_text_sequence": [
+      "Trunk",
+      "Branch 1",
+      "Branch 2",
+      "Extra Z-Translation",
+      "Finished"
+    ],
+    "stage_text_repeats_per_frame": true,
+    "channel_never_says_Leaf": true,
+    "per_frame": [
+      {
+        "frame": 0,
+        "recovered_pose": [
+          18.4258878,
+          19.7149549,
+          -1027.25424,
+          -7.32837773,
+          -0.272421517,
+          -27.0166457
+        ],
+        "iou": 0.989608254,
+        "l1_pixel_diff": 35445,
+        "per_px_l1": 0.0338029861,
+        "z_gap_vs_fem_jts_mm": 0.458758833,
+        "label": "Labels/fem/AT_K1_V1_0160_label_fem.tif",
+        "start_iou_correspondence": 1.0
+      },
+      {
+        "frame": 1,
+        "recovered_pose": [
+          19.0587181,
+          20.1832101,
+          -1028.11437,
+          -7.52316511,
+          -0.40796996,
+          -27.0357485
+        ],
+        "iou": 0.988367785,
+        "l1_pixel_diff": 40035,
+        "per_px_l1": 0.0381803513,
+        "z_gap_vs_fem_jts_mm": -1.38237428,
+        "label": "Labels/fem/AT_K1_V1_0170_label_fem.tif",
+        "start_iou_correspondence": 1.0
+      },
+      {
+        "frame": 2,
+        "recovered_pose": [
+          16.4626482,
+          16.3437999,
+          -1027.98149,
+          -7.33820008,
+          0.377716504,
+          -23.9913052
+        ],
+        "iou": 0.985045756,
+        "l1_pixel_diff": 51255,
+        "per_px_l1": 0.0488805771,
+        "z_gap_vs_fem_jts_mm": 0.708509713,
+        "label": "Labels/fem/AT_K1_V1_0180_label_fem.tif",
+        "start_iou_correspondence": 1.0
+      }
+    ],
+    "iou_gate": {
+      "threshold": 0.85,
+      "per_frame": [
+        true,
+        true,
+        true
+      ],
+      "gate_result": "PASS"
+    },
+    "l1_banded_record": {
+      "per_px_band": 0.021,
+      "note": "informational only (cross-GPU variance doctrine, angle 03 R2-5) \u2014 production-shape per-px L1 runs higher than the flat-3000 shape's 0.020-0.029 because the search covers more corners; never a gate"
+    },
+    "z_gap_banded_informational": {
+      "band_mm": 15,
+      "per_frame_mm": [
+        0.459,
+        -1.382,
+        0.709
+      ],
+      "never_a_gate": true
+    },
+    "sym_trap_pins": {
+      "directive": "Sym_Trap",
+      "orientationSymTrapUpdated_count": 61,
+      "expected_count": 61,
+      "costCalls": 0,
+      "stageText": "Idle",
+      "analysis_evals_uncounted": 60,
+      "results_files_written": [
+        "Results.csv",
+        "Results.xyz",
+        "Results2D.xy"
+      ],
+      "note": "pre-Cut-B characterization: trunk + branch sections are inside the !sym_trap_call guard (optimizer_manager.cpp:927), so the SymTrap pass is leaf-init + CalculateSymTrap only; the U9 script-driven shape {Trunk, Branch x N, Leaf repeat=0} must reproduce 0 DIRECT search calls BIT-IDENTICALLY (the plan's earlier '30000' claim was refuted by brace analysis \u2014 supervisor-approved 2026-08-12)"
+    },
+    "tibia_pass": {
+      "label": "Labels/tib/AT_K1_V1_0160_label_tib.tif",
+      "start_pose_iou_correspondence": 1.0,
+      "recovered_iou_record": 1.0,
+      "per_px_l1": 0.0,
+      "note": "the tibia 'recovery' == the tib.jts start pose (no search under SymTrap; CalculateSymTrap scores 60 candidates but never updates the optimum). The appearance values are RECORD-ONLY \u2014 the ambiguity doctrine (angle 03 R3-4): the mirrored tibia pose may legitimately match the label; the checked coverage lives in the sym-trap pins."
+    },
+    "lineage_invariants": {
+      "1_group_once_dilation": {
+        "dilation_relays_per_frame": 4,
+        "total": 12,
+        "note": "trunk + branch group (BEFORE the repeat loop) + leaf + epilogue restore \u2014 a per-repeat dilation would give 5/frame"
+      },
+      "2_per_repeat_reseed": {
+        "stage_recovery_sequence": "recorded per frame (trunk -> b1 -> b2 -> leaf); each stage recovery lies inside its search box centered on the previous stage's recovery (asserted); frame 2 shows the staged correction: trunk z=-1047.67 -> b1 -1031.93 -> b2 -1032.26 -> leaf -1027.98. NOTE: b2 == b1 == leaf on frame 0 (the branches legitimately found no improvement \u2014 deterministic); the seed itself is internal, so the sequence is the recorded evidence + the U9 bit-identity diff compares the whole sequence"
+      },
+      "3_asymmetric_z_leaf": {
+        "leaf_range": [
+          3,
+          3,
+          15,
+          3,
+          3,
+          3
+        ],
+        "z_over_inplane": 5.0,
+        "note": "z=15 vs in-plane 3 \u2014 Flood's asymmetry preserved (angle 04 R3-3); the production shape runs the full z-leaf"
+      },
+      "4_frame_to_frame_seed_chaining": {
+        "init_prev_frame": true,
+        "per_frame_recoveries": [
+          [
+            18.4258878,
+            19.7149549,
+            -1027.25424,
+            -7.32837773,
+            -0.272421517,
+            -27.0166457
+          ],
+          [
+            19.0587181,
+            20.1832101,
+            -1028.11437,
+            -7.52316511,
+            -0.40796996,
+            -27.0357485
+          ],
+          [
+            16.4626482,
+            16.3437999,
+            -1027.98149,
+            -7.33820008,
+            0.377716504,
+            -23.9913052
+          ]
+        ],
+        "first_pose_in_trunk_box_gap_mm": [
+          [
+            0.096,
+            0.02,
+            1.323
+          ],
+          [
+            0.537,
+            0.488,
+            0.463
+          ]
+        ],
+        "note": "frame N's trunk seed == frame N-1's recovery (code rule under All); the first pose-update of each frame N lands within the trunk box of frame N-1's recovery (asserted band)"
+      }
+    },
+    "edge_cases": {
+      "number_branches_0": {
+        "stage_text_sequence": [
+          "Trunk",
+          "Extra Z-Translation",
+          "Finished"
+        ],
+        "no_phantom_stages": true,
+        "dilation_relays": 3
+      },
+      "leaf_disabled": {
+        "stage_text_sequence": [
+          "Trunk",
+          "Branch 1",
+          "Branch 2",
+          "Finished"
+        ],
+        "no_phantom_stages": true,
+        "dilation_relays": 3
+      }
+    },
+    "caps_gate_error_path": "the gate fails on a skipped stage / missed cap (pure-logic negative checks inside the oracle; the flat-3000 oracle is blind to this class)",
+    "gpu": "RTX 3090 Ti (CUDA 12.4, sm_86)",
+    "caps": [
+      20000,
+      25000,
+      30000,
+      35000
+    ],
+    "per_frame_iou": [
+      0.989608254,
+      0.988367785,
+      0.985045756
+    ],
+    "symtrap_relay_count": 61,
+    "tibia_cost_calls": 0
   }
 }

@@ -181,6 +181,12 @@ bool OptimizerManager::Initialize(
         init_prev_frame_ = false;
         /*Index For Starting Frame in Optimization*/
         start_frame_index_ = current_frame_index;
+        /*U6: pin the single-frame scope (mirrors the Single branch). Without
+         * this, end_frame_index_ stays UNINITIALIZED and create_image_indices
+         * reads garbage (descending negative range -> UB, or a many-thousand-
+         * iteration sym-trap hang). The tibia-after-femur oracle (plan 008
+         * U6, jtml.oracle_multistage) is the first executor of this path. */
+        end_frame_index_ = current_frame_index;
 
         sym_trap_call = true;
     } else if (opt_directive == "Backward") {

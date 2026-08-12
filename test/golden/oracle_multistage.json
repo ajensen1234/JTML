@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "instrument": "plan-008 U6 multi-stage oracle (test/oracle/multistage_oracle_test.cpp)",
+  "shape": "trunk 20000 -> 2x branch 5000 -> leaf 5000; cumulative caps [20000, 25000, 30000, 35000]",
+  "directive_femur": "All (3 Kneel_1 frames; init_prev_frame chaining)",
+  "stage_sequence": ["Trunk", "Branch 1", "Branch 2", "Extra Z-Translation", "Finished", "Trunk", "Branch 1", "Branch 2", "Extra Z-Translation", "Finished", "Trunk", "Branch 1", "Branch 2", "Extra Z-Translation", "Finished"],
+  "caps": [20000, 25000, 30000, 35000],
+  "caps_band": 500,
+  "per_frame_iou": [0.989608254, 0.988367785, 0.985045756],
+  "per_frame_l1_pixel_diff": [35445, 40035, 51255],
+  "per_frame_per_px_l1": [0.0338029861, 0.0381803513, 0.0488805771],
+  "per_frame_z_gap_mm": [0.458758833, -1.38237428, 0.708509713],
+  "per_frame_label": ["example_studies/Kneel_1/Labels/fem/AT_K1_V1_0160_label_fem.tif", "example_studies/Kneel_1/Labels/fem/AT_K1_V1_0170_label_fem.tif", "example_studies/Kneel_1/Labels/fem/AT_K1_V1_0180_label_fem.tif"],
+  "frame0_recovery_pose": [18.4258878, 19.7149549, -1027.25424, -7.32837773, -0.272421517, -27.0166457],
+  "per_frame_recovered_pose": [[18.4258878, 19.7149549, -1027.25424, -7.32837773, -0.272421517, -27.0166457], [19.0587181, 20.1832101, -1028.11437, -7.52316511, -0.40796996, -27.0357485], [16.4626482, 16.3437999, -1027.98149, -7.33820008, 0.377716504, -23.9913052]],
+  "dilation_relays_total": 12,
+  "lineage_invariants": {
+    "1_group_once_dilation_relays_per_frame": 4,
+    "2_stage_recovery_sequence": [[[18.4258878, 19.716479, -1027.25424, -7.3232972, -0.280042307, -27.0242665], [18.4258878, 19.7149549, -1027.25424, -7.32837773, -0.272421517, -27.0166457], [18.4258878, 19.7149549, -1027.25424, -7.32837773, -0.272421517, -27.0166457], [18.4258878, 19.7149549, -1027.25424, -7.32837773, -0.272421517, -27.0166457]], [[19.0660341, 20.279232, -1029.84683, -7.77648015, -0.51781094, -26.6681216], [19.0660341, 20.1969275, -1027.67491, -7.54785647, -0.426361465, -27.0110571], [19.0614616, 20.1832101, -1028.11437, -7.54785647, -0.416200413, -27.0110571], [19.0587181, 20.1832101, -1028.11437, -7.52316511, -0.40796996, -27.0357485]], [[17.2267932, 17.9624556, -1047.67084, -11.4122516, 0.0496161126, -20.5690852], [16.8022306, 16.837627, -1031.92601, -8.65324352, 0.369689272, -22.7285912], [16.6848704, 16.837627, -1032.26133, -8.53893168, 0.30364243, -23.0283422], [16.4626482, 16.3437999, -1027.98149, -7.33820008, 0.377716504, -23.9913052]]],
+    "3_asymmetric_z_leaf_range": [3, 3, 15, 3, 3, 3],
+    "4_frame_to_frame_chaining": "init_prev_frame=true; per-frame terminal sequence recorded; first-pose-in-trunk-box band asserted"
+  },
+  "final_cost_calls": 35008
+}

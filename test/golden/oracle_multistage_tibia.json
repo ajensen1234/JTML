@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "instrument": "plan-008 U6 multi-stage oracle (test/oracle/multistage_oracle_test.cpp)",
+  "directive_tibia": "Sym_Trap (frame 0; tibia primary; femur row = femur-run frame-0 recovery)",
+  "symtrap_relay_count": 61,
+  "tibia_cost_calls": 0,
+  "tibia_stage_text": "Idle",
+  "analysis_evals_uncounted": 60,
+  "results_files": ["Results.csv", "Results.xyz", "Results2D.xy"],
+  "tibia_label": "example_studies/Kneel_1/Labels/tib/AT_K1_V1_0160_label_tib.tif",
+  "tibia_start_iou": 1,
+  "tibia_recovered_iou": 1,
+  "tibia_per_px_l1": 0,
+  "note": "pre-Cut-B characterization: the engine's SymTrap pass is leaf-init + CalculateSymTrap only (trunk + branch inside the !sym_trap_call guard, optimizer_manager.cpp:927); the U9 script-driven shape must reproduce 0 DIRECT search calls bit-identically"
+}
