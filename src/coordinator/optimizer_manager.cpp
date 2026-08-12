@@ -263,120 +263,26 @@ bool OptimizerManager::Initialize(
         return succesfull_initialization_;
     }
 
-    /*Get Dilation Values for Trunk, Branch, and Leaf*/
-    /*Trunk*/
-    trunk_dilation_val_ = 0;
-    std::vector<jta_cost_function::Parameter<int>> active_int_params =
-        trunk_manager_.getActiveCostFunctionClass()->getIntParameters();
-    for (int i = 0; i < active_int_params.size(); i++) {
-        if (active_int_params[i].getParameterName() == "Dilation" ||
-            active_int_params[i].getParameterName() == "DILATION" ||
-            active_int_params[i].getParameterName() == "dilation") {
-            trunk_dilation_val_ = trunk_manager_.getActiveCostFunctionClass()
-                                      ->getIntParameters()
-                                      .at(i)
-                                      .getParameterValue();
-        }
-    }
-    if (trunk_dilation_val_ <= 0) trunk_dilation_val_ = 0;
-    /*Check Special Mahfouz Case*/
-    if (trunk_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ")
-        trunk_dilation_val_ = 3;
-    /*Branch*/
-    branch_dilation_val_ = 0;
-    active_int_params =
-        branch_manager_.getActiveCostFunctionClass()->getIntParameters();
-    for (int i = 0; i < active_int_params.size(); i++) {
-        if (active_int_params[i].getParameterName() == "Dilation" ||
-            active_int_params[i].getParameterName() == "DILATION" ||
-            active_int_params[i].getParameterName() == "dilation") {
-            branch_dilation_val_ = branch_manager_.getActiveCostFunctionClass()
-                                       ->getIntParameters()
-                                       .at(i)
-                                       .getParameterValue();
-        }
-    }
-    if (branch_dilation_val_ <= 0) branch_dilation_val_ = 0;
-    /*Check Special Mahfouz Case*/
-    if (branch_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ")
-        branch_dilation_val_ = 3;
-    /*Leaf*/
-    leaf_dilation_val_ = 0;
-    active_int_params =
-        leaf_manager_.getActiveCostFunctionClass()->getIntParameters();
-    for (int i = 0; i < active_int_params.size(); i++) {
-        if (active_int_params[i].getParameterName() == "Dilation" ||
-            active_int_params[i].getParameterName() == "DILATION" ||
-            active_int_params[i].getParameterName() == "dilation") {
-            leaf_dilation_val_ = leaf_manager_.getActiveCostFunctionClass()
-                                     ->getIntParameters()
-                                     .at(i)
-                                     .getParameterValue();
-        }
-    }
-    if (leaf_dilation_val_ <= 0) leaf_dilation_val_ = 0;
-    /*Check Special Mahfouz Case*/
-    if (leaf_manager_.getActiveCostFunction() == "DIRECT_MAHFOUZ")
-        leaf_dilation_val_ = 3;
+    /*Get the Dilation + Dark Silhouette values for Trunk, Branch, and Leaf —
+     * one DeriveStageParams call per stage manager (the U7 pure relocation of
+     * the inline scan; the six-name variant list lives in ONE place, the pure
+     * TU). Values are identical to the pre-Cut-C inline scans (last-match-
+     * wins, ≤0 clamp, DIRECT_MAHFOUZ → 3, the six bool-name variants) — the
+     * U6 oracle re-verifies bit-identity.*/
+    const jta::StageCostParams trunk_params =
+        DeriveStageParams(trunk_manager_);
+    trunk_dilation_val_ = trunk_params.dilation;
+    trunk_dark_silhouette_val_ = trunk_params.dark_silhouette;
 
-    /*Get Black Silhouette? Values for Trunk, Branch, and Leaf*/
-    /*Black Silhouette Values Based on Bool Parameter Names (Black_Silhouette or
-     * Dark_Silhouette or BLACK_SILHOUETTE or DARK_SILHOUETTE or
-     * black_silhouette or dark_silhouette)*/
-    /*Trunk*/
-    trunk_dark_silhouette_val_ = false;
-    std::vector<jta_cost_function::Parameter<bool>> active_bool_params =
-        trunk_manager_.getActiveCostFunctionClass()->getBoolParameters();
-    for (int i = 0; i < active_bool_params.size(); i++) {
-        if (active_bool_params[i].getParameterName() == "Black_Silhouette" ||
-            active_bool_params[i].getParameterName() == "Dark_Silhouette" ||
-            active_bool_params[i].getParameterName() == "BLACK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "DARK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "black_silhouette" ||
-            active_bool_params[i].getParameterName() == "dark_silhouette") {
-            trunk_dark_silhouette_val_ =
-                trunk_manager_.getActiveCostFunctionClass()
-                    ->getBoolParameters()
-                    .at(i)
-                    .getParameterValue();
-        }
-    }
-    /*Branch*/
-    branch_dark_silhouette_val_ = false;
-    active_bool_params =
-        branch_manager_.getActiveCostFunctionClass()->getBoolParameters();
-    for (int i = 0; i < active_bool_params.size(); i++) {
-        if (active_bool_params[i].getParameterName() == "Black_Silhouette" ||
-            active_bool_params[i].getParameterName() == "Dark_Silhouette" ||
-            active_bool_params[i].getParameterName() == "BLACK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "DARK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "black_silhouette" ||
-            active_bool_params[i].getParameterName() == "dark_silhouette") {
-            branch_dark_silhouette_val_ =
-                branch_manager_.getActiveCostFunctionClass()
-                    ->getBoolParameters()
-                    .at(i)
-                    .getParameterValue();
-        }
-    }
-    /*Leaf*/
-    leaf_dark_silhouette_val_ = false;
-    active_bool_params =
-        leaf_manager_.getActiveCostFunctionClass()->getBoolParameters();
-    for (int i = 0; i < active_bool_params.size(); i++) {
-        if (active_bool_params[i].getParameterName() == "Black_Silhouette" ||
-            active_bool_params[i].getParameterName() == "Dark_Silhouette" ||
-            active_bool_params[i].getParameterName() == "BLACK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "DARK_SILHOUETTE" ||
-            active_bool_params[i].getParameterName() == "black_silhouette" ||
-            active_bool_params[i].getParameterName() == "dark_silhouette") {
-            leaf_dark_silhouette_val_ =
-                leaf_manager_.getActiveCostFunctionClass()
-                    ->getBoolParameters()
-                    .at(i)
-                    .getParameterValue();
-        }
-    }
+    const jta::StageCostParams branch_params =
+        DeriveStageParams(branch_manager_);
+    branch_dilation_val_ = branch_params.dilation;
+    branch_dark_silhouette_val_ = branch_params.dark_silhouette;
+
+    const jta::StageCostParams leaf_params =
+        DeriveStageParams(leaf_manager_);
+    leaf_dilation_val_ = leaf_params.dilation;
+    leaf_dark_silhouette_val_ = leaf_params.dark_silhouette;
 
     /*Upload GPU Frames*/
     /*Intensity Frames
@@ -1107,31 +1013,11 @@ void OptimizerManager::Optimize() {
                 }
 
                 const jta::StageCostParams trunk_params =
-                    jta::DeriveStageCostParams(
-                        stage_manager->getActiveCostFunction(),
-                        stage_manager->getActiveCostFunctionClass()
-                            ->getIntParameters(),
-                        stage_manager->getActiveCostFunctionClass()
-                            ->getBoolParameters());
+                    DeriveStageParams(*stage_manager);
 
                 /*Make Sure Dilation Image is Showing Trunk Value (Should be
                  * Unnecessary)*/
-                dilate(
-                    frames_A_[frame_index].GetEdgeImage(),
-                    frames_A_[frame_index].GetDilationImage(),
-                    cv::Mat(),
-                    cv::Point(-1, -1),
-                    trunk_params.dilation); /*Reset Dilation In That Image*/
-                if (calibration_.biplane_calibration) {
-                    dilate(
-                        frames_B_[frame_index].GetEdgeImage(),
-                        frames_B_[frame_index].GetDilationImage(),
-                        cv::Mat(),
-                        cv::Point(-1, -1),
-                        trunk_params.dilation); /*Reset Dilation In That
-                                                   Image*/
-                }
-                emit UpdateDilationBackground();
+                ResetStageDilation(frame_index, trunk_params.dilation);
 
                 /*Run the trunk stage of DIRECT bound to the real GPU cost
                  * (budget_ was just reset to trunk_budget and
@@ -1167,31 +1053,10 @@ void OptimizerManager::Optimize() {
                     }
 
                     const jta::StageCostParams branch_params =
-                        jta::DeriveStageCostParams(
-                            stage_manager->getActiveCostFunction(),
-                            stage_manager->getActiveCostFunctionClass()
-                                ->getIntParameters(),
-                            stage_manager->getActiveCostFunctionClass()
-                                ->getBoolParameters());
+                        DeriveStageParams(*stage_manager);
 
                     /*Make Sure Dilation Image is Showing Branch Value */
-                    dilate(
-                        frames_A_[frame_index].GetEdgeImage(),
-                        frames_A_[frame_index].GetDilationImage(),
-                        cv::Mat(),
-                        cv::Point(-1, -1),
-                        branch_params.dilation); /*Reset Dilation In That
-                                                    Image*/
-                    if (calibration_.biplane_calibration) {
-                        dilate(
-                            frames_B_[frame_index].GetEdgeImage(),
-                            frames_B_[frame_index].GetDilationImage(),
-                            cv::Mat(),
-                            cv::Point(-1, -1),
-                            branch_params.dilation); /*Reset Dilation In That
-                                                        Image*/
-                    }
-                    emit UpdateDilationBackground();
+                    ResetStageDilation(frame_index, branch_params.dilation);
                 }
 
                 /*Move to Branch If Necessary: one search per repeat, each
@@ -1236,30 +1101,10 @@ void OptimizerManager::Optimize() {
                     }
 
                     const jta::StageCostParams leaf_params =
-                        jta::DeriveStageCostParams(
-                            stage_manager->getActiveCostFunction(),
-                            stage_manager->getActiveCostFunctionClass()
-                                ->getIntParameters(),
-                            stage_manager->getActiveCostFunctionClass()
-                                ->getBoolParameters());
+                        DeriveStageParams(*stage_manager);
 
                     /*Make Sure Dilation Image is Showing Leaf Value */
-                    dilate(
-                        frames_A_[frame_index].GetEdgeImage(),
-                        frames_A_[frame_index].GetDilationImage(),
-                        cv::Mat(),
-                        cv::Point(-1, -1),
-                        leaf_params.dilation); /*Reset Dilation In That Image*/
-                    if (calibration_.biplane_calibration) {
-                        dilate(
-                            frames_B_[frame_index].GetEdgeImage(),
-                            frames_B_[frame_index].GetDilationImage(),
-                            cv::Mat(),
-                            cv::Point(-1, -1),
-                            leaf_params.dilation); /*Reset Dilation In That
-                                                      Image*/
-                    }
-                    emit UpdateDilationBackground();
+                    ResetStageDilation(frame_index, leaf_params.dilation);
                 }
 
                 /*Sym_Trap: the repeat=0 no-search leaf — init + dilate +
@@ -1376,6 +1221,42 @@ void OptimizerManager::Optimize() {
 
     /*Finish And Return*/
     emit finished();
+}
+
+jta::StageCostParams OptimizerManager::DeriveStageParams(
+    jta_cost_function::CostFunctionManager& manager) {
+    /*The one-line shim over jta::DeriveStageCostParams (U7 pure TU — the
+     * six-name variant list lives there, in ONE place). Every call site stays
+     * exactly where the pre-shim DeriveStageCostParams calls were: in the
+     * stage loop the call runs AFTER the stage's InitializeActiveCostFunction
+     * (the init-gating order is load-bearing) — never hoisted above the kind
+     * switch.*/
+    return jta::DeriveStageCostParams(
+        manager.getActiveCostFunction(),
+        manager.getActiveCostFunctionClass()->getIntParameters(),
+        manager.getActiveCostFunctionClass()->getBoolParameters());
+}
+
+void OptimizerManager::ResetStageDilation(size_t frame_index, int dilation) {
+    /*Make Sure the Dilation Image is Showing the Given Dilation Value (Reset
+     * Dilation In That Image) — the dilate-A / dilate-B (if biplane) / emit
+     * UpdateDilationBackground block, one place for the trunk/branch/leaf
+     * stage specs (the dilation value is the only per-stage difference).*/
+    dilate(
+        frames_A_[frame_index].GetEdgeImage(),
+        frames_A_[frame_index].GetDilationImage(),
+        cv::Mat(),
+        cv::Point(-1, -1),
+        dilation); /*Reset Dilation In That Image*/
+    if (calibration_.biplane_calibration) {
+        dilate(
+            frames_B_[frame_index].GetEdgeImage(),
+            frames_B_[frame_index].GetDilationImage(),
+            cv::Mat(),
+            cv::Point(-1, -1),
+            dilation); /*Reset Dilation In That Image*/
+    }
+    emit UpdateDilationBackground();
 }
 
 void OptimizerManager::RunDirectStage(

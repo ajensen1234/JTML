@@ -60,7 +60,6 @@ public:
         SelectionMode selection = SelectionMode::Original;
         double epsilon = 0.0;  // 0.0 disables the post-filter entirely
         bool delta_limit = false;
-        unsigned int delta_limit_subdivisions = 0;
         SizeMeasure size_measure = SizeMeasure::L2;
         SplitRule split_rule = SplitRule::OneSide;
         TieSelection ties = TieSelection::All;

@@ -311,7 +311,7 @@ chaining.
 
 ## Implementation Units
 
-- [ ] U1. **Tier-0 metric-semantics pins + CPU references**
+- [x] U1. **Tier-0 metric-semantics pins + CPU references**
 
 **Goal:** Characterize the cost-path behaviors at the pure surface
 before any fix — the run's R13 characterization pass that creates the surfaces the
@@ -375,7 +375,7 @@ pass their invariants.
 
 ---
 
-- [ ] U2. **Behavior-neutral cost-path fixes**
+- [x] U2. **Behavior-neutral cost-path fixes**
 
 **Goal:** Land the five behavior-neutral fixes — zero oracle impact — as
 separate jj changes, closing the latent bug classes before the live one.
@@ -425,7 +425,7 @@ pins that were RED/spec-documenting now assert the fixed behavior.
 
 ---
 
-- [ ] U3. **CUDA-free finite-check at EvaluateCostFunction**
+- [x] U3. **CUDA-free finite-check at EvaluateCostFunction**
 
 **Goal:** Close the dead-weight NaN class at the one shared chokepoint —
 `DirectOptimizer::EvaluateCostFunction` — regardless of GLh.
@@ -472,7 +472,7 @@ the probe; no change to the finite-path trace.
 
 ---
 
-- [ ] U4. **Distance-map index fix + adversarial GPU probe + one re-baseline**
+- [x] U4. **Distance-map index fix + adversarial GPU probe + one re-baseline**
 
 **Goal:** Fix the one live kernel bug and re-baseline exactly once,
 single-variable, recording the recovered-pose delta — the trustworthy
@@ -525,7 +525,7 @@ recorded, not asserted (direction claim confirmed or refuted by the data).
 
 ---
 
-- [ ] U5. **z-profile probe**
+- [x] U5. **z-profile probe**
 
 **Goal:** The cheapest instrument that sees the z-weak axis — executable
 per the run's spec, consuming the same injected-cost lambda as production.
@@ -583,7 +583,7 @@ angle 06 R2-1/R3-4); the oracle's cost-lambda entry points.
 
 ---
 
-- [ ] U6. **Multi-stage oracle on the driver seam**
+- [x] U6. **Multi-stage oracle on the driver seam**
 
 **Goal:** The production-shaped oracle (20k→25k→30k→35k, per-stage
 dilation, tibia-after-femur, sym_trap) through the `OptimizerRunDriver`
@@ -670,7 +670,7 @@ invariants asserted.
 
 ---
 
-- [ ] U7. **Cut A — stage-script TU + pure builders + graph registry**
+- [x] U7. **Cut A — stage-script TU + pure builders + graph registry**
 
 **Goal:** The container's pure surface: StageScript types, the named
 builders, the `jtml-production` graph as registered data — zero production
@@ -737,7 +737,7 @@ suite green untouched).
 
 ---
 
-- [ ] U8. **Cut C — DirectOptimizer::Options with bit-identical defaults**
+- [x] U8. **Cut C — DirectOptimizer::Options with bit-identical defaults**
 
 **Goal:** The per-stage optimizer-variant slot (origin R3) as a typed
 Options struct whose defaults reproduce today's search bit-identically.
@@ -797,7 +797,7 @@ defaulted sites).
 
 ---
 
-- [ ] U9. **Cut B — script-driven Optimize loop + BuildGpuCostAdapter (the PoC)**
+- [x] U9. **Cut B — script-driven Optimize loop + BuildGpuCostAdapter (the PoC)**
 
 **Goal:** The feasibility PoC: `Optimize()` consumes the StageScript and
 runs `jtml-production` through the adapter — bit-identical against the
@@ -866,7 +866,7 @@ production-visible change — qml parity verified through
 
 ---
 
-- [ ] U10. **Cut F — torch include/link hygiene**
+- [x] U10. **Cut F — torch include/link hygiene**
 
 **Goal:** Remove the layer-map smell: the unused ATen include and the
 PUBLIC torch link — one gated change, no behavior change.
@@ -966,6 +966,22 @@ diff shows only the include + link line).
   that later reconciles `golden_oracle.org`.
 - Per-session convention: one jj change per logical unit/fix; no interactive
   pagers.
+
+---
+
+## Execution Notes (U1–U10 landed 2026-08-12, commits e15fe849…7a3d03ff)
+
+Measured deltas that materially affect the follow-up plans:
+
+- **~7,000 evals/s measured** (U6, RTX 3090 Ti, production shape, ~15 s for the whole multistage run) — the derived 20–60 evals/s is refuted by ~2 orders of magnitude; the perf plan's pre-registered bands (Cut 1 → 60–300; Cut 2 → 1,000–5,000) and the ≥95%-host-block hypothesis must be re-based on this number (the sync-bound story may still hold per-eval, but the wall-clock framing changes completely).
+- **SymTrap costCalls == 0, not 30000 and not 20000**: the `if (!sym_trap_call)` guard at optimizer_manager.cpp:927 wraps trunk AND branches — under SymTrap only the leaf-CFM init + CalculateSymTrap run (60 uncounted analysis evals; stageText stays "Idle"; the early return at :1201 skips the final UpdateDisplay). Both the synthesis's pin and the review-resolved pin missed the outer guard; U6 characterized and recorded it; the U7 script maps SymTrap → [{Leaf, repeat=0}] and U9 preserves the behavior bit-identically.
+- **G2 precondition FAILS at leaf dilation 1** (U5): chamfer valley 0.9886 < dilated valley 0.9965 — the polish stage's z-claim gate (G1–G4) will pre-register "expected unchanged within noise" for z; the run's honest gating semantics apply.
+- **`updateCostFunctionParameterValues` int overload is a silent no-op** (U5 root-cause; writes to a by-value copy) — hygiene-pass item; production uses setIntParameterValue on the active class.
+- **b2 == b1 on frame 0 is legitimate** (U6): deterministic RNG-free DIRECT from identical seeds is bit-identical; the b2≠b1 assert was dropped for box-consistency, with the stage-recovery sequences recorded instead.
+- **One-line production fix**: `end_frame_index_` was uninitialized on the SymTrap path (UB read; first executor = the U6 tibia pass) — initialized in the directive branch, commented.
+- **Re-baseline verdict** (U4): direction confirmed (frame-0 z moved toward fem.jts), magnitude refuted — the "6.31 mm frame-1 gap" was a Qt5-capture artifact; the post-fix oracle's frame-1 gap was 1.19 mm and unmoved.
+- **U1 sym_trap fem2tib pin corrected** to the kernel-exact (0,0,10) (the identity-angle 312 rotation is the x↔z swap; kernel-as-spec doctrine).
+- **probe_vtk fails in this environment** with a GLX symbol error (pre-existing, unrelated to this plan; see docs/solutions/tooling-decisions/jtml-rendering-runtime-xcb-qvtk).
 
 ---
 

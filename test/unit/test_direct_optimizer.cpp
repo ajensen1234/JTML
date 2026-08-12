@@ -420,10 +420,6 @@ TEST_CASE("DirectOptimizer non-default Options fields fail fast (plan-008 stub s
     REQUIRE_THROWS_AS(make(o), std::invalid_argument);
 
     o = Options{};
-    o.delta_limit_subdivisions = 1;
-    REQUIRE_THROWS_AS(make(o), std::invalid_argument);
-
-    o = Options{};
     o.hidden_constraints = true;
     REQUIRE_THROWS_AS(make(o), std::invalid_argument);
 

@@ -39,12 +39,6 @@ void ValidateOptions(const DirectOptimizer::Options& opts) {
             "DirectOptimizer::Options: delta_limit is a plan-008 fail-fast "
             "stub; the delta-limit refinement lands with the algorithm plan");
     }
-    if (opts.delta_limit_subdivisions != 0) {
-        throw std::invalid_argument(
-            "DirectOptimizer::Options: delta_limit_subdivisions != 0 is a "
-            "plan-008 fail-fast stub; the delta-limit refinement lands with "
-            "the algorithm plan");
-    }
     if (opts.size_measure != DirectOptimizer::Options::SizeMeasure::L2) {
         throw std::invalid_argument(
             "DirectOptimizer::Options: size_measure != L2 is a plan-008 "
@@ -242,6 +236,22 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
 
         Point6D updated_center;
 
+        /*Store-or-delete a freshly evaluated changed-center box (plan 008 U3):
+         * a finite eval stores the box (value_ + AddHyperBox); a non-finite
+         * eval deletes it — the box is a STANDALONE heap copy not yet linked
+         * into storage, so deleting is safe (a stored NaN would accumulate as
+         * dead weight and could poison the column minimum once all finite
+         * boxes in the column are gone).*/
+        auto store_or_delete =
+            [this](HyperBox6D* box, const std::optional<double>& eval) {
+                if (eval.has_value()) {
+                    box->value_ = *eval;
+                    data_.AddHyperBox(box);
+                } else {
+                    delete box;
+                }
+            };
+
         /*Changed-center hyperbox A.*/
         auto changed_hyperbox_a = new HyperBox6D();
         *changed_hyperbox_a = potentially_optimal_hyperboxes_[i];
@@ -253,17 +263,9 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 changed_hyperbox_a->GetSides().GetDirection(
                     largest_direction));
         changed_hyperbox_a->SetCenter(updated_center);
-        std::optional<double> eval_a =
-            EvaluateCostFunction(changed_hyperbox_a->GetCenter());
-        if (eval_a.has_value()) {
-            changed_hyperbox_a->value_ = *eval_a;
-            data_.AddHyperBox(changed_hyperbox_a);
-        } else {
-            // Infeasible eval (plan 008 U3): the box is never stored -- a
-            // stored NaN would accumulate as dead weight and could poison the
-            // column minimum once all finite boxes in the column are gone.
-            delete changed_hyperbox_a;
-        }
+        store_or_delete(
+            changed_hyperbox_a,
+            EvaluateCostFunction(changed_hyperbox_a->GetCenter()));
 
         /*Changed-center hyperbox B.*/
         auto changed_hyperbox_b = new HyperBox6D();
@@ -276,15 +278,9 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 changed_hyperbox_b->GetSides().GetDirection(
                     largest_direction));
         changed_hyperbox_b->SetCenter(updated_center);
-        std::optional<double> eval_b =
-            EvaluateCostFunction(changed_hyperbox_b->GetCenter());
-        if (eval_b.has_value()) {
-            changed_hyperbox_b->value_ = *eval_b;
-            data_.AddHyperBox(changed_hyperbox_b);
-        } else {
-            // Infeasible eval (plan 008 U3): never stored (see box A above).
-            delete changed_hyperbox_b;
-        }
+        store_or_delete(
+            changed_hyperbox_b,
+            EvaluateCostFunction(changed_hyperbox_b->GetCenter()));
     }
 }
 

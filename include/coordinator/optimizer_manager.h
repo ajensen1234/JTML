@@ -248,6 +248,20 @@ private:
      * fail-fast stubs in this plan).*/
     DirectOptimizer::Options direct_options_;
 
+    /*Plan 008 U7 (Cut C): the one-line shim over jta::DeriveStageCostParams
+     * for a stage CostFunctionManager — the six-name variant list lives in
+     * ONE place, the pure TU. Every call site stays exactly where the
+     * pre-shim DeriveStageCostParams calls were (in the stage loop AFTER the
+     * stage's InitializeActiveCostFunction — the init-gating order is
+     * load-bearing).*/
+    jta::StageCostParams DeriveStageParams(
+        jta_cost_function::CostFunctionManager& manager);
+
+    /*The stage dilate-A / dilate-B (if biplane) / emit UpdateDilationBackground
+     * block — one place for the trunk/branch/leaf stage specs (the dilation
+     * value is the only per-stage difference).*/
+    void ResetStageDilation(size_t frame_index, int dilation);
+
     /*Run one DIRECT stage (trunk/branch/leaf) using the extracted pure
      * DirectOptimizer with the real GPU eval (plan U6). `range` is the stage
      * search range (already applied to range_ by the caller), and

@@ -26,34 +26,29 @@ namespace jta {
 
 namespace {
 
-/*Validate the settings' numeric fields (error path: negative budgets fail
- * fast with a clear error — a negative budget is a settings corruption, not a
- * run shape; the engine never validates).*/
+/*ThrowIfNegative(name, value, requirement): fail fast on a negative settings
+ * field — a negative value is a settings corruption, not a run shape (the
+ * engine never validates). The message keeps the per-field requirement text,
+ * so the errors stay byte-identical to the pre-helper throws.*/
+void ThrowIfNegative(
+    const std::string& field_name, int value, const std::string& requirement) {
+    if (value < 0) {
+        throw std::invalid_argument(
+            "BuildStageScript: negative " + field_name + " (" +
+            std::to_string(value) + "); " + requirement);
+    }
+}
+
+/*Validate the settings' numeric fields.*/
 void ValidateSettings(const OptimizerSettings& settings) {
-    if (settings.trunk_budget < 0) {
-        throw std::invalid_argument(
-            "BuildStageScript: negative trunk_budget (" +
-            std::to_string(settings.trunk_budget) +
-            "); budgets must be non-negative");
-    }
-    if (settings.branch_budget < 0) {
-        throw std::invalid_argument(
-            "BuildStageScript: negative branch_budget (" +
-            std::to_string(settings.branch_budget) +
-            "); budgets must be non-negative");
-    }
-    if (settings.leaf_budget < 0) {
-        throw std::invalid_argument(
-            "BuildStageScript: negative leaf_budget (" +
-            std::to_string(settings.leaf_budget) +
-            "); budgets must be non-negative");
-    }
-    if (settings.number_branches < 0) {
-        throw std::invalid_argument(
-            "BuildStageScript: negative number_branches (" +
-            std::to_string(settings.number_branches) +
-            "); the branch count must be non-negative");
-    }
+    ThrowIfNegative("trunk_budget", settings.trunk_budget,
+                    "budgets must be non-negative");
+    ThrowIfNegative("branch_budget", settings.branch_budget,
+                    "budgets must be non-negative");
+    ThrowIfNegative("leaf_budget", settings.leaf_budget,
+                    "budgets must be non-negative");
+    ThrowIfNegative("number_branches", settings.number_branches,
+                    "the branch count must be non-negative");
 }
 
 /*The five normal directives — frame-selection directives, stage-shape
