@@ -1,0 +1,182 @@
+{
+  "runId": "3c1437c3",
+  "agent": "ce-adversarial-reviewer",
+  "task": "You are ce-adversarial-reviewer. Construct failure scenarios: (1) the heatmap guard — what happens when SOME frames have heatmaps and others do not (vector alignment, DIRECT_DILATION at(i) access, curvature costs with 0 keypoints — division by zero? kernel launch with 0 threads?); (2) commit-on-pool — recycle during mid-edit with the new flush: any path where the typed value is lost or misrouted?; (3) the dataset-swap guard — can suppressFrameSync stick true?; (4) the drag-sync fix — activeModelIndex vs the style index after a rebuild; (5) the QSettings MRU — concurrent app instances, symlinks, dedupe; (6) the Loader-gated PosesTable + focusFirstCell interplay.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 106491,
+    "output": 63275,
+    "cacheRead": 8813824,
+    "cacheWrite": 0,
+    "cost": 0.028652223600000006,
+    "turns": 103
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 106491,
+        "output": 63275,
+        "cacheRead": 8813824,
+        "cacheWrite": 0,
+        "cost": 0.028652223600000006,
+        "turns": 103
+      }
+    }
+  ],
+  "durationMs": 796952,
+  "toolCount": 112,
+  "launchContractDigest": "bc10b133cd0ece31cf687949706636f8e637e80179fb46b2de1acec5b30db1f4",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "8 concrete findings with file paths, line numbers, severities (2×P1, 3×P2, 3×P3), confidence scores, evidence quotes, and suggested fixes written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-adversarial-reviewer.json (validated as parseable JSON); plus 7 residual risks and 7 testing gaps."
+        }
+      ],
+      "changedFiles": [
+        "src/coordinator/optimizer_manager.cpp",
+        "src/compute/gpu_heatmaps.cu",
+        "src/compute/gpu_metrics.cu",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/StudyBridge.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/Theme.qml",
+        "src/app/experimental/RunBar.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_StudyFlows.qml"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @ --stat",
+          "result": "passed",
+          "summary": "162 files, +13182/-1050; scoped diffs read for gpu_heatmaps.cu, gpu_metrics.cu, optimizer_manager.cpp, AppBridge.cpp, QmlVtkRenderer.cpp, OptimizerBridge.h/.cpp"
+        },
+        {
+          "command": "read/grep of src/compute, src/coordinator, src/app/experimental, test/qml sources",
+          "result": "passed",
+          "summary": "Traced Frame ctor (uninitialized num_curvature_keypoints_), DIRECT_DILATION at(i)/AllocateCurvatureHausdorfScore callers, commit-on-pool handlers, suppressFrameSync deferral, drag-sync index flow, MRU RMW, Loader gate"
+        },
+        {
+          "command": "python3 -c json.load on artifact",
+          "result": "passed",
+          "summary": "Artifact JSON valid: 8 findings, 7 residual risks, 7 testing gaps"
+        }
+      ],
+      "validationOutput": [
+        "Attack-area verdicts: (1) heatmap guard — vector stays frame-aligned, at(i) in-bounds, curvature costs no-op with 0 keypoints, but the guard's 0-keypoint premise rests on an uninitialized member (P1); 0-thread kernel launch exists only in dead code. (2) commit-on-pool — in-place recycle and teardown paths drop live edits (P1/P2); stale (-1,-1) tuple on focus-retained reuse (P2). (3) suppressFrameSync — no stuck-true path; ordering-dependent contract noted as residual. (4) drag-sync — index now follows the actor, but STL-skip index shift can still misroute the pose (P2). (5) MRU — concurrent-instance RMW race + symlink dedupe (P3). (6) Loader gate + focusFirstCell — focus fires before delegate instantiation (P3); dirty guard blind to in-flight edits (P2).",
+        "Suppressed per rubric: direct logic bugs, known vuln patterns, single-I/O error handling, perf anti-patterns, style, test-coverage-only gaps, API-contract breaks, migration safety — all owned by other personas."
+      ],
+      "residualRisks": [
+        "suppressFrameSync ordering-dependence on synchronous clearDataset+loadImages",
+        "AllocateCurvatureHausdorfScore per-stage leak + unchecked init failure",
+        "CurvatureHeatmapMetric dead code with 0-keypoint invalid kernel config if ever wired",
+        "0-keypoint GPUHeatmap path skips cudaSetDevice; heatmap_on_gpu_ never read",
+        "Mixed keypoint counts: hausdorf buffer sized per stage-init frame only",
+        "setCurvatureHeatmaps CWD side effects (hm*.png)",
+        "applyViewerPose silent drop on scene-index range miss"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 full pass over the experimental QML front-end: theme/component extraction, view-state fixes, UX audit, pose-table virtualization with commit-on-pool, QML test harness, profiling tasks, and the owner-requested heatmap guard in src/compute + src/coordinator",
+      "reviewFindings": [
+        "P1: optimizer_manager.cpp:709 — heatmap guard relies on uninitialized num_curvature_keypoints_ (Frame ctor never sets it); no-segmentation runs can still abort non-deterministically",
+        "P1: PosesTable.qml:232 — commit-on-pool misses in-place recycle (fast scroll/model refresh) — live edit silently dropped (documented in tst_PosesTable.qml:79-81)",
+        "P2: PoseCell.qml:101 — focus-retained reuse leaves stale (-1,-1,-1) tuple; next edit rejected, value lost",
+        "P2: QmlVtkRenderer.cpp:302 — STL-skip index shift can route drag pose to the wrong model",
+        "P2: PosesDialog.qml:204 — dirty-close guard blind to in-flight edits (drop or misleading discard prompt)",
+        "P3: main.qml:150 — discard-confirm Escape loop can never dismiss",
+        "P3: FileDialogBridge.cpp:50 — MRU concurrent-instance RMW race + symlink dedupe failure",
+        "P3: PosesTable.qml:258 — focusFirstCell runs before delegate instantiation; silently no-ops"
+      ],
+      "manualNotes": "Read-only review; no files modified besides the artifact JSON. Area 3 (suppressFrameSync) produced no finding above the confidence floor — the guard's -1-leak case is pinned by test_datasetSwapNeverWritesNegativeOne and the replace flow is synchronous; the ordering dependence is recorded as a residual risk. Artifact: .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-adversarial-reviewer.json"
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/3c1437c3_ce-adversarial-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553538739
+}

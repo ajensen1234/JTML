@@ -4,7 +4,7 @@
 
 * Tech Stack
 - Qt6 (6.7.2, qt6-main/wayland) + VTK 9.3 (source-built via vtk_installer.sh, Qt6, VTK_USE_X=OFF, SDL2 on — standalone VTK windows broken, only QVTK path works) + CUDA 12.4 + torch C++ (pytorch-gpu 2.4.1 cuda120) + OpenCV 4.10 (built against Qt5 — notable) + Eigen; C++20/CUDA20; pixi-only build (configure/build/test/run); jj VCS; linux-64 only.
-- App: 2D-3D knee-implant registration via D.R.E.C.T. global optimizer (Jones-1993-style DIRECT) over a GPU DRR + silhouette cost; monoplane + biplane; torch segmentation + implant pose estimation (user-provided .pt models).
+- App: 2D-3D knee-implant registration via DIRECT global optimizer (Jones-1993-style DIRECT) over a GPU DRR + silhouette cost; monoplane + biplane; torch segmentation + implant pose estimation (user-provided .pt models).
 - Tests: Catch2 v3 (pure logic), QtTest (Qt seams), hegel v0.11.1 PBT (FetchContent, 13 PBT targets + 1 smoke), ctest labels headless / oracle / oracle;render (NO gpu label). CI: ubuntu-latest, headless only, no GPU job.
 
 * Existing Related Code

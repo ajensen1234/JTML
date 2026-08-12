@@ -129,8 +129,8 @@ private:
     int* dev_distance_map_score_;
 
     // Curvature heatmap score (going to be min distance)
-    int* curvature_hausdorf_score_;
-    int* dev_curvature_hausdorf_score_;
+    int* curvature_hausdorf_score_ = nullptr;
+    int* dev_curvature_hausdorf_score_ = nullptr;
 };
 } // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

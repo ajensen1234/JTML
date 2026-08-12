@@ -70,3 +70,6 @@ Joint-Track-Machine-Learning
 docs/html/
 docs/latex/
 Testing/
+
+# Plan 007 U7: qmlprofiler artifacts (traces + reports)
+profiler/

@@ -58,8 +58,12 @@ public:
     static PrimaryModelStyle* New();
     vtkTypeMacro(PrimaryModelStyle, vtkInteractorStyleTrackballActor);
 
-    void SetPrimaryActor(vtkActor* actor) { primary_actor_ = actor; }
+    void SetPrimaryActor(vtkActor* actor, int sceneIndex) {
+        primary_actor_ = actor;
+        primary_actor_index_ = sceneIndex;
+    }
     vtkActor* primaryActor() const { return primary_actor_; }
+    int primaryActorIndex() const { return primary_actor_index_; }
 
 protected:
     void OnLeftButtonDown() override {
@@ -85,15 +89,23 @@ protected:
 
 private:
     vtkActor* primary_actor_ = nullptr;
+    /*Owner fix (2026-08-12): the EndInteraction observer reports the moved
+     * actor's SCENE INDEX with its pose — the previous hardcoded 0 wrote
+     * the drag into whichever model was scene index 0 (dragging the femur
+     * visibly moved the tibia when the tibia was index 0). Kept in sync
+     * with the actor by every SetPrimaryActor caller.*/
+    int primary_actor_index_ = -1;
 };
 
 vtkStandardNewMacro(PrimaryModelStyle);
 
 // Model-style EndInteraction observer (render thread): read the primary
-// actor's transform and post a QUEUED invocation to the GUI thread (the
-// renderer's queueModelPoseSync emits modelPoseAdjusted there — the app
-// writes the pose into LocationStorage + the scene so the optimizer starts
-// from the visually arranged pose). Never touches app state here.
+// actor's transform and report it via the direct by-value signal emit
+// (reportModelPoseAdjusted -> modelPoseAdjusted; AutoConnection queues
+// delivery to GUI-thread receivers). The queued-invokeMethod variant is
+// documented-broken on this stack (see
+// docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md)
+// — do NOT reintroduce it. Never touches app state here.
 void OnModelStyleEndInteraction(
     vtkObject* caller, unsigned long, void* clientData, void*) {
     auto* style = static_cast<PrimaryModelStyle*>(caller);
@@ -109,7 +121,8 @@ void OnModelStyleEndInteraction(
     // Emit from whichever thread the observer runs on: the connections have
     // GUI-thread affinity, so AutoConnection queues the delivery.
     renderer->reportModelPoseAdjusted(
-        0, pos[0], pos[1], pos[2], orient[0], orient[1], orient[2]);
+        style->primaryActorIndex(), pos[0], pos[1], pos[2], orient[0],
+        orient[1], orient[2]);
 }
 
 // The vtkUserData returned by initializeVTK: owns every VTK object in the
@@ -291,7 +304,8 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
         data->modelStyle->SetPrimaryActor(
             (active < 0 || data->models.empty())
                 ? nullptr
-                : data->models[static_cast<size_t>(active)].actor);
+                : data->models[static_cast<size_t>(active)].actor,
+            active);
     }
 }
 
@@ -470,15 +484,16 @@ void QmlVtkRenderer::setActiveModel(int sceneIndex) {
             }
             data->activeModelIndex = sceneIndex;
             vtkActor* actor = nullptr;
+            int active = -1;  // cleared pick: no movable model
             if (sceneIndex >= 0) {
-                const int active = ClampedActiveIndex(
+                active = ClampedActiveIndex(
                     data, static_cast<int>(data->models.size()));
                 data->activeModelIndex = active;  // pin the invariant
                 if (!data->models.empty()) {
                     actor = data->models[static_cast<size_t>(active)].actor;
                 }
             }
-            data->modelStyle->SetPrimaryActor(actor);
+            data->modelStyle->SetPrimaryActor(actor, active);
             (void)renderWindow;
         });
 }

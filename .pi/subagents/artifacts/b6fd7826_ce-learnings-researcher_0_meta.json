@@ -1,0 +1,195 @@
+{
+  "runId": "b6fd7826",
+  "agent": "ce-learnings-researcher",
+  "task": "You are ce-learnings-researcher. Search docs/solutions/ for past learnings that apply to this diff: the queued-functor pose-sync bug (direct signal emits), the render-thread contract, the truncation bug (doubles), the moc signals-section bug, the layered-lib split. Flag where the diff conflicts with or repeats a documented learning (e.g., does the new drag-sync fix still use direct emits? does the harness respect the render-thread contract?).\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 63240,
+    "output": 42098,
+    "cacheRead": 1697024,
+    "cacheWrite": 0,
+    "cost": 0.012696353600000002,
+    "turns": 25
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 63240,
+        "output": 42098,
+        "cacheRead": 1697024,
+        "cacheWrite": 0,
+        "cost": 0.012696353600000002,
+        "turns": 25
+      }
+    }
+  ],
+  "durationMs": 429105,
+  "toolCount": 42,
+  "launchContractDigest": "8ae6b7e67cb02f5308227abf380a93acd70d984dc64a05226b14e752676630b2",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "4 concrete findings returned with file paths, line numbers, severities (2xP2, 2xP3), confidence scores, autofix classes, owners, and direct evidence quotes — full analysis written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-learnings-researcher.json; compact JSON returned in the reply."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/StudyBridge.cpp",
+        "src/app/experimental/PoseBridge.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.h",
+        "src/app/experimental/FileDialogBridge.h",
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/compute/gpu_heatmaps.cu",
+        "src/compute/gpu_metrics.cu",
+        "src/compute/curvature_hausdorf_metric.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "test/qml/main.cpp",
+        "test/qml/tests.qrc",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/CMakeLists.txt",
+        "test/qml_lint.cmake",
+        "test/unit/experimental_selection_test.cpp",
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "pixi.toml",
+        ".gitignore",
+        "docs/solutions/conventions/jtml-qml-view-testing-2026-08-12.md",
+        "docs/solutions/ui-bugs/jtml-qml-trace-driven-debugging-2026-08-12.md"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @ (targeted file sets)",
+          "result": "passed",
+          "summary": "Diffed all named review files: QmlVtkRenderer.cpp, bridges, gpu_heatmaps.cu, gpu_metrics.cu, optimizer_manager.cpp, test/qml harness, test/CMakeLists.txt, pixi.toml, .gitignore, docs"
+        },
+        {
+          "command": "grep -rn 'invokeMethod' src/app/experimental",
+          "result": "passed",
+          "summary": "Zero matches — queued-functor pattern fully absent; direct-emit retained"
+        },
+        {
+          "command": "grep signals:/public:/private: ordering in all src/app/experimental headers",
+          "result": "passed",
+          "summary": "All 7 modified Q_OBJECT headers keep signals: last — moc trap not re-triggered"
+        },
+        {
+          "command": "grep -rn 'CurvatureHeatmapMetric|gpu_heatmaps_|GetDeviceHeatmapPointer' src/",
+          "result": "passed",
+          "summary": "CurvatureHeatmapMetric has zero call sites (dead code); only live consumer reads GetNumKeypoints for AllocateCurvatureHausdorfScore"
+        },
+        {
+          "command": "read docs/solutions (12 files, incl. 2 new 08-12 entries) + cross-check claims vs code",
+          "result": "passed",
+          "summary": "New convention entry claims verified accurate (headless/no-VTK/Material/sole-runner, qmllint accepted ids, profiling tasks, .gitignore)"
+        }
+      ],
+      "validationOutput": [
+        "Drag-sync fix conforms to the 2026-08-11 queued-functor learning: direct reportModelPoseAdjusted emit, AutoConnection thread-hop, all SetPrimaryActor callers updated with pinned clamped index (QmlVtkRenderer.cpp:301, 489).",
+        "Harness conforms to render-thread contract: no VTK/bridges/jtml libs, offscreen env, ViewportPanel absent from tests.qrc (VTK territory).",
+        "No double-narrowing added (truncation learning clean): setPoseValue parses to double with finite check; bit-exact double pins exist.",
+        "Layered-lib conventions hold: explicit sources in test/CMakeLists.txt, no new compute/coordinator files, no GLOB exposure.",
+        "QML gotchas honored: StudyPanel.qml:109 list-id click fix, model.x role access (FINAL-prop collision avoided), attached ListView.onPooled/onReused with declaration, mouse-path pins present."
+      ],
+      "residualRisks": [
+        "Oracle render smoke (not in this diff) is the only full drag-sync path coverage; no non-zero-index drag leg verified there.",
+        "0-keypoint heatmap contract untested (GPU-bound; oracle candidate).",
+        "Contradictory commit-on-pool comments (PosesTable.qml:19-22 vs 223-229) risk a future maintainer removing the onPooled flush."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 QML improvement pass: theme tokens + component extraction, view-state gap fixes (PoseCell commit contract, refresh owner, ML-seed invalidation, run-lock), virtualization + commit-on-pool, Qt Quick Test harness, profiling tasks, owner-feedback fixes (drag-sync scene index, heatmap 0-keypoint guards, frame-picker mouse path), 2 new docs/solutions entries.",
+      "reviewFindings": [
+        "P2: src/app/experimental/QmlVtkRenderer.cpp:103 - pre-existing stale comment prescribes the documented-broken queued-functor pattern on the drag-sync observer (100% confidence, safe_auto, review-fixer)",
+        "P2: src/app/experimental/PosesTable.qml:19 - header comment contradicts the file's own onPooled flush and the documented Qt 6.7 pooling learning (100% confidence, safe_auto, review-fixer)",
+        "P3: test/unit/experimental_selection_test.cpp:447 - drag-sync scene-index fix unpinned: all applyViewerPose tests pass index 0, no multi-model/non-zero-index or name-match-divergence pin (75%, manual, downstream-resolver)",
+        "P3: src/compute/gpu_metrics.cu:98 - 0-keypoint guards sound for the live upload path, but sole consumer CurvatureHeatmapMetric is dead code that would hit the same NULL-buffer crash class if wired (75%, advisory, downstream-resolver)"
+      ],
+      "manualNotes": "No critical-patterns.md exists in this repo (skipped per convention). All conformance checks used the live diff (jj ywpkloqo..@), not the changed-file list alone. Artifact written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-learnings-researcher.json."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/b6fd7826_ce-learnings-researcher_0_transcript.jsonl",
+  "timestamp": 1786553170843
+}

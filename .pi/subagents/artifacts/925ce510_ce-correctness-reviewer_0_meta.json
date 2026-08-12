@@ -1,0 +1,188 @@
+{
+  "runId": "925ce510",
+  "agent": "ce-correctness-reviewer",
+  "task": "You are ce-correctness-reviewer. Logic errors, edge cases, state bugs, error propagation. Focus: the U3 view-state fixes (PoseCell commit contract capture-at-edit-start + Qt.binding restore; PoseBridge refresh owner wiring; D4 seed invalidation paths incl. copy/load; run-lock matrix completeness; dataset-swap guard), the U5 commit-on-pool mechanism (edited flag + ListView.onPooled flush), the heatmap 0-keypoint guard chain (GPUHeatmap ctor -> AllocateCurvatureHausdorfScore -> optimizer_manager), the drag-sync index plumbing, and the FileDialogBridge QSettings MRU logic.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 120251,
+    "output": 85230,
+    "cacheRead": 12675968,
+    "cacheWrite": 0,
+    "cost": 0.038096125199999976,
+    "turns": 104
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 120251,
+        "output": 85230,
+        "cacheRead": 12675968,
+        "cacheWrite": 0,
+        "cost": 0.038096125199999976,
+        "turns": 104
+      }
+    }
+  ],
+  "durationMs": 1243713,
+  "toolCount": 126,
+  "launchContractDigest": "31d9d33499aa24ef71969d68a39b0f3857fb3951040aa92870dd559f39961b27",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "7 concrete findings returned with file paths, line numbers, severities (3×P2, 4×P3), confidence scores, autofix classes, owners, and direct evidence quotes; artifact written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-correctness-reviewer.json (validated as JSON: 7 findings, 8 residual risks, 7 testing gaps)"
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/SettingsPanel.qml",
+        "src/app/experimental/MlBridge.cpp",
+        "src/compute/gpu_metrics.cu",
+        "src/compute/gpu_heatmaps.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/FakePoseBridge.qml"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @",
+          "result": "passed",
+          "summary": "Full 15.8k-line diff read in chunks; all focus-area files examined in current state"
+        },
+        {
+          "command": ".build/bin/jtml_test_qml_view (QT_QPA_PLATFORM=offscreen)",
+          "result": "passed",
+          "summary": "Existing harness: 38 passed, 0 failed, 3291ms — confirms landed state of U6 pins"
+        },
+        {
+          "command": "qml6 probe /tmp/probe3.qml (real components, 500-row model, offscreen)",
+          "result": "passed",
+          "summary": "Proved focus retention through pool+reuse and stale (-1,-1,-1) tuple after reuse (F1 mechanism)"
+        },
+        {
+          "command": "qml6 probe /tmp/probe5.qml (PosesDialog mid-edit close)",
+          "result": "passed",
+          "summary": "Refuted the mid-edit-close drop hypothesis: editingFinished commits ([[0,0,0,42.5]]) before Loader teardown"
+        },
+        {
+          "command": "qmltestrunner /tmp/ktest (ListView key navigation probe)",
+          "result": "passed",
+          "summary": "Confirmed focused-delegate Down/Up moves currentIndex (D7 list keyboard works)"
+        },
+        {
+          "command": "pixi run python3 json validation of the artifact",
+          "result": "passed",
+          "summary": "Artifact is valid JSON with expected counts"
+        }
+      ],
+      "validationOutput": [
+        "F1 (P2): stale-tuple-after-recycle typing path probe-verified — activeFocus true while pooled AND after reuse to another row; tuple cleared to -1,-1,-1; real bridge bounds check rejects (frame<0) so no corruption, but typed value is silently lost with a confusing validation message",
+        "F2 (P2): D7/U4 pose-table cell keyboard contract (arrows, Esc-revert, single tab stop) absent from PosesTable/PoseCell; plan lines 244/659 and U6 scenario (e) require it",
+        "F3 (P2): GPUMetrics ctor never initializes the two curvature pointers; new AllocateCurvatureHausdorfScore(0) no-op + unconditional destructor cudaFree makes the no-segmentation teardown free indeterminate pointers (previously the run aborted before GPUMetrics existed)",
+        "F4 (P3, pre-existing): SettingsPanel inline bindings die on first interaction; Reset leaves the form desynced from the bridge",
+        "F5 (P3): tst_PosesTable comment contradicts the landed commit-on-pool mechanism (probe disproves focus-loss ordering)",
+        "F6 (P3): FakePoseBridge accepts '12.5abc'/'Infinity' the real bridge rejects",
+        "F7 (P3): ML estimate writes storage outside the D3 refresh-owner triggers — open pose table shows stale value"
+      ],
+      "residualRisks": [
+        "F1 likelihood depends on pool scheduling re-inserting the focus-carrying delegate visibly (mechanism itself probe-proven)",
+        "cudaFree-of-indeterminate-pointer impact is driver-dependent (error vs crash) — UB either way",
+        "Pre-existing GPU error-path double-free and per-stage alloc leak (gpu_heatmaps.cu, gpu_metrics.cu)",
+        "SettingsPanel Reset desync (pre-existing) also affects combos and enable checkboxes"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Review-only pass over plan 007 (U1-U7 + 2 owner-feedback rounds): 7 findings (3×P2, 4×P3), zero P0/P1; the commit-on-pool, D3 refresh owner, D4 seed invalidation, run-lock matrix, drag-sync index plumbing, dataset-swap guard, and FileDialogBridge MRU logic were verified correct; the heatmap 0-keypoint guard chain is sound except for the GPUMetrics teardown trap",
+      "reviewFindings": [
+        "P2: PoseCell.qml:101 - stale (-1,-1,-1) commit tuple after recycle with retained focus; typing without clicking loses the edit (probe-verified)",
+        "P2: PosesTable.qml:107 - D7 pose-table cell keyboard contract never landed",
+        "P2: gpu_metrics.cu:97 - uninitialized curvature pointers freed at teardown in the newly-enabled no-segmentation run",
+        "P3: SettingsPanel.qml:119 - Reset desync via dead inline bindings (pre-existing)",
+        "P3: tst_PosesTable.qml:94 - comment misdocuments the commit-on-pool mechanism",
+        "P3: FakePoseBridge.qml:27 - over-accepts values the real bridge rejects",
+        "P3: MlBridge.cpp:386 - pose table stale after ML estimate",
+        "No blockers in: commit-on-pool flush ordering, D3 refresh triggers incl. stop path, D4 invalidation (all 5 paths), run-lock matrix (complete), drag-sync scene index (pair-consistent at all SetPrimaryActor sites), dataset-swap guard, FileDialogBridge MRU"
+      ],
+      "manualNotes": "Behavioral verification was done with throwaway probes in /tmp using the real shipped components (qml6 6.7.2, offscreen) — no repo files were modified; the existing harness binary was run read-only. Probe outputs are quoted in the artifact's evidence arrays."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/925ce510_ce-correctness-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553985196
+}

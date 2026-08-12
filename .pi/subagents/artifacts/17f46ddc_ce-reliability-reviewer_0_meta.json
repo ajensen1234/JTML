@@ -1,0 +1,173 @@
+{
+  "runId": "17f46ddc",
+  "agent": "ce-reliability-reviewer",
+  "task": "You are ce-reliability-reviewer. Error handling, failure paths, cleanup: GPUHeatmap ctor guard (does the 0-keypoint early-return leak anything? dev_heatmap_ init order vs destructor cudaFree), AllocateCurvatureHausdorfScore guard + destructor with unallocated pointers, the dirty-close guard logic (discardConfirmed reset paths), the optimizer run-state machine after a heatmap-less run errors, FileDialogBridge QSettings write failures.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 96682,
+    "output": 45680,
+    "cacheRead": 5000064,
+    "cacheWrite": 0,
+    "cost": 0.0201630296,
+    "turns": 60
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 96682,
+        "output": 45680,
+        "cacheRead": 5000064,
+        "cacheWrite": 0,
+        "cost": 0.0201630296,
+        "turns": 60
+      }
+    }
+  ],
+  "durationMs": 550046,
+  "toolCount": 71,
+  "launchContractDigest": "ea6df09975fcb37a11cdfc1561446b2247ae83908ef549409eded43aa476e3c2",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "5 concrete findings written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-reliability-reviewer.json, each with file, line, severity, confidence, autofix_class, owner, requires_verification, pre_existing, why_it_matters, and direct evidence quotes. Headline: P1 — GPUMetrics dtor (gpu_metrics.cu:86,94) frees curvature_hausdorf_score_/dev_curvature_hausdorf_score_ that the new 0-keypoint guard (gpu_metrics.cu:102-104) leaves uninitialized (ctor at 13-77 never writes them; header members at gpu_metrics.cuh:132-133 have no initializers) — a regression introduced by the diff on the now-nominal heatmap-less path. Also verified clean: GPUHeatmap 0-keypoint guard leaks nothing; optimizer run-state machine handles heatmap-less runs; discardConfirmed reset paths complete; drag-sync index fix consistent."
+        }
+      ],
+      "changedFiles": [
+        "src/compute/gpu_metrics.cu",
+        "src/compute/gpu_heatmaps.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/StudyBridge.cpp",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/QmlVtkRenderer.cpp"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @ -- <scoped file sets>",
+          "result": "passed",
+          "summary": "Full diff reviewed for compute, coordinator, and experimental QML files"
+        },
+        {
+          "command": "grep/read of gpu_metrics.cu, gpu_heatmaps.cu, gpu_metrics.cuh, gpu_heatmaps.cuh, optimizer_manager.cpp, optimizer_run_controller.cpp/.h, optimizer_run_driver.cpp, DIRECT_DILATION.cpp, curvature_hausdorf_metric.cu, frame.cu, curvature_utilities.cpp, location_storage.cpp, main.qml, PosesDialog.qml, RunBar.qml, MlStrip.qml, ViewportPanel.qml, StudyPanel.qml, PoseCell.qml, QmlVtkRenderer.cpp, StudyBridge.cpp, MlBridge.cpp, FileDialogBridge.cpp",
+          "result": "passed",
+          "summary": "Traced ctor/dtor init order, run-state machine, discard-confirm flows, QSettings paths, and drag-sync index consistency"
+        },
+        {
+          "command": "python json.load on the artifact file",
+          "result": "passed",
+          "summary": "Artifact is valid JSON with 5 findings"
+        }
+      ],
+      "validationOutput": [
+        "GPUHeatmap ctor: dev_heatmap_=0 set before the 0-keypoint early return; dtor cudaFree(0) is a no-op; NO leak — guard verified safe",
+        "GPUMetrics: ctor never initializes curvature_hausdorf_score_/dev_curvature_hausdorf_score_; new guard leaves them indeterminate; dtor frees them unconditionally -> P1 UB on every heatmap-less run teardown",
+        "Run-state machine: pre-fix Initialize-failure path verified handled (ghost thread, M6 bind, M10a seed restore, Error state); post-fix 0-kp runs complete cleanly; no stuck state",
+        "Dirty-close guard: discardConfirmed reset on every onOpened in both dialogs; RunBar sets both before close; reset paths complete; Yes-doesn't-discard is a semantics gap (P3)",
+        "FileDialogBridge: QSettings status() never checked, no sync -> silent persistence failures (P3)",
+        "Drag-sync fix: SetPrimaryActor keeps actor+index atomic; consumers bounds-check; verified consistent"
+      ],
+      "residualRisks": [
+        "P1 GPUMetrics dtor UB on the 0-keypoint path (fix: nullptr-init in ctor/header)",
+        "Guard asymmetry (keypoints>0 + empty buffer) re-enters the pre-fix abort if a future writer desyncs Frame state",
+        "Transient per-frame heatmap buffer copy on the GUI thread during Initialize",
+        "Silent QSettings persistence failures",
+        "Discard-confirm semantics: Yes keeps changes live; next run consumes them"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 QML front-end improvement pass (component extraction, run-lock matrix, dirty-close guard, pose-table refresh owner, ML-seed invalidation) plus owner-requested heatmap-less optimizer run fix (GPUHeatmap 0-keypoint guard, AllocateCurvatureHausdorfScore guard, OptimizerManager skip-if-empty) and FileDialogBridge per-purpose dir memory",
+      "reviewFindings": [
+        "blocker(P1): src/compute/gpu_metrics.cu:102 - new 0-keypoint guard leaves curvature_hausdorf_score_/dev_curvature_hausdorf_score_ uninitialized; dtor (lines 86/94) frees them unconditionally on every heatmap-less run teardown",
+        "P3: src/coordinator/optimizer_manager.cpp:710 - guard asymmetry vs ctor keypoint-count guard",
+        "P3: src/coordinator/optimizer_manager.cpp:704 - full by-value heatmap buffer copy on GUI thread",
+        "P3: src/app/experimental/FileDialogBridge.cpp:54 - silent QSettings write failures",
+        "P3: src/app/experimental/main.qml:147 - 'Discard' Yes path discards nothing; run consumes the changes"
+      ],
+      "manualNotes": "Verified clean (no finding): GPUHeatmap 0-keypoint guard leaks nothing; optimizer run-state machine handles heatmap-less runs and Initialize-failure ghosts; discardConfirmed reset paths are complete in both dialogs; drag-sync scene-index fix keeps actor+index atomic with bounds-checked consumers. P1 fix is a two-line nullptr init (safe_auto) but needs a CUDA build + a compute-sanitizer pass on a real heatmap-less study since headless tests cannot touch GPU."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/17f46ddc_ce-reliability-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553291887
+}

@@ -1,0 +1,221 @@
+{
+  "runId": "61262d05",
+  "agent": "ce-api-contract-reviewer",
+  "task": "You are ce-api-contract-reviewer. The QML-callable surfaces: OptimizerBridge.h (hasSeedPose/clearSeedPose additions), PoseBridge.h (refreshTable), MlBridge (hasSegmentModel), FileDialogBridge signature change (purpose param — QML call sites updated in main.qml?), AppBridge.cpp wiring, the qmldir entries (new component registrations), resources.qrc completeness (every new .qml listed?), and whether any pinned bridge test or the parity path depends on a changed signature.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 104011,
+    "output": 47508,
+    "cacheRead": 7134336,
+    "cacheWrite": 0,
+    "cost": 0.023919960399999995,
+    "turns": 76
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 104011,
+        "output": 47508,
+        "cacheRead": 7134336,
+        "cacheWrite": 0,
+        "cost": 0.023919960399999995,
+        "turns": 76
+      }
+    }
+  ],
+  "durationMs": 613265,
+  "toolCount": 95,
+  "launchContractDigest": "f8d0b7ac8fe8cd6788d7830bae3c3d5f8960f1f46539e4edc3ad02db6ad7afc6",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "5 findings with file paths, line numbers, severities (2x P2, 3x P3), confidence anchors, and direct evidence quotes written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-api-contract-reviewer.json; residual_risks and testing_gaps populated; headless verification runs: jtml_test_experimental_pose_bridge (12/12), jtml_test_experimental_ml_bridge (11/11), jtml_test_qml_view (38/38), qmllint gate PASSED"
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/OptimizerBridge.h",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/PoseBridge.h",
+        "src/app/experimental/PoseBridge.cpp",
+        "src/app/experimental/FileDialogBridge.h",
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/qmldir",
+        "src/app/experimental/resources.qrc",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/Theme.qml",
+        "src/compute/gpu_heatmaps.cu",
+        "src/compute/gpu_metrics.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "test/qml/FakeOptimizerBridge.qml",
+        "test/qml/FakePoseBridge.qml",
+        "test/qml/FakeMlBridge.qml",
+        "test/qml/FakeStudyBridge.qml",
+        "test/qml/FakeSettingsBridge.qml",
+        "test/qml/FakeAppBridge.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_SettingsPanel.qml",
+        "test/qml/tst_Theme.qml",
+        "test/qml/main.cpp",
+        "test/qml/tests.qrc",
+        "test/qml/qmldir",
+        "test/qml/components-qmldir",
+        "test/qml_lint.cmake",
+        "test/CMakeLists.txt",
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "test/unit/experimental_ml_bridge_test.cpp",
+        "pixi.toml"
+      ],
+      "testsAddedOrUpdated": [
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "test/unit/experimental_ml_bridge_test.cpp",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_SettingsPanel.qml",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/tst_Theme.qml"
+      ],
+      "commandsRun": [
+        {
+          "command": "QT_QPA_PLATFORM=offscreen .build/bin/jtml_test_experimental_pose_bridge",
+          "result": "passed",
+          "summary": "12/12 test cases, 133 assertions — incl. new D3 refresh + D4 seed-invalidation pins"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen .build/bin/jtml_test_experimental_ml_bridge",
+          "result": "passed",
+          "summary": "11/11 test cases, 91 assertions — incl. D4 pose-table-edit-drops-seed pin"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen QT_QUICK_CONTROLS_STYLE=Material .build/bin/jtml_test_qml_view",
+          "result": "passed",
+          "summary": "38 passed, 0 failed — virtualization, commit-on-pool, run-lock, dataset-swap, theme pins"
+        },
+        {
+          "command": "cmake -P test/qml_lint.cmake (Qt 6.7.2 qmllint)",
+          "result": "passed",
+          "summary": "qmllint gate PASSED (only documented-accepted warnings)"
+        },
+        {
+          "command": "QT_QPA_PLATFORM=offscreen timeout 25 .build/bin/jtml_experimental",
+          "result": "passed",
+          "summary": "App boots to GL init with zero QML type-resolution errors (GL unavailable on this box — GLEW errors expected); all extracted components resolve"
+        }
+      ],
+      "validationOutput": [
+        "qmldir: all 6 new components registered, matching resources.qrc (all 10 .qml files present incl. main.qml; renderer.qml in renderer.qrc) — complete",
+        "FileDialogBridge: all call sites updated (main.qml:69 'images', :85 'models'); no C++ callers; default purpose arg backward-compatible",
+        "hasSeedPose/refreshTable: additive surfaces; hasSeedPose relays pre-existing controller core state; refreshTable emits only modelReset (never poseTableChanged) so D3 refresh cannot clear a pending seed",
+        "QmlVtkRenderer: both SetPrimaryActor call sites pass the index; cleared-pick path reports -1 which applyViewerPose guards; oracle smoke lambda ignores the index",
+        "D4 wiring: poseTableChanged emitted only from genuine mutation paths (setPoseValue/copy/load, never save/refresh) — seed invalidation is precise and pinned",
+        "Parity/render-smoke binaries postdate all changed sources (12:08:26 / 12:09:10 vs latest source 12:08:51) — code under test includes every contract change",
+        "App-side SettingsPanel qmllint/runtime resolution confirmed despite absence from app qmldir (pre-existing directory-import behavior)"
+      ],
+      "residualRisks": [
+        "jtml.qml_parity_check (IoU 0.993627) and jtml.qml_render_smoke require GPU/xcb and were not re-run in this environment; binaries are current with all sources",
+        "D3 run-state leg (AppBridge.cpp:84) is attested by inspection only — not headlessly drivable without a controller seam",
+        "Commit-on-modelReset for a mid-edit cell during a concurrent viewer drag (modal:false dialog) is unverified",
+        "FileDialogBridge MRU logic has zero test coverage and writes the real user QSettings"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007: bridge surface additions (OptimizerBridge::hasSeedPose, PoseBridge::refreshTable), AppBridge D3/D4 wiring (terminal-state + drag table refresh, manual-pose-write seed invalidation), FileDialogBridge purpose-keyed MRU (signature extended with default), QmlVtkRenderer drag-sync scene-index fix, heatmap 0-keypoint guards in gpu_heatmaps/gpu_metrics/optimizer_manager, qmldir+qrc registrations for 6 extracted components, 38-function Qt Quick Test harness with fake bridges, qmllint gate, profiling build tasks",
+      "reviewFindings": [
+        "P2: FileDialogBridge.cpp:20 — purpose/MRU surface is the only bridge with zero headless coverage; real-user-config QSettings; magic purpose strings",
+        "P2: QmlVtkRenderer.cpp:121 — modelPoseAdjusted index semantics changed 0->real (correct owner fix; all consumers verified; render smoke re-run pending)",
+        "P3: test/qml/FakeOptimizerBridge.qml:9 — hasSeedPose/seed surface missing from fake (documented subset; nothing enforces parity)",
+        "P3: AppBridge.cpp:84 — D3 terminal-state refresh leg pinned nowhere (wiring correct by inspection)",
+        "P3: PosesTable.qml:139 — modelReset can destroy a mid-edit cell during concurrent drag; commit-on-destroy unverified; contradictory onPooled-ordering comments"
+      ],
+      "manualNotes": "No blockers found — all bridge surface changes are additive or owner-requested fixes with verified consumers; the two P2s are verification/testing obligations, not defects. Parity constraint (IoU 0.993627) is code-consistent (binary timestamps) but needs a GPU/xcb re-run by the oracle owner. The qmllint-run app boot also incidentally confirmed the pre-existing SettingsPanel resolution question."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/61262d05_ce-api-contract-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553355226
+}

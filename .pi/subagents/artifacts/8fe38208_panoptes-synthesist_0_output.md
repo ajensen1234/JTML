@@ -1,0 +1,15 @@
+The synthesis is verified complete and structurally intact. Final response:
+
+## Task result
+
+**Artifact written:** `/home/ajj/repo/uf/JTML/.panoptes/optimizer-deep-dive/synthesis.org` (via `panoptes_write_artifact`, run `i-want-to-deepen-the-optimization-angle-here-both-in-terms-o-mspdhzo444m4`)
+
+**8-line delta summary:**
+1. Header bumped to `ROUND: 3 (wave 1 complete)`; angles 01–04 now carry `## Round 3` sections grounded in Zotero primary texts, 05–06 remain round-2 complete (noted explicitly).
+2. New `* Round 3 Updates (wave 1)` section added after the Round-2 section: per-angle deltas (01–04), 14 one-line resolutions, and a "what wave 1 added" fold-in list — preserving the existing structure, not rewriting it.
+3. RESOLVED contradictions recorded: **Mahfouz normalization** (paper confirms structure incl. 3-px band + negative weights; numeric weights unextractable → kernel-as-spec keeps 2.55/×255/−2.67/−1), **three-way dilation** (Flood verbatim: leaf=1 unanimous, trunk 6 = tibia value on a femur, both 6/4/1 and 6/3/1 violate branch=trunk−4; ablation now tests {10,6,1},{6,2,1},{6,4,1},{6,3,1} + bilateral-vs-render-only semantics), **GLh formula** (Eqs. 3–6 with selection-time d̃ = d/√n, f̃=1 flat case, 1e-6 recompute, Definition-1 feasibility).
+4. Verdict-changing findings folded into Key Findings: new Finding 12 (oracle cost target = dilated Canny frame, not the label — Canny 3/0/150-vs-40/120-vs-30/80 is cost-load-bearing; single-variable re-baseline), Finding 13 (DIRECT-JTA lineage primary-text verified → staged basin-capture battery metric), Finding 14 (z-stage budget first-class, Yamazaki z-polish, SOTA benchmarks), plus Round-3 sub-bullets in Findings 1/3/4/8.
+5. Contradiction 1 upgraded to RESOLVED (three-way, against Flood 2018); Contradiction 5 corroborated by LEAP; three new Round-3 contradiction entries (Canny three-way, Flood's dilation-semantics inconsistency, ε=0 performance-vs-convergence nuance).
+6. Dependency-ordered execution path updated in place: dilation-schedule ablation now tests lineage configs + semantics axis; multi-stage oracle's z-stage budget is first-class (z_leaf_budget × z-range axes, flood-direct-jta shape with 145k caps, ψ/trap-incidence measurement on the tibia pass); probe gains yamazaki-polynomial + coupling modes; battery gains ε-arm, DIRECT-l arm, DGO protocol (two-tier ε_pe, data profiles, 13/80 caveat, Emmental-GKLS); Cut 0 record gains the lineage-throughput reconciliation; polish z-arm = Yamazaki decoupled z-polish.
+7. Per-Angle Summaries 01–04 and Methodology updated with Round-3 wave-1 content; Open Questions updated (Mahfouz/dilation entries resolved, new ψ-distribution / Canny-halo / S3≥S1-ordering items).
+8. All citations preserved and carried from the angle files (corpus paths + source file:line); every Round-3 claim links back to its angle report; corrections to earlier prose flagged explicitly (oracle cost-target, ε=0 framing, gb attribution, dilation status).

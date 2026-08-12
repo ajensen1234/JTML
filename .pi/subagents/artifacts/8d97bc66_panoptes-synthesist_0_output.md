@@ -1,0 +1,18 @@
+The updated synthesis.org is in place with all required sections, and the run phase is confirmed complete (6/6 angles done). Final report follows.
+
+## Deliverable
+
+**File written:** `/home/ajj/repo/uf/JTML/.panoptes/optimizer-deep-dive/synthesis.org` (full overwrite via `panoptes_write_artifact`, run `i-want-to-deepen-the-optimization-angle-here-both-in-terms-o-mspdhzo444m4`)
+
+## Final summary (10 lines — the whole round-3 delta)
+
+1. **All six angles now carry Round-3 sections grounded in Zotero primary texts; the run's research phase is marked complete** (`#+ROUND: 3 (final)`, `#+STATUS: complete`; the artifact tool confirmed phase: complete, 6/6 angles done).
+2. **New `* Round 3 Updates (wave 2)` section** records the final-wave deltas for angles 05–06 with per-angle subsections, a one-line resolutions list (7 new resolutions), and the fold-in summary — the wave-1 section's stale "wave 2 not planned" sentence is fixed.
+3. **Finding 15 (perf sanity baseline):** Flood's ~3,000 evals/s / 333 µs-per-eval on a 2018 GTX 970 is the verified cross-era parity line; Abdellah's same-GPU volumetric DRRs (25–67 ms) show silhouette evals are ~2 orders cheaper; JTML's implied ≥95% host-block fraction is now falsifiable (GPU-active > 1 ms at Cut 0 inverts the cut order), with pre-registered evals/s bands (Cut 1 → 60–300; Cut 2 → 1,000–5,000; parity 3,000), a Cut-5 kernel-fusion contingency, fast-DRR-family verdicts (bindless DEFER; block-projection/splatting NO-GO for bit-identity; resolution arm ARM-ABLE with the 50%/75% cliff), and Cut 4's wall-clock cross-check gate.
+4. **Finding 16 (simplex-polish arm):** the Mahfouz primary text (7-point NM simplex, SA dropped per the T=0 control) upgrades the arbitration to a FOUR-arm study — D (plain NM on the chamfer surrogate, ~150–200 host lines, zero new kernels) makes C-vs-D the cleanest isolate of the gradient's marginal value, and D ≈ C ≈ B is a now-distinguishable honest null.
+5. **Finding 17 (pull-list re-rank):** 8 → 3 (arXiv:1906.07870, Veriserum, NVDiffrast repo); SoftRas/Modular Primitives/DiffDRR/LEAP/Gablonsky are in-library; two open items resolved in-paper (z/w no-gradient policy L558-560; the "4×4" tiny-image stress test); Yamazaki is geometry/curve-fit, confirming the z-depth NO-GO and upgrading the polish z-arm to the decoupled focus→COG fit.
+6. **Wave-2 sub-bullets folded into Findings 4/5/6** (focus→COG ray + Mahfouz corroboration of the z doctrine; Cut 0 items 9–10 + falsification threshold + resolution arm + Dorgham/Flood antecedents; four-arm study + DiffDRR boundary confirmation + corpus survey).
+7. **Contradictions updated:** Contradiction 6 now carries the four-arm design; Contradiction 3 extended (fast-DRR NO-GOs are determinism-bounded); 5 new wave-2 open questions added (1 ms verdict, launch-overhead state, C-vs-D direction, jagged-curve transfer, off-axis angle).
+8. **Execution path finalized:** steps 2 (probe direction = focus→COG ray), 7 (primary-text-anchored cut gates, Cut-5 contingency, resolution arm, Cut-4 cross-check), and 8 (four-arm study, arm-D spec, Yamazaki z-arm, 3-item pull list) updated; step 4 gains the render-resolution axis; standing rules extended with the parity-line/1-ms/50%-cliff anchors.
+9. **Per-angle summaries 5 and 6 and the Methodology** updated for the final wave, with the full corpus-text list and the wave-2 synthesis method recorded.
+10. **All evidence preserved:** every claim carries its source angle + file:line + primary-text locators (Flood L568-574, Modular Primitives L558-560, Mahfouz L451-491/L597-602, Yamazaki L104-107, etc.); all six per-angle summaries link to their files via org links.

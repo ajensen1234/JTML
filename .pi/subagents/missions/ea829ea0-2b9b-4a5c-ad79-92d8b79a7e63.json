@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "ea829ea0-2b9b-4a5c-ad79-92d8b79a7e63",
+  "title": "Resume your U6 work. Good progress: the harness builds and 31/35 tests pass. Four failures remain...",
+  "objective": "Resume your U6 work. Good progress: the harness builds and 31/35 tests pass. Four failures remain — fix them efficiently and move fast:\n1. qml_view::SettingsPanel::test_scaleCommitsTwoDecimals — trunkRangeX compare fails (you were mid-debug).\n2. qml_view::SettingsPanel::test_saveAndResetReachBridge — saveCalls property compare fails.\n3. qml_view::PosesTable::test_commitOnPoolMidEdit — commit-on-pool pin: typed value did not land on row 3.\n4. qml_view::PosesTable::test_rejectedCommitSurvivesRecycle — verify() false: binding-alive pin.\n\nSpeed directives:\n- Run the failing tests in isolation first: QT_QPA_PLATFORM=offscreen QT_QUICK_CONTROLS_STYLE=Material .build/bin/jtml_test_qml_view <TestCase>::<testFunction> — iterate on ONE failure at a time.\n- Distinguish test-harness bugs from product bugs: if the component behavior is correct and the TEST is wrong (wrong fake surface, wrong event simulation), fix the test. If the component is wrong, fix the component. Either is fine — the pins must pass.\n- SettingsPanel SpinBox scale test hint: the x100 SpinBox commits value/100 on onValueModified; if the fake's property is a JS property on a QtObject, binding updates do not notify — the fake may need signal-based properties or the assertion needs tryCompare.\n- PosesTable recycle tests hint: verify the fake model emits proper modelReset/dataChanged; ListView pooling requires the model to signal row removal. If simulating scroll+pool is flaky, drive the pool directly via positionViewAtIndex to force eviction.\n- Do not rewrite passing tests. Do not gold-plate. Get 35/35 green, run the full headless suite (pixi run test) + the lint gate, then write your acceptance report.\nConstraints unchanged: no git/jj, no staging/committing; scope = src/app/experimental/** QML + test/qml/** + test/CMakeLists.txt; no bridge/C++ changes.",
+  "status": "completed",
+  "createdAt": "2026-08-12T15:19:52.189Z",
+  "updatedAt": "2026-08-12T15:30:43.356Z",
+  "runs": [
+    {
+      "runId": "48d0f63a-7829-40d3-8608-10685660a3bd",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/48d0f63a-7829-40d3-8608-10685660a3bd",
+      "status": "complete",
+      "startedAt": "2026-08-12T15:19:52.191Z",
+      "completedAt": "2026-08-12T15:30:43.356Z"
+    }
+  ],
+  "workflowChildren": [
+    {
+      "workflowRunId": "48d0f63a-7829-40d3-8608-10685660a3bd",
+      "key": "u6-resume",
+      "status": "completed",
+      "startedAt": "2026-08-12T15:19:52.251Z",
+      "updatedAt": "2026-08-12T15:30:43.338Z",
+      "artifactPaths": [
+        "/tmp/pi-subagents-uid-1000/async-subagent-runs/14b242bc",
+        "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T14-48-28-894Z_019ff672-39de-7cf4-8437-a02bdf255d86.jsonl"
+      ],
+      "runId": "14b242bc",
+      "agent": "worker",
+      "task": "Resume your U6 work. Good progress: the harness builds and 31/35 tests pass. Four failures remain — fix them efficiently and move fast:\n1. qml_view::SettingsPanel::test_scaleCommitsTwoDecimals — trunkRangeX compare fails (you were mid-debug).\n2. qml_view::SettingsPanel::test_saveAndResetReachBridge — saveCalls property compare fails.\n3. qml_view::PosesTable::test_commitOnPoolMidEdit — commit-on-pool pin: typed value did not land on row 3.\n4. qml_view::PosesTable::test_rejectedCommitSurvivesRecycle — verify() false: binding-alive pin.\n\nSpeed directives:\n- Run the failing tests in isolation first: QT_QPA_PLATFORM=offscreen QT_QUICK_CONTROLS_STYLE=Material .build/bin/jtml_test_qml_view <TestCase>::<testFunction> — iterate on ONE failure at a time.\n- Distinguish test-harness bugs from product bugs: if the component behavior is correct and the TEST is wrong (wrong fake surface, wrong event simulation), fix the test. If the component is wrong, fix the component. Either is fine — the pins must pass.\n- SettingsPanel SpinBox scale test hint: the x100 SpinBox commits value/100 on onValueModified; if the fake's property is a JS property on a QtObject, binding updates do not notify — the fake may need signal-based properties or the assertion needs tryCompare.\n- PosesTable recycle tests hint: verify the fake model emits proper modelReset/dataChanged; ListView pooling requires the model to signal row removal. If simulating scroll+pool is flaky, drive the pool directly via positionViewAtIndex to force eviction.\n- Do not rewrite passing tests. Do not gold-plate. Get 35/35 green, run the full headless suite (pixi run test) + the lint gate, then write your acceptance report.\nConstraints unchanged: no git/jj, no staging/committing; scope = src/app/experimental/** QML + test/qml/** + test/CMakeLists.txt; no bridge/C++ changes.",
+      "completedAt": "2026-08-12T15:30:43.338Z",
+      "sessionPath": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T14-48-28-894Z_019ff672-39de-7cf4-8437-a02bdf255d86.jsonl",
+      "heartbeat": {
+        "updatedAt": "2026-08-12T15:30:43.338Z",
+        "status": "completed"
+      }
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/48d0f63a-7829-40d3-8608-10685660a3bd/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/48d0f63a-7829-40d3-8608-10685660a3bd/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/14b242bc"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "Workflow completed with 1 child run(s). Return: Everything is green. Writing the acceptance report:\n\n## U6 Summary\n\n**Part A — Property injection (D1):** All 8 components now declare `required property var <bridge>`; main.qml injects the real bridges at every use site via root-level aliases (same-name passing is self-referential in QML — the aliases avoid binding loops). Zero context-property coupling left in components; qmllint unqualified warnings dropped ~300 → 67 (of which **0 are bridge-coupling**; the rest are main.qml's rootContext refs + the qmllint Unbound-delegate limitation, both in the gate's documented accepted set).\n\n**Product bugs found & fixed (the harness earned its keep):**\n1. **App was unloadable since U5** — `required property double x/y/z` on the pose-table delegate collided with Item's FINAL geometry props (`Cannot override FINAL property`). Fixed with the qt-qml-sanctioned `model.roleName` access.\n2. **PosesDialog dirty-close guard was broken** — `discardConfirmed`/`discardRequested()` were referenced but neve Trace: 2 event(s)."
+}

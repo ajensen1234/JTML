@@ -1,0 +1,171 @@
+{
+  "runId": "0e115a99",
+  "agent": "ce-testing-reviewer",
+  "task": "You are ce-testing-reviewer. Coverage gaps, weak assertions, brittle tests. Focus: test/qml/ harness (38 functions — do the pins actually fail for the right reasons? are the fakes faithful? does tst_StudyFlows cover the run-lock matrix, dirty guards, keyboard, dataset-swap? any assertion that could pass while behavior is broken?), the extended bridge suites, the qmllint gate (accepted-warning set too permissive?), missing coverage for the heatmap guard (0-keypoint path has no test — assess), the frame-picker pins.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 93098,
+    "output": 58908,
+    "cacheRead": 5552896,
+    "cacheWrite": 0,
+    "cost": 0.022538034399999993,
+    "turns": 60
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 93098,
+        "output": 58908,
+        "cacheRead": 5552896,
+        "cacheWrite": 0,
+        "cost": 0.022538034399999993,
+        "turns": 60
+      }
+    }
+  ],
+  "durationMs": 673976,
+  "toolCount": 82,
+  "launchContractDigest": "99babb0ceca2e0f2f5304de5267c442ba9deb1441cae23a5ae2a20c0415e9d4e",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "9 concrete findings returned with file paths, line numbers, severities (2×P2, 7×P3), confidence levels, owners, and direct evidence quotes; full analysis written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-testing-reviewer.json; compact JSON returned in final response. Key findings verified empirically: ran ctest jtml.qml_view (38/38 passed) and jtml.qml_lint (passed) from the existing .build; built a standalone Qt Quick Test probe in /tmp against the same pixi Qt 6.7.2 env proving editingFinished fires synchronously at focus-out (making tst_PoseCell's capture pin vacuous); parsed the live qmllint JSON to verify accepted-warning counts per file."
+        }
+      ],
+      "changedFiles": [
+        "test/qml/tst_PoseCell.qml (reviewed, not modified)",
+        "test/qml/tst_StudyFlows.qml (reviewed, not modified)",
+        "test/qml/tst_PosesTable.qml (reviewed, not modified)",
+        "test/qml/tst_SettingsPanel.qml (reviewed, not modified)",
+        "test/qml/tst_Theme.qml (reviewed, not modified)",
+        "test/qml/Fake*.qml (reviewed, not modified)",
+        "test/qml_lint.cmake (reviewed, not modified)",
+        "test/CMakeLists.txt (reviewed, not modified)",
+        "src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp (guard branches assessed)",
+        "test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp (reviewed — strong D3/D4 wiring pins)"
+      ],
+      "testsAddedOrUpdated": [
+        "none (read-only review; probe harness built and deleted in /tmp, outside the repo)"
+      ],
+      "commandsRun": [
+        {
+          "command": "pixi run ctest --test-dir .build -R jtml.qml_lint",
+          "result": "passed",
+          "summary": "qmllint gate green (0.42s); parsed .build/test/qml-lint-out.json: accepted-set counts per file (PosesTable 25 unqualified, MlStrip 25 import, main.qml 26 unqualified + 9 missing-property, etc.)"
+        },
+        {
+          "command": "pixi run ctest --test-dir .build -R jtml.qml_view",
+          "result": "passed",
+          "summary": "Qt Quick Test harness green: 38/38 passed (28 test functions + 10 init/cleanup) in 3.3s, offscreen + Material"
+        },
+        {
+          "command": "pixi run bash -c 'cmake -S /tmp/qmlprobe -B /tmp/qmlprobe/build && cmake --build ... && QT_QPA_PLATFORM=offscreen ./build/probe'",
+          "result": "passed",
+          "summary": "Standalone timing probe (Qt 6.7.2, same env): PROBE-DEFERRED [\"commit:frame=3\",\"after-wait\"] — editingFinished fires synchronously at focus-out with pre-mutation values, proving tst_PoseCell's mid-edit mutation executes after the commit; probe deleted afterward"
+        }
+      ],
+      "validationOutput": [
+        "38/38 QML harness functions pass; qmllint gate passes with the documented accepted set; probe empirically settles the focus-timing semantics the capture pin depends on"
+      ],
+      "residualRisks": [
+        "offscreen-only pooling/focus semantics vs xcb app path",
+        "QmlVtkRenderer drag-sync fix and FileDialogBridge MRU have no automated coverage (VTK / modal-dialog constraints)",
+        "fake bridges can drift from C++ bridge surfaces",
+        "main.qml glue outside harness and gate teeth"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Reviewed the test architecture of the plan-007 QML improvement pass: 38-function Qt Quick Test harness over real component sources with fake bridges, qmllint gate, and extended bridge unit tests. The harness is real and caught 3 product bugs, but several pins are weaker than claimed: the PoseCell capture-tuple test mutates state after the synchronous commit (cannot detect the C2 regression), the dataset-swap test never simulates the transient it guards, and the plan's U6 composition-root scenarios (load ordering, replace-confirm, run-close, discard reopen, toolbar Camera/Model run-lock) were never delivered. The 0-keypoint heatmap guard and the D-08 toggle re-asserts are unpinned; fake fidelity has gaps (accepts 'inf', no range checks). The D3/D4 unit pins (table refresh owner, ML-seed invalidation) are genuinely strong.",
+      "reviewFindings": [
+        "P2: test/qml/tst_PoseCell.qml:62 - capture-tuple pin is vacuous (state mutated after synchronous commit; probe-verified)",
+        "P2: test/qml/tst_StudyFlows.qml:194 - dataset-swap pin cannot fail on suppress-guard removal (no model swap simulated; fake clearDataset is a no-op)",
+        "P2: test/qml/tests.qrc:1 - plan U6 composition-root scenarios (load ordering, replace-confirm, run-close, discard reopen, Camera/Model run-lock, shellDirty) all untested",
+        "P3: src/compute/gpu_heatmaps.cu:25 - 0-keypoint guard untested at any level (needs GPU oracle case)",
+        "P3: test/qml_lint.cmake:18 - accepted-set doc stale (unqualified not removed by U3; 25 in PosesTable); unused-imports accepted with zero warnings",
+        "P3: src/app/experimental/MlStrip.qml:285 - D-08 toggle re-asserts + view-toggle run-lock unpinned",
+        "P3: test/qml/tst_SettingsPanel.qml - branch/leaf enable checkboxes unpinned despite testability objectNames",
+        "P3: test/qml/FakePoseBridge.qml:27 - fake accepts inf/Infinity and lacks range checks the real bridge has",
+        "P3: test/qml/tst_StudyFlows.qml:258 - save-failure-keeps-dirty / copy boundaries / estimate-label-cleared scenarios not delivered"
+      ],
+      "manualNotes": "Empirical verification was used for the two highest-confidence findings: (1) a standalone probe compiled against the repo's pixi Qt 6.7.2 env proved editingFinished fires synchronously inside forceActiveFocus(), so tst_PoseCell's post-commit mutations cannot detect a live-value-read regression; (2) live qmllint JSON and test runs confirm all 38 harness functions pass and the gate's accepted set absorbs 25 unqualified delegate warnings in PosesTable that the header doc claims were removed by U3. The 0-keypoint heatmap guard is untestable headless by constraint (CUDA), so the gap is real but the fix must land in the GPU oracle suite. All 38-passing tests were executed from the pre-existing .build; nothing in the repo was modified."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/0e115a99_ce-testing-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553415507
+}

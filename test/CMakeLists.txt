@@ -818,6 +818,30 @@ target_link_options(jtml_test_experimental_settings PRIVATE
 add_test(NAME jtml.experimental_settings COMMAND jtml_test_experimental_settings)
 set_tests_properties(jtml.experimental_settings PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# FileDialogBridge directory-memory tests (plan 007 review round, AC1).
+# QtCore + QtWidgets only (QFileDialog lives in the .cpp; the tests exercise
+# only the QSettings helpers — XDG_CONFIG_HOME is redirected to a temp dir,
+# never the user's real config). Q_OBJECT header listed for AUTOMOC (repo
+# gotcha).
+add_executable(jtml_test_experimental_file_dialog
+    unit/experimental_file_dialog_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/FileDialogBridge.h
+    ${PROJECT_SOURCE_DIR}/src/app/experimental/FileDialogBridge.cpp
+)
+target_include_directories(jtml_test_experimental_file_dialog PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src/app/experimental
+)
+target_link_libraries(jtml_test_experimental_file_dialog PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Widgets
+)
+add_test(NAME jtml.experimental_file_dialog
+    COMMAND jtml_test_experimental_file_dialog)
+set_tests_properties(jtml.experimental_file_dialog PROPERTIES
+    LABELS "headless" TIMEOUT 120)
+
 # Shared cost-function registry mapping tests (plan 006 U1, R8/AE3). The
 # shared jta::BuildCostFunctionRegistryEntries (services layer — the one
 # mapping both front-ends call) direct-compiles against the real
@@ -1456,6 +1480,14 @@ elseif(EXISTS "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/qt6/bin/qmllint")
     set(QML_LINT_QT6 "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/qt6/bin/qmllint")
 else()
     set(QML_LINT_QT6 "")
+    # Review fix (ce-code-review 2026-08-12, AN2): the gate used to
+    # silently vanish when no Qt6 qmllint was resolvable — a configure
+    # warning makes the disappearance visible.
+    message(WARNING "jtml.qml_lint NOT registered: Qt6 qmllint not found "
+                    "($ENV{CONDA_PREFIX}/lib/qt6/bin or "
+                    "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/qt6/bin). "
+                    "The bare 'qmllint' on PATH is Qt 5.15.8 and is never "
+                    "used.")
 endif()
 if(QML_LINT_QT6)
     add_test(NAME jtml.qml_lint
@@ -1468,3 +1500,32 @@ if(QML_LINT_QT6)
         LABELS "headless" TIMEOUT 120
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
+
+# Plan 007 U6: Qt Quick Test coverage for the experimental view layer.
+# test/qml/ harness: tst files + fakes on disk (QUICK_TEST_SOURCE_DIR),
+# components imported via tests.qrc aliases to src/app/experimental
+# (no drift). Headless-safe by construction: no VTK, no bridges, no
+# jtml libs — the fakes replace the C++ bridges. Material style env
+# matches the app's style pin. The QuickTest ctest target is the SOLE
+# run mechanism (bare `qmltestrunner` on PATH is Qt 5.15.8 and would run
+# the tst files on the Qt 5 engine).
+block()
+find_package(Qt6 COMPONENTS QuickTest Quick Qml QuickControls2 REQUIRED)
+add_executable(jtml_test_qml_view
+    qml/main.cpp
+    qml/tests.qrc
+)
+target_link_libraries(jtml_test_qml_view PRIVATE
+    Qt6::QuickTest
+    Qt6::Quick
+    Qt6::Qml
+    Qt6::QuickControls2
+)
+target_compile_definitions(jtml_test_qml_view PRIVATE
+    QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qml")
+add_test(NAME jtml.qml_view COMMAND jtml_test_qml_view)
+set_tests_properties(jtml.qml_view PROPERTIES
+    LABELS "headless" TIMEOUT 300
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_CONTROLS_STYLE=Material")
+endblock()

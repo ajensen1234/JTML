@@ -197,15 +197,15 @@ Tooling: `ncu` (nsight-compute 2024.1) is already in the environment for kernel-
 - include/compute/cuda_launch_parameters.h — threads_per_block=256, maximum_stride_size=10,000,000 (overflow bound).
 - include/domain/settings_constants.h — TRUNK_BUDGET=20000, BRANCH_BUDGET=5000, Z_SEARCH_BUDGET=5000 (35k evals/frame figure).
 
-## Round 2
+* Round 2
 
-### Summary
+** Summary
 
 Round 1's structural claims are now converted into measured, ordered cut recipes with exact file:line placements, pre-registered predictions, and per-cut gates. New source-verified findings this round: (1) the clock() meter is not just CPU-only — it carries a 1000× unit error on Linux (glibc clock() returns microseconds; the code labels the raw ticks "ms/call" with no CLOCKS_PER_SEC division anywhere in src/, and the UI's "Iterations Per Second" at mainscreen.cpp:4654-4655 divides 1000.0 by the raw µs value → ~1000× understated, with the ETA math at :4598/:4659 off by the same factor); (2) there are TWO meter sites (optimizer_manager.cpp:1197-1203 end-of-frame, :1272-1279 iteration callback — the dispatch's :1274-1281 is the latter), and the QML/experimental UI relays no speed at all (OptimizerBridge.h has no speed property; the widgets-path MainScreen::onUpdateDisplay at view/mainscreen.cpp:4582 is the only consumer); (3) Cut 3's fixed grid is bounded by arithmetic: dev_stride_prefixes_ (maximum_stride_size = 10M ints) caps the fragment fill at ~2.55e9 via the existing host guard (render_engine.cu:795-800), and both fill kernels already guard their ENTIRE body — including FillTriangleKernel's shared-memory load and __syncthreads (:636-641) — behind `i < total` (:628-629), so a fixed grid larger than the true count is bit-safe with NO kernel-source change; the open questions are the measured fragment distribution and the empty-grid launch cost; (4) eval-state ownership for Cut 2 is pinned to the code: RenderEngine owns renderer_output_ (a GPUImage: dev_image_ cudaMalloc + pinned bounding_box_, gpu_image.cu:13-40), GPUMetrics owns the score buffers (gpu_metrics.cu:7-65), OptimizerManager constructs GPUMetrics at :818 — so "compute owns buffer state, manager owns graph" (angle 04 R2-4) maps to a second renderer_output_ inside RenderEngine + a second score-buffer bank inside GPUMetrics, with no manager-graph change. Cut order is unchanged (0 instrument → 1 async terminal copies → 2 iteration batching → 3 conditional fragment-fill removal → 4 meter fix) but each cut now has an executable spec, a prediction sourced from Cut 0's data, and a revert rule.
 
-### Key Findings (Round 2)
+** Key Findings (Round 2)
 
-#### R2-1 — The clock() meter has a 1000× unit error on Linux, on top of the CPU-time blind spot
+*** R2-1 — The clock() meter has a 1000× unit error on Linux, on top of the CPU-time blind spot
 
 - grep of src/ for CLOCKS_PER_SEC: zero hits — the meter divides raw clock() ticks by calls with no unit conversion: `static_cast<double>(clock() - start_clock_) / static_cast<double>(cost_function_calls_)` (optimizer_manager.cpp:1198-1199) and the RunDirectStage twin (:1274-1275).
 - On Linux glibc, clock() returns microseconds (CLOCKS_PER_SEC = 1e6; MSVC uses 1000). The code labels the value "ms/call"; the actual value is CPU-µs/call → 1000× unit error. The JTA codebase is a Windows-Qt origin, so this is plausibly port-induced — but on this Linux/pixi build the error is live.
@@ -214,7 +214,7 @@ Round 1's structural claims are now converted into measured, ordered cut recipes
 - Confidence: high (code path verified; no CLOCKS_PER_SEC anywhere; the platform unit semantics are POSIX-standard). The "port-induced" attribution is medium (original codebase not verifiable here).
 - Relevance: Cut 4 must (a) switch to steady_clock wall time and (b) emit TRUE ms/call so the existing UI math (1000.0/ms_per_call) becomes correct without a UI-side change.
 
-#### R2-2 — Two meter sites, one UI consumer, and a QML gap
+*** R2-2 — Two meter sites, one UI consumer, and a QML gap
 
 - Site 1: end-of-frame emit, optimizer_manager.cpp:1197-1203 (uses cost_function_calls_, the running frame-level counter).
 - Site 2: RunDirectStage iteration-callback emit, optimizer_manager.cpp:1272-1279 (uses opt.GetCostFunctionCalls()) — the dispatch's :1274-1281. Both must be replaced by Cut 4.
@@ -223,7 +223,7 @@ Round 1's structural claims are now converted into measured, ordered cut recipes
 - Severity: low-medium (defines Cut 4's surface; the widgets path is the production meter today).
 - Confidence: high (signal chain grep-verified end to end).
 
-#### R2-3 — Cut 3's fixed grid is bounded by arithmetic: stride-prefix capacity + in-kernel guards make it a host-side change
+*** R2-3 — Cut 3's fixed grid is bounded by arithmetic: stride-prefix capacity + in-kernel guards make it a host-side change
 
 - dev_stride_prefixes_ is allocated once at maximum_stride_size × sizeof(int) = 10M × 4 B = 40 MB (render_engine.cu InitializeCUDA, :311-312 region). StridePrefixKernel writes one entry per 256-fragment stride group (index i, guarded i < total/256, :592-593); FillTriangleKernel reads dev_stride_prefixes[blockIdx.x] with blockIdx.x < total/256. Both stay in-bounds iff total ≤ maximum_stride_size × 256 ≈ 2.56e9.
 - The existing host overflow guard is `fragment_fill_[0] > maximum_stride_size × (threads_per_block − 1)` = 2.55e9 (render_engine.cu:795-800), i.e., exactly the capacity bound (threads_per_block = 256, include/compute/cuda_launch_parameters.h). SAFE_CAP = maximum_stride_size × threads_per_block is the device-capacity ceiling; nothing above it is launchable anyway.
@@ -232,7 +232,7 @@ Round 1's structural claims are now converted into measured, ordered cut recipes
 - Severity: high (this arithmetic is what makes Cut 3's decision procedure executable — it shrinks the cut from "kernel-level change" to a host-side grid computation + measured GRID_CAP).
 - Confidence: high (all guard/alloc lines verified).
 
-#### R2-4 — Cut 2's double-buffer ownership is pinned to the code (compute owns state; manager owns graph)
+*** R2-4 — Cut 2's double-buffer ownership is pinned to the code (compute owns state; manager owns graph)
 
 - Today: RenderEngine owns renderer_output_ per camera — a GPUImage whose dev_image_ (cudaMalloc) and bounding_box_ (pinned cudaHostAlloc) are allocated in the GPUImage ctor (gpu_image.cu:13-40) and freed in the dtor; renderer_output_ is created in RenderEngine::InitializeCUDA (render_engine.cu:319). GPUMetrics owns the score buffers: pinned host pixel_score_/distance_map_score_/edge_pixels_count_ + device dev_pixel_score_/dev_distance_map_score_/dev_edge_pixels_count_, all in the ctor (gpu_metrics.cu:7-65), freed in the dtor (:68-95). OptimizerManager constructs GPUMetrics once in Initialize (optimizer_manager.cpp:818) and hands it by pointer to all three CFMs (CostFunctionManager.cpp:122).
 - Target (per angle 04 R2-4): compute owns buffer STATE → (a) a second render output inside RenderEngine (renderer_output_b_, same width/height/device, allocated next to :319); (b) a second bank INSIDE GPUMetrics — dev_pixel_score_[2], dev_distance_map_score_[2], dev_edge_pixels_count_[2] plus pinned twins, with SetActiveBank(int) toggling. One object with doubled internal state keeps the manager's graph (one GPUMetrics, three CFMs by pointer) untouched. The alternation logic lives in the cost layer (the batched adapter in compute).
@@ -240,14 +240,14 @@ Round 1's structural claims are now converted into measured, ordered cut recipes
 - Severity: high (the buffer/allocation answer the dispatch asked for).
 - Confidence: high (ownership verified in gpu_image.cu / gpu_metrics.cu / optimizer_manager.cpp:818 / CostFunctionManager.cpp:122).
 
-#### R2-5 — Round-1 line-span correction + the instrumentation layer constraint
+*** R2-5 — Round-1 line-span correction + the instrumentation layer constraint
 
 - costFunctionDIRECT_DILATION spans DIRECT_DILATION.cpp:58-107 (round 1 cited :67-106; the signature is at :58). Composition order verified: RenderPrimaryCamera → FastImplantDilationMetric → DistanceMapMetric (monoplane), biplane branch at :88-105.
 - nvtx3 must NOT enter jtml_domain: DirectOptimizer is the "zero Qt/VTK/CUDA" extraction (direct_optimizer.h:11-13) — the per-iteration range therefore lives in the coordinator's iteration callback (optimizer_manager.cpp:1263-1280), which fires exactly once per ConvexHull+Trisect iteration (direct_optimizer.cpp:41-49), NOT inside DirectOptimizer. All per-eval/per-stage ranges live in compute (jtml_compute, where the toolkit include path already applies).
 - Severity: medium (a layer-purity constraint that shapes every instrumentation placement).
 - Confidence: high (header contract + callback wiring verified).
 
-### The instrumentation protocol (Cut 0) — the first deliverable
+** The instrumentation protocol (Cut 0) — the first deliverable
 
 Goal: replace the derived 20-60 evals/s estimate with a measured per-eval record and make the item-8 claim (sync-bound, not kernel-bound) arbitrable by data. Behavior change: none. Compile-in always (nvtx3 is header-only, ~ns per range when idle).
 
@@ -305,7 +305,7 @@ The exact first-run record (replaces the derived 20-60 evals/s estimate):
 
 The record is saved as a run artifact (perf.json or a section in baseline.json's sibling); it is the pre-registration source for Cuts 1-3's predicted Δ.
 
-### Cut 1 — async terminal copies + one event wait per eval (full spec)
+** Cut 1 — async terminal copies + one event wait per eval (full spec)
 
 The 3 terminal copies (of the 5) become cudaMemcpyAsync into the EXISTING pinned buffers; the 2 render syncs (bounding-box render_engine.cu:781-785, fragment :786-790) STAY synchronous — the host needs the bbox to size the metric launch grids (fast_implant_dilation_metric.cu:201-207, distance_map_metric.cu:83-89) and the fragment count to size the fill launches (render_engine.cu:812-816, :823-826). These are data-dependent launch configs; removing them requires moving the crop math onto the device (out of scope; interacts with angle 02's metric semantics).
 
@@ -327,7 +327,7 @@ Biplane freebie (fold into Cut 1): with the primary metrics' copies async, the s
 
 Prediction (pre-registered after Cut 0): Δ = measured sync-stall sum of the 3 converted copies + 2-3 driver round-trips − one event wait ≈ the merge of drains #2+#3 (fast-implant + distance-map). If Cut 0 shows those drains are small (< 5% of wall), the cut still lands (pure win) but the emphasis moves to Cut 2. Gate: headless green, oracle green, bit-identity empty, mean per-eval event-time reduction ≥ prediction.
 
-### Cut 2 — iteration batching + double-buffered eval state (full spec)
+** Cut 2 — iteration batching + double-buffered eval state (full spec)
 
 Domain seam (per angle 04 R2-4 clause 1): DirectOptimizer gains ONE optional sibling of the same type family — `using BatchCostFunction = std::function<std::vector<double>(const std::vector<Point6D>&)>` + SetBatchCostFunction (no CUDA types in direct_optimizer.h; the :11-13 "zero Qt/VTK/CUDA" contract intact). In TrisectPotentiallyOptimal, collect the iteration's changed-center poses in exactly the sequential order (box i in potentially_optimal_hyperboxes_ order; A then B per box — direct_optimizer.cpp:158-178 region), call the batch callback once, then replay per pose in order: cost_function_calls_++ (EvaluateCostFunction's bookkeeping), best-value update + improvement callback, AddHyperBox. Identical stored values, identical optimum, identical callback order (contract clause 2). The seed eval (Run(), direct_optimizer.cpp:38) stays sequential. No batch surface set ⇒ today's loop, byte-for-byte.
 
@@ -343,7 +343,7 @@ Headless-verifiable determinism argument: the replay contract is pure domain log
 
 Prediction: after Cut 1, the per-eval host-block is the render drain + the terminal wait; batching hides both behind the previous eval's GPU work. Predicted Δ = the measured host-block-window sum from Cut 0 minus what Cut 1 already removed. Gate: headless green (incl. the new Tier-0 batch test), oracle green, bit-identity empty, per-eval event-time reduction ≥ prediction. Revert rule: if the batched path shows no improvement (or a regression) over 3 runs, abandon the jj change and keep sequential.
 
-### Cut 3 — fragment-fill removal: the decision procedure (conditional)
+** Cut 3 — fragment-fill removal: the decision procedure (conditional)
 
 Trigger measurement (during Cut 0): the fragment sweep (fragment_fill_[0] min/max/p99/max-ever + bbox per eval over frame-0's 3000 evals) plus the render-drain time (event gap from PrepareLaunchPacketKernel completion to the fill kernels' start).
 
@@ -360,7 +360,7 @@ Safe fallback (the decision's default): if (a) or (b) fails — unbounded tail, 
 
 Prediction: Δ = the measured render-drain sum minus the residual fallback cost. Gate: oracle green, non-overflow bit-identity empty, overflow frames still error, event-time reduction ≥ prediction.
 
-### Cut 4 — the event-based ms/call meter (full spec)
+** Cut 4 — the event-based ms/call meter (full spec)
 
 Replace BOTH clock() meters: optimizer_manager.cpp:1272-1279 (RunDirectStage iteration callback — the dispatch's :1274-1281) and :1197-1203 (end-of-frame emit). Both currently compute CPU-ticks/call (µs on Linux) and emit it as "ms/call" — CPU-only, GPU-blind, sync-blind, and 1000× unit-wrong (R2-1).
 
@@ -372,7 +372,7 @@ New meter spec:
 - Where the UI reads it (verified): UpdateDisplay(double iteration_speed, ...) → OptimizerRunController::onManagerUpdateDisplay (coordinator/optimizer_run_controller.cpp:243) → updateDisplayRelayed → MainScreen::onUpdateDisplay (view/mainscreen.cpp:4582; speed :4654-4655, ETA :4598/:4659, VTK actor text). The QML/experimental path (OptimizerBridge.h) relays no speed today (R2-2) — adding it is a separate small change if the QML UI needs the meter.
 - No behavior change to the search. Gate: meter tracks the event-measured per-eval time within noise (wall ≥ event always; the gap is reported, not asserted).
 
-### The measurement protocol every cut must pass
+** The measurement protocol every cut must pass
 
 For Cuts 1-3 (Cut 4 is meter-only; Cut 0 is record-only):
 
@@ -383,7 +383,7 @@ For Cuts 1-3 (Cut 4 is meter-only; Cut 0 is record-only):
 
 Revert rule: a cut that measures < prediction (or a regression) is reverted in the same jj change (jj abandon) with the measurement recorded in the run's artifacts; the cut may be retried only with a new prediction derived from the new baseline. Cuts land in order 0 → 1 → 2 → 4 → (3 conditional) — Cut 3 never before Cut 2, Cut 4 before any cut is demonstrated to the user via the UI.
 
-### What Could Not Be Verified (Round 2)
+** What Could Not Be Verified (Round 2)
 
 - The actual fragment_fill_ distribution and render-drain times — need the GPU sweep on the RTX 3090 (Cut 0, record item 8). Cut 3's go/no-go is unmeasured until then.
 - Whether nvtx3 resolves in the coordinator TUs (include-path question — verify at build; the additive toolkit-include fallback is specified).
@@ -392,7 +392,7 @@ Revert rule: a cut that measures < prediction (or a regression) is reverted in t
 - The user-visible magnitude of the R2-1 unit bug (the code path is verified; the numbers on the user's display were not captured).
 - GPUMetrics' SetActiveBank semantics vs the three per-stage CFMs sharing one instance (the stage loop is sequential so no interleave by construction, but the invariant is asserted, not yet tested).
 
-### Sources (Round 2)
+** Sources (Round 2)
 
 - src/coordinator/optimizer_manager.cpp — frame loop :918; budget/call reset :984-985; start_clock_ :993-994; end-of-frame meter emit :1197-1203; RunDirectStage :1236-1255; iteration callback + meter :1263-1280; GPUMetrics construction :818.
 - src/view/mainscreen.cpp — onUpdateDisplay :4582-4670; "Iterations Per Second" :4654-4655; ETA :4598/:4659.
@@ -412,3 +412,114 @@ Revert rule: a cut that measures < prediction (or a regression) is reverted in t
 - include/compute/cuda_launch_parameters.h — threads_per_block=256; maximum_stride_size=10,000,000.
 - pixi.toml — nvtx dep :17; -DLIBNVTOOLSEXT :76. pixi.lock — nsight-compute 2024.1 :253; cuda-nvtx 12.4.99 :63; Python nvtx-0.2.10 :257; no nsight-systems.
 - .panoptes/optimizer-deep-dive/angles/04-backend-architecture.org — R2-4 double-buffer seam contract (clauses 1-4).
+
+* Round 3
+
+** Summary
+
+The corpus's rendering/DRR evidence turns the cross-era throughput datum into a full, falsifiable baseline and gives the cut order its first external anchors. Flood 2018 (floodAutomatedRegistration3D2018.txt) is verified end-to-end as the sanity baseline: 145,000 evals (50k trunk + 3×15k branch + 50k z) at ~3,000 iterations/s = 333 µs per eval on a GTX 970 (the paper's own arithmetic checks: 145,000/3,000 ≈ 48 s ≈ "50 seconds per frame"), where the eval is deliberately GPU-cheap ("a simple L1 norm... can be computed by a GPU extremely efficiently" — render + one L1 pass, no chamfer, no per-eval input dilation). Abdellah 2015 measured the SAME GTX 970 rendering volumetric DRRs at 25 ms/2048² and 67 ms/4096² — so a silhouette eval is ~2 orders of magnitude cheaper than a volumetric DRR on identical silicon, and JTML's derived 16–50 ms/eval on an RTX 3090 (4.2× bandwidth, ~9× FP32) sits squarely in volumetric-DRR territory while doing silhouette work: the cross-era arithmetic implies ~95%+ of JTML's per-eval wall is host-side, a pre-registration Cut 0 can falsify (GPU-active per-eval > 1 ms inverts the cut order). The fast-DRR family licenses almost nothing for the fragment-fill rasterizer itself — bindless textures accelerate reads on volumetric cudaArrays, not the scatter-writes of a linear-memory fill (render_engine.cu:628-700); block projection (Mu 2016) and splatting are approximate-reuse techniques that break the run's bit-identity/determinism contract; CUDA/OpenGL interop is display-only. The real transfers are: Dorgham's "similarity on the GPU" doctrine — the primary-text antecedent of Cuts 1–3, with a measured ~2 ms CPU-similarity ≈ D2H-copy parity; Flood's own batch-render future-work note (L761–765) — the antecedent of Cut 2, verbatim; the field's sampled/reduced-resolution DRR evidence (registration-accuracy-preserving at 50% compression, failing at 75%) — the spec for a render-resolution ablation arm beyond the cuts; and Tornai's block-size data (10–145% swings) — a zero-semantics knob for Cut 0's ncu pass. Pre-registered evals/s on the 3090: today 20–60 (derived), Cut 1 → 60–300, Cut 2 → 1,000–5,000 with Flood's 3,000 evals/s as the cross-era parity line; Cut 4's meter fix gains a wall-clock cross-check gate.
+
+** Key Findings (Round 3)
+
+*** R3-1 — Flood 2018 is the sanity baseline, verified verbatim (arithmetic + cost semantics)
+
+- Budget and speed (floodAutomatedRegistration3D2018.txt L568–574): "The iteration budget was 50,000 for the trunk search, 15,000 for each of the three branch searches, and 50,000 for the z-translation search. Using a 4GHz Intel Core i7 4790K in conjunction with a Nvidia GeForce GTX 970, a GPU based version of the registration routine achieved speeds of approximately 3,000 iterations per second (50 seconds per frame)." Arithmetic check: 145,000/3,000 = 48.3 s ≈ "50 seconds per frame" — "iteration" = cost-function eval; per-eval = 333 µs INCLUDING DIRECT bookkeeping on the host.
+- Cost semantics (L157–162): "The score is a simple L1 norm that rewards matching edges and punishes overlapping black space. There is no need for normalization because we are interested in finding the global minimum... We use L1 in place of other p-norms because it can be computed by a graphics processing unit (GPU) extremely efficiently." The eval = silhouette render + one L1 pass; the input Canny frame is dilated ONCE per stage (not per eval); there is NO chamfer/distance-map term and no per-eval input dilation — JTML's extra metric stages (fast-implant edge/dilate/difference + distance-map chamfer, ~7 kernels) are the workload delta vs Flood, not the render.
+- Budget-by-time design (L568): "Iteration count for the algorithm was pegged to take approximately one minute of operating time." The lineage sizes budgets by WALL TIME; JTML's are fixed eval counts (20k/5k×2/5k). If the cuts raise evals/s toward Flood's rate, each frame gets faster in wall time without changing the search — a pure win — but the lineage's time-budget framing is a flag for the budget-constants conversation (they were tuned against a slow pipeline).
+- Confidence: high (verbatim quotes; arithmetic verified). Relevance: this is the baseline the dispatch requires — the first nvtx/cudaEvent record must report JTML's per-eval time against 333 µs/eval (GTX 970, 2018).
+
+*** R3-2 — Same-GPU cross-check: a volumetric DRR costs ~2 orders more than a silhouette eval on the identical GTX 970
+
+- Abdellah 2015 (abdellahGPUAccelerationDigitally2015.txt L14–15, L333–337): bindless-texture + ray-march volumetric DRR pipeline on "an NVIDIA GeForce 970 GTX": "the pipeline line can generate 2048² and 4096² DRRs at 40 and 15 frames per second respectively" — i.e. 25 ms and 67 ms per volumetric DRR, versus Flood's 333 µs per silhouette+L1 eval on the same GPU: a 75–200× per-frame gap. This validates that the silhouette+L1 design is the field's cheap-cost choice and that JTML's fragment-fill renderer (also silhouette-based) belongs in the µs-per-eval regime, NOT the ms-per-eval regime.
+- Cross-check corroboration: Tornai 2012 (tornaiFastDRRGeneration2012.txt L21–23) ray-cast DRR of a 400×225 ROI = 2.7–5.2 ms full-ROI (0.3–7.3 ms at 1.1–9.1% sampling) on 2007–2010 GPUs; Dorgham 2012 (dorghamGPUAcceleratedGeneration2012.txt L27–30) 256³ CT DRR ≈ 24 ms (8800 GTX) / ≈ 2 ms (GTX 580); Ikebe 2023 (ikebeDRRAccelerationUsing2023.txt L195–197, L424) Siddon–Jacobs DRR ≈ 61 ms on a laptop GTX 1650 Ti; Gopalakrishnan 2022 (gopalakrishnanFastAutoDifferentiableDigitally2022.txt L135–136) 200² DRR = 72.7 ms on an RTX 2080 Ti (PyTorch-vectorized — see R3-4 item 7). Volumetric DRRs are uniformly tens-of-ms; Flood's silhouette eval is sub-ms.
+- Confidence: high (all numbers verbatim; the 75–200× ratio is arithmetic). Relevance: if Cut 0 measures JTML's per-eval wall in the tens-of-ms, the magnitude of the sync-bound claim is confirmed against the field's own per-eval economics; the comparison also quantifies how much headroom a GPU-only cost would have.
+
+*** R3-3 — Cross-era arithmetic: JTML's derived 16–50 ms/eval on a ~9×-faster GPU implies ~95%+ host-block fraction (pre-registered, falsifiable)
+
+- JTML today (derived, from the oracle's "a few minutes" for kBudget=3000; oracle_test.cpp:244): 20–60 evals/s → 16–50 ms/eval wall on the RTX 3090. Flood: 333 µs/eval on the GTX 970. Ratio: ~50–150× slower per eval on hardware ~3 generations newer.
+- Hardware deltas (public specs): GTX 970 — 1,664 CUDA cores, 1.05/1.178 GHz, 224.4 GB/s, 3.92 TFLOPS FP32 (techpowerup.com/gpu-specs/geforce-gtx-970.c2620; nanoreview.net/en/gpu/geforce-gtx-970); RTX 3090 — 10,496 CUDA cores, 1.70 GHz boost, 24 GB GDDR6X, 936.2 GB/s, ~35.6 TFLOPS FP32 (nvidia.com/en-gb/geforce/graphics-cards/30-series/rtx-3090-3090ti/; techpowerup.com/gpu-specs/geforce-rtx-3090.c3622). Capability ratios for a fill/memory-bound workload: cores 6.3×, bandwidth 4.2×, FP32 ~9.1×.
+- Workload adjustment: JTML's eval is heavier than Flood's (12,412-facet KR_right_7_fem.stl vs knee-implant models; +2 metric stages), but the 4–9× hardware advantage swamps a plausible 2–5× workload factor: the field-consistent GPU-active estimate for JTML's eval on the 3090 is ~50–500 µs (render: ~12k triangles → ~1–2M fragments → ~5–15 µs fill at 10,496 lanes + memset ~2 µs + projection/scan/launch ~30–75 µs; metrics over the ≤~500² crop ~10–50 µs). Even at the top of the band, 16–50 ms wall vs ~1 ms GPU-active ⇒ ≥ 95% of per-eval wall is host-block/driver/sync.
+- FALSIFICATION pre-registration: if Cut 0's cudaEvent per-eval GPU-active measures > 1 ms on the 3090 (3× Flood's whole-eval on a 970), the sync-bound hypothesis fails in magnitude: the kernels themselves are then the problem and the order inverts to kernel-level work (ncu on FillTriangleKernel/DilateKernel/DistanceMapMetric_Kernel) BEFORE Cuts 1–2. If GPU-active is in the 50–500 µs band, Cuts 1–2 are validated as the correct lever and the post-Cut-2 wall should approach the GPU-active + launch-overhead floor.
+- NEW contingency the corpus exposes: with ~15 launches/eval at ~2–5 µs driver overhead each, the per-eval floor after Cuts 1–2 is ~30–75 µs of launch overhead even with zero syncs — so the item-8 verdict can resolve into "launch-overhead-bound" rather than "sync-bound". That state is NOT addressed by Cut 3 (which removes one sync, not launches); the next lever would be a NEW direction: kernel fusion of the metric stage (FastImplantDilation + DistanceMap over the crop into one kernel — the "similarity on the GPU" doctrine of R3-5 applied to launches) as a Cut-5 candidate, pre-registered now, triggered if nsys shows launch gaps dominating post-Cut-2.
+- Confidence: medium (JTML's 20–60 evals/s is itself derived from oracle runtimes and must be measured; hardware specs high; the GPU-active band is analytic, to be replaced by Cut 0). Relevance: this converts the round-1 "structurally confirmed, magnitude unmeasured" claim into a sharply falsifiable pre-registration with a numeric threshold.
+
+*** R3-4 — Fast-DRR family vs the fragment-fill rasterizer (render_engine.cu): per-technique applicability verdicts
+
+The JTML fill (FillTriangleKernel, render_engine.cu:616–700) is a fragment-scatter rasterizer: one thread per fragment of each triangle's pixel bbox, shared-memory binary search for the triangle index (per 256-fragment stride), barycentric in-triangle test, single byte write `dev_image[(pyPixel)*width + pxPixel] = 255` to LINEAR uint8 memory. The DRR-family techniques were designed for volumetric ray casts/splats; their transfer value is mostly negative or deferred:
+
+| Technique (source) | What it is | Verdict for JTML | Cost in this stack |
+|---|---|---|---|
+| Bindless texture objects (abdellah L70–74, L283–287) | Runtime-created texture objects over cudaArrays (3D-locality layout, trilinear filter); needs Kepler 3.0+/CUDA 5.0+ | DEFER — accelerates READ-side locality on volumetric data; JTML's fill is a scatter-WRITE to linear memory (no texture benefit); only the metric kernels read dev_image_ (edge/dilate/chamfer neighborhoods) and those crops are small, already L2-served. Only adopt if Cut 0's ncu shows the metric kernels cache-bound (L1/L2 miss-rate evidence) | 3 kernels touched + texture-object lifecycle per buffer; medium code, LOW-MEDIUM regression risk (changed cache behavior is a perf gamble, not a semantics risk; tex1Dfetch is value-exact) |
+| CUDA/OpenGL interop (abdellah L276–280) | PBO mapping of the CUDA image into an OpenGL texture for DISPLAY; buffers locked while mapped | NO-GO for the cost path — display-only in the paper; JTML's display is VTK/cvMat D2H (render_engine.cu:852–856, :880–884), OFF the hot path. Any zero-copy display is angle 04's VTK-surface domain, not a perf cut | Would touch the visualization path, not compute; skip |
+| Block projection / slab reuse (Mu 2016: muFastDRRGeneration2016.txt L135–140, L147–148, L232–234) | Pose-grid of pre-generated block projections; new poses re-assemble slabs ("reuses ray segments instead of whole rays"); bounded, estimable projection error (<0.5 mm at ≤3° off-grid, Eq. 2) | NO-GO — an approximate-reuse scheme for EXPENSIVE volumetric ray casts. JTML's re-projection is already the cheapest part of the eval; the pose-grid/slab machinery costs more than the re-render AND breaks the bit-identity/determinism contract every cut is gated on (R1 determinism finding: int-atomics + bit-identical diffing). The error-bound idea has a legitimate home in the ablation's resolution axis (R3-8), never in the cost path | Full new subsystem (pose grid, slab storage, error bookkeeping) + accuracy loss; excluded |
+| Splatting (wobbled splatting — Spörk via dorgham refs [22],[30],[31]; zwickerSurfaceSplatting2001 in corpus) | Object-space forward projection of voxels/samples as screen-space footprints | NO-GO — replaces the barycentric-exact fill with approximate footprints (overlap/underlap, fuzzy edges); changes the rendered image, breaks bit-identity. The fill's barycentric test IS the exactness; the dilation metric absorbs small edge fuzz but the determinism contract does not | New fill kernel + per-vertex splat data; high risk; excluded |
+| Sampled / reduced-resolution DRR (tornai RR1/RR2 L21–23; dorgham RR1/RR2 §III-B) | Render a subset of rays/pixels/samples, interpolate; registration-accuracy-preserving at 50% compression, NOT at 75% (dorgham Fig. 13) | ARM-ABLE — the one family technique with a real home, as a VALUE-CHANGING ablation axis (render-resolution scaling, see R3-8), never as a bit-identical cut | Low (scale memset/fill dims + metrics at scale or upscale); gated by oracle + z-profile probe |
+| Block-size / occupancy tuning (tornai §III: 10–145% execution-time swings with block size; optimal blocks/SM 1–8, vendor-suggested sizes often NOT optimal; abdellah §IV: block-config profiling with cudaEventRecord) | Launch-config-only tuning; kernel semantics unchanged | FREE WIN CANDIDATE — JTML's threads_per_block=256 is a single constant (include/compute/cuda_launch_parameters.h); a sweep {64,128,256,512} on FillTriangleKernel/StridePrefixKernel + the metric kernels is zero-semantics (identical kernel behavior, different launch config) and belongs in Cut 0's ncu pass. Matters MORE if Cut 3's fixed grid lands (large empty-grid block counts, R2-3) | One constant + re-measure; zero risk; the paper's own cudaEventRecord methodology matches Cut 0's |
+| Auto-differentiable DRR (gopalakrishnan 2022) | Vectorized Siddon in PyTorch with autograd | NOT a render-acceleration technique — a differentiability technique. Perf-relevant for three things: (a) the torch-route is ~50–100× slower per pixel than hand CUDA (72.7 ms/200² = ~1.8 µs/px on a 2080 Ti vs tornai's ~30 ns/px on a 580 GTX) → corroborates the torch-boundary NO-GO for the eval path (04 contradiction 5; 06 photometric NO-GO); (b) registration-level evidence for angle 06: 745/1000 converged in 65.5±14.3 iterations (1.92±0.43 s) with negative ZNCC "locally convex in the neighborhood of the optimal" (L32–34, L360–361, L618, L639–641) — the field's gradient-based registration uses ~2 orders fewer iterations than DIRECT's thousands, so IF the polish arm lands, per-eval speed matters more, strengthening the cuts; (c) gradient-vs-FFD fidelity 0.05±0.01 (L314–316) — the field standard that angle 06's gradient-twin gate mirrors | None for the eval path; the numbers feed 06's premises |
+| Matched forward/back projectors (kim 2023, kimDifferentiableForwardProjector2023.txt L212–221) | "one should employ methods for backprojection that are the exact transpose of the forward projection, referred to as matched projectors"; chosen "because... stable after over a thousand or more iterations"; torch-free C++/CUDA core + thin torch.nn.Module binding, small memory footprint | CORROBORATION ONLY — the architecture pattern (CUDA core + thin adapter, no per-call allocation) is already JTML's compute/manager split; the matched-projector doctrine is already folded into 04 R3-4 / 06 R2-4; the "thousand+ iterations" stability note supports keeping JTML's forward path exact (no approximate reuse) in a 35k-eval regime | None (already carried by 04/06) |
+
+- Severity: medium-high (the verdicts bound the "beyond Cut 3" space: nothing in the fast-DRR family rescues the fragment-fill itself; the wins are the resolution axis, the block-size knob, and the launch-overhead contingency of R3-3).
+- Confidence: medium (analytical verdicts grounded in paper definitions + verified kernel structure; not measured).
+- Relevance: Cut 3's mechanics (rounds 1–2: device-side clamp + fixed grid, bit-safe via in-kernel guards) stand as specified — the family adds no better fragment-fill mechanism; its license is for the areas AROUND the fill.
+
+*** R3-5 — Dorgham's "similarity on the GPU" doctrine = the primary-text antecedent of Cuts 1–3
+
+- Dorgham 2012 explicitly documents JTML's exact problem and its fix (dorghamGPUAcceleratedGeneration2012.txt L566–579): "the similarity measure process is not a high complexity process... it requires about 2 ms to measure the similarity between two images of size 512 × 267 pixels using a Dual Quad core, Intel 2.3-GHz processor. Whereas transforming the DRRs from the device memory to the host memory requires almost the same time" (the D2H copy is a first-class cost — the "synchronization problem" framing is at L570-578: GPU-side similarity "does not require any data transfer between the device and the host memory... there will not be a delay or synchronization problem but more device memory will be required to store the DRR").
+- Transfer: (1) the copy is not bandwidth-bound — even a FULL-IMAGE 512×267 copy costs ~2 ms in that era; JTML's 5 scalar copies pay the pipeline drain + host wake, the same phenomenon; (2) the fix direction is ALL-DEVICE similarity — which is exactly Cut 1 (async terminal copies) + Cut 3 (device-side clamp + deferred fragment read, render_engine.cu:786–790 no longer mid-eval) + the R3-3 launch-overhead contingency (kernel fusion of the metric stage = the doctrine applied to launches); (3) Dorgham's memory cost note ("more device memory will be required") is the same trade the double-buffered eval state of Cut 2 pays (one extra GPUImage + one score-bank — R2-4).
+- Confidence: high (verbatim quotes; the drain interpretation is medium). Relevance: the run's item-8 claim and its entire cut architecture are not novel engineering opinion — they are the documented, published design of the DRR-registration literature.
+
+*** R3-6 — Flood's batch-render note is Cut 2's lineage, verbatim
+
+- floodAutomatedRegistration3D2018.txt L761–765 (future work): "The number of hyper-rectangles deemed potentially optimal is at the very least two, and in practice can be much higher. A scheme that simultaneously renders the silhouette for each of these hyper-rectangles would scale almost proportionally up to this number." — the DIRECT+silhouette field's own identified scaling path is EXACTLY Cut 2 (iteration batching: collect the iteration's potentially-optimal boxes, enqueue all evals back-to-back on double-buffered state, one terminal wait, replay bookkeeping). Flood's "at the very least two, and in practice can be much higher" matches JTML's 2×N_optimal evals per TrisectPotentiallyOptimal iteration (direct_optimizer.cpp:113–163).
+- Also noted: Flood's own "potentially optimal" phrasing confirms the DIRECT hull-selection structure the batch surface must preserve (the A/B ordering + replay contract of R2/Cut 2).
+- Confidence: high (verbatim). Relevance: Cut 2 goes from "a JTML-invented optimization" to "the lineage's documented scaling path, implemented 8 years later".
+
+*** R3-7 — Evals/s targets for Cuts 0–2 on the RTX 3090 (pre-registered bands + gates + Flood-parity line)
+
+- Baseline today: 20–60 evals/s (16–50 ms/eval wall — DERIVED from oracle runtimes; Cut 0's first record replaces this). Flood parity: 3,000 evals/s (GTX 970, 2018).
+- Cut 0 (instrument): no target — record only. ADDITIONS to the round-2 record spec: item 9 = the lineage reconciliation table (per-eval wall, per-eval GPU-active, evals/s vs 333 µs/3,000 evals/s [Flood, GTX 970 2018] and vs 25–67 ms/14–40 DRRs-per-s [Abdellah, GTX 970 2015] and 72.7 ms/200² [DiffDRR, 2080 Ti 2022]) — the dispatch's "where JTML sits relative to that era's number" is a required row, not a footnote; item 10 = the block-size sweep {64,128,256,512} × {FillTriangleKernel, StridePrefixKernel, fast-implant, distance-map} from ncu (R3-4). Pre-registered verdict thresholds: GPU-active ≤ 1 ms ⇒ sync-bound confirmed in magnitude (Cuts 1–2 are the lever); GPU-active > 1 ms ⇒ falsified, kernel work first (R3-3).
+- Cut 1 (async terminal copies): expected 2–5× on wall (removes ~2 of 3 drains + 2–3 driver round trips) → 60–300 evals/s. Gate (additive to the round-2 gate): measured mean per-eval wall reduction ≥ prediction AND evals/s lands in the band (or above).
+- Cut 2 (iteration batching + double-buffer): host-block fraction → ~0; wall approaches GPU-active + launch overhead + host math. Expected band: 1,000–5,000 evals/s. GATES (additive): (a) evals/s ≥ 1,000 (pre-registered floor); (b) the FLOOD-PARITY LINE reported — evals/s ≥ 3,000 means JTML's heavier eval (12,412 facets, +2 metric stages) matches the lineage's whole-eval rate on a GPU 4–9× more capable, which is the correct cross-era pass/fail; (c) if evals/s < 1,000 with GPU-active in-band, the residual is launch-overhead-bound → trigger the R3-3 contingency (kernel-fusion Cut 5) instead of Cut 3's fragment-sync work. Cut 3's trigger and gates are unchanged (render-drain ≥ 50% of wall after 1–2 AND fragment distribution ≪ SAFE_CAP — R2-3).
+- Cut 4 (meter): gate gains the dispatch's wall-clock cross-check (R3-9).
+- Budget-by-time design note (R3-1): once evals/s rises toward the band, the eval-count budgets (20k/5k×2/5k, settings_constants.h) complete each frame in seconds-to-a-minute instead of tens of minutes; the lineage sizes budgets by time ("pegged to take approximately one minute"), so a future conversation is whether JTML's budgets should become time-capped — flagged, NOT changed by any cut.
+- Confidence: medium (bands are analytic pre-registrations; Cut 0 replaces them with measurements; the falsification threshold is the load-bearing rule). Relevance: gives the parent an executable accept/reject line per cut, anchored to a primary-text number instead of an internal estimate.
+
+*** R3-8 — Beyond the cuts: the render-resolution ablation arm (the one family technique with a real home)
+
+- Field evidence for the arm: Dorgham's registration accuracy is "almost the same" as full-resolution at 50% sampling compression and "did not provide an accurate result" at 75% (dorghamGPUAcceleratedGeneration2012.txt, Fig. 12–13, §IV-B); Tornai shows 1.1–9.1% sampled DRRs used successfully in registration with robustness (L21–23, L550–552: 200–700 DRRs per registration); the trunk stage of the lineage runs at dilation 6–10 (blurred), which is exactly the regime where resolution loss is cheapest.
+- Spec (VALUE-CHANGING arm for the ablation runner, NOT a bit-identical cut — cost values change, so it is gated by oracle green + the z-profile probe, never by the bit-identity diff): render-resolution axis {1024² (today), 512², 256²} per stage, implemented as scaled memset/fill dims + metrics at the scaled crop (with the crop math of fast_implant_dilation_metric.cu:201-207 / distance_map_metric.cu:83-89 re-derived at scale) OR a 2×/4× upscale before the metrics; the arbiter is the z-profile probe's valley_depth/argmin_offset at each scale (does the cost landscape survive ¼-resolution rendering?) plus the oracle IoU gate. Pre-registered expectation from the field: 50% resolution is likely safe in trunk (dilation-blurred), 25% is the cliff (Dorgham's 75%-compression failure).
+- Explicitly NOT included: stride-skipping fragments (RR2-analog) — the DilateKernel only dilates EDGE pixels (fast_implant_dilation_metric.cu:242-271), so interior holes from skipped fragments persist; the honest form is resolution scaling, not fragment sparsification.
+- Severity: medium (an optional arm, but it is the only corpus-licensed lever that reduces per-eval GPU work directly, which becomes the binding constraint IF the launch-overhead contingency of R3-3 does not materialize and GPU-active itself dominates).
+- Confidence: medium (design spec; field numbers verbatim). Relevance: gives the parent a concrete "Cut 6" candidate that the corpus actually licenses, unlike bindless textures/splatting/block projection.
+
+*** R3-9 — Cut 4's meter fix gains a wall-clock cross-check gate (the dispatch's validation requirement)
+
+- Problem: the R2-1 unit error (1000×: Linux clock() = CPU-µs labeled "ms/call") survived precisely because the meter has NO external reference — it is self-referential. The fixed meter must be validated against an independent measurement, or the same class of silent error recurs in the new code.
+- Gate (additive to round-2 Cut 4): over a 10 s capture window, compare (a) the fixed meter's ms/call (both sites: optimizer_manager.cpp:1197-1203 end-of-frame and :1272-1279 iteration callback), (b) an independent steady_clock ms/call over the same window (the Cut 0 instrumentation's per-stage wall already provides this), (c) cudaEvent GPU ms/call. ACCEPTANCE: |meter − wall| ≤ 5% of wall (or ≤ 1 ms, whichever is larger), and the wall−GPU gap is reported in the record (the item-8 visibility line — the meter must not hide the sync fraction it used to measure as "fast"). The oracle cost lambda (oracle_test.cpp:288-291) is the natural place for the cross-check harness since it already holds the event pairs.
+- Confidence: high (spec). Relevance: closes the loop on the dispatch's "meter fix validated against wall-clock" — the fix is not "uses steady_clock" but "uses steady_clock AND agrees with an independent wall/event measurement within a pre-registered tolerance".
+
+** What Could Not Be Verified (Round 3)
+
+- Actual JTML per-eval wall and GPU-active times on the RTX 3090 — Cut 0 is the first measurement; the 20–60 evals/s derivation ("a few minutes" for kBudget=3000) is low-confidence until then, and the R3-3 bands are analytic.
+- Flood's implant model triangle counts and render resolution — the paper does not state them; the 333 µs/eval is the whole-eval figure, so the workload-adjustment factor in R3-3 (2–5×) is an estimate.
+- Whether the metric-stage kernels' L1/L2 behavior justifies texture objects — needs ncu (Cut 0 record item 10); the DEFER verdict in R3-4 stands until then.
+- The exact per-launch driver overhead on this driver/arch — the R3-3 launch-overhead floor (30–75 µs/eval) is a range estimate; nsys decides whether the "launch-bound" contingency fires.
+- Mu 2016's full error model (only the abstract/methods/summary sections were read: Eq. 2 error bound, pose-grid/slab design) — sufficient for the NO-GO verdict; not needed further.
+- DiffDRR's 72.7 ms/200² includes PyTorch framework overhead, so its per-pixel comparison to hand-CUDA renderers is order-of-magnitude only (used as such in R3-4).
+
+** Sources (Round 3)
+
+- /home/ajj/zotero-paper-text/f/floodAutomatedRegistration3D2018.txt — L157–162 (L1 "GPU extremely efficiently" + no-normalization design), L215–221 (render is the eval bottleneck), L568–574 (145k budget, ~3,000 iterations/s, GTX 970, "50 seconds per frame", time-pegged budget), L761–765 (batch-render future work = Cut 2's lineage). The sanity baseline.
+- /home/ajj/zotero-paper-text/a/abdellahGPUAccelerationDigitally2015.txt — L14–15 + L333–337 (2048²/4096² DRRs at 40/15 fps on GTX 970 — same-GPU volumetric cross-check), L70–74/L283–287 (bindless textures, Kepler 3.0+/CUDA 5.0+), L276–280 (PBO interop is display-only).
+- /home/ajj/zotero-paper-text/t/tornaiFastDRRGeneration2012.txt — L21–23 (2.7–5.2 ms full ROI, 0.3–7.3 ms sampled), Table III (block-size optimization, 10–145% swings), L550–552 (200–700 DRRs per registration), §III rules (3D texture, interpolation, branch/division micro-opts).
+- /home/ajj/zotero-paper-text/d/dorghamGPUAcceleratedGeneration2012.txt — L27–30 (24 ms/8800 GTX, 2 ms/GTX 580 DRR), L566–579 (CPU similarity ~2 ms ≈ D2H copy time; GPU-side similarity "no synchronization problem" — Cuts 1–3 antecedent), Fig. 12–13/§IV-B (50% compression OK, 75% not — resolution-arm evidence), §III-B (RR1/RR2 sampling definitions).
+- /home/ajj/zotero-paper-text/g/gopalakrishnanFastAutoDifferentiableDigitally2022.txt — L32–34 + L360–361 (locally-convex loss), L135–136 (72.7 ms/200² on 2080 Ti), L314–316 (gradient fidelity 0.05±0.01, 35.1 ms vs 400.5 ms FFD), L618 + L639–641 (745/1000, 65.5±14.3 iterations, 1.92 s). Feeds 06's premises + the torch-route cost evidence.
+- /home/ajj/zotero-paper-text/k/kimDifferentiableForwardProjector2023.txt — L212–221 (matched-projector doctrine, "stable after over a thousand or more iterations", torch-free CUDA core + thin binding). Architecture corroboration (04 R3-4 already carries it).
+- /home/ajj/zotero-paper-text/m/muFastDRRGeneration2016.txt — L135–140 (block projection reuses ray segments), L147–148 + L232–234 (pose grid, bounded projection error Eq. 2), L566–569 (slab binding trade). Block-projection NO-GO basis.
+- /home/ajj/zotero-paper-text/i/ikebeDRRAccelerationUsing2023.txt — L195–197 + L424 (SJ DRR 61 ms on GTX 1650 Ti; 650–1546× CPU speedup). Volumetric-regime corroboration.
+- Hardware specs: techpowerup.com/gpu-specs/geforce-gtx-970.c2620; nanoreview.net/en/gpu/geforce-gtx-970; nvidia.com/en-gb/geforce/graphics-cards/30-series/rtx-3090-3090ti/; techpowerup.com/gpu-specs/geforce-rtx-3090.c3622.
+- src/compute/render_engine.cu — FillTriangleKernel :616–700 (fragment-scatter, linear uint8 write, shared-mem binary search, guard :628–629), Render :711+ (memset :716, cudaGetLastError :713), D2H syncs :781–790; include/compute/cuda_launch_parameters.h (threads_per_block=256 — the block-size sweep constant).
+- src/domain/direct_optimizer.cpp — TrisectPotentiallyOptimal :113–163 (2×N_optimal independent evals per iteration — the Cut 2 batch surface Flood's note anticipates).
+- src/coordinator/optimizer_manager.cpp — meter sites :1197–1203, :1272–1279 (Cut 4 cross-check targets).
+- test/oracle/oracle_test.cpp — kBudget=3000 :244, cost lambda :288–291 (the 20–60 evals/s derivation source).
+- Workspace: .panoptes/optimizer-deep-dive/synthesis.org — Finding 5 (sync-bound claim), 04 R3-5 (the lineage throughput datum this round upgrades to a full baseline family), 03 R3-1 (z-leaf budget/Flood transfer caveat: "JTML's per-eval cost is 50–150× slower — the transfer question is exactly what the per-stage data profile measures").

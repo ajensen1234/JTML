@@ -1,0 +1,204 @@
+{
+  "runId": "28079c01",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nYOU ARE AGENT C — R4 batch (C++/CMake/docs; NO main.qml, NO PosesDialog.qml, NO test/qml tst files — other agents own those).\n\nYOUR WORK:\na. src/app/experimental/PoseBridge.cpp: role-filtered dataChanged (review finding 14): notifyCellChanged currently emits dataChanged(index(frame,0), index(frame,0)) with NO roles — all 6 cells re-read per single-axis edit. Qt 6 supports role-filtered dataChanged: emit with the single role for the edited axis. Check the table model's roleNames (frameIndex/x/y/z/xa/ya/za) and map axis→role. One-line, behavior-preserving; keep the existing tests green (test/unit/experimental_pose_bridge_test.cpp must not need changes — check!).\nb. src/app/experimental/AppBridge.cpp: ML-estimate table refresh (finding 15): MlBridge's successful estimate writes storage directly (SavePose) but the D3 refresh triggers (run terminal state, viewerPoseApplied) don't include it — an open pose table shows the pre-estimate value. Wire: when mlBridge reports a successful estimate (find the signal — onPoseEstimated or similar), ALSO refresh the pose table — WITHOUT clearing the seed (refreshTable only emits modelReset per the api-contract review — verify it doesn't clear the seed; if it does, use a separate refresh path). Read MlBridge.h/AppBridge.cpp wiring first.\nc. test/CMakeLists.txt: the jtml.qml_lint gate silently unregisters when no Qt6 qmllint binary is found (finding 9): add message(WARNING ...) at configure when QML_LINT_QT6 ends up empty, so the gate's disappearance is visible.\nd. src/app/experimental/ViewportPanel.qml: remove the dead I-03 guard (Component.onCompleted with `if (!viewportItem)` — unreachable: the id always exists) — finding 17. Keep a comment noting the failure mode is silently unobservable (the renderer reports no failure).\ne. FileDialogBridge headless coverage (finding 10): make rememberDir/lastDir/mruUrls public (non-invokable — just move them to public in the header; they're trivial accessors) and add test/unit/experimental_file_dialog_test.cpp (Catch2, QtCore-only — FileDialogBridge is a QObject with QSettings; the test redirects XDG_CONFIG_HOME to a temp dir via qputenv before constructing, then pins: rememberDir→lastDir round-trip per purpose, purpose-bucket isolation (images vs models), MRU order + dedupe + kMaxMruDirs cap (5)). Register the target in test/CMakeLists.txt following the jtml.experimental_settings test recipe (block-scoped, rpath, LABELS headless) — NOTE: FileDialogBridge.h has Q_OBJECT (AUTOMOC: list the header in the add_executable sources). Link Qt6::Core + Qt6::Widgets (QFileDialog is in the .cpp — linking Widgets pulls it; the test only exercises the QSettings helpers, which don't exec dialogs).\nf. docs: handoff-2026-08-12-qml-experimental-improvement.md — fix the stale line-count claim ('main.qml 1020 → ~230 lines' → the actual post-U4/final figure; the toolbar extraction this round shrinks it further — use the orchestrator's final number if unknown, else write '~300 (post-toolbar-extraction)' and note the review) — actually: correct it to the true final value after the toolbar extraction lands; if you can't know it, qualify it. And AGENTS.md: add test/qml/ to the Test suite layout enumeration (Qt Quick Test harness + jtml.qml_lint gate) beside the existing QtTest/Catch2 bullet — one or two lines, matching the file's style.\ng. Report: files changed, test target summary, deviations.\nRepo: /home/ajj/repo/uf/JTML (Qt 6.7.2 QML app; experimental front-end under src/app/experimental/). This is a fix round after a 10-persona code review of plan 007.\nYOU MAY LOAD THE QT SKILLS for guidance: /home/ajj/.pi/agent/skills/qt-qml/SKILL.md, /home/ajj/.pi/agent/skills/qt-qml-test/SKILL.md (+ its references/ for the 47 testing rules), /home/ajj/.pi/agent/skills/qt-qml-review/SKILL.md. Apply them.\nCONSTRAINTS: EDIT-ONLY — do NOT run pixi run build / pixi run test / cmake / ninja (the orchestrator builds and tests after the parallel wave lands; concurrent builds on the shared .build dir race). You MAY run $CONDA_PREFIX/lib/qt6/bin/qmllint (or .pixi/envs/default/lib/qt6/bin/qmllint) --json on your changed QML for syntax checking (the bare qmllint on PATH is Qt 5.15.8 — never use it). No git/jj commands, no staging, no commits.\nTest conventions (read existing files first): test/qml/ harness — quick_test_main, tests.qrc aliases REAL component sources, fakes (FakePoseBridge/FakeStudyBridge...) injected via required properties, QT_QPA_PLATFORM=offscreen + QT_QUICK_CONTROLS_STYLE=Material. Run pattern the orchestrator uses: QT_QPA_PLATFORM=offscreen QT_QUICK_CONTROLS_STYLE=Material .build/bin/jtml_test_qml_view tst_<Name> (the existing binary — but do not rebuild it).",
+  "exitCode": 0,
+  "usage": {
+    "input": 550294,
+    "output": 13324,
+    "cacheRead": 13815296,
+    "cacheWrite": 0,
+    "cost": 0.05972735439999999,
+    "turns": 26
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 550294,
+        "output": 13324,
+        "cacheRead": 13815296,
+        "cacheWrite": 0,
+        "cost": 0.05972735439999999,
+        "turns": 26
+      }
+    }
+  ],
+  "durationMs": 214005,
+  "toolCount": 25,
+  "launchContractDigest": "5f02c3c0c94f881398815a10f3ad89e1985e4ab08188e3f6ff6fa50020f3db58",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "passed",
+        "message": "changed-files evidence present."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "passed",
+        "message": "tests-added evidence present."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "All 7 work items (a-g) implemented within their declared scope: no main.qml, no PosesDialog.qml, no test/qml tst files touched. Role-filtered dataChanged emits the single axis role (PoseBridge.cpp:154-158, verified against roleNames); ML-estimate refresh wired via MlBridge::poseEstimated -> PoseBridge::refreshTable (AppBridge.cpp:102, refreshTable emits only modelReset so no seed-clear per the api-contract verification); lint-gate configure warning added; ViewportPanel dead guard removed with a documenting comment; FileDialogBridge helpers made public + headless Catch2 test added (3 test cases: round-trip, bucket isolation, MRU order/dedupe/cap); handoff line-count claim corrected; AGENTS.md test layout updated. Constraint honored: edit-only, no build/test/commit run."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/PoseBridge.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/FileDialogBridge.h",
+        "src/app/experimental/ViewportPanel.qml",
+        "test/CMakeLists.txt",
+        "test/unit/experimental_file_dialog_test.cpp",
+        "docs/handoff-2026-08-12-qml-experimental-improvement.md",
+        "AGENTS.md"
+      ],
+      "testsAddedOrUpdated": [
+        "test/unit/experimental_file_dialog_test.cpp (new — 3 Catch2 test cases)"
+      ],
+      "commandsRun": [
+        {
+          "command": ".pixi/envs/default/lib/qt6/bin/qmllint --json on ViewportPanel.qml",
+          "result": "passed",
+          "summary": "Only the documented accepted environmental warnings (jtml.experimental C++-module import gap, unqualified) — no new warnings from the guard removal."
+        },
+        {
+          "command": "grep/read review of PoseBridge roleNames, AppBridge wiring, FileDialogBridge header, CMake recipe",
+          "result": "passed",
+          "summary": "Role mapping verified against roleNames(); refreshTable verified to emit only modelReset (no seed-clear); AUTOMOC Q_OBJECT header listed in the new target; no jtml_coordinator/JTA deps needed."
+        }
+      ],
+      "validationOutput": [
+        "PoseBridge::notifyCellChanged now emits dataChanged(cell, cell, {role}) with RoleForAxis(axis); out-of-range axis falls back to a full-row emit — behavior-preserving, existing pose_bridge tests assert refreshTable model-reset + cell reads, not the dataChanged role list (grep confirmed no notifyCellChanged/dataChanged-role assertions).",
+        "AppBridge connect added after the viewerPoseApplied->refreshTable connect; MlBridge::poseEstimated(primary) is emitted only on success (after the degradation return), so the refresh fires exactly once per successful estimate.",
+        "FileDialogBridge test uses XDG_CONFIG_HOME redirected to QTemporaryDir before bridge construction; QSettings member resolves the path in the ctor; declared-before-bridge order guarantees the temp dir outlives the bridge.",
+        "test/CMakeLists.txt registration follows the jtml_test_experimental_settings recipe (explicit sources incl. the Q_OBJECT header for AUTOMOC, block-scoped, LABELS headless, TIMEOUT 120); links Qt6::Core + Qt6::Widgets for QFileDialog in the .cpp; no rpath lines needed (no build-dir .so deps).",
+        "Handoff line-count corrected to the true post-U4 figure (~517) with a note that the review round's toolbar extraction shrinks it further; AGENTS.md gains the test/qml/ bullet beside the existing layout enumeration."
+      ],
+      "residualRisks": [
+        "The new test target is registered but not compiled (edit-only wave) — the orchestrator's build will validate it; compile-plausibility was checked by reading (includes resolve: FileDialogBridge.h QtCore-only, catch2 macros, QTemporaryDir/QByteArray).",
+        "handoff's post-toolbar-extraction line count is qualified (~517 pre-extraction) since agent B's final main.qml size was unknown at write time; the orchestrator may tighten the wording.",
+        "Concurrent-agent files (FileDialogBridge.cpp, FakeAppBridge.qml, FakePoseBridge.qml, qml_lint.cmake) appear modified in the working tree — not mine; the orchestrator should reconcile them with agents A/B's wave."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Role-filtered pose-table cell notify; ML-estimate pose-table refresh; visible lint-gate unregistration warning; dead renderer-guard removal; FileDialogBridge memory surface made public + headless test target; handoff + AGENTS.md documentation corrections.",
+      "reviewFindings": [
+        "no blockers — all 7 items implemented within scope; compile-time validation deferred to the orchestrator's post-wave build"
+      ],
+      "manualNotes": "I loaded the qt skills for guidance as instructed (qt-qml/qt-qml-test conventions applied to the test authoring: explicit includes, purpose-bucket isolation, Catch2 CHECK/REQUIRE usage matching the repo's unit-test style)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/28079c01_worker_0_transcript.jsonl",
+  "timestamp": 1786554920018
+}

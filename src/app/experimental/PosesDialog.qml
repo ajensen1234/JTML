@@ -19,6 +19,19 @@ Dialog {
     height: 460
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
+    // 007 U6 (D1): injected bridge surface — the composition root passes
+    // the real bridges; tests pass fakes. No context-property coupling.
+    required property var poseBridge
+    required property var studyBridge
+    required property var optimizerBridge
+
+    // Plan 007 U4 (I-13): dirty-close guard. Declared here (was a
+    // dangling reference — the app threw on dialog open/close); the root
+    // shows the discard-confirm dialog when this signal fires, and sets
+    // discardConfirmed before the deliberate Run-button close.
+    signal discardRequested()
+    property bool discardConfirmed: false
+
     // U8 pose table (net-new UI — the widgets app never numerically edits
     // poses; review-fixed semantics): rows = frames, 6 editable cells per
     // row (x/y/z/xa/ya/za) for the PRIMARY model's stored poses; each cell
@@ -29,9 +42,9 @@ Dialog {
     // pose_copy seam; save/load wrap pose_file_io. Every control is
     // disabled during an optimizer run (the U6 locking — the Run button
     // also closes this dialog; the toolbar opener is disabled too).
-    property bool canEditPoses: poseBridge.rowCount > 0
-                                && studyBridge.primaryModelIndex >= 0
-                                && !optimizerBridge.running
+    property bool canEditPoses: root.poseBridge.rowCount > 0
+                                && root.studyBridge.primaryModelIndex >= 0
+                                && !root.optimizerBridge.running
 
     // ---- Pose/kinematics file actions (U8): the pose_file_io wrappers
     // surface false returns (unwritable path) + parse failures through the
@@ -41,7 +54,7 @@ Dialog {
         title: qsTr("Save Pose")
         fileMode: FileDialog.SaveFile
         nameFilters: ["JTA Pose File (*.jtap)", "Pose File (*.txt)"]
-        onAccepted: poseBridge.savePoseFile(selectedFile)
+        onAccepted: root.poseBridge.savePoseFile(selectedFile)
     }
     FileDialog {
         id: loadPoseFileDialog
@@ -51,14 +64,14 @@ Dialog {
             "JointTrack Pose File (*.jtp)",
             "Pose File (*.txt)"
         ]
-        onAccepted: poseBridge.loadPoseFile(selectedFile)
+        onAccepted: root.poseBridge.loadPoseFile(selectedFile)
     }
     FileDialog {
         id: saveKinematicsFileDialog
         title: qsTr("Save Kinematics")
         fileMode: FileDialog.SaveFile
         nameFilters: ["JTA Kinematics File (*.jtak)", "Kinematics File (*.txt)"]
-        onAccepted: poseBridge.saveKinematics(selectedFile)
+        onAccepted: root.poseBridge.saveKinematics(selectedFile)
     }
     FileDialog {
         id: loadKinematicsFileDialog
@@ -68,7 +81,7 @@ Dialog {
             "JointTrack Kinematics File (*.jts)",
             "Kinematics File (*.txt)"
         ]
-        onAccepted: poseBridge.loadKinematics(selectedFile)
+        onAccepted: root.poseBridge.loadKinematics(selectedFile)
     }
 
     contentItem: ColumnLayout {
@@ -79,11 +92,11 @@ Dialog {
             Layout.fillWidth: true
             spacing: Theme.spacingXs
             Label {
-                text: studyBridge.primaryModelIndex >= 0
+                text: root.studyBridge.primaryModelIndex >= 0
                       ? qsTr("Model %1 · %2 frames")
-                            .arg(studyBridge.primaryModelIndex)
-                            .arg(poseBridge.rowCount)
-                      : qsTr("%1 frames").arg(poseBridge.rowCount)
+                            .arg(root.studyBridge.primaryModelIndex)
+                            .arg(root.poseBridge.rowCount)
+                      : qsTr("%1 frames").arg(root.poseBridge.rowCount)
                 color: Theme.fg
                 font.bold: true
                 font.pixelSize: Theme.label
@@ -93,14 +106,14 @@ Dialog {
                 Layout.preferredHeight: 14
                 Layout.preferredWidth: Math.max(dirtyLabel.implicitWidth + 12, 28)
                 radius: 7
-                color: poseBridge.dirty ? Theme.badgeDirtyBg
+                color: root.poseBridge.dirty ? Theme.badgeDirtyBg
                                         : Theme.badgeCleanBg
                 Label {
                     id: dirtyLabel
                     anchors.centerIn: parent
-                    text: poseBridge.dirty ? qsTr("● unsaved")
+                    text: root.poseBridge.dirty ? qsTr("● unsaved")
                                            : qsTr("saved")
-                    color: poseBridge.dirty ? Theme.badgeDirtyFg
+                    color: root.poseBridge.dirty ? Theme.badgeDirtyFg
                                             : Theme.badgeCleanFg
                     font.pixelSize: Theme.caption
                 }
@@ -114,12 +127,12 @@ Dialog {
             Button {
                 text: qsTr("◀ Copy Prev")
                 enabled: root.canEditPoses
-                onClicked: poseBridge.copyPrevious()
+                onClicked: root.poseBridge.copyPrevious()
             }
             Button {
                 text: qsTr("Copy Next ▶")
                 enabled: root.canEditPoses
-                onClicked: poseBridge.copyNext()
+                onClicked: root.poseBridge.copyNext()
             }
             Item { Layout.fillWidth: true }
             Button {
@@ -157,17 +170,23 @@ Dialog {
             active: root.visible
             sourceComponent: PosesTable {
                 id: poseTable
+                // 007 U6 (D1): the Loader cannot satisfy required
+                // properties, so the table's bridges are passed at the
+                // instantiation site from the dialog's injected props.
+                poseBridge: root.poseBridge
+                studyBridge: root.studyBridge
+                optimizerBridge: root.optimizerBridge
             }
         }
 
         // ---- Inline validation message (review fix) -----------------------
         Label {
             Layout.fillWidth: true
-            visible: poseBridge.validationMessage.length > 0
+            visible: root.poseBridge.validationMessage.length > 0
             color: Theme.badge
             font.pixelSize: Theme.caption
             wrapMode: Text.Wrap
-            text: poseBridge.validationMessage
+            text: root.poseBridge.validationMessage
         }
     }
 
@@ -183,8 +202,20 @@ Dialog {
         }
     }
     onClosed: {
-        if (poseBridge.dirty && !root.discardConfirmed) {
+        if (root.poseBridge.dirty && !root.discardConfirmed) {
             root.discardRequested()
+        }
+    }
+
+    // R2 (review round): the discard-close path calls this BEFORE closing
+    // the dialog so the table's in-flight cell edits are dropped instead
+    // of committed during teardown (Component.onDestruction honors
+    // suppressDestructionCommit). No-op when the table is already
+    // destroyed — the Esc-close flow tears the table down before the
+    // discard decision, so the caller must invoke this before close().
+    function prepareDiscard() {
+        if (poseTableLoader.item) {
+            poseTableLoader.item.suppressDestructionCommit = true
         }
     }
 }

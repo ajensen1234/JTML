@@ -1,0 +1,1 @@
+All coherent — the root property, six delegate pass-throughs, the cell property, and the dialog API are wired; 7+7 test functions. Task complete. Acceptance report:

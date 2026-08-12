@@ -15,12 +15,26 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Theme.spacingXs
 
+    // 007 U6 (D1): injected bridge surface — the composition root passes
+    // the real bridges; tests pass fakes. No context-property coupling.
+    required property var mlBridge
+    required property var studyBridge
+    required property var optimizerBridge
+
+    // Testability (plan 007 U6): the action buttons are reachable from
+    // the Qt Quick Test via findChild (degradation matrix + run-lock pins).
+    readonly property string segmentButtonObjectName: "mlSegmentButton"
+    readonly property string estimateButtonObjectName: "mlEstimateButton"
+    readonly property string blackSilButtonObjectName: "mlBlackSilButton"
+    readonly property string femurKindButtonObjectName: "mlFemButton"
+    readonly property string tibiaKindButtonObjectName: "mlTibButton"
+
     // D5 (plan 007 U3): single run-lock source for this panel — every
     // locked control binds to it (Black-sil., Fem/Tib, and the view
     // toggles joined the matrix in U3; the review found the spread
     // !optimizerBridge.running bindings are how controls keep escaping
     // the lock).
-    readonly property bool runLocked: optimizerBridge.running
+    readonly property bool runLocked: root.optimizerBridge.running
 
     // Loaded-.pt label helper: the last path segment (the full path is in
     // the bridge's property; the strip shows the basename to fit the
@@ -37,19 +51,19 @@ ColumnLayout {
         id: segFemPtDialog
         title: qsTr("Load Femur Segmentation Model (.pt)")
         nameFilters: ["Torch File (*.pt)", "All files (*)"]
-        onAccepted: mlBridge.setSegmentFemPt(selectedFile)
+        onAccepted: root.mlBridge.setSegmentFemPt(selectedFile)
     }
     FileDialog {
         id: segTibPtDialog
         title: qsTr("Load Tibia Segmentation Model (.pt)")
         nameFilters: ["Torch File (*.pt)", "All files (*)"]
-        onAccepted: mlBridge.setSegmentTibPt(selectedFile)
+        onAccepted: root.mlBridge.setSegmentTibPt(selectedFile)
     }
     FileDialog {
         id: estimatePtDialog
         title: qsTr("Load Pose Estimation Model (.pt)")
         nameFilters: ["Torch File (*.pt)", "All files (*)"]
-        onAccepted: mlBridge.setEstimatePt(selectedFile)
+        onAccepted: root.mlBridge.setEstimatePt(selectedFile)
     }
 
     // ---- The strip -------------------------------------------------------
@@ -78,11 +92,11 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideMiddle
-            color: mlBridge.segmentFemPt.length > 0
+            color: root.mlBridge.segmentFemPt.length > 0
                    ? Theme.fg : Theme.fgMuted
             font.pixelSize: Theme.caption
-            text: mlBridge.segmentFemPt.length > 0
-                  ? baseName(mlBridge.segmentFemPt)
+            text: root.mlBridge.segmentFemPt.length > 0
+                  ? baseName(root.mlBridge.segmentFemPt)
                   : qsTr("not set")
         }
     }
@@ -98,11 +112,11 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideMiddle
-            color: mlBridge.segmentTibPt.length > 0
+            color: root.mlBridge.segmentTibPt.length > 0
                    ? Theme.fg : Theme.fgMuted
             font.pixelSize: Theme.caption
-            text: mlBridge.segmentTibPt.length > 0
-                  ? baseName(mlBridge.segmentTibPt)
+            text: root.mlBridge.segmentTibPt.length > 0
+                  ? baseName(root.mlBridge.segmentTibPt)
                   : qsTr("not set")
         }
     }
@@ -118,11 +132,11 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideMiddle
-            color: mlBridge.estimatePt.length > 0
+            color: root.mlBridge.estimatePt.length > 0
                    ? Theme.fg : Theme.fgMuted
             font.pixelSize: Theme.caption
-            text: mlBridge.estimatePt.length > 0
-                  ? baseName(mlBridge.estimatePt)
+            text: root.mlBridge.estimatePt.length > 0
+                  ? baseName(root.mlBridge.estimatePt)
                   : qsTr("not set")
         }
     }
@@ -130,28 +144,32 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Theme.spacingXs
         Button {
+            id: segmentButton
+            objectName: root.segmentButtonObjectName
             text: qsTr("Segment")
             Layout.fillWidth: true
             enabled: !root.runLocked
-                     && studyBridge.hasDataset
-                     && studyBridge.currentFrame >= 0
-                     && mlBridge.hasSegmentModel
-            onClicked: mlBridge.segmentCurrentFrame()
+                     && root.studyBridge.hasDataset
+                     && root.studyBridge.currentFrame >= 0
+                     && root.mlBridge.hasSegmentModel
+            onClicked: root.mlBridge.segmentCurrentFrame()
         }
         Button {
+            id: estimateButton
+            objectName: root.estimateButtonObjectName
             text: qsTr("Estimate")
             Layout.fillWidth: true
             enabled: !root.runLocked
-                     && studyBridge.hasDataset
-                     && studyBridge.currentFrame >= 0
-                     && studyBridge.primaryModelIndex >= 0
-                     && mlBridge.hasEstimateModel
+                     && root.studyBridge.hasDataset
+                     && root.studyBridge.currentFrame >= 0
+                     && root.studyBridge.primaryModelIndex >= 0
+                     && root.mlBridge.hasEstimateModel
                      // D6 (plan 007 U3, I5): the widgets estimate actions
                      // segment first and REQUIRE the segment model — the
                      // button reflects that (the bridge guard already
                      // messages; the view disables first).
-                     && mlBridge.hasSegmentModel
-            onClicked: mlBridge.estimateCurrentFrame()
+                     && root.mlBridge.hasSegmentModel
+            onClicked: root.mlBridge.estimateCurrentFrame()
         }
     }
     // D6 hint (plan 007 U3, I5): when an estimate .pt is set but no
@@ -159,7 +177,7 @@ ColumnLayout {
     // why (mirrors the bridge's guard message).
     Label {
         Layout.fillWidth: true
-        visible: mlBridge.hasEstimateModel && !mlBridge.hasSegmentModel
+        visible: root.mlBridge.hasEstimateModel && !root.mlBridge.hasSegmentModel
         color: Theme.fgDim
         font.pixelSize: Theme.caption
         wrapMode: Text.Wrap
@@ -178,13 +196,30 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Theme.spacingXs
         CheckBox {
+            id: blackSilCheck
+            objectName: root.blackSilButtonObjectName
             text: qsTr("Black sil.")
+            // Owner fix (2026-08-12): the Material style's label color did
+            // not reach this control (black text on the dark panel) — the
+            // app's convention is explicit Theme colors, so pin the text
+            // via a contentItem override (CheckBox has no `color`/`label`
+            // property; the style keeps drawing background + indicator).
+            contentItem: Text {
+                text: blackSilCheck.text
+                color: Theme.fg
+                font: blackSilCheck.font
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: blackSilCheck.indicator
+                             ? blackSilCheck.indicator.width
+                               + blackSilCheck.spacing
+                             : 0
+            }
             font.pixelSize: Theme.caption
-            checked: mlBridge.blackSilhouette
+            checked: root.mlBridge.blackSilhouette
             // D5 (plan 007 U3, I4): locked during a run — a mid-run
             // black-silhouette toggle races the segmentation pipeline.
             enabled: !root.runLocked
-            onToggled: mlBridge.blackSilhouette = checked
+            onToggled: root.mlBridge.blackSilhouette = checked
         }
         Label {
             text: qsTr("Implant:")
@@ -197,6 +232,7 @@ ColumnLayout {
         }
         Button {
             id: femurKindButton
+            objectName: root.femurKindButtonObjectName
             text: qsTr("Fem")
             checkable: true
             // D5 (plan 007 U3, I4): locked during a run (review D-07 —
@@ -205,7 +241,7 @@ ColumnLayout {
             font.pixelSize: Theme.caption
             implicitWidth: 40
             Accessible.name: qsTr("Femur implant kind")
-            onClicked: mlBridge.implantKind = 0
+            onClicked: root.mlBridge.implantKind = 0
         }
         // D-08 (plan 007 U3): Binding re-asserts from the bridge value —
         // an inline `checked:` binding dies on the first click (see the
@@ -213,10 +249,11 @@ ColumnLayout {
         Binding {
             target: femurKindButton
             property: "checked"
-            value: mlBridge.implantKind === 0
+            value: root.mlBridge.implantKind === 0
         }
         Button {
             id: tibiaKindButton
+            objectName: root.tibiaKindButtonObjectName
             text: qsTr("Tib")
             checkable: true
             // D5 (plan 007 U3, I4): locked during a run (review D-07).
@@ -224,12 +261,12 @@ ColumnLayout {
             font.pixelSize: Theme.caption
             implicitWidth: 40
             Accessible.name: qsTr("Tibia implant kind")
-            onClicked: mlBridge.implantKind = 1
+            onClicked: root.mlBridge.implantKind = 1
         }
         Binding {
             target: tibiaKindButton
             property: "checked"
-            value: mlBridge.implantKind === 1
+            value: root.mlBridge.implantKind === 1
         }
     }
     RowLayout {
@@ -252,7 +289,7 @@ ColumnLayout {
             font.pixelSize: Theme.caption
             implicitWidth: 44
             Accessible.name: qsTr("Original view")
-            onClicked: mlBridge.setBackgroundMode(0)
+            onClicked: root.mlBridge.setBackgroundMode(0)
         }
         // D-08 (plan 007 U3): the segment flow calls setBackgroundMode(1)
         // programmatically (MlBridge.cpp), so the buttons MUST re-assert
@@ -261,7 +298,7 @@ ColumnLayout {
         Binding {
             target: origViewButton
             property: "checked"
-            value: mlBridge.backgroundMode === 0
+            value: root.mlBridge.backgroundMode === 0
         }
         Button {
             id: segViewButton
@@ -271,30 +308,30 @@ ColumnLayout {
             font.pixelSize: Theme.caption
             implicitWidth: 44
             Accessible.name: qsTr("Segmented view")
-            onClicked: mlBridge.setBackgroundMode(1)
+            onClicked: root.mlBridge.setBackgroundMode(1)
         }
         Binding {
             target: segViewButton
             property: "checked"
-            value: mlBridge.backgroundMode === 1
+            value: root.mlBridge.backgroundMode === 1
         }
     }
     // Estimate result display (the pose that seeds the optimizer).
     Label {
         Layout.fillWidth: true
-        visible: mlBridge.hasEstimate
+        visible: root.mlBridge.hasEstimate
         elide: Text.ElideMiddle
         color: Theme.ok
         font.pixelSize: Theme.caption
-        text: mlBridge.estimateText
+        text: root.mlBridge.estimateText
     }
     // Status/hint label (the AE4 degradation surface).
     Label {
         Layout.fillWidth: true
-        visible: mlBridge.statusText.length > 0
+        visible: root.mlBridge.statusText.length > 0
         color: Theme.fgDim
         font.pixelSize: Theme.caption
         wrapMode: Text.Wrap
-        text: mlBridge.statusText
+        text: root.mlBridge.statusText
     }
 }

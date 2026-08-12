@@ -1,0 +1,1 @@
+All my changes are in place (the extra files in the diff — `FileDialogBridge.cpp`, `Fake*.qml`, `qml_lint.cmake` — are concurrent edits from the other two agents; I didn't touch them). Final scope check confirms my edits are internally consistent.

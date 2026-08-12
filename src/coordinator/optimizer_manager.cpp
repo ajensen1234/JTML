@@ -693,12 +693,21 @@ bool OptimizerManager::Initialize(
         }
     }
     for (int i = 0; i < frames_A_.size(); i++) {
+        /*Owner fix (2026-08-12): curvature heatmaps only exist after an ML
+         * segmentation (Frame::setCurvatureHeatmaps); a study loaded
+         * without segmentation has none, and the upload must not abort the
+         * run. The GPUHeatmap ctor treats num_keypoints <= 0 as a
+         * legitimate no-upload state (initialized, 0 keypoints), keeping
+         * the vector frame-aligned so the cost functions' per-frame at(i)
+         * access stays valid (GetNumKeypoints() == 0 -> the curvature
+         * costs no-op; the distance-map costs are unaffected).*/
+        auto frame_heatmaps = frames_A_[i].getCurvatureHeatmaps();
         auto heatmap = new GPUHeatmap(
             width,
             height,
             cuda_device_id,
             frames_A_[i].GetNumCurvatureKeypoints(),
-            frames_A_[i].getCurvatureHeatmaps().data());
+            frame_heatmaps.empty() ? nullptr : frame_heatmaps.data());
         if (heatmap->IsInitializedCorrectly()) {
             gpu_heatmaps_.push_back(heatmap);
         } else {

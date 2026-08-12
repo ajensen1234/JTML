@@ -89,7 +89,7 @@ private:
     cv::Mat distance_map_;
     std::vector<cv::Mat> curvature_heatmaps_;
     std::vector<uchar> curvature_heatmap_chars_;
-    int num_curvature_keypoints_;
+    int num_curvature_keypoints_ = 0;
     /*Constants*/
     int aperture_;
     int low_threshold_;

@@ -1,0 +1,7 @@
+I now have everything needed. Verification summary:
+
+1. **R10 deferral** — origin R8/Key-Decisions put Cut 0 + Cut 4 in Phase 0 ("absorbed from the deferred-CUDA inventory into Phase 0"); the plan defers both to the perf plan, but discloses it in three places (R10 trace line, Overview, Scope Boundaries) with a coherent rationale (gates are IoU/bit-identity, not evals/s). Trace is honest, with disclosed consequences.
+2. **U10 (Cut F torch hygiene)** — origin's own Scope Boundaries explicitly permit it ("No torch in the cost path (Cut F include/link hygiene only)"), and origin R8 Phase 2 includes Cut F. Not smuggled; suppressed.
+3. **U8 divergence probes** — verified `src/domain/direct_optimizer.cpp` contains no ε filter, no gb, no ties/selection machinery (only a comment at :98). The plan's boundary ("stays at bit-identical defaults", "no algorithm work") contradicts its own test scenario requiring ε>0 tie-filtering and gb stagnation-restriction behavior — variant machinery that origin R9 assigns to the battery-scored algorithm phase. P2.
+4. **Phase labels** — U2/U3/U4 labeled "Phase 1"/"Phase 2" while origin R8 puts all of them in Phase 0; labels are also non-topological within the plan (U5/U6 "Phase 1" depend on U4 "Phase 2"). P3.
+5. U5/U6 probe/oracle specs verified faithful to the run's spec; z_leaf_budget axis is origin-declared; U7 registry stubs permitted by R6. All suppressed.

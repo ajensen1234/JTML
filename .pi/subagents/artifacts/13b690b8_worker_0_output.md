@@ -1,0 +1,1 @@
+All three agents' changes are in the shared working tree (mine + A's + C's — the orchestrator builds after the wave). My scope is complete. Acceptance report:

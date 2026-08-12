@@ -1,0 +1,214 @@
+{
+  "runId": "7199ee6e",
+  "agent": "ce-project-standards-reviewer",
+  "task": "You are ce-project-standards-reviewer. AGENTS.md compliance: layered-lib rules (domain/services/coordinator/compute/view), AUTOMOC header-in-sources rule, explicit .cpp lists in CMakeLists (any new .cpp added to test/CMakeLists.txt or src/app/experimental/CMakeLists.txt?), headless-test discipline (no GPU/VTK in headless), jj conventions, include-what-you-use (transitive includes — gpu_heatmaps.cuh changes), test naming jtml.<name>, docs frontmatter format in the 2 new docs/solutions entries.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 121470,
+    "output": 41179,
+    "cacheRead": 5909888,
+    "cacheWrite": 0,
+    "cost": 0.022541803200000002,
+    "turns": 66
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 121470,
+        "output": 41179,
+        "cacheRead": 5909888,
+        "cacheWrite": 0,
+        "cost": 0.022541803200000002,
+        "turns": 66
+      }
+    }
+  ],
+  "durationMs": 496771,
+  "toolCount": 77,
+  "launchContractDigest": "5a351371f935741909079cc28015baf3d53d88aa87303f8b9f0e1442c0a18458",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "4 concrete findings written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-project-standards-reviewer.json, each with file, line, severity (1×P2, 3×P3), confidence, evidence quotes; residual_risks and testing_gaps populated. Verified standards areas: layered-lib .cpp lists (no new .cpp outside test/CMakeLists.txt's explicit main.cpp entry), AUTOMOC rule (no shared Q_OBJECT header in the new target), headless discipline (jtml.qml_lint + jtml.qml_view run offscreen, VTK-free, both PASSED in .build via ctest), jj message conventions (all commits '<scope>: <msg>'), IWYU (FileDialogBridge adds QFileInfo/QSettings/QUrl; no new transitive includes), test naming jtml.<name>, docs/solutions frontmatter (module/tags/problem_type present, category-consistent)."
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/main.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/SettingsPanel.qml",
+        "src/app/experimental/Theme.qml",
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.h/.cpp",
+        "src/app/experimental/PoseBridge.h/.cpp",
+        "src/app/experimental/FileDialogBridge.h/.cpp",
+        "src/app/experimental/qmldir",
+        "src/app/experimental/resources.qrc",
+        "src/app/experimental/renderer.qml",
+        "src/compute/gpu_heatmaps.cu",
+        "src/compute/gpu_metrics.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "test/CMakeLists.txt",
+        "test/qml/*",
+        "test/qml_lint.cmake",
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "test/unit/experimental_ml_bridge_test.cpp",
+        "pixi.toml",
+        ".gitignore",
+        "AGENTS.md",
+        "docs/plans/2026-08-12-007-*.md",
+        "docs/reviews/2026-08-12-qml-experimental-review.md",
+        "docs/solutions/conventions/jtml-qml-view-testing-2026-08-12.md",
+        "docs/solutions/ui-bugs/jtml-qml-trace-driven-debugging-2026-08-12.md",
+        "docs/handoff-2026-08-12-qml-experimental-improvement.md"
+      ],
+      "testsAddedOrUpdated": [
+        "test/qml/tst_Theme.qml",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_SettingsPanel.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/main.cpp",
+        "test/qml/tests.qrc",
+        "test/qml_lint.cmake",
+        "test/unit/experimental_pose_bridge_test.cpp",
+        "test/unit/experimental_ml_bridge_test.cpp"
+      ],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @",
+          "result": "passed",
+          "summary": "Full 16,279-line diff captured and reviewed across all 48 review-scope files"
+        },
+        {
+          "command": "ctest -R jtml.qml_lint (QT_QPA_PLATFORM=offscreen)",
+          "result": "passed",
+          "summary": "qmllint gate passes (0.43s) — only documented-accepted warning ids"
+        },
+        {
+          "command": "ctest -R jtml.qml_view (QT_QPA_PLATFORM=offscreen)",
+          "result": "passed",
+          "summary": "Qt Quick Test harness passes (3.40s)"
+        },
+        {
+          "command": ".build/bin/jtml_test_qml_view",
+          "result": "passed",
+          "summary": "Totals: 38 passed, 0 failed — all 5 suites (28 test_* + init/cleanup) green"
+        },
+        {
+          "command": "wc -l src/app/experimental/main.qml && grep -rn 'Keys\\.' src/app/experimental/*.qml",
+          "result": "passed",
+          "summary": "main.qml = 517 lines (vs handoff claim ~230); only StudyPanel.qml:161 has Keys handling — evidence for findings 1 and 3"
+        }
+      ],
+      "validationOutput": [
+        "Headless label discipline verified: jtml.qml_lint + jtml.qml_view registered LABELS headless, offscreen platform, Material style pin, no VTK/bridges/jtml libs linked in the harness (ViewportPanel deliberately excluded)",
+        "qmldir + resources.qrc list every new component (plan wiring-contract rule satisfied)",
+        "Both new docs/solutions entries have YAML frontmatter with module/tags/problem_type, matching their category's established shape",
+        "Test naming jtml.<name> conformant (jtml.qml_lint, jtml.qml_view); commit messages conform to '<scope>: <msg>'",
+        "AUTOMOC gotcha not applicable (no shared Q_OBJECT header in jtml_test_qml_view); explicit .cpp list rule satisfied (test/qml/main.cpp added to add_executable)"
+      ],
+      "residualRisks": [
+        "48/48 headless claim vs 39 in current build cache (unverifiable)",
+        "qml_lint gate silently unregisters without a Qt6 qmllint binary",
+        "Heatmap guard + renderer scene-index fix have no automated pins (oracle/manual-visual verification)",
+        "Parity band re-run (~1h oracle gate) is the ultimate check for the compute/coordinator owner-fix"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 full improvement pass over the experimental QML front-end: U1 review report, U2 theme tokens + component extraction, U3 view-state gap fixes (commit contract, table refresh owner, ML-seed invalidation, run-lock matrix, keyboard wiring), U4 UX/composition pass, U5 pose-table virtualization, U6 Qt Quick Test harness + qmllint gate, U7 profiling build, two owner-feedback rounds, heatmap-less optimizer guard (owner-requested compute/coordinator touch), plus docs/solutions entries and handoff.",
+      "reviewFindings": [
+        "P2: src/app/experimental/PosesTable.qml:133 - plan D7 pose-table keyboard contract (cell navigation, single tab stop) unimplemented and unpinned",
+        "P3: test/qml/tst_StudyFlows.qml:1 - plan U6 load-ordering/replace-confirm/D10 scenario pins undelivered, omission undocumented",
+        "P3: docs/handoff-2026-08-12-qml-experimental-improvement.md:6 - 'main.qml 1020 → ~230 lines' claim stale (actual 517)",
+        "P3: AGENTS.md:28 - Test-suite section not updated for test/qml/ + Qt Quick Test convention",
+        "No blockers in headless discipline, AUTOMOC, .cpp lists, jj conventions, test naming, docs frontmatter, IWYU"
+      ],
+      "manualNotes": "Verification performed against the committed range ywpkloqo..@ (working copy @); both new headless tests were actually executed and passed. The two P3 doc findings (handoff line count, AGENTS.md layout) are advisory; the P2 is a genuine plan-contract gap (owner-confirmed D7 keyboard contract absent from code and tests). Findings that belong to other personas (correctness of the heatmap guard, layout/UX details) were suppressed per persona rubric."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/7199ee6e_ce-project-standards-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553238404
+}

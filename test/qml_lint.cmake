@@ -15,10 +15,13 @@
 #   import                — env Qt5+Qt6 module ambiguity (QtQuick.Dialogs
 #                           defined twice: qt-main 5.15.8 + qt6 6.7.2) +
 #                           the C++-module import note. Environmental.
-#   unqualified           — context-property bridge coupling (studyBridge/
-#                           optimizerBridge/... are engine-level root
-#                           properties qmllint cannot see). Removed by
-#                           plan 007 U3's property injection.
+#   unqualified           — main.qml root-context bridge references
+#                           (studyBridge/optimizerBridge/... are engine-level
+#                           root properties qmllint cannot see) + delegate
+#                           model.*/ListView.view.* accesses inside nested
+#                           items. The D1 property injection (plan 007 U6)
+#                           removed the component-level coupling; the root
+#                           composition + nested-delegate accesses remain.
 #   unresolved-type /
 #   missing-property      — QmlVtkRenderer is C++-registered without a
 #                           qmltypes file; qmllint cannot resolve it
@@ -26,8 +29,9 @@
 #   use-proper-function   — SettingsPanel's `property var commit`
 #                           pass-through glue (deliberate; QML has no
 #                           function-typed property).
-#   unused-imports        — resolved by U2 (kept accepted so a leftover
-#                           does not silently rot the gate).
+#   unused-imports        — kept accepted so a leftover does not silently
+#                           rot the gate (currently zero warnings; the
+#                           count is verified at each gate run).
 #
 # Anything else (e.g. Quick.layout-positioning) FAILS the gate.
 cmake_minimum_required(VERSION 3.19)

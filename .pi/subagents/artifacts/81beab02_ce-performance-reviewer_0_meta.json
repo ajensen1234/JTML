@@ -1,0 +1,177 @@
+{
+  "runId": "81beab02",
+  "agent": "ce-performance-reviewer",
+  "task": "You are ce-performance-reviewer. The virtualization (ListView reuse + per-row delegate cost), the whole-row dataChanged re-evaluation, the RunBar 18k binding churn from the profile, the pickImages/pickModels dialog cost (3.2s — profile evidence), the qml_lint gate runtime, any O(n^2) in the new QML (selectedModels.indexOf), the SettingsPanel inline component reuse.\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 97327,
+    "output": 28148,
+    "cacheRead": 2746112,
+    "cacheWrite": 0,
+    "cost": 0.0145981668,
+    "turns": 33
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 97327,
+        "output": 28148,
+        "cacheRead": 2746112,
+        "cacheWrite": 0,
+        "cost": 0.0145981668,
+        "turns": 33
+      }
+    }
+  ],
+  "durationMs": 350326,
+  "toolCount": 42,
+  "launchContractDigest": "cb27a31a074eef9794eeea15c3d6746b9347ed44081e1fa0df8dbc205172ce26",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "4 concrete findings with file paths, line numbers, severities (1×P2, 3×P3), confidence scores, direct evidence quotes, and owner/autofix classification; full analysis written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-performance-reviewer.json (validated as parseable JSON) plus 5 residual risks and 4 testing gaps"
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/OptimizerBridge.h",
+        "src/app/experimental/PoseBridge.cpp",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/SettingsPanel.qml",
+        "src/app/experimental/main.qml",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/StudyBridge.h",
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/Theme.qml",
+        "src/compute/gpu_heatmaps.cu",
+        "src/compute/gpu_metrics.cu",
+        "src/coordinator/optimizer_manager.cpp",
+        "test/CMakeLists.txt",
+        "test/qml_lint.cmake",
+        "profiler/reports/profile-report-jtml_experimental-2026-08-12.md"
+      ],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @ --stat",
+          "result": "passed",
+          "summary": "Full diff stat: 162 files, 12,737 insertions; reviewed the performance-relevant subset"
+        },
+        {
+          "command": "read of all experimental QML + bridge sources and diff hunks",
+          "result": "passed",
+          "summary": "main.qml, StudyPanel, MlStrip, RunBar, PosesTable, PoseCell, PosesDialog, SettingsPanel, Theme, ViewportPanel, PoseBridge.h/.cpp, OptimizerBridge.h/.cpp, StudyBridge.h, FileDialogBridge.h/.cpp, AppBridge.cpp, qml_lint.cmake, test/CMakeLists.txt, heatmap-guard diff"
+        },
+        {
+          "command": "python3 json validation of the artifact",
+          "result": "passed",
+          "summary": "Artifact is valid JSON: 4 findings, 5 residual risks, 4 testing gaps"
+        }
+      ],
+      "validationOutput": [
+        "Profile evidence cross-checked against code: 3,195 ms pickImages (FileDialogBridge.cpp:35 stack QFileDialog per call), 18,736 evals/label (OptimizerBridge.h:60-64 shared progressChanged NOTIFY + unconditional relay at OptimizerBridge.cpp:293), whole-row dataChanged (PoseBridge.cpp:122-125 emit without roles), selectedModels.indexOf (StudyPanel.qml:135, pre-existing at base main.qml:695)",
+        "Suppressed per rubric: SettingsPanel inline components (correct reuse — declared once, instantiated 19×), qml_lint gate runtime (cold path, ~2-4 s vs multi-minute suite), ListView delegate per-row cost (correctly virtualized: reuseItems + Loader-gated dialog), GPU heatmap guards (perf-improving early-outs), RunBar per-eval micro-cost (measured trivial)"
+      ],
+      "residualRisks": [
+        "Mid-edit cell destruction on viewerPoseApplied full reset while the Poses dialog is open (data-loss edge, correctness/reliability review)",
+        "U5 virtualized pose table unmeasured in the profile (session cut short) — U7 re-profile required",
+        "qml_lint gate uncached per ctest run — negligible today, growth lever documented"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 full improvement pass over the experimental QML front-end: component extraction, view-state gap fixes, pose-table virtualization (ListView reuse + commit-on-pool), Qt Quick Test harness, profiling build + report, FileDialogBridge per-purpose dir memory, heatmap-less optimizer guards",
+      "reviewFindings": [
+        "P2: FileDialogBridge.cpp:35 - fresh QFileDialog per open, 3.2 s measured modal freeze; interim member-reuse lever, queued QML picker (deferred item B)",
+        "P3: OptimizerBridge.h:60 - 18,736 RunBar binding evals/8 runs verified trivial; coarse progressChanged NOTIFY granularity; no change now",
+        "P3: PoseBridge.cpp:122 - whole-row dataChanged without roles; role-filtered emit is a one-liner",
+        "P3: StudyPanel.qml:135 - selectedModels.indexOf O(V×S) per selection change; cosmetic at expected counts"
+      ],
+      "manualNotes": "No P0/P1 perf blockers. The profile report (part of this diff) already measured and accepted the two largest items; findings add the precise mechanism + levers and mark pre-existing vs new. F3 (role-filtered dataChanged) is the only safe_auto-adjacent fix (gated_auto: unit tests exist for setPoseValue, so verify nothing pins the un-filtered emit)."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/81beab02_ce-performance-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553092226
+}

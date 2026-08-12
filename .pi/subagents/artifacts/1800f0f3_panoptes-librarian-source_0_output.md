@@ -1,0 +1,10 @@
+The Round 3 section is appended at lines 416–525, with the round-1/2 content intact above it. The deliverable is complete.
+
+## Task result
+
+**Appended `## Round 3` to `angles/05-compute-perf.org`** (runId `i-want-to-deepen-the-optimization-angle-here-both-in-terms-o-mspdhzo444m4`, append=true, verified in place at lines 416–525).
+
+The Round 3 section delivers all three dispatch items from primary texts:
+1. **Sanity baseline** (R3-1/R3-2/R3-3): Flood 2018 verified verbatim — 145,000 evals at ~3,000 iterations/s on GTX 970 (arithmetic checks: 145,000/3,000 ≈ 48 s ≈ "50 seconds per frame"), L1-only cost ("computed by a GPU extremely efficiently"), time-pegged budget. Abdellah's same-GTX-970 volumetric DRRs (25/67 ms at 2048²/4096²) establish that silhouette evals are ~2 orders cheaper than volumetric DRRs — so JTML's derived 16–50 ms/eval on a ~9×-faster 3090 implies ≥95% host-block fraction, with a falsification pre-registration (GPU-active > 1 ms inverts the cut order).
+2. **Render-path alternatives** (R3-4/R3-5): per-technique verdicts against the verified fragment-scatter fill (render_engine.cu:616–700) — bindless textures DEFER, CUDA/OpenGL interop and block projection and splatting NO-GO (approximation breaks the bit-identity contract), block-size tuning FREE (10–145% swings in the literature), resolution-sampling ARM-ABLE as a value-changing ablation axis; Dorgham's "similarity on the GPU" doctrine is the primary-text antecedent of Cuts 1–3; Flood's batch-render note (L761–765) is Cut 2's lineage verbatim.
+3. **Iteration-speed context** (R3-7/R3-9): pre-registered evals/s bands (today 20–60 derived → Cut 1: 60–300 → Cut 2: 1,000–5,000 with Flood's 3,000 evals/s as the cross-era parity line), plus Cut 0 record additions (lineage reconciliation row, block-size sweep) and Cut 4's new wall-clock cross-check gate (±5%).

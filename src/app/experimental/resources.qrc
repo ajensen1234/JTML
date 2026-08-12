@@ -10,6 +10,7 @@
         <file>ViewportPanel.qml</file>
         <file>PosesTable.qml</file>
         <file>PosesDialog.qml</file>
+        <file>Toolbar.qml</file>
         <file>qmldir</file>
     </qresource>
 </RCC>

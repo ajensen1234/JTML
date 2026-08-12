@@ -94,6 +94,14 @@ AppBridge::AppBridge(
     connect(study_bridge_, &StudyBridge::viewerPoseApplied,
             pose_bridge_, &PoseBridge::refreshTable);
 
+    /*Review fix (ce-code-review 2026-08-12, C7): the ML estimate writes
+     * storage directly (MlBridge's save_pose -> LocationStorage::SavePose)
+     * but was absent from the D3 refresh set — an open pose table showed
+     * the pre-estimate value. refreshTable emits only modelReset (never
+     * poseTableChanged), so this cannot clear the pending seed (D4).*/
+    connect(ml_bridge_, &MlBridge::poseEstimated,
+            pose_bridge_, &PoseBridge::refreshTable);
+
     /*Plan 007 U3 (D4): any manual pose write drops the pending ML seed —
      * viewer drags (viewerPoseApplied), pose-table edits / copy-prev-next
      * / pose+kinematics loads (poseTableChanged fires on every mutation).

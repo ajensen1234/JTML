@@ -1,6 +1,6 @@
 ---
 date: 2026-08-11
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 module: jtml_view
 tags: [qml, qtquick, qquickvtkitem, architecture, view-model]
 problem_type: convention
@@ -86,12 +86,23 @@ The bridges (`StudyBridge`/`SettingsBridge`/`OptimizerBridge`/`MlBridge`/
 `PoseBridge` behind an `AppBridge` hub) are the **VM layer QWidgets never
 needed**: QML speaks QObject properties/signals, the seams are plain C++
 (domain deliberately Qt-free). They are thin pass-throughs by rule — all
-behavior lives in the seams. The genuine duplication residue (R13-forced):
-the `LaunchOptimizer` drive sequence mirrored in `OptimizerBridge`, the
-`BuildCostFunctionRegistryEntries` mapping replicated + golden-fixture pinned,
-`matToVTK` copied. **Extraction follow-ups:** shared controllers
-(`OptimizerRunController` etc.) in coordinator/services that BOTH apps call —
-the same seam as the multi-stage oracle (panoptes synthesis item 3).
+behavior lives in the seams. The duplication residue this phase accepted
+(R13-forced) — the `LaunchOptimizer` drive sequence mirrored in
+`OptimizerBridge`, the `BuildCostFunctionRegistryEntries` mapping replicated
++ golden-fixture pinned, `matToVTK` copied — **was extracted by plan 006
+(2026-08-11)**: shared `OptimizerRunController`, `StudyLoadController`,
+`SessionStateController`, the shared `jta::BuildCostFunctionRegistryEntries`
+(services/cost_function_registry.cpp), `MlOrchestrator`, and the
+widget-free render-pipeline builder — both apps now delegate to those (see
+`docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md`). Plan 007
+(2026-08-12) then refactored the QML layer itself: component extraction
+(StudyPanel/MlStrip/RunBar/ViewportPanel/PosesTable/PosesDialog/Toolbar),
+D1 property injection (components take `required property var <bridge>`;
+rootContext properties remain only in main.cpp), the virtualized pose
+ table with the corrected commit-on-pool, and a headless Qt Quick Test
+harness (`test/qml/`, 40 test functions) — see
+`docs/solutions/conventions/jtml-qml-view-testing-2026-08-12.md` and
+`docs/solutions/conventions/qml-listview-delegate-patterns-2026-08-12.md`.
 
 ## QML render smoke recipe (R15)
 
@@ -111,13 +122,18 @@ built-in dialog. Forcing the portal theme
 `FileDialog` through `org.freedesktop.portal.FileChooser`, and the Qt 6.7
 sources verify `multiple=true` is passed for `OpenFiles` end-to-end — **yet on
 this box (xdg-desktop-portal-gnome) neither the portal dialog nor the Qt
-built-in delivered multi-select in practice.** **Final resolution (2026-08-11):
-the image/model pickers are now a pure-QML checkbox picker
-(`src/app/experimental/MultiFilePicker.qml`, FolderListModel + explicit
-checkboxes) — identical behavior on every backend, zero native/portal
-variance. The calibration picker stays native (single file). Note: the
-built-in dialog's ExtendedSelection requires ctrl/shift-click, which users
-may not discover; checkboxes are unambiguous.
+built-in delivered multi-select in practice.** **Resolution (2026-08-12,
+superseding the 2026-08-11 checkbox-picker attempt):** the image/model
+pickers go through `FileDialogBridge` (`src/app/experimental/FileDialogBridge.cpp`)
+— Qt's own in-process dialog with `DontUseNativeDialog` (multi-select
+unconditionally, immune to portal backend dispatch). The earlier pure-QML
+`MultiFilePicker.qml` (FolderListModel + checkboxes) was replaced by it and
+no longer exists. Plan 007 added per-purpose remembered directories + a
+sidebar MRU (QSettings org `JointTrackAutoGPU` / app `jtml_experimental` —
+deliberately outside the oracle-pinned registry scope); paste-to-jump works
+via the dialog's "File name:" field; a full QML path-bar picker (copyable
+Location field) is the queued follow-up. The calibration picker stays native
+(single file).
 
 ## Other conventions
 
@@ -135,5 +151,9 @@ may not discover; checkboxes are unambiguous.
 - `docs/solutions/tooling-decisions/jtml-rendering-runtime-xcb-qvtk-2026-08-10.md`
 - `.panoptes/jtml-research-horizons/angles/04-qml-vs-widgets.org` (the evidence base)
 - Plan: `docs/plans/2026-08-11-005-feat-qml-experimental-frontend-plan.md`
+- Plan 007: `docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md`
 - `docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md`
 - `docs/solutions/build-errors/jtml-moc-signals-section-placement-duplicate-definition-2026-08-11.md`
+- `docs/solutions/conventions/jtml-qml-view-testing-2026-08-12.md`
+- `docs/solutions/conventions/qml-listview-delegate-patterns-2026-08-12.md`
+- `docs/solutions/conventions/jtml-shared-vm-layer-2026-08-11.md`

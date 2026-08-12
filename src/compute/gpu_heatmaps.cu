@@ -9,6 +9,24 @@ GPUHeatmap::GPUHeatmap(
     unsigned char* host_heatmaps) {
     // Start out assuming initialized incorrectly
     initialized_correctly_ = false;
+    dev_heatmap_ = 0;
+    width_ = width;
+    height_ = height;
+    device_ = gpu_device;
+    num_keypoints_ = num_keypoints;
+
+    /*Owner fix (2026-08-12): curvature heatmaps exist only after an ML
+     * segmentation (Frame::setCurvatureHeatmaps); a study loaded without
+     * segmentation has zero keypoints and a null host buffer — a 0-size
+     * cudaMemcpy from nullptr fails on some drivers and aborted the
+     * optimizer run. Zero keypoints is a legitimate state: no upload, no
+     * device buffer, initialized (the cost functions query
+     * GetNumKeypoints() == 0 and no-op).*/
+    if (num_keypoints <= 0) {
+        heatmap_on_gpu_ = false;
+        initialized_correctly_ = true;
+        return;
+    }
 
     /*Cuda Error Status*/
     cudaGetLastError();
@@ -21,12 +39,6 @@ GPUHeatmap::GPUHeatmap(
         heatmap_on_gpu_ = false;
         return;
     } else {
-        width_ = width;
-        height_ = height;
-        device_ = gpu_device;
-        num_keypoints_ = num_keypoints;
-        dev_heatmap_ = 0;
-
         cudaMalloc(
             (void**)&dev_heatmap_,
             width_ * height_ * num_keypoints_ * sizeof(unsigned char));

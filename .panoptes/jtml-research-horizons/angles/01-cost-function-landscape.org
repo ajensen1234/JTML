@@ -10,7 +10,7 @@ three ingredients (dilated-edge overlap, a mean-chamfer distance-map term, and g
 priors) combined with different weights and switches, plus one Mahfouz-style intensity
 term. The 2D-3D registration literature splits into four families: silhouette/edge
 overlap + distance-transform (the implant/RSA mainstream: Mahfouz 2003, Flood & Banks
-2017 D.R.E.C.T., model-based RSA), intensity-based (MI, NCC, pattern intensity),
+2017 DIRECT, model-based RSA), intensity-based (MI, NCC, pattern intensity),
 gradient-based (gradient correlation, gradient difference, gradient orientation,
 normalized gradient fields), and learned metrics (angle 03).
 
@@ -34,14 +34,14 @@ term (R13 behavior-delta risk).
 The landscape for 2D-3D registration of *metallic implants* to single-plane fluoroscopy,
 with the repo's position on each family.
 
-** A. Dilated-edge overlap (the repo's default family + D.R.E.C.T.)
+** A. Dilated-edge overlap (the repo's default family + DIRECT)
 
 - What it is: Canny/segmentation edge of the fluoro frame dilated by N px; rendered implant
   silhouette edge-detected and dilated by N px; asymmetric +1/-1 overlap count normalized
   by the comparison white-pixel sum. This is exactly FastImplantDilationMetric
   [src/compute/fast_implant_dilation_metric.cu] plus the precomputed white-sum
   [src/compute/DIRECT_DILATION.cpp:71-78].
-- Provenance: the D.R.E.C.T. paper ("Automated Registration of 3-D Knee Implant Models to
+- Provenance: the DIRECT paper ("Automated Registration of 3-D Knee Implant Models to
   Fluoroscopic Images Using Lipschitzian Optimization", Flood & Banks, IEEE TMI 2017/2018,
   DOI 10.1109/TMI.2017.2773398) — "a pyramidal approach that identifies the correct pose
   by matching decreasing dilations of an edge-detected image with the silhouette of an
@@ -308,7 +308,7 @@ code-level evidence is conclusive regardless.
 
 * What Could Not Be Verified
 
-- D.R.E.C.T. paper full text (IEEE paywall; the refs/ PDF could not be text-extracted in
+- DIRECT paper full text (IEEE paywall; the refs/ PDF could not be text-extracted in
   this environment): the paper-side dilation handling and its per-axis accuracy numbers are
   inferred from the published abstract + repo comments (medium confidence). The repo-side
   description of the deviation is high confidence.
@@ -332,7 +332,7 @@ code-level evidence is conclusive regardless.
 
 - Flood, P.D.L. & Banks, S.A. "Automated Registration of 3-D Knee Implant Models to
   Fluoroscopic Images Using Lipschitzian Optimization", IEEE TMI, 2017/2018, DOI
-  10.1109/TMI.2017.2773398 (https://ieeexplore.ieee.org/document/8106803) — the D.R.E.C.T.
+  10.1109/TMI.2017.2773398 (https://ieeexplore.ieee.org/document/8106803) — the DIRECT paper.
   metric + pyramid; origin of the repo's dilation schedule. Also in refs/ (local PDF,
   unextractable here).
 - Mahfouz, M., Hoff, W., Komistek, R., Dennis, D. "A robust method for registration of
@@ -460,7 +460,7 @@ weights in the harness (e.g., Z_Weight ∈ {0, 10, 100, 1000}) on the z-profile 
 correctly weighted SAME_Z prior is the cheapest z improvement available, and it is
 clinically grounded (tibiofemoral contact).
 
-** 6. Ablate the documented deviation from the D.R.E.C.T. paper
+** 6. Ablate the documented deviation from the DIRECT paper
 
 After bug-4 is fixed, DIRECT_DILATION_T1 (rendered-side dilation 1 in trunk, same-dilation
 otherwise) becomes a real ablation of the paper's asymmetric schedule vs the repo's

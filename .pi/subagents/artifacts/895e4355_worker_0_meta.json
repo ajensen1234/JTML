@@ -1,0 +1,118 @@
+{
+  "runId": "895e4355",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nImplement plan 007 U6 for the JTML repo (cwd: /home/ajj/repo/uf/JTML). READ first: docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md (U6 + decision D1 property injection + the Open Questions), and the current src/app/experimental/ components (U2-U5 landed: main.qml bootstrap, StudyPanel, MlStrip, RunBar, ViewportPanel, PosesDialog, PosesTable (virtualized ListView), PoseCell, SettingsPanel, Theme).\n\nU6 GOAL: the view layer gets automated Qt Quick Test coverage — headless (offscreen, no VTK), via a test/qml/ harness — enabled by the D1 property-injection refactor.\n\nPART A — PROPERTY INJECTION (D1, testability refactor):\nCurrently every component reads bridges as rootContext properties (poseBridge, settingsBridge, studyBridge, optimizerBridge, mlBridge, appBridge) — qmllint reports them as Unqualified access (the lint gate accepts that category with 'removed by U3's property injection' as the removal path; U6 is where it actually lands).\nRefactor: each component declares `required property var <bridge>` (same names as today) for the bridges it reads, and main.qml passes the real bridges at the use sites. This makes qmllint clean AND lets tests inject fakes.\nComponent -> required properties (read each component and confirm the exact set):\n- StudyPanel: appBridge, studyBridge, optimizerBridge\n- MlStrip: mlBridge, studyBridge, optimizerBridge\n- RunBar: optimizerBridge\n- ViewportPanel: appBridge, studyBridge (it owns the scene glue; the QmlVtkRenderer stays; NOTE: ViewportPanel is instantiated in main.qml AND is NOT part of the headless test set — it must still load in the app only)\n- PosesDialog: poseBridge, studyBridge, optimizerBridge\n- PosesTable: poseBridge, studyBridge, optimizerBridge\n- PoseCell: poseBridge, studyBridge\n- SettingsPanel: settingsBridge\nmain.qml passes every bridge into every component use site explicitly. Where a component ALSO uses the bridges in its inner inline components (SettingsPanel's RangeField commit closures use settingsBridge via the component scope), the injected property must be in scope for the inline components (declare on the root item; inline components inherit the file scope).\nIMPORTANT correctness check: after injection, grep for any remaining bare bridge-name references that would now be undefined (e.g. in Connections targets inside components — Connections { target: studyBridge } must become target: root.studyBridge or the injected property). The app MUST still launch and behave identically.\n\nPART B — THE test/qml/ HARNESS:\nCreate test/qml/ with:\n- main.cpp — quick_test_main (Qt6::QuickTest) loading the tst files from the qrc.\n- tests.qrc — embeds the tst files + the components under test + a test qmldir. The components are executable-backed (no qt_add_qml_module), so tst files import components via RELATIVE DIRECTORY import (Form 2 per the qt-qml-test source-import rules) resolved inside the qrc; singleton Theme needs the qmldir entry.\n- FakeBridges.qml — test-only QObject types (or plain QtObject instances) exposing the exact property/signal surface each component reads: poseBridge (rowCount, tableModel — needs a real QAbstractListModel for the table... if PoseTableModel is C++-only, either embed a tiny C++ fake model in main.cpp or use a QML ListModel with the same role names; decide by reading PoseBridge.h role names), settingsBridge (the full field surface), studyBridge (frameCount, currentFrame, primaryModelIndex, selectedModels, frameListModel, modelListModel...), optimizerBridge (running, canRun, progress, stageText, costCalls, currentMinimum), mlBridge (segmentFemPt, hasSegmentModel, ...), appBridge (frameCount, modelCount).\n\ntst files (one per component, per the qt-qml-test skill rules — TestCase, SignalSpy only for source-declared signals, tryCompare after mouse events, no-op test functions forbidden, singleton tests restore state):\n- tst_Theme.qml — tokens exist, TypeScale monotonic + pinned values (12/14/16/18), contrast pairs >= 4.5:1 for the used text/bg pairs (hardcode the ratios from Theme's comment), singleton access.\n- tst_PoseCell.qml — THE data-integrity pins (C1/C2 from U3): commit lands on the captured (frame, model, axis) even if selection changes mid-edit; failed commit reverts display AND keeps the binding alive (type again after failed commit works); storedValue change re-renders text; validation message display.\n- tst_SettingsPanel.qml — field bindings mirror the fake bridge; SpinBox x100 scale commits 2-decimal doubles; dirty badge states; Save/Reset; dilation-field enablement per stage.\n- tst_PosesTable.qml — U5's pins: with a fake 500-row model only visible rows instantiated (count via objectName/children on the ListView); edit row 3 -> scroll away mid-edit (commit-on-pool) -> scroll back -> typed value committed to row 3, no cross-row write; failed commit on a recycled cell reverts + stays editable; Loader gate (table not built while dialog closed); model rows count.\n- tst_StudyFlows.qml — panel-level with fakes: load-ordering guards (calibration-first messages for Images and Models via the message dialog), models-first-then-images merge rule, replace-confirm Yes/No, ML degradation enabled-binding matrix (incl. Estimate-requires-segment), run-lock matrix (Black-sil./Fem/Tib/mode toggles/rows disabled during run), keyboard contract (frame list onCurrentIndexChanged -> setCurrentFrame; Space/Enter model toggle; dataset-swap no -1 write), dirty-close guard.\n\nPART C — CMake registration (additive, in test/CMakeLists.txt):\n- block-scoped find_package(Qt6 COMPONENTS QuickTest) (precedent: the render-smoke block);\n- add_executable(jtml_test_qml_view ...) with main.cpp + tests.qrc (+ a C++ fake model TU if needed);\n- link Qt6::QuickTest + Qt6::Quick + Qt6::Qml + Qt6::QuickControls2 (NOT VTK, NOT the bridges — the fakes replace them; do NOT link jtml_coordinator or jtml_compute — this must stay headless and VTK-free);\n- add_test jtml.qml_view LABELS headless TIMEOUT 300 WORKING_DIRECTORY repo root, ENVIRONMENT QT_QPA_PLATFORM=offscreen QT_QUICK_CONTROLS_STYLE=Material (the app pins Material Dark — the tests must exercise the same style);\n- rpath recipe per the existing test targets.\n\nCONSTRAINTS:\n- Scope: src/app/experimental/** QML (injection) + test/qml/** (new) + test/CMakeLists.txt (additive). NO changes to bridge .h/.cpp, backend, oracle, or existing tests.\n- The test target MUST NOT instantiate QmlVtkRenderer/VTK. If a tst file imports ViewportPanel, that is forbidden — viewport stays untested (it is the oracle/render-smoke territory).\n- Do not run git/jj. Do not stage/commit.\n- Verification: pixi run build; pixi run test (must stay 47/47 + the new jtml.qml_view green); run the lint gate (injection should REMOVE most unqualified warnings — the gate's accepted set stays but the count should drop dramatically; report the before/after warning count); report the tst pass/fail counts from ctest -R jtml.qml_view --output-on-failure.\n- If a test cannot be written as specified because the fake surface is incomplete, make the minimal fake addition and document it.\n- Report: injection refactor summary (per component), the tst files + scenario coverage table, CMake registration, test results (counts), lint before/after, residual risks.",
+  "exitCode": 1,
+  "processSignal": "SIGINT",
+  "usage": {
+    "input": 55586,
+    "output": 118678,
+    "cacheRead": 39401088,
+    "cacheWrite": 0,
+    "cost": 0.07566746320000003,
+    "turns": 101
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": false,
+      "exitCode": 1,
+      "error": "Subagent timed out after 1800000ms.",
+      "usage": {
+        "input": 55586,
+        "output": 118678,
+        "cacheRead": 39401088,
+        "cacheWrite": 0,
+        "cost": 0.07566746320000003,
+        "turns": 101
+      }
+    }
+  ],
+  "durationMs": 1800065,
+  "toolCount": 119,
+  "error": "Subagent timed out after 1800000ms.",
+  "launchContractDigest": "a89d369cdefac0efa89546418fc7fd6f3422f8b1be2710e2acbb00aff4e3d7c9",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "rejected",
+    "evidenceStatus": "rejected",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "timeout",
+        "status": "failed",
+        "message": "Acceptance was not evaluated because the subagent timed out."
+      }
+    ],
+    "verifyRuns": []
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/895e4355_worker_0_transcript.jsonl",
+  "timestamp": 1786547909009
+}

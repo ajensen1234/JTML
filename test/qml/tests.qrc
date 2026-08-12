@@ -1,0 +1,35 @@
+<RCC>
+    <!-- Plan 007 U6: the Qt Quick Test harness resource.
+         /tests  — the tst files + fakes (tst files are also read from
+                   disk via QUICK_TEST_SOURCE_DIR; embedding keeps the
+                   harness self-contained).
+         /components — aliases to the REAL src/app/experimental sources
+                   so the tests exercise the shipped files (no drift).
+         ViewportPanel is deliberately absent: it hosts the VTK renderer
+         (oracle/render-smoke territory). -->
+    <qresource prefix="/">
+        <file alias="tests/tst_Theme.qml">tst_Theme.qml</file>
+        <file alias="tests/tst_PoseCell.qml">tst_PoseCell.qml</file>
+        <file alias="tests/tst_SettingsPanel.qml">tst_SettingsPanel.qml</file>
+        <file alias="tests/tst_PosesTable.qml">tst_PosesTable.qml</file>
+        <file alias="tests/tst_StudyFlows.qml">tst_StudyFlows.qml</file>
+        <file alias="tests/qmldir">qmldir</file>
+        <file alias="tests/FakeAppBridge.qml">FakeAppBridge.qml</file>
+        <file alias="tests/FakeStudyBridge.qml">FakeStudyBridge.qml</file>
+        <file alias="tests/FakeOptimizerBridge.qml">FakeOptimizerBridge.qml</file>
+        <file alias="tests/FakeMlBridge.qml">FakeMlBridge.qml</file>
+        <file alias="tests/FakePoseBridge.qml">FakePoseBridge.qml</file>
+        <file alias="tests/FakeSettingsBridge.qml">FakeSettingsBridge.qml</file>
+
+        <file alias="components/Theme.qml">../../src/app/experimental/Theme.qml</file>
+        <file alias="components/PoseCell.qml">../../src/app/experimental/PoseCell.qml</file>
+        <file alias="components/SettingsPanel.qml">../../src/app/experimental/SettingsPanel.qml</file>
+        <file alias="components/PosesTable.qml">../../src/app/experimental/PosesTable.qml</file>
+        <file alias="components/PosesDialog.qml">../../src/app/experimental/PosesDialog.qml</file>
+        <file alias="components/StudyPanel.qml">../../src/app/experimental/StudyPanel.qml</file>
+        <file alias="components/MlStrip.qml">../../src/app/experimental/MlStrip.qml</file>
+        <file alias="components/RunBar.qml">../../src/app/experimental/RunBar.qml</file>
+        <file alias="components/Toolbar.qml">../../src/app/experimental/Toolbar.qml</file>
+        <file alias="components/qmldir">components-qmldir</file>
+    </qresource>
+</RCC>

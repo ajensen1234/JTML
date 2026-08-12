@@ -27,6 +27,20 @@ import "."  // Theme
 Item {
     id: root
 
+    // 007 U6 (D1): injected bridge surface — the composition root passes
+    // the real bridge; tests pass a fake. No context-property coupling.
+    required property var settingsBridge
+
+    // Testability (plan 007 U6): the form controls carry objectNames so
+    // the Qt Quick Test can reach them via findChild (binding-mirror +
+    // ×100-scale + dirty-badge + enablement pins). The inline component
+    // instances pass their own controlName through to the inner SpinBox.
+    readonly property string dirtyLabelObjectName: "settingsDirtyLabel"
+    readonly property string saveButtonObjectName: "settingsSaveButton"
+    readonly property string resetButtonObjectName: "settingsResetButton"
+    readonly property string branchEnableObjectName: "settingsBranchEnable"
+    readonly property string leafEnableObjectName: "settingsLeafEnable"
+
     ColumnLayout {
         id: formRoot
         anchors.fill: parent
@@ -48,15 +62,16 @@ Item {
                 Layout.preferredHeight: 14
                 Layout.preferredWidth: Math.max(dirtyLabel.implicitWidth + 12, 28)
                 radius: 7
-                color: settingsBridge.dirty ? Theme.badgeDirtyBg
+                color: root.settingsBridge.dirty ? Theme.badgeDirtyBg
                                             : Theme.badgeCleanBg
                 Accessible.role: Accessible.StatusBar
                 Label {
                     id: dirtyLabel
+                    objectName: root.dirtyLabelObjectName
                     anchors.centerIn: parent
-                    text: settingsBridge.dirty ? qsTr("● unsaved")
+                    text: root.settingsBridge.dirty ? qsTr("● unsaved")
                                                : qsTr("saved")
-                    color: settingsBridge.dirty ? Theme.badgeDirtyFg
+                    color: root.settingsBridge.dirty ? Theme.badgeDirtyFg
                                                 : Theme.badgeCleanFg
                     font.pixelSize: Theme.caption
                 }
@@ -83,6 +98,9 @@ Item {
                     property string fieldLabel: ""
                     property double fieldValue: 0
                     property var commit: null  // function(double) -> bridge setter
+                    // 007 U6: testability passthrough — the inner SpinBox
+                    // carries this as its objectName when set.
+                    property string controlName: ""
                     Layout.fillWidth: true
                     spacing: 1
                     Label {
@@ -92,6 +110,7 @@ Item {
                     }
                     SpinBox {
                         id: rangeSpin
+                        objectName: rangeField.controlName
                         Layout.fillWidth: true
                         editable: true
                         from: -100000
@@ -119,6 +138,8 @@ Item {
                     property var commit: null  // function(int) -> bridge setter
                     property int minValue: 0
                     property int maxValue: 100000
+                    // 007 U6: testability passthrough.
+                    property string controlName: ""
                     Layout.fillWidth: true
                     spacing: 1
                     Label {
@@ -127,6 +148,7 @@ Item {
                         font.pixelSize: Theme.caption
                     }
                     SpinBox {
+                        objectName: intField.controlName
                         Layout.fillWidth: true
                         editable: true
                         from: intField.minValue
@@ -174,54 +196,57 @@ Item {
                     font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
-                    model: settingsBridge.trunkCostFunctions
-                    current: settingsBridge.trunkCostFunctionIndex
-                    commit: function(i) { settingsBridge.trunkCostFunctionIndex = i }
+                    model: root.settingsBridge.trunkCostFunctions
+                    current: root.settingsBridge.trunkCostFunctionIndex
+                    commit: function(i) { root.settingsBridge.trunkCostFunctionIndex = i }
                 }
                 GridLayout {
                     Layout.fillWidth: true
                     columns: 2
                     RangeField {
                         fieldLabel: "X"
-                        fieldValue: settingsBridge.trunkRangeX
-                        commit: function(v) { settingsBridge.trunkRangeX = v }
+                        controlName: "trunkRangeX"
+                        fieldValue: root.settingsBridge.trunkRangeX
+                        commit: function(v) { root.settingsBridge.trunkRangeX = v }
                     }
                     RangeField {
                         fieldLabel: "Y"
-                        fieldValue: settingsBridge.trunkRangeY
-                        commit: function(v) { settingsBridge.trunkRangeY = v }
+                        fieldValue: root.settingsBridge.trunkRangeY
+                        commit: function(v) { root.settingsBridge.trunkRangeY = v }
                     }
                     RangeField {
                         fieldLabel: "Z"
-                        fieldValue: settingsBridge.trunkRangeZ
-                        commit: function(v) { settingsBridge.trunkRangeZ = v }
+                        fieldValue: root.settingsBridge.trunkRangeZ
+                        commit: function(v) { root.settingsBridge.trunkRangeZ = v }
                     }
                     RangeField {
                         fieldLabel: "XA"
-                        fieldValue: settingsBridge.trunkRangeXA
-                        commit: function(v) { settingsBridge.trunkRangeXA = v }
+                        fieldValue: root.settingsBridge.trunkRangeXA
+                        commit: function(v) { root.settingsBridge.trunkRangeXA = v }
                     }
                     RangeField {
                         fieldLabel: "YA"
-                        fieldValue: settingsBridge.trunkRangeYA
-                        commit: function(v) { settingsBridge.trunkRangeYA = v }
+                        fieldValue: root.settingsBridge.trunkRangeYA
+                        commit: function(v) { root.settingsBridge.trunkRangeYA = v }
                     }
                     RangeField {
                         fieldLabel: "ZA"
-                        fieldValue: settingsBridge.trunkRangeZA
-                        commit: function(v) { settingsBridge.trunkRangeZA = v }
+                        fieldValue: root.settingsBridge.trunkRangeZA
+                        commit: function(v) { root.settingsBridge.trunkRangeZA = v }
                     }
                 }
                 IntField {
                     fieldLabel: qsTr("Budget")
-                    fieldValue: settingsBridge.trunkBudget
-                    commit: function(v) { settingsBridge.trunkBudget = v }
+                    controlName: "trunkBudget"
+                    fieldValue: root.settingsBridge.trunkBudget
+                    commit: function(v) { root.settingsBridge.trunkBudget = v }
                 }
                 IntField {
                     fieldLabel: qsTr("Dilation")
-                    fieldValue: settingsBridge.trunkDilation
-                    commit: function(v) { settingsBridge.trunkDilation = v }
-                    enabled: settingsBridge.trunkHasDilation
+                    controlName: "trunkDilation"
+                    fieldValue: root.settingsBridge.trunkDilation
+                    commit: function(v) { root.settingsBridge.trunkDilation = v }
+                    enabled: root.settingsBridge.trunkHasDilation
                 }
 
                 // ---- Branch ------------------------------------------------
@@ -232,66 +257,67 @@ Item {
                     font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
-                    model: settingsBridge.branchCostFunctions
-                    current: settingsBridge.branchCostFunctionIndex
-                    commit: function(i) { settingsBridge.branchCostFunctionIndex = i }
+                    model: root.settingsBridge.branchCostFunctions
+                    current: root.settingsBridge.branchCostFunctionIndex
+                    commit: function(i) { root.settingsBridge.branchCostFunctionIndex = i }
                 }
                 GridLayout {
                     Layout.fillWidth: true
                     columns: 2
                     RangeField {
                         fieldLabel: "X"
-                        fieldValue: settingsBridge.branchRangeX
-                        commit: function(v) { settingsBridge.branchRangeX = v }
+                        fieldValue: root.settingsBridge.branchRangeX
+                        commit: function(v) { root.settingsBridge.branchRangeX = v }
                     }
                     RangeField {
                         fieldLabel: "Y"
-                        fieldValue: settingsBridge.branchRangeY
-                        commit: function(v) { settingsBridge.branchRangeY = v }
+                        fieldValue: root.settingsBridge.branchRangeY
+                        commit: function(v) { root.settingsBridge.branchRangeY = v }
                     }
                     RangeField {
                         fieldLabel: "Z"
-                        fieldValue: settingsBridge.branchRangeZ
-                        commit: function(v) { settingsBridge.branchRangeZ = v }
+                        fieldValue: root.settingsBridge.branchRangeZ
+                        commit: function(v) { root.settingsBridge.branchRangeZ = v }
                     }
                     RangeField {
                         fieldLabel: "XA"
-                        fieldValue: settingsBridge.branchRangeXA
-                        commit: function(v) { settingsBridge.branchRangeXA = v }
+                        fieldValue: root.settingsBridge.branchRangeXA
+                        commit: function(v) { root.settingsBridge.branchRangeXA = v }
                     }
                     RangeField {
                         fieldLabel: "YA"
-                        fieldValue: settingsBridge.branchRangeYA
-                        commit: function(v) { settingsBridge.branchRangeYA = v }
+                        fieldValue: root.settingsBridge.branchRangeYA
+                        commit: function(v) { root.settingsBridge.branchRangeYA = v }
                     }
                     RangeField {
                         fieldLabel: "ZA"
-                        fieldValue: settingsBridge.branchRangeZA
-                        commit: function(v) { settingsBridge.branchRangeZA = v }
+                        fieldValue: root.settingsBridge.branchRangeZA
+                        commit: function(v) { root.settingsBridge.branchRangeZA = v }
                     }
                 }
                 IntField {
                     fieldLabel: qsTr("Budget")
-                    fieldValue: settingsBridge.branchBudget
-                    commit: function(v) { settingsBridge.branchBudget = v }
+                    fieldValue: root.settingsBridge.branchBudget
+                    commit: function(v) { root.settingsBridge.branchBudget = v }
                 }
                 IntField {
                     fieldLabel: qsTr("Number of branches")
-                    fieldValue: settingsBridge.numberBranches
+                    fieldValue: root.settingsBridge.numberBranches
                     minValue: 1
                     maxValue: 20
-                    commit: function(v) { settingsBridge.numberBranches = v }
+                    commit: function(v) { root.settingsBridge.numberBranches = v }
                 }
                 IntField {
                     fieldLabel: qsTr("Dilation")
-                    fieldValue: settingsBridge.branchDilation
-                    commit: function(v) { settingsBridge.branchDilation = v }
-                    enabled: settingsBridge.branchHasDilation
+                    fieldValue: root.settingsBridge.branchDilation
+                    commit: function(v) { root.settingsBridge.branchDilation = v }
+                    enabled: root.settingsBridge.branchHasDilation
                 }
                 CheckBox {
+                    objectName: root.branchEnableObjectName
                     text: qsTr("Enable branch stage")
-                    checked: settingsBridge.enableBranch
-                    onToggled: settingsBridge.enableBranch = checked
+                    checked: root.settingsBridge.enableBranch
+                    onToggled: root.settingsBridge.enableBranch = checked
                 }
 
                 // ---- Leaf ---------------------------------------------------
@@ -302,59 +328,60 @@ Item {
                     font.pixelSize: Theme.label
                 }
                 CostVariantCombo {
-                    model: settingsBridge.leafCostFunctions
-                    current: settingsBridge.leafCostFunctionIndex
-                    commit: function(i) { settingsBridge.leafCostFunctionIndex = i }
+                    model: root.settingsBridge.leafCostFunctions
+                    current: root.settingsBridge.leafCostFunctionIndex
+                    commit: function(i) { root.settingsBridge.leafCostFunctionIndex = i }
                 }
                 GridLayout {
                     Layout.fillWidth: true
                     columns: 2
                     RangeField {
                         fieldLabel: "X"
-                        fieldValue: settingsBridge.leafRangeX
-                        commit: function(v) { settingsBridge.leafRangeX = v }
+                        fieldValue: root.settingsBridge.leafRangeX
+                        commit: function(v) { root.settingsBridge.leafRangeX = v }
                     }
                     RangeField {
                         fieldLabel: "Y"
-                        fieldValue: settingsBridge.leafRangeY
-                        commit: function(v) { settingsBridge.leafRangeY = v }
+                        fieldValue: root.settingsBridge.leafRangeY
+                        commit: function(v) { root.settingsBridge.leafRangeY = v }
                     }
                     RangeField {
                         fieldLabel: "Z"
-                        fieldValue: settingsBridge.leafRangeZ
-                        commit: function(v) { settingsBridge.leafRangeZ = v }
+                        fieldValue: root.settingsBridge.leafRangeZ
+                        commit: function(v) { root.settingsBridge.leafRangeZ = v }
                     }
                     RangeField {
                         fieldLabel: "XA"
-                        fieldValue: settingsBridge.leafRangeXA
-                        commit: function(v) { settingsBridge.leafRangeXA = v }
+                        fieldValue: root.settingsBridge.leafRangeXA
+                        commit: function(v) { root.settingsBridge.leafRangeXA = v }
                     }
                     RangeField {
                         fieldLabel: "YA"
-                        fieldValue: settingsBridge.leafRangeYA
-                        commit: function(v) { settingsBridge.leafRangeYA = v }
+                        fieldValue: root.settingsBridge.leafRangeYA
+                        commit: function(v) { root.settingsBridge.leafRangeYA = v }
                     }
                     RangeField {
                         fieldLabel: "ZA"
-                        fieldValue: settingsBridge.leafRangeZA
-                        commit: function(v) { settingsBridge.leafRangeZA = v }
+                        fieldValue: root.settingsBridge.leafRangeZA
+                        commit: function(v) { root.settingsBridge.leafRangeZA = v }
                     }
                 }
                 IntField {
                     fieldLabel: qsTr("Budget")
-                    fieldValue: settingsBridge.leafBudget
-                    commit: function(v) { settingsBridge.leafBudget = v }
+                    fieldValue: root.settingsBridge.leafBudget
+                    commit: function(v) { root.settingsBridge.leafBudget = v }
                 }
                 IntField {
                     fieldLabel: qsTr("Dilation")
-                    fieldValue: settingsBridge.leafDilation
-                    commit: function(v) { settingsBridge.leafDilation = v }
-                    enabled: settingsBridge.leafHasDilation
+                    fieldValue: root.settingsBridge.leafDilation
+                    commit: function(v) { root.settingsBridge.leafDilation = v }
+                    enabled: root.settingsBridge.leafHasDilation
                 }
                 CheckBox {
+                    objectName: root.leafEnableObjectName
                     text: qsTr("Enable leaf stage")
-                    checked: settingsBridge.enableLeaf
-                    onToggled: settingsBridge.enableLeaf = checked
+                    checked: root.settingsBridge.enableLeaf
+                    onToggled: root.settingsBridge.enableLeaf = checked
                 }
 
                 // ---- Save / Reset --------------------------------------------
@@ -362,14 +389,18 @@ Item {
                     Layout.fillWidth: true
                     spacing: Theme.spacingXs
                     Button {
+                        id: resetButton
+                        objectName: root.resetButtonObjectName
                         text: qsTr("Reset")
-                        onClicked: settingsBridge.reset()
+                        onClicked: root.settingsBridge.reset()
                     }
                     Button {
+                        id: saveButton
+                        objectName: root.saveButtonObjectName
                         text: qsTr("Save")
                         Layout.fillWidth: true
-                        highlighted: settingsBridge.dirty
-                        onClicked: settingsBridge.save()
+                        highlighted: root.settingsBridge.dirty
+                        onClicked: root.settingsBridge.save()
                     }
                 }
             }

@@ -49,6 +49,28 @@ const char* kSelectFrameAndModel =
 const char* kSelectModelAndLoadFrames =
     "Select Model and Load Frames First!";
 
+/*axis (0..5 = x, y, z, xa, ya, za) -> the table model role for that
+ * cell; -1 for an out-of-range axis (the caller falls back to a full-row
+ * notify).*/
+int RoleForAxis(int axis) {
+    switch (axis) {
+        case 0:
+            return PoseTableModel::XRole;
+        case 1:
+            return PoseTableModel::YRole;
+        case 2:
+            return PoseTableModel::ZRole;
+        case 3:
+            return PoseTableModel::XaRole;
+        case 4:
+            return PoseTableModel::YaRole;
+        case 5:
+            return PoseTableModel::ZaRole;
+        default:
+            return -1;
+    }
+}
+
 }  // namespace
 
 /*---- PoseTableModel ----*/
@@ -119,10 +141,21 @@ void PoseTableModel::refresh() {
 }
 
 void PoseTableModel::notifyCellChanged(int frame, int axis) {
-    Q_UNUSED(axis);  // one index covers all roles (the whole row re-reads)
     const QModelIndex cell = index(frame, 0);
-    if (cell.isValid()) {
+    if (!cell.isValid()) {
+        return;
+    }
+    /*Review fix (ce-code-review 2026-08-12): emit the SINGLE role for the
+     * edited axis — Qt 6 supports role-filtered dataChanged. The old
+     * no-roles emit made all 6 cells + the frame label re-read per
+     * single-axis edit (the U7 profile candidate). Behavior-preserving:
+     * only the edited cell's binding re-evaluates; an out-of-range axis
+     * falls back to a full-row notify.*/
+    const int role = RoleForAxis(axis);
+    if (role == -1) {
         emit dataChanged(cell, cell);
+    } else {
+        emit dataChanged(cell, cell, {role});
     }
 }
 

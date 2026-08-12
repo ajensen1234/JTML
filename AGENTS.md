@@ -1,7 +1,7 @@
 # JTML — Agent Working Guide
 
 JTML is a Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 built against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant
-registration (D.R.E.C.T. global optimizer over a GPU cost function). This file captures the
+registration (DIRECT global optimizer over a GPU cost function). This file captures the
 conventions a coding agent needs to work here without re-deriving them.
 
 ## Build & environment (pixi)
@@ -33,6 +33,12 @@ Layout under `test/`, all registered in `test/CMakeLists.txt`:
 - `test/golden/` — golden-oracle baseline (`baseline.json`, `fem_golden.jts`,
   `fem_oracle_captured.jtak`, `calibration.txt`).
 - `test/oracle/` — the GPU-labeled Tier-2 appearance oracle (built, U6).
+- `test/qml/` — **Qt Quick Test** for the view layer (plan 007 U6):
+  `quick_test_main` harness over the REAL `src/app/experimental/*.qml`
+  sources (qrc-aliased, no drift) with injected fake bridges; headless
+  (offscreen + `QT_QUICK_CONTROLS_STYLE=Material`, no VTK). The
+  `jtml.qml_lint` qmllint gate (Qt 6.7.2 binary) runs from `test/`
+  (`test/qml_lint.cmake`).
 
 Conventions:
 - **QtTest for Qt/threading seams; Catch2 for pure math.** Both register via CTest.

@@ -1,0 +1,154 @@
+{
+  "runId": "cd3a0cfa",
+  "agent": "ce-learnings-researcher",
+  "task": "Planning context: implementing the 'graph container' in JTML (Qt6/CUDA C++ knee-implant registration app) — data-driven optimizer stage sequences (StageScript) over the existing Optimize() loop in src/coordinator/optimizer_manager.cpp, preserving behavior bit-identically (R13 pin-first doctrine); plus foundation work: Tier-0 characterization pins for 7 cost-path bugs, one oracle re-baseline, the z-profile probe and multi-stage oracle test instruments. Search docs/solutions/ (categories: build-errors, conventions, logic-errors, test-failures, tooling-decisions, ui-bugs) for applicable learnings: headless Qt/CUDA testing, CMake AUTOMOC + explicit source-list gotchas, oracle/golden testing, GPU metric or cost-function work, pin-first characterization, stage-loop/manager patterns, layer purity, re-baseline or baseline.json conventions. Report: the specific solution docs (paths + YAML frontmatter) with the one-line lesson each, prioritized by relevance to stage-loop refactoring and headless test seams. Do NOT modify files.",
+  "exitCode": 0,
+  "usage": {
+    "input": 54506,
+    "output": 13239,
+    "cacheRead": 334976,
+    "cacheWrite": 0,
+    "cost": 0.006137846400000001,
+    "turns": 8
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 54506,
+        "output": 13239,
+        "cacheRead": 334976,
+        "cacheWrite": 0,
+        "cost": 0.006137846400000001,
+        "turns": 8
+      }
+    }
+  ],
+  "durationMs": 111206,
+  "toolCount": 19,
+  "launchContractDigest": "2af8565300545cf5f5d9592fa2cd0aed08a5afe997508b5b8f906868261641ae",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Returned concrete findings with repo-relative file paths for 13 of 15 solution docs (6 detailed with YAML frontmatter fields, 7 compact), severities quoted from frontmatter (high: cost-function truncation, heatmap guard, xcb/qvtk, pose-sync; medium: testability/cmake, shared-vm, mainscreen, oracle-recipes, layered-lib, moc-signals, test-isolation, qml-view-testing; low-adjacent: listview delegates, qml-trace), each with a one-line lesson, prioritized by relevance to stage-loop refactoring (budget semantics, OptimizerRunDriver seam, per-frame call-counting) and headless test seams (AUTOMOC/GLOB traps, QSettings isolation, oracle labeling, QVTK-only render path)."
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "find docs/solutions -name '*.md'",
+          "result": "passed",
+          "summary": "Full inventory: 15 solution docs across 6 categories (build-errors, conventions, logic-errors, test-failures, tooling-decisions, ui-bugs)"
+        },
+        {
+          "command": "grep (parallel keyword sweeps: stage/manager/loop, qt|cuda|cmake|automoc, oracle|baseline|pin-first, cost|gpu|metric|optimizer, budget|epoch|purity)",
+          "result": "passed",
+          "summary": "Pre-filtered candidates: 13 relevant files identified before any full read"
+        },
+        {
+          "command": "read (frontmatter of all 15, full reads of 9 top-tier files, section reads of 2 moderate files)",
+          "result": "passed",
+          "summary": "Distilled lessons from full content of all strong/moderate matches; confirmed no patterns/critical-patterns.md exists"
+        }
+      ],
+      "validationOutput": [
+        "docs/solutions/ contains exactly 6 subdirectories and 15 .md files; no docs/solutions/patterns/critical-patterns.md (absence noted per convention).",
+        "Cross-checked budget semantics: 20k→25k→30k→35k cumulative caps verified against optimizer_settings.cpp + OptimizerManager::Optimize per the 2026-08-07 doc; flagged as the authoritative anchor, not prose.",
+        "Confirmed OptimizerRunDriver seam (2026-08-11 doc) is explicitly reserved as the multi-stage oracle entry point — consistent with the caller's multi-stage oracle instruments."
+      ],
+      "residualRisks": [
+        "Only 2 of the 7 cost-path bugs have solution entries (cost-function double-truncation 2026-08-08; heatmap 0-keypoint guard 2026-08-12) — the other 5 may be undocumented; capture with /ce-compound after pinning.",
+        "No dedicated Tier-0 characterization-pin or pin-first solution doc exists; the pin-first doctrine is implicit in the testability doc (quirks pinned before normalizing) and shared-vm doc (characterization test + behavior diff per R13 cut type).",
+        "All learnings date 2026-08-07..12 (recent, same project lineage) — unlikely superseded, but the budget caps are load-bearing against optimizer_settings.cpp defaults; re-verify if those defaults change.",
+        "Baseline.json re-baseline mechanics (exact re-capture procedure) are described but the re-baseline itself must be executed and recorded in test/golden/ — no doc covers the re-baseline-in-progress state."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No files modified — research-only task; findings delivered as the report above.",
+      "reviewFindings": [
+        "no blockers",
+        "note: jtml-testability doc warns stale '~10k/stage' / '20k/25k/30k' prose exists in older handoff/golden text — the 20k→25k→30k→35k cumulative caps are the authoritative values for StageScript budget pins",
+        "note: shared-vm doc states the silhouette-IoU oracle cannot see the z-weak-axis problem — the z-profile probe is the documented measurement-first prerequisite"
+      ],
+      "manualNotes": "Report covers all 15 docs in docs/solutions/: 6 detailed entries (testability-and-cmake-conventions, shared-vm-layer, mainscreen-decomposition, qt6-hegel-oracle-recipes, cost-function-truncation, heatmap-guard) + 7 compact additional matches + 2 weak matches noted for completeness."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": false
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/cd3a0cfa_ce-learnings-researcher_0_transcript.jsonl",
+  "timestamp": 1786558979204
+}

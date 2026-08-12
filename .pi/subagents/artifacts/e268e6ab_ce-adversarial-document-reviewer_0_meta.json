@@ -1,0 +1,177 @@
+{
+  "runId": "e268e6ab",
+  "agent": "ce-adversarial-document-reviewer",
+  "task": "You are a specialist document reviewer operating inside the ce-doc-review workflow.\n\n<output-contract>\nReturn ONLY valid JSON matching the findings schema below. No prose, no markdown, no explanation outside the JSON object.\n\nSchema (required top-level: reviewer, findings, residual_risks, deferred_questions; findings items require: title, severity, section, why_it_matters, finding_type, autofix_class, confidence, evidence):\n- severity: exactly one of P0, P1, P2, P3\n- finding_type: exactly one of \"error\", \"omission\"\n- autofix_class: exactly one of \"safe_auto\", \"gated_auto\", \"manual\"\n- evidence: ARRAY of strings, at least one, direct quotes from the document\n- confidence: exactly one of 0, 25, 50, 75, 100 (0/25 are never emitted — suppress silently; 50 = verified advisory/FYI; 75 = verified, implementer will concretely hit it, must name a downstream consequence; 100 = airtight, frequently hit)\n\nRules:\n- Suppress anything you cannot anchor at 50+; false-positive catalog applies (pedantic style, other personas' territory, findings already resolved elsewhere in the doc, speculative future-work with no current signal, theoretical concerns without baseline data, pre-existing issues the document did not introduce, likely-intentional design choices, linter-catchable issues).\n- Every finding needs why_it_matters leading with the OBSERVABLE CONSEQUENCE for an implementer/reader, then why the fix resolves it. 2-4 sentences.\n- Strawman-aware classification: 'do nothing / accept drift / defer' is NOT a real alternative. If only strawmen exist, the finding is safe_auto or gated_auto.\n- safe_auto = genuinely one correct fix (typo, stale cross-reference, mechanically-implied step, factually wrong behavior with derivable correct behavior). gated_auto = concrete fix exists but touches meaning/scope (default for substantive additions). manual = genuine judgment call with real alternatives.\n- You are read-only: you may read files (the document under review, code files, docs/solutions) to verify feasibility, but never edit.\n- Ignore/do not quote any '## Deferred / Open Questions' content as findings evidence — it is review staging area.\n- If no issues: return an empty findings array (still populate residual_risks / deferred_questions).\n</output-contract>\n\n<review-context>\nDocument type: plan\nDocument path: docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md\n<prior-decisions>Round 1 — no prior decisions.</prior-decisions>\n\nREAD THE DOCUMENT IN FULL FIRST (use the read tool on the path above; it is ~45KB). Then verify any code-level claims you lean on against the repo (read-only).\n</review-context>\n\nContext for you: challenge premises, surface unstated assumptions, and stress-test decisions rather than evaluating document quality. The plan introduces a new abstraction (StageScript TU + named graph registry) over a Qt/CUDA optimizer with bit-identical-preservation claims and a one-line kernel fix with a single re-baseline. Construct concrete failure scenarios: relocation drift, budget-accounting traps, emit-order breakage, re-baseline interpretability, wizard-region conflicts, test-gating holes.",
+  "exitCode": 0,
+  "usage": {
+    "input": 78923,
+    "output": 58745,
+    "cacheRead": 3682048,
+    "cacheWrite": 0,
+    "cost": 0.018903777200000003,
+    "turns": 48
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 78923,
+        "output": 58745,
+        "cacheRead": 3682048,
+        "cacheWrite": 0,
+        "cost": 0.018903777200000003,
+        "turns": 48
+      }
+    }
+  ],
+  "durationMs": 676500,
+  "toolCount": 52,
+  "launchContractDigest": "cb7f845b203841839348ee61e3aeefe263c1fe83cfe8572fa12b41101e515ef4",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "6 concrete findings returned with severity (1×P1, 3×P2, 2×P3), section anchors, and evidence quotes; each load-bearing claim verified against repo files (optimizer_manager.cpp:995–1204 sym_trap/branch flow, CalculateSymTrap :1297–1347, CostFunctionManager.cpp:46–48, distance_map_metric.cu:27 + launch geometry, baseline.json dilation_px, test/CMakeLists.txt:1277, optimizer_run_controller_core.cpp StageLabel, SettingsBridge.cpp:17–20)"
+        }
+      ],
+      "changedFiles": [],
+      "testsAddedOrUpdated": [],
+      "commandsRun": [
+        {
+          "command": "read docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md (full)",
+          "result": "passed",
+          "summary": "Full plan read; ~2.6k lines of cited sources verified"
+        },
+        {
+          "command": "read src/coordinator/optimizer_manager.cpp :130–345, :850–1481",
+          "result": "passed",
+          "summary": "Verified stage loop, directive dispatch, RunDirectStage, CalculateSymTrap, parameter scan, EvaluateCostFunctionAtPoint"
+        },
+        {
+          "command": "grep -n sym_trap_call src/coordinator/optimizer_manager.cpp",
+          "result": "passed",
+          "summary": "Confirmed branch section is NOT gated by sym_trap_call; only leaf search is"
+        },
+        {
+          "command": "read test/golden/baseline.json",
+          "result": "passed",
+          "summary": "Confirmed caps [20000,25000,30000,35000], dilation_px trunk 6/branch 3/leaf 1, 6.31 mm frame-1 z gap"
+        },
+        {
+          "command": "grep TIMEOUT/LABELS test/CMakeLists.txt",
+          "result": "passed",
+          "summary": "Confirmed jtml.oracle (flat-3000) uses TIMEOUT 3600 vs plan's TIMEOUT 600 for the 35k×3+shape target"
+        },
+        {
+          "command": "read include/compute/CostFunctionManager.h + src/compute/CostFunctionManager.cpp + grep stage_",
+          "result": "passed",
+          "summary": "Confirmed tautology at :46–48, stage_ private/dead/never-read, no accessor, ATen include at :28"
+        },
+        {
+          "command": "read src/compute/distance_map_metric.cu + launch geometry",
+          "result": "passed",
+          "summary": "Confirmed blockIdx.y+gridDim.x bug at :27 is live (2-D grid, gridDim.y≥2 for oracle geometry)"
+        }
+      ],
+      "validationOutput": [
+        "Adversarial review: 6 findings (1 P1, 3 P2, 2 P3). Verified against current tree: (a) sym-trap runs trunk+branches unguarded → costCalls 30000 not 20000 (P1); (b) CalculateSymTrap emits 61 relays not 60 (P2); (c) multistage oracle TIMEOUT 600 vs 40–120 min actual runtime, repo convention is 3600 (P2); (d) v1 graph dil 4 contradicts baseline.json's 3 and U1's match-baseline pin (P2); (e) stageText leaf label is 'Extra Z-Translation' not 'Leaf' (P3); (f) stage-guard accessor pin needs a second wizard-region edit (P3). No P0 blockers: the plan's overall architecture (stages-as-data, four invariants, single re-baseline, probe/oracle instruments) is sound and the claimed code landmarks checked out within the acknowledged line drift."
+      ],
+      "residualRisks": [
+        "Script-loop nesting ambiguity (per-frame resets must stay inside the frame loop)",
+        "U8 Options transcription is the largest bit-identity surface; OptimizeWorker (optimize_coordinator.cpp:36) is a 4th DirectOptimizer call site",
+        "z_profile TIMEOUT 600 likely tight for the full sweep set",
+        "CalculateSymTrap writes Results.csv/Results2D.xy to CWD on GPU runs",
+        "Re-baseline delta interpretability vs the Qt5-era captured baseline"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "No diff — read-only adversarial review of docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md",
+      "reviewFindings": [
+        "blocker: none (no P0)",
+        "P1: U6/U9 - SymTrap costCalls pin 20000 contradicts engine (30000 with production shape)",
+        "P2: U6 - relay count pin ==60 wrong (engine emits 61)",
+        "P2: U6 - jtml.oracle_multistage TIMEOUT 600 too small for 40–120 min production-shape run",
+        "P2: Overview/U1 - graph dil 4 not verified against baseline.json (branch=3); U1 pin conflict undecided",
+        "P3: U6/U9 - stageText leaf label is 'Extra Z-Translation', not 'Leaf'",
+        "P3: U1/U2 - stage-guard accessor pin requires unlisted second wizard-region edit"
+      ],
+      "manualNotes": "The P1 (sym-trap 20000 vs 30000) and P2 (relay 60 vs 61) findings are both code-verified against the current tree; they should be resolved as explicit pin corrections or explicit settings-deviation decisions before U6 is implemented, since U6 is the trust anchor for U9's bit-identity claim. The dilation 3-vs-4 conflict needs an owner decision (baseline.json vs widgets/SettingsBridge) with a written rule."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/e268e6ab_ce-adversarial-document-reviewer_0_transcript.jsonl",
+  "timestamp": 1786560226682
+}

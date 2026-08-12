@@ -28,6 +28,11 @@ import "."  // Theme
 TextField {
     id: root
 
+    // 007 U6 (D1): injected bridge surface — the PosesTable delegate
+    // passes its own injected props down to each cell.
+    required property var poseBridge
+    required property var studyBridge
+
     required property int frameRow
     required property int axisIndex
     required property double storedValue
@@ -44,16 +49,83 @@ TextField {
     property int commitModel: -1
     property int commitAxis: -1
 
+    // R2 (review round): when a model reset / dialog teardown destroys
+    // this cell mid-edit, commit the live edit instead of silently
+    // dropping it — UNLESS the owner explicitly suppressed commits (the
+    // discard-close path).
+    property bool suppressDestructionCommit: false
+
+    // D7 (review round): the pose-table keyboard contract — the table is
+    // a single tab stop; arrows move between cells/rows, Escape reverts.
+    // Direction encoding for navRequested: -2 up, -1 left, +1 right,
+    // +2 down.
+    signal navRequested(int direction)
+
+    Keys.onPressed: (event) => {
+        switch (event.key) {
+        case Qt.Key_Left:
+            root.navRequested(-1)
+            event.accepted = true
+            break
+        case Qt.Key_Right:
+            root.navRequested(1)
+            event.accepted = true
+            break
+        case Qt.Key_Up:
+            root.navRequested(-2)
+            event.accepted = true
+            break
+        case Qt.Key_Down:
+            root.navRequested(2)
+            event.accepted = true
+            break
+        case Qt.Key_Escape:
+            // Esc reverts the cell to the stored value (and re-arms the
+            // binding) without committing.
+            edited = false
+            resetDisplay()
+            event.accepted = true
+            break
+        }
+    }
+
+    Component.onDestruction: {
+        // R2: a full model reset (refreshTable) or the dialog teardown
+        // destroys this cell mid-edit — commit rather than lose the
+        // typed value (the discard-close path sets
+        // suppressDestructionCommit first).
+        if (edited && !suppressDestructionCommit) doCommit()
+    }
+
+    // 007 U6 (proven by the recycle pins): Qt 6.7 ListView pooling does
+    // NOT drop focus (hidden/reparented items keep activeFocus), so the
+    // "focus loss fires editingFinished before pooling" assumption never
+    // holds on recycle — the typed value would be silently clobbered by
+    // resetDisplay without a commit. Track interactive edits and commit
+    // them explicitly from the delegate's onPooled (commit-on-pool, made
+    // real).
+    property bool edited: false
+
     onActiveFocusChanged: {
         if (activeFocus) {
             commitFrame = frameRow
-            commitModel = studyBridge.primaryModelIndex
+            commitModel = root.studyBridge.primaryModelIndex
             commitAxis = axisIndex
         }
     }
 
-    onEditingFinished: {
-        if (!poseBridge.setPoseValue(commitFrame, commitModel,
+    // User typing marks the cell edited (the text binding is broken by
+    // editing; this flag survives focus transitions).
+    onTextEdited: edited = true
+
+    onEditingFinished: doCommit()
+
+    // The single commit path: captured tuple + live text. A rejected
+    // commit re-arms the storedValue binding (C1).
+    function doCommit() {
+        if (!edited) return
+        edited = false
+        if (!root.poseBridge.setPoseValue(commitFrame, commitModel,
                                      commitAxis, text)) {
             // Rejected commit: re-arm the storedValue binding (C1). The
             // stored value is current — the display shows it again and
@@ -62,15 +134,35 @@ TextField {
         }
     }
 
-    // D8 (U5): pooled-delegate re-sync. After an edit the text binding is
-    // dead; a reused cell re-arms it from the (re-bound) storedValue and
-    // clears the stale commit tuple. No live edit survives pooling — the
-    // focus loss that preceded pooling already committed it (commit-on-pool
-    // ordering), so resetting here can never clobber a pending commit.
+    // Called by the delegate's onPooled: flush a live edit before the
+    // pooled cell is re-bound to a new row (the real commit-on-pool).
+    function commitIfEditing() {
+        if (edited) doCommit()
+    }
+
+    // D8 (U5, hardened in U6): pooled-delegate re-sync. After an edit the
+    // text binding is dead; a reused cell re-arms it from the (re-bound)
+    // storedValue and clears the stale commit tuple. Called by the
+    // delegate's onReused — any live edit was already flushed by
+    // commitIfEditing in onPooled (the focus-loss ordering does not hold
+    // on recycle, so the flush is explicit).
     function resetDisplay() {
-        commitFrame = -1
-        commitModel = -1
-        commitAxis = -1
+        // Review fix (ce-code-review 2026-08-12, C1): a pool round-trip
+        // can RETAIN focus (Qt 6.7 pooling does not drop it). If the
+        // recycled cell still has focus, frameRow/axisIndex already
+        // re-bound to the NEW row — re-capture the tuple so the next edit
+        // commits the new row; a stale (-1,-1,-1) tuple would silently
+        // reject (and lose) the typed value.
+        if (activeFocus) {
+            commitFrame = frameRow
+            commitModel = root.studyBridge.primaryModelIndex
+            commitAxis = axisIndex
+        } else {
+            commitFrame = -1
+            commitModel = -1
+            commitAxis = -1
+        }
+        edited = false
         text = Qt.binding(() => storedValue.toFixed(3))
     }
 }

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "30d81577-97c1-45df-a196-2876d8ff0e03",
+  "title": "const followup = [",
+  "objective": "const followup = [",
+  "status": "failed",
+  "createdAt": "2026-08-12T15:19:40.106Z",
+  "updatedAt": "2026-08-12T15:19:40.184Z",
+  "runs": [
+    {
+      "runId": "93fccf01-118a-4921-b4b8-6a54382c3839",
+      "mode": "workflow",
+      "asyncDir": "/tmp/pi-subagents-uid-1000/async-subagent-runs/93fccf01-118a-4921-b4b8-6a54382c3839",
+      "status": "failed",
+      "startedAt": "2026-08-12T15:19:40.111Z",
+      "completedAt": "2026-08-12T15:19:40.184Z"
+    }
+  ],
+  "workflowChildren": [],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/93fccf01-118a-4921-b4b8-6a54382c3839/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/tmp/pi-subagents-uid-1000/async-subagent-runs/93fccf01-118a-4921-b4b8-6a54382c3839/events.jsonl",
+      "description": "Lifecycle events"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/home/ajj/repo/uf/JTML",
+  "ownerSessionId": "/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/2026-08-12T13-18-16-725Z_019ff61f-a495-758f-8e7a-43e63afc1967.jsonl",
+  "summary": "workflowScript must be valid JavaScript.\nIf task text contains Markdown fences or backticks, use an array joined with \"\\n\" or escaped strings instead of a raw backtick template literal.\n\nOriginal SyntaxError:\nworkflow-script.js:12\n- For the SettingsPanel SpinBox scale test: the ×100 SpinBox commits value/100 on onValueModified — if the fake's property is a JS property on a QtObject, binding updates may need a tryCompare or the fake must be a QObject with a NOTIFY signal. Check whether the fake needs signal-based properties (QtObject property changes do not notify).\",\n      ^^^\n\nSyntaxError: Unexpected identifier 'the'\n    at new Script (node:vm:117:7)\n    at MessagePort.<anonymous> ([worker eval]:298:18)\n    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:843:20)\n    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28)"
+}

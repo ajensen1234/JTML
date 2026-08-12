@@ -125,6 +125,14 @@ explicitly.
 
 ### Deferred to Follow-Up Work
 
+- Full QML path-bar picker (owner request 2026-08-12, "A now, B later"):
+  a `PathPickerDialog.qml` with a copyable Location field, paste-to-jump,
+  multi-select checkboxes, and the remembered dirs (replaces
+  `FileDialogBridge` for images/models; calibration stays native). The
+  minimal fix landed in U6's change: per-purpose remembered dir + sidebar
+  MRU bookmarks in `FileDialogBridge` (QSettings org
+  `JointTrackAutoGPU` / app `jtml_experimental` — deliberately outside
+  the oracle-pinned registry scope).
 - `qt_add_qml_module` conversion + QML language-server integration for the
   app (needs care with the render-smoke target that loads `qrc:/renderer.qml`
   — separate gated cut).
@@ -234,7 +242,7 @@ explicitly.
 | D5 | **Full run-lock matrix:** extend the existing `!optimizerBridge.running` lock to the Black-silhouette checkbox, the Fem/Tib buttons, and viewport interaction (`enabled: false` on the renderer — blocks mouse events). **The viewport lock has a visible state:** a "Running — interaction locked" overlay/dim on the viewport while a run is active (owner-confirmed) — dead input on a live-looking scene is the same silent-failure class D4 exists to prevent. | Completes the DisableAll mirror (I4); drags during a run are a semantic clobber. Answers Q4. |
 | D6 | **Estimate enablement:** add `mlBridge.hasSegmentModel` to the Estimate button binding + a hint label when disabled. | Matches AE4 degradation and the Segment button's pattern (I5). Answers Q5. |
 | D7 | **Keyboard contract:** frame list wires `onCurrentIndexChanged → studyBridge.setCurrentFrame` (single source of truth; list highlight + bridge can't diverge); model list toggles on Space/Enter; rows are focusable (`activeFocusOnTab`), ListView handles Up/Down; visible focus indicator bound to `activeFocus`. **The pose table is a single tab stop with cell navigation** (owner-confirmed): Left/Right between the 6 cells, Up/Down between rows, Enter commits, Esc reverts — required because recycled delegates physically cannot be reached by Tab. | Fixes I6 and satisfies qt-ui-design keyboard requirements. Answers Q6. |
-| D8 | **Pose-table virtualization:** `Repeater`→`ListView` with `reuseItems: true`, fixed row height, `onPooled`/`onReused` reset of cell state, commit contract from D2. **Mid-edit scroll-away is commit-on-pool** (owner-confirmed): focus-out fires `editingFinished` before pooling, the commit handler reads the live text against the captured tuple, and the `onPooled` reset runs after the commit — the typed value is never lost or misrouted. **Rejected alternatives:** `TableView` — the model is a `QAbstractListModel` with 6 pose roles per row; TableView expects per-column roles/columns, which would force a model-shape change rippling into PoseBridge and its pinned tests, and TableView's delegate recycling is less controllable than ListView's pooling hooks for the commit contract. `reuseItems: false` — keeps O(visible) instantiation but churns delegates (create/destroy) on every scroll of a 500-row table, which is exactly the churn profiling targets. | The dialog currently instantiates 6 TextFields × every frame (O(n) at load); virtualization is the profiling-driven fix. Requires D2 first. Answers Q1. |
+| D8 | **Pose-table virtualization:** `Repeater`→`ListView` with `reuseItems: true`, fixed row height, `onPooled`/`onReused` reset of cell state, commit contract from D2. **Mid-edit scroll-away is commit-on-pool** (owner-confirmed): **corrected by U6's harness — the focus-loss ordering assumption was WRONG in Qt 6.7** (pooling does not drop focus; hidden items keep activeFocus, so `editingFinished` never fires on recycle and typed values were silently clobbered). The landed mechanism: an `edited` flag on PoseCell + explicit `commitIfEditing()` flushed from the attached `ListView.onPooled` handler (delegate-root `onPooled`/`onReused` handlers never fire — they are ListView-attached signals). **Rejected alternatives:** `TableView` — the model is a `QAbstractListModel` with 6 pose roles per row; TableView expects per-column roles/columns, which would force a model-shape change rippling into PoseBridge and its pinned tests, and TableView's delegate recycling is less controllable than ListView's pooling hooks for the commit contract. `reuseItems: false` — keeps O(visible) instantiation but churns delegates (create/destroy) on every scroll of a 500-row table, which is exactly the churn profiling targets. | The dialog currently instantiates 6 TextFields × every frame (O(n) at load); virtualization is the profiling-driven fix. Requires D2 first. Answers Q1. |
 | D9 | **Keep qrc + qmldir; no `qt_add_qml_module`** for the app. New components register in `qmldir` + `resources.qrc`. The Qt Quick Test target gets its own test-owned `.qrc` embedding the components under test. | Works with the render-smoke target (loads `qrc:/renderer.qml`); zero risk to the oracle path; smallest CMake delta. `qmllint` runs as a ctest command, not a module integration. |
 | D10 | **Models-without-frames image load stays a merge** (replace rule keys on `frameCount > 0`), documented in the flow tests. | Legitimate models-first workflow; changing it is behavior risk with no owner ask (M5). Answers Q7. |
 | D11 | **Theme tokens first, extraction second:** extend `Theme.qml` (dirty/badge tokens, TypeScale roles), then re-point every hardcoded color/`font.pixelSize` site, *then* extract components. | Prevents the extraction from forking the palette (M2 — the flow analyzer's explicit warning). |
@@ -388,9 +396,34 @@ commit fails  → inline validation message; display re-syncs to storedValue
 
 ---
 
+### Review Round (ce-code-review 2026-08-12, after U8)
+
+Follow-up items from the 10-persona code review of the landed pass (all
+other findings fixed in the review round; the P1s were defects the pass
+itself introduced — GPUMetrics dtor uninitialized pointers + Frame
+keypoint count — both fixed and gated):
+
+- [x] R1. D7 pose-table keyboard contract (owner-approved decision A, never
+  landed): per-cell Keys handling — Left/Right between the 6 cells, Up/Down
+  rows, Esc reverts via resetDisplay, Enter commits; single tab stop;
+  tst_PosesTable pins (plan U6 scenario (e)).
+- [x] R2. Mid-edit flush on in-place re-bind + destruction paths (P1):
+  delegate onFrameIndexChanged flush + re-arm; PoseCell
+  Component.onDestruction commit; pin the instant-jump case.
+- [x] R3. Componentize the toolbar + load flows (Toolbar.qml) so the
+  harness pins calibration-first, replace-request, D10 merge, Camera/Model
+  run-lock; replace-confirm dialog + run-closes-dialogs stay root-owned
+  (recorded cut if extraction balloons).
+- [x] R4. Batch: lint-gate configure warning; role-filtered dataChanged;
+  ML-estimate table refresh (C7); discard-dialog Escape loop fix;
+  FileDialogBridge headless test (XDG_CONFIG_HOME redirect); ViewportPanel
+  dead guard removal; handoff line-count + AGENTS.md updates.
+
+---
+
 ## Implementation Units
 
-- [ ] U1. **Structured review + findings report (qt-qml-review)**
+- [x] U1. **Structured review + findings report (qt-qml-review)**
 
 **Goal:** Baseline the QML layer against the full review checklist before
 any change: deterministic lint + system qmllint + 6 parallel analysis
@@ -436,7 +469,7 @@ deliverable.
 
 ---
 
-- [ ] U2. **Theme tokens + component extraction (qt-qml)**
+- [x] U2. **Theme tokens + component extraction (qt-qml)**
 
 **Goal:** main.qml shrinks from ~1,020 lines to a bootstrap; every
 component is a file with a single responsibility; all colors and type
@@ -503,7 +536,7 @@ sizes come from `Theme.qml`; Layout.* sizing and import rules are clean.
 
 ---
 
-- [ ] U3. **View-state gap fixes (flow findings C1/C2, I1-I6)**
+- [x] U3. **View-state gap fixes (flow findings C1/C2, I1-I6)**
 
 **Goal:** Fix the data-integrity and state gaps the flow analysis found:
 pose-cell commit contract, pose-table freshness, ML-seed invalidation,
@@ -610,7 +643,7 @@ run-lock completion, Estimate enablement, keyboard→bridge wiring.
 
 ---
 
-- [ ] U4. **UI/UX audit + polish incl. visual composition (qt-ui-design)**
+- [x] U4. **UI/UX audit + polish incl. visual composition (qt-ui-design)**
 
 **Goal:** Apply the qt-ui-design audit checklist to the polished shell:
 typography scale, keyboard + focus, accessibility, contrast, hit targets
@@ -731,7 +764,7 @@ rule-compliant.
 
 ---
 
-- [ ] U5. **Pose-table virtualization (Repeater → ListView)**
+- [x] U5. **Pose-table virtualization (Repeater → ListView)**
 
 **Goal:** The Poses table stops instantiating 6 TextFields × every frame:
 virtualized ListView with a safe commit contract under recycling.
@@ -809,7 +842,7 @@ data-integrity prerequisite), U2 (PosesTable component)
 
 ---
 
-- [ ] U6. **Qt Quick Test coverage (qt-qml-test / qt-qml-test-run)**
+- [x] U6. **Qt Quick Test coverage (qt-qml-test / qt-qml-test-run)**
 
 **Goal:** The view layer gets real automated coverage: component tests
 (Theme, PoseCell, SettingsPanel, PosesTable) + view-flow tests (load
@@ -898,7 +931,7 @@ contrast to pin), U5 (table to pin)
 
 ---
 
-- [ ] U7. **Performance baseline + hotspot fixes (qt-qml-profiler)**
+- [x] U7. **Performance baseline + hotspot fixes (qt-qml-profiler)**
 
 **Goal:** Profile the 2D chrome, fix the top hotspots, and document the
 results — including measuring the known torch GUI-thread freeze.
@@ -965,7 +998,7 @@ results — including measuring the known torch GUI-thread freeze.
 
 ---
 
-- [ ] U8. **Institutional capture + handoff**
+- [x] U8. **Institutional capture + handoff**
 
 **Goal:** The pass's conventions (Qt Quick Test recipe, qmllint gate,
 profiler recipe, injection pattern) land in `docs/solutions/` and the
@@ -993,6 +1026,10 @@ handoff reflects the new state — without editing historical docs.
   2026-08-12 (synthesis items 1 → 3 → 2 → 5 → 8: cost-path bug fixes,
   metric-ablation harness, multi-stage oracle, DIRECT variants, compute
   perf), plus the QML follow-ups this pass leaves open.
+
+**DONE (2026-08-12):** `docs/solutions/conventions/jtml-qml-view-testing-2026-08-12.md`
++ `docs/handoff-2026-08-12-qml-experimental-improvement.md` written;
+`profiler/` gitignored; MultiFilePicker drift noted in the conventions entry.
 
 **Test expectation:** none — documentation.
 

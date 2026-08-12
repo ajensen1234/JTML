@@ -95,6 +95,14 @@ GPUMetrics::~GPUMetrics() {
 };
 
 void GPUMetrics::AllocateCurvatureHausdorfScore(int num_keypoints) {
+    /*Owner fix (2026-08-12): 0-keypoint heatmaps (a study loaded without
+     * ML segmentation) must not allocate — a 0-size cudaHostAlloc is not
+     * guaranteed to succeed on every driver. The curvature metrics are
+     * no-ops with 0 keypoints.*/
+    if (num_keypoints <= 0) {
+        return;
+    }
+
     cudaMalloc(
         (void**)&dev_curvature_hausdorf_score_, num_keypoints * sizeof(int));
     if (cudaGetLastError() != cudaSuccess) {

@@ -31,6 +31,20 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Theme.accent
 
+    // 007 U6 (D1): the components take injected `required property`
+    // bridges with the SAME names as the root-context properties. Passing
+    // them down as `bridge: bridge` is self-referential inside the child
+    // declaration (an object's own properties are in scope for its
+    // initializers — QML binding loop). Alias each at the root so the
+    // child declarations bind a distinct name.
+    readonly property var appBridgeRef: appBridge
+    readonly property var studyBridgeRef: studyBridge
+    readonly property var settingsBridgeRef: settingsBridge
+    readonly property var optimizerBridgeRef: optimizerBridge
+    readonly property var mlBridgeRef: mlBridge
+    readonly property var poseBridgeRef: poseBridge
+    readonly property var fileDialogBridgeRef: fileDialogBridge
+
     // D5 (plan 007 U3): single run-lock source for the shell root — every
     // toolbar control binds to it (the review D-07 found the Camera/Model
     // toggles escaped the original inventory; the spread
@@ -49,32 +63,9 @@ Window {
         nameFilters: ["Calibration File (*.txt)"]
         onAccepted: studyBridge.loadCalibration(selectedFile)
     }
-    // Multi-select via the native Qt file dialog (FileDialogBridge — Qt's
-    // in-process dialog, DontUseNativeDialog: immune to the portal backend
-    // dispatch that breaks multi-select on this box; see FileDialogBridge.h).
-    function pickImages() {
-        const files = fileDialogBridge.getOpenFileNames(
-                    qsTr("Load Images"),
-                    "Image Files (*.tif *.tiff *.png *.TIF *.TIFF *.PNG)",
-                    "")
-        if (files.length === 0) return
-        // A second image set is a new study: confirm, then replace the
-        // dataset before loading.
-        if (studyBridge.frameCount > 0) {
-            replaceDialog.pendingPaths = files
-            replaceDialog.open()
-        } else {
-            studyBridge.loadImages(files)
-        }
-    }
-    function pickModels() {
-        const files = fileDialogBridge.getOpenFileNames(
-                    qsTr("Load Implant Models"),
-                    "CAD File (*.stl *.STL)",
-                    "")
-        if (files.length === 0) return
-        studyBridge.loadModels(files)
-    }
+    // Multi-select via the native Qt file dialog — the picker logic moved
+    // into Toolbar.qml (R3): the toolbar emits showMessageRequested /
+    // replaceRequested / calibrationRequested for the root-owned dialogs.
     Dialog {
         id: replaceDialog
         property var pendingPaths: []
@@ -120,6 +111,11 @@ Window {
         title: qsTr("Discard unsaved changes?")
         modal: true
         implicitWidth: 420
+        // Review fix (2026-08-12, finding 12): NOT dismissible by Escape —
+        // Escape on this confirm would reject() and reopen the dirty dialog
+        // (onRejected -> pendingDialog.open()), whose next Esc re-triggers
+        // the guard: an unreachable Escape loop. Buttons only.
+        closePolicy: Popup.NoAutoClose
         // The dialog whose close triggered this confirm; Yes leaves it
         // closed, No reopens it.
         property var pendingDialog: null
@@ -130,6 +126,14 @@ Window {
             wrapMode: Text.Wrap
         }
         onAccepted: {
+            // R2 (review round): the discard path must drop in-flight pose
+            // edits — tell the Poses dialog to suppress its destruction
+            // commits before the close stands (defensive: Agent A adds
+            // prepareDiscard to PosesDialog).
+            if (discardDialog.pendingDialog === poseDialog
+                    && poseDialog.prepareDiscard) {
+                poseDialog.prepareDiscard()
+            }
             discardDialog.pendingDialog = null
         }
         onRejected: {
@@ -154,6 +158,8 @@ Window {
         property bool discardConfirmed: false
         contentItem: SettingsPanel {
             id: settingsPanelContent
+            // 007 U6 (D1): inject the real bridge at the use site.
+            settingsBridge: root.settingsBridgeRef
             width: settingsDialog.availableWidth
             height: settingsDialog.availableHeight
         }
@@ -170,20 +176,26 @@ Window {
                 discardDialog.pendingDialog = settingsDialog
                 discardDialog.open()
             }
-            // Plan 007 U4: focus returns to the opener.
-            if (!root.runLocked) settingsOpenButton.forceActiveFocus()
+            // Plan 007 U4: focus returns to the opener (R3: inside the
+            // toolbar component).
+            if (!root.runLocked) toolbar.focusSettingsOpener()
         }
     }
     PosesDialog {
         id: poseDialog
+        // 007 U6 (D1): inject the real bridges at the use site.
+        poseBridge: root.poseBridgeRef
+        studyBridge: root.studyBridgeRef
+        optimizerBridge: root.optimizerBridgeRef
         onDiscardRequested: {
             discardDialog.pendingDialog = poseDialog
             discardDialog.open()
         }
         onClosed: {
             // Plan 007 U4: focus returns to the opener (the run-close
-            // path skips it — the Run button keeps focus during a run).
-            if (!root.runLocked) posesOpenButton.forceActiveFocus()
+            // path skips it — the Run button keeps focus during a run;
+            // R3: the opener lives in the toolbar component).
+            if (!root.runLocked) toolbar.focusPosesOpener()
         }
     }
 
@@ -244,181 +256,26 @@ Window {
         anchors.fill: parent
         spacing: Theme.spacingXs
 
-        // ---- Toolbar: study actions + interaction mode + dialog openers
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            color: Theme.panel
-            radius: 4
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: Theme.spacingSm
-                spacing: Theme.spacingXs
-
-                // ---- Cluster 1: study load actions --------------------
-                RowLayout {
-                    spacing: Theme.spacingXs
-                    Button {
-                        text: qsTr("Calibration")
-                        enabled: !studyBridge.hasCalibration
-                                 && !root.runLocked
-                        onClicked: calibrationFileDialog.open()
-                    }
-                    Button {
-                        text: qsTr("Images")
-                        enabled: !root.runLocked
-                        onClicked: {
-                            if (!studyBridge.hasCalibration) {
-                                showMessage(qsTr("Error!"),
-                                            qsTr("Load Calibration First!"))
-                            } else {
-                                pickImages()
-                            }
-                        }
-                    }
-                    Button {
-                        text: qsTr("Models")
-                        enabled: !root.runLocked
-                        onClicked: {
-                            if (!studyBridge.hasCalibration) {
-                                showMessage(qsTr("Error!"),
-                                            qsTr("Load Calibration First!"))
-                            } else {
-                                pickModels()
-                            }
-                        }
-                    }
-                }
-
-                // ---- Cluster separators (visual grouping) --------------
-                Rectangle {
-                    Layout.preferredWidth: 1
-                    Layout.preferredHeight: 18
-                    color: Theme.border
-                    Accessible.ignored: true
-                }
-
-                // ---- Cluster 2: calibration status ---------------------
-                Label {
-                    text: studyBridge.hasCalibration
-                          ? (studyBridge.calibratedForBiplane
-                             ? qsTr("Calibrated (biplane)")
-                             : qsTr("Calibrated (monoplane)"))
-                          : qsTr("No calibration")
-                    color: studyBridge.hasCalibration
-                           ? Theme.ok : Theme.fgMuted
-                    font.pixelSize: Theme.caption
-                }
-
-                Rectangle {
-                    Layout.preferredWidth: 1
-                    Layout.preferredHeight: 18
-                    color: Theme.border
-                    Accessible.ignored: true
-                }
-
-                // ---- Cluster 3: interaction mode -----------------------
-                // Interaction mode (#1/#4): camera-centric (trackball
-                // camera, pivots at the primary model) vs model-centric
-                // (rotates the primary model about its center — the
-                // widgets app's trackball-actor mode).
-                RowLayout {
-                    spacing: Theme.spacingXs
-                    Label {
-                        text: qsTr("Interact:")
-                        color: Theme.fgMuted
-                        font.pixelSize: Theme.caption
-                    }
-                    ButtonGroup {
-                        id: interactGroup
-                        buttons: [cameraModeButton, modelModeButton]
-                    }
-                    Button {
-                        id: cameraModeButton
-                        text: qsTr("Camera")
-                        checkable: true
-                        // D5 (plan 007 U3, I4): locked during a run (review
-                        // D-07 — the mode toggles escaped the inventory).
-                        enabled: !root.runLocked
-                        Accessible.name: qsTr("Camera interaction mode")
-                        onClicked: viewportPanel.viewport.setInteractionMode(0)
-                    }
-                    // D-08 (plan 007 U3): an inline `checked:` binding dies on
-                    // the first click (AbstractButton + ButtonGroup write the
-                    // property imperatively), so programmatic bridge changes
-                    // would leave the toggle stale. A Binding object re-asserts
-                    // from the bridge value (the single source); the group
-                    // keeps click exclusivity. A re-click on the active toggle
-                    // re-sets the same bridge value (idempotent — I-12).
-                    Binding {
-                        target: cameraModeButton
-                        property: "checked"
-                        value: viewportPanel.viewport.interactionMode === 0
-                    }
-                    Button {
-                        id: modelModeButton
-                        text: qsTr("Model")
-                        checkable: true
-                        // D5 (plan 007 U3, I4): locked during a run.
-                        enabled: !root.runLocked
-                        Accessible.name: qsTr("Model interaction mode")
-                        onClicked: viewportPanel.viewport.setInteractionMode(1)
-                    }
-                    Binding {
-                        target: modelModeButton
-                        property: "checked"
-                        value: viewportPanel.viewport.interactionMode === 1
-                    }
-                }
-
-                Rectangle {
-                    Layout.preferredWidth: 1
-                    Layout.preferredHeight: 18
-                    color: Theme.border
-                    Accessible.ignored: true
-                }
-
-                // ---- Cluster 4: dialog openers -------------------------
-                RowLayout {
-                    spacing: Theme.spacingXs
-                    Button {
-                        id: settingsOpenButton
-                        text: qsTr("Optimizer Settings…")
-                        enabled: !root.runLocked
-                        onClicked: settingsDialog.open()
-                    }
-                    Button {
-                        id: posesOpenButton
-                        text: qsTr("Poses…")
-                        enabled: !root.runLocked
-                        onClicked: poseDialog.open()
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // ---- Shell unsaved indicator (plan 007 U4, M6) ---------
-                Rectangle {
-                    id: shellDirtyBadge
-                    Layout.preferredHeight: 14
-                    Layout.preferredWidth:
-                        Math.max(shellDirtyLabel.implicitWidth + 12, 28)
-                    radius: 7
-                    color: root.shellDirty ? Theme.badgeDirtyBg
-                                           : Theme.badgeCleanBg
-                    Accessible.role: Accessible.StatusBar
-                    Label {
-                        id: shellDirtyLabel
-                        anchors.centerIn: parent
-                        text: root.shellDirty ? qsTr("● unsaved")
-                                              : qsTr("saved")
-                        color: root.shellDirty ? Theme.badgeDirtyFg
-                                               : Theme.badgeCleanFg
-                        font.pixelSize: Theme.caption
-                    }
-                }
+        // ---- Toolbar (007 R3): extracted to Toolbar.qml so the harness
+        // pins the load-flow guards + the Camera/Model run lock. The
+        // toolbar emits requests; the root owns the dialogs + message
+        // channel. `viewport` is the renderer (declared below — forward
+        // id references are fine in QML).
+        Toolbar {
+            id: toolbar
+            studyBridge: root.studyBridgeRef
+            optimizerBridge: root.optimizerBridgeRef
+            fileDialogBridge: root.fileDialogBridgeRef
+            viewport: viewportPanel.viewport
+            shellDirty: root.shellDirty
+            onShowMessageRequested: (t, m) => showMessage(t, m)
+            onReplaceRequested: (paths) => {
+                replaceDialog.pendingPaths = paths
+                replaceDialog.open()
             }
+            onCalibrationRequested: calibrationFileDialog.open()
+            onSettingsRequested: settingsDialog.open()
+            onPosesRequested: poseDialog.open()
         }
 
         RowLayout {
@@ -439,10 +296,17 @@ Window {
                     spacing: Theme.spacingSm
 
                     StudyPanel {
+                        // 007 U6 (D1): inject the real bridges.
+                        appBridge: root.appBridgeRef
+                        studyBridge: root.studyBridgeRef
+                        optimizerBridge: root.optimizerBridgeRef
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
                     MlStrip {
+                        mlBridge: root.mlBridgeRef
+                        studyBridge: root.studyBridgeRef
+                        optimizerBridge: root.optimizerBridgeRef
                         Layout.fillWidth: true
                     }
                 }
@@ -451,6 +315,10 @@ Window {
             // ---- Center: the single main viewport ----------------------
             ViewportPanel {
                 id: viewportPanel
+                // 007 U6 (D1): inject the real bridges.
+                appBridge: root.appBridgeRef
+                studyBridge: root.studyBridgeRef
+                optimizerBridge: root.optimizerBridgeRef
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
@@ -462,6 +330,7 @@ Window {
         // optimizerBridge.running). Run closes the edit dialogs (a mid-run
         // settings/pose edit cannot race the run) then starts the run.
         RunBar {
+            optimizerBridge: root.optimizerBridgeRef
             Layout.fillWidth: true
             onRunRequested: {
                 // DisableAll mirror: close the edit dialogs so a mid-run

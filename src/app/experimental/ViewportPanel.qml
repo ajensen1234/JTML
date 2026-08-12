@@ -13,6 +13,13 @@ import jtml.experimental 1.0
 Item {
     id: root
 
+    // 007 U6 (D1): injected bridge surface — the composition root passes
+    // the real bridges (this panel is NOT in the headless test set — it
+    // hosts the VTK renderer, oracle/render-smoke territory).
+    required property var appBridge
+    required property var studyBridge
+    required property var optimizerBridge
+
     property alias viewport: viewportItem
 
     // D5 (plan 007 U3): single run-lock source — every locked control on
@@ -32,7 +39,7 @@ Item {
         // until a study loads. (Plan 007 U4: the debug pose readout overlay
         // was removed — the Poses dialog is the real surface.)
         Rectangle {
-            visible: appBridge.frameCount === 0
+            visible: root.appBridge.frameCount === 0
             anchors.fill: parent
             color: Theme.surface
             Label {
@@ -105,7 +112,7 @@ Item {
     Connections {
         target: viewportItem
         function onModelPoseAdjusted(sceneModelIndex, x, y, z, xa, ya, za) {
-            studyBridge.applyViewerPose(
+            root.studyBridge.applyViewerPose(
                         sceneModelIndex, x, y, z, xa, ya, za)
         }
     }
@@ -119,16 +126,16 @@ Item {
     Connections {
         target: studyBridge
         function onSelectionChanged() {
-            viewportItem.setActiveModel(studyBridge.primaryModelIndex)
+            viewportItem.setActiveModel(root.studyBridge.primaryModelIndex)
         }
     }
 
-    // Review I-03 guard: if the renderer failed to materialize (GL/xcb
-    // failure), surface it instead of silently no-opping the glue.
-    Component.onCompleted: {
-        if (!viewportItem) {
-            console.warn("ViewportPanel: QmlVtkRenderer failed to "
-                         + "instantiate — viewport glue will no-op")
-        }
-    }
+    // Review I-03 guard (removed in the ce-code-review round): the old
+    // `Component.onCompleted: if (!viewportItem)` was unreachable (the id
+    // always exists), so it guarded nothing. The real failure mode — the
+    // QmlVtkRenderer failing to materialize (GL/xcb) — is still silently
+    // unobservable: the renderer reports no failure and the glue no-ops.
+    // Surfacing it needs a real failure signal out of
+    // QmlVtkRenderer::initializeVTK, which currently never reports
+    // failure.
 }

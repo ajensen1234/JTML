@@ -6,3 +6,4 @@ RunBar 1.0 RunBar.qml
 ViewportPanel 1.0 ViewportPanel.qml
 PosesTable 1.0 PosesTable.qml
 PosesDialog 1.0 PosesDialog.qml
+Toolbar 1.0 Toolbar.qml

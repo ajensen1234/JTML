@@ -1,0 +1,17 @@
+The Round 3 append landed successfully and the file is structurally intact: Round 1 (lines 1–145), Round 2 (146–301), Round 3 appended (302–428) with the acceptance-report block closed. The write is the deliverable and it succeeded.
+
+## Task result
+
+**Deliverable:** `## Round 3` appended to `angles/02-cost-path-foundation.org` via `panoptes_write_artifact` (append=true, runId i-want-to-deepen-the-optimization-angle-here-both-in-terms-o-mspdhzo444m4). Round 1/2 content untouched. No source files modified; read-only otherwise.
+
+**What the round resolved, per primary text:**
+
+1. **Mahfouz normalization (R3-1, R3-6)** — The full 2003 text confirms the kernel's structure: two ratios each "multiplying the two images together, summing… and normalizing by the sum of the predicted image"; intensity deliberately NOT a correlation-coefficient normalization; contour weighted more heavily; negative weights (fn 2); a 3-px distance-weighted growing band; optimizer = SA-modified Nelder–Mead (the repo's code documents its own DIRECT deviation: "Not Using Simulated Annealing Obviously…"). The **numeric weights are unextractable** (equations are embedded images) → kernel-as-spec verdict: **keep 2.55/×255/−2.67/−1**, fix only the pointer guard. The 3-px band is a **full lineage match** (kernel hardcodes 3 at implant_mahfouz_metric.cu:356-366; edge_processor.cpp:22-26 + optimizer_manager.cpp:252-253 force 3 for DIRECT_MAHFOUZ). Tier-0 pin list delivered (7 pins incl. the float-vs-truncated pair and the band formula).
+
+2. **Dilation contradiction (R3-2)** — Every Flood 2018 dispatch number verified verbatim (10/6, branch=trunk−4, leaf=1, budgets, ranges, Canny). Resolution: leaf=1 unanimous; trunk 6 = paper's **tibia** value on a **femur** (femur robust band 8–12); **both** 6/4/1 (code) and 6/3/1 (docs) violate branch=trunk−4. Ablation extended to lineage configs {10,6,1},{6,2,1},{6,4,1},{6,3,1} + a bilateral-vs-render-only semantics axis (the paper is internally inconsistent; the repo's "(DIFFERENT FROM JTA PAPER)" comment misstates it).
+
+3. **Canny divergence (R3-3, R3-5)** — Flagged as **cost-load-bearing** with a round-1/2 correction: the DIRECT_DILATION cost's comparison is the **dilated Canny frame** (DIRECT_DILATION.cpp:73-80), not the Study2Grid label — only the IoU gate uses the label. Oracle 3/0/150 vs production 3/40/120 vs paper femur-A 3/30/80. Re-baseline rule: keep the Phase-2 re-baseline single-variable (index fix only), add Canny as an ablation axis.
+
+4. **Jensen 2024 sym-trap future (R3-4)** — Field remedy = explicit dyad flip (m = v×s, ψ = angle(s,v)) + ML classification + sequence-continuity spline. sym_trap future in dependency order: fix Bug 4 first (sym_trap_function.cpp:106), then the three angle-03 pins, then ψ/trap measurement, then dyad-aware evaluation + continuity; ML classification is not a JTML action item.
+
+**Acceptance contract:** `criterion-1` (concrete findings with file paths + severity) satisfied with evidence in the report; `commandsRun` distinguishes passed source/corpus verification from not-run GPU probes; `reviewFindings` includes the new high-severity finding (oracle Canny config is cost-load-bearing); residual risks recorded (unextractable weights, paper-internal dilation ambiguity, unmeasured ψ distribution, no GPU runs). The full fenced `acceptance-report` JSON block is in the appended section (file lines 353–428).

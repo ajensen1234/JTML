@@ -28,8 +28,19 @@ ColumnLayout {
     Layout.fillHeight: true
     spacing: Theme.spacingSm
 
+    // 007 U6 (D1): injected bridge surface — the composition root passes
+    // the real bridges; tests pass fakes. No context-property coupling.
+    required property var appBridge
+    required property var studyBridge
+    required property var optimizerBridge
+
+    // Testability (plan 007 U6): the lists are reachable from the Qt
+    // Quick Test via findChild (keyboard contract + run-lock pins).
+    readonly property string frameListObjectName: "studyFrameList"
+    readonly property string modelListObjectName: "studyModelList"
+
     // D5 (plan 007 U3): single run-lock source for this panel.
-    readonly property bool runLocked: optimizerBridge.running
+    readonly property bool runLocked: root.optimizerBridge.running
     // D7 dataset-swap guard: set when a dataset replace is in flight so a
     // transient currentIndex reset never syncs to the bridge.
     property bool suppressFrameSync: false
@@ -37,27 +48,29 @@ ColumnLayout {
     // Frame list (delegate selection contract: currentIndex drives the
     // bridge — no QItemSelectionModel).
     Label {
-        text: qsTr("Frames (%1)").arg(appBridge.frameCount)
+        text: qsTr("Frames (%1)").arg(root.appBridge.frameCount)
         color: Theme.fg
         font.bold: true
         font.pixelSize: Theme.label
     }
     ListView {
         id: frameList
+        objectName: root.frameListObjectName
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         enabled: !root.runLocked
-        model: studyBridge.frameListModel
+        model: root.studyBridge.frameListModel
         // D7 (I6): the bridge is the single source of truth — every
         // currentIndex change syncs to it (the delegate MouseArea only
         // sets currentIndex; Up/Down arrives via the ListView's key
         // handling once a row has focus).
         onCurrentIndexChanged: {
             if (root.suppressFrameSync) return
-            studyBridge.setCurrentFrame(frameList.currentIndex)
+            root.studyBridge.setCurrentFrame(frameList.currentIndex)
         }
         delegate: Rectangle {
+            required property int index
             required property string display
             width: ListView.view.width
             height: 24
@@ -88,7 +101,12 @@ ColumnLayout {
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: ListView.view.currentIndex = index
+                // Owner fix (2026-08-12): ListView.view is NULL in nested
+                // items — the attached `view` property only reaches the
+                // delegate ROOT. The old `ListView.view.currentIndex =`
+                // threw a TypeError per click (frame picker dead). The
+                // list id is in file scope and works from delegates.
+                onClicked: frameList.currentIndex = index
             }
         }
         highlightFollowsCurrentItem: true
@@ -96,23 +114,25 @@ ColumnLayout {
 
     // Model list (multi-select via the bridge-owned set).
     Label {
-        text: qsTr("Models (%1)").arg(appBridge.modelCount)
+        text: qsTr("Models (%1)").arg(root.appBridge.modelCount)
         color: Theme.fg
         font.bold: true
         font.pixelSize: Theme.label
     }
     ListView {
         id: modelList
+        objectName: root.modelListObjectName
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         enabled: !root.runLocked
-        model: studyBridge.modelListModel
+        model: root.studyBridge.modelListModel
         delegate: Rectangle {
+            required property int index
             required property string display
             width: ListView.view.width
             height: 24
-            color: studyBridge.selectedModels.indexOf(index) !== -1
+            color: root.studyBridge.selectedModels.indexOf(index) !== -1
                    ? Theme.selection : "transparent"
             // D7: rows are reachable by keyboard; Space/Enter toggles the
             // row (the bridge-owned multi-select set).
@@ -142,21 +162,21 @@ ColumnLayout {
                 if (event.key === Qt.Key_Space
                         || event.key === Qt.Key_Return
                         || event.key === Qt.Key_Enter) {
-                    studyBridge.toggleModelSelected(index)
+                    root.studyBridge.toggleModelSelected(index)
                     event.accepted = true
                 }
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: studyBridge.toggleModelSelected(index)
+                onClicked: root.studyBridge.toggleModelSelected(index)
             }
         }
     }
     Label {
-        text: studyBridge.selectedModelCount > 0
+        text: root.studyBridge.selectedModelCount > 0
               ? qsTr("Selected %1 · primary %2")
-                    .arg(studyBridge.selectedModelCount)
-                    .arg(studyBridge.primaryModelIndex)
+                    .arg(root.studyBridge.selectedModelCount)
+                    .arg(root.studyBridge.primaryModelIndex)
               : qsTr("No model selected")
         color: Theme.fgMuted
         font.pixelSize: Theme.caption
@@ -173,7 +193,7 @@ ColumnLayout {
         function onDatasetChanged() {
             root.suppressFrameSync = true
             Qt.callLater(function() {
-                frameList.currentIndex = studyBridge.currentFrame
+                frameList.currentIndex = root.studyBridge.currentFrame
                 root.suppressFrameSync = false
             })
         }

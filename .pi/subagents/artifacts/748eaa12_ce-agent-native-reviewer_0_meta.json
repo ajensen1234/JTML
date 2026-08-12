@@ -1,0 +1,211 @@
+{
+  "runId": "748eaa12",
+  "agent": "ce-agent-native-reviewer",
+  "task": "You are ce-agent-native-reviewer. Agent-accessible parity: the FileDialogBridge Q_INVOKABLE signature changed (added purpose param) — do QML call sites match? Any QML-only behaviors that break scripted/agent-driven use? The qml_lint gate running as a ctest — is it robust in CI-ish environments (CONDA_PREFIX fallback)?\n\nINTENT: Plan 007 — full improvement pass over the experimental QML front-end of a Qt 6.7.2 + VTK 9.3 + CUDA knee-implant registration app. Units: structured review; Theme tokens + component extraction (main.qml 1020->230 lines); view-state gap fixes (PoseCell commit contract, pose-table refresh owner, ML-seed invalidation via OptimizerBridge::clearSeedPose, run-lock matrix incl. Camera/Model toggles, Estimate enablement, keyboard wiring + dataset-swap guard); UX audit + visual composition pass; pose-table virtualization (ListView reuse + commit-on-pool); Qt Quick Test harness (test/qml/, 38 test functions, fake bridges, property injection); profiling build (pixi configure-profiling task). Plus two owner-feedback rounds: toolbar overflow fix, drag-sync scene-index fix (QmlVtkRenderer), heatmap-less optimizer runs (GPUHeatmap 0-keypoint guard + AllocateCurvatureHausdorfScore guard + OptimizerManager skip-if-empty), Black-sil. checkbox label, frame-picker ListView.view-null-in-nested-MouseArea fix, FileDialogBridge per-purpose dir memory + sidebar MRU.\nCONSTRAINTS: oracle parity band must stay intact (jtml.qml_parity_check green, IoU 0.993627); widgets app (src/view) and backend seams untouched except the owner-requested heatmap guard (src/compute/gpu_heatmaps.cu, gpu_metrics.cu, src/coordinator/optimizer_manager.cpp); headless tests must not touch GPU/VTK.\nREVIEW SCOPE: diff base ywpkloqo -> working copy @. CHANGED FILES (read them; do NOT rely on this list alone — check the diff too):\n  src/app/experimental/: main.qml (bootstrap), StudyPanel.qml, MlStrip.qml, RunBar.qml, ViewportPanel.qml, PosesDialog.qml, PosesTable.qml, PoseCell.qml, SettingsPanel.qml, Theme.qml, QmlVtkRenderer.cpp, AppBridge.cpp, OptimizerBridge.h/.cpp, PoseBridge.h/.cpp, StudyBridge.cpp, FileDialogBridge.h/.cpp, qmldir, resources.qrc, renderer.qml\n  src/compute/gpu_heatmaps.cu, gpu_metrics.cu; src/coordinator/optimizer_manager.cpp\n  test/qml/ (harness: main.cpp, tests.qrc, fakes, tst_*), test/qml_lint.cmake, test/CMakeLists.txt, test/unit/experimental_pose_bridge_test.cpp, experimental_ml_bridge_test.cpp\n  pixi.toml (configure-profiling/build-profiling tasks), docs/plans/2026-08-12-007-*.md (the PLAN — read for requirements verification), docs/reviews/2026-08-12-qml-experimental-review.md, docs/solutions/* (2 new entries), docs/handoff-2026-08-12-*.md, .gitignore\nRUN `jj diff --from ywpkloqo --to @` for the full diff (this repo uses jj, not git).\n\nOUTPUT CONTRACT:\n1. Write your FULL analysis to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/<your-name>.json — JSON with: { reviewer, findings: [ { title, severity (P0|P1|P2|P3), file, line, confidence (0|25|50|75|100), autofix_class (safe_auto|gated_auto|manual|advisory), owner (review-fixer|downstream-resolver|human|release), requires_verification (bool), pre_existing (bool), suggested_fix (optional), why_it_matters, evidence[] } ], residual_risks: [], testing_gaps: [] }.\n2. Return COMPACT JSON: { reviewer, findings: [ {title, severity, file, line, confidence, autofix_class, owner, requires_verification, pre_existing, suggested_fix?} ], residual_risks: [], testing_gaps: [] }.\nConfidence anchors: 50 = verified real but advisory; 75 = verified, implementers will concretely hit it; 100 = airtight. Suppress below 50. Every finding needs file+line and a direct evidence quote in the artifact.\nYOU ARE READ-ONLY: no file edits (except your artifact write), no git/jj mutations, no commits.\n\nYour persona rubric is built into your agent configuration — apply it, with the suppression rules for findings that belong to other personas.",
+  "exitCode": 0,
+  "usage": {
+    "input": 99580,
+    "output": 41959,
+    "cacheRead": 4124672,
+    "cacheWrite": 0,
+    "cost": 0.0186194008,
+    "turns": 52
+  },
+  "model": "opencode-go/deepseek-v4-flash",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 99580,
+        "output": 41959,
+        "cacheRead": 4124672,
+        "cacheWrite": 0,
+        "cost": 0.0186194008,
+        "turns": 52
+      }
+    }
+  ],
+  "durationMs": 510142,
+  "toolCount": 59,
+  "launchContractDigest": "fca6b4760a9a150cc75c2ceeccd0158e52d77416a6a4effbafae3488b7e840f8",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "attested",
+    "evidenceStatus": "attested",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "attested",
+      "explicit": false,
+      "inferredReason": [
+        "read-only/reviewer-style agent"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Return concrete findings with file paths and severity when applicable",
+          "evidence": [
+            "review-findings",
+            "residual-risks"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "review-findings",
+        "residual-risks"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "read-only/reviewer-style agent"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Return concrete findings with file paths and severity when applicable",
+        "evidence": [
+          "review-findings",
+          "residual-risks"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "8 findings returned with file+line+severity+confidence+evidence; full analysis written to .context/compound-engineering/ce-code-review/20260812-123833-8f0aeec8/ce-agent-native-reviewer.json (verified via read-back of written artifact); key checks executed: FileDialogBridge 4-arg signature vs both QML call sites (match), Qt Quick Test + qml_lint ctests run and passed, Qt source verification of sidebar replacement semantics, test-function count 28 vs claimed 38"
+        }
+      ],
+      "changedFiles": [
+        "src/app/experimental/main.qml",
+        "src/app/experimental/FileDialogBridge.h",
+        "src/app/experimental/FileDialogBridge.cpp",
+        "src/app/experimental/PoseCell.qml",
+        "src/app/experimental/PosesTable.qml",
+        "src/app/experimental/PosesDialog.qml",
+        "src/app/experimental/StudyPanel.qml",
+        "src/app/experimental/MlStrip.qml",
+        "src/app/experimental/RunBar.qml",
+        "src/app/experimental/SettingsPanel.qml",
+        "src/app/experimental/ViewportPanel.qml",
+        "src/app/experimental/Theme.qml",
+        "src/app/experimental/QmlVtkRenderer.cpp",
+        "src/app/experimental/AppBridge.cpp",
+        "src/app/experimental/OptimizerBridge.h",
+        "src/app/experimental/OptimizerBridge.cpp",
+        "src/app/experimental/PoseBridge.h",
+        "src/app/experimental/PoseBridge.cpp",
+        "test/CMakeLists.txt",
+        "test/qml_lint.cmake",
+        "test/qml/main.cpp",
+        "test/qml/tests.qrc",
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_SettingsPanel.qml",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/tst_Theme.qml",
+        "docs/handoff-2026-08-12-qml-experimental-improvement.md",
+        "docs/plans/2026-08-12-007-refactor-qml-experimental-improvement-pass-plan.md"
+      ],
+      "testsAddedOrUpdated": [
+        "test/qml/tst_PoseCell.qml",
+        "test/qml/tst_PosesTable.qml",
+        "test/qml/tst_SettingsPanel.qml",
+        "test/qml/tst_StudyFlows.qml",
+        "test/qml/tst_Theme.qml",
+        "test/qml_lint.cmake (gate)"
+      ],
+      "commandsRun": [
+        {
+          "command": "jj diff --from ywpkloqo --to @ --stat",
+          "result": "passed",
+          "summary": "Full plan-007 diff enumerated; review scoped to changed files"
+        },
+        {
+          "command": "ctest -R jtml.qml_lint --output-on-failure (.build)",
+          "result": "passed",
+          "summary": "qmllint gate passes 0.42s; registered via .pixi fallback path (CONDA_PREFIX unset in this shell)"
+        },
+        {
+          "command": "ctest -R jtml.qml_view --output-on-failure (.build)",
+          "result": "passed",
+          "summary": "Qt Quick Test harness passes 3.42s (offscreen + Material)"
+        },
+        {
+          "command": "grep -c 'function test' test/qml/tst_*.qml",
+          "result": "passed",
+          "summary": "28 delivered test functions vs 38 claimed in handoff"
+        },
+        {
+          "command": "grep -rn 'Keys\\.' src/app/experimental/*.qml",
+          "result": "passed",
+          "summary": "Only StudyPanel.qml:161 has a Keys handler; pose-table D7 keyboard nav absent"
+        },
+        {
+          "command": "fetch_content/get_search_content on Qt 6 qsidebar.cpp + qfiledialog.cpp",
+          "result": "passed",
+          "summary": "Verified QUrlModel::setUrls removes all rows; non-empty setSidebarUrls replaces default places"
+        }
+      ],
+      "validationOutput": [
+        "FileDialogBridge 4-arg signature matches main.qml:69-74 ('images') and main.qml:85-90 ('models'); no other call sites exist",
+        "jtml.qml_lint + jtml.qml_view both green in this environment",
+        "Wrong-binary lint failure mode verified loud: /usr/bin/qmllint rejects --json; missing-binary mode verified silent (no test registered, no message)"
+      ],
+      "residualRisks": [
+        "Composition-root flows untested (main.qml outside harness) — manual-visual only",
+        "D7 pose-table keyboard contract unimplemented — keyboard-only users cannot navigate pose cells",
+        "Sidebar MRU replacing default places needs runtime confirmation",
+        "Lint gate silent-drop on machines without .pixi env / CONDA_PREFIX"
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Plan 007 QML improvement pass: theme tokens + component extraction, view-state fixes (run-lock matrix, ML-seed invalidation, pose-table refresh owner, keyboard wiring, dataset-swap guard), pose-table virtualization with commit-on-pool, Qt Quick Test harness with fake bridges, qmllint ctest gate, profiling tasks, heatmap guards, FileDialogBridge per-purpose dir memory + MRU",
+      "reviewFindings": [
+        "P2: PoseCell.qml - D7 pose-table keyboard cell navigation unimplemented + untested despite U4/U6 marked done",
+        "P2: test/CMakeLists.txt:1459 - jtml.qml_lint silently unregistered when no Qt6 qmllint resolvable",
+        "P3: FileDialogBridge.cpp:44 - sidebar MRU replaces default places (Qt source verified)",
+        "P3: FileDialogBridge.cpp:35 - modal exec() not scriptable; primitives exist (advisory)",
+        "P3: test/qml_lint.cmake:26 - stale allowlist comment ('unqualified' removal path never happened)",
+        "P3: test/qml_lint.cmake:38 - test/qml files not linted",
+        "P3: handoff line 52 - 38 claimed vs 28 delivered test functions; U6 scenarios (a)/(d)/(e) uncovered",
+        "P3: test/qml_lint.cmake:48 - no qmllint version check (bounded, failures loud)"
+      ],
+      "manualNotes": "Assigned focus items resolved: (1) FileDialogBridge signature change — QML call sites match, no other callers; C++ default arg unused but harmless. (2) QML-only scripted-use breakers — none blocking: all actions have bridge primitives; modal dialog + discard-confirm are human-only sugar with scriptable escapes. (3) qml_lint CI robustness — silent-skip hole is the concrete finding; wrong-binary fails loud. 20/20 high-priority actions agent-accessible."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "not-applicable",
+      "expected": false,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/748eaa12_ce-agent-native-reviewer_0_transcript.jsonl",
+  "timestamp": 1786553251825
+}
