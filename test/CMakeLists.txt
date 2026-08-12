@@ -311,10 +311,11 @@ set_tests_properties(jtml.calibration PROPERTIES LABELS "headless" TIMEOUT 120)
 # Tier-0 metric-semantics pins + CPU references (plan 008 U1 / the R13
 # characterization pass). Every CPU reference encodes the CURRENT kernel code as
 # spec (kernel-as-spec); RED pins document pre-fix bugs (U2/U4 flip them).
-# Direct-compile pattern: only data_structures_6D.cpp (Point6D) is compiled; the
-# sym_trap pin includes the REAL compute-layer transform header (compile-time
-# CUDA/OpenCV headers only — no runtime GPU, no CUDA/OpenCV link; same include
-# relaxation as jtml.experimental_settings).
+# Since U2 the stage-guard observable pin constructs the REAL CostFunctionManager
+# (constructor + getStage() only — CPU-only, no CUDA calls at runtime) linked
+# from jtml_compute, the same fixture recipe (heavy include set, rpath) as
+# jtml.cost_function_registry; the sym_trap pin includes the REAL compute-layer
+# transform header (compile-time CUDA/OpenCV headers only).
 add_executable(jtml_test_metric_semantics
     unit/test_metric_semantics.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
@@ -324,10 +325,21 @@ target_include_directories(jtml_test_metric_semantics PRIVATE
     ${PROJECT_SOURCE_DIR}/include/compute
     ${CUDA_INCLUDE_DIRS}
     $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(jtml_test_metric_semantics PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(jtml_test_metric_semantics PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    ${JTA_LIBS})
+# The conda toolchain overrides BUILD_RPATH, so append the runtime lib dirs
+# explicitly (GNU ld accumulates -rpath): jtml_compute.so lives in the build
+# lib dir; torch/cuda deps in the pixi env (the .so's own RUNPATH covers
+# them, this is belt-and-braces for the test binary).
+target_link_options(jtml_test_metric_semantics PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.metric_semantics COMMAND jtml_test_metric_semantics)
-set_tests_properties(jtml.metric_semantics PROPERTIES LABELS "headless" TIMEOUT 120)
+set_tests_properties(jtml.metric_semantics PROPERTIES LABELS "headless" TIMEOUT 300)
 
 # Hegel PBT twin for the metric-semantics CPU references (plan 008 U1): IoU/L1/
 # chamfer/distance-map/Mahfouz invariants + the CropIndexToGlobal bijectivity pin

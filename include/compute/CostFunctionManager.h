@@ -86,6 +86,11 @@ public:
     /*Set Current Frame Index*/
     JTML_DLL void setCurrentFrameIndex(unsigned int current_frame_index);
 
+    /*Stage accessor — plan 008 U2 second documented wizard-region exception:
+    minimal getStage() makes the stage-guard pin observable (stage_ is dead
+    constructor state today; cfm_index is the future source of truth).*/
+    Stage getStage() { return stage_; }
+
     /*Upload Data (Images,Poses etc.)*/
     JTML_DLL void UploadData(
         std::vector<gpu_cost_function::GPUEdgeFrame*>* gpu_edge_frames_A,

@@ -114,9 +114,12 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
     double x_delZ = s_z * (np.z_location_ - p.z_location_);
     double X_dist = sqrt(x_delX * x_delX + x_delY * x_delY + x_delZ * x_delZ);
 
-    double y_delX = s_x * (np.x_location_ - p.x_location_);
-    double y_delY = s_y * (np.y_location_ - p.y_location_);
-    double y_delZ = s_z * (np.z_location_ - p.z_location_);
+    /*Plan 008 U2 (Bug 2): Y_dist must project onto the y-axis unit vector
+    r = R·{0,1,0} — it reused the x-axis vector s, so Y_TRANS silently
+    duplicated X_TRANS (pure y-offsets scored 0).*/
+    double y_delX = r_x * (np.x_location_ - p.x_location_);
+    double y_delY = r_y * (np.y_location_ - p.y_location_);
+    double y_delZ = r_z * (np.z_location_ - p.z_location_);
     double Y_dist = sqrt(y_delX * y_delX + y_delY * y_delY + y_delZ * y_delZ);
 
     /*Parameter*/
@@ -131,7 +134,11 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
     this->getActiveCostFunctionClass()->getBoolParameterValue(
         "Z_TRANS", z_tran);
 
-    double min_dist;
+    /*Plan 008 U2 (Bug 1): min_dist was read uninitialized (UB) when no axis
+    flag was set and returned garbage on the all-flags-false path; init-0 is
+    the documented fallback (registry defaults X/Y/Z_TRANS all false,
+    CostFunctionManager.cpp:365-369).*/
+    double min_dist = 0.0;
 
     if (x_tran) {
         min_dist += X_dist * pole_weight;

@@ -101,9 +101,12 @@ double CostFunctionManager::costFunctionsym_trap_function() {
                                            {0.0f,0.0f,0.0f,1.0f} }; */
 
     float x2tib[4][4];
+    /*Plan 008 U2 (Bug 4): the tibia x-translation slot must carry
+    p.x_location_ — it received p.z_location_ (the x slot duplicated z,
+    collapsing the tibia's x offset; the trap-analysis prerequisite).*/
     create_312_transform(
         x2tib,
-        p.z_location_,
+        p.x_location_,
         p.y_location_,
         p.z_location_,
         p.z_angle_,

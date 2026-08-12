@@ -43,7 +43,12 @@ CostFunctionManager::CostFunctionManager(Stage stage) {
 
     /*Initialize stage*/
     stage_ = stage;
-    if (stage_ != Stage::Trunk || stage_ != Stage::Branch ||
+    /*Plan 008 U2 — first documented wizard-region exception: the original guard
+    was a tautology (`||` — no Stage value equals all three members, so every
+    manager collapsed to Trunk). `&&` forces Trunk only for invalid values.
+    cfm_index (the StageScript) is the future stage source of truth; stage_ is
+    constructor state kept for the getStage() accessor pin.*/
+    if (stage_ != Stage::Trunk && stage_ != Stage::Branch &&
         stage_ != Stage::Leaf)
         stage_ = Stage::Trunk;
 

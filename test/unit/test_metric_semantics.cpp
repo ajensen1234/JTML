@@ -9,8 +9,8 @@
 // RED pins (tagged [red]) document pre-fix bugs on today's source; they are the
 // spec the behavior-neutral fixes (U2) and the live distance-map index fix (U4)
 // must satisfy. Do NOT "fix" a test to match a bug — a RED pin flips green only
-// when the production fix lands (and, for sym_trap, when the transcribed call
-// below is updated to the fixed call at the same time).
+// when the production fix lands (sym_trap + stage-guard flipped in U2, when the
+// transcriptions below were updated to the fixed calls at the same time).
 //
 // Pins in this file:
 //   - chamfer stage functions (edge / quadrant-only dilation / difference) +
@@ -25,16 +25,20 @@
 //   - dilation registry/constants pins (settings_constants.h IS a Flood tibia
 //     transcription; engine runtime dilation 6/4/1; baseline.json's {6,3,1} is
 //     the known-stale docs-claim),
-//   - stage-guard semantics pin (Bug 3; the accessor-dependent observable pin
-//     lands in U2 with the minimal getStage() accessor),
-//   - DD PolePenalty extraction spec (init-0 + Y-axis, Bugs 1+2),
-//   - sym_trap tibia-transform pins (Bug 4, RED via [!mayfail] today).
+//   - stage-guard semantics pin (Bug 3; fixed in U2 — the tautology
+//     characterization became the observable getStage() pin via the minimal
+//     accessor, the second documented wizard-region exception),
+//   - DD PolePenalty extraction spec (init-0 + Y-axis, Bugs 1+2; production
+//     fixes landed in U2),
+//   - sym_trap tibia-transform pins (Bug 4; RED via [!mayfail] pre-U2, now
+//     real assertions on the fixed call).
 //
 // Direct-compile pattern: the target compiles data_structures_6D.cpp (Point6D)
-// only; every reference is test-local pure C++. The sym_trap pin includes the
-// REAL compute-layer transform header (compile-time CUDA/OpenCV headers only —
-// no runtime GPU, no CUDA/OpenCV link), the same relaxation the
-// jtml.experimental_settings target already uses.
+// and links the REAL CostFunctionManager from jtml_compute (constructor +
+// getStage() only — CPU-only, no CUDA calls at runtime; the same pattern as
+// jtml.experimental_settings / jtml.cost_function_registry). The sym_trap pin
+// includes the REAL compute-layer transform header (compile-time CUDA/OpenCV
+// headers only — no runtime GPU).
 
 #include <algorithm>
 #include <array>
@@ -42,6 +46,7 @@
 #include <cstdint>
 #include <functional>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include <catch2/catch_approx.hpp>
@@ -49,7 +54,12 @@
 
 #include "compute/pixel_grayscale_colors.h"
 #include "compute/Stage.h"
+/*NOTE: must precede CostFunctionManager.h — that header includes the custom-
+variables headers INSIDE the class body, so (with #pragma once) including it
+first would textually nest the transform functions in class scope instead of
+global scope.*/
 #include "compute/sym_trap_functionCustomVariables.h"
+#include "compute/CostFunctionManager.h"
 #include "cuda_launch_parameters.h"
 #include "domain/settings_constants.h"
 
@@ -401,22 +411,16 @@ long long L1Reference(const std::vector<unsigned char>& A,
 }
 
 // ---------------------------------------------------------------------------
-// Stage-guard semantics (Bug 3, CostFunctionManager.cpp:46-48).
-// The production guard is a tautology: `if (stage_ != Stage::Trunk ||
+// Stage-guard semantics (Bug 3, CostFunctionManager.cpp:46-48 — FIXED in U2).
+// The production guard was a tautology: `if (stage_ != Stage::Trunk ||
 // stage_ != Stage::Branch || stage_ != Stage::Leaf) stage_ = Stage::Trunk;` —
 // no Stage value can equal all three members, so EVERY constructed manager
-// collapses to Trunk (the Branch/Leaf constructors at settings_control.cpp:
-// 1198-1199 are affected). U2 fixes `||` -> `&&`. The end-to-end observable pin
-// (construct CostFunctionManager(Stage), assert getStage() == Stage) needs the
-// minimal getStage() accessor — a SEPARATE U2 landing (the documented second
-// wizard-region exception) — so THIS pin locks the guard SEMANTICS at the pure
-// surface (the exact boolean the one-line fix rewrites) and notes the accessor
-// dependency.
+// collapsed to Trunk (the Branch/Leaf constructors at settings_control.cpp:
+// 1198-1199 were affected). U2 rewrote `||` -> `&&` and added the minimal
+// getStage() accessor (the documented second wizard-region exception); the
+// observable pin below asserts the fixed behavior on the REAL manager. The
+// pure boolean below locks the exact expression the fix rewrites.
 // ---------------------------------------------------------------------------
-
-bool StageGuardCollapsesToTrunkBuggy(Stage s) {
-    return s != Stage::Trunk || s != Stage::Branch || s != Stage::Leaf;
-}
 
 bool StageGuardCollapsesToTrunkCorrected(Stage s) {
     return s != Stage::Trunk && s != Stage::Branch && s != Stage::Leaf;
@@ -825,26 +829,32 @@ TEST_CASE(
 // Stage-guard semantics pins (Bug 3)
 // ===========================================================================
 
-TEST_CASE("stage guard: the current OR-guard is a tautology (Bug 3 characterization)",
-          "[metric_semantics][stage_guard][red]") {
-    // No Stage value can equal all three enum members, so the production
-    // condition `s != Trunk || s != Branch || s != Leaf` is always true and
-    // every constructed CostFunctionManager collapses to Trunk.
-    REQUIRE(StageGuardCollapsesToTrunkBuggy(Stage::Trunk));
-    REQUIRE(StageGuardCollapsesToTrunkBuggy(Stage::Branch));
-    REQUIRE(StageGuardCollapsesToTrunkBuggy(Stage::Leaf));
+TEST_CASE(
+    "stage guard: getStage() reports the stage the caller constructed (U2)",
+    "[metric_semantics][stage_guard]") {
+    // Bug 3 fix (CostFunctionManager.cpp:46-48): the guard was the tautology
+    // `s != Trunk || s != Branch || s != Leaf`, so every manager collapsed to
+    // Trunk (previously the accessor would always report Trunk). U2 rewrote it
+    // as `&&` and added the minimal getStage() accessor (the documented second
+    // wizard-region exception); this observable pin asserts the fixed behavior
+    // on the REAL CostFunctionManager linked from jtml_compute.
+    jta_cost_function::CostFunctionManager trunk(Stage::Trunk);
+    jta_cost_function::CostFunctionManager branch(Stage::Branch);
+    jta_cost_function::CostFunctionManager leaf(Stage::Leaf);
+    REQUIRE(trunk.getStage() == Stage::Trunk);
+    REQUIRE(branch.getStage() == Stage::Branch);
+    REQUIRE(leaf.getStage() == Stage::Leaf);
 }
 
 TEST_CASE(
     "stage guard: the corrected AND-guard preserves every valid stage (U2 spec)",
     "[metric_semantics][stage_guard]") {
     // U2's one-line fix (`||` -> `&&` at CostFunctionManager.cpp:46) makes the
-    // guard force Trunk only for invalid values — never for a valid stage.
-    // DEPENDENCY: the observable pin (construct CostFunctionManager(Stage::Branch);
-    // REQUIRE(getStage() == Stage::Branch)) needs the minimal getStage() accessor
-    // in include/compute/CostFunctionManager.h — a SEPARATE U2 landing (the
-    // documented second wizard-region exception). This pure-semantics pin locks
-    // the boolean the fix rewrites.
+    // guard force Trunk only for invalid values — never for a valid stage. The
+    // observable counterpart (construct CostFunctionManager(Stage::Branch);
+    // REQUIRE(getStage() == Stage::Branch)) landed with the minimal getStage()
+    // accessor in the same unit (see the pin above); this pure-semantics pin
+    // locks the boolean the fix rewrites.
     REQUIRE_FALSE(StageGuardCollapsesToTrunkCorrected(Stage::Trunk));
     REQUIRE_FALSE(StageGuardCollapsesToTrunkCorrected(Stage::Branch));
     REQUIRE_FALSE(StageGuardCollapsesToTrunkCorrected(Stage::Leaf));
@@ -857,8 +867,8 @@ TEST_CASE(
 TEST_CASE("DD PolePenalty: init-0 spec (Bug 1) + per-axis accumulation",
           "[metric_semantics][dd_pole]") {
     // Bug 1 spec: no flags -> exactly 0 contribution (the production `double
-    // min_dist;` read is UB today — the U2 fix lands this helper as the pure
-    // extraction and initializes min_dist = 0.0).
+    // min_dist;` was read uninitialized (UB) until U2 initialized min_dist =
+    // 0.0 — this helper IS the production semantics).
     REQUIRE(PolePenalty(1.0, 2.0, 3.0, false, false, false, 75.0) == 0.0);
     REQUIRE(PolePenalty(1.0, 2.0, 3.0, true, false, false, 75.0) == 75.0);
     REQUIRE(PolePenalty(1.0, 2.0, 3.0, false, true, false, 75.0) == 150.0);
@@ -867,63 +877,71 @@ TEST_CASE("DD PolePenalty: init-0 spec (Bug 1) + per-axis accumulation",
 }
 
 TEST_CASE("DD PolePenalty: Y-axis spec (Bug 2) + identity-vector characterization",
-          "[metric_semantics][dd_pole][red]") {
+          "[metric_semantics][dd_pole]") {
     // Bug 2 spec: a pure y-offset must penalize via the non-principal y axis.
+    // U2's production fix (DD_NEW_POLE_CONSTRAINT.cpp:117-120) now projects
+    // Y_dist onto r = R·{0,1,0} instead of reusing the x-axis vector s.
     REQUIRE(PolePenalty(0.0, 5.0, 0.0, false, true, false, 1.0) == 5.0);
 
     // Characterization on the vectors (identity rotation): r = R·{0,1,0} =
     // (0,1,0), s = R·{1,0,0} = (1,0,0); pure y-offset Δ = (0,5,0).
     //   correct Y_dist = |r·Δ| = 5
-    //   buggy Y_dist   = |s·Δ| = 0  (lines 117-120 reuse the s vector)
+    //   buggy Y_dist   = |s·Δ| = 0  (pre-U2 lines 117-120 reused the s vector)
     const double correct_y_dist = std::fabs(0.0 * 0.0 + 1.0 * 5.0 + 0.0 * 0.0);
     const double buggy_y_dist = std::fabs(1.0 * 0.0 + 0.0 * 5.0 + 0.0 * 0.0);
     REQUIRE(correct_y_dist == 5.0);
     REQUIRE(buggy_y_dist == 0.0);
-    // Today Y_dist == X_dist by construction; the fix must make them differ.
+    // Pre-U2 Y_dist == X_dist by construction; the fix makes them differ.
     REQUIRE(correct_y_dist != buggy_y_dist);
 }
 
 // ===========================================================================
-// sym_trap tibia-transform pins (Bug 4 — RED via [!mayfail] today)
+// sym_trap tibia-transform pins (Bug 4 — FIXED in U2)
 // ===========================================================================
 
 TEST_CASE(
-    "sym_trap: tibia x-translation slot must carry tibia x (Bug 4, RED pre-fix)",
-    "[metric_semantics][sym_trap][red][!mayfail]") {
-    // costFunctionsym_trap_function (sym_trap_function.cpp:104-108) builds the
-    // tibia transform with p.z in BOTH the x and z slots:
-    //   create_312_transform(x2tib, p.z, p.y, p.z, p.za, p.xa, p.ya)
-    // The femur call (:114-118) is correct; the commented-out reference matrix
-    // (:91-95) shows the intent: the x slot must carry p.x. This pin replicates
-    // the call VERBATIM (pre-fix source truth) and asserts the spec. RED today:
-    // x2tib[0][3] == 60 (pose.z), not 50 (pose.x). U2 lands the fix at
-    // sym_trap_function.cpp:106 (x slot -> p.x_location_), updates this
-    // transcription to the fixed call, and removes the [!mayfail] tag.
+    "sym_trap: tibia x-translation slot carries tibia x (Bug 4 fixed)",
+    "[metric_semantics][sym_trap]") {
+    // costFunctionsym_trap_function (sym_trap_function.cpp:104-112) builds the
+    // tibia transform; the x slot must carry p.x_location_ (pre-U2 it received
+    // p.z_location_ — the x slot duplicated z, collapsing the tibia's x offset;
+    // the trap-analysis prerequisite). This pin replicates the POST-fix call
+    // verbatim and asserts the spec. Was RED via [!mayfail] pre-U2:
+    // x2tib[0][3] == 60 (pose.z), not 50 (pose.x).
     const Point6D pose(50, 20, 60, 15, -8, 30);
     float x2tib[4][4];
-    // verbatim from costFunctionsym_trap_function (pre-fix source truth):
-    create_312_transform(x2tib, pose.z, pose.y, pose.z, pose.za, pose.xa, pose.ya);
-    REQUIRE(x2tib[0][3] == Approx(pose.x));  // RED today: == 60, not 50
+    // verbatim from costFunctionsym_trap_function (post-fix source truth):
+    create_312_transform(x2tib, pose.x, pose.y, pose.z, pose.za, pose.xa, pose.ya);
+    REQUIRE(x2tib[0][3] == Approx(pose.x));
     REQUIRE(x2tib[2][3] == Approx(pose.z));
 }
 
 TEST_CASE(
-    "sym_trap: fem2tib relative translation column (Bug 4, RED pre-fix)",
-    "[metric_semantics][sym_trap][red][!mayfail]") {
-    // Femur at origin / tibia (10,0,0), identity angles: the relative
-    // translation column must be (10,0,0). Today the tibia x slot receives
-    // p.z == 0 (and the z slot also p.z == 0), so the column is (0,0,0).
+    "sym_trap: fem2tib relative translation column (Bug 4 fixed)",
+    "[metric_semantics][sym_trap]") {
+    // Femur at origin / tibia (10,0,0), identity angles. The relative
+    // translation column of fem2tib = fem2x·x2tib is R_fem^T·t_tib. The
+    // identity-angle 312 rotation part is the x↔z swap matrix
+    // [[0,0,1],[0,1,0],[1,0,0]] (kernel-as-spec: create_312_transform at
+    // zero angles yields transform[0][0] = cy*sx*sz - cz*sy = 0), so the
+    // tibia x offset maps into the femur frame's Z slot:
+    //   pre-U2:  t_tib = (0,0,0)  -> column (0,0,0)   (x offset dropped)
+    //   post-U2: t_tib = (10,0,0) -> column (0,0,10) (x offset visible)
+    // The U1 pin's draft expectation (10,0,0) assumed an identity rotation
+    // part, which the kernel does not produce — corrected to the kernel-exact
+    // composition per kernel-as-spec (approved U2 deviation, recorded in the
+    // plan's commit history).
     const Point6D tibia(10, 0, 0, 0, 0, 0);
     const Point6D femur(0, 0, 0, 0, 0, 0);
     float x2tib[4][4], x2fem[4][4], fem2x[4][4], fem2tib[4][4];
-    // verbatim from costFunctionsym_trap_function (pre-fix source truth):
-    create_312_transform(x2tib, tibia.z, tibia.y, tibia.z, tibia.za, tibia.xa,
+    // verbatim from costFunctionsym_trap_function (post-fix source truth):
+    create_312_transform(x2tib, tibia.x, tibia.y, tibia.z, tibia.za, tibia.xa,
                          tibia.ya);
     create_312_transform(x2fem, femur.x, femur.y, femur.z, femur.za, femur.xa,
                          femur.ya);
     invert_transformation(fem2x, x2fem);
     matmult(fem2tib, fem2x, x2tib);
-    REQUIRE(fem2tib[0][3] == Approx(10.0));  // RED today: 0
+    REQUIRE(fem2tib[0][3] == Approx(0.0));
     REQUIRE(fem2tib[1][3] == Approx(0.0));
-    REQUIRE(fem2tib[2][3] == Approx(0.0));
+    REQUIRE(fem2tib[2][3] == Approx(10.0));
 }
