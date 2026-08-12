@@ -40,6 +40,7 @@ check
 
 # agent working artifacts
 .pi-subagents/
+.pi/
 # compound-pipeline review run artifacts (transient; see .context/compound-engineering/)
 .context/
 # hegel property-based testing (Beta; see test/CMakeLists.txt). The nested

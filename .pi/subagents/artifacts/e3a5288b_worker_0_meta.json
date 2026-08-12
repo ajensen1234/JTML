@@ -1,0 +1,212 @@
+{
+  "runId": "e3a5288b",
+  "agent": "worker",
+  "task": "Implement U1 of docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md in /home/ajj/repo/uf/JTML.\n\n## Unit U1 — Tier-0 metric-semantics pins + CPU references\n\nGoal: Characterize the cost-path behaviors at the pure surface before any fix — the run's R13 characterization pass that creates the surfaces the fixes plug into. Requirements: R8 (Phase 0 pins). Dependencies: none.\n\nFiles:\n- Create: test/unit/test_metric_semantics.cpp, test/unit/test_metric_semantics_properties.cpp\n- Modify: test/CMakeLists.txt (two new targets, headless label, TIMEOUT)\n\nApproach:\n- Per-metric deterministic cases + hegel PBT invariants per the run's Tier-0 inventory (read the inventory in .panoptes/optimizer-deep-dive/angles/02-cost-path-foundation.org — grep 'Tier-0' and 'CropIndexToGlobal'): chamfer stage functions; distance-map CropIndexToGlobal full-coverage pin (CORRECTED formula passes bijectivity, BUGGY formula as written at src/compute/distance_map_metric.cu:27 fails — this is the RED characterization, assert that the buggy variant fails, documented as the spec U4's fix must satisfy); Mahfouz float-vs-truncated ratio pair (kernel-as-spec on 2.55/x255/-2.67/-1); IoU/L1 with the IOU(empty,empty) reference decision (1.0 as spec-with-flagged-deviation, kernel gives 0/0 NaN at src/compute/iou.cu:82-83); dilation registry/constants pins (settings_constants.h IS a verbatim Flood tibia transcription — pin it as such; engine runtime dilation 6/4/1; baseline.json's dilation_px {6,3,1} is the known-stale docs-claim); the stage-guard accessor pin (a minimal getStage() accessor in include/compute/CostFunctionManager.h is a SEPARATE later unit U2 — here write the pin against the corrected guard semantics and note the accessor dependency); sym_trap tibia-transform pin; DD PolePenalty extraction + init-0/Y-axis pins.\n- Direct-compile pattern: pure sources compiled into the test targets (no Qt/CUDA surface); props target follows the hegel rpath/dl recipe.\n\nExecution note: characterization-first — the index pin is RED against today's kernel by design; do not 'fix' the test to match the bug.\n\nPatterns to follow (READ THESE FIRST):\n- test/unit/test_direct_optimizer.cpp + test/unit/test_direct_optimizer_properties.cpp (direct-compile + hegel twin target wiring)\n- test/CMakeLists.txt (existing target patterns, LABELS headless, TIMEOUT)\n- docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md (direct-compile pattern, AUTOMOC gotcha, cumulative-budget doctrine)\n- docs/solutions/tooling-decisions/qt6-hegel-oracle-tooling-recipes-2026-08-08.md (hegel rpath/dl recipe for props targets)\n- docs/solutions/logic-errors/cost-function-parameter-double-truncation-2026-08-08.md (typed cost params: PBT round-trip invariants catch type-class bugs)\n\nTest scenarios (from the plan):\n- Happy path: each metric's CPU reference returns the documented value for a hand-computed input (e.g., 2x2 crop with known EDGE/DILATED pattern)\n- Edge: IOU(empty,empty) returns spec'd 1.0 (flagged deviation)\n- Edge: CropIndexToGlobal covers every pixel exactly once for the oracle's actual 64x64-crop / 16x16-block geometry (PBT invariant: bijective mapping)\n- Edge: Mahfouz truncated-vs-float ratio pair differs measurably\n- Error path: the buggy index formula demonstrably fails the full-coverage invariant (RED, run and record)\n- Integration: registry/constants pins match baseline.json's recorded budget shape; dilation values pin the ENGINE runtime (6/4/1)\n\nVerification: headless suite green via pixi; the index pin recorded RED (expected-fail surfaced, not silently removed); the PBT twins pass their invariants.\n\n## Execution rules\n- This is a jj repo: DO NOT describe/commit/new. Leave the working copy dirty; the orchestrator commits.\n- Build/test ONLY via pixi: `pixi run build` then `pixi run ctest -R 'metric_semantics' --output-on-failure` (or `pixi run test` if the targeted run is unavailable). Never bare cmake/ninja.\n- Read the referenced files before writing. Match existing conventions exactly.\n- The buggy index formula at src/compute/distance_map_metric.cu:27 is: `int i = (blockIdx.y + gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;` — the corrected form is `blockIdx.y * gridDim.x`. Extract the real geometry constants from the kernel/launch site when writing the bijectivity test.\n- Report: files created/modified, test run results (names + pass/fail), how the RED pin is encoded, any deviations from the plan or discoveries.",
+  "exitCode": 0,
+  "usage": {
+    "input": 130412,
+    "output": 101900,
+    "cacheRead": 8492416,
+    "cacheWrite": 0,
+    "cost": 0.03528422239999999,
+    "turns": 56
+  },
+  "model": "opencode-go/deepseek-v4-flash:high",
+  "attemptedModels": [
+    "opencode-go/deepseek-v4-flash:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "opencode-go/deepseek-v4-flash:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 130412,
+        "output": 101900,
+        "cacheRead": 8492416,
+        "cacheWrite": 0,
+        "cost": 0.03528422239999999,
+        "turns": 56
+      }
+    }
+  ],
+  "durationMs": 930310,
+  "toolCount": 79,
+  "launchContractDigest": "1fabe0b153303c1b5f162442548bfac2785bd622eec5b681edcc4c9b37b01ce4",
+  "launchResolvedExtensions": {
+    "version": 1,
+    "source": "launch-resolved",
+    "disableAmbientExtensions": false,
+    "runtime": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "configured": [],
+    "effective": [
+      "sha256:c16c4a5946d18614"
+    ],
+    "omitted": {
+      "runtime": 0,
+      "configured": 0,
+      "effective": 0
+    }
+  },
+  "acceptance": {
+    "status": "checked",
+    "evidenceStatus": "checked",
+    "explicit": false,
+    "effectiveAcceptance": {
+      "level": "checked",
+      "explicit": false,
+      "inferredReason": [
+        "write-capable worker/task"
+      ],
+      "criteria": [
+        {
+          "id": "criterion-1",
+          "must": "Implement the requested change without widening scope",
+          "evidence": [
+            "changed-files",
+            "tests-added",
+            "commands-run",
+            "residual-risks",
+            "no-staged-files"
+          ],
+          "severity": "required"
+        }
+      ],
+      "evidence": [
+        "changed-files",
+        "tests-added",
+        "commands-run",
+        "residual-risks",
+        "no-staged-files"
+      ],
+      "verify": [],
+      "stopRules": []
+    },
+    "inferredReason": [
+      "write-capable worker/task"
+    ],
+    "criteria": [
+      {
+        "id": "criterion-1",
+        "must": "Implement the requested change without widening scope",
+        "evidence": [
+          "changed-files",
+          "tests-added",
+          "commands-run",
+          "residual-risks",
+          "no-staged-files"
+        ],
+        "severity": "required"
+      }
+    ],
+    "runtimeChecks": [
+      {
+        "id": "criterion:criterion-1",
+        "status": "passed",
+        "message": "Required criterion 'criterion-1' satisfied."
+      },
+      {
+        "id": "evidence:changed-files",
+        "status": "passed",
+        "message": "changed-files evidence present."
+      },
+      {
+        "id": "evidence:tests-added",
+        "status": "passed",
+        "message": "tests-added evidence present."
+      },
+      {
+        "id": "evidence:commands-run",
+        "status": "passed",
+        "message": "commands-run evidence present."
+      },
+      {
+        "id": "evidence:residual-risks",
+        "status": "passed",
+        "message": "residual-risks evidence present."
+      },
+      {
+        "id": "evidence:no-staged-files",
+        "status": "passed",
+        "message": "no-staged-files evidence present."
+      },
+      {
+        "id": "no-staged-files",
+        "status": "passed",
+        "message": "No staged files detected."
+      }
+    ],
+    "verifyRuns": [],
+    "childReport": {
+      "criteriaSatisfied": [
+        {
+          "id": "criterion-1",
+          "status": "satisfied",
+          "evidence": "Scope limited to plan 008 U1's three files: created test/unit/test_metric_semantics.cpp (22 deterministic Catch2 pins: chamfer stages, distance-map +0.1 hack + EDGE-only quirk, CropIndexToGlobal corrected-vs-buggy, Mahfouz truncated-vs-float 2.55/x255/-2.67/-1 chain, IoU/L1/white-sum incl. IOU(∅,∅)=1.0 spec decision, settings_constants.h transcription + engine dilation 6/4/1 + baseline.json 6/3/1-stale flag + 20/25/30/35k budget shape, stage-guard corrected-semantics pin with accessor dependency noted, DD PolePenalty init-0/Y-axis, two RED [!mayfail] sym_trap tibia pins) and test/unit/test_metric_semantics_properties.cpp (6 hegel PBT invariants incl. the CropIndexToGlobal bijectivity pin); modified test/CMakeLists.txt with exactly two targets, headless labels, TIMEOUT. No production source touched (per the task: getStage() accessor deferred to U2)."
+        }
+      ],
+      "changedFiles": [
+        "test/unit/test_metric_semantics.cpp",
+        "test/unit/test_metric_semantics_properties.cpp",
+        "test/CMakeLists.txt"
+      ],
+      "testsAddedOrUpdated": [
+        "test/unit/test_metric_semantics.cpp",
+        "test/unit/test_metric_semantics_properties.cpp"
+      ],
+      "commandsRun": [
+        {
+          "command": "pixi run build",
+          "result": "passed",
+          "summary": "Full build green; both new targets (jtml_test_metric_semantics, jtml_test_metric_semantics_props) compiled and linked; only OpenCV deprecation warnings from the compile-time header chain."
+        },
+        {
+          "command": "pixi run ctest --test-dir .build -R 'metric_semantics' --output-on-failure",
+          "result": "passed",
+          "summary": "2/2 passed: jtml.metric_semantics (22 cases: 20 passed, 2 [!mayfail] RED sym_trap pins failed-as-expected, suite green) and jtml.metric_semantics_props (6 PBT cases, 4831 assertions green)."
+        },
+        {
+          "command": "pixi run test",
+          "result": "passed",
+          "summary": "Full headless suite 51/51 passed (49 pre-existing + 2 new); zero regressions."
+        },
+        {
+          "command": ".build/bin/jtml_test_metric_semantics",
+          "result": "passed",
+          "summary": "Direct binary run surfaced the RED pins: sym_trap tibia x-slot == 60.0 vs spec 50.0 and fem2tib[0][3] == 0.0 vs spec 10.0, '2 failed as expected'; buggy index REQUIRE_FALSE characterization green."
+        }
+      ],
+      "validationOutput": [
+        "RED pin encoding: (a) CropIndexToGlobal — live test asserts CORRECTED formula bijects over the oracle's 64x64-crop/16x16-block geometry (threads_per_block read from cuda_launch_parameters.h at compile time, launch-site grid ceil(crop/16)^2) AND REQUIRE_FALSE on the verbatim buggy formula (src/compute/distance_map_metric.cu:27) with the concrete failure arithmetic (block (0,0) starts at 1024 -> rows 0-15 never visited; blocks (0,1)/(1,0) collide); (b) sym_trap — two spec pins tagged [!mayfail] that genuinely fail today (x2tib[0][3]==60 not 50; fem2tib translation (0,0,0) not (10,0,0)), visible in console output as 'failed as expected', flipped green by U2 (fix sym_trap_function.cpp:106, update the transcribed call, drop the tag); (c) index PBT REQUIREF_FALSE on the buggy formula holds for all drawn tiled geometries.",
+        "Characterization finding (flagged, not fixed): the inventory's 'white_sum + chamfer => 0 at perfect overlap' is inconsistent with the kernel code (kernel-as-spec): at perfect overlap every edge/dilated pixel hits a non-white comparison pixel, so chamfer == +|E(P)| and composition == white_sum + |E(P)| >= 0, zero only for the empty image. The kernel-exact value is pinned in the chamfer composition test with the discrepancy documented.",
+        "PBT invariants green: IoU in [0,1] / symmetry / reflexivity (incl. IOU(empty,empty)==1.0 spec); L1 symmetry / self-zero; chamfer ChamferMetric(P,P)==|E(P)|; distance-map score in [0,255] with EDGE-only sampling (DILATED never counted) and the 0/(0+0.1) hack; Mahfouz ratios finite + non-negative (intended value-guard semantics vs the kernel's 0/0 NaN pointer-guard bug); CropIndexToGlobal corrected bijects / buggy never satisfies."
+      ],
+      "residualRisks": [
+        "The props twin duplicates the CPU references from the deterministic twin (established house pattern — QuadraticCost is likewise duplicated in the direct-optimizer twins); both files carry cross-referencing kernel-as-spec comments, but a future edit could drift one copy.",
+        "The two sym_trap RED pins are transcribed CALL SITES (plan's 'replicate the call verbatim' recipe); U2 must update both transcriptions to the fixed call AND remove the [!mayfail] tags, or the pins will silently stay mayfail-green.",
+        "The [!mayfail] RED failures are hidden from default ctest --output-on-failure (test counts as passed); surfaced when the binary runs directly (evidence captured) and via the [red] tags + source comments. The index RED is a live passing characterization, visible in every run.",
+        "The DIRECT_DILATION registry-default Dilation==6 is pinned via TRUNK_DILATION==6 with CostFunctionManager.cpp:412 cited in a comment rather than compiled (listCostFunctions lives in the CUDA/torch-linked CostFunctionManager.cpp); the inventory's 'testable via CostFunction.cpp' claim does not hold as written.",
+        "The deterministic target includes compute/sym_trap_functionCustomVariables.h (compile-time CUDA/OpenCV headers only, no runtime/link GPU) — a deliberate, flagged relaxation matching jtml.experimental_settings; the OpenCV headers emit deprecation warnings."
+      ],
+      "noStagedFiles": true,
+      "diffSummary": "Adds 929-line test_metric_semantics.cpp (Tier-0 CPU references + 22 deterministic pins incl. two [!mayfail] RED sym_trap pins and the corrected-vs-buggy CropIndexToGlobal pin), 435-line test_metric_semantics_properties.cpp (6 hegel PBT invariants), and 39 lines of CMake registering jtml.metric_semantics (headless, TIMEOUT 120) + jtml.metric_semantics_props (headless, TIMEOUT 300) following the direct-compile + hegel rpath/dl recipes.",
+      "reviewFindings": [
+        "no blockers",
+        "note: plan U1 text listed the minimal getStage() accessor inside U1; the task instruction explicitly moved it to U2 — the pin is written against the corrected guard semantics with the accessor dependency documented (deviation from the plan text, following the task contract).",
+        "note: inventory 'chamfer => 0 at perfect overlap' found inconsistent with kernel code; kernel-exact composition value pinned instead with the discrepancy flagged (characterization-first, per the inventory's own kernel-as-spec rule)."
+      ],
+      "manualNotes": "Working copy left dirty per execution rules (no jj describe/commit/new). Pre-existing .pi/subagents artifacts and papers/ untracked files were already in the working copy before this task and were not touched. Engine runtime dilation pinned as 6/4/1 (settings_control.cpp:1201-1206 + settings_constants.h 6/-2/1) with baseline.json's {6,3,1} documented as the known-stale docs-claim to reconcile after U5's probe."
+    }
+  },
+  "effects": {
+    "fileMutation": {
+      "status": "observed",
+      "expected": true,
+      "attempted": true
+    }
+  },
+  "transcriptPath": "/home/ajj/repo/uf/JTML/.pi/subagents/artifacts/e3a5288b_worker_0_transcript.jsonl",
+  "timestamp": 1786561634389
+}

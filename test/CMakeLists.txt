@@ -308,6 +308,45 @@ target_link_libraries(jtml_test_calibration PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.calibration COMMAND jtml_test_calibration)
 set_tests_properties(jtml.calibration PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Tier-0 metric-semantics pins + CPU references (plan 008 U1 / the R13
+# characterization pass). Every CPU reference encodes the CURRENT kernel code as
+# spec (kernel-as-spec); RED pins document pre-fix bugs (U2/U4 flip them).
+# Direct-compile pattern: only data_structures_6D.cpp (Point6D) is compiled; the
+# sym_trap pin includes the REAL compute-layer transform header (compile-time
+# CUDA/OpenCV headers only — no runtime GPU, no CUDA/OpenCV link; same include
+# relaxation as jtml.experimental_settings).
+add_executable(jtml_test_metric_semantics
+    unit/test_metric_semantics.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_metric_semantics PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_metric_semantics PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.metric_semantics COMMAND jtml_test_metric_semantics)
+set_tests_properties(jtml.metric_semantics PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Hegel PBT twin for the metric-semantics CPU references (plan 008 U1): IoU/L1/
+# chamfer/distance-map/Mahfouz invariants + the CropIndexToGlobal bijectivity pin
+# (corrected formula passes, the buggy src/compute/distance_map_metric.cu:27
+# formula never satisfies it — the RED characterization). Pure: no CUDA/OpenCV
+# headers; same hegel link/rpath recipe as the other props targets.
+add_executable(jtml_test_metric_semantics_props
+    unit/test_metric_semantics_properties.cpp
+)
+target_include_directories(jtml_test_metric_semantics_props PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_metric_semantics_props PRIVATE
+    Catch2::Catch2WithMain hegel dl)
+target_link_options(jtml_test_metric_semantics_props PRIVATE
+    "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
+add_test(NAME jtml.metric_semantics_props COMMAND jtml_test_metric_semantics_props)
+set_tests_properties(jtml.metric_semantics_props PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # Hegel PBT for the DIRECT container (src/domain): cached-min consistency with the
 # column tail box across random insertions.
 add_executable(jtml_test_direct_data_storage_props
