@@ -1,0 +1,38 @@
+[2026-08-13T17:34:48.891Z] run created (you-don-t-have-to-do-a-local-recon-here-you-can-search-your-msrst3crl794, "You don't have to do a local recon here - you can search your context for all the relevant stuff that you need (and perhaps even read in some of the solutoins and plans). I want to learn more about production software architecture here. I don't personally like the shape of how the current repo is structured (domain/services/etc) - fine that it works, but I want to be able to reference something authoritative here. And since we're deeper into compute land, I'm sure that things are going to be idiosyncratic (i.e., i'm sure mvvm works great when you have microservices and a CRUD app - or wahtever), but I want to know where I can dig deeper into how to actually think about this. I have some general thoughts on the way that I would want this framed, in terms of the way that th edata is shaped, how that gets passed around, the objects/structs that i would be operating on, but i don't know if i have a good external grounding of the types of resources that are available for that kind of work. Does that make sense? I really just want to have a decent grasp on this. you can help me refine the research angles")
+[2026-08-13T17:36:01.388Z] recon: local-recon.org saved
+[2026-08-13T17:38:46.622Z] approve: run approved (7 layers, all thinking=high. Run name: compute-app-architecture-grounding. TWO ROUNDS pre-authorized: round 1 = 7 parallel librarians; round 2 = deepen pass on ALL angles (gap-review briefs must name concrete gaps per angle). Angle 7 (JTML re-framing) output must be a WIDE menu of divergent re-framing options — no prescription, offered for user consideration. Top-level synthesis MUST include a section presenting a menu of options to consider (not a single recommendation). Personas: 01-authoritative-literature-map = panoptes-librarian-docs (curated); 02-mvvm-critique, 03-data-centric-design, 04-language-affordances, 05-stack-native-guidance, 06-case-studies, 07-jtml-reframing = generated role blocks embedded against panoptes-librarian-generic. LOCAL CONTEXT from context-sourced recon (local-recon.org): Qt6 6.7.2 + VTK 9.3 + CUDA 12.4 + OpenCV C++20, DIRECT global optimizer over GPU cost; current domain/services/coordinator/compute/view/app layering derived from testability seams, NEVER external literature (plan 003 External References empty); R15 behavior preservation + R12 no premature abstraction are normative; seams: OptimizeCoordinator, DirectOptimizer injected cost, CostFunctionManager (7 variants), stage-graph registry, SettingsBridge VM, pose_file_io; jtml_domain is planned Rust-interop surface.)
+[2026-08-13T17:38:46.628Z] slug: -> compute-app-architecture-grounding
+[2026-08-13T17:38:46.634Z] approve: angles registered
+[2026-08-13T17:40:35.966Z] angle 01-authoritative-literature-map: -> in_progress (failCount 0)
+[2026-08-13T17:40:35.972Z] angle 02-mvvm-critique: -> in_progress (failCount 0)
+[2026-08-13T17:40:35.977Z] angle 03-data-centric-design: -> in_progress (failCount 0)
+[2026-08-13T17:40:35.983Z] angle 04-language-affordances: -> in_progress (failCount 0)
+[2026-08-13T17:40:35.989Z] angle 05-stack-native-guidance: -> in_progress (failCount 0)
+[2026-08-13T17:40:35.995Z] angle 06-case-studies: -> in_progress (failCount 0)
+[2026-08-13T17:40:36.000Z] angle 07-jtml-reframing: -> in_progress (failCount 0)
+[2026-08-13T17:44:02.724Z] angle 03-data-centric-design: -> done (angles/03-03-data-centric-design.org); phase now collecting
+[2026-08-13T17:44:39.859Z] angle 06-case-studies: -> done (angles/06-06-case-studies.org); phase now collecting
+[2026-08-13T17:44:48.934Z] angle 04-language-affordances: -> done (angles/04-04-language-affordances.org); phase now collecting
+[2026-08-13T17:45:17.912Z] angle 05-stack-native-guidance: -> done (angles/05-05-stack-native-guidance.org); phase now collecting
+[2026-08-13T17:45:21.871Z] angle 02-mvvm-critique: -> done (angles/02-02-mvvm-critique.org); phase now collecting
+[2026-08-13T17:49:27.632Z] angle 01-authoritative-literature-map: -> done (angles/01-01-authoritative-literature-map.org); phase now collecting
+[2026-08-13T17:49:46.497Z] angle 07-jtml-reframing: -> done (angles/07-07-jtml-reframing.org); phase now synthesizing
+[2026-08-13T17:51:11.263Z] queue: synthesize
+[2026-08-13T17:51:11.270Z] deliver: synthesize
+[2026-08-13T17:54:22.493Z] synthesize: master doc landed; run complete
+[2026-08-13T18:03:08.348Z] deepen: 01-authoritative-literature-map, 02-mvvm-critique, 03-data-centric-design, 04-language-affordances, 05-stack-native-guidance, 06-case-studies, 07-jtml-reframing re-opened (round 2+)
+[2026-08-13T18:03:53.337Z] angle 01-authoritative-literature-map: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.344Z] angle 02-mvvm-critique: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.349Z] angle 03-data-centric-design: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.355Z] angle 04-language-affordances: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.360Z] angle 05-stack-native-guidance: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.367Z] angle 06-case-studies: -> in_progress (failCount 0)
+[2026-08-13T18:03:53.372Z] angle 07-jtml-reframing: -> in_progress (failCount 0)
+[2026-08-13T18:07:56.025Z] angle 02-mvvm-critique: -> done (angles/02-02-mvvm-critique.org); phase now collecting
+[2026-08-13T18:08:14.111Z] angle 04-language-affordances: -> done (angles/04-04-language-affordances.org); phase now collecting
+[2026-08-13T18:08:42.592Z] angle 03-data-centric-design: -> done (angles/03-03-data-centric-design.org); phase now collecting
+[2026-08-13T18:09:05.368Z] angle 05-stack-native-guidance: -> done (angles/05-05-stack-native-guidance.org); phase now collecting
+[2026-08-13T18:09:35.933Z] angle 01-authoritative-literature-map: -> done (angles/01-01-authoritative-literature-map.org); phase now collecting
+[2026-08-13T18:10:42.136Z] angle 06-case-studies: -> done (angles/06-06-case-studies.org); phase now collecting
+[2026-08-13T18:10:46.547Z] angle 07-jtml-reframing: -> done (angles/07-07-jtml-reframing.org); phase now synthesizing
+[2026-08-13T18:14:43.955Z] synthesize: master doc landed; run complete

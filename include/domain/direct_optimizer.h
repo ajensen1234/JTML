@@ -14,8 +14,8 @@
 // with the cost function injected and zero Qt/VTK/CUDA/JTML dependencies.
 //
 // This is a faithful extraction of the DIRECT loop that ran inside
-// OptimizerManager (see src/coordinator/optimizer_manager.cpp): ConvexHull (Jarvis
-// gift-wrapping), TrisectPotentiallyOptimal, DenormalizeRange /
+// OptimizerManager (see src/coordinator/optimizer_manager.cpp): ConvexHull
+// (Jarvis gift-wrapping), TrisectPotentiallyOptimal, DenormalizeRange /
 // DenormalizeFromCenter, and the budget loop are preserved verbatim. The lone
 // GPU touchpoint -- EvaluateCostFunction -- is replaced by the injected `cost`
 // callback, which is invoked with the DENORMALIZED physical point.
@@ -45,10 +45,14 @@ public:
     // throw std::invalid_argument. No variant semantics ship here; the
     // divergence branches land with the algorithm plan (R9).
     struct Options {
-        enum class SelectionMode { Original };  // today's Jarvis gift-wrap hull
-        enum class SizeMeasure { L2 };  // sqrt-norm column size
-        enum class SplitRule { OneSide };  // largest-denormalized one-side trisection
-        enum class TieSelection { All };  // slope >= highest_slope keeps every tie
+        enum class SelectionMode { Original }; // today's Jarvis gift-wrap hull
+        enum class SizeMeasure { L2 };         // sqrt-norm column size
+        enum class SplitRule {
+            OneSide
+        }; // largest-denormalized one-side trisection
+        enum class TieSelection {
+            All
+        }; // slope >= highest_slope keeps every tie
 
         // User-provided (empty) so `Options()` is valid as the ctor's default
         // argument below: a defaulted ctor would need this nested class's
@@ -58,17 +62,21 @@ public:
         Options() {}
 
         SelectionMode selection = SelectionMode::Original;
-        double epsilon = 0.0;  // 0.0 disables the post-filter entirely
+        double epsilon = 0.0; // 0.0 disables the post-filter entirely
         bool delta_limit = false;
         SizeMeasure size_measure = SizeMeasure::L2;
         SplitRule split_rule = SplitRule::OneSide;
         TieSelection ties = TieSelection::All;
-        bool hidden_constraints = false;  // GLh surrogate, off
-        bool globally_biased = false;  // gb phase switch, off
+        bool hidden_constraints = false; // GLh surrogate, off
+        bool globally_biased = false;    // gb phase switch, off
     };
 
-    DirectOptimizer(CostFunction cost, Point6D range, Point6D starting_point,
-                    unsigned int budget, Options options = Options());
+    DirectOptimizer(
+        CostFunction cost,
+        Point6D range,
+        Point6D starting_point,
+        unsigned int budget,
+        Options options = Options());
 
     // Run the DIRECT loop until the budget is consumed, a stop is requested, or
     // an internal error occurs. Returns false on error (e.g. an all-zero range
@@ -130,8 +138,8 @@ private:
     // phi = f_min + ||x - x_min|| and treat the eval as finite) is RESERVED
     // here -- plan 008 U3 does not wire it.
     std::optional<double> EvaluateCostFunction(Point6D unit_point);
-    Point6D DenormalizeRange(Point6D unit_point) const;
-    Point6D DenormalizeFromCenter(Point6D unit_point) const;
+    [[nodiscard]] Point6D DenormalizeRange(Point6D unit_point) const;
+    [[nodiscard]] Point6D DenormalizeFromCenter(Point6D unit_point) const;
 
     CostFunction cost_;
 
@@ -147,7 +155,8 @@ private:
     // stubs in this unit).
     Options options_;
     // Zero-initialized at construction (guard-precondition lesson: a guard's
-    // precondition must itself be initialized -- see docs/solutions/logic-errors/
+    // precondition must itself be initialized -- see
+    // docs/solutions/logic-errors/
     // jtml-heatmap-guard-allocator-preconditions-2026-08-12.md).
     unsigned int non_finite_count_ = 0;
 

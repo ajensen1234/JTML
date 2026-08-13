@@ -1,0 +1,5 @@
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+python-interpreter-path = "./docs/plans/bin/python3"

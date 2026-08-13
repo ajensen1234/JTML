@@ -1,0 +1,1314 @@
+* DIRECT Variant Engine (1-DTC-GL-gb) + Capacity-Based Cost Launch Service
+:PROPERTIES:
+:CUSTOM_ID: direct-variant-engine-1-dtc-gl-gb-capacity-based-cost-launch-service
+:END:
+** Overview
+:PROPERTIES:
+:CUSTOM_ID: overview
+:END:
+Two workstreams land on the seams plan 008 built (stage-graph container,
+=DirectOptimizer::Options= slot, =BuildGpuCostAdapter=):
+
+1. *The algorithm plan the Options stubs point at* (plan 008 U8: "the divergence branches
+   land with the algorithm plan (R9)"; the origin's Phase 3). The literature's
+   highest-evidence upgrade --- *1-DTC-GL-gb* (synthesis Finding 3) --- becomes real
+   variant semantics behind the existing fail-fast =Options= surface: GL two-step Pareto
+   selection, globally-biased (gb) phase switch, faithful 1-DTC least-split rule, ε
+   refinement control, and the DIRECT-GLh hidden-constraint surrogate. The stage graph
+   grows a per-stage optimizer slot (=StageSpec.options=), a new stage runner
+   *=RunOptimizedStage=* replaces the pure-DIRECT =RunDirectStage= call sites in the loop,
+   and a new high-level graph *=jtml-gl-gb=* is registered as the scoring candidate.
+   Promotion stays harness-arbitrated (R9): =jtml-production= remains the default,
+   bit-identical.
+
+2. *A capacity-based kernel launch service for cost queries*, shaped as the owner asked:
+   /outside/ the optimization graph. A compute-layer service (=CostCapacityService=) owns
+   device-capacity knowledge --- SM count, per-kernel occupancy, the SAFE_CAP ceiling, and
+   the runtime-derived eval-bank count N --- and the optimizer /sends cost queries to it/.
+   The capacity answer sizes kernel launches ("when available": capacity-derived config,
+   today's sizing as fallback) and, through the origin's batch seam (R12), executes POH
+   batches N-way when capacity allows. The stage graph, the stage loop, and
+   =DirectOptimizer= stay launch-agnostic --- no launch machinery enters the coordinator
+   or domain layers.
+
+--------------
+
+** Problem Frame
+:PROPERTIES:
+:CUSTOM_ID: problem-frame
+:END:
+The repo's current DIRECT configuration --- original selection, ε=0, all hull ties,
+one-side trisection on the largest /denormalized/ side, L2 size --- sits in the worst
+local-refinement regime the literature documents for a 20k--35k-budget 6-DOF search
+(synthesis Finding 3; Stripinis & Paulavičius 2022: GL selection beats IO/IA by ~60--72%
+on n>4 problems, with the budget crossover far below the 20k trunk). Plan 008 built the
+container for this: =Options= exists with bit-identical defaults, but every non-default
+field is a fail-fast stub awaiting this plan (see origin: R3, R9;
+=docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md= U8).
+
+Meanwhile each cost evaluation launches ~15 kernels with fixed or sqrt-heuristic sizing
+(=include/compute/launch_config.cuh=, =include/compute/cuda_launch_parameters.h=), zero
+occupancy awareness, and one pose per round trip. The GPU is under-occupied per kernel
+(origin R11). The owner's shape for fixing that: a capacity-aware launch service the
+optimizer queries, so launch policy never mucks up the optimizer. This resolves the
+origin's deferred N-bank question at the same time: the bank count is /runtime,
+capacity-derived/ --- not a compile-time constant.
+
+--------------
+
+** Requirements Trace
+:PROPERTIES:
+:CUSTOM_ID: requirements-trace
+:END:
+From the origin (=docs/brainstorms/2026-08-12-optimizer-path-requirements.md=):
+
+- R2. Graphs are C++-typed data in a named registry --- the new =jtml-gl-gb= graph is a
+  registry entry; the manifest/battery references it by name.
+- R3. Each stage has an optimizer-variant slot (the =Options= surface) defaulting to
+  today's classic DIRECT bit-identically; the slot accepts future stage kinds.
+- R4. Execution goes through the existing seams (=OptimizerRunDriver=, =RunDirectStage='s
+  injected-cost lambda, the GPU cost path, the IoU gates). No new layer, no RunBackend
+  enum.
+- R9. No algorithm delta before the apparatus: variants are scored by the analytic battery
+  (22 n=5 DIRECTGOLib v1.2 + Hartman6 + GKLS, ε-arm, gb-semantics arms, staged
+  basin-capture) and the oracle before any production change. 1-DTC-GL-gb is a candidate,
+  not a commitment. /Partially covered by this plan (GKLS/constrained arms, the
+  hidden-constraint protocol, and DIRECT-l deferred to the follow-up scoring round --- see
+  U8's promotion gate for the fidelity pin)./
+- R10. No perf claim without measured numbers --- the N-way unit's gates cite the Cut-0
+  instrumentation verdict (external workstream) and the pre-registered bands (1,000--5,000
+  evals/s; Flood 3,000 parity line).
+- R11. The parallel-eval target is execution-level parallelism of the per-iteration POH
+  batch; the N-bank count is resolved here as runtime/capacity-derived.
+- R12. The batch seam: =DirectOptimizer= keeps =std::function<double(const Point6D&)>= and
+  gains one optional sibling =std::function<std::vector<double>(const
+  std::vector<Point6D>&)>=; replay-ordered bookkeeping; Tier-0 headless replay test; no
+  CUDA types in the domain header.
+- R13. Gates: headless green, oracle green, bit-identity diff empty, measured improvement
+  within pre-registered bands; a cut that doesn't move the needle is reverted in the same
+  jj change.
+- R14. No caching/memoization of cost results (respected; the service never caches
+  scores).
+- R16 (horizon note): the polish stage stub stays a stub --- this plan does not implement
+  polish.
+
+Plan-local requirements (the capacity-launch shape is an owner decision beyond the
+origin's letter; it implements the origin's R11 intent):
+
+- P1. The capacity/launch machinery lives in a compute-layer service; the coordinator and
+  domain layers never see CUDA launch types.
+- P2. Capacity-based launch is used *when available*: a successful capacity query yields
+  the launch config; otherwise today's sizing runs unchanged (fail-safe fallback, never a
+  crash).
+- P3. A capacity-derived launch never computes less work than the exact launch would: the
+  work-coverage invariant is =grid × block ≥ work items= and SAFE_CAP is the ceiling. The
+  service never produces a grid larger than the minimal covering grid (exact-grid-wins
+  below resident capacity --- see Key Technical Decisions; over-launching fully-guarded
+  kernels only schedules no-op blocks). Bit-identity follows from verified PER-KERNEL
+  full-body =if (i < total)= guards + int-atomic reductions (deep-dive R2-3) --- the guard
+  premise is verified per kernel, never assumed globally (U10's per-kernel policy;
+  =DistanceMapMetric_Kernel= lacks it and is excluded).
+
+*Origin actors:* A1 (owner/developer --- registers graphs), A2 (measurement harness ---
+the only actor that scores variants), A3 (production app --- observes no behavioral
+difference under =jtml-production=).
+
+*Origin flows:* F1 (graph-driven optimizer run), F2 (harness scoring of a graph/variant).
+
+*Origin acceptance examples:* AE1 (covers R6/R7 --- jtml-production caps
++ invariants, enforced by U7's parity pin), AE2 (covers R11/R12 ---
+batched pose→score bit-identical + replay test, enforced by U11/U12), AE3 (covers R3 ---
+the harness records variant dimensions, enforced by U8's battery manifest).
+
+--------------
+
+** Scope Boundaries
+:PROPERTIES:
+:CUSTOM_ID: scope-boundaries
+:END:
+- *No default change.* =jtml-production= stays the production graph; the
+  new graph ships as a scoring candidate. Promotion is an owner code
+  change only after battery + oracle (R9).
+- No kernel rewrites. Capacity-based launch changes *host-side
+  grid/block sizing only*; kernel sources stay untouched (the in-kernel
+  guards make clamped launches bit-safe per deep-dive R2-3).
+- No DIRECT-l (OnePerGroup) semantics this plan --- the enum value lands
+  on the =Options= surface as a stub so R9's DIRECT-l arm has a named
+  slot; its implementation is a follow-up.
+- No 1-DBDP diagonal-bisection partition (best n>4 average but requires
+  diagonal rework --- origin synthesis Finding 3 records the tradeoff;
+  1-DTC is the landing partition).
+- No ε-arm /default/: ε stays 0.0 everywhere in registered graphs; the
+  battery measures the arms, it does not ship them.
+- No caching/memoization of cost results (origin R14).
+- No UI wiring for graph selection --- that is plan 009's surface
+  (=docs/plans/2026-08-12-009-feat-stage-graph-selection-plan.md=); this
+  plan consumes nothing from the view layer.
+- No metric fusion, render-resolution arm, fragment-fill removal, or
+  pose-array batched render (parked in origin R15).
+- No re-litigation of resolved decisions (origin R9): Mahfouz normalization, the dilation
+  three-way, gb canonical numbers, the GLh formula, DIRECT_DILATION NaN-impossibility.
+
+*** Deferred to Follow-Up Work
+:PROPERTIES:
+:CUSTOM_ID: deferred-to-follow-up-work
+:END:
+- Production consumption of =jtml-gl-gb= through =Initialize= needs plan 009 U1+U2
+  (=OptimizerSettings.stage_graph_name= + named-graph-wins consumption) --- ready to
+  execute, separate plan.
+- DIRECT-l one-per-group semantics (R9 battery arm) once the battery harness exists.
+- The GKLS/Emmental constrained batteries and the 80-problem hidden- constraint protocol
+  ride the battery harness in a follow-up scoring round (U8 ships the DIRECTGOLib v1.2
+  core + Hartman6 + staged basin-capture).
+
+--------------
+
+** Context & Research
+:PROPERTIES:
+:CUSTOM_ID: context-research
+:END:
+*** Relevant Code and Patterns
+:PROPERTIES:
+:CUSTOM_ID: relevant-code-and-patterns
+:END:
+- =include/domain/direct_optimizer.h= / =src/domain/direct_optimizer.cpp= --- the pure
+  engine; =Options= struct with fail-fast stubs (=ValidateOptions=);
+  =EvaluateCostFunction= is the non-finite eval chokepoint (GLh hook).
+- =include/coordinator/optimizer_stage_script.h= /
+  =src/coordinator/optimizer_stage_script.cpp= --- =StageSpec=/=StageScript=/ =StageGraph=
+  registry (=jtml-production= + =ReservedStubGraphNames=), =CumulativeStageCaps=, the
+  convergence-tradeoff design note.
+- =src/coordinator/optimizer_manager.cpp= --- the script-driven =Optimize()= loop;
+  =RunDirectStage= (the pure/GPU boundary); =BuildGpuCostAdapter= (the shared
+  injected-cost lambda the oracle and probe also consume); run-level =direct_options_=
+  stored in =Initialize=.
+- =include/compute/cuda_launch_parameters.h= --- =threads_per_block = 256=,
+  =maximum_stride_size = 10M=; SAFE_CAP = 2.55e9 = =maximum_stride_size ×
+  (threads_per_block − 1)= (the host overflow guard's exact bound, render_engine.cu ---
+  the capacity ceiling).
+- =include/compute/launch_config.cuh= --- today's sqrt-heuristic sizing with a derived
+  occupancy estimate (no occupancy API).
+- Cost-path launch sites: =src/compute/render_engine.cu= (fill kernels with full-body =if
+  (i < total)= guards + the host overflow guard at the SAFE_CAP boundary),
+  =src/compute/fast_implant_dilation_metric.cu=, =src/compute/distance_map_metric.cu=.
+- Buffer-state sites for the N-way banks (deep-dive pinned, now under service-owned lazy-pool ownership): =render_engine.cu= InitializeCUDA region (render output allocated for a caller-supplied pool set; the internal buffer stays as the bank-0 default) and =gpu_metrics.cu:7-65= (score buffers + pinned twins moved into the pool; bank selection is a pool-index passthrough).
+
+*** Institutional Learnings
+:PROPERTIES:
+:CUSTOM_ID: institutional-learnings
+:END:
+- =docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md= ---
+  the =file(GLOB)= trap: every new =.cpp=/=.cu= must be added to the explicit source list;
+  direct-compile test pattern for pure sources.
+- =docs/solutions/conventions/jtml-layered-lib-split-2026-08-08.md= --- per-layer CMake
+  shape; =jtml_compute= is the one SHARED node that owns CUDA; grep-gated include
+  prefixes.
+- =docs/solutions/logic-errors/jtml-symtrap-outer-guard-pin-2026-08-12.md= --- pin-first
+  characterization discipline: record what the engine actually does before asserting; do
+  not trust derived pins.
+- =test/HEGEL-PBT-GUIDE.md= --- hegel PBT authoring patterns for pure domain logic
+  (variants worth locking: f_min monotonicity, budget compliance, determinism).
+- AGENTS.md gotchas: new =.cpp= in explicit CMake lists; include what you use; QtTest for
+  Qt seams / Catch2 for pure math; =headless= label never touches GPU.
+
+*** External References
+:PROPERTIES:
+:CUSTOM_ID: external-references
+:END:
+All algorithm content is already distilled from the Zotero corpus into the panoptes
+research base --- no fresh external research was needed:
+
+- =.panoptes/optimizer-deep-dive/synthesis.org= --- Finding 3 (1-DTC-GL-gb is the landing
+  variant; gb canonical semantics; split tie-break; battery spec; GLh formula verified
+  from paper Eqs. 3--6), Finding 5 (sync-bound cost path; batch seam contract;
+  double-buffer situs; SAFE_CAP arithmetic), Finding 13 (staged basin-capture metric),
+  execution path steps 6--7.
+- =.panoptes/optimizer-deep-dive/angles/01-direct-variants.org= --- the full variant
+  surface (selection × partitioning × refinement × hidden constraints) with per-variant
+  evidence and budget-regime crossovers.
+- =.panoptes/optimizer-deep-dive/angles/05-compute-perf.org= --- Cut recipes, capacity
+  ceiling arithmetic (R2-3), determinism doctrine (int-atomic reductions ⇒ bit-identical
+  at fixed launch configs).
+- Papers (corpus paths under =~/zotero-paper-text/=): Stripinis & Paulavičius 2022
+  (arXiv:2109.14912, the 12-variant empirical study), Stripinis & Paulavičius 2021
+  (DIRECT-GLh, Optimization Letters), Jones Perttunen & Stuckman 1993 (ε Definition 4.1),
+  Gablonsky & Kelley 2001 (floored ε, DIRECT-l), Paulavičius et al. 2014 (Gb-DISIMPL, the
+  canonical gb numbers 5 / every-5th), Mathematics 2022 10:3760 (refinement restrictions
+  study; -gb never hurt).
+
+--------------
+
+** Key Technical Decisions
+:PROPERTIES:
+:CUSTOM_ID: key-technical-decisions
+:END:
+- *Landing variant = 1-DTC-GL-gb, ε=0, L2 kept* (synthesis Finding 3): GL selection beats
+  IO/IA by ~60--72% on n>4; the 20k trunk lives far above the ≥4000-eval GL crossover; -gb
+  is the only restriction that never hurt and is best on expensive objectives (GPU
+  silhouette renders qualify).
+- *Guarded divergence, per field.* Every variant branch guards on "different from default"
+  before diverging (plan 008 U8's proof strategy); defaults stay bit-identical by
+  construction, and each field's fail-fast stub flips to "implemented" independently.
+- *gb semantics: canonical + code-as-shipped arm.* The DIRECTGO reference code inverts the
+  phases vs two papers (synthesis Finding 9). Implement the canonical prose semantics
+  (local phase while improving + on every-5th security iterations; global-only beyond 5
+  stagnant iterations; Yaro_epsilon 0.01; numbers 5 / every-5th from Gb-DISIMPL) and carry
+  a flag for the inverted code-as-shipped arm so the battery records which semantics it
+  measured (AE3).
+- *Faithful 1-DTC requires the least-split rule.* The studied 1-DTC splits the least-split
+  dimension in /unit/ space (global split counter, lowest-index tie-break); the repo
+  splits the largest denormalized side. They coincide on the trunk and diverge
+  deterministically on the first branch/leaf split (repo picks Z, study picks X). The new
+  split rule lands as a non-default =SplitRule= value --- a real behavior change, but only
+  ever inside the new graph, scored on the anisotropic-range probe and the staged battery
+  before promotion (synthesis Finding 10).
+- *GLh at selection time, over feasible f_min only* --- φ = f_min + d(x_min,x), d̄ = d/√n,
+  f̄ = (f−f_min)/(f_max−f_min), sentinel 10^9, re-tag when x_min moves ≥ 1e-6 in unit
+  coords (paper Eqs. 3--6, verified Round 3). It hooks the existing non-finite eval
+  chokepoint; DIRECT_DILATION cannot emit NaN, so production's active cost never triggers
+  it --- it is insurance for the NaN-emitting variants (Mahfouz, pole-constraint,
+  sym-trap) and for hidden-constraint battery problems.
+- *=RunOptimizedStage= replaces the pure-DIRECT call sites; it does not fork the loop, and
+  it does not duplicate the runner.* The stage loop calls one function per stage;
+  =RunOptimizedStage= computes the stage's effective options and calls the existing
+  PRIVATE =RunDirectStage= runner once --- the runner gains an =Options= parameter
+  (defaulted to classic for today's call shape), so its entire wiring (adapter, call
+  offset, improvement/iteration callbacks, cooperative stop, error path, writeback) stays
+  single-sourced and the default path is diff-untouched. Extending the private runner's
+  signature is NOT the executor extraction origin R4 forbids --- the runner is private;
+  the oracle and probe converge on =BuildGpuCostAdapter=, never on the runner, so the
+  signature change is invisible to them.
+- *Per-stage options live on =StageSpec=, selected atomically* (resolves the origin's
+  deferred "final StageSpec field set" question): ={kind, range, budget, repeat,
+  cfm_index, options}=. The precedence is one exact per-stage rule:
+  =effective_options(stage) = spec.options if any field differs from classic, else
+  direct_options_, else classic= --- where the run-level =direct_options_= originates at
+  =OptimizerRunLaunch.direct_options= (plan 008 U8) forwarded through =Initialize=.
+  Selection is ATOMIC --- never per-field merged --- so the battery manifest always
+  records a variant that actually ran (AE3 determinism). Accepted corollary for v1: a
+  default =spec.options= means "inherit run-level", so a graph cannot force classic over a
+  non-default run-level slot; no merge. The runner needs an Options field-wise equality
+  (is-classic) helper --- a U1/U6 deliverable (no operator== exists today).
+- *Capacity is a compute-layer service the optimizer queries* (owner's shape; P1).
+  =CostCapacityService= answers: device snapshot, per-kernel occupancy, SAFE_CAP-clamped
+  grid sizing, and =EvalBankCount()=. The coordinator owns no buffers and no streams
+  (deep-dive R2-4's contract).
+- *Capacity-based launch = host-side sizing only, and never a larger grid than the work
+  requires* (P3, deepened): the invariant is work coverage --- =grid × block ≥ work
+  items=, SAFE_CAP the ceiling --- and the capacity-derived grid is =ceil(work / B_opt)=
+  for the kernel's occupancy-optimal block size =B_opt=. *Exact-grid-wins below resident
+  capacity*: over-launching fully-guarded kernels only schedules no-op blocks (a
+  guaranteed regression at any workload --- the deepening audit's blocker), so the service
+  never produces a grid larger than the minimal covering grid. Where capacity sizing
+  actually pays is the /reduction/ of overshooting launch formulas (the 2D-sqrt render
+  grids overshoot up to ~100% for non-square work) toward the minimal grid, under a
+  per-kernel policy: fill kernels are block-pinned at 256 (stride-prefix architecture),
+  halo metric kernels are excluded, and =DistanceMapMetric_Kernel= is EXCLUDED from
+  reshaping until its missing full-body =i < total= guard lands in its own scoped,
+  oracle-gated kernel unit --- its only guard today is a derived-location bound (=orig_loc
+  < width*height=) that overshoot threads can pass, so a minimal-grid reshape can change
+  scores (the review-verified guard hole; U10's per-kernel policy carries the full table).
+  Overflow beyond SAFE_CAP keeps today's synchronous fallback; bit-identity rests on
+  per-kernel VERIFIED full-body =if (i < total)= guards + int-atomic reductions (synthesis
+  Finding 5 determinism doctrine) --- verified per kernel, never assumed globally.
+- *The bank count N is runtime, MEMORY-bounded* (resolves the origin's deferred R11
+  question): =EvalBankCount()= = =min(⌊device free memory ÷ per-bank footprint⌋, N_MAX)=,
+  floored at 1 --- memory, not occupancy, is the binding constraint for buffer banks
+  (occupancy bounds concurrent kernels, not allocations). The per-bank footprint is the
+  per-eval WRITE-SET (the 40 MB stride-prefix buffer and the per-triangle arrays dominate
+  --- not the image + score ints), counted across BOTH cameras in biplane; read-only
+  buffers stay shared. =EvalBankCount()= (the pool size) is decided in =Initialize= after frame dims are known and BEFORE
+  the first GPUModel ctor; the service owns the bank POOL (render outputs + per-eval score buffers + pinned twins), checked out per-pose by the greedy feeder and returned on recycle --- RenderEngine/GPUMetrics render/score into a caller-supplied pool buffer set rather than an N-fixed internal. N=1 means "serial path, allocates nothing new".
+- *The batch seam follows R12 exactly*: optional sibling =std::function=, replay-ordered
+  bookkeeping (calls, optimum, callback order identical whether the cost layer batches or
+  not), no CUDA types in the domain header, Tier-0 replay test as the contract's
+  executable spec.
+
+--------------
+
+** Open Questions
+:PROPERTIES:
+:CUSTOM_ID: open-questions
+:END:
+*** Resolved During Planning
+:PROPERTIES:
+:CUSTOM_ID: resolved-during-planning
+:END:
+- *Final StageSpec field set* (origin deferred-to-planning): ={kind, range, budget,
+  repeat, cfm_index, options}= --- the options slot defaults to the bit-identical classic
+  search; registry graphs carry non-default options per stage.
+- *N-bank count: compile-time vs runtime* (origin deferred-to-planning): runtime,
+  memory-bounded via =CostCapacityService::EvalBankCount()= = =min(⌊device free memory ÷
+  per-bank write-set footprint⌋, N_MAX)=, floored at 1. The ceiling formula is fixed (Key
+  Technical Decisions); only the numeric =N_MAX= and the per-bank write-set enumeration
+  are implementation-time.
+- *What "capacity-based launch" sizes* (resolved by the deepening audit): NOT up-clamped
+  grids --- over-launching fully-guarded kernels is a guaranteed regression, so the
+  service never produces a grid larger than the minimal covering grid. Capacity sizing
+  means occupancy-optimal block sizes, the reduction of overshooting launch formulas
+  toward the minimal covering grid (per-kernel policy table in U10), SAFE_CAP as the
+  ceiling, and the runtime memory-bounded bank count N for the batch path.
+- *Which gb semantics*: canonical prose semantics as the default arm; the inverted
+  code-as-shipped behavior rides as an explicit battery arm with a recorded semantics pin
+  (synthesis Finding 9).
+- *New graph name*: =jtml-gl-gb= (registry naming convention next to =jtml-production=;
+  not a reserved stub name).
+- *How the new graph runs before plan 009 lands*: the battery drives it headlessly through
+  =StageGraphByName("jtml-gl-gb")= + the stage runner directly --- no =Initialize= change
+  needed for scoring. Production consumption waits on plan 009 U1+U2.
+- *Epsilon shape*: =Options.epsilon= (exists) + a floored-form flag (Gablonsky
+  =max(10⁻⁴|f_min|, 10⁻⁸)=) so the battery's ε-arm {0, 1e-7, 1e-4} can express both the
+  pure ε|f_min| filter (inert at f_min=0 by Definition 4.1) and its documented mitigation.
+
+*** Deferred to Implementation
+:PROPERTIES:
+:CUSTOM_ID: deferred-to-implementation
+:END:
+- Which kernels' launch formulas prove linearizable for the 2D→1D minimal-grid reshape
+  (per-kernel index-math verification), and the measured occupancy inputs --- the fallback
+  makes any order safe; a kernel that proves non-linearizable simply keeps its formula.
+- =N_MAX= numeric value --- the ceiling formula is fixed (Key Technical Decisions); the
+  value is measured against the RTX 3090 (24 GB) when U12 lands (deepening estimate: ~75
+  MB/bank at a 300k-triangle implant ⇒ N_MAX = 4 ≈ 300 MB, conservative).
+- Battery CI-profile reduction (which subset of the 22 problems runs per-PR vs nightly)
+  --- follow the ablation-runner doctrine once the runner surface exists.
+- Whether the floored-ε flag needs a distinct =EpsilonMode= enum instead of a bool once
+  both arms are scored --- cosmetic surface decision.
+
+--------------
+
+** High-Level Technical Design
+:PROPERTIES:
+:CUSTOM_ID: high-level-technical-design
+:END:
+
+#+begin_quote
+/This illustrates the intended approach and is directional guidance for
+review, not implementation specification. The implementing agent should
+treat it as context, not code to reproduce./
+#+end_quote
+
+#+begin_example
+                       StageGraph registry (C++ data)
+        ┌────────────────────────────┬───────────────────────────────┐
+        │ "jtml-production"          │ "jtml-gl-gb"  (NEW, U7)       │
+        │  stages: classic options   │  stages: GL + gb + LeastSplit │
+        └─────────────┬──────────────┴──────────────┬────────────────┘
+                      │ StageSpec {kind, range, budget, repeat,
+                      │            cfm_index, options (NEW, U6)}
+                      ▼
+        Optimize() stage loop ── RunOptimizedStage(spec, cfm)   (NEW, U6)
+                      │   options == default ──► RunDirectStage (byte-identical today)
+                      │   options != default ──► DirectOptimizer(cost, range, seed,
+                      │                          budget, spec.options)  (U1–U5 semantics)
+                      ▼
+        cost injection (unchanged single-eval seam)
+        std::function<double(const Point6D&)>  ──► BuildGpuCostAdapter ─► GPU cost
+        std::function<vector<double>(const vector<Point6D>&)>  (NEW sibling, U11)
+                      │                                   ▲ replay-ordered
+                      ▼                                   │ bookkeeping in
+        ┌────────────────────────────────────────────┐    │ DirectOptimizer
+        │ CostCapacityService   (compute layer, U9)  │◄───┘
+        │  • DeviceCapacitySnapshot (SMs, threads)   │
+        │  • Occupancy(kernel, block) ─► resident    │
+        │    capacity                                │
+        │  • CapacityGrid(work, kernel) — clamp ≤    │
+        │    SAFE_CAP, never < work      (U10)       │
+        │  • EvalBankCount() ─► N (runtime)          │
+        │  • RunCostBatch(poses) — N-way banks +     │
+        │    capacity-sized launches     (U11/U12)   │
+        └────────────────────────────────────────────┘
+#+end_example
+
+Decision matrix for a cost-kernel launch (U10):
+
+| Capacity query      | Work vs SAFE_CAP | Launch config                                                 |
+|---------------------+------------------+---------------------------------------------------------------|
+| succeeds            | work ≤ SAFE_CAP  | capacity-derived grid (occupancy-shaped, clamped at SAFE_CAP) |
+| succeeds            | work > SAFE_CAP  | today's sizing + existing synchronous overflow fallback       |
+| fails / unavailable | any              | today's sizing, unchanged (P2)                                |
+
+--------------
+
+** Implementation Units
+:PROPERTIES:
+:CUSTOM_ID: implementation-units
+:END:
+*** Phase A --- The variant engine + the new high-level graph
+:PROPERTIES:
+:CUSTOM_ID: phase-a-the-variant-engine-the-new-high-level-graph
+:END:
+- [ ] U1. *Options surface un-stubbing: guarded-divergence scaffolding*
+
+*Goal:* Grow the =Options= surface to the full variant vocabulary and
+convert =ValidateOptions= from blanket fail-fast to per-field
+"implemented vs stub" --- without changing any search behavior.
+
+*Requirements:* R3, R9
+
+*Dependencies:* None
+
+*Files:* - Modify: =include/domain/direct_optimizer.h= (Options enum
+values: =SelectionMode::GL=, =SplitRule::LeastSplitGlobal=,
+=TieSelection::OnePerGroup= (stub), floored-ε flag; doc the
+guarded-divergence contract per field) - Modify:
+=src/domain/direct_optimizer.cpp= (=ValidateOptions= per-field table;
+unimplemented fields keep the fail-fast throw with a clear message
+naming this plan) - Modify: =src/domain/CMakeLists.txt= only if new
+files are added (the explicit-source-list gotcha) - Test:
+=test/unit/test_direct_optimizer.cpp= (extend)
+
+*Approach:* - Additive enum values only; defaults untouched
+(bit-identical contract). - Each non-default field's throw message
+switches from "plan-008 fail-fast stub" to "implemented by plan 010 UN"
+as the later units land --- the message table is the progress tracker. -
+Keep =TieSelection::OnePerGroup= a stub this plan (scope boundary). -
+Add the Options field-wise equality / is-classic helper here --- both
+=RunOptimizedStage='s effective-options branch and the stage-script
+parity tests need it (no operator== exists on Options today).
+
+*Patterns to follow:* the existing =ValidateOptions= field-by-field
+structure; plan 008 U8's guarded-divergence comments.
+
+*Test scenarios:* - Happy path: =Options()= and every field at its
+default constructs and runs; =Run()= on the existing golden cost
+reproduces the existing recorded search exactly (regression pin). - Edge
+case: each newly added non-default value throws =std::invalid_argument=
+with the plan-010 message until its unit lands; values landed by earlier
+units do NOT throw. - Happy path: one non-default field at a time
+combined with all-default others still throws only for the unimplemented
+fields (the table is per-field, not all-or-nothing).
+
+*Verification:* =pixi run test= green; the default-path search is
+byte-identical to the pre-unit behavior (existing goldens untouched).
+
+--------------
+
+- [ ] U2. *GL two-step Pareto selection (union S = G ∪ L)*
+
+*Goal:* Implement the literature's highest-evidence selection upgrade:
+the two-step Pareto selection with the union variant (global staircase G
+and local distance staircase L merged, the DGO/GLh form that is "on
+average more effective" than separate processing).
+
+*Requirements:* R3, R9
+
+*Dependencies:* U1
+
+*Files:* - Modify: =src/domain/direct_optimizer.cpp= (selection branch
+guarded on =selection == SelectionMode::GL=; the =ConvexHull= Jarvis
+hull stays the =Original= path) - Modify:
+=include/domain/direct_optimizer.h= (flip the field's stub status + doc
+the GL semantics and the tie/ε interaction) - Test:
+=test/unit/test_direct_variants.cpp= (new) - Test:
+=test/unit/test_direct_variants_properties.cpp= (new, hegel) - Modify:
+=test/CMakeLists.txt= (new targets, =headless= label, direct- compile
+pattern)
+
+*Approach:* - GL's two staircases (global: box value vs size; local:
+distance from current optimum vs size) computed from the same box table
+the hull already uses; union S = G ∪ L feeds the existing trisection
+machinery. Distances are already needed downstream by GLh (U5) --- store
+once. - Guarded divergence: the hull code path is untouched when
+=selection == Original=. - Selection-order pin: record the
+evaluated-point sequence with a recording fake cost on small problems;
+the GL sequence is the spec.
+
+*Execution note:* characterization-first --- pin the classic selection
+sequence on the same fake cost first, so the GL-vs-classic diff is the
+evidence of divergence and nothing else diverges.
+
+*Patterns to follow:* =test/unit/test_direct_optimizer.cpp= fake-cost
+goldens; angle 01's GL definitions (Definitions 1--3 of Stripinis 2018,
+union form per DIRECTGO §2.2).
+
+*Test scenarios:* - Happy path: GL on a recording quadratic cost over a
+small budget selects the pinned POH sequence (golden recorded from the
+paper's semantics, not from the implementation). - Happy path: GL and
+Original on an isotropic problem with one box per size level select the
+same set (degenerate agreement case). - Edge case: all-equal costs (flat
+function) --- the local staircase's distances break the degeneracy
+without crashing or empty POH sets. - Integration: hegel PBT --- for
+random smooth costs, f_min after k iterations under GL ≤ f_min under
+no-search seed; budget compliance holds (calls ≤ budget + call_offset);
+runs are deterministic (same cost ⇒ same sequence).
+
+*Verification:* new targets green under =ctest -L headless=; the U1
+message table marks =SelectionMode::GL= implemented; classic goldens
+unchanged.
+
+--------------
+
+- [ ] U3. *gb phase switch (canonical semantics + shipped arm)*
+
+*Goal:* Implement the globally-biased refinement control --- the only
+restriction that never hurt in the 287-problem study and the best on
+expensive objectives.
+
+*Requirements:* R3, R9
+
+*Dependencies:* U2 (gb toggles between the GL local phase and the
+global-only Pareto phase)
+
+*Files:* - Modify: =src/domain/direct_optimizer.cpp= (phase state machine guarded on
+=globally_biased=) - Modify: =include/domain/direct_optimizer.h= (field docs: canonical
+semantics, parameters, the shipped-arm flag) - Test: =test/unit/test_direct_variants.cpp=
+(extend) - Test: =test/unit/test_direct_variants_properties.cpp= (extend)
+
+*Approach:* - Canonical semantics (two primary texts agree; the DIRECTGO code's inversion
+is the outlier, synthesis Finding 9): local distance-biased phase while f_min improves and
+on every-5th "security" iterations; global-only Pareto selection once 5 consecutive
+non-improving iterations elapse; return to the local phase when f_min improves. -
+Parameters canonical from Gb-DISIMPL: 5 stagnant iterations, security every 5th,
+Yaro_epsilon 0.01 --- recorded in the Options docs and the battery manifest (AE3: the
+harness knows which semantics it scored). - A bool flag selects the inverted
+code-as-shipped arm for the battery; the default arm is canonical. - Phase state
+(improvement counter, iteration counter) lives in =DirectOptimizer= members initialized at
+construction --- never in statics.
+
+*Execution note:* characterization-first --- pin the phase-transition sequence (iteration
+indices where the phase flips) on a recording cost whose improvement schedule is
+constructed, before trusting the state machine.
+
+*Test scenarios:* - Happy path: constructed cost improving every iteration → local phase
+every iteration, security global pass every 5th (pinned transition sequence). - Happy
+path: constructed cost stagnating after iteration k → global-only from k+5, back to local
+on the first improvement after (pinned). - Edge case: stagnation from the seed (no
+improvement ever) --- global-only from iteration 5 to budget exhaustion; no crash, budget
+respected. - Edge case: the shipped-arm flag reproduces the inverted phase order on the
+same constructed cost (battery arm pin). - Integration: hegel PBT --- phase state never
+corrupts the bookkeeping: cost_function_calls_ and optimum tracking match the non-gb run's
+accounting for the same evaluated points.
+
+*Verification:* headless green; =globally_biased= marked implemented in the U1 table; the
+transition pins are checked into the test as golden data, not derived at runtime.
+
+--------------
+
+- [ ] U4. *Faithful 1-DTC split (least-split global counter) + ε refinement control*
+
+*Goal:* Complete the "1-DTC" in 1-DTC-GL-gb: the least-split partition rule the studied
+variant actually uses, and the ε-filter refinement control with both literature forms.
+
+*Requirements:* R3, R9 (ε-arm {0, 1e-7, 1e-4})
+
+*Dependencies:* U1
+
+*Files:* - Modify: =src/domain/direct_optimizer.cpp= (split branch guarded on =split_rule
+== LeastSplitGlobal=; ε post-filter guarded on =epsilon > 0.0=) - Modify:
+=include/domain/direct_optimizer.h= (=SplitRule::LeastSplitGlobal=, floored-ε flag, field
+docs incl. the divergence note: repo's largest- denormalized rule picks Z where the study
+picks X on the first branch/leaf split) - Modify: =include/domain/direct_data_storage.h= /
+=src/domain/direct_data_storage.cpp= only if the global split counter needs storage
+(prefer a =DirectOptimizer= member) - Test: =test/unit/test_direct_variants.cpp= (extend)
+
+*Approach:* - Least-split: a global per-dimension split counter; pick the least-split
+dimension in /unit/ space, lowest-index tie-break (the study's §2.3.1 rule, confirmed
+word-for-word). Counter resets per =DirectOptimizer= instance --- which matches the
+stage-loop's one-optimizer-per-stage shape (each stage is a fresh search domain). - ε
+filter (Jones 1993 Definition 4.1): exclude POH candidates whose lower bound cannot beat
+=f_min − ε|f_min|= --- two-sided, accuracy-tied; the floored flag switches to Gablonsky's
+=max(10⁻⁴|f_min|, 10⁻⁸)= form (the documented mitigation for the f_min→0 silhouette-cost
+shape where the pure filter is inert). - ε=0.0 remains "no filter anywhere" --- the
+production bit-identical path.
+
+*Execution note:* characterization-first --- the anisotropic-range probe is the spec: on
+range (15,15,25,25,25,25) pin that =LeastSplitGlobal='s first split is X while =OneSide='s
+is Z (the quantified divergence, synthesis Finding 10). Record before asserting.
+
+*Test scenarios:* - Happy path: isotropic range (35)^6 --- both split rules pick the same
+dimension on the first split (they coincide on the trunk). - Happy path: anisotropic-range
+probe pins the X-vs-Z divergence above. - Happy path: ε = 1e-4 on a recording cost filters
+exactly the pinned POH boxes (golden sequence); ε = 0.0 is byte-identical to pre-unit. -
+Edge case: floored-ε at f_min = 0 --- the filter uses the 10⁻⁸ floor instead of going
+inert (pinned); pure form at f_min = 0 filters nothing (inert, pinned --- that is the
+literature behavior, not a bug). - Edge case: least-split counter across tied dimensions
+picks the lowest index every time (determinism pin). - Integration: hegel PBT --- box
+table integrity: split counts per dimension stay consistent with the counter; no dimension
+splits while another has fewer splits (invariant of the rule).
+
+*Verification:* headless green; the anisotropic probe's recorded divergence matches
+synthesis Finding 10 exactly; =LeastSplitGlobal= + ε marked implemented.
+
+--------------
+
+- [ ] U5. *DIRECT-GLh hidden-constraint surrogate*
+
+*Goal:* Implement the φ = f_min + d(x_min, x) surrogate for infeasible (non-finite)
+evaluations --- near-zero incremental cost because GL's distances already exist after U2.
+*Scope note (review-resolved):* U5 ships per the owner's explicit request (the
+Zotero-sourced GLh variant); it has NO consumer inside this plan --- the registered graph
+pins =hidden_constraints false=, no battery arm in this plan exercises it, and its
+paper-anchor validation (5/67, 100/100 Emmental) rides the deferred hidden-constraint
+scoring round. It lands as implemented-but-consumerless for exactly that follow-up round
+and the NaN-emitting variants; the =hidden_constraints= field itself is U1's fail-fast
+stub until U5 lands.
+
+*Requirements:* R3, R9
+
+*Dependencies:* U2 (distances), and plan-008 U3's non-finite eval chokepoint
+(=EvaluateCostFunction= / =GetNonFiniteCount=)
+
+*Files:* - Modify: =src/domain/direct_optimizer.cpp= (surrogate tagging at selection time
+guarded on =hidden_constraints=) - Modify: =include/domain/direct_optimizer.h= (field
+docs: paper-verified formula, trigger story --- DIRECT_DILATION cannot emit NaN; the
+surrogate protects the NaN-emitting variants and battery problems) - Test:
+=test/unit/test_direct_variants.cpp= (extend)
+
+*Approach:* - Formula verified from the paper (Eqs. 3--6, synthesis Round 3): store raw
+f_min + distance d for infeasible points; at selection normalize d̃ = d/√n and f̃ = (f −
+f_min)/(f_max − f_min) with f_min over feasible points only; f̃ = 1 for the flat case;
+sentinel 10^9; re-tag all surrogates when x_min moves ≥ 1e-6 in unit coordinates. -
+*Empty-feasible-set fallback (the review-resolved gap):* when zero feasible evals exist
+there is no f_min to anchor the surrogate (the seed result is non-finite →
+current_optimum_value_ = DBL_MAX, so φ = f_min + d would overflow). The surrogate is
+DISABLED until the first feasible eval lands: with no feasible point, infeasible boxes are
+excluded from selection exactly as the =hidden_constraints=-off path does today (no
+tagging, no crash), and the search runs to budget. The pinned "all-infeasible" outcome is
+therefore: no surrogate, no crash, optimum stays unset/seed. f_max for the f̃ normalization
+tracks over feasible evals only (undefined until the first feasible eval → f̃ = 1, the
+flat-case branch). - Infeasible points never enter the optimum, never count as
+improvements (the existing chokepoint contract); they participate in selection only
+through the surrogate. - Guarded divergence: with =hidden_constraints= off and an
+all-finite cost (production's DIRECT_DILATION), zero code paths differ.
+
+*Test scenarios:* - Happy path: fake cost returning NaN outside a feasibility region ---
+the surrogate-tagged boxes are selected and the search reaches the feasible optimum
+(compare against the paper's Phase-II uniform-search behavior on a constructed
+instance). - Happy path: x_min moves ≥ 1e-6 → surrogates recomputed (pin the recompute
+event count). - Edge case: all evaluations infeasible --- the surrogate is DISABLED (no
+f_min exists to anchor φ), infeasible boxes are excluded from selection like the
+=hidden_constraints=-off path, search runs to budget, no crash, optimum stays unset/seed,
+=GetNonFiniteCount()= == calls. - Edge case: flat feasible costs (f̃ = 1 branch) --- no
+division by zero (the +1e-16 guard). - Error path: a NaN cost with =hidden_constraints=
+OFF behaves exactly as today (infeasible, excluded, counted) --- the surrogate never leaks
+into the default path.
+
+*Verification:* headless green; =hidden_constraints= marked implemented; the GLh paper's
+own anchors recorded as comments (5/67 DIRECTLib fails, 100/100 Emmental) for the
+follow-up validation round.
+
+--------------
+
+- [ ] U6. *StageSpec optimizer slot + =RunOptimizedStage= (the new optimizer function)*
+
+*Goal:* Per-stage optimizer-variant slots in the graph schema, and the new stage runner
+that replaces the pure-DIRECT call sites in the =Optimize()= loop --- default options
+delegate to today's path byte-identically.
+
+*Requirements:* R3, R4, F1
+
+*Dependencies:* U1 (the slot's type exists); independent of U2--U5 for the plumbing
+(non-default options still fail-fast until they land)
+
+*Files:* - Modify: =include/coordinator/optimizer_stage_script.h= (=StageSpec= gains
+=DirectOptimizer::Options options= defaulted; schema doc update; the domain header stays
+the slot's home --- no CUDA types either way) - Modify:
+=src/coordinator/optimizer_stage_script.cpp= (=JtmlProductionGraph= explicit default
+options; =CumulativeStageCaps= unaffected) - Modify: =src/coordinator/optimizer_manager.h=
+/ =src/coordinator/optimizer_manager.cpp= (new =RunOptimizedStage(const StageSpec&,
+CostFunctionManager&)=; =RunDirectStage= --- a private member --- gains an =Options=
+parameter defaulted to classic; the three loop call sites switch to =RunOptimizedStage=;
+the runner constructs =DirectOptimizer= with the effective options) - Test:
+=test/unit/test_stage_script.cpp= (extend) - Test: =test/lifecycle/= coordinator suite if
+the runner's signal contract needs observation (QtTest seam per AGENTS.md)
+
+*Approach:* - Effective-options precedence (one exact rule, atomic --- no per-field
+merge): =effective_options(stage) = spec.options if any field differs from classic
+(field-wise equality helper, U1), else direct_options_ (from
+OptimizerRunLaunch.direct_options via Initialize), else classic=. Corollary, accepted for
+v1: a default =spec.options= inherits the run-level slot, so a graph cannot force classic
+over a non-default run-level value. - *Run-level seam gate (the adversarial review's
+catch):* the run-level =direct_options_= (via =OptimizerRunLaunch.direct_options=) is a
+LIVE production seam today, and once U2--U5 implement every field, a non-classic run-level
+value would flow into =jtml-production= silently --- unscored by any battery arm and
+ungated. Gate: a non-classic run-level =direct_options_= is legal only when it exactly
+equals a battery-scored arm (validated against the manifest via the U1 equality helper),
+otherwise it fails fast with a plan-010 message at Initialize. Pin: "non-classic run-level
++ jtml-production ⇒ throw unless the value matches a scored arm". This
+keeps R9's "scored before any production change" true for the run-level path too. - ONE
+production runner, zero wiring duplication: =RunDirectStage= gains an =Options= parameter
+defaulted to classic; =RunOptimizedStage(spec, stage_manager)= computes the effective
+options and calls the runner once. The runner's full wiring (adapter ctor, SetCallOffset,
+improvement callback, iteration callback with the cooperative-stop poll and the 33 ms
+display gate, Run()==false error path, post-run writeback) stays single-sourced. Extending
+the private runner's signature is not the executor extraction origin R4 forbids --- the
+oracle and probe converge on =BuildGpuCostAdapter=, never on the runner. - Stage
+bookkeeping (cumulative =budget_ += spec.budget=, call offsets, stage text) is untouched
+--- the slot changes /how a stage searches/, not /what it accounts/.
+
+*Patterns to follow:* plan 008 U9's loop consumption (script-driven =Optimize()=); the
+=BuildGpuCostAdapter= three-consumer convergence note.
+
+*Test scenarios:* - Covers AE1. Happy path: settings-built script with default options ---
+=CumulativeStageCaps= lands on [20000, 25000, 30000, 35000]; the loop's observable
+sequence (costCalls, stage text) is identical to pre-unit (the multistage oracle is the
+arbiter on the GPU machine). - Happy path: a =StageSpec= with one non-default implemented
+option routes through the variant branch (observable via a recording fake cost in the
+headless coordinator seam). - Error path: a =StageSpec= carrying a still-stub option fails
+fast at stage start with the plan-010 message (no silent classic fallback). - Integration:
+=StageGraphByName("jtml-production")= stages all carry default options → production
+consumption (once plan 009 lands) is byte-identical. - Error path (run-level seam gate): a
+non-classic run-level =direct_options_= under =jtml-production= throws at Initialize
+unless the value exactly equals a battery-scored arm (manifest-validated) --- never a
+silent unscored variant in production (the adversarial review's gate). - Integration:
+plan-009 handoff contract --- named-graph consumption must route through this same
+=RunOptimizedStage= precedence rule (recorded in System-Wide Impact), never re-derive a
+different one.
+
+*Verification:* headless + lifecycle suites green; the three loop call sites compile
+against one function; the default-path behavior is diff-untouched (the runner body changes
+one line --- member =direct_options_= → parameter).
+
+--------------
+
+- [ ] U7. *Register the =jtml-gl-gb= high-level graph*
+
+*Goal:* The new high-level graph the owner asked for: the production stage shape (trunk
+20k → 2×branch 5k → leaf 5k, same ranges and cfm indices) with the landing variant --- GL
+selection + gb + faithful 1-DTC least-split, ε=0, L2 --- in every stage's optimizer slot.
+
+*Requirements:* R2, R3, R9, F2
+
+*Dependencies:* U2, U3, U4 (the options the graph carries must be implemented), U6 (the
+slot exists)
+
+*Files:* - Modify: =src/coordinator/optimizer_stage_script.cpp= (=ListStageGraphs= gains
+=jtml-gl-gb=; =ReservedStubGraphNames= untouched) - Modify:
+=docs/optimizer-stage-graphs.md= (registry table + the new graph's recipe + the
+"candidate, not default" note) - Test: =test/unit/test_stage_script.cpp= (extend)
+
+*Approach:* - Graph stages reuse =settings_constants.h= ranges/budgets --- same derivation
+as =jtml-production= (no new constants). - The gb arm in the registered graph is canonical
+semantics; the shipped-arm variant is a battery axis, not a second registered graph. -
+Registration is data-only; nothing consumes the graph in production until plan 009 U2
+lands (the battery drives it headlessly meanwhile).
+
+*Test scenarios:* - Covers AE1. Parity pin: =StageGraphByName("jtml-production")= is
+byte-identical to the pre-unit registry entry (default options everywhere) --- plan 009's
+future parity test stays green. - Happy path: =StageGraphByName("jtml-gl-gb")= returns the
+pinned shape: 3 stages, cumulative caps [20000, 25000, 30000, 35000], options = {selection
+GL, globally_biased true, split_rule LeastSplitGlobal, epsilon 0.0, hidden_constraints
+false}. - Edge case: =ListStageGraphs()= ordering/names pinned (the registry is part of
+the harness's vocabulary --- names are a contract). - Error path: unknown/reserved names
+still throw (no regression of the fail-fast contract).
+
+*Verification:* headless green; =docs/optimizer-stage-graphs.md= documents the new graph
+as a scoring candidate.
+
+--------------
+
+- [ ] U8. *Analytic battery harness + staged scoring gate*
+
+*Goal:* The measurement apparatus R9 demands before any variant claim: a headless battery
+that scores =jtml-gl-gb='s options against the classic baseline on DIRECTGOLib v1.2 (22
+n=5 problems) + Hartman6 under the production cumulative-budget shape, reporting data
+profiles and the staged basin-capture metric.
+
+*Requirements:* R9, F2, AE3
+
+*Dependencies:* U2--U5 (the scored variants), U7 (the scored graph)
+
+*Files:* - Create: =test/battery/direct_battery.cpp= (Catch2 main over the pure domain
+engine --- direct-compile pattern, zero Qt/CUDA) - Create:
+=test/battery/direct_battery_problems.cpp= (+ header --- the 22 problem definitions with
+pinned f* formulas, Hartman6, and the n=2 cheap-regime set) - Create:
+=test/battery/battery_manifest.{h,cpp}= (per-run record: variant dimensions ---
+selection/gb semantics/split rule/ε arm --- budget shape, pe results, eval counts; the AE3
+contract: the harness always knows exactly which variant it measured) - Modify:
+=test/CMakeLists.txt= (=jtml_test_direct_battery= target, =headless= label, generous
+TIMEOUT; the CI-reduced profile as a ctest filter, full battery nightly) - Modify:
+=docs/optimizer-stage-graphs.md= or a new =docs/optimizer-battery.md= (the battery
+protocol + result table home)
+
+*Approach:* - Problems and f* values transcribed from DIRECTGOLib v1.2 (Zenodo 6617799,
+version pin recorded) --- the battery is pure-domain: the injected cost is the analytic
+function, no GPU. - Termination pe ≤ 1e-2 (15/22 f*=0 subset reported separately as pe =
+100·f); budget shapes: the production cumulative 20/25/30/35k and crossover probes {500,
+1000, 4000} (paper-anchored); Mmax recorded per comparison target. - Arms: baseline
+(classic), GL, GL-gb (canonical), GL-gb (shipped arm), GL-gb + LeastSplit (=
+=jtml-gl-gb='s trunk options), ε-arm {0, 1e-7, 1e-4} on the classic+floored forms.
+DIRECT-l stubbed out this plan (scope boundary) --- the manifest schema reserves its
+dimension. - *Staged battery* (synthesis Finding 13): per-stage basin-capture --- does the
+trunk result land inside the branch restart box of the true basin? --- plus per-stage
+refinement, because the production shape already forfeits cross-stage global convergence
+and a flat comparison cannot see a cascade failure. - Data profiles (evals-to-target
+curves) as the reporting instrument, aligned with the measurement workstream's Moré & Wild
+shape. - *Promotion gate (the plan's standing rule):* a variant may be promoted to a
+production graph only when (a) the battery data profile dominates or ties baseline at the
+production budget shape, (b) the staged basin-capture shows no cascade regression, (c) the
+Tier-2 oracle passes IoU ≥ 0.85 driven through the named graph. The R9 battery is
+PARTIALLY COVERED in this plan (U8 ships DIRECTGOLib v1.2 + Hartman6 + staged
+basin-capture; the GKLS/Emmental constrained arms, the 80-problem hidden-constraint
+protocol, and the DIRECT-l arm are deferred to the follow-up scoring round --- the
+review-resolved fidelity pin): promotion on the U8-shipped arms alone is NOT an R9-
+complete decision; the manifest must record either that the follow-up scoring round ran
+and cleared, or an explicitly scoped owner decision to promote on the subset. An
+ANISOTROPIC battery tier is required for the split-rule divergence: the DIRECTGOLib
+problems are axis-symmetric unit-box, where the two split rules coincide --- add an
+anisotropic tier reusing the production trunk/branch/leaf ranges over the analytic
+problems so the least-split divergence is actually scored (the adversarial review's catch;
+otherwise the risk table's "scored by U8's staged battery" claim is unsupported). Until
+then =jtml-production= remains the default. The gate is a data review by the owner,
+recorded in the manifest --- never an automatic switch.
+
+*Execution note:* record-first --- run the baseline arm and record its profiles before
+running variant arms, so the comparison is against a pinned baseline, not a re-derived one
+(the SymTrap pin discipline).
+
+*Patterns to follow:* =test/unit/test_direct_optimizer.cpp= direct-compile target wiring;
+=test/CMakeLists.txt= label/TIMEOUT conventions; the ablation-runner schema fields from
+the deep-dive (angle 03) for the manifest shape.
+
+*Test scenarios:* - Happy path: battery reproduces the study's qualitative ordering on the
+cheap-regime n=2 set (IO-classic competitive ≤500 evals, GL dominant ≥4000) --- the
+harness sanity check that the transcription is right. - Happy path: the manifest records
+every arm's variant dimensions (Covers AE3) --- a pinned round-trip test: write manifest,
+read back, dimensions identical. - Edge case: f*=0 problems report pe = 100·f without
+division-by-zero; non-converged runs report pe at budget exhaustion (never a crash). -
+Integration: =jtml-gl-gb='s stage options run end-to-end through the battery driver (graph
+→ RunOptimizedStage-equivalent construction over the pure engine with analytic costs). -
+Integration (battery-vs-runtime parity --- the adversarial review's re-derivation catch):
+a headless coordinator-layer cross-check drives =StageGraphByName("jtml-gl-gb")= through
+the REAL =RunOptimizedStage= precedence (or an extracted pure effective-options resolver
+both call) with a recording fake cost and asserts the battery driver's construction
+produces the identical eval sequence --- the battery scores what production runs, never a
+re-derived phantom.
+
+*Verification:* battery target green headless; baseline + variant profiles recorded in the
+manifest; the promotion gate text is the run's decision record.
+
+--------------
+
+*** Phase B --- Capacity-based cost launch service
+:PROPERTIES:
+:CUSTOM_ID: phase-b-capacity-based-cost-launch-service
+:END:
+*Premise-gate note (product-lens review, P3):* U9--U11 are U12's plumbing and ship ahead
+of the external Cut-0 verdict, with no perf gate of their own (U10 explicitly "promises NO
+perf delta"). If Cut-0 falsifies the sync-bound model (GPU-active > 1 ms), U9--U11's
+wiring is re-reviewed as a unit before U12 proceeds --- a launch-policy reversion or
+de-scope is on the table, not just U12's premise (the units are bit-identity-safe either
+way, so the consequence is committed maintenance surface, not incorrect behavior).
+
+- [ ] U9. *=CostCapacityService= (compute layer)*
+
+*Goal:* The capacity knowledge the optimizer queries, owned by compute: device snapshot,
+per-kernel occupancy, SAFE_CAP arithmetic, capacity-clamped grid sizing, and the runtime
+eval-bank count.
+
+*Requirements:* P1, P2, P3, R11
+
+*Dependencies:* None (parallel with Phase A)
+
+*Files:* - Create: =include/compute/cost_capacity_service.cuh= - Create:
+=src/compute/cost_capacity_service.cu= - Modify: =src/compute/CMakeLists.txt= (explicit
+=.cu= list --- the GLOB trap) - Test: =test/unit/test_cost_capacity_service.cpp= (the pure
+arithmetic over injected device props --- headless) - Test: =test/oracle/= target for the
+real-device occupancy query (=LABELS "oracle;gpu"=, TIMEOUT 3600, repo-root
+WORKING_DIRECTORY --- the repo's GPU-test convention; never =headless=)
+
+*Approach:* - Snapshot: SM count, max threads/SM, the SAFE_CAP constant
+(=maximum_stride_size × (threads_per_block − 1)= = 2.55e9, exactly the host overflow
+guard's bound in render_engine.cu:803 --- one source of truth), queried once per device and
+cached in the service instance (ownership: the manager's GPU object graph constructs it in
+=Initialize=, like every other GPU object --- deep-dive R2-4). - Occupancy:
+=cudaOccupancyMaxActiveBlocksPerMultiprocessor= queried with each kernel's REAL launch
+config (register/shared-memory dependent) --- advisory input to block-size selection; a
+CUDA error marks capacity unavailable and every consumer falls back (P2). Block-size
+selection for =B_opt= uses the guide-blessed =cudaOccupancyMaxPotentialBlockSize(&minGridSize,
+&blockSize, func, 0, 0)= (one call returns the block size achieving max occupancy) rather
+than hand-deriving it; =blockSizeLimit= caps at =maxThreadsPerBlock= (1024). - =CapacityGrid(work_items,
+kernel)=: the work-coverage invariant (P3, deepened) --- returns =ceil(work / B_opt)= for the
+kernel's occupancy-optimal block size =B_opt=, never exceeding the minimal covering grid and
+never below it (exact-grid-wins below resident capacity), never above SAFE_CAP threads, and
+never above the guide's grid-dimension ceiling =maxGridDim= (2²¹−1 per axis, CC 3.0+ --- a
+pathological 1-elem/block config must not overflow the grid). -
+=EvalBankCount()=: MEMORY-bounded --- =min(⌊device free memory ÷ per-bank footprint⌋,
+N_MAX)=, floored at 1, where the per-bank footprint is the per-eval write-set (U12
+enumeration) counted across both cameras in biplane. Occupancy is a grid-sizing input only
+--- it bounds concurrent kernels, not buffer allocation. - Construction-order invariant: =EvalBankCount= (the pool size) is computed once in =Initialize= after frame dims are known and BEFORE the first GPUModel ctor. The service owns the POOL of buffer sets (render outputs + score buffers + pinned twins); RenderEngine/GPUMetrics render/score into a caller-supplied buffer set. Single-eval consumers (oracle twin, z-profile probe, =EvaluateCostFunctionAtPoint=) always target the bank-0 set the engine already owns (no allocation; N=1 identity). - No streams, no buffers, no allocation in the service itself ---
+it is pure knowledge + sizing math. Buffer/stream ownership lands with U12 where the
+deep-dive pinned it (RenderEngine/GPUMetrics internals).
+
+*Patterns to follow:* =include/compute/launch_config.cuh= (the builder shape it supersedes
+--- keep it for non-cost callers until a follow-up migrates them); =gpu_metrics.cu='s
+pinned-buffer ownership style.
+
+*Test scenarios:* - Happy path (headless): with injected fake props (80 SMs, 2048
+threads/SM), =CapacityGrid= for work ≤ resident capacity returns EXACTLY the minimal
+covering grid (never padded up); SAFE_CAP clamps a 3e9-work request; a kernel whose
+current formula already equals the minimal grid gets a strict no-op answer. - Edge case
+(headless): work = 0 → minimal launch (1 block); work = SAFE_CAP exactly → unchanged;
+=grid × block ≥ work= holds for every produced config (the work-coverage invariant). -
+Edge case (headless): =EvalBankCount= floors at 1 when the per-bank write-set footprint
+exceeds free memory; clamps at =N_MAX=; the biplane footprint counts both cameras. - Error
+path (headless): the "capacity unavailable" flag makes every consumer-facing query return
+the fallback sentinel (today's sizing wins downstream). - Integration (GPU-labeled): on
+the real RTX 3090, the occupancy query for the fill/metric kernels returns > 0 blocks/SM
+and the service's SAFE_CAP equals =maximum_stride_size × (threads_per_block − 1)= (=
+2.55e9, the host overflow guard's exact bound).
+
+*Verification:* headless arithmetic green; GPU-labeled query green on the GPU machine; no
+launch site consumes the service yet (knowledge only --- wiring is U10).
+
+--------------
+
+- [ ] U10. *Capacity-based launch wiring in the cost path*
+
+*Goal:* Cost-path kernel launches are sized by the service /when capacity is available/
+--- occupancy-optimal block sizes, overshooting launch formulas reduced toward the minimal
+covering grid, SAFE_CAP as the ceiling --- with today's sizing as the automatic fallback,
+and bit-identity proven. This unit is plumbing + occupancy measurement + the reshape
+candidates: it promises NO perf delta (the pre-registered meter band attaches to U12 only
+--- the bit-identity diff is this unit's gate, not a perf gate).
+
+*Requirements:* P2, P3, R13
+
+*Dependencies:* U9
+
+*Files:* - Modify: =src/compute/render_engine.cu= (the fill-kernel launches ---
+=StridePrefixKernel=/=FillTriangleKernel= --- get capacity-clamped grids; the host
+overflow guard stays, SAFE_CAP-aligned) - Modify:
+=src/compute/fast_implant_dilation_metric.cu=, =src/compute/distance_map_metric.cu=
+(metric launches sized through the service) - Modify: =src/compute/CMakeLists.txt= if a
+shared launch helper lands - Test: GPU-labeled bit-identity harness (extend =test/oracle/=
+--- pose → score sequence diff vs the pre-unit baseline over the oracle's frames)
+
+*Approach:* - Each launch site asks the service for a config; on unavailable/ overflow it
+uses the exact pre-unit computation (P2). No kernel-source changes --- bit-safety rests on
+PER-KERNEL verified full-body =if (i < total)= guards (deep-dive R2-3 verified the fill
+kernels; the per-kernel policy above records which kernels qualify and which are
+excluded). - Per-kernel capacity policy (the deepening audit): fill kernels
+(StridePrefix/FillTriangle) are block-pinned at 256 by the stride-prefix architecture ---
+capacity is a no-op beyond the SAFE_CAP ceiling; the halo metric kernels (16×16 blocks,
+14×14 interior + halo reads) are EXCLUDED from reshaping; the 2D-sqrt render grids
+(overshooting up to ~100% for non-square work) are reduction candidates once their index
+math verifies linearizable; =DistanceMapMetric_Kernel= is EXCLUDED from reshaping until
+its missing full-body =i < total= guard lands in its own scoped, oracle-gated kernel unit
+--- its only guard today is the derived-location =orig_loc < width*height= bound, which
+overshoot threads can pass (reading/atomicAdd-ing below the crop), so a minimal-grid
+reshape can change scores (the review-verified guard hole; the deep-dive's full-body-guard
+verification covers only the fill kernels). - The render pipeline's data-dependent
+launches (bbox/fragment sync) stay untouched this unit. - The pre-unit pose→score sequence
+is recorded FIRST on the GPU machine, then the unit's diff must be empty (the R13
+bit-identity gate, the run's standard protocol).
+
+*Execution note:* characterization-first --- record the baseline pose→score sequence and
+the per-kernel launch configs before changing any launch; the diff and the config table
+are the evidence.
+
+*Test scenarios:* - Covers R13. Integration (GPU): pose→score sequence over the oracle
+frames is bit-identical to the recorded baseline (empty diff). - Happy path (GPU):
+capacity configs are actually exercised --- log/pin that at least one kernel's grid came
+from the service (not the fallback) on the RTX 3090. - Edge case (GPU): a constructed
+oversized-work case (if reachable from fixtures) still takes the synchronous fallback path
+unchanged. - Error path (headless-level contract): service constructed with the
+unavailable flag → every launch site's config equals the pre-unit formula (pinned in the
+unit test over fake props).
+
+*Verification:* oracle green (IoU ≥ 0.85), bit-identity diff empty, headless suite
+unaffected (the wiring is compute-layer only).
+
+*User Notes*: do we really want to be editing the underlying kernels here? I don't know if
+this makes more sense as a layer on top of that that can actually call the kernels
+themselves, though something like that would require thinking about the architecture
+differently. Thinking about the shape of the data that's getting passed around, you have a
+list/vector/stack/whatever of poses (6 x num x <data_size>), and you're simply asking, for
+every single pose in this queue, what's the returned numeric cost? To me, is there
+something that can do this with a while loop? Or are you almost strictly going to have to
+move to an async component? For example (i'm writing the psuedo code in python)
+
+#+begin_src python
+while len(poses_to_eval) > 0:
+    if (cuda_capacity = True):
+        pose_to_launch = pose_to_eval.pop(0) # or whatever, grab the first one available
+                                             # and remove from the queue - we can flow
+                                             # control that however we want
+
+#+end_src
+
+Does something like the above require async code? Or can this be handled cleanly in the
+current paradigm? Each time you're launching that code, you're just re-using the existing
+set of kernels over a different set of data.
+--------------
+
+- [ ] U11. *The batch cost query seam (R12 sibling + replay bookkeeping)*
+
+*Goal:* The query surface the owner described --- the optimizer sends a POH batch to the
+cost layer and gets per-point results back in input order --- lands as R12's optional
+=std::function= sibling with replay-ordered bookkeeping, executed by default through the
+capacity service (N=1 identity until U12).
+
+*Requirements:* R12, R4, P1, AE2
+
+*Dependencies:* U9 (the service is the batch executor); U6 preferred (the stage runner
+wires the sibling), but the domain part is independent
+
+*Files:* - Modify: =include/domain/direct_optimizer.h= (=BatchCostFunction =
+std::function<std::vector<double>(const std::vector<Point6D>&)>=; =SetBatchCost= setter;
+doc the contract: results in input order, MAY batch any pairwise-independent eval set,
+single-point path unchanged) - Modify: =src/domain/direct_optimizer.cpp=
+(=TrisectPotentiallyOptimal= collects the iteration's pairwise-independent centers; when
+the batch function is set, one call replaces the loop; per-eval bookkeeping --- calls++,
+non-finite handling INCLUDING its immediate iteration-callback fire, optimum update,
+AddHyperBox, improvement callback --- replays in input order) - Modify:
+=src/compute/cost_capacity_service.cuh/.cu= (=RunCostBatch= --- v1: serial execution of
+the batch through the existing per-pose cost path, capacity-sized launches per U10;
+streams/banks arrive in U12) - Modify: =src/coordinator/optimizer_manager.cpp=
+(=RunDirectStage=/ =RunOptimizedStage= set the sibling alongside the single-eval
+adapter) - Test: =test/unit/test_direct_optimizer_batch.cpp= (new --- the Tier-0 replay
+test) - Modify: =test/CMakeLists.txt=
+
+*Approach:* - The sibling is OPTIONAL and defaulted-off: unset ⇒ the exact pre-unit serial
+path (guarded divergence at the seam level). - Replay order is the contract: the batch
+returns scores in input order; =DirectOptimizer= replays every per-eval side effect in
+that order --- calls++, non-finite handling INCLUDING its immediate iteration-callback
+fire, optimum update, AddHyperBox, improvement callback --- so cost_function_calls_, the
+optimum sequence, storage order, and callback firing ORDER are identical whether the cost
+layer batches or not (under the batch path the fires occur back-to-back at batch return
+rather than interleaved with evals: wall-clock timing may differ, order is identical ---
+UI-invisible at the 33 ms display gate). - Packing order (contract text; the Tier-0 replay
+test is its executable spec): input order = serial eval order --- per POH box the +shift
+center then the −shift center, boxes in POH-column order; the batch evaluates the FULL
+per-iteration POH set with no truncation at the budget boundary (the serial path
+overshoots the per-iteration budget guard inside a final trisection; the replay must land
+the same overshoot). - Failure contract (shared with U12): any error inside the batch
+executor aborts the stage through the EXISTING error path (=error_occurrred_ = true= +
+=OptimizerError=) --- results are never partially consumed and never silently
+re-fallen-back to per-point evaluation. - The batch candidate set is the POH iteration's
+new centers --- the pairwise-independent set the deep-dive verified (2×|POH| centers from
+the pre-loop snapshot). Decision-dependent future optimizers (a Nelder-Mead polish) simply
+never set the sibling. - No CUDA types cross the domain header; the service's batch
+execution is the compute-side implementation detail.
+
+*Execution note:* test-first --- the Tier-0 replay test is written against the contract
+(the batch callback receives exactly the sequential pose sequence;
+storage/optimum/callback sequences identical) and must pass with BOTH a fake batch cost
+and no batch cost set.
+
+*Test scenarios:* - Covers AE2. Happy path (Tier-0 replay, headless): a recording fake
+batch cost receives exactly the sequential pose sequence the serial path would evaluate,
+in order, per iteration. - Covers AE2. Happy path (headless): with the batch sibling set
+vs unset, the run produces identical cost_function_calls_, identical optimum sequence,
+identical improvement-callback sequence (the replay pin). - Edge case (headless): a batch
+returning a non-finite entry --- that point replays as infeasible exactly as the serial
+path would; the rest of the batch is unaffected. - Edge case (headless): a budget that
+exhausts mid-final-iteration --- the batch evaluates the full final POH set (no
+truncation) and cost_function_calls_ equals the serial run's overshoot exactly. - Error
+path (headless): a batch function returning the wrong vector size is a contract violation
+--- fail fast (assert/exception), never silent misbookkeeping. - Edge case (headless): POH
+batch of size 1 and size 0 --- degenerate batches take the batch path harmlessly (or fall
+back --- pinned either way). - Integration (GPU-labeled): the service's =RunCostBatch=
+over real GPU costs returns scores equal to N serial single-eval calls (bit-exact).
+
+*Verification:* headless green incl. the new replay test; the single- eval path's goldens
+untouched; GPU batch-vs-serial equality green.
+
+--------------
+
+- [ ] U12. *N-way eval banks + streams, sized by capacity (gated)*
+
+*Goal:* When the capacity service says N > 1 fits, the POH batch runs N-way: N banks of
+eval state (render output + score buffers), N CUDA streams, capacity-sized launches per
+bank --- the origin's streamed N-way target (R11) with the bank count resolved at runtime.
+
+*User Note*: I'm not sure that this is exactly what I mean, though maybe it is. I'm
+suggesting that you can basically queue up one pose at a time into the system until it's
+full, and then just greedily evaluate as space becomes available. The kernel launch itself
+doesn't have to be N-way by design, but it would occur, because of available capacity,
+that you would have N running concurrently. I'm not suggesting that you have to queue up N
+at the beginning, and then launch them at the same time, I'm saying that if you're just
+feeding the GPU one at a time based on capacity, and the kernel launching parameters
+allowed it, you would see better overall utilization.
+
+*Requirements:* R11, R12, R13, R10, P1
+
+*Dependencies:* U10 (capacity launches), U11 (the batch seam); *external:* the Cut-0
+instrumentation verdict from the measurement workstream must exist, EXTENDED with CPU host
+time per cost call (R10: no perf claim without measured numbers; the band-reachability
+condition is =GPU_active_per_eval ≥ CPU_host_per_eval= --- if CPU overhead dominates, no N
+reaches the band; and if GPU-active > 1 ms falsified the sync-bound model, this unit's
+premise is re-reviewed before execution)
+
+*Files:* - Modify: =src/compute/cost_capacity_service.cuh/.cu= (owns the bank POOL ---
+pool init = min(EvalBankCount, |batch max|) at Initialize; per-pose =CheckoutBank()= /
+=RecycleBank()= on the greedy feeder's capacity probe; =RunCostBatch= N-way: per-bank
+stream assignment, per-bank capacity launches, deterministic combine --- the pose→score
+result order stays input order) - Modify: =src/compute/render_engine.cu= (render INTO a
+caller-supplied output pointer instead of the single internal =renderer_output_= --- the
+per-bank output lives in the pool, the engine writes to a passed-in device buffer; the
+internal buffer stays as bank-0 / single-eval default so N=1 allocates nothing new) -
+Modify: =src/compute/gpu_model.cu= (render-output passed in per call, not owned
+internally; N-free --- the engine no longer takes an N ctor param, the pool holds the
+buffer sets) - Modify: =src/compute/gpu_metrics.cu= (score into a caller-supplied
+score-buffer bank; pinned twins move into the pool; =SetActiveBank= drops to a pool-index
+passthrough --- pinned situs gpu_metrics.cu:7-65) - Modify: =src/coordinator/optimizer_manager.cpp=
+(the service owns the pool; constructed in =Initialize= with the rest of the GPU object
+graph --- the manager owns the graph, compute owns the state, the coordinator owns
+neither) - Test: GPU-labeled (the Tier-0 replay test's GPU twin + the bit-identity diff +
+the meter band)
+
+*Approach:* - Pool size = =EvalBankCount()= at Initialize --- AFTER frame dims are
+known, BEFORE the first GPUModel ctor; the POOL owns =max(EvalBankCount, needed)= buffer
+sets (render outputs + per-eval score buffers + pinned twins), each checked out per-pose by
+the greedy feeder and returned on recycle (the user's service-owned lazy-pool model).
+N=1 keeps the U11 serial execution (allocates nothing new beyond the bank-0 set the
+engine already owns). Gate before executing: =pool × per-bank footprint ≤ 50%= of device
+free memory, measured. - Per-bank write-set enumeration (the binding audit): every per-eval-
+WRITTEN device buffer is a pool resource --- the 40 MB stride-prefix buffer,
+projected/snapped/bbox triangle arrays, vertex-z, backface/ tangent, z-line values, CUB
+scratch storage, renderer output, score buffers + pinned twins (~75 MB/bank at a
+300k-triangle implant); read-only buffers (triangles, normals) stay explicitly shared.
+Sharing any write buffer across concurrent banks is a data race that fails the
+bit-identity gate nondeterministically. - Two migration levers, not one: (1) the
+platform's per-thread default stream (compile with =--default-stream=per-thread= or
+define =CUDA_API_PER_THREAD_DEFAULT_STREAM=) makes the legacy implicit-sync hazard
+vanish for any poorly-specified call, AND (2) stream-explicit variants for every cost-path
+CUDA call (=cudaMemsetAsync=, stream-parameterized CUB scan, =cudaMemcpyAsync= into pinned
+buffers on the bank stream, structural syncs as per-bank =cudaStreamSynchronize=), pinned
+by a grep-gate test asserting zero default-stream launches/copies in the bank path. The
+guide: the legacy default stream implicitly synchronizes with every other stream --- one
+unmigrated synchronous call serializes all banks even after (1). - Executor structure
+(band reachability): the greedy feeder checks out a free bank per pose as capacity allows
+(=cudaStreamQuery= / =cudaEventQuery= as the non-blocking capacity probe), rendering the
+WHOLE batch round-robin across checked-out banks BEFORE any fill drain; then per pose in
+input order: per-bank stream sync (cheap --- N−1 evals old), fill config from the pinned
+fragment_fill copy, fill + metric launches, score reads deferred to bank recycle (the
+user's single-pose-at-a-time greedy model, now with the pool making it possible). A
+naive launch-sync-fill-next loop serializes the host on each render phase and caps
+throughput at ~1/render-time (Flood parity, not above it). - Determinism doctrine
+(synthesis Finding 5): per-pose reductions stay int-atomic within a bank; banks never
+share a reduction target; the batch result vector is assembled in input order ---
+bit-identity vs the serial path is diffable. - Streams are the service's (compute-owned);
+the coordinator still only registers the callback (deep-dive R2-4). - All bank allocation
+at =Initialize= / =CheckoutBank= pool --- the eval path still allocates nothing per call.
+
+*Test scenarios:* - Covers AE2. Integration (GPU): pose→score sequence bit-identical to
+the serial path over the oracle frames (empty diff) with N ≥ 2. - Covers R13. Integration
+(GPU): the fixed meter (when landed by the measurement workstream) shows evals/s inside
+the pre-registered band (1,000--5,000; Flood 3,000 parity line recorded) --- and the
+revert rule applies: no improvement over 3 runs ⇒ abandon the jj change, keep serial. -
+Edge case (GPU): a POH batch smaller than N --- only the needed banks launch; results
+still input-ordered. - Error path (GPU): any CUDA error inside the batch executor aborts
+the stage through the existing error path (error_occurrred_ + OptimizerError; no silent
+partial batch, no silent per-point fallback). - Edge case (GPU): determinism stress ---
+the bit-identity diff runs with a multi-bank batch whose adjacent poses schedule on
+different banks, repeated ≥ 3× to catch interleaving-dependent races.
+
+*Verification:* oracle green, replay green, bit-identity diff empty, measured band
+recorded in the run's result doc; or the unit is reverted per R13 and recorded as a
+measured no-go.
+
+--------------
+
+** System-Wide Impact
+:PROPERTIES:
+:CUSTOM_ID: system-wide-impact
+:END:
+- *Interaction graph:* =Optimize()= loop → =RunOptimizedStage= → =DirectOptimizer=
+  (variant options) → injected cost (single or batch sibling) → =CostCapacityService= →
+  capacity-sized launches / N banks. The =UpdateDisplay=/=UpdateOptimum=/=OptimizerError=
+  signal contract is untouched --- the iteration/improvement callbacks fire from the same
+  places they fire today, in the same order (under the batch path, replayed fires occur
+  back-to-back at batch return; order identical, wall-clock timing may differ). The
+  options precedence chain (=OptimizerRunLaunch.direct_options= → Initialize →
+  =direct_options_= → =RunOptimizedStage='s atomic selection over =spec.options=) is the
+  plan-009 handoff contract: named-graph consumption must route through the same rule,
+  never re-derive one.
+- *Error propagation:* unimplemented variant options fail fast at stage start (never
+  mid-search); capacity-query failures fall back to today's sizing silently-by-design (P2)
+  with the unavailability observable via the service; batch-size contract violations fail
+  fast in the replay loop; ANY error inside the batch executor (v1 serial or U12 N-way)
+  aborts the stage through the one existing error path (=error_occurrred_= +
+  =OptimizerError=) --- never a partial batch, never a silent per-point fallback.
+- *State lifecycle risks:* the N-way banks are the one new allocation surface ---
+  allocated once in =Initialize= (N decided after frame dims, before the first GPUModel
+  ctor), freed with the GPU object graph (service destruction sequenced with the models
+  and GPUMetrics in the manager's destructor), never per-call; the ceiling formula =N_MAX
+  ≤ ⌊(device memory − fixed allocations) / per-bank write-set footprint⌋= bounds
+  worst-case VRAM growth (numeric value measured at U12). The gb phase state is
+  per-=DirectOptimizer=-instance (per-stage), never shared across stages.
+- *API surface parity:* =BuildGpuCostAdapter= has three consumers (production runner,
+  Tier-2 oracle, z-profile probe) --- this plan never changes its body; the batch sibling
+  is additive and the oracle keeps the single-eval path.
+- *Integration coverage:* the multistage oracle on the GPU machine is the arbiter for
+  every Phase-A landing (driven through the named graph once plan 009 lands) and for
+  U10/U12 bit-identity; the headless suite cannot see launch behavior by design.
+- *Unchanged invariants:* =jtml-production='s shape, the cumulative caps [20000, 25000,
+  30000, 35000], the four lineage invariants (group-once dilation, per-repeat re-seed,
+  asymmetric z-leaf, frame-to-frame seed chaining), the Sym_Trap =[{Leaf, repeat=0}]=
+  script, the domain layer's zero-CUDA contract, and the reserved stub graph names.
+
+--------------
+
+** Risks & Dependencies
+:PROPERTIES:
+:CUSTOM_ID: risks-dependencies
+:END:
+| Risk                                                                                                                | Mitigation                                                                                                                                                                                                                                                                                                     |
+|---------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Split-rule divergence (repo Z vs study X on first branch/leaf split) changes variant behavior on anisotropic stages | The divergence is quantified (synthesis Finding 10), pinned by U4's anisotropic probe, and scored by U8's ANISOTROPIC battery tier (production ranges over the analytic problems --- the DIRECTGOLib unit-box set alone cannot score it); the rule ships only inside the new graph, never in =jtml-production= |
+| gb docs-vs-code contradiction (DIRECTGO inverts two papers)                                                         | Canonical semantics are the registered default; the inverted form is an explicit battery arm; the manifest records which semantics scored (AE3)                                                                                                                                                                |
+| GLh surrogate drift from the paper                                                                                  | Formula verified from Eqs. 3--6 in Round 3; the paper's own anchors (5/67, 100/100 Emmental) are recorded for the follow-up validation round; production's DIRECT_DILATION cannot trigger the surrogate at all                                                                                                 |
+| Capacity clamp silently dropping work                                                                               | P3 invariant: never below the exact grid (no grid-stride kernels exist); SAFE_CAP overflow keeps the existing synchronous fallback; U10's bit-identity diff is the proof                                                                                                                                       |
+| Batch bookkeeping drift (calls/callback order)                                                                      | Replay-ordered contract + Tier-0 replay test as the executable spec (U11); wrong-size batch results fail fast                                                                                                                                                                                                  |
+| N-bank memory growth on smaller GPUs                                                                                | N is capacity-derived, clamped to =N_MAX=, floored at 1; N=1 allocates nothing new                                                                                                                                                                                                                             |
+| Legacy default-stream implicit synchronization silently serializes the N banks                                      | U12 mandates stream-explicit variants for every cost-path CUDA call (=cudaMemsetAsync=, stream-parameterized CUB scan, =cudaMemcpyAsync= + pinned); a grep-gate test asserts zero default-stream launches/copies in the bank path; the bit-identity diff doubles as the canary                                 |
+| Shared per-eval-written buffers race under N-way concurrency (bit-identity gate)                                    | U12's bank construction is driven by the per-bank write-set enumeration (read-only buffers explicitly shared, everything written per eval duplicated) + the ≥3× multi-bank determinism stress test                                                                                                             |
+| Runner wiring divergence if a variant branch ever copies =RunDirectStage='s body                                    | U6's shape forbids it by construction (one runner, an =Options= parameter); if a copy branch is ever introduced, the callback/meter wiring must be pinned by a shared private helper, never inline-copied                                                                                                      |
+| Battery runtime cost (22 problems × arms × budgets)                                                                 | CI-reduced profile per-PR, full battery nightly --- the ablation-runner doctrine; problems are analytic (zero GPU cost)                                                                                                                                                                                        |
+| Premature promotion of the variant                                                                                  | Standing rule in U8: promotion requires battery dominance + staged basin-capture + oracle IoU ≥ 0.85, recorded as an owner decision; the default never switches automatically                                                                                                                                  |
+| Plan 009 not yet executed (named-graph consumption)                                                                 | Scoring does not need it (battery drives the graph headlessly); production consumption is an explicit deferred dependency                                                                                                                                                                                      |
+| Cut-0 verdict missing when U12 is ready                                                                             | U12 carries the external dependency explicitly; if the sync-bound model is falsified (GPU-active > 1 ms), U12's premise is re-reviewed, not executed blindly                                                                                                                                                   |
+
+--------------
+
+** Documentation / Operational Notes
+:PROPERTIES:
+:CUSTOM_ID: documentation-operational-notes
+:END:
+- =docs/optimizer-stage-graphs.md= gains the =jtml-gl-gb= recipe, the per-stage =options=
+  slot documentation, and the "candidate, scored, not default" status note (U7).
+- The battery protocol + result table lives in a new
+  =docs/optimizer-battery.md= (U8) --- it is the promotion gate's
+  decision record.
+- A =docs/solutions/= entry lands if execution surfaces a new convention
+  (e.g., the capacity-launch fallback pattern or a replay-bookkeeping
+  gotcha) --- per the repo's compound-doc convention.
+- The handoff doc (=docs/handoff-2026-08-12-optimizer-path.md=) gets its
+  workstream statuses updated as units complete.
+- Every unit is one logical jj change
+  (=jj describe -m "..." && jj new=); a gated unit that fails its gate
+  is abandoned in the same jj change (R13 revert rule).
+
+--------------
+
+** Sources & References
+:PROPERTIES:
+:CUSTOM_ID: sources-references
+:END:
+- *Origin document:*
+  [[file:docs/brainstorms/2026-08-12-optimizer-path-requirements.md]]
+- *Research grounding:* =.panoptes/optimizer-deep-dive/synthesis.org=
+  (Findings 3, 5, 9, 10, 13; execution path steps 6--7) +
+  =.panoptes/optimizer-deep-dive/angles/01-direct-variants.org= +
+  =.panoptes/optimizer-deep-dive/angles/05-compute-perf.org= +
+  =.panoptes/optimizer-deep-dive/angles/04-backend-architecture.org=
+  (R2-4 seam contract, R2-6 Options cut)
+- *Related plans:*
+  [[file:docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md]]
+  (U8's stub promise this plan fulfills),
+  [[file:docs/plans/2026-08-12-009-feat-stage-graph-selection-plan.md]]
+  (named-graph consumption dependency)
+- *Guide:* [[file:docs/optimizer-stage-graphs.md]]
+- Related code: =include/domain/direct_optimizer.h=,
+  =include/coordinator/optimizer_stage_script.h=,
+  =src/coordinator/optimizer_manager.cpp= (=RunDirectStage= /
+  =BuildGpuCostAdapter=), =include/compute/cuda_launch_parameters.h=,
+  =include/compute/launch_config.cuh=
+- Papers (via Zotero corpus, distilled in the angle files): Stripinis & Paulavičius 2022
+  (arXiv:2109.14912); Stripinis & Paulavičius 2021 (DIRECT-GLh, DOI
+  10.1007/s11590-021-01726-z); Jones, Perttunen & Stuckman 1993 (JOTA 79); Gablonsky &
+  Kelley 2001 (JOG 21); Paulavičius et al. 2014 (Gb-DISIMPL, JOG 59); Mathematics 2022,
+  10, 3760

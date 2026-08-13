@@ -1,0 +1,412 @@
+#+TITLE: JTML Re-Framing: A Wide Menu of Architecture Options
+#+DATE: 2026-08-13
+#+PANOPTES_ANGLE: 07-jtml-reframing
+
+* Summary
+
+Read as a principal engineer doing an architecture assessment: JTML's current layering is better-grounded than the "no authoritative reference" feeling suggests — it embodies functional-core, ports-and-adapters, and characterization-testing patterns *by accident of being testability-driven* — but it is vocabulary-orphaned (plan 003's External References section is empty), data-flow-blind (no explicit map of what crosses each boundary), and the words it chose (domain/services/coordinator) collide with loaded architecture vocabulary. This report offers a wide menu of **19 named re-framing options across 6 families** (keep-and-justify, re-layer, data-shaped, language-driven, ecosystem-native, hybrid), each with what changes, what stays, what breaks (R15/R12 exposure), cost/benefit, and its external evidence base. Per the assignment, this is a menu, **not a recommendation** — the menu-at-a-glance table at the end is the decision surface. Sibling angles 01–06 are still in flight; each option notes where their findings would strengthen the evidence base.
+
+* Current-Shape Assessment
+
+** What works — the case for the status quo (challenging belief (a))
+
+The current shape is *not* without authority; it converges on published architecture patterns from the testability direction:
+
+- **The injected-cost seam is an output port.** `DirectOptimizer` takes a `std::function<double(const double*)>` cost — that is literally a ports-and-adapters "port" (adapter = `jtml_compute`). The headless suite plugs a fake cost in and runs the whole optimizer — the port is already load-bearing. [Source: local-recon.org (recon of this run), docs/plans/2026-08-07-003-refactor-layered-directory-restructure-plan.md] — Confidence: high
+- **`jtml_domain` is a provable functional core.** Nine files grep-gated to zero `QObject|vtk|cuda|torch|opencv` — a pure value-and-function surface with a planned Rust FFI boundary. Gary Bernhardt's "Boundaries" thesis is exactly "use simple values as boundaries between components" (https://www.destroyallsoftware.com/talks/boundaries). The repo's purity gate is a machine-checked instantiation of that. — Confidence: high
+- **Per-cut gates + R15 are the discipline external literature recommends for restructuring.** Behavior-preserving relocation verified by oracle + headless + manual-visual gates is the "characterization test before refactor" doctrine (Michael Feathers: https://michaelfeathers.silvrback.com/characterization-testing) applied as a team-wide norm — the oracle (IoU-gated golden master) is a characterization artifact. — Confidence: high
+- **The dependency graph is downward-only and acyclic** (`domain ← services ← coordinator ← view ← app`, `compute` standalone) — that is the Clean Architecture Dependency Rule in miniature (https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), even though it was derived from CMake link hygiene, not from the essay. — Confidence: high
+- **R12 is doing real anti-premature-abstraction work** — no interface layer exists today; the seams that exist (injected cost, headless coordinator, stage-graph registry) were all built because a test or a feature needed them. That is the empirical sequence the literature recommends (abstraction after evidence), not the speculative one it warns about (https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-raii aside; see Fowler on refactoring discipline). — Confidence: medium (inference from plan docs)
+
+** What is genuinely suspect — where belief (b) is right
+
+- **No external grounding was ever consulted** — plan 003's "External References: None required" for the naming that shapes every file path ([plan 003, External References section](docs/plans/2026-08-07-003-refactor-layered-directory-restructure-plan.md)). The *behavior* is grounded; the *vocabulary* is not. — Confidence: high
+- **The names collide with loaded vocabulary.** "services" (DDD Service Layer vs application services vs microservices — https://martinfowler.com/eaaCatalog/serviceLayer.html), "domain" (DDD rich domain model — which JTML's deliberately-anemic algorithm surface is *not*, per Fowler's critique: https://martinfowler.com/bliki/AnemicDomainModel.html), "coordinator" (MVVM coordinator vs orchestrator). A reader maps the names onto the wrong literature. — Confidence: high
+- **Layers were derived from build/test seams, not data flow.** The flow UI → coordinator → optimizer → GPU cost → render is implicit; no doc maps which structs cross which boundary (this run's local-recon lists "no explicit data-flow map" as a gap). Layer placement and data movement are two different axes that have never been checked against each other. — Confidence: high
+- **Hot-spot gravity:** `optimizer_manager.cpp` ~1,700 lines interleaves algorithm policy (stage sequence, budgets, dilation) with session/GPU state and signal emission ([plan 008 problem frame](docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md)); `mainscreen.cpp` ~5,115 lines is View + composition-adjacent code (local-recon). The layer *names* imply separation the files don't fully honor. — Confidence: high
+- **Compute metrics mutate the rendered image in place** — composition works only by mutation ordering (prior-run finding: `.panoptes/optimizer-deep-dive/synthesis.org`, angle 05). That is an implicit data-flow contract that the architecture docs never state. — Confidence: high
+- **"services" layer character drifted:** since plan 004 U8 the services layer links GPU/torch — its name says "headless service", its reality is "GPU-adjacent support" (local-recon). The boundary semantics need either a rename or a documented intent. — Confidence: medium
+
+** MVVM is CRUD-tuned? — the strongest arguments both ways (belief (c))
+
+- For the belief (MVVM is form/data-binding machinery): The pattern's mechanism is per-field property notification and command binding. Martin Fowler's Presentation Model (which MVVM renamed) is explicit: the view "synchronizes its state with Presentation Model frequently," "field or key synchronization" (https://martinfowler.com/eaaDev/PresentationModel.html). Microsoft's own framing: "The view model implements properties and commands to which the view can data bind to, and notifies the view of any state changes through change notification events" (https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm). Wikipedia's MVVM article records the known limits: "overkill for simple user interfaces," upfront generalization is hard, and large-scale data binding degrades performance (https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel). A 3D viewport's state is not fields — it is GPU buffers, camera, interactor state, render timing — precisely what binding machinery was not built for. — Confidence: high
+- Against the belief (MVVM has a real role here): MVVM's testability argument is the strong one — Josh Smith's canonical case is decoupling presentation logic from the view for testability and designer/developer parallelism (https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern). JTML's *actual* MVVM surface — `SettingsBridge`, the stage-graph selection VM (`stageGraphs`/`stageGraphIndex` per plan 009), `FrameListModel`/`ModelListModel` QAbstractListModel view-models — is exactly the form-like, stateful, testable territory MVVM/PM was designed for, and the fake-bridge tests already harvest that value. The error in "MVVM is CRUD-tuned" is treating the whole app as an MVVM problem: the compute core is a *pipeline* problem (VTK/CUDA-shaped), while the settings/state/UI surface is a *binding* problem (MVVM-shaped). The two have different native framings — that split, made explicit, is itself one of the options below. — Confidence: high
+- Net: the belief is half-right and half-misapplied; the critique's strongest form is "MVVM names the wrong layer for the compute path," not "MVVM is useless here." — Confidence: high
+
+* The Wide Menu
+
+The menu spans six families. Every option states: rationale / changes / stays / breaks (R15/R12 exposure) / cost-benefit / evidence anchor. No recommendation is made; the menu-at-a-glance table is the decision surface.
+
+** Family A — Keep-and-justify
+
+*** A1. Status Quo, Now Authoritative (document-and-adopt)
+- Rationale: The cheapest way to "reference something authoritative" is to make the *existing* shape authoritative: map each layer and seam to the external framework it already instantiates (dependency rule, ports, functional core, characterization testing), fill plan 003's empty External References, and write the compound learning into docs/solutions/. This converts "fine that it works" into "demonstrably grounded" without moving a file.
+- Changes in JTML: docs only — an architecture ADR/compound learning mapping domain→functional core, injected cost→port, coordinator→use-case orchestration, services→application-layer support, compute→adapter+pipeline, view→Qt model/view; plus a boundary-contract table (see Data-Shaped Sketch). Optionally one grep-guard per claimed property so the claims stay machine-checked.
+- Stays: every lib, dir, seam, test, gate.
+- Breaks: nothing — R15 trivially preserved; R12 untouched (no new abstractions).
+- Cost/Benefit: XS cost (days of writing); benefit is the requested "authoritative reference" plus a map for future reviewers; zero regression surface.
+- Evidence: Clean Architecture dependency rule (https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), Bernhardt boundaries (https://www.destroyallsoftware.com/talks/boundaries), Feathers characterization testing (https://michaelfeathers.silvrback.com/characterization-testing). Strengthened by angle 01 (literature map) — the authoritative mapping table is exactly its deliverable.
+
+*** A2. Naming Alignment (rename into authoritative vocabulary)
+- Rationale: The five lib names are the only thing with no external backing. Rename into vocabulary that reads correctly against the literature: e.g., `services` → `application` (Evans/application layer) or `infrastructure`; `coordinator` → `use_cases` or keep `coordinator` but document it as orchestrator; `domain` stays (it is the value surface). A reader should be able to open the repo and map names onto sources.
+- Changes in JTML: directory renames + include re-pointing (the exact-string scripted rewrite precedent from plan 003 conventions), CMake target names, packaging `install(TARGETS ...)`, `golden_oracle.org` path refs, AGENTS.md + docs sweep; note `jtml_view`'s AUTOUIC PUBLIC include dir bakes the target name ([plan 003 conventions](docs/solutions/conventions/jtml-layered-lib-split-2026-08-08.md)).
+- Stays: the dependency graph, lib count, test suite, all gates.
+- Breaks: mechanical R15 exposure (every include site is a compile-checked rename — the zero-prefix grep guards make misses loud); R12 low. Real cost: docs churn and the baked-in target name.
+- Cost/Benefit: S–M cost, one-time; benefit is vocabulary that links to literature instead of colliding with it.
+- Evidence: Fowler Service Layer catalog (https://martinfowler.com/eaaCatalog/serviceLayer.html), Evans DDD layer naming (book; see angle 01 for the map). Strengthened by angle 01.
+
+** Family B — Re-layer
+
+*** B1. Clean Circles (align to Clean Architecture's four rings)
+- Rationale: The current shape already approximates the rings: domain = entities (pure), coordinator's intent controller + stage policy = use cases, viewmodels/pose_file_io/SettingsBridge = interface adapters, Qt/VTK/CUDA/view = frameworks. Aligning explicitly means *naming* the rings in the directory structure and adding boundary interfaces only where control actually inverts (the cost port already exists; a progress port and a persistence port are the other two real ones).
+- Changes in JTML: introduce `use_cases/` for OptimizeIntentController + stage-policy code (pulling the policy out of optimizer_manager toward it — plan 008 is already the vehicle); rename nothing else; formalize cost/progress/persistence as thin interfaces in domain.
+- Stays: lib split, gates, kernels.
+- Breaks: R12 risk is the real one — Clean Architecture's boundary interfaces, taken literally, means inventing interfaces for their own sake; R15 risk only if optimizer_manager is restructured before pins land (it is the 1,700-line hot spot). Cost M.
+- Cost/Benefit: M cost; benefit = a universally recognizable map (the most-cited architecture essay in the field) for the part of the system that is genuinely policy-shaped.
+- Evidence: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html (verified: "simple data structures passed across the boundaries"). Strengthened by angle 01 and angle 02 (critique — this family is where over-abstraction risk is documented).
+
+*** B2. Hexagonal Hinge (ports & adapters, made explicit)
+- Rationale: JTML is *already hexagonal in embryo*: the injected cost is an output port, the headless coordinator is the test adapter, the oracle is a second adapter on the same port. The option: enumerate the six real ports (Cost, StageGraphRepository, Settings, PosePersistence, Render, Progress), name them in domain, and keep every existing adapter where it is.
+- Changes in JTML: ~4–6 thin abstract interfaces in domain (each wrapping an existing seam, not inventing a new one); adapters stay in compute/services/view; no directory move beyond interface files.
+- Stays: everything else, including libs and gates.
+- Breaks: R12 exposure is bounded *if* each interface wraps an existing seam (the anti-R12 failure is interfaces with a single implementation and no consumer); R15 safe (thin wrappers).
+- Cost/Benefit: S–M; benefit = the app becomes readable as a canonical ports-and-adapters diagram, which is the most testable framing the literature offers for exactly this shape of app.
+- Evidence: Hexagonal architecture (https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)); Cockburn's original essay is the canonical primary source but its site failed to fetch for this report (see What Could Not Be Verified). Strengthened by angle 01.
+
+*** B3. DDD Layers (Evans vocabulary, honestly anemic)
+- Rationale: Adopt Evans' layer names (domain model / application / infrastructure / interface) with the honest caveat that JTML's domain is a *value-and-algorithm surface*, not a rich DDD domain model — Fowler's anemic-domain-model critique cuts exactly here (services carrying all behavior over bags of data). If the user wants DDD vocabulary, the option is to take the vocabulary while documenting that JTML deliberately chooses the anemic shape because the domain is math, not stateful entities (and Rust interop demands plain data).
+- Changes in JTML: renames per DDD (services→infrastructure, coordinator→application), plus a decision record explaining why the domain stays "anemic" by design.
+- Stays: code semantics.
+- Breaks: same mechanical rename exposure as A2 plus the semantic commitment — a reader will expect rich domain models and find none; the ADR must pre-empt that.
+- Cost/Benefit: S–M; benefit = vocabulary that has a book behind it; cost = the mismatch must be documented or it misleads.
+- Evidence: https://martinfowler.com/bliki/AnemicDomainModel.html (the critique, quoted), https://martinfowler.com/eaaCatalog/serviceLayer.html. Strengthened by angle 02 and angle 03.
+
+** Family C — Data-shaped
+
+*** C1. Flow Map First (document the data flow, change nothing yet)
+- Rationale: The user said the framing they *want* is "the way the data is shaped, how that gets passed around, the objects/structs." That map does not exist. Producing it is itself the first re-framing move, and every other data-shaped option needs it to sequence against. Deliverable: one doc (docs/architecture/data-flow.md) with the boundary-contract table below (which structs cross which boundary, who owns them, what never crosses), plus a "hot path" section for the ~7k evals/s loop.
+- Changes in JTML: docs + a small number of `static_assert`/compile-time audits (e.g., no raw device pointers outside compute includes) if desired.
+- Stays: all code.
+- Breaks: none. R15/R12 trivially safe.
+- Cost/Benefit: S; benefit = the missing foundation for C2–C5 and for every future reviewer; it is the single cheapest option that directly answers the user's stated desire.
+- Evidence: Bernhardt (values at boundaries — https://www.destroyallsoftware.com/talks/boundaries); Clean Architecture's boundary-data rule (https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html). Strengthened by angle 03 (data-centric design survey — the map should use its vocabulary).
+
+*** C2. Value Contracts (typed value objects at every boundary)
+- Rationale: Give the flow a small set of immutable value types — Pose6D, StageSpec/StageScript (already exists per plan 008), RunPayload (already passed by value via OptimizerRunLaunch), CostSample (variant, components, total, eval serial), EvalRequest/EvalResult, StateEvent — and forbid anything else from crossing a lib boundary. Concretely this means the compute metrics become pure functions over scratch buffers (killing the in-place mutation ordering), and the optimizer exchanges values, not handles.
+- Changes in JTML: compute metric signatures (behavior-preserving: pin-first, then scratch-buffer version, oracle-verified); coordinator already moves payloads by value; view consumes StateEvent values instead of poking coordinator state.
+- Stays: libs, gates, kernels.
+- Breaks: R15 exposure is the metric purity refactor (the highest-risk single item — the in-place mutation is load-bearing); sequence behind pins + the oracle; R12 low.
+- Cost/Benefit: M; benefit = every boundary becomes inspectable, mockable, and cacheable (a pure cost enables caching/CPU fallback — prior-run angle 05 called the scratch buffer "unblocks caching, reuse, and CPU fallback").
+- Evidence: Bernhardt boundaries (https://www.destroyallsoftware.com/talks/boundaries), Clean Architecture boundary data (https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), Fowler Value Object (https://martinfowler.com/eaaCatalog/valueObject.html). Strengthened by angle 03 and angle 05.
+
+*** C3. Cache-Shaped Optimizer (data-oriented design of the hot loop)
+- Rationale: The DIRECT hot loop already uses column-sorted storage (`direct_data_storage` — structurally a struct-of-arrays). DOD would make that explicit and extend it: hot/cold split of per-stage state, batch eval state as contiguous arrays, zero per-eval allocations, and document the layout as architecture rather than accident. This is the "organize data so what you process is adjacent in memory" pattern — relevant at 7k evals/s where each eval is sync-bound (prior-run angle 05) and cache misses in the DIRECT bookkeeping add real latency.
+- Changes in JTML: storage internals in domain (layout reorg only, behavior-identical arithmetic), compute already hoists allocations; add a layout doc.
+- Stays: all seams and APIs.
+- Breaks: R15 exposure is subtle — float *order* changes can shift DIRECT's discrete trisection decisions; must be pinned by oracle + baseline tolerance before/after; R12 low.
+- Cost/Benefit: S–M; benefit = faster evals/s on the existing hardware without touching kernel math, plus a documented layout that future algorithm work respects.
+- Evidence: Fabian, Data-Oriented Design (https://www.dataorienteddesign.com/dodbook/), Nystrom data locality incl. hot/cold splitting (https://gameprogrammingpatterns.com/data-locality.html). Strengthened by angle 03 and angle 05 (measurement — per-eval sync cost is the dominant term, so the DOD payoff is bounded by it).
+
+*** C4. Pipeline of Filters (VTK-style demand-driven stages)
+- Rationale: The registration is naturally a dataflow pipeline: Load study → Segment → Estimate initial pose → Render silhouette/DRR → Compute cost → Optimize stage → Emit pose. VTK's canonical architecture is exactly this — algorithms as filters over typed data with lazy, dirty-flag execution (MTime/Modified), which is why scientific imaging apps are pipeline-shaped. Plan 008 already made the *run shape* data (StageScript); this option extends the same principle to the *compute path*: each stage a filter with declared inputs/outputs, the Optimize() loop a pipeline executor.
+- Changes in JTML: the stage-graph container (plan 008/009) becomes the production executor (it is currently validated but "not consumed by the production run" per plan 009); Optimize()'s interleaved session/GPU/signal code is factored into stage functions with explicit data objects between them.
+- Stays: kernels, cost variants, IoU gates, budgets.
+- Breaks: R15 risk is the highest in the menu — this restructures the 1,700-line hot spot; must land behind the multi-stage oracle pins (prior-run angle 06 recommendation) and plan 008's bit-identical PoC discipline; R12 medium (stage abstraction must not outrun need).
+- Cost/Benefit: M–L; benefit = the stage-graph selection feature (plan 009) becomes naturally expressible, biplane/tiered-dilation/polish shapes become data (plan 008 R5), and the shape matches the ecosystem's mental model (VTK, FBP).
+- Evidence: AOSA VTK chapter (Geveci & Schroeder — https://aosabook.org/en/v1/vtk.html), vtkAlgorithm execution model (https://vtk.org/doc/nightly/html/classvtkAlgorithm.html), flow-based programming (https://jpaulm.github.io/fbp/). Strengthened by angle 05 (stack-native) and angle 06 (case studies — ParaView/3D Slicer are pipeline-shaped).
+
+*** C5. CUDA-Graph Cost (one captured graph per evaluation)
+- Rationale: The per-eval GPU work is ~15 kernel launches + ~5 synchronous D2H copies; NVIDIA's own data show launch overhead is the tax (2.9μs kernel vs 9.6μs observed per launch, falling to 3.4μs with a captured graph — https://developer.nvidia.com/blog/cuda-graphs/). A captured, instantiated CUDA Graph turns the whole eval into one launch; the two host-decided launch sizes in Render() become device-side upper bounds (prior-run angle 05 rec 2 called this "the single highest-leverage kernel-level change").
+- Changes in JTML: compute layer internals only: capture once per stage-config, instantiate once, relaunch per eval; remove per-eval D2H syncs where they exist only for host bookkeeping.
+- Stays: kernels, host cost assembly, the injected-cost port, all seams.
+- Breaks: R15 exposure on the render path (pin via oracle + `ctest -L render` before/after); R12 low; CUDA-Graph capture has constraints (no host feedback mid-graph) that the scratch-buffer purity of C2 makes tractable — C5 pairs naturally with C2.
+- Cost/Benefit: M; benefit = the largest concrete per-eval latency win available on this stack, and the eval loop becomes a single stream-ordered op — which is also the *data shape* the stage graph (plan 008) can express.
+- Evidence: NVIDIA CUDA Graphs (https://developer.nvidia.com/blog/cuda-graphs/), CUDA C++ Programming Guide streams/graphs (https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#streams). Strengthened by angle 05 (compute-perf measurement first: nvtx/Nsight before and after).
+
+*** C6. Stream-Ordered Eval Loop (overlap without graphs)
+- Rationale: If CUDA Graphs prove too constraining, the same direction with less machinery: run the eval loop stream-ordered — launch eval N+1's kernels on a stream while eval N's D2H drain completes — with a small bounded lookahead, keeping the worker-thread model and host meters. Determinism is preserved (int-atomic reductions are order-independent per prior-run angle 05; stream ordering is defined).
+- Changes in JTML: compute per-eval API gains stream/event handles; the coordinator loop becomes a two-phase (enqueue/drain) loop.
+- Stays: everything else.
+- Breaks: R15 medium (concurrency surface, but same values), R12 low.
+- Cost/Benefit: M; benefit = hides the ~5 D2H round-trips behind compute without kernel changes; a fallback/complement to C5.
+- Evidence: CUDA C++ Programming Guide, streams section (https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#streams). Strengthened by angle 05.
+
+*** C7. Typed Event Flow (the UI boundary speaks events, not calls)
+- Rationale: The view currently calls into coordinator state and receives coarse signals. Make the boundary an explicit typed event stream — RunStarted{stageGraph}, StageStarted{spec}, EvalCompleted{serial, cost, components}, BestPoseUpdated, RunCompleted{pose, IoU, stats} — so the view and meters are pure projections of a stream, and the coordinator's state machine is the only writer. This is the Qt-native version of "the flow, made data" and directly enables the honest meters (the current ms/call meter divides CPU clock() by count — prior-run angle 05 — which structurally excludes GPU time).
+- Changes in JTML: coordinator emits richer typed signals; view/meters subscribe; SettingsBridge-style VMs already give the pattern (plan 009's `stageGraphs`/`stageGraphIndex`).
+- Stays: coordinator state machine, optimizer, compute.
+- Breaks: R15 medium (UI behavior — manual-visual gate + QML widget parity tests); R12 low.
+- Cost/Benefit: S–M; benefit = testable UI logic, honest meters, and the event log doubles as the debugging trace (the repo already has trace-driven-debugging learnings: docs/solutions/ui-bugs/jtml-qml-trace-driven-debugging-2026-08-12.md).
+- Evidence: Qt signals/slots as the native decoupling mechanism (https://doc.qt.io/qt-6/model-view-programming.html), flow-based programming (https://jpaulm.github.io/fbp/). Strengthened by angle 05 (stack-native) and angle 06.
+
+** Family D — Language-driven
+
+*** D1. Pure Core / Imperative Shell, made explicit
+- Rationale: JTML already has the FCIS shape (pure domain + imperative shell of Qt/GPU/files). Making it explicit: the coordinator's Idle→Running→Idle state machine becomes a pure step function `(State, Event) -> (State, Effects)` in domain, and the QObject shell applies the effects (GPU launches, file writes, signal emissions). This is the highest-value *behavioral* change for testability: every transition becomes a headless assertion, and the 1,700-line manager's policy moves where the tests already live.
+- Changes in JTML: OptimizeCoordinator refactored to a pure transition core + thin effect shell; optimizer_manager stage policy migrates behind plan 008's StageScript anyway; tests move from QtTest-observed to pure-function asserts (plus a thin shell test).
+- Stays: libs, seams, gates, kernels.
+- Breaks: R15 medium-high — the machine is live in production; sequence behind pins and the multi-stage oracle; R12 low.
+- Cost/Benefit: M; benefit = the largest testability win per unit of restructure, and it is exactly the shape the planned Rust interop wants (pure core callable from either language).
+- Evidence: Bernhardt "Boundaries" (https://www.destroyallsoftware.com/talks/boundaries). Strengthened by angle 04 (language affordances — functional core in C++20 and/or Rust) and angle 02.
+
+*** D2. Rust Interop Surface (cxx on the 9 pure files)
+- Rationale: The domain purity gate exists *for* a Rust boundary. This option realizes it: generate cxx bindings over the 9 pure files (Pose6D, DirectOptimizer, StageScript machinery), keep the C++ shell as-is, and give new algorithm work (DIRECT variants, cost-math experiments) a Rust home behind the same value types. The FFI is the "data-shaped" boundary par excellence — only plain data crosses it, by construction.
+- Changes in JTML: build system (cxx bridge + pixi/cargo integration), domain headers annotated with cxx, new algorithm code optionally in Rust; the interop surface becomes the documented contract for what may cross out of domain.
+- Stays: everything outside domain, all seams.
+- Breaks: R12 if Rust arrives before a concrete algorithm need; build fragility (hegel already network-at-configure; cxx adds toolchain coupling to a pixi-only build); R15 safe (pure surface, additive).
+- Cost/Benefit: M–L; benefit = the FFI surface the layout was designed for, plus a second language for experiments without contaminating the C++ core.
+- Evidence: cxx — safe interop between Rust and C++ (https://cxx.rs/). Strengthened by angle 04 (language affordances survey — including whether Rust earns its place for this workload).
+
+** Family E — Ecosystem-native
+
+*** E1. Qt Data Layer (model/view first-class)
+- Rationale: Qt's native "authoritative shape" for data on screen is Model/View — `QAbstractItemModel` roles, delegates, proxy models — and JTML already has two view-models (FrameListModel, ModelListModel) plus a VM layer (SettingsBridge). Making it first-class: the model classes become *the* canonical interface between view and state; `mainscreen.cpp` (5,115 lines) shrinks to thin projection; the QML experiment shares the same models for free (QAbstractListModel is the QML-native interface — prior-run angle 04).
+- Changes in JTML: view/VM layer only; list models gain the roles the view needs; SettingsBridge/VM surface (plan 009) completes; no change below view.
+- Stays: all layers below view, gates.
+- Breaks: R15 medium (view behavior — manual-visual + widget/QML parity tests); R12 low.
+- Cost/Benefit: M; benefit = the UI layer finally expresses the ecosystem's pattern instead of a bespoke 5k-line View, and it is the cheapest way to keep both frontends alive.
+- Evidence: Qt Model/View Programming (https://doc.qt.io/qt-6/model-view-programming.html — including the convenience classes and proxy-model machinery), Fowler Presentation Model (https://martinfowler.com/eaaDev/PresentationModel.html). Strengthened by angle 05 (stack-native guidance) and angle 02 (MVVM critique).
+
+*** E2. VTK-Native Render Path (render + cost as VTK algorithms/data)
+- Rationale: The app renders STL implants and DRRs inside a QVTK window but the render/cost engine is hand-written CUDA outside VTK's pipeline. This option wraps the engine in the ecosystem's shape: implants as vtkPolyData, DRR as vtkImageData, the render engine as a vtkAlgorithm subclass with proper MTime/Modified semantics — so VTK's demand-driven execution, caching, and tooling (vtkCamera, vtkRenderWindow, Doxygen ecosystem) apply; it also forces consolidation of the stl_reader/STLReader duplicate flagged in plan 003.
+- Changes in JTML: compute/render internals + services model loading; the CUDA kernels stay but are invoked from a vtkAlgorithm; camera/calibration move to vtkCamera/vtkMatrix4x4 (careful — calibration is a deferred purity decouple).
+- Stays: kernels, cost variants, host loop.
+- Breaks: R15 medium-high on the render path (oracle + render-regression gates are the pins); R12 medium (VTK object graph is a heavyweight abstraction — "no premature abstraction" argues for doing this only when VTK tooling is actually consumed); CUDA-in-VTK glue is real work (compute owns CUDA by convention — the seam must stay).
+- Cost/Benefit: M–L; benefit = the view/render path becomes ecosystem-standard, which matters if VTK-based visualization features (measurements, DICOM, annotations) are on the roadmap.
+- Evidence: AOSA VTK chapter (https://aosabook.org/en/v1/vtk.html), vtkAlgorithm (https://vtk.org/doc/nightly/html/classvtkAlgorithm.html), ParaView docs (https://www.paraview.org/Wiki/ParaView_Architecture_Overview). Strengthened by angle 05 and angle 06 (how ParaView/3D Slicer actually wire CUDA/rendering).
+
+*** E3. QML Decision Record (record the NO-GO; keep widgets)
+- Rationale: The prior research run's angle 04 verdict was QML = NO-GO now (a plan-005-scale rewrite whose payoff is styling; QWidgets-first ecosystem; QQuickVTKItem render-thread ownership rework). The re-framing option is to *convert the "QML-swappable later" comment into a dated decision record* with the evidence attached, and keep the experimental QML app as a bounded sandbox (Path B: QQuickWidget islands if ever needed).
+- Changes in JTML: docs (one compound-learning decision record); no code.
+- Stays: everything.
+- Breaks: nothing.
+- Cost/Benefit: XS; benefit = the architecture story no longer carries an implied future that the evidence rejects.
+- Evidence: QQuickVTKItem class docs (https://vtk.org/doc/nightly/html/classQQuickVTKItem.html — "All VTK objects are owned by and run on the QML render thread" per prior-run angle 04 source read), Qt Quick overview (https://doc.qt.io/qt-6/qtquick-index.html). Strengthened by angle 05.
+
+** Family F — Hybrid / composite
+
+*** F1. Two-Track Composite (data-shaped core + ecosystem shells)
+- Rationale: The menu's highest-coherence composite: a value-contract core (C2) with the run shape as data (C4/plan 008), the eval loop as a CUDA Graph (C5) or stream-ordered (C6), the UI as Qt Model/View + VMs (E1), and the pure core as the Rust surface (D2). Each family's option is chosen where its native shape is strongest; the composite is sequenced as independent cuts so R15 stays per-cut.
+- Changes in JTML: all of the above, in sequenced cuts with pins and oracle gates between them.
+- Stays: kernels, cost variants, budgets, the five libs (as the *enforcement* structure even if some are renamed).
+- Breaks: full sequencing risk — the cuts interact (C5 needs C2's scratch purity; C4 needs plan 008's executor); R15/R12 discipline per cut is the entire risk posture.
+- Cost/Benefit: L; benefit = a shape where every layer maps to an external framework AND to the data flow; the "reference something authoritative" goal achieved structurally, not just documentally.
+- Evidence: composite of the above; strengthened by all six sibling angles.
+
+*** F2. Vertical Slices (feature packages instead of horizontal layers)
+- Rationale: The counter-shape: organize by feature (segmentation, registration, visualization, study management), each slice owning its data and seams, with the horizontal libs demoted to enforcement. This is the "shape follows features" school (Jimmy Bogard's vertical-slice architecture). For a *medical-registration* app whose only real feature is registration plus a settings/study UI, the honest analysis is that vertical slicing buys little — there is one compute pipeline, not many; VTK/ParaView (the closest peers) are horizontal/pipeline-shaped, not sliced.
+- Changes in JTML: large directory churn reorganizing by feature; CMake and grep guards redone; the five libs become internal enforcement.
+- Stays: kernels, tests (re-pointed).
+- Breaks: the highest churn-to-benefit ratio in the menu; R15 is mechanically safe but the effort is large; R12 risk medium (forced seams where none are needed). Included for completeness and because the user asked for WIDE — but its evidence base (vertical-slice success stories are CRUD/web-centric) is the weakest for this app class.
+- Cost/Benefit: L cost, low expected benefit for a single-pipeline compute app; the peer evidence points the other way.
+- Evidence: Bogard, Vertical Slice Architecture (https://jimmybogard.com/vertical-slice-architecture/); counter-evidence: AOSA VTK (pipeline-horizontal, https://aosabook.org/en/v1/vtk.html). Strengthened by angle 06 (case studies — whether any compute-heavy desktop app actually slices vertically).
+
+*** F3. Shape-Follows-Seams ADR (docs-only, seams-as-architecture)
+- Rationale: The most conservative composite: accept that JTML's shape *is* its seams (injected cost, headless coordinator, stage-graph registry, SettingsBridge, pose_file_io, per-cut gates), and publish that as the architecture: an ADR whose thesis is "structure follows testability seams and behavior gates," with each seam mapped to its external counterpart. This is the "make the accident deliberate" move — distinct from A1 in that it *asserts* a theory of architecture (seams-first) rather than merely documenting the status quo.
+- Changes in JTML: docs (ADR + compound learning) + a seam inventory with ownership (which seams are frozen, which are open for change).
+- Stays: everything.
+- Breaks: nothing.
+- Cost/Benefit: XS–S; benefit = the repo's architecture story becomes a defensible position (there is real literature for seams-as-structure: Feathers' legacy-code seams, DI composition), not an accident.
+- Evidence: Feathers characterization testing (https://michaelfeathers.silvrback.com/characterization-testing); the composition-root concept (thin app/main.cpp already plays it — Seemann & van Deursen, *Dependency Injection* (Manning, 2018); print source, blog URL could not be verified — see What Could Not Be Verified). Strengthened by angle 01 and angle 02.
+
+* Data-Shaped Concrete Sketch (accountable question 3)
+
+What the data-shaped framing looks like concretely — the structs, where they live, who owns them, and which boundary each crosses:
+
+** The structs
+
+- `Pose6D { double x,y,z; double zrot,xrot,yrot; Source source; bool valid; }` — crosses: UI ⇄ coordinator ⇄ optimizer ⇄ compute. Lives in: `domain` (value type, trivially copyable, Rust-FFI-safe). Owner: domain (immutable; copies everywhere, references nowhere).
+- `StageSpec { StageKind kind; int budget; PoseRange range[6]; int dilation; CostVariantId variant; bool zSearch; }` and `StageScript = vector<StageSpec>` — already exists (plan 008). Crosses: services(settings) → coordinator → domain(optimizer). Lives in domain. Owner: the StageGraphByName registry (code-registered data).
+- `RunPayload { StageGraphRef graph; CostSelection perStage; FrameSet frames; SettingsSnapshot settings; }` — already passed by value (OptimizerRunLaunch). Crosses: viewmodel → coordinator → optimizer. Owner: coordinator's caller (the view/VM side) constructs; nobody mutates after launch.
+- `EvalRequest { Pose6D pose; uint64 evalSerial; }` and `EvalResult { double cost; CostComponents components; bool feasible; }` — crosses: optimizer ⇄ compute. Lives in domain (types) with compute implementing the evaluation; `CostComponents` is the *named* decomposition (overlap, chamfer, priors, sym-trap) so the meters and the z-profile probe can read it without re-deriving it.
+- `CostSample { CostVariantId variant; CostComponents c; double total; uint64 evalSerial; }` — crosses: compute → coordinator → view (meters, traces). Owner: coordinator's event stream (see C7). This is the struct that replaces "the cost is a double and the meters guess".
+- `GpuImage { void* devicePtr; Dims dims; PixelFormat format; cudaStream_t stream; }` — compute-internal handle type. NEVER crosses out of `jtml_compute` (grep-guarded). Owner: compute (hoisted allocations, scratch buffers). The C2 option makes the *metrics* pure consumers of GpuImage (no in-place mutation).
+- `StudyFrame { FrameId id; Path stlPath, fluoroPath, calibration; }` — crosses: services → compute (for rendering) and services → view (for display). Owner: services/model layer.
+- `StateEvent = Idle | Running { stageSpec, evalsDone, budget, bestCost } | Done { pose, IoU, stats } | Failed { reason }` — crosses: coordinator → view, via Qt signals (or C7's typed stream). Owner: coordinator's state machine (single writer).
+
+** Ownership table
+
+| Thing | Owner | May not leave |
+|---|---|---|
+| Value types (Pose6D, StageSpec, RunPayload, CostSample, StateEvent) | domain | — (they are the currency) |
+| Run lifecycle + state machine | coordinator | — |
+| GPU buffers, kernels, streams, graphs | compute | compute ⇄ nothing outside (handles only) |
+| Files, torch models, settings persistence | services | raw paths only via StudyFrame |
+| Widgets, list models, VMs | view | QObject pointers never cross into domain |
+| Wiring (composition) | app/main.cpp | — |
+
+** The hot path (per-eval, ~7k evals/s)
+
+`RunPayload` (owned) → optimizer picks `EvalRequest` → compute evaluates on hoisted buffers via stream/graph → `EvalResult` value → optimizer stores in column-sorted storage → coordinator emits `EvalCompleted` events → view projects. The data-shaped discipline: *no* device pointer, *no* QObject, *no* mutable shared state crosses any of these hops — each hop is a value.
+
+* Menu at a Glance
+
+| # | Option | Family | What changes | What stays | What breaks (risk) | Cost | Evidence anchor |
+|---|---|---|---|---|---|---|---|
+| A1 | Status Quo, Now Authoritative | Keep | docs/ADR only | everything | none | XS | Clean Arch, Bernhardt, Feathers |
+| A2 | Naming Alignment | Keep | dirs/CMake/docs renames | layering, gates | mechanical R15 (grep-caught); baked-in view target name | S–M | Fowler ServiceLayer, DDD |
+| B1 | Clean Circles | Re-layer | use_cases ring + 3 thin ports | libs, kernels | R12 (interface invention) | M | uncle-bob |
+| B2 | Hexagonal Hinge | Re-layer | 4–6 ports wrapping existing seams | everything else | R12 bounded (one-impl interfaces) | S–M | Hexagonal wiki |
+| B3 | DDD Layers | Re-layer | renames + anemic-by-design ADR | semantics | rename churn; semantic mismatch | S–M | Fowler anemic |
+| C1 | Flow Map First | Data | docs + audits | everything | none | S | Bernhardt |
+| C2 | Value Contracts | Data | compute metrics → pure (scratch), typed boundary structs | libs, gates | R15 on metric purity (pin-first) | M | Bernhardt, ValueObject |
+| C3 | Cache-Shaped Optimizer | Data | storage internals (SoA/hot-cold) | seams/APIs | R15 subtle (float order) | S–M | Fabian DOD, Nystrom |
+| C4 | Pipeline of Filters | Data | stage container becomes production executor | kernels, budgets | R15 highest (1,700-line hot spot) | M–L | AOSA VTK, vtkAlgorithm |
+| C5 | CUDA-Graph Cost | Data | compute: one graph launch/eval | kernels, ports | R15 on render path; pairs with C2 | M | NVIDIA CUDA Graphs |
+| C6 | Stream-Ordered Loop | Data | per-eval stream/event handles | worker-thread model | R15 medium (concurrency) | M | CUDA guide §streams |
+| C7 | Typed Event Flow | Data | coordinator → typed event stream | state machine | R15 medium (UI) | S–M | Qt signals, FBP |
+| D1 | Pure Core / Imperfect Shell | Language | coordinator → pure step fn + shell | libs, gates | R15 medium-high (live machine) | M | Bernhardt |
+| D2 | Rust Interop Surface | Language | cxx bindings on 9 pure files | everything outside domain | R12 timing; build fragility | M–L | cxx.rs |
+| E1 | Qt Data Layer | Ecosystem | view/VM → model/view first-class | layers below view | R15 medium (view) | M | Qt M/V docs, Fowler PM |
+| E2 | VTK-Native Render Path | Ecosystem | render/cost wrapped as vtkAlgorithm+data | kernels | R15 medium-high render; R12 medium | M–L | AOSA VTK, vtkAlgorithm |
+| E3 | QML Decision Record | Ecosystem | docs (NO-GO record) | everything | none | XS | QQuickVTKItem docs |
+| F1 | Two-Track Composite | Hybrid | C2+C4+C5/E1+D2 sequenced cuts | kernels, five-lib enforcement | full sequencing risk; per-cut R15 | L | composite |
+| F2 | Vertical Slices | Hybrid | feature-package churn | kernels, tests | highest churn/benefit; weakest evidence for this app class | L | Bogard (counter: AOSA VTK) |
+| F3 | Shape-Follows-Seams ADR | Hybrid | docs (seams-as-architecture thesis) | everything | none | XS–S | Feathers, Seemann DI |
+
+* What Could Not Be Verified
+
+- Alistair Cockburn's own hexagonal-architecture page (alistair.cockburn.us) failed to fetch; the concept is cited via Wikipedia instead (https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)).
+- Mark Seemann's "Composition Root" blog post URL 404'd at multiple date/case variants (and the Wayback Machine rate-limited); the composition-root concept is attributed to the print book Seemann & van Deursen, *Dependency Injection* (Manning, 2018) — a print citation, no URL.
+- NVIDIA's "How to Overlap Data Transfers in CUDA C/C++" blog post 404'd at every URL variant tried; the streams claim is anchored to the CUDA C++ Programming Guide instead (https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#streams).
+- The VTKBook "Visualization Pipeline" chapter on docs.vtk.org 404'd at the guessed URL; the pipeline claim is anchored to the AOSA VTK chapter and vtkAlgorithm docs instead (both verified live).
+- Mike Acton's CppCon 2014 "Data-Oriented Design" talk was not fetched (YouTube); the DOD claims rest on Fabian's book site and Nystrom's chapter (both verified).
+- 3D Slicer's developer architecture docs 404'd; case-study evidence for pipeline-shaped medical apps is carried by angle 06 (not yet landed when this was written).
+- Whether the sibling angles (01–06) land conclusions that contradict any option's evidence anchor — they were in flight; each option names where its evidence base would be strengthened by theirs.
+- No GPU machine was available to this angle, so none of the R15-risk ratings were empirically exercised — they are assessments from plan docs and prior-run findings, not measurements.
+
+* Sources
+
+External (verified by fetch during this angle):
+- Gary Bernhardt, "Boundaries" (SCNA 2012) — https://www.destroyallsoftware.com/talks/boundaries — the functional-core/imperative-shell and values-at-boundaries thesis underpinning C1, C2, D1.
+- Robert C. Martin, "The Clean Architecture" — https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html — dependency rule + simple data structures across boundaries; B1, C2.
+- Martin Fowler, "Presentation Model" — https://martinfowler.com/eaaDev/PresentationModel.html — MVVM's origin pattern; the synchronization mechanism = the CRUD-tuned critique's target; E1.
+- Martin Fowler, "Anemic Domain Model" — https://martinfowler.com/bliki/AnemicDomainModel.html — the services-over-data critique that B3 must answer.
+- Martin Fowler, "Service Layer" — https://martinfowler.com/eaaCatalog/serviceLayer.html; "Value Object" — https://martinfowler.com/eaaCatalog/valueObject.html — vocabulary for A2/B3/C2.
+- Hexagonal architecture — https://en.wikipedia.org/wiki/Hexagonal_architecture_(software) — B2.
+- Josh Smith, "WPF Apps With The Model-View-ViewModel Design Pattern" (MSDN Magazine 2009) — https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern — the MVVM pro side.
+- Microsoft .NET MAUI architecture guide, MVVM — https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm — official MVVM framing ("properties and commands to which the view can data bind").
+- Wikipedia, "Model–view–viewmodel" — https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel — criticisms (overkill for simple UIs; data-binding perf at scale).
+- Jeffrey Palermo, "The Onion Architecture: part 1" — https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/ — re-layering precedent (family B context).
+- Richard Fabian, "Data-Oriented Design" (online book) — https://www.dataorienteddesign.com/dodbook/ — C3.
+- Robert Nystrom, "Data Locality" (Game Programming Patterns) — https://gameprogrammingpatterns.com/data-locality.html — cache lines, hot/cold splitting — C3.
+- NVIDIA, "Getting Started with CUDA Graphs" — https://developer.nvidia.com/blog/cuda-graphs/ — launch-overhead data (9.6μs→3.4μs) — C5.
+- CUDA C++ Programming Guide, streams — https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#streams — C5/C6.
+- AOSA Volume 1, "VTK" (Geveci & Schroeder) — https://aosabook.org/en/v1/vtk.html — the canonical pipeline architecture — C4, E2, F2 counter-evidence.
+- VTK: vtkAlgorithm class reference — https://vtk.org/doc/nightly/html/classvtkAlgorithm.html — demand-driven execution model — C4, E2.
+- ParaView documentation — https://www.paraview.org/Wiki/ParaView_Architecture_Overview — ecosystem shape — E2.
+- J. Paul Morrison, "Flow-Based Programming" — https://jpaulm.github.io/fbp/ — C4, C7.
+- cxx — safe interop between Rust and C++ — https://cxx.rs/ — D2.
+- Qt 6 Model/View Programming — https://doc.qt.io/qt-6/model-view-programming.html — E1.
+- Qt Quick overview — https://doc.qt.io/qt-6/qtquick-index.html — E3 context.
+- VTK: QQuickVTKItem class reference — https://vtk.org/doc/nightly/html/classQQuickVTKItem.html — E3.
+- Michael Feathers, "Characterization Testing" — https://michaelfeathers.silvrback.com/characterization-testing — the R15/oracle discipline's external backing — A1, F3.
+- Jimmy Bogard, "Vertical Slice Architecture" — https://jimmybogard.com/vertical-slice-architecture/ — F2.
+- GDC Vault, "Overwatch Gameplay Architecture and Netcode" (Timothy Ford) — https://www.gdcvault.com/play/1024001/Gameplay-Architecture-and-Netcode — referenced for the ECS/game-data-shaped contrast (page verified live; content not extractable — see What Could Not Be Verified).
+- VTK documentation hub (book listing) — https://vtk.org/documentation/ — context for the VTK textbook pipeline chapter.
+- C4 model — https://c4model.com/ — context for structure-level diagrams (F3's ADR could adopt it).
+
+Repo-local sources (no URL; evidence from this repo's own recon):
+- .panoptes/compute-app-architecture-grounding/local-recon.org — the LOCAL CONTEXT for this run (seams, conventions, gaps).
+- docs/plans/2026-08-07-003-refactor-layered-directory-restructure-plan.md — layer provenance, R12/R15, empty External References.
+- docs/solutions/conventions/jtml-layered-lib-split-2026-08-08.md — per-layer CMake conventions, AUTOUIC baked target name, grep gates.
+- docs/plans/2026-08-12-008-refactor-optimizer-graph-container-plan.md — StageScript/StageSpec, the 1,700-line manager problem frame, jtml-production graph shape.
+- docs/plans/2026-08-12-009-feat-stage-graph-selection-plan.md — SettingsBridge VM surface, stageGraphs/stageGraphIndex, registry-not-consumed status.
+- .panoptes/optimizer-deep-dive/synthesis.org — prior-run findings used as repo-local evidence (in-place metric mutation, per-eval syncs, ms/call meter, determinism).
+- docs/solutions/ui-bugs/jtml-qml-trace-driven-debugging-2026-08-12.md — trace-driven debugging precedent for C7.
+
+Print source (no URL): Seemann & van Deursen, *Dependency Injection: Principles, Practices, and Patterns* (Manning, 2018) — composition-root concept cited in F3.
+
+## Round 2 — Re-Anchored Menu (Corrected Premises)
+
+*Round 2 of 2 (pre-authorized deepen). Every premise in the round-1 menu was re-measured in the repo on the real numbers and re-anchored on the production classes and the consumed-vs-unconsumed stage surface. The menu stays wide; the *premises* are corrected. Round-1 verdicts that survive a corrected premise are marked CONFIRMED; those that rested on a wrong number or wrong class are CORRECTED; anything that could not be re-derived from repo evidence is UNRESOLVED. Repo-local citations are `path:line`; external URLs are live-fetched this round where noted.*
+
+** Re-measured premises (the numbers every option must now stand on)
+
+| # | Premise | Round-1 stated | Re-measured | Verdict |
+|---|---|---|---|---|
+| P1 | mainscreen.cpp size | ~5,115 lines (E1) | 5,045 lines (read: `src/view/mainscreen.cpp`, line_count 5,045) | CORRECTED |
+| P2 | optimizer_manager.cpp size | ~1,700 lines (B1/C4/D1) | 1,538 lines — and the file lives in **src/coordinator/**, not src/compute/ (read: `src/coordinator/optimizer_manager.cpp`, line_count 1,538) | CORRECTED |
+| P3 | domain pure .cpp count | 9 files (D2) | 10 .cpp files in `add_library(jtml_domain STATIC ...)` (`src/domain/CMakeLists.txt:13-22`: ambiguous_pose_processing, data_structures_6D, direct_data_storage, direct_optimizer, model_list_builder, optimize_intent_controller, pose_copy, pose_file_io, session_state, sym_trap_functions) | CORRECTED |
+| P4 | kernels per monoplane eval | ~15 launches; ~12-13 (brief) | ~11-12 grid launches: Render() = 7 kernels + 1 CUB DeviceScan (`src/compute/render_engine.cu`: ResetKernel :722, WorldToPixelKernel :725, BoundingBoxForTrianglesKernel :746, BoundingBoxSizesKernel :756, PrepareLaunchPacketKernel :775, StridePrefixKernel :812, FillTriangleKernel :823, `cub::DeviceScan::ExclusiveSum` :764; the :313 call is the one-time temp-storage sizing query, not per-eval) + FIDM 4 (`src/compute/fast_implant_dilation_metric.cu:170,218,242,273`) or DM 3 (2 distinct kernels, Reset ×2 + Kernel: `src/compute/distance_map_metric.cu:79-80,106`). The brief's "render ≈5 + 2 CUB" is corrected to "render ≈8 (7 kernels + 1 scan)"; only one DeviceScan is per-eval | CORRECTED |
+| P5 | biplane kernels/eval | ≈20 (brief) | Derived, not measured: biplane_mode_ is real (`src/compute/DIRECT_DILATION_T1.cpp:25`, `src/compute/DIRECT_MAHFOUZ.cpp:44`, `src/compute/sym_trap_function.cpp:30`) and the launch packet is biplane-capable (`camera_a_frames`/`camera_b_frames`, `include/coordinator/optimizer_run_driver.h:44-45`); ≈22-24 if the render+metric half doubles. No biplane wall measurement exists in the evidence | UNRESOLVED (derived ≈22-24) |
+| P6 | evals/s | (prior run derived 20-60 evals/s) | **~7,000 evals/s on the RTX 3090 Ti** (~143 μs/eval wall; ~15 s for the whole production-shape multistage run) — `docs/handoff-2026-08-12-optimizer-path.md:116-122` (§4: "The derived 20–60 evals/s is refuted by ~2 orders"); this run's synthesis repeats ~7k and explicitly notes no GPU profiling was performed (`.panoptes/compute-app-architecture-grounding/synthesis.org:105`) | CONFIRMED |
+| P7 | per-eval D2H | ~5 copies / ~32 bytes | 3 copies / 24 bytes (FIDM variant: render 2 = bbox 4×int + fragment_fill 1×int, `render_engine.cu:781-790`; FIDM 1×int, `fast_implant_dilation_metric.cu:289-290`) or 4 copies / 28 bytes (DM variant: + 2×int, `distance_map_metric.cu:117-126`). The "~5/32 B" figure sums *both* variants' sites — a single eval pays one variant | CORRECTED |
+| P8 | injected cost signature | std::function<double(const double*)> | `using CostFunction = std::function<double(const Point6D&)>;` — `include/domain/direct_optimizer.h:28`; the callback receives the **denormalized physical point** (`direct_optimizer.h:20-21`) | CORRECTED |
+| P9 | DIRECT storage layout | "structurally a struct-of-arrays" (C3) | `std::vector<std::vector<HyperBox6D*>*> storage_matrix_;` — `include/domain/direct_data_storage.h:59`; per-column `new std::vector<HyperBox6D*>()` + per-box `new HyperBox6D` (`src/domain/direct_data_storage.cpp:19-25,112-114`) and lower_bound insert (`:93-101`) — **pointer-chasing AoS**, column-sorted by size, NOT SoA | CORRECTED |
+| P10 | production orchestrator | "coordinator" generically (A1/B1/B2/D1/C7) | Production = MainScreen → **OptimizerRunController** (`src/view/mainscreen.cpp:176-208`) → **OptimizerManagerRunDriver** (fresh per run; `CreateOptimizerManagerRunDriver` wired in `src/app/experimental/OptimizerBridge.cpp:71`); run-state machine + **epoch counter** live in the Qt/GPU-free **OptimizerRunControllerCore** (`include/coordinator/optimizer_run_controller_core.h:14-17`; `onRunStarted(){ ++epoch_; state_=Running; }` :131-134; `epoch()` :152; `epoch_` member :188). **OptimizeCoordinator is exercised only by test/lifecycle/coordinator_test.cpp** — test-only, not production | CONFIRMED (brief's framing verified) |
+| P11 | stage surface consumed | "stage container validated but not consumed" (C4) | Production Optimize() **CONSUMES BuildStageScript/StageScript since plan 008 U9**: `stage_script_ = jta::BuildStageScript(...)` (`src/coordinator/optimizer_manager.cpp:220`), member (`include/coordinator/optimizer_manager.h:296-301`), iterated `for (const jta::StageSpec& spec : stage_script_)` (`optimizer_manager.cpp:980`). What is unconsumed is the **named-graph registry + selection** (`StageGraphByName` → manager wiring is "a small pinned follow-up", `include/coordinator/optimizer_stage_script.h:12-16`) | CORRECTED (consumed/unconsumed split) |
+| P12 | ms/call meter | CPU clock()/count (prior-run angle 05) | `static_cast<double>(clock() - start_clock_) / static_cast<double>(cost_function_calls_)` — `src/coordinator/optimizer_manager.cpp:1199-1200`, emitted as `UpdateDisplay`; header comment labels it "(Milliseconds)" (`optimizer_manager.h:290`) but **no CLOCKS_PER_SEC conversion** exists (POSIX clock() = μs ticks → the emitted value is ticks/call, μs-scale); the view divides `1000.0 / iteration_speed` treating it as ms/call (`src/view/mainscreen.cpp:4598`). The honest-meter fix touches **optimizer_manager.cpp:1199 (compute/signature) AND mainscreen.cpp:4598 (display math)** | CONFIRMED (claim) / CORRECTED (location: both files, not view-only) |
+| P13 | StageSpec/StageScript location | "Lives in domain" (sketch) | Lives in **coordinator**: `include/coordinator/optimizer_stage_script.h:59+` (StageSpec, StageScript), Qt/GPU-free TU but header includes `services/optimizer_settings.h` (`:35`). OptimizerRunLaunch also coordinator (`include/coordinator/optimizer_run_driver.h:42-63`, carries Qt types: QModelIndexList, QString, LocationStorage, 3× CostFunctionManager) | CORRECTED |
+
+** Re-anchored options (which changed materially)
+
+- **A1 (Status Quo, Now Authoritative) — re-point, stays XS.** The doc mapping must map the *production* orchestrator — OptimizerRunController (+Core state machine, +ManagerRunDriver fresh-per-run seam) — not the test-only OptimizeCoordinator. The injected-cost port claim becomes exact: `std::function<double(const Point6D&)>` is the port (P8). No cost change.
+- **B1 (Clean Circles) — cost drops M → S–M.** The "use cases ring" already half-exists: OptimizerRunControllerCore is a pure, production-consumed run-state machine + epoch (P10), and the stage policy is already data (stage_script_, P11). B1's remaining pull-out shrinks to the per-spec executor cases at optimizer_manager.cpp:980+ inside a measured 1,538-line file (P2) — a smaller target than "the 1,700-line hot spot".
+- **B2 (Hexagonal Hinge) — one port re-pointed.** The "StageGraphRepository" port would wrap an *unconsumed* registry (P11) — premature; re-point it to the consumed BuildStageScript/stage_script_ seam and defer the registry port to plan 009. Cost port (P8) and progress/persistence ports unchanged.
+- **B3 (DDD Layers) — re-point the rename.** "coordinator→application" now names OptimizerRunController/Core/Driver (production) plus the test-only OptimizeCoordinator; the rename is invisible to production either way. Unchanged otherwise.
+- **C2 (Value Contracts) — materially unchanged; boundary-struct reality corrected.** The port it formalizes is verified real (P8). But its typed boundary structs (EvalRequest/EvalResult, CostSample, StateEvent, Pose6D) are all **new** — 0 matches in src/ — and the value-type precedent sits in *coordinator* (StageSpec/OptimizerRunLaunch, P13), not domain; C2's "all value types in domain" placement is a proposal, not a restatement.
+- **C3 (Cache-Shaped Optimizer) — premise CORRECTED, benefit downgraded.** The "already structurally SoA" premise is false: measured pointer-chasing AoS with per-insert new (P9). The option becomes a real layout *conversion*, not "make the SoA explicit". Payoff premise also weakens: at ~143 μs/eval wall (P6) with GPU/sync-dominated behavior, host-side DIRECT bookkeeping is a small fraction of the eval — the DOD win is bounded until a profile shows host-bound segments (no Nsight exists; synthesis.org:105). Survives, reframed.
+- **C4 (Pipeline of Filters) — 'highest R15 risk' re-based.** The premise "container validated but not consumed" split in two: the *script* is consumed (P11); the *executor/selection* (registry → named-graph run, plan 009) is not. C4's production move is now the per-spec executor factoring (optimizer_manager.cpp:980+) on a measured 1,538-line file (P2) — bounded, sequenceable behind the existing plan-008 pins. Kind of risk unchanged; target measured and smaller.
+- **C5 (CUDA-Graph Cost) — upside re-derived to [7%–50%] of wall, unmeasured; headline downgraded.** Baseline: ~143 μs/eval wall (P6). NVIDIA's figures (fetch-verified this round from https://developer.nvidia.com/blog/cuda-graphs/): 2.9 μs kernel execution; **9.6 μs/launch measured overhead; 3.8 μs with stream overlap; 3.4 μs per kernel with captured graphs** — i.e. ~6.2 μs/launch recoverable on NVIDIA's own profile. Measured per-eval launches ≈11-12 (P4). The brief's "~7%" (9.6/143) is the lower bound — it treats a per-*launch* figure as if it were per-*eval*; the upper bound (6.2 μs × 11-12 ≈ 68-74 μs ≈ 48-52% of wall) holds only if the eval is launch-gap-bound, which the measured 7k evals/s throughput plus 3-4 synchronous D2H copies per eval (P7) argue against — the GPU is not idle per launch, and the wall includes kernel execution and sync waits. Honest statement: **upside ∈ [7%, 50%] of per-eval wall; discriminating measurement (cudaEvent/Nsight breakdown) does not exist** (this run's synthesis.org:105 lists it as the missing decision-relevant measurement; `docs/brainstorms/2026-08-12-optimizer-path-requirements.md:183-187` demands a measured breakdown before any perf claim). C5 survives as a candidate; its round-1 "single highest-leverage kernel-level change" claim is downgraded to "unproven until the eval loop is profiled". Its unconditional win is removing the ~3-4 sync D2H and per-launch gaps — and handoff §4 itself flags "per-eval sync structure may still dominate" (handoff-2026-08-12-optimizer-path.md:121).
+- **C6 (Stream-Ordered Eval Loop) — target corrected, survives.** "Hide the ~5 D2H round-trips" becomes "hide 3-4 synchronous copies / 24-28 bytes per eval" (P7) — the win is hiding the *syncs*, not the bytes. NVIDIA's 3.8 μs/launch overlap figure is its direct evidence (same blog, fetch-verified); recovered ≈5.8 μs/launch on NVIDIA's profile. Same caveat: repo profile absent.
+- **C7 (Typed Event Flow) — scope corrected and location pinned.** The premise "view calls into coordinator state" overstates: production already relays by-value via OptimizerRunController (QTBUG-2842 re-emission, mainscreen.cpp:176-208) — C7 *strengthens* an existing typed surface rather than creating a boundary. Honest-meter premise CONFIRMED (P12): the fix touches **optimizer_manager.cpp:1199-1200 (computation + signal payload) and mainscreen.cpp:4598 (display math)** — the meter is CPU clock()-based, unit-labeled ms but emitting raw ticks without CLOCKS_PER_SEC, and it averages *including* GPU sync waits; the view's `1000.0/iteration_speed` compounds the unit mismatch. Cost S–M, unchanged.
+- **D1 (Pure Core / Imperfect Shell) — 40-60% already shipped; cost M → S–M.** The pure transition core already exists and is production-consumed: OptimizerRunControllerCore's 5-state machine + epoch (P10). D1's remaining work = migrate the per-spec stage-policy cases (optimizer_manager.cpp:980+, 1,538-line file) into the pure layer and confirm OptimizerRunController as the effect shell. The "live machine" R15 framing is corrected: OptimizeCoordinator is not the live machine (test-only, P10); the production thread lifecycle is the H3-bounded fresh-driver-per-run seam (optimizer_run_driver.h:65-76).
+- **D2 (Rust Interop Surface) — 9 → 10 pure files.** cxx surface would cover the 10 .cpp files in `src/domain/CMakeLists.txt:13-22` (P3), including optimize_intent_controller.cpp and session_state.cpp. R12/build-fragility cells unchanged.
+- **E1 (Qt Data Layer) — 5,115 → 5,045.** All other cells unchanged.
+- **F1 (Two-Track Composite) — re-based constituent by constituent.** Its C3/C5 sub-options inherit the corrected premises (P9, P4, P6); its C4 sub-option inherits the consumed/unconsumed split (P11); sequencing discipline unchanged. F2, F3, E2, E3: no premise touched by the re-measurement — unchanged.
+
+** Corrected menu-at-a-glance (Round 2)
+
+| # | Option | Family | Round-1 cell | Round-2 corrected cell | Changed? |
+|---|---|---|---|---|---|
+| A1 | Status Quo, Now Authoritative | Keep | XS, none | XS, none — re-point doc mapping to OptimizerRunController/Core/Driver (P10), port signature `std::function<double(const Point6D&)>` (P8) | re-pointed |
+| A2 | Naming Alignment | Keep | S–M, mechanical R15 | unchanged | no |
+| B1 | Clean Circles | Re-layer | M, R12 (interface invention) | **S–M** — use-cases ring half-exists (Core state machine + stage_script_ data); pull-out target = per-spec executor cases in a measured 1,538-line file (P2/P10/P11) | cost down |
+| B2 | Hexagonal Hinge | Re-layer | S–M, R12 bounded | S–M — StageGraphRepository port deferred (registry unconsumed, P11); re-point to BuildStageScript/stage_script_ seam | re-pointed |
+| B3 | DDD Layers | Re-layer | S–M, rename churn | unchanged (rename now covers production + test-only classes, P10) | re-pointed |
+| C1 | Flow Map First | Data | S, none | S, none — hot-path section now written against 7k evals/s, 11-12 launches, 24-28 B D2H (P4/P6/P7) | re-based |
+| C2 | Value Contracts | Data | M, R15 metric purity | M, R15 metric purity — boundary structs are all NEW (0 matches in src/); value-type precedent is coordinator-side, not domain (P13) | re-anchored |
+| C3 | Cache-Shaped Optimizer | Data | S–M, R15 subtle (float order) | **S–M → M**: premise "already SoA" FALSE (pointer-chasing AoS, P9); becomes a layout conversion; benefit bounded by unmeasured host/GPU split (P6) | materially changed |
+| C4 | Pipeline of Filters | Data | M–L, R15 **highest** (1,700-line spot) | **M–L, R15 highest-but-bounded**: restructure target = per-spec executor cases in a measured 1,538-line file (P2); script consumed, executor/selection unconsumed (P11) | re-based |
+| C5 | CUDA-Graph Cost | Data | M, "single highest-leverage kernel-level change" | **M, upside re-derived to [7%–50%] of 143 μs wall, UNMEASURED** (P6; NVIDIA 9.6→3.4 verified) — headline downgraded pending Nsight | materially changed |
+| C6 | Stream-Ordered Loop | Data | M, R15 medium | M — target corrected to 3-4 sync copies/24-28 B per eval (P7); NVIDIA 3.8 μs overlap figure verified | re-based |
+| C7 | Typed Event Flow | Data | S–M, R15 medium (UI) | S–M — honest-meter premise CONFIRMED; fix touches optimizer_manager.cpp:1199 **and** mainscreen.cpp:4598 (P12); boundary strengthens existing relays | location pinned |
+| D1 | Pure Core / Imperfect Shell | Language | M, R15 medium-high (live machine) | **S–M** — pure core already shipped (OptimizerRunControllerCore, P10); live-machine risk re-based (OptimizeCoordinator is test-only) | materially changed |
+| D2 | Rust Interop Surface | Language | M–L, cxx on 9 pure files | M–L — **10 pure .cpp files** (P3) | count corrected |
+| E1 | Qt Data Layer | Ecosystem | M, R15 medium (view) | M — mainscreen 5,045 lines (P1) | number corrected |
+| E2 | VTK-Native Render Path | Ecosystem | M–L, R15 medium-high render | unchanged | no |
+| E3 | QML Decision Record | Ecosystem | XS, none | unchanged | no |
+| F1 | Two-Track Composite | Hybrid | L, sequencing risk | L — sub-options re-based per above (C3/C4/C5/C6 cells) | re-based |
+| F2 | Vertical Slices | Hybrid | L, weakest evidence | unchanged | no |
+| F3 | Shape-Follows-Seams ADR | Hybrid | XS–S, none | unchanged — seam inventory should now include the OptimizerRunController relay seam (P10/P11) | re-pointed |
+
+** Which C-options survive the measured baseline (explicit)
+
+- **Survive with corrected premises**: C1 (docs; baseline-neutral), C2 (correctness option, orthogonal to perf), C4 (bounded restructure of a measured file), C6 (sync-hiding, cheaper path), C7 (honest-meter fix, location pinned).
+- **Survive as candidates whose payoff is now explicitly unmeasured**: C5 (upside band [7%, 50%] of wall; needs cudaEvent/Nsight — the run's synthesis lists this as the single most decision-relevant missing measurement, synthesis.org:84), C3 (conversion to packed layout; benefit pending a host-vs-GPU profile).
+- **Nothing in the C family is killed** by the measured baseline; the measured numbers instead convert C3/C5 from "premised wins" into "framed hypotheses with a defined measurement step" — matching the brainstorm's falsification rule (`docs/brainstorms/2026-08-12-optimizer-path-requirements.md:183-187`).
+
+** Struct-sketch reconciliation (round-1 "Data-Shaped Concrete Sketch" vs repo reality)
+
+- **EXIST as sketched (name and role)**: `StageSpec`/`StageScript` (`include/coordinator/optimizer_stage_script.h:59+`) — but in **coordinator**, not domain (P13); `OptimizerRunLaunch` (`include/coordinator/optimizer_run_driver.h:42-63`) — the sketch's "RunPayload, already passed by value" — but it is a coordinator-side Qt-typed launch packet, not a domain value type.
+- **EXIST under different names / locations**: `Point6D` (`include/domain/data_structures_6D.h:25`) for the sketch's `Pose6D`; `Pose` (`include/compute/render_engine.cuh:28`); `GPUImage` (`include/compute/gpu_image.cuh:12`) for the sketch's `GpuImage`; `GPUFrame` (`gpu_frame.cuh:27`); `Frame` (`include/compute/frame.h:28`); `Model` (`include/services/model.h:24`); `LocationStorage` (`include/services/location_storage.h:18`); `Calibration` (`include/services/calibration.h:89`).
+- **NEW (sketch-only; 0 matches in src/)**: `Pose6D`, `EvalRequest`, `EvalResult`, `CostSample`, `StateEvent`, `StudyFrame` (grep `StateEvent|EvalRequest|EvalResult|CostSample` over src/: 0 matches).
+- **Where the crossing table implies they live vs reality**: the sketch's ownership table puts all value types in `domain` — reality: run-shape value types (StageScript, OptimizerRunLaunch) are **coordinator**; device-adjacent types (Frame) are **compute**; model/calibration are **services**; only Point6D-class values are domain. A corrected crossing table assigns: new pure structs (EvalRequest/EvalResult/CostSample/StateEvent) → domain is *plausible* (Rust-FFI intent, CMakeLists.txt:4-7) but the precedent says run-shape types live coordinator-side; the sketch's `GpuImage` → `GPUImage` in compute with its "never leaves compute" rule already enforced by the lib split.
+
+** What Could Not Be Verified (Round 2)
+
+- **The kernel-vs-transfer breakdown of the ~143 μs/eval wall** — no Nsight/cudaEvent profile exists in repo evidence (this run's synthesis.org:105; brainstorm demands one before perf claims). Consequently C3/C5/C6 payoffs remain bounded ranges, not numbers.
+- **Whether the ~7,000 evals/s measurement includes the D2H copies in the timed path** — flagged open by this run's synthesis (synthesis.org:105) and by handoff §4's own caveat ("per-eval sync structure may still dominate").
+- **Biplane per-eval kernel count and wall time** — derived ≈22-24 from monoplane measurements plus biplane_mode_ presence; no biplane measurement was found (P5).
+- **The meter's displayed units in the widgets UI** — the computation (optimizer_manager.cpp:1199, no CLOCKS_PER_SEC) and the view math (mainscreen.cpp:4598, `1000.0/iteration_speed`) are measured; the on-screen label semantics were not fully traced through the widget layer.
+- **Transferability of NVIDIA's 9.6→3.4 μs/launch figures** (measured on NVIDIA's own test stack, V100-era blog) to the RTX 3090 Ti + CUDA 12.4 + this launch profile — unverified; only the blog's numbers are verified, not their applicability.
+- **Exact contents of the per-spec executor cases** at optimizer_manager.cpp:980+ (iteration and consumption verified; the switch body was read at :944-980 but not line-by-line to the end of Optimize()).
+- **"Epochs" vs "epoch"** — the core has a single integer `epoch_` counter (stale-relay guard, H1), not a multi-epoch run concept; the brief's "epochs" maps onto that counter (P10).
+
+** Sources (Round 2)
+
+- NVIDIA, "Getting Started with CUDA Graphs" — https://developer.nvidia.com/blog/cuda-graphs/ — re-fetched this round (mode=answer): 2.9 μs kernel execution; 9.6 μs per-launch overhead (synchronized); 3.8 μs with overlap; 3.4 μs per kernel with captured graphs — the C5/C6 re-derivation basis.
+- docs/handoff-2026-08-12-optimizer-path.md §4 (lines 116-128) — the authoritative measured baseline: ~7,000 evals/s on the RTX 3090 Ti; derived 20-60 evals/s refuted by ~2 orders; "re-base the pre-registered bands on the measured ~7k evals/s (§4)" (line 72); stale-source flag on `.panoptes/optimizer-deep-dive/synthesis.org` for the 20-60 derivation (lines 151-153).
+- docs/brainstorms/2026-08-12-optimizer-path-requirements.md (lines 183-187) — falsification rule: measured cudaEvent/ncu breakdown replaces derived estimates before any perf claim; 60-300/1,000-5,000 bands stale.
+- Repo-local re-measurements (all read this round): src/view/mainscreen.cpp (5,045); src/coordinator/optimizer_manager.cpp (1,538; meter :1199-1200; BuildStageScript :220; stage iteration :980); src/domain/CMakeLists.txt:13-22 (10 .cpp); include/domain/direct_optimizer.h:28 (CostFunction signature); src/domain/direct_data_storage.cpp:19-25,93-121 + include/domain/direct_data_storage.h:59 (AoS); src/compute/render_engine.cu:722-823 (:313/:764 CUB; :781-790 D2H); src/compute/fast_implant_dilation_metric.cu:170-291; src/compute/distance_map_metric.cu:79-126; include/coordinator/optimizer_stage_script.h:6-19,59; include/coordinator/optimizer_manager.h:290-301; include/coordinator/optimizer_run_controller.h:4-24; include/coordinator/optimizer_run_controller_core.h:14-17,131-134,152,188; include/coordinator/optimizer_run_driver.h:42-76; src/coordinator/optimize_coordinator.cpp (only self-references); test/lifecycle/coordinator_test.cpp (only OptimizeCoordinator consumer); src/view/mainscreen.cpp:176-208,4582-4599 (production wiring + meter display); src/app/experimental/OptimizerBridge.cpp:71; include/domain/data_structures_6D.h:25 (Point6D); include/compute/render_engine.cuh:28 (Pose); include/compute/gpu_image.cuh:12 (GPUImage); include/compute/gpu_frame.cuh:27 (GPUFrame); include/compute/frame.h:28; include/services/model.h:24; include/services/location_storage.h:18; include/services/calibration.h:89.

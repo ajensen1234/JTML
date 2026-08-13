@@ -1,0 +1,170 @@
+#+TITLE: Angle 01 — Signal Engineering: Which Projection Features Break Rotational Symmetry, and What Cannot (Evidence for the Cost-Function Seam)
+#+DATE: 2026-08-14
+#+PANOPTES_ANGLE: 01-01-signal-engineering
+
+* Summary
+For parts with a *continuous* rotational symmetry (hip stem shank, femoral head,
+cylindrical cup), the attenuation projection is *provably invariant* under rotation about
+the symmetry axis: every function of the image — silhouette, intensity, gradient,
+curvature, MI, learned — is invariant, so NO single-plane cost function can recover that
+DOF, regardless of feature engineering. The literature independently confirms this floor
+(D'Isidoro & Ferguson 2018; dental cylindrical-implant study 2021; known-component
+registration modeling screws as 5-DoF). For the knee femoral component there is no exact
+continuous symmetry: all 6 DOF are in principle recoverable, but varus/valgus and depth
+are *ill-conditioned* (near-circular condyle arcs ⇒ first-order-flat silhouette basins;
+Yamazaki 2004 measured a "less pointy" depth curve). That conditioning can be rescued by
+two-sided intensity/attenuation and gradient-orientation features — but the repo's
+renderer produces only flat-fill white silhouettes, and DIRECT_MAHFOUZ's "intensity" term
+is one-sided (fluoroscopy sampled under the template silhouette), so neither is currently
+available. The curvature story: the GPU metric was never implemented (stub returns 0.0)
+AND a fair test was never specified (undefined semantics), AND local curvature is a
+second-order, noise-amplified feature that is itself invariant for circular boundaries —
+the mismatch between a local feature and a global symmetry ambiguity is real, but a
+globally aggregated contour-curvature term could in principle work at a tight per-eval
+budget. Verdict: the owner's assumption "the current cost functions don't provide enough
+signal" survives for the KNEE conditioning DOFs (cheapest fix surface: two-sided
+intensity + GO features in a new cost variant); it does NOT survive for symmetric
+hip/shoulder parts, where the missing signal is absent from the projection itself and the
+fix is external reference / priors / dyads (angle 02).
+
+* Research Questions (accountable)
+1. Which projection features are provably non-invariant under rotation about an implant's symmetry axis, and what evidence shows they are usable in monoplane fluoroscopy 2D-3D registration?
+2. Which of those are computable in a ~143 µs/eval GPU loop (kernel + sync budget, RTX 3090 Ti)?
+3. What does the literature say about intensity-inside-silhouette, gradient/phase, curvature-as-feature, and multi-feature fusion for implant registration (Mahfouz, Yamazaki, Flood, gradient-correlation family)?
+4. For each candidate feature: does it break CONTINUOUS rotational symmetry (stems, heads) or only MIRROR symmetry (cups, glenoids)?
+5. Is there a provable information floor — is the symmetric DOF recoverable from ANY single-plane projection, or only from shading/attenuation cues monoplane X-ray cannot supply?
+
+* Evidence (per source)
+- D'Isidoro & Ferguson, "2D/3D registration of the prosthetic hip from X-ray images: a method for retrieval of rotation of the acetabular cup around its symmetry axis," CMBBE 2018 (ETH Zürich). VERIFIED-full-text (abstract PDF). Quote: "Since the acetabular cup is symmetric, its rotation around the symmetry axis can not be uniquely determined with the sole use of contours... This issue was not addressed by previous fluoroscopy studies." Their fix is NOT a new image feature: recover the unknown rotation from the *pelvic bone* model registered to the same image (external reference). http://cmbbe2018.tecnico.ulisboa.pt/pen_cmbbe2018/pdf/WEB_ABSTRACTS/Abstracts_CMBBE2018_50.pdf
+- Petto et al., "Standardization of three-dimensional pose of cylindrical implants from intraoral radiographs," BMC Oral Health 21, 2021. VERIFIED-full-text (PMC7937219). "a cylindrical object did not have enough information... to resolve all degrees of freedom"; rotation about the long axis "did not roughly influence its radiographic shadow"; lost rotation solved "by simply adding an extra reference point not collinear with the dental implant axis" (external reference again). https://pmc.ncbi.nlm.nih.gov/articles/PMC7937219/
+- Otake et al., "Intraoperative evaluation of device placement in spine surgery using known-component 3D-2D image registration," (JHU/Siewerdsen group; PMC5901722). VERIFIED-full-text. Screws are "radially symmetric, giving the component pose 5 DoF (not 6)": the community *drops* the symmetric DOF rather than measuring it; component registration uses gradient correlation; phantom TRE 1.1±0.1 mm / 0.7±0.4°, clinical 2.7±2.6 mm / 1.5±0.8°. https://pmc.ncbi.nlm.nih.gov/articles/PMC5901722/
+- Yamazaki, Watanabe, Nakajima, Sugamoto, Tomita, Yoshikawa, Tamura, "Improvement of depth position in 2-D/3-D registration of knee implants using single-plane fluoroscopy," IEEE TMI 23(5):602-612, 2004. VERIFIED-full-text (Europe PMC abstract, PMID 15147013). Depth translation "causes only small changes in the 2-D silhouette"; evaluation curve for depth "more jagged, and the curve peak less pointy" than the other five DOFs; their fix is optimization structure (independent depth stage with approximate evaluation curve), NOT a new feature: RMSE depth 2.6→0.9 mm (sim), 3.2→1.4 mm (in vitro). https://europepmc.org/article/MED/15147013
+- Mahfouz, Hoff, Komistek, Dennis, "A robust method for registration of three-dimensional knee implant models to two-dimensional fluoroscopy images," IEEE TMI 22(12):1561-1574, 2003. Abstract VERIFIED; method details partly INFERRED (repo port comments). Direct image-to-image measure; "does not require an accurate segmentation of the implant silhouette"; simulated annealing. https://doi.org/10.1109/tmi.2003.820027
+- Mahfouz, Hoff, Komistek, Dennis, "Effect of segmentation errors on 3D-to-2D registration of implant models in X-ray images," J Biomech 38:229-239, 2005. VERIFIED-full-text (abstract, PMID 15598449). Segmented contours "vary significantly" between interactive/automatic methods; segmentation methods "can fail completely" under occlusion → argument for direct image-to-image over contour-segmentation. https://europepmc.org/article/MED/15598449
+- Flood & Banks, "Automated Registration of 3-D Knee Implant Models to Fluoroscopic Images Using Lipschitzian Optimization," IEEE TMI 37(1):326-335, 2018. VERIFIED-full-text (abstract, PMID 29293431). State of the art in the silhouette/dilation family: "matching altered dilations of an edge-detected image with the silhouette of an implant model"; converges under 25-55 mm / 25-55°; robust to bone/soft-tissue noise. No treatment of symmetry-axis ambiguity (that is their later dyad work, Jensen-2024-style, mirrored in this repo). ("Flood" in the task's literature list = Paris D. L. Flood.) https://europepmc.org/article/MED/29293431
+- Banks & Hodge, "Accurate measurement of three-dimensional knee replacement kinematics using single-plane fluoroscopy," IEEE TMI 43(6):638-649, 1996. Abstract VERIFIED. Silhouette-based 6-DOF estimator; "knee rotations can be measured with an accuracy of approximately one degree" (for the visible DOFs). https://pubmed.ncbi.nlm.nih.gov/8987268/
+- Penney, Weese, Little, Desmedt, Hill, Hawkes, "A comparison of similarity measures for use in 2-D-3-D medical image registration," IEEE TMI 17(4):586-595, 1998. Abstract VERIFIED; measure definitions INFERRED + corroborated (De Silva 2016; Med Phys 2005 formula; US Patent 7480399). Six measures (NCC, pattern intensity, gradient correlation, gradient difference, entropy-of-difference, MI) on spine phantom with fiducial gold standard; gradient-based measures robust to structures present in only one image. https://doi.org/10.1109/42.730403
+- Weese et al., "Fast voxel-based 2D/3D registration algorithm using a rendering method based on the shear-warp factorization," SPIE 3661, 1999. Abstract VERIFIED. Pattern intensity introduced as "especially suitable for 2D/3D registration... robust with respect to structures... visible in the X-ray fluoroscopy image but not in the CT scan" (e.g., a stent). https://researchprofiles.canberra.edu.au/en/publications/fast-voxel-based-2d3d-registration-algorithm-using-a-rendering-me/
+- Pattern intensity formula (VERIFIED): PINT = Σ_{i,j} Σ_{v,w within radius r} σ² / (σ² + (Idiff(i,j) − Idiff(v,w))²), Idiff = prior − current — "Comparison of similarity measures for the task of template matching of masses on serial mammograms," Med Phys 2005. https://doi.org/10.1118/1.1851892
+- De Silva et al., "3D–2D image registration for target localization in spine surgery: investigation of similarity metrics providing robustness to content mismatch," Phys Med Biol 61(8):3009, 2016. VERIFIED-full-text (PDF answer mode). GC and GO: with masking 0% gross failures; unmasked, GC fails >14% while GO keeps 0% (median PDE 5.5 mm). GO robust to content mismatch (implants/instrumentation/soft tissue); GI/GC/GS susceptible. https://beta.iopscience.iop.org/article/10.1088/0031-9155/61/8/3009/pdf
+- Otake et al., "Robust 3D–2D image registration: application to spine interventions and vertebral labeling in the presence of anatomical deformation," PMB 58(23):8535, 2013. Abstract VERIFIED. Normalized gradient information + CMA-ES; robustness to deformation/content mismatch. https://iopscience.iop.org/article/10.1088/0031-9155/58/23/8535
+- Hermans, Bellemans, Vandermeulen, Suetens, "A Statistical Approach to Determine Symmetrical Solutions for the Registration of 3D Knee Implant Models to Sagittal Fluoroscopy Images," ICCV 2007. Abstract VERIFIED. "Because knee implant components are highly symmetrical with respect to the sagittal plane, two significantly different model poses result in 2D image projections" that are near-identical → statistical identification of the two solutions (mirror ambiguity, NOT continuous). https://mlanthology.org/iccv/2007/hermans2007iccv-statistical/
+- Markelj, Tomaževič, Likar, Pernuš, "A review of 3D/2D registration methods for image-guided interventions," Med Image Anal 16(3):642-661, 2012. Abstract VERIFIED. Canonical taxonomy: feature-based vs intensity-based; implant/DRR context. https://pubmed.ncbi.nlm.nih.gov/20452269/
+- Mokhtarian, Murase, "Silhouette-Based Object Recognition Through Curvature Scale Space," ICCV 1993; Mokhtarian, Abbasi, Kittler, BMVC 1996. Abstracts VERIFIED. Curvature scale space is the established *global* contour-shape descriptor, robust to scale/position/orientation/noise; note CSS is designed for recognition invariance — for registration we need the pose-indexed *sensitivity* of silhouette curvature instead. https://mlanthology.org/iccv/1993/mokhtarian1993iccv-silhouette/ ; https://bmva.org/bmvc/1996/mokhtarian_1.html
+- Worring & Smeulders, "The Accuracy and Precision of Curvature Estimation Methods," ICPR 1992; Kerautret, Lachaud, "Robust Estimation of Curvature along Digital Contours with Global Optimization," 2008. METADATA-verified. Digital curvature estimation is a second-order, noise-amplified problem requiring global/dedicated estimators — a caution for curvature-per-eval at fluoroscopy SNR. https://ivi.fnwi.uva.nl/isis/publications/bibtexbrowser.php?bib=all.bib&key=WorringISSAH1992 ; https://jacquesolivierlachaud.github.io/publication/kerautret-08-a/kerautret-08-a.pdf
+- TREA patent application, "Method and apparatus for determining a pose of an implant." VERIFIED (page answer). Industry practice: for an implant "with a degree of symmetry," a single projection yields "alternative, indistinguishable poses"; disambiguation requires additional measurement configurations (translation-reconstruction run = moving view geometry). https://trea.com/information/method-and-apparatus-for-determining-a-pose-of-an-implant/patentapplication/ff171a4a-1967-4282-af8f-e5e290035527
+- Repo (VERIFIED in-repo): render_engine.cu FillTriangleKernel writes constant 255 inside projected triangles (flat-fill silhouette; no depth/attenuation target); curvature_hausdorf_metric.cu returns `double test = 0` (GPU curvature never implemented); implant_mahfouz_metric.cu intensity term = Σ(fluoroscopy intensity under template-white pixels)/count (one-sided; comment: "Sum of Pixel Input * Pixel Projected / Sum of Pixel Projected"); CostFunctionManager registers Black_Silhouette for DIRECT_MAHFOUZ but the metric never branches on it (the name is parsed into stage-param `dark_silhouette` at optimizer_stage_script.cpp:187-199, which affects no GPU kernel); sym_trap_function adds the only rotation-sensitive term, vv = asin(fem2tib[2][1]) varus/valgus penalty (a geometric prior, not an image feature); cost seam std::function<double(const Point6D&)> at include/domain/direct_optimizer.h:28.
+
+* Findings
+** Finding 1 — The information floor is provable, and four independent sources confirm it: rotation about a continuous symmetry axis is unrecoverable from a single-plane projection of that part, by ANY image feature.
+- Proof sketch: for a homogeneous shape S with rotational symmetry R_a(θ)S = S, the
+  ray-attenuation integral through R_a(θ)S equals that through S (rotation is
+  measure-preserving). Hence every pixel of the DRR, and every statistic of the DRR
+  (silhouette mask, interior intensity, gradient magnitude/phase, boundary curvature, MI
+  joint histogram, learned features), is exactly invariant. This holds for any single
+  view; even scatter/beam hardening are functions of the same invariant path-length
+  distribution. Only features that break the *geometric* symmetry itself (collar, neck,
+  fins, non-circular cross-section, machining bevels, asymmetric attachments) can break
+  the image invariance.
+- Corroboration: D'Isidoro & Ferguson 2018 (cup rotation "cannot be uniquely determined
+  with the sole use of contours"; fix = pelvic-bone reference) [Source: cmbbe2018 PDF];
+  dental implant 2021 ("did not have enough information... to resolve all degrees of
+  freedom"; fix = extra non-collinear reference point) [Source: PMC7937219]; Otake KC-Reg
+  2018 (screws deliberately modeled as 5-DoF) [Source: PMC5901722]; TREA patent (extra
+  measurement configurations required for symmetric implants) [Source: trea.com].
+- Relevance: JTML has zero hip/shoulder models; if those enter scope, the symmetric DOF
+  (stem version for a circular-section stem, cup rotation for a cylindrical cup) is a
+  floor, not a signal problem. No cost function in the seam can fix it; the fix is
+  external reference (D'Isidoro's pelvic-bone route), kinematic priors, dyads (angle 02),
+  or multi-view. Angle 05's geometry taxonomy should classify each implant's weak DOF as
+  continuous-floor vs mirror-ambiguous vs merely ill-conditioned.
+- Confidence: high (mathematical; 4 independent corroborations).
+
+** Finding 2 — For the knee femoral component there is NO exact continuous symmetry: all 6 DOF are theoretically recoverable from one plane. The weak DOFs are a conditioning problem (first-order-flat cost basins), and two-sided intensity/GO features are the documented rescue.
+- The condyle arcs are near-circular in the coronal-ish projection; rotation about the AP
+  axis (varus/valgus) maps the arc nearly onto itself ⇒ silhouette overlap changes only at
+  second order ⇒ flat basin. Yamazaki 2004 is the canonical demonstration for the sibling
+  weak DOF (depth): "only small changes in the 2-D silhouette"; the depth evaluation curve
+  was "more jagged, and the curve peak less pointy" — and their improvement (2.6→0.9 mm
+  sim, 3.2→1.4 mm vitro) came from optimization structure, not new features [Source:
+  europepmc MED/15147013]. The repo's own z_profile instrument (6.31 mm gap) measures
+  exactly this phenomenon.
+- Rescue features, in evidence order: gradient orientation (GO) — 0% gross failures under
+  implant/instrument content mismatch where plain gradient correlation failed >14% (De
+  Silva 2016) [Source: IOPscience PDF]; gradient correlation (Penney 1998; used for
+  component pose in Otake KC-Reg) [Sources: doi 10.1109/42.730403; PMC5901722]; pattern
+  intensity (robust to structures present in only one image — exactly the bone/cement
+  content-mismatch situation in TKA fluoroscopy) [Sources: Weese SPIE 3661; Med Phys 2005
+  formula]; normalized gradient information (Otake 2013) [Source: IOPscience].
+- Why this matters locally: the only rotation-sensitive term in the repo today is the
+  sym_trap varus/valgus penalty — a geometric prior. The prior exists precisely because
+  the image signal is weak. A two-sided intensity/GO term would add genuine image signal
+  for varus/valgus and IE rotation via the non-circular features (intercondylar notch,
+  trochlear groove, condylar shoulders, bevels) rotating into/out of the projection — but
+  ONLY if the template side renders attenuation/thickness, which it currently does not.
+- Confidence: high for the conditioning diagnosis (Yamazaki abstract + geometry); medium
+  for the degree of rescue achievable in THIS renderer (needs the new render target,
+  unmeasured).
+** Finding 3 — DIRECT_MAHFOUZ's intensity term is one-sided and cannot deliver the signal; it is also the cheapest place to add it correctly.
+- In-repo verification: the intensity term computes the mean fluoroscopy intensity over template-white pixels (implant_mahfouz_metric.cu:129-156, 285-328; "(Sum of Pixel Input * Pixel Projected)/(Sum of Pixel Projected)"). For a rotation that preserves the silhouette, the sampled support is unchanged ⇒ the term is invariant. It is a silhouette-support-weighted fluoroscopy statistic, not a two-sided image comparison.
+- The two-sided Mahfouz-style measure the literature actually uses compares a *rendered predicted image* against the fluoroscopy directly ("direct image-to-image") [Source: Mahfouz 2003 abstract; Mahfouz 2005's argument against segmentation variability]. To implement it, the renderer needs a per-pixel thickness/attenuation value; today FillTriangleKernel writes constant 255 (render_engine.cu:616-709) — no depth target. Adding a min-z/attenuation accumulation in the existing fragment-fill pipeline is a contained change.
+- Black_Silhouette is registered (CostFunctionManager.cpp:426) but gates nothing in the GPU metric; it is only name-scanned into the stage-param struct (optimizer_stage_script.cpp:187-199). The recon's "dead config" claim is correct in effect (no kernel behavior depends on it).
+- Confidence: high (verified in-repo).
+** Finding 4 — Curvature: "tried and failed" is wrong — it was never measured; but the concept as scoped (local per-keypoint heatmaps) was also ill-specified, and local curvature is provably invariant for circular boundaries.
+- In-repo verification: CurvatureHeatmapMetric returns constant 0.0 with an empty kernel (curvature_hausdorf_metric.cu:12-34, 70-71); never registered, never called. The CPU utilities (Menger curvature, inflection keypoints, per-keypoint heatmaps) work but are per-keypoint-local and CPU-side — unusable at 7k evals/s.
+- Physics: curvature of a contour is a second-order (noise-amplified) quantity [Worring & Smeulders 1992; Kerautret-Lachaud 2008], and for a circular boundary segment (condyle arc, head, cup rim) curvature is CONSTANT along the arc ⇒ invariant under rotation about the arc center — the very DOF being attacked. Local curvature features attack a global symmetry/conditioning ambiguity with a feature that is blind exactly where the ambiguity lives, unless aggregated globally.
+- The fair-test version would be a *global* contour-shape term: curvature profile / CSS-style descriptor of the whole rendered silhouette vs the precomputed fluoroscopic contour curvature map (CSS is the established robust global contour descriptor, Mokhtarian 1993/1996). This is pose-sensitive (template silhouette changes with pose) and symmetry-sensitive for non-circular contours. But it requires per-eval contour extraction + curvature on the template side — the tightest budget item (see Finding 6).
+- Verdict: the owner's belief ("curvature heatmaps were tried and still not great") fails on the facts (never implemented), but the deeper challenge stands: as scoped (local keypoint heatmaps) curvature was the wrong tool; as a global contour term it is a plausible-but-unproven feature with no published implant-2D-3D precedent found in this research.
+- Confidence: high (repo facts + geometry); medium (no published precedent for the global-curvature implant term — absence of evidence).
+** Finding 5 — Continuous vs mirror symmetry must be separated, and the repo already has the mirror half.
+- Continuous (stems, heads, cylindrical cups): no local gradient, cost flat, provably unrecoverable from the single-plane image alone (Finding 1). No feature fixes it; only external reference/priors/multi-view.
+- Mirror (tibial tray mirror poses, cups' anterior/posterior tilt pair, sagittal-symmetric knee components): two discrete poses with near-identical projections; the cost still has working local gradients at each minimum — the problem is a global ambiguity, not missing signal. Hermans 2007 ICCV documents exactly this for knee implants (sagittal-plane symmetry → two significantly different poses with near-identical projections; statistical identification of the two solutions) [Source: mlanthology ICCV 2007]. The repo's domain sym-trap directive (CalculateSymTrap sweep, Crane-Duffy dyads, compute_mirror_pose) IS this class of machinery — angle 02 owns its completion. Distinct from the compute-side sym_trap_function varus/valgus penalty (a continuous-DOF prior) — recon explicitly warns not to conflate the two, and this report does not.
+- Consequence for feature work: for mirror-ambiguous parts, signal engineering is NOT the fix (signal exists); for continuous-symmetric parts, signal engineering is IMPOSSIBLE; only for ill-conditioned-but-asymmetric parts (knee femoral component) is signal engineering the right lever.
+- Confidence: high.
+** Finding 6 — GPU budget: the two-sided intensity/GO features fit ~143 µs/eval; per-eval contour curvature is the tight squeeze; the fluoroscopy side must be precomputed per frame.
+- Baseline: ~7,000 evals/s ≈ 143 µs/eval, ~15 kernels + 5 sync D2H copies, sync-latency-bound (repo recon; prior architecture-grounding synthesis). Every new per-eval kernel adds launch + latency; the D2H copy count is the scarce resource.
+- Free per eval: anything computed once per frame on the fluoroscopy side (gradient/GO maps, distance maps, edge-dilation frames, contour curvature maps, ROI masks). The existing DistanceMapMetric/dilated-edge frames already exploit this; curvature_utilities.cpp belongs HERE (per-frame preprocessing), not in the per-eval loop.
+- Per-eval costs (informed estimates on RTX 3090 Ti, to be measured with the jtml.z_profile-style instrument): thickness/attenuation render target: +1 fill-mode in the existing fragment pipeline, ~10-20 µs; template Sobel: +2 kernels ~5-10 µs; GO/GC comparison: one orientation-bin reduction kernel ~10-20 µs; pattern intensity: ~20-40 µs; Mahfouz two-sided NCC over ROI: ~10-20 µs (reductions already available via CUB). Total realistic add for intensity+GO: ~40-70 µs ⇒ ~5-6k evals/s — acceptable for a 15-20 s run.
+- Per-eval boundary curvature (GPU EDT of the rendered mask + level-set curvature, or CSS of extracted contour): +3-5 kernels / 20-50 µs and, worse, it is a second-order feature computed on an aliased raster silhouette each eval — the highest risk/benefit ratio of all candidates. If pursued, specify it as a global contour term with defined semantics (the 2026 de-scope of the old stub was for undefined semantics — that critique survives).
+- Confidence: medium (budget estimates are extrapolations from the measured baseline; the cost *structure* — precompute-per-frame vs per-eval — is high confidence).
+
+* What Could Not Be Verified
+- Yamazaki 2004's per-rotation errors (IE / varus-valgus / flexion) — abstract gives only depth RMSE and the qualitative "less pointy" curve; full text is paywalled (subscription only).
+- The exact Mahfouz 2003 similarity-measure formula beyond what the repo port's code comments state; the paper's full text is paywalled.
+- Whether the repo's renderer can emit a thickness/attenuation target without new kernels — current code has no depth target (verified); the specific implementation cost is inferred, not measured.
+- Any published implant-specific 2D-3D registration using boundary curvature as the similarity feature — searches found none; the case for it rests on the general CSS literature and first-principles sensitivity, not on an implant-registration precedent.
+- Quantitative GPU timings for the proposed kernels — no benchmark exists in-repo; the z_profile/valley-depth instrument is the right first measurement, and oracle Tier-1/Tier-2 gates must stay green.
+- The identity of "Flood" in the task's literature list — resolved with high confidence to Paris D. L. Flood (Flood & Banks, IEEE TMI 2018; JointTrack Auto 2016) — but if the owner meant a different author, the TMI 2018 paper is the one that matters and is covered.
+- The arxiv 2503.07763 acetabular ellipse-fitting paper's treatment (if any) of the cup symmetry ambiguity — the fetched page did not answer; cited at abstract level only.
+- Whether the intended hip/shoulder implants actually possess exact continuous symmetries — that is angle 05's geometry inventory; this report provides the classification rule (stabilizer of the projection map = continuous symmetry group of the radiological thickness function), not the per-implant verdict.
+- GPU curvature's historical "dud" verdict: the 2023 commit message is repo lore (owner note), not an evaluation; the stub's zero output is verified, the reasons for abandoning are not independently verifiable.
+
+* Implications for JTML (concrete, cost-aware, R15-safe)
+1. **Do not resurrect the local per-keypoint GPU curvature metric.** It was never implemented, its semantics were undefined (2026 de-scope verdict), and local curvature is blind exactly at circular boundaries. Complete the pending de-scope hygiene item (remove AllocateCurvatureHausdorfScore at DIRECT_DILATION.cpp:42-43 + banner). If curvature is ever wanted, it must be a *global* contour-shape term with defined semantics — schedule as a separate, measured experiment, not a port.
+2. **Cheapest high-value change: make DIRECT_MAHFOUZ two-sided.** (a) Add a thickness/attenuation render target to render_engine.cu (accumulate per-pixel path-length in FillTriangleKernel or a sibling kernel; keep flat-fill mode bit-identical for existing variants — R15). (b) Add a kernel comparing the rendered thickness image to the fluoroscopy intensity frame with an NCC/pattern-intensity-style term (pattern intensity is the documented choice for content mismatch: bone/cement edges present in X-ray but not in the model — Weese 1999; Penney 1998). (c) Register it as a NEW variant (e.g., DIRECT_MAHFOUZ_T2) following the per-variant pattern: explicit .cpp in src/compute, explicit CMakeLists entry, CostFunctionManager registration, 51-entry registry golden fixture update (cost_function_registry_test). Zero changes to direct_optimizer.h:28 seam or optimizer — the cheapest possible fix surface, as the owner hypothesized.
+3. **Add a gradient-orientation (GO) term** — the single best-documented metric under implant/instrument content mismatch (De Silva 2016: 0% gross failures unmasked). Fluoroscopy GO map precomputed once per frame; per-eval = template Sobel + orientation comparison. Same variant-registration path as (2). The current DistanceMapMetric edge-to-template and FastImplantDilationMetric overlap stay untouched.
+4. **Before wiring weights, measure valley depth per weak DOF** with the existing jtml.z_profile instrument (and extend it to rotation sweeps around the AP axis): the deciding number is whether the new term deepens the varus/valgus and IE basins. This is the R15-safe validation path (measurement, not re-derivation) and directly answers "does the new feature carry signal about THIS DOF."
+5. **Do not promise image signal for continuous-symmetric parts.** If hip/shoulder scope proceeds: stem version (circular/tapered-stem class) and cup rotation about the symmetry axis are information floors — the evidence-backed routes are external reference (D'Isidoro's pelvic-bone matching [cmbbe2018]), kinematic priors (the existing sym_trap penalty pattern), multi-view (TREA patent), or dyad/priors work owned by angle 02. Angle 01's boundary: the seam can carry priors (it already does — sym_trap_function), but no image feature in this family recovers a symmetric DOF.
+6. **Re-purpose curvature_utilities.cpp as per-frame fluoroscopy preprocessing** (contour curvature map, per-keypoint heatmaps at frame rate, not eval rate) — that is where the working CPU code is cost-effective; keep it out of the 143 µs loop.
+7. **Feature/DOF classification to hand to angle 05 and angle 02**: for each implant class, label weak DOFs as (a) continuous-floor (stem version, head orientation, cylindrical-cup rotation) → priors/external reference; (b) mirror-ambiguous (tray, sagittal knee components — Hermans 2007; repo dyads) → disambiguation, signal exists; (c) ill-conditioned (knee femoral varus/valgus, depth) → two-sided intensity/GO features + conditioning priors. Only (c) is a signal-engineering problem.
+
+* Sources
+- D'Isidoro & Ferguson 2018 (CMBBE abstract PDF) — provable floor for cup symmetry axis, external-reference fix. http://cmbbe2018.tecnico.ulisboa.pt/pen_cmbbe2018/pdf/WEB_ABSTRACTS/Abstracts_CMBBE2018_50.pdf
+- Petto et al. 2021, BMC Oral Health (PMC7937219) — cylindrical implant rotational invariance + external reference. https://pmc.ncbi.nlm.nih.gov/articles/PMC7937219/
+- Otake et al. 2018 (PMC5901722) — known-component registration: 5-DoF symmetric screws, GC for components, TRE numbers. https://pmc.ncbi.nlm.nih.gov/articles/PMC5901722/
+- Yamazaki et al. 2004, IEEE TMI 23(5):602-612 — depth conditioning, "less pointy" curve, optimization-structure fix. https://europepmc.org/article/MED/15147013
+- Mahfouz et al. 2003, IEEE TMI 22(12) — direct image-to-image measure (method context). https://doi.org/10.1109/tmi.2003.820027
+- Mahfouz et al. 2005, J Biomech 38:229-239 — contour segmentation variability argument. https://europepmc.org/article/MED/15598449
+- Flood & Banks 2018, IEEE TMI 37(1):326-335 — SOTA in the silhouette/dilation family (Lipschitzian optimization). https://europepmc.org/article/MED/29293431
+- Banks & Hodge 1996, IEEE TMI 43(6) — classic silhouette single-plane kinematics (~1° visible DOFs). https://pubmed.ncbi.nlm.nih.gov/8987268/
+- Penney et al. 1998, IEEE TMI 17(4):586-595 — six-measure comparison, gradient correlation family. https://doi.org/10.1109/42.730403
+- Weese et al. 1999, SPIE 3661 — pattern intensity for 2D/3D under content mismatch. https://researchprofiles.canberra.edu.au/en/publications/fast-voxel-based-2d3d-registration-algorithm-using-a-rendering-me/
+- Med Phys 2005 (10.1118/1.1851892) — pattern intensity formula. https://doi.org/10.1118/1.1851892
+- De Silva et al. 2016, PMB 61(8):3009 — GO vs GC robustness under implant content mismatch. https://beta.iopscience.iop.org/article/10.1088/0031-9155/61/8/3009/pdf
+- Otake et al. 2013, PMB 58(23):8535 — normalized gradient information. https://iopscience.iop.org/article/10.1088/0031-9155/58/23/8535
+- Hermans et al. 2007, ICCV — sagittal mirror-symmetry ambiguity for knee implants. https://mlanthology.org/iccv/2007/hermans2007iccv-statistical/
+- Markelj et al. 2012, Med Image Anal 16(3) — 3D/2D registration taxonomy survey. https://pubmed.ncbi.nlm.nih.gov/20452269/
+- Mokhtarian & Murase 1993 (ICCV); Mokhtarian, Abbasi, Kittler 1996 (BMVC) — curvature scale space, global contour descriptors. https://mlanthology.org/iccv/1993/mokhtarian1993iccv-silhouette/ ; https://bmva.org/bmvc/1996/mokhtarian_1.html
+- Worring & Smeulders 1992 (ICPR); Kerautret & Lachaud 2008 (Pattern Recognition) — curvature estimation is noise-sensitive second-order. https://ivi.fnwi.uva.nl/isis/publications/bibtexbrowser.php?bib=all.bib&key=WorringISSAH1992 ; https://jacquesolivierlachaud.github.io/publication/kerautret-08-a/kerautret-08-a.pdf
+- TREA patent application — industry: symmetric implants need extra measurement configurations. https://trea.com/information/method-and-apparatus-for-determining-a-pose-of-an-implant/patentapplication/ff171a4a-1967-4282-af8f-e5e290035527
+- Repo (in-repo verification): render_engine.cu (flat-fill 255, no depth target); curvature_hausdorf_metric.cu (stub 0.0); implant_mahfouz_metric.cu (one-sided intensity term); CostFunctionManager.cpp:426 + optimizer_stage_script.cpp:187-199 (Black_Silhouette registered/parsed, no kernel effect); include/domain/direct_optimizer.h:28 (cost seam); .panoptes/symmetry-robust-implant-registration/local-recon.org (recon facts: 7 variants, 143 µs/eval, 6.31 mm z-profile, dyad machinery, conventions R12/R15, 51-entry registry fixture).
