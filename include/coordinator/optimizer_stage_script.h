@@ -8,10 +8,12 @@
  * the named graph registry (ListStageGraphs / StageGraphByName) mirroring
  * CostFunctionManager::listCostFunctions (src/compute/CostFunctionManager.cpp)
  * and the golden-pinned mapping pattern of jta::BuildCostFunctionRegistryEntries
- * (src/services/cost_function_registry.cpp). Zero production behavior change:
- * this TU is NOT consumed by the manager yet (that is Cut B / U9); Optimize()'s
- * hard-coded loop (src/coordinator/optimizer_manager.cpp) remains the running
- * engine. Requirements: R1 (stages-as-data), R2 (named registry), R4 (the
+ * (src/services/cost_function_registry.cpp). Zero production behavior change at
+ * U7; since U9 (Cut B) the manager's Optimize() loop CONSUMES BuildStageScript
+ * (stage_script_, built once in Initialize) — the named-graph REGISTRY below
+ * is the validated configuration surface; wiring the manager to run a NAMED
+ * graph (StageGraphByName instead of the builder) is a small pinned
+ * follow-up. Requirements: R1 (stages-as-data), R2 (named registry), R4 (the
  * existing seams stay the execution surface), R5 (the schema must not preclude
  * biplane / tiered-dilation / polish), R6 (v1 ships jtml-production; stubs
  * allowed).
