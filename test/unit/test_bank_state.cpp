@@ -151,3 +151,19 @@ TEST_CASE("footprint rejects overflowing dimensions and admission arithmetic", "
     REQUIRE(saturated.bank_count >= 1);
     REQUIRE(saturated.budget_bytes == std::numeric_limits<std::uint64_t>::max() / 2);
 }
+
+TEST_CASE("bank checkout is unique and recycle waits for completion", "[bank_state]") {
+    gpu_cost_function::BankCheckoutTracker tracker(2);
+    const int first = tracker.checkout();
+    const int second = tracker.checkout();
+    REQUIRE(first != second);
+    REQUIRE(first >= 0);
+    REQUIRE(second >= 0);
+    REQUIRE(tracker.checkout() == -1);
+    REQUIRE_FALSE(tracker.recycle(static_cast<std::size_t>(first), false));
+    REQUIRE(tracker.checkedOut(static_cast<std::size_t>(first)));
+    REQUIRE(tracker.recycle(static_cast<std::size_t>(first), true));
+    REQUIRE_FALSE(tracker.checkedOut(static_cast<std::size_t>(first)));
+    REQUIRE(tracker.recycle(static_cast<std::size_t>(second), true));
+    REQUIRE(tracker.checkout() >= 0);
+}

@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 namespace gpu_cost_function {
 
@@ -73,7 +74,43 @@ struct BankState {
     RenderBuffers primary;
     RenderBuffers secondary;  // empty for monoplane
     MetricBuffers metrics;
+    // Opaque handles keep this contract CUDA-header-free. U12's CUDA pool casts
+    // them to cudaStream_t/cudaEvent_t; bank 0 remains nullptr for compatibility.
+    void* stream = nullptr;
+    void* completion_event = nullptr;
     bool in_flight = false;
+};
+
+/* Headless lifecycle seam. The CUDA pool uses the same state transitions while
+ * its GPU oracle supplies the real event readiness. */
+class BankCheckoutTracker {
+public:
+    explicit BankCheckoutTracker(std::size_t count) : checked_out_(count, false) {}
+
+    int checkout() {
+        for (std::size_t i = 0; i < checked_out_.size(); ++i) {
+            if (!checked_out_[i]) {
+                checked_out_[i] = true;
+                return static_cast<int>(i);
+            }
+        }
+        return -1;
+    }
+
+    bool recycle(std::size_t index, bool ready) {
+        if (index >= checked_out_.size() || !checked_out_[index] || !ready) return false;
+        checked_out_[index] = false;
+        return true;
+    }
+
+    bool checkedOut(std::size_t index) const {
+        return index < checked_out_.size() && checked_out_[index];
+    }
+
+    std::size_t size() const { return checked_out_.size(); }
+
+private:
+    std::vector<bool> checked_out_;
 };
 
 struct BankFootprintInput {

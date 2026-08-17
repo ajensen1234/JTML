@@ -69,3 +69,41 @@ TEST_CASE("U9 oracle: occupancy query returns > 0 blocks/SM for a real kernel", 
     REQUIRE(grid.capacity_applicable);
     REQUIRE(static_cast<std::int64_t>(grid.grid_blocks) * grid.block_threads >= 4096);
 }
+
+TEST_CASE("U12 oracle: extra bank owns a stream and completion event", "[capacity][gpu]") {
+    using gpu_cost_function::BankFootprintInput;
+    using gpu_cost_function::CostCapacityService;
+
+    CostCapacityService service;
+    service.setSnapshot(gpu_cost_function::DeviceCapacitySnapshot{
+        .sm_count = 80,
+        .max_threads_per_sm = 2048,
+        .safe_cap = 2550000000LL,
+        .grid_dim_limit = 2147483647LL,
+        .free_device_bytes = 64LL * 1024 * 1024,
+        .per_bank_footprint_bytes = 0,
+        .n_max = 2,
+    });
+    BankFootprintInput layout;
+    layout.width = 1;
+    layout.height = 1;
+    layout.triangle_count = 1;
+    layout.maximum_stride_size = 1;
+    layout.cub_storage_bytes = 1;
+    REQUIRE(service.ConfigurePool(layout, 2));
+    REQUIRE(service.poolSize() == 2);
+    // Extra bank allocation is lazy: it appears when checked out.
+    REQUIRE(service.bankState(1) == nullptr);
+    const int bank = service.CheckoutBank();
+    REQUIRE(bank == 1);
+    const auto* state = service.bankState(1);
+    REQUIRE(state != nullptr);
+    REQUIRE(state->stream != nullptr);
+    REQUIRE(state->completion_event != nullptr);
+
+    REQUIRE(service.bankInFlight(1));
+    REQUIRE_FALSE(service.RecycleBank(1, false));
+    REQUIRE(service.bankInFlight(1));
+    REQUIRE(service.RecycleBank(1, true));
+    REQUIRE_FALSE(service.bankInFlight(1));
+}

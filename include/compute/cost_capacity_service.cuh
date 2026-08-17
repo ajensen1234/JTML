@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "cuda_launch_parameters.h"  // threads_per_block, maximum_stride_size (plain consts)
@@ -31,6 +32,8 @@
 #include "compute/bank_state.cuh"  // U12 Stage 1 ownership contract
 
 namespace gpu_cost_function {
+
+class BankStatePool;  // CUDA-owned implementation in cost_capacity_service.cu
 
 /* Plain device snapshot, headless-injectable. */
 struct DeviceCapacitySnapshot {
@@ -130,18 +133,15 @@ inline int evalBankCount(const DeviceCapacitySnapshot& snap) {
  * test never links CUDA. */
 class CostCapacityService {
 public:
-    CostCapacityService() = default;
+    CostCapacityService();
+    ~CostCapacityService();
 
-    /* GPU-only: query device props + free memory + resolve the snapshot into this instance.
-     * Returns false (and marks capacity unavailable) on any CUDA error, so every consumer
-     * falls back (P2). */
+    CostCapacityService(const CostCapacityService&) = delete;
+    CostCapacityService& operator=(const CostCapacityService&) = delete;
+
     bool refreshDeviceSnapshot(int device);
-
-    /* GPU-only: occupancy-optimal block size for a kernel function pointer via
-     * cudaOccupancyMaxPotentialBlockSize; returns fallback threads_per_block on error. */
     int occupancyOptimalBlockSize(const void* kernel_func);
 
-    /* Pure, inline: grid sizing over the current snapshot. */
     CapacityGrid gridFor(std::int64_t work_items, int block_threads) const {
         return capacityGrid(work_items, block_threads, snap_);
     }
@@ -150,28 +150,29 @@ public:
     bool available() const { return isCapacityAvailable(snap_); }
     const DeviceCapacitySnapshot& snapshot() const { return snap_; }
 
-    /* Plan 010 U11 (R12): v1 serial batch executor through the injected
-     * per-pose cost path (N=1 identity until U12). Evaluates every pose in input
-     * order and returns the scores in the same order. This is the compute-side
-     * implementation detail behind the domain's BatchCostFunction -- the domain
-     * layer never constructs it directly; the coordinator (U6/U12) wires it. No
-     * streams/banks yet; U12 adds them. */
     template <typename SinglePointEval>
     std::vector<double> RunCostBatch(
         const std::vector<Point6D>& poses, SinglePointEval eval) const {
         std::vector<double> out;
         out.reserve(poses.size());
-        for (const auto& p : poses) {
-            out.push_back(static_cast<double>(eval(p)));
-        }
+        for (const auto& p : poses) out.push_back(static_cast<double>(eval(p)));
         return out;
     }
 
-    /* Headless-test seam: install an injected snapshot. */
     void setSnapshot(const DeviceCapacitySnapshot& snap) { snap_ = snap; }
+
+    /* U12 lifecycle: configure admission and lazily create extra banks. The
+     * compatibility bank 0 remains owned by RenderEngine/GPUMetrics. */
+    bool ConfigurePool(const BankFootprintInput& layout, std::size_t n_max);
+    std::size_t poolSize() const;
+    int CheckoutBank();
+    bool RecycleBank(std::size_t index, bool completion_ready);
+    bool bankInFlight(std::size_t index) const;
+    const BankState* bankState(std::size_t index) const;
 
 private:
     DeviceCapacitySnapshot snap_;
+    std::unique_ptr<BankStatePool> pool_;
 };
 
 }  // namespace gpu_cost_function
