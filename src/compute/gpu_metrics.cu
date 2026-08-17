@@ -74,9 +74,13 @@ GPUMetrics::GPUMetrics() {
     if (cudaGetLastError() != cudaSuccess) {
         initialized_correctly_ = false;
     }
+    CaptureBank0Metrics();
 };
 
 GPUMetrics::~GPUMetrics() {
+    /* External bank pointers are non-owning. Always restore the original
+     * allocation set before freeing members. */
+    RestoreBank0Metrics();
     /*Free CUDA*/
     cudaFree(dev_pixel_score_);
     cudaFree(dev_intersection_score_);
@@ -178,8 +182,87 @@ bool GPUMetrics::IsInitializedCorrectly() {
     return initialized_correctly_;
 }
 
+void GPUMetrics::CaptureBank0Metrics() {
+    bank0_metrics_.host_pixel_score = pixel_score_;
+    bank0_metrics_.dev_pixel_score = dev_pixel_score_;
+    bank0_metrics_.host_intersection = intersection_score_;
+    bank0_metrics_.host_union = union_score_;
+    bank0_metrics_.dev_intersection = dev_intersection_score_;
+    bank0_metrics_.dev_union = dev_union_score_;
+    bank0_metrics_.host_white_count = &white_pix_count_;
+    bank0_metrics_.dev_white_count = dev_white_pix_count_;
+    bank0_metrics_.host_distance_score = distance_map_score_;
+    bank0_metrics_.dev_distance_score = dev_distance_map_score_;
+    bank0_metrics_.host_edge_count = edge_pixels_count_;
+    bank0_metrics_.dev_edge_count = dev_edge_pixels_count_;
+    bank0_metrics_.host_curvature = curvature_hausdorf_score_;
+    bank0_metrics_.dev_curvature = dev_curvature_hausdorf_score_;
+    bank0_metrics_.curvature_capacity = 0;
+    bank0_metrics_captured_ = true;
+}
+
+void GPUMetrics::RestoreBank0Metrics() {
+    if (!bank0_metrics_captured_) return;
+    pixel_score_ = static_cast<int*>(bank0_metrics_.host_pixel_score);
+    dev_pixel_score_ = static_cast<int*>(bank0_metrics_.dev_pixel_score);
+    intersection_score_ = static_cast<int*>(bank0_metrics_.host_intersection);
+    union_score_ = static_cast<int*>(bank0_metrics_.host_union);
+    dev_intersection_score_ = static_cast<int*>(bank0_metrics_.dev_intersection);
+    dev_union_score_ = static_cast<int*>(bank0_metrics_.dev_union);
+    dev_white_pix_count_ = static_cast<int*>(bank0_metrics_.dev_white_count);
+    distance_map_score_ = static_cast<int*>(bank0_metrics_.host_distance_score);
+    dev_distance_map_score_ = static_cast<int*>(bank0_metrics_.dev_distance_score);
+    edge_pixels_count_ = static_cast<int*>(bank0_metrics_.host_edge_count);
+    dev_edge_pixels_count_ = static_cast<int*>(bank0_metrics_.dev_edge_count);
+    curvature_hausdorf_score_ = static_cast<int*>(bank0_metrics_.host_curvature);
+    dev_curvature_hausdorf_score_ = static_cast<int*>(bank0_metrics_.dev_curvature);
+    active_bank_ = nullptr;
+    execution_stream_ = nullptr;
+}
+
+bool GPUMetrics::BindMetricBank(const BankState& bank) {
+    const auto& m = bank.metrics;
+    if (!m.host_pixel_score || !m.dev_pixel_score ||
+        !m.host_distance_score || !m.dev_distance_score ||
+        !m.host_edge_count || !m.dev_edge_count ||
+        !m.host_intersection || !m.host_union ||
+        !m.dev_intersection || !m.dev_union ||
+        !m.host_white_count || !m.dev_white_count) {
+        return false;
+    }
+    pixel_score_ = static_cast<int*>(m.host_pixel_score);
+    dev_pixel_score_ = static_cast<int*>(m.dev_pixel_score);
+    intersection_score_ = static_cast<int*>(m.host_intersection);
+    union_score_ = static_cast<int*>(m.host_union);
+    dev_intersection_score_ = static_cast<int*>(m.dev_intersection);
+    dev_union_score_ = static_cast<int*>(m.dev_union);
+    dev_white_pix_count_ = static_cast<int*>(m.dev_white_count);
+    distance_map_score_ = static_cast<int*>(m.host_distance_score);
+    dev_distance_map_score_ = static_cast<int*>(m.dev_distance_score);
+    edge_pixels_count_ = static_cast<int*>(m.host_edge_count);
+    dev_edge_pixels_count_ = static_cast<int*>(m.dev_edge_count);
+    curvature_hausdorf_score_ = static_cast<int*>(m.host_curvature);
+    dev_curvature_hausdorf_score_ = static_cast<int*>(m.dev_curvature);
+    active_bank_ = const_cast<BankState*>(&bank);
+    execution_stream_ = bank.stream ? reinterpret_cast<cudaStream_t>(bank.stream) : nullptr;
+    return true;
+}
+
+bool GPUMetrics::TrySetActiveBank(BankState* bank) {
+    if (bank == nullptr) {
+        RestoreBank0Metrics();
+        return true;
+    }
+    if (!bank0_metrics_captured_) CaptureBank0Metrics();
+    if (!BindMetricBank(*bank)) {
+        RestoreBank0Metrics();
+        return false;
+    }
+    return true;
+}
+
 void GPUMetrics::SetActiveBank(BankState* bank) {
-    active_bank_ = bank;
+    (void)TrySetActiveBank(bank);
 }
 
 void GPUMetrics::SetExecutionStream(cudaStream_t stream) {
@@ -193,4 +276,6 @@ BankState* GPUMetrics::GetActiveBank() const {
 cudaStream_t GPUMetrics::GetExecutionStream() const {
     return execution_stream_;
 }
+
 } // namespace gpu_cost_function
+

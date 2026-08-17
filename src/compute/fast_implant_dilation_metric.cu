@@ -290,4 +290,54 @@ double GPUMetrics::FastImplantDilationMetric(
         pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
     return -1 * pixel_score_[0];
 };
+
+/* U12 Stage 4A explicit-stream path. The metric chain remains ordered on one
+ * bank stream and consumes the selected bank's reduction pointers. */
+double GPUMetrics::FastImplantDilationMetric(
+    GPUImage* rendered_image,
+    GPUDilatedFrame* comparison_frame,
+    int dilation,
+    cudaStream_t stream) {
+    if (!stream || !active_bank_) {
+        return FastImplantDilationMetric(rendered_image, comparison_frame, dilation);
+    }
+    int* bounding_box = rendered_image->GetBoundingBox();
+    int height = rendered_image->GetFrameHeight();
+    int width = rendered_image->GetFrameWidth();
+    FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_pixel_score_);
+    int sub_left_x = max(bounding_box[0] - dilation, dilation);
+    int sub_bottom_y = max(bounding_box[1] - dilation, dilation);
+    int sub_right_x = min(bounding_box[2] + dilation, width - dilation - 1);
+    int sub_top_y = min(bounding_box[3] + dilation, height - dilation - 1);
+    int sub_cropped_width = sub_right_x - sub_left_x + 1;
+    int sub_cropped_height = sub_top_y - sub_bottom_y + 1;
+    dim3 block(static_cast<unsigned>(ceil(sqrt(static_cast<double>(threads_per_block)))),
+               static_cast<unsigned>(ceil(sqrt(static_cast<double>(threads_per_block)))));
+    dim3 grid(static_cast<unsigned>(ceil(static_cast<double>(sub_cropped_width) / (block.x - 2))),
+              static_cast<unsigned>(ceil(static_cast<double>(sub_cropped_height) / (block.y - 2))));
+    FastImplantDilationMetric_EdgeKernel<<<grid, block, block.x * block.y * sizeof(unsigned char), stream>>>(
+        rendered_image->GetDeviceImagePointer(), sub_left_x, sub_bottom_y,
+        sub_right_x, sub_top_y, width, dilation);
+    dim3 dilate_grid(static_cast<unsigned>(ceil(2.0 * sub_cropped_width / sqrt(static_cast<double>(threads_per_block)))),
+                     static_cast<unsigned>(ceil(2.0 * sub_cropped_height / sqrt(static_cast<double>(threads_per_block)))));
+    FastImplantDilationMetric_DilateKernel<<<dilate_grid, threads_per_block, 0, stream>>>(
+        rendered_image->GetDeviceImagePointer(), width, height,
+        sub_left_x, sub_bottom_y, sub_cropped_width, dilation);
+    int left = max(bounding_box[0] - dilation, 0);
+    int bottom = max(bounding_box[1] - dilation, 0);
+    int right = min(bounding_box[2] + dilation, width - 1);
+    int top = min(bounding_box[3] + dilation, height - 1);
+    int diff_width = right - left + 1;
+    int diff_height = top - bottom + 1;
+    dim3 diff_grid(static_cast<unsigned>(ceil(static_cast<double>(diff_width) / sqrt(static_cast<double>(threads_per_block)))),
+                   static_cast<unsigned>(ceil(static_cast<double>(diff_height) / sqrt(static_cast<double>(threads_per_block)))));
+    FastImplantDilationMetric_DifferenceKernel<<<diff_grid, threads_per_block, 0, stream>>>(
+        rendered_image->GetDeviceImagePointer(), comparison_frame->GetDeviceImagePointer(),
+        dev_pixel_score_, width, height, left, bottom, diff_width);
+    cudaError_t err = cudaMemcpyAsync(pixel_score_, dev_pixel_score_, sizeof(int),
+                                      cudaMemcpyDeviceToHost, stream);
+    if (err != cudaSuccess) return 0.0;
+    if (cudaStreamSynchronize(stream) != cudaSuccess) return 0.0;
+    return -1.0 * pixel_score_[0];
+}
 } // namespace gpu_cost_function

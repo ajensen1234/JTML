@@ -12,6 +12,7 @@
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_intensity_frame.cuh"
 #include "compute/gpu_model.cuh"
+#include "compute/bank_state.cuh"
 /*Pose Matrix Class*/
 #include "domain/preprocessor-defs.h"
 #include "compute/pose_matrix.h"
@@ -43,6 +44,13 @@ public:
         GPUImage* rendered_image,
         GPUDilatedFrame* comparison_frame,
         int dilation);
+    /* U12 Stage 4A: explicit-stream metric path. The returned score is
+     * synchronized before return; bank-owned pinned twins are used. */
+    JTML_DLL double FastImplantDilationMetric(
+        GPUImage* rendered_image,
+        GPUDilatedFrame* comparison_frame,
+        int dilation,
+        cudaStream_t stream);
     /*Computes Version of Mahfouz Metric Very Quickly (Subtle Changes and also
     Not Using Simulated Annealing Obviously...) The score returned is: This
     function is for implants. THIS FUNCTION DOES NOT HAVE AN ERROR CHECK*/
@@ -84,6 +92,12 @@ public:
 
     JTML_DLL double DistanceMapMetric(
         GPUImage* projected_image, GPUFrame* distance_map, int dilation);
+    /* U12 Stage 4A: explicit-stream distance-map path. */
+    JTML_DLL double DistanceMapMetric(
+        GPUImage* projected_image,
+        GPUFrame* distance_map,
+        int dilation,
+        cudaStream_t stream);
 
     JTML_DLL double
     CurvatureHeatmapMetric(GPUImage* projected_image, GPUHeatmap* gpu_heatmap);
@@ -94,6 +108,9 @@ public:
      * stream. Legacy metric wrappers remain unchanged in this compatibility
      * slice; later stages consume these seams for explicit bank execution. */
     JTML_DLL void SetActiveBank(BankState* bank);
+    /* Returns false and restores bank 0 when the supplied view is incomplete.
+     * SetActiveBank remains void for the Stage 2 compatibility API. */
+    JTML_DLL bool TrySetActiveBank(BankState* bank);
     JTML_DLL void SetExecutionStream(cudaStream_t stream);
     JTML_DLL BankState* GetActiveBank() const;
     JTML_DLL cudaStream_t GetExecutionStream() const;
@@ -141,9 +158,15 @@ private:
     int* curvature_hausdorf_score_ = nullptr;
     int* dev_curvature_hausdorf_score_ = nullptr;
 
-    /* U12 Stage 2: non-owning compatibility metadata. */
+    /* U12 Stage 2/4A: non-owning compatibility metadata. */
     BankState* active_bank_ = nullptr;
     cudaStream_t execution_stream_ = nullptr;
+    MetricBuffers bank0_metrics_{};
+    bool bank0_metrics_captured_ = false;
+
+    void CaptureBank0Metrics();
+    void RestoreBank0Metrics();
+    bool BindMetricBank(const BankState& bank);
 };
 } // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

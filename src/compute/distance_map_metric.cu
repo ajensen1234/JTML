@@ -132,4 +132,39 @@ double GPUMetrics::DistanceMapMetric(
     return distance_map_score_[0] /
            (edge_pixels_count_[0] + 0.1); // adding a 0.1 to avoid singularities
 }
+
+double GPUMetrics::DistanceMapMetric(
+    GPUImage* projected_image, GPUFrame* distance_map, int dilation,
+    cudaStream_t stream) {
+    if (!stream || !active_bank_) {
+        return DistanceMapMetric(projected_image, distance_map, dilation);
+    }
+    const int height = projected_image->GetFrameHeight();
+    const int width = projected_image->GetFrameWidth();
+    int* bounding_box = projected_image->GetBoundingBox();
+    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_distance_map_score_);
+    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_edge_pixels_count_);
+    int left = max(bounding_box[0] - dilation, dilation);
+    int bottom = max(bounding_box[1] - dilation, dilation);
+    int right = min(bounding_box[2] + dilation, width - dilation - 1);
+    int top = min(bounding_box[3] + dilation, height - dilation - 1);
+    int crop_width = right - left + 1;
+    int crop_height = top - bottom + 1;
+    dim3 grid(static_cast<unsigned>(ceil(static_cast<double>(crop_width) /
+                                         sqrt(static_cast<double>(threads_per_block)))),
+              static_cast<unsigned>(ceil(static_cast<double>(crop_height) /
+                                         sqrt(static_cast<double>(threads_per_block)))));
+    DistanceMapMetric_Kernel<<<grid, threads_per_block, 0, stream>>>(
+        projected_image->GetDeviceImagePointer(), distance_map->GetDeviceImagePointer(),
+        dev_distance_map_score_, dev_edge_pixels_count_, width, height,
+        left, bottom, crop_width);
+    cudaError_t err = cudaMemcpyAsync(distance_map_score_, dev_distance_map_score_,
+                                      sizeof(int), cudaMemcpyDeviceToHost, stream);
+    if (err != cudaSuccess) return 0.0;
+    err = cudaMemcpyAsync(edge_pixels_count_, dev_edge_pixels_count_, sizeof(int),
+                          cudaMemcpyDeviceToHost, stream);
+    if (err != cudaSuccess) return 0.0;
+    if (cudaStreamSynchronize(stream) != cudaSuccess) return 0.0;
+    return distance_map_score_[0] / (edge_pixels_count_[0] + 0.1);
+}
 } /*end namespace gpu_cost_function*/

@@ -13,6 +13,9 @@
 #include "compute/render_engine.cuh"
 
 using gpu_cost_function::BankState;
+using gpu_cost_function::GPUFrame;
+using gpu_cost_function::GPUImage;
+using gpu_cost_function::GPUDilatedFrame;
 using gpu_cost_function::GPUMetrics;
 using gpu_cost_function::RenderEngine;
 
@@ -37,6 +40,27 @@ TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-b
                                  BankState* (GPUMetrics::*)() const>);
     static_assert(std::is_same_v<decltype(&GPUMetrics::GetExecutionStream),
                                  cudaStream_t (GPUMetrics::*)() const>);
+
+    static_assert(std::is_same_v<decltype(static_cast<double (GPUMetrics::*)(
+                                         GPUImage*,
+                                         GPUDilatedFrame*,
+                                         int,
+                                         cudaStream_t)>(
+        &GPUMetrics::FastImplantDilationMetric)),
+                                 double (GPUMetrics::*)(GPUImage*,
+                                                         GPUDilatedFrame*,
+                                                         int,
+                                                         cudaStream_t)>);
+    static_assert(std::is_same_v<decltype(static_cast<double (GPUMetrics::*)(
+                                         GPUImage*,
+                                         GPUFrame*,
+                                         int,
+                                         cudaStream_t)>(
+        &GPUMetrics::DistanceMapMetric)),
+                                 double (GPUMetrics::*)(GPUImage*,
+                                                         GPUFrame*,
+                                                         int,
+                                                         cudaStream_t)>);
 
     // A BankState is a view only. Stage 2 introduces no ownership or allocation.
     BankState view;
