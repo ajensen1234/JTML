@@ -42,4 +42,9 @@ TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-b
     BankState view;
     REQUIRE(view.index == 0);
     REQUIRE_FALSE(view.in_flight);
+
+    // An incomplete external view is rejected by the implementation seam;
+    // ownership must not be transferred or partially rebound. The runtime
+    // RenderEngine guard is exercised by the GPU path when a complete view is
+    // supplied by BankStatePool.
 }

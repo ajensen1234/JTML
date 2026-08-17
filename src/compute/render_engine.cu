@@ -349,7 +349,96 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
         initialized_correctly_ = false;
         FreeCuda();
     }
+    if (cudaStatus == cudaSuccess && !CaptureBank0Pointers()) {
+        initialized_correctly_ = false;
+        FreeCuda();
+        return cudaErrorInvalidValue;
+    }
     return cudaStatus;
+}
+
+bool RenderEngine::CaptureBank0Pointers() {
+    if (renderer_output_ == nullptr || dev_triangles_ == nullptr ||
+        dev_normals_ == nullptr || fragment_fill_ == nullptr) return false;
+    bank0_pointers_.z_line_values = dev_z_line_values_;
+    bank0_pointers_.transformed_vertex_zs = dev_transf_vertex_zs_;
+    bank0_pointers_.tangent_triangle = dev_tangent_triangle_;
+    bank0_pointers_.backface = dev_backface_;
+    bank0_pointers_.projected_triangles = dev_projected_triangles_;
+    bank0_pointers_.projected_triangles_snapped = dev_projected_triangles_snapped_;
+    bank0_pointers_.bounding_box_triangles = dev_bounding_box_triangles_;
+    bank0_pointers_.bounding_box_triangles_sizes = dev_bounding_box_triangles_sizes_;
+    bank0_pointers_.bounding_box_triangles_sizes_prefix = dev_bounding_box_triangles_sizes_prefix_;
+    bank0_pointers_.bounding_box = dev_bounding_box_;
+    bank0_pointers_.fragment_fill_device = dev_fragment_fill_;
+    bank0_pointers_.fragment_fill_host = fragment_fill_;
+    bank0_pointers_.stride_prefixes = dev_stride_prefixes_;
+    bank0_pointers_.cub_storage = dev_cub_storage_;
+    bank0_pointers_.cub_storage_bytes = cub_storage_bytes_;
+    bank0_pointers_.output_device = renderer_output_->GetDeviceImagePointer();
+    bank0_pointers_.bounding_box_host = renderer_output_->GetBoundingBox();
+    active_output_device_ = bank0_pointers_.output_device;
+    active_bounding_box_host_ = renderer_output_->GetBoundingBox();
+    bank0_pointers_captured_ = true;
+    active_bank_ = nullptr;
+    execution_stream_ = nullptr;
+    return true;
+}
+
+bool RenderEngine::BindBankPointers(BankState* bank) {
+    if (!bank0_pointers_captured_) return false;
+    if (bank == nullptr) { RestoreBank0Pointers(); return true; }
+    const auto& r = bank->primary;
+    if (r.output == nullptr || r.host_bounding_box == nullptr ||
+        r.dev_transformed_vertex_zs == nullptr || r.dev_backface == nullptr ||
+        r.dev_projected_triangles == nullptr || r.dev_projected_triangles_snapped == nullptr ||
+        r.dev_bounding_box_triangles == nullptr || r.dev_bounding_box_triangles_sizes == nullptr ||
+        r.dev_bounding_box_triangles_sizes_prefix == nullptr || r.dev_bounding_box == nullptr ||
+        r.dev_fragment_fill == nullptr || r.host_fragment_fill == nullptr ||
+        r.dev_stride_prefixes == nullptr || r.dev_cub_storage == nullptr) return false;
+    dev_z_line_values_ = nullptr;
+    dev_transf_vertex_zs_ = static_cast<float*>(r.dev_transformed_vertex_zs);
+    dev_tangent_triangle_ = static_cast<bool*>(r.dev_tangent_triangle);
+    dev_backface_ = static_cast<bool*>(r.dev_backface);
+    dev_projected_triangles_ = static_cast<float*>(r.dev_projected_triangles);
+    dev_projected_triangles_snapped_ = static_cast<int*>(r.dev_projected_triangles_snapped);
+    dev_bounding_box_triangles_ = static_cast<int*>(r.dev_bounding_box_triangles);
+    dev_bounding_box_triangles_sizes_ = static_cast<int*>(r.dev_bounding_box_triangles_sizes);
+    dev_bounding_box_triangles_sizes_prefix_ = static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix);
+    dev_bounding_box_ = static_cast<int*>(r.dev_bounding_box);
+    dev_fragment_fill_ = static_cast<int*>(r.dev_fragment_fill);
+    fragment_fill_ = static_cast<int*>(r.host_fragment_fill);
+    dev_stride_prefixes_ = static_cast<int*>(r.dev_stride_prefixes);
+    dev_cub_storage_ = r.dev_cub_storage;
+    cub_storage_bytes_ = r.cub_storage_bytes;
+    active_output_device_ = static_cast<unsigned char*>(r.output);
+    active_bounding_box_host_ = static_cast<int*>(r.host_bounding_box);
+    active_bank_ = bank;
+    execution_stream_ = bank->stream == nullptr ? nullptr : reinterpret_cast<cudaStream_t>(bank->stream);
+    return true;
+}
+
+void RenderEngine::RestoreBank0Pointers() {
+    if (!bank0_pointers_captured_) return;
+    dev_z_line_values_ = bank0_pointers_.z_line_values;
+    dev_transf_vertex_zs_ = bank0_pointers_.transformed_vertex_zs;
+    dev_tangent_triangle_ = bank0_pointers_.tangent_triangle;
+    dev_backface_ = bank0_pointers_.backface;
+    dev_projected_triangles_ = bank0_pointers_.projected_triangles;
+    dev_projected_triangles_snapped_ = bank0_pointers_.projected_triangles_snapped;
+    dev_bounding_box_triangles_ = bank0_pointers_.bounding_box_triangles;
+    dev_bounding_box_triangles_sizes_ = bank0_pointers_.bounding_box_triangles_sizes;
+    dev_bounding_box_triangles_sizes_prefix_ = bank0_pointers_.bounding_box_triangles_sizes_prefix;
+    dev_bounding_box_ = bank0_pointers_.bounding_box;
+    dev_fragment_fill_ = bank0_pointers_.fragment_fill_device;
+    fragment_fill_ = bank0_pointers_.fragment_fill_host;
+    dev_stride_prefixes_ = bank0_pointers_.stride_prefixes;
+    dev_cub_storage_ = bank0_pointers_.cub_storage;
+    cub_storage_bytes_ = bank0_pointers_.cub_storage_bytes;
+    active_output_device_ = bank0_pointers_.output_device;
+    active_bounding_box_host_ = bank0_pointers_.bounding_box_host;
+    active_bank_ = nullptr;
+    execution_stream_ = nullptr;
 }
 
 void RenderEngine::SetPose(Pose model_pose) {
@@ -924,7 +1013,11 @@ void RenderEngine::SetCapacityService(const CostCapacityService* service) {
 }
 
 void RenderEngine::SetActiveBank(BankState* bank) {
-    active_bank_ = bank;
+    if (bank == nullptr) {
+        RestoreBank0Pointers();
+        return;
+    }
+    (void)BindBankPointers(bank);
 }
 
 void RenderEngine::SetExecutionStream(cudaStream_t stream) {
@@ -941,10 +1034,11 @@ cudaStream_t RenderEngine::GetExecutionStream() const {
 
 cudaError_t RenderEngine::RenderPhase(BankState& bank) {
     if (bank.stream == nullptr) return cudaErrorInvalidResourceHandle;
+    if (!BindBankPointers(&bank)) return cudaErrorInvalidValue;
     auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
     auto& r = bank.primary;
-    auto output = static_cast<unsigned char*>(r.output);
-    auto bbox_host = static_cast<int*>(r.host_bounding_box);
+    auto output = active_output_device_;
+    auto bbox_host = active_bounding_box_host_;
     auto fragment_host = static_cast<int*>(r.host_fragment_fill);
     if (output == nullptr || bbox_host == nullptr || fragment_host == nullptr ||
         r.dev_bounding_box == nullptr || r.dev_fragment_fill == nullptr) {
@@ -1003,9 +1097,10 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
     if (bank.stream == nullptr || bank.primary.host_fragment_fill == nullptr) {
         return cudaErrorInvalidResourceHandle;
     }
+    if (!BindBankPointers(&bank)) return cudaErrorInvalidValue;
     auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
     auto& r = bank.primary;
-    auto output = static_cast<unsigned char*>(r.output);
+    auto output = active_output_device_;
     if (output == nullptr) return cudaErrorInvalidValue;
     const int fragment_fill = *static_cast<int*>(r.host_fragment_fill);
     if (static_cast<double>(fragment_fill) >

@@ -276,6 +276,38 @@ private:
     /* U12 Stage 2: non-owning compatibility metadata. */
     BankState* active_bank_ = nullptr;
     cudaStream_t execution_stream_ = nullptr;
+
+    /* U12 Stage 3B: raw pointer aliases are rebound to a fully populated
+     * external BankState view, while these captured aliases remain the
+     * RenderEngine-owned bank-0 allocation. */
+    struct RenderPointerSet {
+        float* z_line_values = nullptr;
+        float* transformed_vertex_zs = nullptr;
+        bool* tangent_triangle = nullptr;
+        bool* backface = nullptr;
+        float* projected_triangles = nullptr;
+        int* projected_triangles_snapped = nullptr;
+        int* bounding_box_triangles = nullptr;
+        int* bounding_box_triangles_sizes = nullptr;
+        int* bounding_box_triangles_sizes_prefix = nullptr;
+        int* bounding_box = nullptr;
+        int* fragment_fill_device = nullptr;
+        int* fragment_fill_host = nullptr;
+        int* stride_prefixes = nullptr;
+        void* cub_storage = nullptr;
+        size_t cub_storage_bytes = 0;
+        unsigned char* output_device = nullptr;
+        int* bounding_box_host = nullptr;
+    };
+
+    bool CaptureBank0Pointers();
+    bool BindBankPointers(BankState* bank);
+    void RestoreBank0Pointers();
+
+    RenderPointerSet bank0_pointers_;
+    unsigned char* active_output_device_ = nullptr;
+    int* active_bounding_box_host_ = nullptr;
+    bool bank0_pointers_captured_ = false;
 };
 } // namespace gpu_cost_function
 #endif /* RENDER_ENGINE_H */
