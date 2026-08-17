@@ -8,10 +8,10 @@
 
 | Metric | Median (µs) | p95 (µs) |
 |---|---:|---:|
-| CPU host wall time | 84.394 | 126.059 |
-| GPU CUDA-event elapsed time | 84.62399989 | 123.871997 |
+| CPU host wall time | 117.854 | 265.858 |
+| GPU CUDA-event elapsed time | 118.4 | 265.9519911 |
 
-- GPU/CPU median ratio: 1.002725311
+- GPU/CPU median ratio: 1.004632851
 - `gpu_active_per_eval_ge_cpu_host_per_eval`: true
 - `gpu_active_over_1ms`: false
 - `u12_band_reachable_by_premise`: true

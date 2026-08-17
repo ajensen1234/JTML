@@ -26,6 +26,7 @@
 namespace gpu_cost_function {
 
 class CostCapacityService;  // plan 010 U10 (defined in cost_capacity_service.cuh)
+struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
     JTML_DLL Pose(
@@ -109,6 +110,13 @@ public:
      * NEVER changes the produced grid for the 256-pinned fill kernels when the
      * work is within SAFE_CAP (provably bit-identical -- see Render()).*/
     JTML_DLL void SetCapacityService(const CostCapacityService* service);
+
+    /* U12 Stage 2: bind non-owning bank metadata and an optional execution
+     * stream.  This slice does not transfer ownership or alter legacy calls. */
+    JTML_DLL void SetActiveBank(BankState* bank);
+    JTML_DLL void SetExecutionStream(cudaStream_t stream);
+    JTML_DLL BankState* GetActiveBank() const;
+    JTML_DLL cudaStream_t GetExecutionStream() const;
 
 private:
     /*Host (CPU) Variables*/
@@ -258,6 +266,10 @@ private:
 
     /*Plan 010 U10: optional capacity service (owned by caller; nullptr = pre-unit).*/
     const CostCapacityService* capacity_service_ = nullptr;
+
+    /* U12 Stage 2: non-owning compatibility metadata. */
+    BankState* active_bank_ = nullptr;
+    cudaStream_t execution_stream_ = nullptr;
 };
 } // namespace gpu_cost_function
 #endif /* RENDER_ENGINE_H */

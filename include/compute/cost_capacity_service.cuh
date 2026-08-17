@@ -28,6 +28,7 @@
 
 #include "cuda_launch_parameters.h"  // threads_per_block, maximum_stride_size (plain consts)
 #include "domain/data_structures_6D.h"  // Point6D for the U11 batch seam
+#include "compute/bank_state.cuh"  // U12 Stage 1 ownership contract
 
 namespace gpu_cost_function {
 

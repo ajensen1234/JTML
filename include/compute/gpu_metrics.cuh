@@ -18,6 +18,7 @@
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
+struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
 
 /*Class of GPU Metrics*/
 class GPUMetrics {
@@ -89,6 +90,14 @@ public:
 
     JTML_DLL void AllocateCurvatureHausdorfScore(int num_keypoints);
 
+    /* U12 Stage 2: bind non-owning bank metadata and an optional execution
+     * stream. Legacy metric wrappers remain unchanged in this compatibility
+     * slice; later stages consume these seams for explicit bank execution. */
+    JTML_DLL void SetActiveBank(BankState* bank);
+    JTML_DLL void SetExecutionStream(cudaStream_t stream);
+    JTML_DLL BankState* GetActiveBank() const;
+    JTML_DLL cudaStream_t GetExecutionStream() const;
+
 private:
     /*Integer for Pinned Memory if Metric Counts Pixels on GPU (as in dilation
     metric) This is often used to compute the metric so we include it in the
@@ -131,6 +140,10 @@ private:
     // Curvature heatmap score (going to be min distance)
     int* curvature_hausdorf_score_ = nullptr;
     int* dev_curvature_hausdorf_score_ = nullptr;
+
+    /* U12 Stage 2: non-owning compatibility metadata. */
+    BankState* active_bank_ = nullptr;
+    cudaStream_t execution_stream_ = nullptr;
 };
 } // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

@@ -922,4 +922,20 @@ bool RenderEngine::IsInitializedCorrectly() {
 void RenderEngine::SetCapacityService(const CostCapacityService* service) {
     capacity_service_ = service;
 }
+
+void RenderEngine::SetActiveBank(BankState* bank) {
+    active_bank_ = bank;
+}
+
+void RenderEngine::SetExecutionStream(cudaStream_t stream) {
+    execution_stream_ = stream;
+}
+
+BankState* RenderEngine::GetActiveBank() const {
+    return active_bank_;
+}
+
+cudaStream_t RenderEngine::GetExecutionStream() const {
+    return execution_stream_;
+}
 } // namespace gpu_cost_function

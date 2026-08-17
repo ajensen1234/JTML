@@ -123,6 +123,30 @@ target_link_libraries(jtml_test_cost_capacity_service PRIVATE Catch2::Catch2With
 add_test(NAME jtml.cost_capacity_service COMMAND jtml_test_cost_capacity_service)
 set_tests_properties(jtml.cost_capacity_service PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# Plan 010 U12 Stage 1: allocation-free bank-state/write-set contract and
+# pure footprint/admission arithmetic. Header-only, CUDA-free, headless.
+add_executable(jtml_test_bank_state unit/test_bank_state.cpp)
+target_include_directories(jtml_test_bank_state PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_bank_state PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.bank_state COMMAND jtml_test_bank_state)
+set_tests_properties(jtml.bank_state PROPERTIES LABELS "headless" TIMEOUT 120)
+
+# Plan 010 U12 Stage 2: compile-time compatibility pins for non-owning
+# RenderEngine/GPUMetrics bank and stream bindings. No CUDA execution here.
+add_executable(jtml_test_bank_binding_api unit/test_bank_binding_api.cpp)
+target_include_directories(jtml_test_bank_binding_api PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_bank_binding_api PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.bank_binding_api COMMAND jtml_test_bank_binding_api)
+set_tests_properties(jtml.bank_binding_api PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Pose / kinematics persistence service round-trip tests (plan U7, R2/R8/R9).
 # Pure file-format logic; compiled CUDA/Qt-free alongside the real golden
 # fixture with the data-structure source, no event loop, no GPU.

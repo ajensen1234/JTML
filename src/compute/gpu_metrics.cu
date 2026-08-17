@@ -177,4 +177,20 @@ int GPUMetrics::ComputeSumWhitePixels(GPUImage* image, cudaError* error) {
 bool GPUMetrics::IsInitializedCorrectly() {
     return initialized_correctly_;
 }
+
+void GPUMetrics::SetActiveBank(BankState* bank) {
+    active_bank_ = bank;
+}
+
+void GPUMetrics::SetExecutionStream(cudaStream_t stream) {
+    execution_stream_ = stream;
+}
+
+BankState* GPUMetrics::GetActiveBank() const {
+    return active_bank_;
+}
+
+cudaStream_t GPUMetrics::GetExecutionStream() const {
+    return execution_stream_;
+}
 } // namespace gpu_cost_function
