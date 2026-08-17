@@ -1129,7 +1129,10 @@ instrumentation verdict from the measurement workstream must exist, EXTENDED wit
 time per cost call (R10: no perf claim without measured numbers; the band-reachability
 condition is =GPU_active_per_eval ≥ CPU_host_per_eval= --- if CPU overhead dominates, no N
 reaches the band; and if GPU-active > 1 ms falsified the sync-bound model, this unit's
-premise is re-reviewed before execution)
+premise is re-reviewed before execution). **Gate now satisfied by
+=test/golden/cut0_measurement.md= (RTX 3090 Ti, 20 evals after 3 warmups): CPU median
+97.694 µs / p95 120.739 µs; GPU-event median 98.080 µs / p95 119.968 µs; ratio 1.004;
+GPU ≥ CPU = true; GPU > 1 ms = false.**
 
 *Files:* - Modify: =src/compute/cost_capacity_service.cuh/.cu= (owns the bank POOL ---
 pool init = min(EvalBankCount, |batch max|) at Initialize; per-pose =CheckoutBank()= /

@@ -27,7 +27,10 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <chrono>
 #include <string>
+#include <fstream>
+#include <iomanip>
 #include <vector>
 
 #include <opencv2/imgcodecs.hpp>
@@ -273,4 +276,130 @@ TEST_CASE("U10 bit-identity: pose->score sequence + fill-kernel configs",
         REQUIRE(std::isfinite(scores[i]));
     }
     REQUIRE(cudaGetLastError() == cudaSuccess);
+}
+
+namespace {
+
+double Percentile95(std::vector<double> samples) {
+    std::sort(samples.begin(), samples.end());
+    const std::size_t rank =
+        static_cast<std::size_t>(std::ceil(0.95 * samples.size()));
+    return samples[std::max<std::size_t>(1, rank) - 1];
+}
+
+double Median(std::vector<double> samples) {
+    std::sort(samples.begin(), samples.end());
+    const std::size_t mid = samples.size() / 2;
+    if (samples.size() % 2 == 0) {
+        return (samples[mid - 1] + samples[mid]) / 2.0;
+    }
+    return samples[mid];
+}
+
+}  // namespace
+
+TEST_CASE("Cut-0: GPU-active versus CPU host time per production cost call",
+          "[oracle][gpu]") {
+    gpu_cost_function::CostCapacityService service;
+    REQUIRE(service.refreshDeviceSnapshot(0));
+    REQUIRE(service.available());
+
+    Pipeline p = BuildPipeline(&service);
+    std::string err;
+    REQUIRE(p.trunk->InitializeActiveCostFunction(err));
+    auto cost = jta::BuildGpuCostAdapter(p.model, p.calibration, *p.trunk);
+    const auto poses = EvalPoses(StartPose());
+    REQUIRE_FALSE(poses.empty());
+
+    constexpr int kWarmups = 3;
+    constexpr int kSamples = 20;
+    for (int i = 0; i < kWarmups; ++i) {
+        (void)cost(poses[static_cast<std::size_t>(i) % poses.size()]);
+    }
+    REQUIRE(cudaDeviceSynchronize() == cudaSuccess);
+
+    cudaEvent_t start = nullptr;
+    cudaEvent_t stop = nullptr;
+    REQUIRE(cudaEventCreate(&start) == cudaSuccess);
+    REQUIRE(cudaEventCreate(&stop) == cudaSuccess);
+
+    std::vector<double> cpu_us;
+    std::vector<double> gpu_us;
+    cpu_us.reserve(kSamples);
+    gpu_us.reserve(kSamples);
+
+    for (int i = 0; i < kSamples; ++i) {
+        const Point6D& pose = poses[static_cast<std::size_t>(i) % poses.size()];
+        const auto cpu_begin = std::chrono::steady_clock::now();
+        REQUIRE(cudaEventRecord(start, nullptr) == cudaSuccess);
+        const double score = cost(pose);
+        const auto cpu_end = std::chrono::steady_clock::now();
+        REQUIRE(std::isfinite(score));
+        REQUIRE(cudaEventRecord(stop, nullptr) == cudaSuccess);
+        REQUIRE(cudaEventSynchronize(stop) == cudaSuccess);
+
+        float event_ms = 0.0f;
+        REQUIRE(cudaEventElapsedTime(&event_ms, start, stop) == cudaSuccess);
+        const double host_microseconds =
+            std::chrono::duration<double, std::micro>(cpu_end - cpu_begin).count();
+        const double device_microseconds = static_cast<double>(event_ms) * 1000.0;
+        REQUIRE(std::isfinite(host_microseconds));
+        REQUIRE(std::isfinite(device_microseconds));
+        REQUIRE(host_microseconds > 0.0);
+        REQUIRE(device_microseconds >= 0.0);
+        cpu_us.push_back(host_microseconds);
+        gpu_us.push_back(device_microseconds);
+    }
+
+    REQUIRE(cudaEventDestroy(start) == cudaSuccess);
+    REQUIRE(cudaEventDestroy(stop) == cudaSuccess);
+
+    const double cpu_median = Median(cpu_us);
+    const double cpu_p95 = Percentile95(cpu_us);
+    const double gpu_median = Median(gpu_us);
+    const double gpu_p95 = Percentile95(gpu_us);
+    const double ratio = gpu_median / cpu_median;
+    const bool gpu_ge_cpu = gpu_median >= cpu_median;
+    const bool gpu_over_1ms = gpu_median > 1000.0;
+
+    std::ofstream artifact("test/golden/cut0_measurement.md");
+    REQUIRE(artifact.good());
+    artifact << "# Cut-0 measurement: GPU-active versus CPU host time\n\n"
+             << "- Device: CUDA device 0\n"
+             << "- Fixture: `example_studies/Kneel_1/1024/2806.tif`\n"
+             << "- Cost: `DIRECT_DILATION`; backface OFF; Canny `3/0/150`; dilation `6`\n"
+             << "- Warmups: " << kWarmups << "\n"
+             << "- Measured evaluations: " << kSamples << "\n\n"
+             << "| Metric | Median (µs) | p95 (µs) |\n"
+             << "|---|---:|---:|\n"
+             << "| CPU host wall time | " << std::setprecision(10) << cpu_median
+             << " | " << cpu_p95 << " |\n"
+             << "| GPU CUDA-event elapsed time | " << gpu_median << " | " << gpu_p95
+             << " |\n\n"
+             << "- GPU/CPU median ratio: " << ratio << "\n"
+             << "- `gpu_active_per_eval_ge_cpu_host_per_eval`: "
+             << (gpu_ge_cpu ? "true" : "false") << "\n"
+             << "- `gpu_active_over_1ms`: " << (gpu_over_1ms ? "true" : "false")
+             << "\n"
+             << "- `u12_band_reachable_by_premise`: "
+             << (gpu_ge_cpu ? "true" : "false") << "\n\n"
+             << "Interpretation: "
+             << (gpu_over_1ms
+                     ? "GPU-active time exceeds 1 ms; re-review U12 before execution."
+                     : (gpu_ge_cpu
+                            ? "U12 band-reachability premise is satisfied."
+                            : "GPU-active time is below CPU host time; U12 must be re-reviewed and is a measured no-go unless the owner changes the gate."))
+             << "\n";
+    artifact.close();
+
+    std::cout << std::fixed << std::setprecision(3)
+              << "[cut0] cpu_median_us=" << cpu_median
+              << " cpu_p95_us=" << cpu_p95
+              << " gpu_median_us=" << gpu_median
+              << " gpu_p95_us=" << gpu_p95
+              << " gpu_cpu_ratio=" << ratio
+              << " gpu_ge_cpu=" << (gpu_ge_cpu ? "true" : "false")
+              << " gpu_over_1ms=" << (gpu_over_1ms ? "true" : "false")
+              << " u12_band_reachable=" << (gpu_ge_cpu ? "true" : "false")
+              << std::endl;
 }

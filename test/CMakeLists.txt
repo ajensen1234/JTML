@@ -1520,6 +1520,12 @@ target_link_options(jtml_test_bit_identity PRIVATE
 add_test(NAME jtml.bit_identity COMMAND jtml_test_bit_identity)
 set_tests_properties(jtml.bit_identity PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+# Cut-0 timing verdict reuses the production bit-identity fixture and executable;
+# the Catch2 name filter selects only the GPU-active/CPU-host measurement.
+add_test(NAME jtml.cut0_measurement
+    COMMAND jtml_test_bit_identity "Cut-0: GPU-active versus CPU host time per production cost call")
+set_tests_properties(jtml.cut0_measurement PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
 # Tier-2 multi-stage oracle (plan 008 U6). GPU-only: NEVER in the headless
