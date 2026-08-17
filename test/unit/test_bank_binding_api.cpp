@@ -25,6 +25,10 @@ TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-b
                                  BankState* (RenderEngine::*)() const>);
     static_assert(std::is_same_v<decltype(&RenderEngine::GetExecutionStream),
                                  cudaStream_t (RenderEngine::*)() const>);
+    static_assert(std::is_same_v<decltype(&RenderEngine::RenderPhase),
+                                 cudaError_t (RenderEngine::*)(BankState&)>);
+    static_assert(std::is_same_v<decltype(&RenderEngine::CompleteRenderPhase),
+                                 cudaError_t (RenderEngine::*)(BankState&)>);
     static_assert(std::is_same_v<decltype(&GPUMetrics::SetActiveBank),
                                  void (GPUMetrics::*)(BankState*)>);
     static_assert(std::is_same_v<decltype(&GPUMetrics::SetExecutionStream),

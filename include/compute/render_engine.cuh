@@ -118,6 +118,12 @@ public:
     JTML_DLL BankState* GetActiveBank() const;
     JTML_DLL cudaStream_t GetExecutionStream() const;
 
+    /* U12 Stage 3A: explicit monoplane bank render phases. These APIs are
+     * non-owning views over a caller-owned BankState; legacy Render() remains
+     * the unchanged bank-0 synchronous wrapper. */
+    JTML_DLL cudaError_t RenderPhase(BankState& bank);
+    JTML_DLL cudaError_t CompleteRenderPhase(BankState& bank);
+
 private:
     /*Host (CPU) Variables*/
 

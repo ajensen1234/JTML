@@ -938,4 +938,105 @@ BankState* RenderEngine::GetActiveBank() const {
 cudaStream_t RenderEngine::GetExecutionStream() const {
     return execution_stream_;
 }
+
+cudaError_t RenderEngine::RenderPhase(BankState& bank) {
+    if (bank.stream == nullptr) return cudaErrorInvalidResourceHandle;
+    auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
+    auto& r = bank.primary;
+    auto output = static_cast<unsigned char*>(r.output);
+    auto bbox_host = static_cast<int*>(r.host_bounding_box);
+    auto fragment_host = static_cast<int*>(r.host_fragment_fill);
+    if (output == nullptr || bbox_host == nullptr || fragment_host == nullptr ||
+        r.dev_bounding_box == nullptr || r.dev_fragment_fill == nullptr) {
+        return cudaErrorInvalidValue;
+    }
+
+    cudaError_t err = cudaMemsetAsync(
+        output, 0, width_ * height_ * sizeof(unsigned char), stream);
+    if (err != cudaSuccess) return err;
+    ResetKernel<<<1, 1, 0, stream>>>(static_cast<int*>(r.dev_bounding_box), width_, height_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block, 0, stream>>>(
+        dev_triangles_, static_cast<float*>(r.dev_projected_triangles),
+        static_cast<int*>(r.dev_projected_triangles_snapped), 3 * triangle_count_,
+        dist_over_pix_pitch_, pix_conversion_x_, pix_conversion_y_,
+        model_pose_.x_location_, model_pose_.y_location_, model_pose_.z_location_,
+        model_rotation_mat_, dev_normals_, static_cast<bool*>(r.dev_backface),
+        use_backface_culling_, fx_, fy_, cx_, cy_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    BoundingBoxForTrianglesKernel<<<dim_grid_bounding_box_, threads_per_block, 0, stream>>>(
+        static_cast<int*>(r.dev_bounding_box_triangles),
+        static_cast<int*>(r.dev_projected_triangles_snapped), triangle_count_,
+        width_, height_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block, 0, stream>>>(
+        static_cast<int*>(r.dev_bounding_box_triangles),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes), triangle_count_,
+        static_cast<int*>(r.dev_bounding_box), static_cast<bool*>(r.dev_backface));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    err = cub::DeviceScan::ExclusiveSum(
+        r.dev_cub_storage, r.cub_storage_bytes,
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        triangle_count_, stream);
+    if (err != cudaSuccess) return err;
+    PrepareLaunchPacketKernel<<<1, 1, 0, stream>>>(
+        static_cast<int*>(r.dev_fragment_fill),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix), triangle_count_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    err = cudaMemcpyAsync(bbox_host, r.dev_bounding_box, 4 * sizeof(int),
+                          cudaMemcpyDeviceToHost, stream);
+    if (err != cudaSuccess) return err;
+    err = cudaMemcpyAsync(fragment_host, r.dev_fragment_fill, sizeof(int),
+                          cudaMemcpyDeviceToHost, stream);
+    if (err != cudaSuccess) return err;
+    return cudaStreamSynchronize(stream);
+}
+
+cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
+    if (bank.stream == nullptr || bank.primary.host_fragment_fill == nullptr) {
+        return cudaErrorInvalidResourceHandle;
+    }
+    auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
+    auto& r = bank.primary;
+    auto output = static_cast<unsigned char*>(r.output);
+    if (output == nullptr) return cudaErrorInvalidValue;
+    const int fragment_fill = *static_cast<int*>(r.host_fragment_fill);
+    if (static_cast<double>(fragment_fill) >
+        static_cast<double>(maximum_stride_size) *
+            static_cast<double>(threads_per_block - 1)) {
+        fragment_overflow_ = true;
+        return cudaErrorMemoryAllocation;
+    }
+    int fill_grid = static_cast<int>(ceil(
+        static_cast<double>(fragment_fill) / static_cast<double>(threads_per_block)));
+    if (capacity_service_ && capacity_service_->available()) {
+        const CapacityGrid grid =
+            capacity_service_->gridFor(fragment_fill, threads_per_block);
+        if (grid.capacity_applicable) fill_grid = grid.grid_blocks;
+    }
+    StridePrefixKernel<<<
+        ceil(static_cast<double>(fragment_fill) /
+             static_cast<double>(threads_per_block * threads_per_block)),
+        threads_per_block, 0, stream>>>(
+        threads_per_block, static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        static_cast<int*>(r.dev_stride_prefixes), triangle_count_);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) return err;
+    FillTriangleKernel<<<fill_grid, threads_per_block, 0, stream>>>(
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        static_cast<int*>(r.dev_bounding_box_triangles), output,
+        triangle_count_, width_, height_,
+        static_cast<float*>(r.dev_projected_triangles),
+        static_cast<int*>(r.dev_stride_prefixes));
+    return cudaGetLastError();
+}
 } // namespace gpu_cost_function
