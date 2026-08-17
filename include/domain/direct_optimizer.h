@@ -27,6 +27,18 @@ class DirectOptimizer {
 public:
     using CostFunction = std::function<double(const Point6D&)>;
 
+    // Plan 010 U11 (R12): the optional BATCH cost-query sibling. When set, the
+    // per-iteration POH center batch replaces the per-point eval loop with ONE
+    // call, results returned in INPUT ORDER; per-eval bookkeeping (calls++,
+    // non-finite handling, optimum update, storage, improvement callback)
+    // REPLAYS in that order, so cost_function_calls_, the optimum sequence,
+    // storage order, and callback firing ORDER are identical whether the cost
+    // layer batches or not. MAY batch any pairwise-independent eval set; the
+    // single-point path is unchanged when unset. No CUDA types cross this
+    // header -- how the cost layer executes the batch is its own detail.
+    using BatchCostFunction =
+        std::function<std::vector<double>(const std::vector<Point6D>&)>;
+
     // Per-stage optimizer-variant slot (plan 008 U8, origin R3). Plain data
     // whose defaults reproduce today's classic-DIRECT search BIT-IDENTICALLY:
     // each field maps line-by-line onto the current code -- Original
@@ -128,6 +140,12 @@ public:
     // optimum display). Receives the physical/denormalized location and value.
     void SetImprovementCallback(ImprovementCallback cb);
 
+    // Plan 010 U11 (R12): install the optional batch cost-query sibling.
+    // Unset (default) => the exact pre-unit serial path. When set, the POH
+    // center batch is evaluated in one call and results are replayed in input
+    // order (the Tier-0 replay contract).
+    void SetBatchCost(BatchCostFunction cb);
+
 private:
     void ConvexHull();
     void TrisectPotentiallyOptimal();
@@ -142,6 +160,9 @@ private:
     [[nodiscard]] Point6D DenormalizeFromCenter(Point6D unit_point) const;
 
     CostFunction cost_;
+    // Plan 010 U11 (R12): optional batch cost-query sibling. Empty when unset
+    // (default), in which case the per-point serial path is used unchanged.
+    BatchCostFunction batch_cost_;
 
     Point6D range_;
     Point6D starting_point_;

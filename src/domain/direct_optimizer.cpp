@@ -158,6 +158,10 @@ void DirectOptimizer::SetImprovementCallback(ImprovementCallback cb) {
     improvement_callback_ = std::move(cb);
 }
 
+void DirectOptimizer::SetBatchCost(BatchCostFunction cb) {
+    batch_cost_ = std::move(cb);
+}
+
 void DirectOptimizer::ConvexHull() {
     /*Reset Potentially Optimal Vector*/
     potentially_optimal_col_ids_.clear();
@@ -222,6 +226,101 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
     /*Trisect each potentially-optimal box: split along the largest
      * denormalized side, keep one box at the original center, and move the two
      * outer boxes to the +/- shifted centers and re-evaluate them.*/
+    //
+    // Plan 010 U11 (R12) batch seam: when batch_cost_ is set, the changed-center
+    // evals of the WHOLE iteration are collected into ONE batch (packing order:
+    // per POH box the +shift let this A center then the -shift B center, boxes
+    // in POH-column order), sent to the cost layer, and the results replayed in
+    // input order. The storage bookkeeping (oc box stored, then A, then B per
+    // box) is deferred until AFTER the batch result is size-validated, so the
+    // storage order, cost_function_calls_, optimum sequence, and improvement-
+    // callback order are identical to the serial path (R12 / AE2).
+    if (batch_cost_) {
+        // Pending boxes in serial storage order: per POH box {oc, A, B}.
+        // changed_index holds the slot into `batch_centers` for A/B (-1 for oc).
+        std::vector<HyperBox6D*> pending;
+        std::vector<int> pending_changed_index;
+        std::vector<Point6D> batch_centers;  // denormalized, in packing order
+
+        for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
+            Point6D denormalized_sides =
+                DenormalizeRange(potentially_optimal_hyperboxes_[i].GetSides());
+            Direction largest_direction =
+                denormalized_sides.GetLargestDirection();
+
+            /*Unchanged-center hyperbox (no eval).*/
+            auto oc = new HyperBox6D();
+            *oc = potentially_optimal_hyperboxes_[i];
+            oc->TrisectSide(largest_direction);
+            pending.push_back(oc);
+            pending_changed_index.push_back(-1);
+
+            auto make_changed = [&](int sign) -> int {
+                auto box = new HyperBox6D();
+                *box = potentially_optimal_hyperboxes_[i];
+                box->TrisectSide(largest_direction);
+                Point6D updated = box->GetCenter();
+                updated.UpdateDirection(
+                    largest_direction,
+                    updated.GetDirection(largest_direction) +
+                        sign * box->GetSides().GetDirection(largest_direction));
+                box->SetCenter(updated);
+                const int idx = static_cast<int>(batch_centers.size());
+                batch_centers.push_back(DenormalizeFromCenter(box->GetCenter()));
+                pending.push_back(box);
+                pending_changed_index.push_back(idx);
+                return idx;
+            };
+
+            make_changed(+1);  // A: +shift
+            make_changed(-1);  // B: -shift
+        }
+
+        /*Single batch call over the whole iteration's changed centers.*/
+        const std::vector<double> results = batch_cost_(batch_centers);
+
+        /*Fail fast on a size-mismatched result (never partially consumed, never
+         * silently re-fallen-back to per-point evaluation).*/
+        if (results.size() != batch_centers.size()) {
+            for (auto* b : pending) delete b;
+            throw std::invalid_argument(
+                "DirectOptimizer: batch cost returned the wrong result size "
+                "(contract violation, plan 010 U11)");
+        }
+
+        /*Replay bookkeeping in the serial storage order. A/B results are read
+         * from `results` by their packing slot; oc boxes store with no eval.*/
+        for (std::size_t p = 0; p < pending.size(); ++p) {
+            HyperBox6D* box = pending[p];
+            const int cidx = pending_changed_index[p];
+            if (cidx < 0) {
+                data_.AddHyperBox(box);
+                continue;
+            }
+            const double result = results[static_cast<std::size_t>(cidx)];
+            const Point6D denormalized_point = batch_centers[static_cast<std::size_t>(cidx)];
+
+            cost_function_calls_++;
+            if (!std::isfinite(result)) {
+                non_finite_count_++;
+                if (iteration_callback_) iteration_callback_();
+                delete box;
+                continue;
+            }
+            box->value_ = result;
+            data_.AddHyperBox(box);
+            if (result < current_optimum_value_) {
+                current_optimum_value_ = result;
+                current_optimum_location_ = denormalized_point;
+                if (improvement_callback_) {
+                    improvement_callback_(current_optimum_location_,
+                                          current_optimum_value_);
+                }
+            }
+        }
+        return;
+    }
+
     for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
         Point6D denormalized_sides =
             DenormalizeRange(potentially_optimal_hyperboxes_[i].GetSides());

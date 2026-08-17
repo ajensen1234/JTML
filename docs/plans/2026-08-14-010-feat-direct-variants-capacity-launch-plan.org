@@ -1033,7 +1033,7 @@ current paradigm? Each time you're launching that code, you're just re-using the
 set of kernels over a different set of data.
 --------------
 
-- [ ] U11. *The batch cost query seam (R12 sibling + replay bookkeeping)*
+- [x] U11. *The batch cost query seam (R12 sibling + replay bookkeeping)*
 
 *Goal:* The query surface the owner described --- the optimizer sends a POH batch to the
 cost layer and gets per-point results back in input order --- lands as R12's optional

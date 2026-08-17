@@ -96,6 +96,20 @@ target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
 set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Plan 010 U11: the tier-0 batch-cost REPLAY test (R12). Compiles the optimizer
+# + data-structure sources CUDA-free, exactly like jtml_test_direct_optimizer.
+# The batch seam is a pure-domain std::function, so the replay contract is
+# fully headless-testable against recording fakes.
+add_executable(jtml_test_direct_optimizer_batch
+    unit/test_direct_optimizer_batch.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp)
+target_include_directories(jtml_test_direct_optimizer_batch PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.direct_optimizer_batch COMMAND jtml_test_direct_optimizer_batch)
+set_tests_properties(jtml.direct_optimizer_batch PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # CostCapacityService pure capacity sizing math (plan 010 U9). The service's
 # sizing functions are INLINE in the header (cost_capacity_service.cuh), so this
 # headless test compiles the header only -- no CUDA link -- against injected fake

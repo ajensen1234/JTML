@@ -24,8 +24,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "cuda_launch_parameters.h"  // threads_per_block, maximum_stride_size (plain consts)
+#include "domain/data_structures_6D.h"  // Point6D for the U11 batch seam
 
 namespace gpu_cost_function {
 
@@ -146,6 +148,23 @@ public:
     int bankCount() const { return evalBankCount(snap_); }
     bool available() const { return isCapacityAvailable(snap_); }
     const DeviceCapacitySnapshot& snapshot() const { return snap_; }
+
+    /* Plan 010 U11 (R12): v1 serial batch executor through the injected
+     * per-pose cost path (N=1 identity until U12). Evaluates every pose in input
+     * order and returns the scores in the same order. This is the compute-side
+     * implementation detail behind the domain's BatchCostFunction -- the domain
+     * layer never constructs it directly; the coordinator (U6/U12) wires it. No
+     * streams/banks yet; U12 adds them. */
+    template <typename SinglePointEval>
+    std::vector<double> RunCostBatch(
+        const std::vector<Point6D>& poses, SinglePointEval eval) const {
+        std::vector<double> out;
+        out.reserve(poses.size());
+        for (const auto& p : poses) {
+            out.push_back(static_cast<double>(eval(p)));
+        }
+        return out;
+    }
 
     /* Headless-test seam: install an injected snapshot. */
     void setSnapshot(const DeviceCapacitySnapshot& snap) { snap_ = snap; }
