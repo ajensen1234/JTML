@@ -3,6 +3,8 @@
 
 /*Cost Function Manager*/
 #include "CostFunctionManager.h"
+
+#include <limits>
 /******************************************************************************/
 /******************************************************************************/
 /******************************** BEGIN WARNING *******************************/
@@ -277,6 +279,61 @@ void CostFunctionManager::setCurrentFrameIndex(
 /*************************DO NOT EDIT FUNCTIONS BELOW *************************/
 /******************************************************************************/
 /*FUNCTIONS THAT INTERACT WITH WIZARD*/
+
+bool CostFunctionManager::TrySetActiveBank(
+    gpu_cost_function::BankState* bank) {
+    if (gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr) {
+        return false;
+    }
+    if (bank == nullptr) {
+        gpu_principal_model_->TrySetActiveBank(nullptr);
+        gpu_metrics_->TrySetActiveBank(nullptr);
+        active_bank_ = nullptr;
+        return true;
+    }
+    if (!gpu_principal_model_->TrySetActiveBank(bank) ||
+        !gpu_metrics_->TrySetActiveBank(bank)) {
+        gpu_principal_model_->TrySetActiveBank(nullptr);
+        gpu_metrics_->TrySetActiveBank(nullptr);
+        active_bank_ = nullptr;
+        return false;
+    }
+    active_bank_ = bank;
+    return true;
+}
+
+double CostFunctionManager::EvaluateDirectDilationOnBank(
+    gpu_cost_function::BankState& bank) {
+    /* Stage 4B is deliberately monoplane/direct-dilation only.  Unsupported
+     * cost families and biplane state fail closed; the scheduler can retain the
+     * serial adapter rather than silently mixing bank and bank-0 state. */
+    if (active_cost_function_ != "DIRECT_DILATION" || biplane_mode_ ||
+        gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr ||
+        bank.stream == nullptr || !TrySetActiveBank(&bank)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    const auto fail = [this]() {
+        TrySetActiveBank(nullptr);
+        return std::numeric_limits<double>::quiet_NaN();
+    };
+    if (!gpu_principal_model_->RenderPrimaryCamera(bank)) return fail();
+
+    const auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
+    double score =
+        DIRECT_DILATION_current_white_pix_sum_dilated_comparison_image_A_ +
+        gpu_metrics_->FastImplantDilationMetric(
+            gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+            gpu_dilated_frames_A_->at(current_frame_index_),
+            DIRECT_DILATION_current_dilation_parameter, stream);
+    score += gpu_metrics_->DistanceMapMetric(
+        gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+        gpu_distance_maps_->at(current_frame_index_),
+        DIRECT_DILATION_current_dilation_parameter, stream);
+    if (!std::isfinite(score)) return fail();
+    TrySetActiveBank(nullptr);
+    return score;
+}
 /*Call Active Cost Function*/
 double CostFunctionManager::callActiveCostFunction() {
     if (active_cost_function_ == "DIRECT_DILATION") {

@@ -78,6 +78,11 @@ public:
     /*Render to cache function (returns true if worked correctly)
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL bool RenderPrimaryCamera(Pose model_pose);
+    /* U12 Stage 4B: render the current primary pose through an explicit bank.
+     * The bank is caller-owned/non-owning; legacy RenderPrimaryCamera remains
+     * the bank-0 wrapper. */
+    JTML_DLL bool RenderPrimaryCamera(BankState& bank);
+    JTML_DLL bool TrySetActiveBank(BankState* bank);
     JTML_DLL bool
     RenderPrimaryCamera_RotationMatrix(RotationMatrix model_pose_matrix);
     JTML_DLL bool RenderSecondaryCamera(Pose model_pose);

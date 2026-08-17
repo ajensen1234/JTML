@@ -70,6 +70,12 @@ public:
     /*Call Active Cost Function*/
     JTML_DLL double callActiveCostFunction();
 
+    /* U12 Stage 4B: bind one non-owning bank for an in-flight evaluation.
+     * Returns false for incomplete state and restores bank 0 on clear. */
+    JTML_DLL bool TrySetActiveBank(gpu_cost_function::BankState* bank);
+    JTML_DLL double EvaluateDirectDilationOnBank(
+        gpu_cost_function::BankState& bank);
+
     /*Get Active Cost Function*/
     JTML_DLL std::string getActiveCostFunction();
 
@@ -180,6 +186,9 @@ private:
 
     /*Biplane Mode?*/
     bool biplane_mode_;
+
+    /* U12 Stage 4B: non-owning active bank for one in-flight evaluation. */
+    gpu_cost_function::BankState* active_bank_ = nullptr;
 
 /******************************************************************************/
 /************************COST FUNCTION VARIABLES END***************************/

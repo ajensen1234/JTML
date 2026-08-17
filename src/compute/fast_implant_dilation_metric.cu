@@ -301,9 +301,14 @@ double GPUMetrics::FastImplantDilationMetric(
     if (!stream || !active_bank_) {
         return FastImplantDilationMetric(rendered_image, comparison_frame, dilation);
     }
-    int* bounding_box = rendered_image->GetBoundingBox();
-    int height = rendered_image->GetFrameHeight();
-    int width = rendered_image->GetFrameWidth();
+    int* bounding_box = active_bank_->primary.host_bounding_box != nullptr
+                            ? static_cast<int*>(active_bank_->primary.host_bounding_box)
+                            : rendered_image->GetBoundingBox();
+    int height = active_bank_->height > 0 ? active_bank_->height : rendered_image->GetFrameHeight();
+    int width = active_bank_->width > 0 ? active_bank_->width : rendered_image->GetFrameWidth();
+    unsigned char* image = active_bank_->primary.output != nullptr
+                               ? static_cast<unsigned char*>(active_bank_->primary.output)
+                               : rendered_image->GetDeviceImagePointer();
     FastImplantDilationMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_pixel_score_);
     int sub_left_x = max(bounding_box[0] - dilation, dilation);
     int sub_bottom_y = max(bounding_box[1] - dilation, dilation);
@@ -316,12 +321,12 @@ double GPUMetrics::FastImplantDilationMetric(
     dim3 grid(static_cast<unsigned>(ceil(static_cast<double>(sub_cropped_width) / (block.x - 2))),
               static_cast<unsigned>(ceil(static_cast<double>(sub_cropped_height) / (block.y - 2))));
     FastImplantDilationMetric_EdgeKernel<<<grid, block, block.x * block.y * sizeof(unsigned char), stream>>>(
-        rendered_image->GetDeviceImagePointer(), sub_left_x, sub_bottom_y,
+        image, sub_left_x, sub_bottom_y,
         sub_right_x, sub_top_y, width, dilation);
     dim3 dilate_grid(static_cast<unsigned>(ceil(2.0 * sub_cropped_width / sqrt(static_cast<double>(threads_per_block)))),
                      static_cast<unsigned>(ceil(2.0 * sub_cropped_height / sqrt(static_cast<double>(threads_per_block)))));
     FastImplantDilationMetric_DilateKernel<<<dilate_grid, threads_per_block, 0, stream>>>(
-        rendered_image->GetDeviceImagePointer(), width, height,
+        image, width, height,
         sub_left_x, sub_bottom_y, sub_cropped_width, dilation);
     int left = max(bounding_box[0] - dilation, 0);
     int bottom = max(bounding_box[1] - dilation, 0);
@@ -332,7 +337,7 @@ double GPUMetrics::FastImplantDilationMetric(
     dim3 diff_grid(static_cast<unsigned>(ceil(static_cast<double>(diff_width) / sqrt(static_cast<double>(threads_per_block)))),
                    static_cast<unsigned>(ceil(static_cast<double>(diff_height) / sqrt(static_cast<double>(threads_per_block)))));
     FastImplantDilationMetric_DifferenceKernel<<<diff_grid, threads_per_block, 0, stream>>>(
-        rendered_image->GetDeviceImagePointer(), comparison_frame->GetDeviceImagePointer(),
+        image, comparison_frame->GetDeviceImagePointer(),
         dev_pixel_score_, width, height, left, bottom, diff_width);
     cudaError_t err = cudaMemcpyAsync(pixel_score_, dev_pixel_score_, sizeof(int),
                                       cudaMemcpyDeviceToHost, stream);

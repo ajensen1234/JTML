@@ -9,7 +9,9 @@
 #include <type_traits>
 
 #include "compute/bank_state.cuh"
+#include "compute/CostFunctionManager.h"
 #include "compute/gpu_metrics.cuh"
+#include "compute/gpu_model.cuh"
 #include "compute/render_engine.cuh"
 
 using gpu_cost_function::BankState;
@@ -17,7 +19,9 @@ using gpu_cost_function::GPUFrame;
 using gpu_cost_function::GPUImage;
 using gpu_cost_function::GPUDilatedFrame;
 using gpu_cost_function::GPUMetrics;
+using gpu_cost_function::GPUModel;
 using gpu_cost_function::RenderEngine;
+using jta_cost_function::CostFunctionManager;
 
 TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-binding]") {
     static_assert(std::is_same_v<decltype(&RenderEngine::SetActiveBank),
@@ -32,6 +36,11 @@ TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-b
                                  cudaError_t (RenderEngine::*)(BankState&)>);
     static_assert(std::is_same_v<decltype(&RenderEngine::CompleteRenderPhase),
                                  cudaError_t (RenderEngine::*)(BankState&)>);
+    static_assert(std::is_same_v<decltype(&GPUModel::TrySetActiveBank),
+                                 bool (GPUModel::*)(BankState*)>);
+    static_assert(std::is_same_v<decltype(static_cast<bool (GPUModel::*)(BankState&)>(
+        &GPUModel::RenderPrimaryCamera)),
+                                 bool (GPUModel::*)(BankState&)>);
     static_assert(std::is_same_v<decltype(&GPUMetrics::SetActiveBank),
                                  void (GPUMetrics::*)(BankState*)>);
     static_assert(std::is_same_v<decltype(&GPUMetrics::SetExecutionStream),
@@ -61,6 +70,10 @@ TEST_CASE("U12 Stage 2 compatibility APIs are additive and non-owning", "[bank-b
                                                          GPUFrame*,
                                                          int,
                                                          cudaStream_t)>);
+    static_assert(std::is_same_v<decltype(&CostFunctionManager::TrySetActiveBank),
+                                 bool (CostFunctionManager::*)(BankState*)>);
+    static_assert(std::is_same_v<decltype(&CostFunctionManager::EvaluateDirectDilationOnBank),
+                                 double (CostFunctionManager::*)(BankState&)>);
 
     // A BankState is a view only. Stage 2 introduces no ownership or allocation.
     BankState view;

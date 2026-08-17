@@ -155,6 +155,8 @@ struct BankAllocation {
         std::size_t index, const BankFootprintInput& in) {
         auto bank = std::make_unique<BankAllocation>();
         bank->view.index = index;
+        bank->view.width = static_cast<int>(in.width);
+        bank->view.height = static_cast<int>(in.height);
         bank->view.in_flight = false;
         if (!AllocateRender(bank->view.primary, in) ||
             (in.biplane && !AllocateRender(bank->view.secondary, in)) ||

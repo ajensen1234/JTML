@@ -139,9 +139,14 @@ double GPUMetrics::DistanceMapMetric(
     if (!stream || !active_bank_) {
         return DistanceMapMetric(projected_image, distance_map, dilation);
     }
-    const int height = projected_image->GetFrameHeight();
-    const int width = projected_image->GetFrameWidth();
-    int* bounding_box = projected_image->GetBoundingBox();
+    const int height = active_bank_->height > 0 ? active_bank_->height : projected_image->GetFrameHeight();
+    const int width = active_bank_->width > 0 ? active_bank_->width : projected_image->GetFrameWidth();
+    int* bounding_box = active_bank_->primary.host_bounding_box != nullptr
+                            ? static_cast<int*>(active_bank_->primary.host_bounding_box)
+                            : projected_image->GetBoundingBox();
+    unsigned char* image = active_bank_->primary.output != nullptr
+                               ? static_cast<unsigned char*>(active_bank_->primary.output)
+                               : projected_image->GetDeviceImagePointer();
     DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_distance_map_score_);
     DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_edge_pixels_count_);
     int left = max(bounding_box[0] - dilation, dilation);
@@ -155,7 +160,7 @@ double GPUMetrics::DistanceMapMetric(
               static_cast<unsigned>(ceil(static_cast<double>(crop_height) /
                                          sqrt(static_cast<double>(threads_per_block)))));
     DistanceMapMetric_Kernel<<<grid, threads_per_block, 0, stream>>>(
-        projected_image->GetDeviceImagePointer(), distance_map->GetDeviceImagePointer(),
+        image, distance_map->GetDeviceImagePointer(),
         dev_distance_map_score_, dev_edge_pixels_count_, width, height,
         left, bottom, crop_width);
     cudaError_t err = cudaMemcpyAsync(distance_map_score_, dev_distance_map_score_,

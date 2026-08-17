@@ -71,6 +71,8 @@ struct MetricBuffers {
  * lease ownership are introduced only after this write-set contract is locked. */
 struct BankState {
     std::size_t index = 0;
+    int width = 0;
+    int height = 0;
     RenderBuffers primary;
     RenderBuffers secondary;  // empty for monoplane
     MetricBuffers metrics;

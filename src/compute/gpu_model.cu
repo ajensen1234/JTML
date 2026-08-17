@@ -263,4 +263,35 @@ Pose GPUModel::GetCurrentSecondaryCameraPose() {
 void GPUModel::SetCurrentSecondaryCameraPose(Pose current_pose) {
     current_pose_B_ = current_pose;
 };
+
+bool GPUModel::TrySetActiveBank(BankState* bank) {
+    if (!initialized_correctly_ || primary_cam_render_engine_ == nullptr) {
+        return false;
+    }
+    primary_cam_render_engine_->SetActiveBank(bank);
+    if (bank != nullptr && primary_cam_render_engine_->GetActiveBank() != bank) {
+        primary_cam_render_engine_->SetActiveBank(nullptr);
+        return false;
+    }
+    if (biplane_mode_ && secondary_cam_render_engine_ != nullptr) {
+        secondary_cam_render_engine_->SetActiveBank(bank);
+        if (bank != nullptr && secondary_cam_render_engine_->GetActiveBank() != bank) {
+            primary_cam_render_engine_->SetActiveBank(nullptr);
+            secondary_cam_render_engine_->SetActiveBank(nullptr);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GPUModel::RenderPrimaryCamera(BankState& bank) {
+    if (!TrySetActiveBank(&bank)) return false;
+    primary_cam_render_engine_->SetPose(current_pose_A_);
+    if (primary_cam_render_engine_->RenderPhase(bank) != cudaSuccess ||
+        primary_cam_render_engine_->CompleteRenderPhase(bank) != cudaSuccess) {
+        TrySetActiveBank(nullptr);
+        return false;
+    }
+    return true;
+}
 } // namespace gpu_cost_function
