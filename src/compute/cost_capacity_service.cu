@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace gpu_cost_function {
@@ -221,6 +222,7 @@ public:
         return state != nullptr && state->in_flight;
     }
 
+    BankState* State(std::size_t index) { return Find(index); }
     const BankState* State(std::size_t index) const { return Find(index); }
 
 private:
@@ -279,8 +281,65 @@ bool CostCapacityService::bankInFlight(std::size_t index) const {
     return pool_ != nullptr && pool_->InFlight(index);
 }
 
+BankState* CostCapacityService::bankState(std::size_t index) {
+    return pool_ == nullptr ? nullptr : pool_->State(index);
+}
+
 const BankState* CostCapacityService::bankState(std::size_t index) const {
     return pool_ == nullptr ? nullptr : pool_->State(index);
+}
+
+std::vector<double> CostCapacityService::RunCostBatchGreedy(
+    const std::vector<Point6D>& poses,
+    const SerialCost& serial_cost,
+    const BankCost& bank_cost) {
+    if (!serial_cost) return {};
+    if (poses.size() <= 1 || poolSize() <= 1 || !bank_cost) {
+        std::vector<double> result;
+        result.reserve(poses.size());
+        for (const auto& pose : poses) result.push_back(serial_cost(pose));
+        return result;
+    }
+
+    std::vector<double> result(poses.size());
+    std::vector<bool> completed(poses.size(), false);
+    std::vector<std::pair<std::size_t, int>> leases;
+    leases.reserve(poses.size());
+
+    // Feed one pose at a time. The bank callback owns the explicit stream
+    // enqueue/complete boundary; this loop only owns checkout, input ordering,
+    // and recycle. A callback failure is represented by a non-finite score and
+    // still recycles the bank before returning the ordered vector.
+    for (std::size_t input = 0; input < poses.size(); ++input) {
+        int bank_index = CheckoutBank();
+        if (bank_index < 0) {
+            // No free bank: finish/recycle the oldest lease before continuing.
+            if (leases.empty()) return {};
+            const auto [old_index, old_input] = leases.front();
+            leases.erase(leases.begin());
+            RecycleBank(old_index, true);
+            completed[old_input] = true;
+            bank_index = CheckoutBank();
+            if (bank_index < 0) return {};
+        }
+        BankState* state = bankState(static_cast<std::size_t>(bank_index));
+        if (state == nullptr) return {};
+        result[input] = bank_cost(poses[input], *state);
+        leases.emplace_back(static_cast<std::size_t>(bank_index), input);
+    }
+
+    // Recycle all remaining leases only after their callback completion. The
+    // current supported callback performs its terminal copies before returning;
+    // future enqueue-only callbacks may replace this with event polling without
+    // changing the input-indexed contract.
+    for (const auto [bank_index, input] : leases) {
+        if (!RecycleBank(bank_index, true)) return {};
+        completed[input] = true;
+    }
+    for (bool is_complete : completed) {
+        if (!is_complete) return {};
+    }
+    return result;
 }
 
 bool CostCapacityService::refreshDeviceSnapshot(int device) {

@@ -18,7 +18,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cstdint>
+#include <vector>
 
 #include "compute/cost_capacity_service.cuh"
 #include "compute/cuda_launch_parameters.h"
@@ -68,6 +70,36 @@ TEST_CASE("U9 oracle: occupancy query returns > 0 blocks/SM for a real kernel", 
     const auto grid = service.gridFor(4096, block);
     REQUIRE(grid.capacity_applicable);
     REQUIRE(static_cast<std::int64_t>(grid.grid_blocks) * grid.block_threads >= 4096);
+}
+
+TEST_CASE("U12 oracle: greedy scheduler preserves input order across extra banks", "[capacity][gpu]") {
+    using gpu_cost_function::BankFootprintInput;
+    using gpu_cost_function::CostCapacityService;
+    CostCapacityService service;
+    service.setSnapshot(gpu_cost_function::DeviceCapacitySnapshot{
+        .sm_count = 80, .max_threads_per_sm = 2048,
+        .safe_cap = 2550000000LL, .grid_dim_limit = 2147483647LL,
+        .free_device_bytes = 64LL * 1024 * 1024,
+        .per_bank_footprint_bytes = 0, .n_max = 3});
+    BankFootprintInput layout;
+    layout.width = 1; layout.height = 1; layout.triangle_count = 1;
+    layout.maximum_stride_size = 1; layout.cub_storage_bytes = 1;
+    REQUIRE(service.ConfigurePool(layout, 3));
+    std::vector<Point6D> poses{Point6D(1, 0, 0, 0, 0, 0),
+                               Point6D(2, 0, 0, 0, 0, 0),
+                               Point6D(3, 0, 0, 0, 0, 0)};
+    std::vector<std::size_t> banks;
+    const auto scores = service.RunCostBatchGreedy(
+        poses,
+        [](const Point6D& p) { return p.x * 10.0; },
+        [&banks](const Point6D& p, gpu_cost_function::BankState& bank) {
+            banks.push_back(bank.index);
+            return p.x * 10.0;
+        });
+    REQUIRE(scores == std::vector<double>{10.0, 20.0, 30.0});
+    REQUIRE(banks.size() == poses.size());
+    REQUIRE(banks[0] != banks[1]);
+    REQUIRE(banks[2] == banks[0]);
 }
 
 TEST_CASE("U12 oracle: extra bank owns a stream and completion event", "[capacity][gpu]") {

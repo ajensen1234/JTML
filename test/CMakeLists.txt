@@ -1492,7 +1492,8 @@ set_tests_properties(jtml.z_profile PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
 # (`oracle;gpu` labels, repo-root WORKING_DIRECTORY, long TIMEOUT).
 add_executable(jtml_test_cost_capacity_oracle
     oracle/cost_capacity_oracle_test.cu
-    ${PROJECT_SOURCE_DIR}/src/compute/cost_capacity_service.cu)
+    ${PROJECT_SOURCE_DIR}/src/compute/cost_capacity_service.cu
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp)
 target_include_directories(jtml_test_cost_capacity_oracle PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/compute)

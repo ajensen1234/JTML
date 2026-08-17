@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -168,7 +169,17 @@ public:
     int CheckoutBank();
     bool RecycleBank(std::size_t index, bool completion_ready);
     bool bankInFlight(std::size_t index) const;
+    BankState* bankState(std::size_t index);
     const BankState* bankState(std::size_t index) const;
+
+    using SerialCost = std::function<double(const Point6D&)>;
+    using BankCost = std::function<double(const Point6D&, BankState&)>;
+
+    /* Greedy U12 feeder. N=1/unsupported paths remain exact serial. */
+    std::vector<double> RunCostBatchGreedy(
+        const std::vector<Point6D>& poses,
+        const SerialCost& serial_cost,
+        const BankCost& bank_cost);
 
 private:
     DeviceCapacitySnapshot snap_;
