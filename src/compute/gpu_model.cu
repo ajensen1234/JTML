@@ -199,6 +199,10 @@ GPUImage* GPUModel::GetPrimaryCameraRenderedImage() {
     return primary_cam_render_engine_->GetRenderOutput();
 };
 
+std::size_t GPUModel::GetPrimaryCubStorageBytes() const {
+    return primary_cam_render_engine_->GetCubStorageBytes();
+}
+
 GPUImage* GPUModel::GetSecondaryCameraRenderedImage() {
     return secondary_cam_render_engine_->GetRenderOutput();
 };
@@ -284,14 +288,22 @@ bool GPUModel::TrySetActiveBank(BankState* bank) {
     return true;
 }
 
-bool GPUModel::RenderPrimaryCamera(BankState& bank) {
+bool GPUModel::EnqueueRenderPrimaryCamera(BankState& bank) {
     if (!TrySetActiveBank(&bank)) return false;
     primary_cam_render_engine_->SetPose(current_pose_A_);
-    if (primary_cam_render_engine_->RenderPhase(bank) != cudaSuccess ||
-        primary_cam_render_engine_->CompleteRenderPhase(bank) != cudaSuccess) {
+    return primary_cam_render_engine_->RenderPhase(bank) == cudaSuccess;
+}
+
+bool GPUModel::CompleteRenderPrimaryCamera(BankState& bank) {
+    if (primary_cam_render_engine_->CompleteRenderPhase(bank) != cudaSuccess) {
         TrySetActiveBank(nullptr);
         return false;
     }
     return true;
+}
+
+bool GPUModel::RenderPrimaryCamera(BankState& bank) {
+    return EnqueueRenderPrimaryCamera(bank) &&
+           CompleteRenderPrimaryCamera(bank);
 }
 } // namespace gpu_cost_function

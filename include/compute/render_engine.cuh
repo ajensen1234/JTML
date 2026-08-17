@@ -103,6 +103,7 @@ public:
 
     /*Is the Render Engine properly initialized?*/
     JTML_DLL bool IsInitializedCorrectly();
+    JTML_DLL std::size_t GetCubStorageBytes() const;
 
     /*Plan 010 U10: optional capacity service used for capacity-based launch
      * sizing. nullptr (default) => pure pre-unit behavior (P2 fallback). The

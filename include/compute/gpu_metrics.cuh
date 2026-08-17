@@ -44,8 +44,14 @@ public:
         GPUImage* rendered_image,
         GPUDilatedFrame* comparison_frame,
         int dilation);
-    /* U12 Stage 4A: explicit-stream metric path. The returned score is
-     * synchronized before return; bank-owned pinned twins are used. */
+    /* U12 enqueue/complete path. */
+    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(
+        GPUImage* rendered_image,
+        GPUDilatedFrame* comparison_frame,
+        int dilation,
+        cudaStream_t stream);
+    JTML_DLL double CompleteFastImplantDilationMetric(cudaStream_t stream);
+    /* Compatibility explicit-stream wrapper: enqueue + complete. */
     JTML_DLL double FastImplantDilationMetric(
         GPUImage* rendered_image,
         GPUDilatedFrame* comparison_frame,
@@ -92,7 +98,14 @@ public:
 
     JTML_DLL double DistanceMapMetric(
         GPUImage* projected_image, GPUFrame* distance_map, int dilation);
-    /* U12 Stage 4A: explicit-stream distance-map path. */
+    /* U12 enqueue/complete path. */
+    JTML_DLL cudaError_t EnqueueDistanceMapMetric(
+        GPUImage* projected_image,
+        GPUFrame* distance_map,
+        int dilation,
+        cudaStream_t stream);
+    JTML_DLL double CompleteDistanceMapMetric(cudaStream_t stream);
+    /* Compatibility explicit-stream wrapper: enqueue + complete. */
     JTML_DLL double DistanceMapMetric(
         GPUImage* projected_image,
         GPUFrame* distance_map,

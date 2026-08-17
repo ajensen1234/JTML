@@ -174,12 +174,23 @@ public:
 
     using SerialCost = std::function<double(const Point6D&)>;
     using BankCost = std::function<double(const Point6D&, BankState&)>;
+    // CUDA-free status: 0 means cudaSuccess; nonzero aborts the batch.
+    using BankEnqueue = std::function<int(const Point6D&, BankState&)>;
+    using BankComplete = std::function<double(BankState&)>;
 
     /* Greedy U12 feeder. N=1/unsupported paths remain exact serial. */
     std::vector<double> RunCostBatchGreedy(
         const std::vector<Point6D>& poses,
         const SerialCost& serial_cost,
         const BankCost& bank_cost);
+
+    /* Enqueue/complete variant: enqueue may return before GPU completion;
+     * complete is called only after the bank completion query succeeds. */
+    std::vector<double> RunCostBatchGreedy(
+        const std::vector<Point6D>& poses,
+        const SerialCost& serial_cost,
+        const BankEnqueue& enqueue,
+        const BankComplete& complete);
 
 private:
     DeviceCapacitySnapshot snap_;

@@ -1032,6 +1032,10 @@ cudaStream_t RenderEngine::GetExecutionStream() const {
     return execution_stream_;
 }
 
+std::size_t RenderEngine::GetCubStorageBytes() const {
+    return cub_storage_bytes_;
+}
+
 cudaError_t RenderEngine::RenderPhase(BankState& bank) {
     if (bank.stream == nullptr) return cudaErrorInvalidResourceHandle;
     if (!BindBankPointers(&bank)) return cudaErrorInvalidValue;

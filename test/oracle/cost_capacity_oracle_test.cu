@@ -34,6 +34,15 @@ __global__ void capacity_probe_kernel(int* out) {
     }
 }
 
+__global__ void scheduler_delay_kernel(int* out) {
+    if (blockIdx.x == 0 && threadIdx.x == 0) {
+        unsigned long long start = clock64();
+        while (clock64() - start < 5000000ULL) {
+        }
+        if (out != nullptr) *out = 1;
+    }
+}
+
 }  // namespace
 
 TEST_CASE("U9 oracle: SAFE_CAP equals the render_engine overflow guard's bound", "[capacity][gpu]") {
@@ -138,4 +147,48 @@ TEST_CASE("U12 oracle: extra bank owns a stream and completion event", "[capacit
     REQUIRE(service.bankInFlight(1));
     REQUIRE(service.RecycleBank(1, true));
     REQUIRE_FALSE(service.bankInFlight(1));
+}
+
+
+TEST_CASE("U12 oracle: enqueue/complete keeps two banks in flight", "[capacity][gpu]") {
+    using gpu_cost_function::BankFootprintInput;
+    using gpu_cost_function::CostCapacityService;
+    using gpu_cost_function::BankState;
+
+    CostCapacityService service;
+    service.setSnapshot(gpu_cost_function::DeviceCapacitySnapshot{
+        .sm_count = 80, .max_threads_per_sm = 2048,
+        .safe_cap = 2550000000LL, .grid_dim_limit = 2147483647LL,
+        .free_device_bytes = 64LL * 1024 * 1024,
+        .per_bank_footprint_bytes = 0, .n_max = 3});
+    BankFootprintInput layout;
+    layout.width = 1; layout.height = 1; layout.triangle_count = 1;
+    layout.maximum_stride_size = 1; layout.cub_storage_bytes = 1;
+    REQUIRE(service.ConfigurePool(layout, 3));
+
+    std::vector<Point6D> poses{Point6D(1, 0, 0, 0, 0, 0),
+                               Point6D(2, 0, 0, 0, 0, 0),
+                               Point6D(3, 0, 0, 0, 0, 0)};
+    bool saw_not_ready = false;
+    const auto scores = service.RunCostBatchGreedy(
+        poses,
+        [](const Point6D&) { return -1.0; },
+        [&](const Point6D&, BankState& bank) -> int {
+            if (bank.index == 2) {
+                const auto first = service.bankState(1);
+                if (first != nullptr && first->completion_event != nullptr) {
+                    const auto status = cudaEventQuery(
+                        reinterpret_cast<cudaEvent_t>(first->completion_event));
+                    saw_not_ready = status == cudaErrorNotReady;
+                }
+            }
+            scheduler_delay_kernel<<<1, 1, 0,
+                reinterpret_cast<cudaStream_t>(bank.stream)>>>(
+                static_cast<int*>(bank.metrics.dev_pixel_score));
+            return static_cast<int>(cudaGetLastError());
+        },
+        [](BankState&) { return 42.0; });
+
+    REQUIRE(scores == std::vector<double>{42.0, 42.0, 42.0});
+    REQUIRE(saw_not_ready);
 }

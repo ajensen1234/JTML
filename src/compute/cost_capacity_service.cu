@@ -342,6 +342,72 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
     return result;
 }
 
+
+std::vector<double> CostCapacityService::RunCostBatchGreedy(
+    const std::vector<Point6D>& poses,
+    const SerialCost& serial_cost,
+    const BankEnqueue& enqueue,
+    const BankComplete& complete) {
+    if (!serial_cost) return {};
+    if (poses.size() <= 1 || poolSize() <= 1 || !enqueue || !complete) {
+        std::vector<double> result;
+        result.reserve(poses.size());
+        for (const auto& pose : poses) result.push_back(serial_cost(pose));
+        return result;
+    }
+
+    struct Lease {
+        std::size_t bank = 0;
+        std::size_t input = 0;
+    };
+    std::vector<double> result(poses.size());
+    std::vector<Lease> leases;
+    leases.reserve(poses.size());
+
+    auto finish = [&](const Lease& lease) -> bool {
+        BankState* state = bankState(lease.bank);
+        if (state == nullptr || state->completion_event == nullptr) return false;
+        const auto event = reinterpret_cast<cudaEvent_t>(state->completion_event);
+        const cudaError_t event_error = cudaEventSynchronize(event);
+        if (event_error != cudaSuccess) return false;
+        result[lease.input] = complete(*state);
+        return RecycleBank(lease.bank, true);
+    };
+
+    for (std::size_t input = 0; input < poses.size(); ++input) {
+        int bank_index = CheckoutBank();
+        if (bank_index < 0) {
+            if (leases.empty() || !finish(leases.front())) return {};
+            leases.erase(leases.begin());
+            bank_index = CheckoutBank();
+            if (bank_index < 0) return {};
+        }
+        BankState* state = bankState(static_cast<std::size_t>(bank_index));
+        if (state == nullptr || state->stream == nullptr ||
+            state->completion_event == nullptr) return {};
+        const auto stream = reinterpret_cast<cudaStream_t>(state->stream);
+        const int enqueue_error = enqueue(poses[input], *state);
+        if (enqueue_error != cudaSuccess) {
+            for (const auto& lease : leases) finish(lease);
+            RecycleBank(static_cast<std::size_t>(bank_index), true);
+            return {};
+        }
+        const cudaError_t record_error = cudaEventRecord(
+            reinterpret_cast<cudaEvent_t>(state->completion_event), stream);
+        if (record_error != cudaSuccess) {
+            for (const auto& lease : leases) finish(lease);
+            RecycleBank(static_cast<std::size_t>(bank_index), true);
+            return {};
+        }
+        leases.push_back({static_cast<std::size_t>(bank_index), input});
+    }
+
+    for (const auto& lease : leases) {
+        if (!finish(lease)) return {};
+    }
+    return result;
+}
+
 bool CostCapacityService::refreshDeviceSnapshot(int device) {
     cudaDeviceProp props{};
     cudaError_t err = cudaGetDeviceProperties(&props, device);

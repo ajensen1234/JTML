@@ -293,13 +293,13 @@ double GPUMetrics::FastImplantDilationMetric(
 
 /* U12 Stage 4A explicit-stream path. The metric chain remains ordered on one
  * bank stream and consumes the selected bank's reduction pointers. */
-double GPUMetrics::FastImplantDilationMetric(
+cudaError_t GPUMetrics::EnqueueFastImplantDilationMetric(
     GPUImage* rendered_image,
     GPUDilatedFrame* comparison_frame,
     int dilation,
     cudaStream_t stream) {
     if (!stream || !active_bank_) {
-        return FastImplantDilationMetric(rendered_image, comparison_frame, dilation);
+        return cudaErrorInvalidResourceHandle;
     }
     int* bounding_box = active_bank_->primary.host_bounding_box != nullptr
                             ? static_cast<int*>(active_bank_->primary.host_bounding_box)
@@ -341,8 +341,26 @@ double GPUMetrics::FastImplantDilationMetric(
         dev_pixel_score_, width, height, left, bottom, diff_width);
     cudaError_t err = cudaMemcpyAsync(pixel_score_, dev_pixel_score_, sizeof(int),
                                       cudaMemcpyDeviceToHost, stream);
-    if (err != cudaSuccess) return 0.0;
+    if (err != cudaSuccess) return err;
+    return cudaGetLastError();
+}
+
+
+double GPUMetrics::CompleteFastImplantDilationMetric(cudaStream_t stream) {
+    if (!stream || !active_bank_) return 0.0;
     if (cudaStreamSynchronize(stream) != cudaSuccess) return 0.0;
     return -1.0 * pixel_score_[0];
+}
+
+double GPUMetrics::FastImplantDilationMetric(
+    GPUImage* rendered_image,
+    GPUDilatedFrame* comparison_frame,
+    int dilation,
+    cudaStream_t stream) {
+    if (EnqueueFastImplantDilationMetric(
+            rendered_image, comparison_frame, dilation, stream) != cudaSuccess) {
+        return 0.0;
+    }
+    return CompleteFastImplantDilationMetric(stream);
 }
 } // namespace gpu_cost_function

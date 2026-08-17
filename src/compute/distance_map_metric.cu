@@ -133,11 +133,11 @@ double GPUMetrics::DistanceMapMetric(
            (edge_pixels_count_[0] + 0.1); // adding a 0.1 to avoid singularities
 }
 
-double GPUMetrics::DistanceMapMetric(
+cudaError_t GPUMetrics::EnqueueDistanceMapMetric(
     GPUImage* projected_image, GPUFrame* distance_map, int dilation,
     cudaStream_t stream) {
     if (!stream || !active_bank_) {
-        return DistanceMapMetric(projected_image, distance_map, dilation);
+        return cudaErrorInvalidResourceHandle;
     }
     const int height = active_bank_->height > 0 ? active_bank_->height : projected_image->GetFrameHeight();
     const int width = active_bank_->width > 0 ? active_bank_->width : projected_image->GetFrameWidth();
@@ -165,11 +165,29 @@ double GPUMetrics::DistanceMapMetric(
         left, bottom, crop_width);
     cudaError_t err = cudaMemcpyAsync(distance_map_score_, dev_distance_map_score_,
                                       sizeof(int), cudaMemcpyDeviceToHost, stream);
-    if (err != cudaSuccess) return 0.0;
+    if (err != cudaSuccess) return err;
     err = cudaMemcpyAsync(edge_pixels_count_, dev_edge_pixels_count_, sizeof(int),
                           cudaMemcpyDeviceToHost, stream);
-    if (err != cudaSuccess) return 0.0;
+    if (err != cudaSuccess) return err;
+    return cudaGetLastError();
+}
+
+
+double GPUMetrics::CompleteDistanceMapMetric(cudaStream_t stream) {
+    if (!stream || !active_bank_) return 0.0;
     if (cudaStreamSynchronize(stream) != cudaSuccess) return 0.0;
     return distance_map_score_[0] / (edge_pixels_count_[0] + 0.1);
+}
+
+double GPUMetrics::DistanceMapMetric(
+    GPUImage* projected_image,
+    GPUFrame* distance_map,
+    int dilation,
+    cudaStream_t stream) {
+    if (EnqueueDistanceMapMetric(
+            projected_image, distance_map, dilation, stream) != cudaSuccess) {
+        return 0.0;
+    }
+    return CompleteDistanceMapMetric(stream);
 }
 } /*end namespace gpu_cost_function*/

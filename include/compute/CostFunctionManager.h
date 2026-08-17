@@ -75,6 +75,10 @@ public:
     JTML_DLL bool TrySetActiveBank(gpu_cost_function::BankState* bank);
     JTML_DLL double EvaluateDirectDilationOnBank(
         gpu_cost_function::BankState& bank);
+    JTML_DLL cudaError_t EnqueueDirectDilationOnBank(
+        gpu_cost_function::BankState& bank);
+    JTML_DLL double CompleteDirectDilationOnBank(
+        gpu_cost_function::BankState& bank);
 
     /*Get Active Cost Function*/
     JTML_DLL std::string getActiveCostFunction();

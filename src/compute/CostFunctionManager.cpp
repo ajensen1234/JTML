@@ -334,6 +334,51 @@ double CostFunctionManager::EvaluateDirectDilationOnBank(
     TrySetActiveBank(nullptr);
     return score;
 }
+
+
+cudaError_t CostFunctionManager::EnqueueDirectDilationOnBank(
+    gpu_cost_function::BankState& bank) {
+    if (active_cost_function_ != "DIRECT_DILATION" || biplane_mode_ ||
+        gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr ||
+        bank.stream == nullptr || !TrySetActiveBank(&bank)) {
+        return cudaErrorInvalidResourceHandle;
+    }
+    if (!gpu_principal_model_->EnqueueRenderPrimaryCamera(bank) ||
+        !gpu_principal_model_->CompleteRenderPrimaryCamera(bank)) {
+        TrySetActiveBank(nullptr);
+        return cudaErrorLaunchFailure;
+    }
+    const auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
+    if (gpu_metrics_->EnqueueFastImplantDilationMetric(
+            gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+            gpu_dilated_frames_A_->at(current_frame_index_),
+            DIRECT_DILATION_current_dilation_parameter,
+            stream) != cudaSuccess ||
+        gpu_metrics_->EnqueueDistanceMapMetric(
+            gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+            gpu_distance_maps_->at(current_frame_index_),
+            DIRECT_DILATION_current_dilation_parameter,
+            stream) != cudaSuccess) {
+        TrySetActiveBank(nullptr);
+        return cudaGetLastError();
+    }
+    return cudaGetLastError();
+}
+
+double CostFunctionManager::CompleteDirectDilationOnBank(
+    gpu_cost_function::BankState& bank) {
+    if (bank.stream == nullptr || gpu_metrics_ == nullptr) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    const auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
+    const double fidm = gpu_metrics_->CompleteFastImplantDilationMetric(stream);
+    const double distance = gpu_metrics_->CompleteDistanceMapMetric(stream);
+    const double score =
+        DIRECT_DILATION_current_white_pix_sum_dilated_comparison_image_A_ +
+        fidm + distance;
+    TrySetActiveBank(nullptr);
+    return score;
+}
 /*Call Active Cost Function*/
 double CostFunctionManager::callActiveCostFunction() {
     if (active_cost_function_ == "DIRECT_DILATION") {

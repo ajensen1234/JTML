@@ -82,6 +82,8 @@ public:
      * The bank is caller-owned/non-owning; legacy RenderPrimaryCamera remains
      * the bank-0 wrapper. */
     JTML_DLL bool RenderPrimaryCamera(BankState& bank);
+    JTML_DLL bool EnqueueRenderPrimaryCamera(BankState& bank);
+    JTML_DLL bool CompleteRenderPrimaryCamera(BankState& bank);
     JTML_DLL bool TrySetActiveBank(BankState* bank);
     JTML_DLL bool
     RenderPrimaryCamera_RotationMatrix(RotationMatrix model_pose_matrix);
@@ -106,6 +108,7 @@ public:
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL GPUImage* GetPrimaryCameraRenderedImage();
     JTML_DLL GPUImage* GetSecondaryCameraRenderedImage();
+    JTML_DLL std::size_t GetPrimaryCubStorageBytes() const;
 
     /*Get the cv::Mat output off the GPU and available for analysis
     Mostly used for image analysis that will not happen on the GPU
