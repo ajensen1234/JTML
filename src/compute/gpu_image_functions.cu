@@ -74,23 +74,29 @@ __global__ void GetMaxMinPixelsKernel(
 
 __global__ void ScaleImageToRangeKernel(
     unsigned char* dev_image,
-    int* dev_max,
-    int* dev_min,
-    unsigned int lower_bound,
-    unsigned int upper_bound,
+    const int* dev_max,
+    const int* dev_min,
+    int lower_bound,
+    int upper_bound,
     int width,
     int height) {
 
-    /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    if (i >= width * height) return;
 
-    /*If Correct Width and Height*/
-    if (i < width * height) {
-        dev_image[i] = (static_cast<float>(dev_image[i] - dev_min[0]) /
-                        static_cast<float>(dev_max[0] - dev_min[0])) *
-                           static_cast<float>(upper_bound - lower_bound) +
-                       lower_bound;
+    const int mn = dev_min[0];
+    const int span = dev_max[0] - mn;
+
+    if (span <= 0) { // uniform image: nothing to stretch
+        dev_image[i] = static_cast<unsigned char>(lower_bound);
+        return;
     }
+
+    const float t =
+        static_cast<float>(dev_image[i] - mn) / static_cast<float>(span);
+    const float v = t * static_cast<float>(upper_bound - lower_bound) +
+                    static_cast<float>(lower_bound);
+    dev_image[i] = static_cast<unsigned char>(fminf(fmaxf(v, 0.0f), 255.0f));
 }
 
 /*Convolution Kernel*/
@@ -320,9 +326,7 @@ bool PasteNonBlackPixels(
 transformed linearly to the bounds specified in the arguments. This new image is
 returned in the original image. Bool return value indicates success.*/
 bool ScaleGrayscaleToRange(
-    GPUImage* grayscale_image,
-    unsigned int lower_bound,
-    unsigned int upper_bound) {
+    GPUImage* grayscale_image, int lower_bound, int upper_bound) {
     /*Make Sure Bounds are within 0 - 255 range*/
     if (lower_bound < 0) lower_bound = 0;
     if (lower_bound > 255) lower_bound = 255;

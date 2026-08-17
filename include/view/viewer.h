@@ -35,8 +35,8 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
-#include "services/calibration.h"
 #include "compute/frame.h"
+#include "services/calibration.h"
 #include "services/model.h"
 
 class Viewer {

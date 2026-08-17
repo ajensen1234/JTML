@@ -85,16 +85,16 @@ find_package(Eigen3 REQUIRED)
 
 # VTK setup - assuming VTK was built using the separate build script
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64")
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
-    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.3/")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.7/")
+    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/cmake/vtk-9.7/")
     set(VTK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib64/")
 else()
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3/")
-    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.3/")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.7/")
+    set(VTK_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/cmake/vtk-9.7/")
     set(VTK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/_deps/vtk/install/lib/")
 endif()
 
-find_package(VTK 9.3 REQUIRED COMPONENTS
+find_package(VTK 9.7 REQUIRED COMPONENTS
     GUISupportQt
     RenderingCore
     RenderingOpenGL2

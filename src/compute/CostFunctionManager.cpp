@@ -367,7 +367,8 @@ cudaError_t CostFunctionManager::EnqueueDirectDilationOnBank(
 
 double CostFunctionManager::CompleteDirectDilationOnBank(
     gpu_cost_function::BankState& bank) {
-    if (bank.stream == nullptr || gpu_metrics_ == nullptr) {
+    if (bank.stream == nullptr || gpu_metrics_ == nullptr ||
+        !TrySetActiveBank(&bank)) {
         return std::numeric_limits<double>::quiet_NaN();
     }
     const auto stream = reinterpret_cast<cudaStream_t>(bank.stream);

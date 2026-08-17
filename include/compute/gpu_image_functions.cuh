@@ -17,8 +17,8 @@
 #include "compute/gpu_model.cuh"
 
 /*Pose Matrix Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/pose_matrix.h"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -45,9 +45,7 @@ to the bounds specified in the arguments and in between pixels are scaled
 linearly. This new image is returned in the original image. Bool return value
 indicates success.*/
 JTML_DLL bool ScaleGrayscaleToRange(
-    GPUImage* grayscale_image,
-    unsigned int lower_bound,
-    unsigned int upper_bound);
+    GPUImage* grayscale_image, int lower_bound, int upper_bound);
 
 /*Convolution Operation. Does not use zero padding, but rather convolves on the
 subimage that is inside the regular image but would allow the kernel to fully

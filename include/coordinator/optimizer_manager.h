@@ -15,6 +15,7 @@
 #include <gpu_intensity_frame.cuh>
 #include <gpu_metrics.cuh>
 #include <gpu_model.cuh>
+#include <cost_capacity_service.cuh>
 
 #include "services/calibration.h"
 
@@ -223,6 +224,7 @@ private:
 
     /*Models*/
     GPUModel* gpu_principal_model_;
+    CostCapacityService* capacity_service_ = nullptr;
     std::vector<GPUModel*> gpu_non_principal_models_;
 
     /*Set Search Range*/

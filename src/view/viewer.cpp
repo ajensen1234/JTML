@@ -22,7 +22,7 @@ double ViewingAngleFromCalibration(int h, int fy) {
     return (180.0 / pi) * 2 * atan2(h, 2 * fy);
 }
 
-}  // namespace
+} // namespace
 
 Viewer::Viewer() {
     initialize_vtk_pointers();
@@ -63,13 +63,16 @@ void Viewer::initialize_vtk_mappers() {
     // identical, since no Update runs before that) + SetPickable(0). The
     // text actor stays view-side (the QML renderer has no text overlay).
     jta::render_pipeline::ConfigureBackgroundChain(
-        importer_.Get(), current_background_.Get(), image_mapper_.Get(),
-        actor_image_.Get(), background_renderer_.Get());
+        importer_.Get(),
+        current_background_.Get(),
+        image_mapper_.Get(),
+        actor_image_.Get(),
+        background_renderer_.Get());
     actor_text_->SetPickable(0);
 }
 
 void Viewer::initialize_vtk_renderers() {
-    background_renderer_->AddActor2D(actor_text_);
+    background_renderer_->AddActor(actor_text_);
 }
 
 void Viewer::load_render_window(vtkSmartPointer<vtkRenderWindow> in) {
@@ -182,8 +185,8 @@ void Viewer::place_image_actors_according_to_calibration(
     // parallel scale 0.5h; z = -fy*pixel_pitch is the widgets' value of
     // camera divergence (a) (the QML side passes -focalLengthPx). The old
     // no-op cal.type_ ternary is gone with it.
-    const double z_pos = -cal.camera_A_principal_.fy() *
-                         cal.camera_A_principal_.pixel_pitch_;
+    const double z_pos =
+        -cal.camera_A_principal_.fy() * cal.camera_A_principal_.pixel_pitch_;
     jta::render_pipeline::PlaceBackgroundImage(
         actor_image_, background_renderer_, img_w, img_h, z_pos);
 }
@@ -196,7 +199,8 @@ void Viewer::load_3d_models_into_actor_and_mapper_list() {
         // Shared pipeline recipe (006 U4): reader output -> mapper -> actor
         // -> scene renderer. The per-model bookkeeping stays view-side.
         jta::render_pipeline::BuildModelActor(
-            new_mapper, new_actor,
+            new_mapper,
+            new_actor,
             loaded_models_->at(i).cad_reader_->GetOutputPort(),
             scene_renderer_);
         model_actor_list_.push_back(new_actor);
@@ -290,23 +294,29 @@ void Viewer::set_model_orientation_at_index(
 std::string
 Viewer::print_location_and_orientation_of_model_at_index(int index) {
     std::string infoText = "Location: <";
-    infoText += std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetPosition()[0])) +
+    infoText += std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetPosition()[0])) +
                 "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetPosition()[1])) +
+                std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetPosition()[1])) +
                 "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetPosition()[2])) +
+                std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetPosition()[2])) +
                 ">\nOrientation: <" +
-                std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetOrientation()[0])) +
+                std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetOrientation()[0])) +
                 "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetOrientation()[1])) +
+                std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetOrientation()[1])) +
                 "," +
-                std::to_string(static_cast<long double>(
-                    model_actor_list_[index]->GetOrientation()[2])) +
+                std::to_string(
+                    static_cast<long double>(
+                        model_actor_list_[index]->GetOrientation()[2])) +
                 ">";
 
     return infoText;

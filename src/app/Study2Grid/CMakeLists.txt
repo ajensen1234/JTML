@@ -31,7 +31,8 @@ find_package(OpenCV REQUIRED)
 target_link_libraries(Study2Grid-Cmake ${REQUIRED_LIBS_QUALIFIED})
 target_link_libraries(Study2Grid-Cmake ${OpenCV_LIBRARIES})
 target_link_libraries(Study2Grid-Cmake ${CUDA_LIBRARIES})
-target_compile_definitions(Study2Grid-Cmake PRIVATE _HAS_STD_BYTE=0)
+target_compile_definitions(Study2Grid-Cmake PRIVATE
+    $<$<PLATFORM_ID:Windows>:_HAS_STD_BYTE=0>)
 
 
 

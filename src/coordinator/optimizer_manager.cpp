@@ -64,6 +64,7 @@ bool OptimizerManager::Initialize(
 
     /*Just In Case Have to Delete*/
     gpu_principal_model_ = 0;
+    capacity_service_ = nullptr;
     gpu_metrics_ = 0;
 
     /*Store Camera Frame Lists Locally and Check That, if Biplane is Enabled ->
@@ -269,8 +270,7 @@ bool OptimizerManager::Initialize(
      * TU). Values are identical to the pre-Cut-C inline scans (last-match-
      * wins, ≤0 clamp, DIRECT_MAHFOUZ → 3, the six bool-name variants) — the
      * U6 oracle re-verifies bit-identity.*/
-    const jta::StageCostParams trunk_params =
-        DeriveStageParams(trunk_manager_);
+    const jta::StageCostParams trunk_params = DeriveStageParams(trunk_manager_);
     trunk_dilation_val_ = trunk_params.dilation;
     trunk_dark_silhouette_val_ = trunk_params.dark_silhouette;
 
@@ -279,13 +279,12 @@ bool OptimizerManager::Initialize(
     branch_dilation_val_ = branch_params.dilation;
     branch_dark_silhouette_val_ = branch_params.dark_silhouette;
 
-    const jta::StageCostParams leaf_params =
-        DeriveStageParams(leaf_manager_);
+    const jta::StageCostParams leaf_params = DeriveStageParams(leaf_manager_);
     leaf_dilation_val_ = leaf_params.dilation;
     leaf_dark_silhouette_val_ = leaf_params.dark_silhouette;
 
     /*Upload GPU Frames*/
-    /*Intensity Frames
+    /*Intensity Frames*/
     /*Trunk*/
     /*Camera A*/
     for (int i = 0; i < frames_A_.size(); i++) {
@@ -768,6 +767,33 @@ bool OptimizerManager::Initialize(
         return succesfull_initialization_;
     }
 
+    /* Plan 010 U12: configure the service-owned extra-bank pool only for the
+     * supported monoplane principal DIRECT_DILATION path. Bank 0 remains owned
+     * by the model/metrics compatibility objects; unsupported/biplane paths
+     * retain poolSize()==1 and the exact serial adapter. */
+    capacity_service_ = new CostCapacityService();
+    if (!calibration_.biplane_calibration &&
+        capacity_service_->refreshDeviceSnapshot(cuda_device_id)) {
+        gpu_cost_function::BankFootprintInput bank_layout;
+        bank_layout.width = static_cast<std::uint64_t>(width);
+        bank_layout.height = static_cast<std::uint64_t>(height);
+        bank_layout.triangle_count = static_cast<std::uint64_t>(
+            primary_model_.triangle_vertices_.size() / 9);
+        bank_layout.maximum_stride_size = maximum_stride_size;
+        bank_layout.cub_storage_bytes =
+            gpu_principal_model_->GetPrimaryCubStorageBytes();
+        bank_layout.biplane = false;
+        const bool admitted = capacity_service_->ConfigurePool(bank_layout, 3);
+        if (admitted) {
+            const int probe_bank = capacity_service_->CheckoutBank();
+            if (probe_bank >= 0) {
+                capacity_service_->RecycleBank(
+                    static_cast<std::size_t>(probe_bank), true);
+            }
+        }
+        gpu_principal_model_->SetCapacityService(capacity_service_);
+    }
+
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
         &gpu_edge_frames_A_,
@@ -892,12 +918,14 @@ void OptimizerManager::Optimize() {
                     gpu_non_principal_models_[non_prin_model_ind]
                         ->SetCurrentPrimaryCameraPose(temp_primary_pose);
                 } else {
-                    emit OptimizerError(QString::fromStdString(
-                        "Could not retrieve pose for non-principal model \"" +
-                        gpu_non_principal_models_[non_prin_model_ind]
-                            ->GetModelName() +
-                        "\" at frame " +
-                        QString::number(frame_index).toStdString() + "!"));
+                    emit OptimizerError(
+                        QString::fromStdString(
+                            "Could not retrieve pose for non-principal model "
+                            "\"" +
+                            gpu_non_principal_models_[non_prin_model_ind]
+                                ->GetModelName() +
+                            "\" at frame " +
+                            QString::number(frame_index).toStdString() + "!"));
                     error_occurrred_ = true;
                     break;
                 }
@@ -991,10 +1019,11 @@ void OptimizerManager::Optimize() {
                 stage_manager = &leaf_manager_;
                 break;
             default:
-                emit OptimizerError(QString::fromStdString(
-                    "OptimizerManager: stage cfm_index " +
-                    std::to_string(spec.cfm_index) +
-                    " out of range (valid 0..2); run aborted"));
+                emit OptimizerError(
+                    QString::fromStdString(
+                        "OptimizerManager: stage cfm_index " +
+                        std::to_string(spec.cfm_index) +
+                        " out of range (valid 0..2); run aborted"));
                 error_occurrred_ = true;
                 break;
             }
@@ -1030,8 +1059,7 @@ void OptimizerManager::Optimize() {
 
                 /*Destruct Trunk Manager Initialization (unconditional —
                  * verbatim)*/
-                if (!stage_manager->DestructActiveCostFunction(
-                        error_message)) {
+                if (!stage_manager->DestructActiveCostFunction(error_message)) {
                     emit OptimizerError(QString::fromStdString(error_message));
                     error_occurrred_ = true;
                 }
@@ -1063,8 +1091,7 @@ void OptimizerManager::Optimize() {
                  * re-seeded from the CURRENT optimum (the per-repeat re-seed
                  * lineage invariant — reading current_optimum_location_,
                  * never a captured one).*/
-                for (unsigned int branch_index = 0;
-                     branch_index < spec.repeat;
+                for (unsigned int branch_index = 0; branch_index < spec.repeat;
                      branch_index++) {
                     /*If Error*/
                     if (error_occurrred_) break;
@@ -1091,8 +1118,7 @@ void OptimizerManager::Optimize() {
             /**************LEAF SPEC (cfm 2)***********************/
             case jta::StageKind::Leaf: {
                 /*Construct Leaf Initialization*/
-                if (optimizer_settings_.enable_leaf_ &&
-                    !error_occurrred_) {
+                if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
                     if (!stage_manager->InitializeActiveCostFunction(
                             error_message)) {
                         emit OptimizerError(
@@ -1117,8 +1143,8 @@ void OptimizerManager::Optimize() {
                 }
 
                 /*Move to Leaf Search If Necessary*/
-                if (optimizer_settings_.enable_leaf_ &&
-                    !error_occurrred_ && !sym_trap_call && spec.repeat > 0) {
+                if (optimizer_settings_.enable_leaf_ && !error_occurrred_ &&
+                    !sym_trap_call && spec.repeat > 0) {
                     /*Update Search Stage Flag as Leaf*/
                     search_stage_flag_ = Leaf;
 
@@ -1141,8 +1167,7 @@ void OptimizerManager::Optimize() {
                  * !error_occurrred_ (the leaf side of the leaf-destruct
                  * error-gating asymmetry; preserved verbatim, flagged to the
                  * hygiene pass).*/
-                if (optimizer_settings_.enable_leaf_ &&
-                    !error_occurrred_) {
+                if (optimizer_settings_.enable_leaf_ && !error_occurrred_) {
                     if (!stage_manager->DestructActiveCostFunction(
                             error_message)) {
                         emit OptimizerError(
@@ -1260,8 +1285,7 @@ void OptimizerManager::ResetStageDilation(size_t frame_index, int dilation) {
 }
 
 void OptimizerManager::RunDirectStage(
-    Point6D range,
-    jta_cost_function::CostFunctionManager& stage_manager) {
+    Point6D range, jta_cost_function::CostFunctionManager& stage_manager) {
     /*Cross the extracted pure optimizer boundary with the real GPU cost. The
      * DirectOptimizer hands the injected lambda the *denormalized physical*
      * point, so set the GPU model poses from it directly (primary, + biplane
@@ -1272,10 +1296,45 @@ void OptimizerManager::RunDirectStage(
      * cost function; Calibration by value, monoplane default).
      * No here-optimum tracking: DirectOptimizer owns that internally and we
      * read it back after Run().*/
+    auto serial_cost = jta::BuildGpuCostAdapter(
+        gpu_principal_model_, calibration_, stage_manager);
     DirectOptimizer opt(
-        jta::BuildGpuCostAdapter(gpu_principal_model_, calibration_,
-                                 stage_manager),
-        range, starting_point_, budget_, direct_options_);
+        serial_cost, range, starting_point_, budget_, direct_options_);
+
+    /* U12 production batch bridge: only the admitted monoplane
+     * DIRECT_DILATION path receives the bank scheduler. All unsupported,
+     * biplane, unavailable, or pool-size-one cases retain the exact serial
+     * adapter above. */
+    if (capacity_service_ != nullptr && capacity_service_->poolSize() > 1 &&
+        !calibration_.biplane_calibration &&
+        stage_manager.getActiveCostFunction() == "DIRECT_DILATION") {
+        opt.SetBatchCost([this, &stage_manager, serial_cost](
+                             const std::vector<Point6D>& poses) {
+            const auto enqueue = [this, &stage_manager](
+                                     const Point6D& physical,
+                                     gpu_cost_function::BankState& bank) {
+                gpu_principal_model_->SetCurrentPrimaryCameraPose(Pose(
+                    physical.x,
+                    physical.y,
+                    physical.z,
+                    physical.xa,
+                    physical.ya,
+                    physical.za));
+                const auto error =
+                    stage_manager.EnqueueDirectDilationOnBank(bank);
+                if (error != cudaSuccess) {
+                    return static_cast<int>(error);
+                }
+                return static_cast<int>(error);
+            };
+            const auto complete =
+                [&stage_manager](gpu_cost_function::BankState& bank) {
+                    return stage_manager.CompleteDirectDilationOnBank(bank);
+                };
+            return capacity_service_->RunCostBatchGreedy(
+                poses, serial_cost, enqueue, complete);
+        });
+    }
 
     /*Cumulative budget semantics: this stage continues from the running call
      * count, so the extracted optimizer's loop guard uses call_offset_ + its
@@ -1285,8 +1344,8 @@ void OptimizerManager::RunDirectStage(
     /*Live optimum display when the search improves (mirrors the original
      * UpdateOptimum emit inside EvaluateCostFunction).*/
     opt.SetImprovementCallback([this](const Point6D& loc, double) {
-        emit UpdateOptimum(loc.x, loc.y, loc.z, loc.xa, loc.ya, loc.za,
-                           primary_model_index_);
+        emit UpdateOptimum(
+            loc.x, loc.y, loc.z, loc.xa, loc.ya, loc.za, primary_model_index_);
     });
 
     /*Progress at ~30fps + cooperative stop, fired after each ConvexHull+Trisect
@@ -1304,7 +1363,8 @@ void OptimizerManager::RunDirectStage(
                 static_cast<double>(clock() - start_clock_) /
                     static_cast<double>(opt.GetCostFunctionCalls()),
                 static_cast<int>(opt.GetCostFunctionCalls()),
-                opt.GetOptimumValue(), primary_model_index_);
+                opt.GetOptimumValue(),
+                primary_model_index_);
             update_screen_clock_ = clock();
         }
     });
@@ -1325,7 +1385,7 @@ void OptimizerManager::CalculateSymTrap() {
     if (current_optimum_location_.xa == 0 &&
         current_optimum_location_.ya == 0 &&
         current_optimum_location_.za == 0) {
-        cout << "ERROR: INVALID STARTING POSE FOR SYMMETRY TRAP" << endl;
+        std::cout << "ERROR: INVALID STARTING POSE FOR SYMMETRY TRAP" << endl;
         return;
     }
     // Store cost values to input to csv
@@ -1444,6 +1504,10 @@ void OptimizerManager::create_image_indices(
 OptimizerManager::~OptimizerManager() {
     /*GPU Metrics Class*/
     delete gpu_metrics_;
+    /* U12 service-owned extra banks must be destroyed before model/metric
+     * owners. */
+    delete capacity_service_;
+    capacity_service_ = nullptr;
 
     /* DESTRUCT CUDA Cost Function Objects (Vector of GPU Models and vector of
     GPU Frames - note Dilated and Intensity must have own vector for each stage
@@ -1502,7 +1566,8 @@ OptimizerManager::~OptimizerManager() {
 };
 
 std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
-    gpu_cost_function::GPUModel* principal_model, Calibration calibration,
+    gpu_cost_function::GPUModel* principal_model,
+    Calibration calibration,
     jta_cost_function::CostFunctionManager& stage_manager) {
     /*Plan 008 U9 (Cut B): the shared GPU cost adapter — the pre-Cut-B
      * RunDirectStage injected-cost lambda body (and the oracle twin's body,
@@ -1519,19 +1584,27 @@ std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
      * safe — identical to the pre-Cut-B lambda's capture).*/
     return [principal_model, calibration, &stage_manager](
                const Point6D& physical) mutable -> double {
-        Pose pose(physical.x, physical.y, physical.z, physical.xa, physical.ya,
-                  physical.za);
+        Pose pose(
+            physical.x,
+            physical.y,
+            physical.z,
+            physical.xa,
+            physical.ya,
+            physical.za);
         principal_model->SetCurrentPrimaryCameraPose(pose);
         if (calibration.biplane_calibration) {
             /*convert_Pose_A_to_Pose_B is a NON-const Calibration member (it
              * builds local matrices only); `mutable` keeps the by-value
              * capture writable without changing behavior (calibration is
              * never modified).*/
-            Point6D physical_B =
-                calibration.convert_Pose_A_to_Pose_B(physical);
+            Point6D physical_B = calibration.convert_Pose_A_to_Pose_B(physical);
             principal_model->SetCurrentSecondaryCameraPose(Pose(
-                physical_B.x, physical_B.y, physical_B.z, physical_B.xa,
-                physical_B.ya, physical_B.za));
+                physical_B.x,
+                physical_B.y,
+                physical_B.z,
+                physical_B.xa,
+                physical_B.ya,
+                physical_B.za));
         }
         return stage_manager.callActiveCostFunction();
     };

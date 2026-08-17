@@ -4,17 +4,17 @@ version = "0.1.0"
 description = "Joint Track Machine Learning Project"
 authors = ["Your Name <your.email@example.com>"]
 channels = ["https://prefix.dev/conda-forge", "https://prefix.dev/nvidia"]
-platforms = [{ platform = "linux-64", cuda = "12.4" }]
+platforms = [{ platform = "linux-64", cuda = "12.9" }]
 
 [dependencies]
 # Core dependencies
 opencv = "*"
-pytorch-gpu = ">=2"
-cuda-version = "12.4"
-cuda = "12.4"
+pytorch-gpu = ">=2.7.1,<3"
+cuda-version = "12.9.*"
+cuda = "12.9.*"
 eigen = "*"
 ninja = "*"
-nvtx = "*"
+nvtx = ">=0.2.16,<0.3"
 
 # Display dependencies
 xorg-libx11 = "*"
@@ -22,11 +22,11 @@ xorg-libxt = "*"
 xorg-libxext = "*"
 curl = ">=8.11.1,<9"
 libcurl = ">=8.11.1,<9"
-cmake = ">=3.31.4,<4"
+cmake = ">=3.31.5,<4"
 wget = ">=1.21.4,<2"
 tar = ">=1.34,<2"
 ccache = "*"
-gcc = "*"
+#gcc = "*"
 sdl2 = ">=2.30.7,<3"
 libopengl = ">=1.7.0,<2"
 glew = ">=2.1.0,<3"
@@ -37,16 +37,24 @@ clang-tools = ">=19.1.2,<20"
 catch2 = ">=3.15.3,<4"
 qt6-main = "6.*"
 qt6-wayland = "6.*"
-cuda-toolkit = ">=12.4.0,<13"
+cuda-toolkit = ">=12.9.0,<13"
 bibtexparser = ">=1.4.4,<2"
+clang = ">=19.1.2,<20"
+clangxx = ">=19.1.2,<20"
+cuda-nvtx-dev = ">=12.9.19,<13"
+cuda-nvtx = ">=12.9.19,<13"
+pyyaml = ">=6.0.3,<7"
 
 [feature.build.dependencies]
-cmake = ">=3.31.4,<4"
+cmake = ">=3.31.8,<4"
 ninja = "*"
-gcc = "*"
+#gcc = "*"
 cxx-compiler = "*"
 pkg-config = "*"
-cuda = "12.4"
+cuda = "12.9.*"
+clang = ">=19.1.2,<20"
+clangxx = ">=19.1.2,<20"
+cuda-nvtx-dev = ">=12.9.19,<13"
 
 # Development dependencies
 [feature.dev.dependencies]
@@ -57,6 +65,7 @@ cmd = ["./vtk_installer.sh"]
 # script changes or the cache disappears (was re-running every invocation).
 inputs = ["vtk_installer.sh"]
 outputs = ["_deps/vtk/build/CMakeCache.txt"]
+
 [tasks.configure]
 # Configure CMake with Ninja generator
 cmd = ["cmake",
@@ -73,10 +82,17 @@ cmd = ["cmake",
     "-DCUDA_NVRTC_LIB=$CONDA_PREFIX/lib/libnvrtc.so",
     "-DTorch_DIR=$CONDA_PREFIX/lib/cmake/Torch",
     "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
-    "-DLIBNVTOOLSEXT=$CONDA_PREFIX/lib/libnvToolsExt.so.1",
     "-DQt6_DIR=$CONDA_PREFIX/lib/cmake/Qt6",
     "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    "-DCMAKE_CXX_COMPILER=clang++",
+    "-DCMAKE_C_COMPILER=clang",
+    "-DCMAKE_CUDA_HOST_COMPILER=clang++",
+    "-DCUDA_INCLUDE_DIRS=$CONDA_PREFIX/targets/x86_64-linux/include",
+    "-DUSE_SYSTEM_NVTX:BOOL=ON",
+    "-Dnvtx3_dir=$CONDA_PREFIX/targets/x86_64-linux/include",
+    "-DTORCH_CUDA_ARCH_LIST=8.6 8.9 12.0",
+    "-DCMAKE_CUDA_ARCHITECTURES=86,89,120",
 ]
 #inputs = ["CMakeLists.txt"]
 depends-on = ["build-vtk"]
@@ -107,6 +123,7 @@ cmd = ["cmake",
     "-DQt6_DIR=$CONDA_PREFIX/lib/cmake/Qt6",
     "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    "-DUSE_SYSTEM_NVTX=ON",
 ]
 #inputs = ["CMakeLists.txt"]
 depends-on = ["build-vtk"]
@@ -159,9 +176,11 @@ dev = ["build", "dev"]
 
 [activation.env]
 Qt6_DIR = "${CONDA_PREFIX}/lib/cmake/Qt6"
-VTK_DIR = "${CONDA_PREFIX}/lib/cmake/vtk-9.3"
+VTK_DIR = "${CONDA_PREFIX}/lib/cmake/vtk-9.7"
 Torch_DIR = "${CONDA_PREFIX}/lib/cmake/Torch"
 OpenCV_DIR = "${CONDA_PREFIX}/lib/cmake/opencv4"
 CUDA_HOME = "${CONDA_PREFIX}"
 CUDA_TOOLKIT_ROOT_DIR = "${CONDA_PREFIX}"
 CUDACXX = "${CONDA_PREFIX}/bin/nvcc"
+CXX="clang++"
+CC="clang"

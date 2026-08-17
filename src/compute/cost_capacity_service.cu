@@ -105,30 +105,43 @@ struct BankAllocation {
         const std::size_t pixels = in.width * in.height;
         const std::size_t triangles = in.triangle_count;
         const std::size_t stride = in.maximum_stride_size;
-        const std::size_t cub = in.cub_storage_bytes;
-        return DeviceAlloc(&render.output, pixels * sizeof(std::uint8_t)) &&
-               HostAlloc(&render.host_bounding_box, 4 * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_backface, triangles * sizeof(std::uint8_t)) &&
-               DeviceAlloc(&render.dev_transformed_vertex_zs,
-                           3 * triangles * sizeof(float)) &&
-               DeviceAlloc(&render.dev_tangent_triangle,
-                           3 * triangles * sizeof(std::uint8_t)) &&
-               DeviceAlloc(&render.dev_projected_triangles,
-                           6 * triangles * sizeof(float)) &&
-               DeviceAlloc(&render.dev_projected_triangles_snapped,
-                           6 * triangles * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_bounding_box_triangles,
-                           4 * triangles * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_bounding_box_triangles_sizes,
-                           triangles * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_bounding_box_triangles_sizes_prefix,
-                           triangles * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_bounding_box, 4 * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_fragment_fill, sizeof(std::int32_t)) &&
-               HostAlloc(&render.host_fragment_fill, sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_stride_prefixes,
-                           stride * sizeof(std::int32_t)) &&
-               DeviceAlloc(&render.dev_cub_storage, cub);
+        if (!DeviceAlloc(&render.output, pixels * sizeof(std::uint8_t)) ||
+            !HostAlloc(&render.host_bounding_box, 4 * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_backface, triangles * sizeof(std::uint8_t)) ||
+            !DeviceAlloc(&render.dev_transformed_vertex_zs,
+                         3 * triangles * sizeof(float)) ||
+            !DeviceAlloc(&render.dev_tangent_triangle,
+                         3 * triangles * sizeof(std::uint8_t)) ||
+            !DeviceAlloc(&render.dev_projected_triangles,
+                         6 * triangles * sizeof(float)) ||
+            !DeviceAlloc(&render.dev_projected_triangles_snapped,
+                         6 * triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_bounding_box_triangles,
+                         4 * triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_bounding_box_triangles_sizes,
+                         triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_bounding_box_triangles_sizes_prefix,
+                         triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_bounding_box, 4 * sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_fragment_fill, sizeof(std::int32_t)) ||
+            !HostAlloc(&render.host_fragment_fill, sizeof(std::int32_t)) ||
+            !DeviceAlloc(&render.dev_stride_prefixes,
+                         stride * sizeof(std::int32_t))) {
+            return false;
+        }
+
+        std::size_t cub_bytes = in.cub_storage_bytes;
+        if (cub_bytes == 0) {
+            // The legacy engine can report zero because its sizing call uses
+            // an in-place probe. Extra banks need a real scratch allocation;
+            // use a conservative 64-byte-per-triangle reserve rather than
+            // repeating that invalid probe. CUB remains the source of the
+            // actual scan execution and will fail closed if this is ever
+            // insufficient.
+            cub_bytes = std::max<std::size_t>(64, triangles * 64);
+        }
+        render.cub_storage_bytes = cub_bytes;
+        return DeviceAlloc(&render.dev_cub_storage, cub_bytes);
     }
 
     static bool AllocateMetrics(MetricBuffers& metrics,

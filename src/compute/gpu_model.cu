@@ -203,6 +203,25 @@ std::size_t GPUModel::GetPrimaryCubStorageBytes() const {
     return primary_cam_render_engine_->GetCubStorageBytes();
 }
 
+int GPUModel::GetPrimaryWidth() const {
+    return primary_cam_render_engine_->GetWidth();
+}
+
+int GPUModel::GetPrimaryHeight() const {
+    return primary_cam_render_engine_->GetHeight();
+}
+
+int GPUModel::GetPrimaryTriangleCount() const {
+    return primary_cam_render_engine_->GetTriangleCount();
+}
+
+void GPUModel::SetCapacityService(const CostCapacityService* service) {
+    primary_cam_render_engine_->SetCapacityService(service);
+    if (secondary_cam_render_engine_ != nullptr) {
+        secondary_cam_render_engine_->SetCapacityService(service);
+    }
+}
+
 GPUImage* GPUModel::GetSecondaryCameraRenderedImage() {
     return secondary_cam_render_engine_->GetRenderOutput();
 };
@@ -289,13 +308,17 @@ bool GPUModel::TrySetActiveBank(BankState* bank) {
 }
 
 bool GPUModel::EnqueueRenderPrimaryCamera(BankState& bank) {
-    if (!TrySetActiveBank(&bank)) return false;
+    if (!TrySetActiveBank(&bank)) {
+        return false;
+    }
     primary_cam_render_engine_->SetPose(current_pose_A_);
-    return primary_cam_render_engine_->RenderPhase(bank) == cudaSuccess;
+    const auto error = primary_cam_render_engine_->RenderPhase(bank);
+    return error == cudaSuccess;
 }
 
 bool GPUModel::CompleteRenderPrimaryCamera(BankState& bank) {
-    if (primary_cam_render_engine_->CompleteRenderPhase(bank) != cudaSuccess) {
+    const auto error = primary_cam_render_engine_->CompleteRenderPhase(bank);
+    if (error != cudaSuccess) {
         TrySetActiveBank(nullptr);
         return false;
     }

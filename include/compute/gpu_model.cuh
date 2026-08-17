@@ -109,6 +109,10 @@ public:
     JTML_DLL GPUImage* GetPrimaryCameraRenderedImage();
     JTML_DLL GPUImage* GetSecondaryCameraRenderedImage();
     JTML_DLL std::size_t GetPrimaryCubStorageBytes() const;
+    JTML_DLL int GetPrimaryWidth() const;
+    JTML_DLL int GetPrimaryHeight() const;
+    JTML_DLL int GetPrimaryTriangleCount() const;
+    JTML_DLL void SetCapacityService(const CostCapacityService* service);
 
     /*Get the cv::Mat output off the GPU and available for analysis
     Mostly used for image analysis that will not happen on the GPU

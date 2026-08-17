@@ -71,7 +71,29 @@ public:
             ms_->VTKEscapeSignal();
         }
     }
+    void update_info_text(vtkActor* actor) {
+        vtkTextActor* text = viewer_ ? viewer_->get_actor_text() : nullptr;
+        if (!text || !actor) return;
 
+        if (!information) {
+            text->GetTextProperty()->SetOpacity(0.0);
+            return;
+        }
+
+        Point6D pose(
+            actor->GetPosition()[0],
+            actor->GetPosition()[1],
+            actor->GetPosition()[2],
+            actor->GetOrientation()[0],
+            actor->GetOrientation()[1],
+            actor->GetOrientation()[2]);
+        if (interactor_camera_B)
+            pose = interactor_calibration.convert_Pose_B_to_Pose_A(pose);
+
+        text->SetInput(format_pose(pose, speed).c_str());
+        text->GetTextProperty()->SetOpacity(1.0);
+        text->GetTextProperty()->SetColor(actor->GetProperty()->GetColor());
+    }
     // Keypress Function
     void OnKeyPress() override {
         // Get the keypress
@@ -80,13 +102,6 @@ public:
         }
         if (this->InteractionProp == NULL) {
             std::string key = rwi->GetKeySym();
-            vtkTextActor* text =
-                vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                               ->GetRenderers()
-                                               ->GetFirstRenderer()
-                                               ->GetActors2D()
-                                               ->GetLastActor2D());
-
             // Handle information toggle
             if (key == "i" || key == "I") {
                 if (information == true) {
@@ -242,72 +257,11 @@ public:
         }
 
         // Information Toggle
-        std::string infoText = "Location: <";
-        vtkTextActor* text =
-            vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                           ->GetRenderers()
-                                           ->GetFirstRenderer()
-                                           ->GetActors2D()
-                                           ->GetLastActor2D());
-        if (information == true) {
-            if (interactor_camera_B == false) {
-                infoText +=
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[0])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[1])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[2])) +
-                    ">\nOrientation: <" +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[0])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[1])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[2])) +
-                    ">\nKeyboard Speed: " + std::to_string(speed);
+        update_info_text(actor);
+        this->Interactor->GetRenderWindow()->Render();
 
-            } else {
-                auto current_position_B = Point6D(
-                    actor->GetPosition()[0],
-                    actor->GetPosition()[1],
-                    actor->GetPosition()[2],
-                    actor->GetOrientation()[0],
-                    actor->GetOrientation()[1],
-                    actor->GetOrientation()[2]);
-                Point6D current_position_A =
-                    interactor_calibration.convert_Pose_B_to_Pose_A(
-                        current_position_B);
-                infoText +=
-                    std::to_string(
-                        static_cast<long double>(current_position_A.x)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.y)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.z)) +
-                    ">\nOrientation: <" +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.xa)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.ya)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.za)) +
-                    ">\nKeyboard Speed: " + std::to_string(speed);
-            }
-            text->GetTextProperty()->SetOpacity(1.0);
-            text->GetTextProperty()->SetColor(actor->GetProperty()->GetColor());
-        } else {
-            text->GetTextProperty()->SetOpacity(0.0);
-        }
-        text->SetInput(infoText.c_str());
+        // Forward events
+        vtkInteractorStyleTrackballActor::OnKeyPress();
         this->Interactor->GetRenderWindow()->Render();
 
         // Forward events
@@ -348,81 +302,14 @@ public:
 
     // Left Mouse Up Function
     void OnLeftButtonUp() override {
-        if (this->InteractionProp == NULL) {
+        leftDown = false;
+        if (this->InteractionProp == nullptr) {
+            vtkInteractorStyleTrackballActor::OnLeftButtonUp();
             return;
         }
         vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
-
-        leftDown = false;
-        // Information Toggle
-        std::string infoText = "Location: <";
-        vtkTextActor* text =
-            vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                           ->GetRenderers()
-                                           ->GetFirstRenderer()
-                                           ->GetActors2D()
-                                           ->GetLastActor2D());
-        if (information == true) {
-            if (interactor_camera_B == false) {
-                infoText +=
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[0])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[1])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetPosition()[2])) +
-                    ">\nOrientation: <" +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[0])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[1])) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(actor->GetOrientation()[2])) +
-                    ">\nKeyboard Speed: " + std::to_string(speed);
-
-            } else {
-                auto current_position_B = Point6D(
-                    actor->GetPosition()[0],
-                    actor->GetPosition()[1],
-                    actor->GetPosition()[2],
-                    actor->GetOrientation()[0],
-                    actor->GetOrientation()[1],
-                    actor->GetOrientation()[2]);
-                Point6D current_position_A =
-                    interactor_calibration.convert_Pose_B_to_Pose_A(
-                        current_position_B);
-                infoText +=
-                    std::to_string(
-                        static_cast<long double>(current_position_A.x)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.y)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.z)) +
-                    ">\nOrientation: <" +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.xa)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.ya)) +
-                    "," +
-                    std::to_string(
-                        static_cast<long double>(current_position_A.za)) +
-                    ">\nKeyboard Speed: " + std::to_string(speed);
-            }
-            text->GetTextProperty()->SetOpacity(1.0);
-            text->GetTextProperty()->SetColor(actor->GetProperty()->GetColor());
-        } else {
-            text->GetTextProperty()->SetOpacity(0.0);
-        }
-        text->SetInput(infoText.c_str());
+        update_info_text(actor);
         this->Interactor->GetRenderWindow()->Render();
-        // Forward Events
         vtkInteractorStyleTrackballActor::OnLeftButtonUp();
     }
 
@@ -447,10 +334,8 @@ public:
         if (this->InteractionProp == NULL) {
             return;
         }
-        if (leftDown == true || rightDown == true || middleDown == true) {
+        if (leftDown || rightDown || middleDown) {
             vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
-
-            // If Right Down and Not Left or MiddleScale The Z
             if (!leftDown && !middleDown) {
                 double* Position = actor->GetPosition();
                 actor->SetPosition(
@@ -458,75 +343,7 @@ public:
                     Position[1],
                     QCursor::pos().y() - rightDownY + rightDownModelZ);
             }
-
-            // Information Toggle
-            std::string infoText = "Location: <";
-            vtkTextActor* text =
-                vtkTextActor::SafeDownCast(this->Interactor->GetRenderWindow()
-                                               ->GetRenderers()
-                                               ->GetFirstRenderer()
-                                               ->GetActors2D()
-                                               ->GetLastActor2D());
-            if (information == true) {
-                if (interactor_camera_B == false) {
-                    infoText +=
-                        std::to_string(
-                            static_cast<long double>(actor->GetPosition()[0])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(actor->GetPosition()[1])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(actor->GetPosition()[2])) +
-                        ">\nOrientation: <" +
-                        std::to_string(static_cast<long double>(
-                            actor->GetOrientation()[0])) +
-                        "," +
-                        std::to_string(static_cast<long double>(
-                            actor->GetOrientation()[1])) +
-                        "," +
-                        std::to_string(static_cast<long double>(
-                            actor->GetOrientation()[2])) +
-                        ">\nKeyboard Speed: " + std::to_string(speed);
-
-                } else {
-                    auto current_position_B = Point6D(
-                        actor->GetPosition()[0],
-                        actor->GetPosition()[1],
-                        actor->GetPosition()[2],
-                        actor->GetOrientation()[0],
-                        actor->GetOrientation()[1],
-                        actor->GetOrientation()[2]);
-                    Point6D current_position_A =
-                        interactor_calibration.convert_Pose_B_to_Pose_A(
-                            current_position_B);
-                    infoText +=
-                        std::to_string(
-                            static_cast<long double>(current_position_A.x)) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(current_position_A.y)) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(current_position_A.z)) +
-                        ">\nOrientation: <" +
-                        std::to_string(
-                            static_cast<long double>(current_position_A.xa)) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(current_position_A.ya)) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(current_position_A.za)) +
-                        ">\nKeyboard Speed: " + std::to_string(speed);
-                }
-                text->GetTextProperty()->SetOpacity(1.0);
-                text->GetTextProperty()->SetColor(
-                    actor->GetProperty()->GetColor());
-            } else {
-                text->GetTextProperty()->SetOpacity(0.0);
-            }
-            text->SetInput(infoText.c_str());
+            update_info_text(actor);
             this->Interactor->GetRenderWindow()->Render();
         }
 
@@ -539,6 +356,14 @@ public:
             }
             vtkInteractorStyleTrackballActor::OnMouseMove();
         }
+    }
+
+private:
+    static std::string format_pose(const Point6D& p, double spd) {
+        auto n = [](double v) { return std::to_string(v); };
+        return "Location: <" + n(p.x) + "," + n(p.y) + "," + n(p.z) +
+               ">\nOrientation: <" + n(p.xa) + "," + n(p.ya) + "," + n(p.za) +
+               ">\nKeyboard Speed: " + n(spd);
     }
 };
 
