@@ -891,7 +891,7 @@ wiring is re-reviewed as a unit before U12 proceeds --- a launch-policy reversio
 de-scope is on the table, not just U12's premise (the units are bit-identity-safe either
 way, so the consequence is committed maintenance surface, not incorrect behavior).
 
-- [ ] U9. *=CostCapacityService= (compute layer)*
+- [x] U9. *=CostCapacityService= (compute layer)*
 
 *Goal:* The capacity knowledge the optimizer queries, owned by compute: device snapshot,
 per-kernel occupancy, SAFE_CAP arithmetic, capacity-clamped grid sizing, and the runtime

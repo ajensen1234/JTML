@@ -35,6 +35,7 @@ add_library(jtml_compute SHARED
     registration_metric.cu
     render_drr_engine.cu
     render_engine.cu
+    cost_capacity_service.cu
     distance_map_metric.cu
     fast_implant_dilation_metric.cu
     gpu_heatmaps.cu

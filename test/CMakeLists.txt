@@ -96,6 +96,19 @@ target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
 set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# CostCapacityService pure capacity sizing math (plan 010 U9). The service's
+# sizing functions are INLINE in the header (cost_capacity_service.cuh), so this
+# headless test compiles the header only -- no CUDA link -- against injected fake
+# device props. The GPU-only device/occupancy queries live in the oracle below.
+add_executable(jtml_test_cost_capacity_service
+    unit/test_cost_capacity_service.cpp)
+target_include_directories(jtml_test_cost_capacity_service PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_cost_capacity_service PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.cost_capacity_service COMMAND jtml_test_cost_capacity_service)
+set_tests_properties(jtml.cost_capacity_service PROPERTIES LABELS "headless" TIMEOUT 120)
+
 # Pose / kinematics persistence service round-trip tests (plan U7, R2/R8/R9).
 # Pure file-format logic; compiled CUDA/Qt-free alongside the real golden
 # fixture with the data-structure source, no event loop, no GPU.
@@ -1431,6 +1444,30 @@ target_link_options(jtml_test_z_profile PRIVATE
     "-Wl,-rpath,${VTK_LIB_DIR}")
 add_test(NAME jtml.z_profile COMMAND jtml_test_z_profile)
 set_tests_properties(jtml.z_profile PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# CostCapacityService GPU-labeled oracle (plan 010 U9). NEVER in the headless
+# default: requires a real CUDA device. Compiles the service's GPU queries
+# (cost_capacity_service.cu) + a local probe kernel, pins the real-device
+# SAFE_CAP == maximum_stride_size*(threads_per_block-1) and that the occupancy
+# query returns > 0 blocks/SM. Same registration recipe as jtml.z_profile
+# (`oracle;gpu` labels, repo-root WORKING_DIRECTORY, long TIMEOUT).
+add_executable(jtml_test_cost_capacity_oracle
+    oracle/cost_capacity_oracle_test.cu
+    ${PROJECT_SOURCE_DIR}/src/compute/cost_capacity_service.cu)
+target_include_directories(jtml_test_cost_capacity_oracle PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_cost_capacity_oracle PRIVATE
+    ${JTA_LIBS}
+    ${CUDA_LIBRARIES}
+    Catch2::Catch2WithMain)
+target_link_options(jtml_test_cost_capacity_oracle PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+set_property(TARGET jtml_test_cost_capacity_oracle PROPERTY CUDA_ARCHITECTURES native)
+add_test(NAME jtml.cost_capacity_oracle COMMAND jtml_test_cost_capacity_oracle)
+set_tests_properties(jtml.cost_capacity_oracle PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # ---------------------------------------------------------------------------
