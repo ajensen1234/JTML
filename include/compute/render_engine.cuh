@@ -24,6 +24,8 @@
 #include "domain/preprocessor-defs.h"
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
+
+class CostCapacityService;  // plan 010 U10 (defined in cost_capacity_service.cuh)
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
     JTML_DLL Pose(
@@ -100,6 +102,13 @@ public:
 
     /*Is the Render Engine properly initialized?*/
     JTML_DLL bool IsInitializedCorrectly();
+
+    /*Plan 010 U10: optional capacity service used for capacity-based launch
+     * sizing. nullptr (default) => pure pre-unit behavior (P2 fallback). The
+     * service is owned by the caller and must outlive this engine. Setting this
+     * NEVER changes the produced grid for the 256-pinned fill kernels when the
+     * work is within SAFE_CAP (provably bit-identical -- see Render()).*/
+    JTML_DLL void SetCapacityService(const CostCapacityService* service);
 
 private:
     /*Host (CPU) Variables*/
@@ -246,6 +255,9 @@ private:
     dim3 dim_grid_vertices_;
     dim3 dim_grid_bounding_box_;
     dim3 dim_grid_fill_;
+
+    /*Plan 010 U10: optional capacity service (owned by caller; nullptr = pre-unit).*/
+    const CostCapacityService* capacity_service_ = nullptr;
 };
 } // namespace gpu_cost_function
 #endif /* RENDER_ENGINE_H */

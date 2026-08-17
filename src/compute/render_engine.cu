@@ -1,5 +1,6 @@
 /*Render Engine Header*/
 #include "compute/render_engine.cuh"
+#include "compute/cost_capacity_service.cuh"  // plan 010 U10
 
 /*Cub Library (CUDA)*/
 #include "cub/cub.cuh"
@@ -809,6 +810,30 @@ cudaError_t RenderEngine::Render() {
         return cudaErrorMemoryAllocation;
     }
 
+    /*Plan 010 U10: FillTriangleKernel is block-pinned at threads_per_block; its
+     * grid is ceil(fragment_fill_/threads_per_block) -- the minimal covering
+     * grid. When the capacity service is available and the work is within
+     * SAFE_CAP, gridFor(fragment_fill_, 256) returns exactly this value (a
+     * strict bit-identity no-op); otherwise the EXACT pre-unit formula is used
+     * (P2 fallback). This never changes the produced grid, so bit-identity is
+     * preserved by construction. StridePrefixKernel above is left untouched
+     * (its grid divides by threads_per_block^2 -- structure-specific, per the
+     * plan's per-kernel policy).*/
+    int fill_grid = static_cast<int>(ceil(
+        static_cast<double>(fragment_fill_[0]) /
+        static_cast<double>(threads_per_block)));
+    if (capacity_service_ && capacity_service_->available()) {
+        const CapacityGrid cg =
+            capacity_service_->gridFor(fragment_fill_[0], threads_per_block);
+        if (cg.capacity_applicable) {
+            // == ceil(fragment/256) == the pre-unit formula above (no-op).
+            fill_grid = cg.grid_blocks;
+        }
+    }
+    /*StridePrefixKernel: block-pinned at threads_per_block; grid divides by
+     * threads_per_block^2 (the stride-prefix structure). Left UNTOUCHED per the
+     * plan's per-kernel policy (capacity is a no-op here -- the formula is
+     * structure-specific, not a minimal-covering reshape candidate).*/
     StridePrefixKernel<<<
         ceil(
             static_cast<double>(fragment_fill_[0]) /
@@ -820,11 +845,7 @@ cudaError_t RenderEngine::Render() {
         dev_stride_prefixes_,
         triangle_count_);
 
-    FillTriangleKernel<<<
-        ceil(
-            static_cast<double>(fragment_fill_[0]) /
-            static_cast<double>(threads_per_block)),
-        threads_per_block>>>(
+    FillTriangleKernel<<<fill_grid, threads_per_block>>>(
         dev_bounding_box_triangles_sizes_,
         dev_bounding_box_triangles_sizes_prefix_,
         dev_bounding_box_triangles_,
@@ -897,4 +918,8 @@ cv::Mat RenderEngine::GetcvMatImage() {
 bool RenderEngine::IsInitializedCorrectly() {
     return initialized_correctly_;
 };
+
+void RenderEngine::SetCapacityService(const CostCapacityService* service) {
+    capacity_service_ = service;
+}
 } // namespace gpu_cost_function

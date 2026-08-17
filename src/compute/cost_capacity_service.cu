@@ -39,6 +39,11 @@ bool CostCapacityService::refreshDeviceSnapshot(int device) {
     snap_.max_threads_per_sm = props.maxThreadsPerMultiProcessor;
     snap_.grid_dim_limit = props.maxGridSize[0];  // per-axis; x is the launch axis
     snap_.free_device_bytes = static_cast<std::int64_t>(free_bytes);
+    // SAFE_CAP: the host overflow guard's exact bound in render_engine.cu
+    // (fragment_fill_[0] > maximum_stride_size * (threads_per_block - 1)) --
+    // one source of truth, computed here so the service carries the ceiling.
+    snap_.safe_cap =
+        static_cast<std::int64_t>(maximum_stride_size) * (threads_per_block - 1);
     snap_.n_max = 0;  // N_MAX numeric value is implementation-time (deep-dive estimate ~4)
     return isCapacityAvailable(snap_);
 }

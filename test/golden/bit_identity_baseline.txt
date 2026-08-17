@@ -1,0 +1,28 @@
+Randomness seeded to: 3772582041
+[bit_identity] frame example_studies/Kneel_1/1024/2806.tif
+[bit_identity] DIRECT_DILATION, backface OFF, Canny 3/0/150, dilation 6
+[bit_identity] poses:
+[bit_identity] pose[0] = 18.5219,19.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[1] = 19.5219,19.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[2] = 17.5219,19.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[3] = 18.5219,20.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[4] = 18.5219,18.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[5] = 18.5219,19.6951,-1025.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[6] = 19.5219,20.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[7] = 20.5219,17.6951,-1027.71,-7.41932,-0.258704,-26.6971
+[bit_identity] pose[8] = 18.0219,20.1951,-1026.71,-7.41932,-0.258704,-26.6971
+[bit_identity] scores:
+[bit_identity] score[0] = 109151
+[bit_identity] score[1] = 111600
+[bit_identity] score[2] = 111500
+[bit_identity] score[3] = 110722
+[bit_identity] score[4] = 110940
+[bit_identity] score[5] = 109196
+[bit_identity] score[6] = 111991
+[bit_identity] score[7] = 115604
+[bit_identity] score[8] = 110424
+[bit_identity] HASHLINE_SEQ 109151.45806983778 111600.31799469399 111500.26823659278 110722.25865393445 110940.08455848781 109196.48561775181 111991.12977728898 115603.97733296774 110424.24307016742
+[bit_identity] HASHLINE_SEQ_DONE
+===============================================================================
+All tests passed (20 assertions in 1 test case)
+

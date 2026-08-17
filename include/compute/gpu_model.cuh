@@ -49,7 +49,11 @@ public:
         float* triangles,
         float* normals,
         int triangle_count,
-        CameraCalibration camera_calibration_primary_cam);
+        CameraCalibration camera_calibration_primary_cam,
+        /*plan 010 U10: optional capacity service forwarded to the render
+         * engines (nullptr = pre-unit sizing). Additive -- existing callers
+         * omit it and get pre-unit behavior.*/
+        const CostCapacityService* capacity_service = nullptr);
 
     /*Biplane constructor*/
     JTML_DLL GPUModel(

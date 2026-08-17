@@ -14,7 +14,8 @@ GPUModel::GPUModel(
     float* triangles,
     float* normals,
     int triangle_count,
-    CameraCalibration camera_calibration_primary_cam) {
+    CameraCalibration camera_calibration_primary_cam,
+    const CostCapacityService* capacity_service) {
     /*Initialize Model Names, Type, and Primary*/
     model_name_ = model_name;
     principal_model_ = principal_model;
@@ -32,6 +33,8 @@ GPUModel::GPUModel(
         normals,
         triangle_count,
         camera_calibration_primary_cam);
+    /*plan 010 U10: forward the optional capacity service (nullptr = pre-unit).*/
+    primary_cam_render_engine_->SetCapacityService(capacity_service);
     secondary_cam_render_engine_ = 0;
 
     /*Check to see if Render Engine Initialized Correctly*/

@@ -1470,6 +1470,43 @@ add_test(NAME jtml.cost_capacity_oracle COMMAND jtml_test_cost_capacity_oracle)
 set_tests_properties(jtml.cost_capacity_oracle PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# Plan 010 U10 bit-identity harness / baseline recorder. GPU-labeled: NEVER in
+# the headless default. Drives the production pose->score path over a fixed
+# frame and records the deterministic (pose,score) sequence; run against the
+# PRE-wiring render_engine and capture stdout as
+# test/golden/bit_identity_baseline.txt FIRST (characterization-first, R13),
+# then after U10 wires the CostCapacityService into the fill launches re-run
+# and the sequence must be BIT-IDENTICAL. Same registration recipe as
+# jtml.z_profile (`oracle;gpu` labels, repo-root WORKING_DIRECTORY, TIMEOUT).
+add_executable(jtml_test_bit_identity
+    oracle/bit_identity_test.cpp)
+target_include_directories(jtml_test_bit_identity PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${VTK_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_bit_identity PRIVATE
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen
+    Catch2::Catch2WithMain)
+set_property(TARGET jtml_test_bit_identity PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_bit_identity PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}")
+target_link_options(jtml_test_bit_identity PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.bit_identity COMMAND jtml_test_bit_identity)
+set_tests_properties(jtml.bit_identity PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # ---------------------------------------------------------------------------
 # Tier-2 multi-stage oracle (plan 008 U6). GPU-only: NEVER in the headless
 # default. Drives OptimizerRunController with the PRODUCTION driver factory
