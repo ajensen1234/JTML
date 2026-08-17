@@ -31,6 +31,24 @@ Two workstreams land on the seams plan 008 built (stage-graph container,
    =DirectOptimizer= stay launch-agnostic --- no launch machinery enters the coordinator
    or domain layers.
 
+
+*Architecture follow-up (added after U12 implementation review):* Phase A remains
+independent and continues as written. Phase B's U12 bank/stream code is a validated
+compatibility prototype, but the long-term compute architecture now moves to a new
+EvaluationContext/EvaluationExecutor workstream before further performance claims or
+broadening beyond monoplane =DIRECT_DILATION=. The new workstream will compare (a) the
+current active-bank compatibility migration, (b) explicit per-evaluation contexts owned
+by an executor, and (c) a more data-oriented batch evaluator. It must settle ownership,
+stream/event lifecycle, the host fragment-packet boundary, bank-count semantics
+(compatibility bank 0 versus extra banks), error/cancellation behavior, and a paired
+serial-versus-N timing protocol. An executor-owned pool of independent
+=RenderEngine=/=GPUMetrics= instances is a valid option only if every instance has
+private mutable state and explicit non-default streams; instantiation alone does not
+create concurrency while methods use the legacy default stream or blocking copies.
+The architecture graph and CUDA 12.9 target notes live in
+=docs/architecture/jtml-cost-evaluation-execution-graph.org=; Phase A's algorithm
+semantics and =jtml-production= default are unchanged.
+
 --------------
 
 ** Problem Frame
@@ -486,69 +504,58 @@ byte-identical to the pre-unit behavior (existing goldens untouched).
 
 - [ ] U2. *GL two-step Pareto selection (union S = G ∪ L)*
 
-*Goal:* Implement the literature's highest-evidence selection upgrade:
-the two-step Pareto selection with the union variant (global staircase G
-and local distance staircase L merged, the DGO/GLh form that is "on
-average more effective" than separate processing).
+*Goal:* Implement the literature's highest-evidence selection upgrade: the two-step Pareto
+selection with the union variant (global staircase G and local distance staircase L
+merged, the DGO/GLh form that is "on average more effective" than separate processing).
 
 *Requirements:* R3, R9
 
 *Dependencies:* U1
 
-*Files:* - Modify: =src/domain/direct_optimizer.cpp= (selection branch
-guarded on =selection == SelectionMode::GL=; the =ConvexHull= Jarvis
-hull stays the =Original= path) - Modify:
-=include/domain/direct_optimizer.h= (flip the field's stub status + doc
-the GL semantics and the tie/ε interaction) - Test:
-=test/unit/test_direct_variants.cpp= (new) - Test:
-=test/unit/test_direct_variants_properties.cpp= (new, hegel) - Modify:
-=test/CMakeLists.txt= (new targets, =headless= label, direct- compile
-pattern)
+*Files:* - Modify: =src/domain/direct_optimizer.cpp= (selection branch guarded on
+=selection == SelectionMode::GL=; the =ConvexHull= Jarvis hull stays the =Original=
+path) - Modify: =include/domain/direct_optimizer.h= (flip the field's stub status + doc
+the GL semantics and the tie/ε interaction) - Test: =test/unit/test_direct_variants.cpp=
+(new) - Test: =test/unit/test_direct_variants_properties.cpp= (new, hegel) - Modify:
+=test/CMakeLists.txt= (new targets, =headless= label, direct- compile pattern)
 
-*Approach:* - GL's two staircases (global: box value vs size; local:
-distance from current optimum vs size) computed from the same box table
-the hull already uses; union S = G ∪ L feeds the existing trisection
-machinery. Distances are already needed downstream by GLh (U5) --- store
-once. - Guarded divergence: the hull code path is untouched when
-=selection == Original=. - Selection-order pin: record the
-evaluated-point sequence with a recording fake cost on small problems;
-the GL sequence is the spec.
+*Approach:* - GL's two staircases (global: box value vs size; local: distance from current
+optimum vs size) computed from the same box table the hull already uses; union S = G ∪ L
+feeds the existing trisection machinery. Distances are already needed downstream by GLh
+(U5) --- store once. - Guarded divergence: the hull code path is untouched when =selection
+== Original=. - Selection-order pin: record the evaluated-point sequence with a recording
+fake cost on small problems; the GL sequence is the spec.
 
-*Execution note:* characterization-first --- pin the classic selection
-sequence on the same fake cost first, so the GL-vs-classic diff is the
-evidence of divergence and nothing else diverges.
+*Execution note:* characterization-first --- pin the classic selection sequence on the
+same fake cost first, so the GL-vs-classic diff is the evidence of divergence and nothing
+else diverges.
 
-*Patterns to follow:* =test/unit/test_direct_optimizer.cpp= fake-cost
-goldens; angle 01's GL definitions (Definitions 1--3 of Stripinis 2018,
-union form per DIRECTGO §2.2).
+*Patterns to follow:* =test/unit/test_direct_optimizer.cpp= fake-cost goldens; angle 01's
+GL definitions (Definitions 1--3 of Stripinis 2018, union form per DIRECTGO §2.2).
 
-*Test scenarios:* - Happy path: GL on a recording quadratic cost over a
-small budget selects the pinned POH sequence (golden recorded from the
-paper's semantics, not from the implementation). - Happy path: GL and
-Original on an isotropic problem with one box per size level select the
-same set (degenerate agreement case). - Edge case: all-equal costs (flat
-function) --- the local staircase's distances break the degeneracy
-without crashing or empty POH sets. - Integration: hegel PBT --- for
-random smooth costs, f_min after k iterations under GL ≤ f_min under
-no-search seed; budget compliance holds (calls ≤ budget + call_offset);
-runs are deterministic (same cost ⇒ same sequence).
+*Test scenarios:* - Happy path: GL on a recording quadratic cost over a small budget
+selects the pinned POH sequence (golden recorded from the paper's semantics, not from the
+implementation). - Happy path: GL and Original on an isotropic problem with one box per
+size level select the same set (degenerate agreement case). - Edge case: all-equal costs
+(flat function) --- the local staircase's distances break the degeneracy without crashing
+or empty POH sets. - Integration: hegel PBT --- for random smooth costs, f_min after k
+iterations under GL ≤ f_min under no-search seed; budget compliance holds (calls ≤
+budget + call_offset); runs are deterministic (same cost ⇒ same sequence).
 
-*Verification:* new targets green under =ctest -L headless=; the U1
-message table marks =SelectionMode::GL= implemented; classic goldens
-unchanged.
+*Verification:* new targets green under =ctest -L headless=; the U1 message table marks
+=SelectionMode::GL= implemented; classic goldens unchanged.
 
 --------------
 
 - [ ] U3. *gb phase switch (canonical semantics + shipped arm)*
 
-*Goal:* Implement the globally-biased refinement control --- the only
-restriction that never hurt in the 287-problem study and the best on
-expensive objectives.
+*Goal:* Implement the globally-biased refinement control --- the only restriction that
+never hurt in the 287-problem study and the best on expensive objectives.
 
 *Requirements:* R3, R9
 
-*Dependencies:* U2 (gb toggles between the GL local phase and the
-global-only Pareto phase)
+*Dependencies:* U2 (gb toggles between the GL local phase and the global-only Pareto
+phase)
 
 *Files:* - Modify: =src/domain/direct_optimizer.cpp= (phase state machine guarded on
 =globally_biased=) - Modify: =include/domain/direct_optimizer.h= (field docs: canonical
@@ -956,12 +963,12 @@ launch site consumes the service yet (knowledge only --- wiring is U10).
 
 - [x] U10. *Capacity-based launch wiring in the cost path*
 
-*Goal:* Cost-path kernel launches are sized by the service /when capacity is available/
---- occupancy-optimal block sizes, overshooting launch formulas reduced toward the minimal
-covering grid, SAFE_CAP as the ceiling --- with today's sizing as the automatic fallback,
-and bit-identity proven. This unit is plumbing + occupancy measurement + the reshape
-candidates: it promises NO perf delta (the pre-registered meter band attaches to U12 only
---- the bit-identity diff is this unit's gate, not a perf gate).
+*Goal:* Cost-path launch plumbing is measured and capacity-aware /where the verified
+per-kernel policy permits it/, with today's sizing as the automatic fallback and bit-identity
+proven. U10's shipped change routes the 256-pinned FillTriangle launch through the service
+as a provable no-op; metric stream/launch migration and broader N-way execution belong to
+the new U12 EvaluationExecutor architecture workstream. This unit promises NO perf delta
+(the bit-identity diff is its gate, not a perf gate).
 
 *Requirements:* P2, P3, R13
 
@@ -971,7 +978,8 @@ candidates: it promises NO perf delta (the pre-registered meter band attaches to
 =StridePrefixKernel=/=FillTriangleKernel= --- get capacity-clamped grids; the host
 overflow guard stays, SAFE_CAP-aligned) - Modify:
 =src/compute/fast_implant_dilation_metric.cu=, =src/compute/distance_map_metric.cu=
-(metric launches sized through the service) - Modify: =src/compute/CMakeLists.txt= if a
+(the explicit metric stream/launch migration is now part of the U12 architecture follow-up;
+U10's verified capacity routing is limited to the fill-launch no-op and its bit-identity gate) - Modify: =src/compute/CMakeLists.txt= if a
 shared launch helper lands - Test: GPU-labeled bit-identity harness (extend =test/oracle/=
 --- pose → score sequence diff vs the pre-unit baseline over the oracle's frames)
 
@@ -1107,7 +1115,10 @@ untouched; GPU batch-vs-serial equality green.
 
 --------------
 
-- [ ] U12. *N-way eval banks + streams, sized by capacity (gated)*
+- [ ] U12. *N-way eval banks + streams, sized by capacity (gated; architecture follow-up required)*
+
+
+*Status note:* the current implementation is a correctness-pinned compatibility prototype. It establishes bank ownership, explicit-stream phases, enqueue/complete APIs, and production wiring for monoplane =DIRECT_DILATION=, but it does not yet constitute a measured speedup result. Before further U12 performance claims or scope expansion, the new EvaluationContext/EvaluationExecutor workstream must resolve active-bank aliasing, bank-0 versus extra-bank semantics, blocking packet/event boundaries, and the serial-versus-N throughput protocol. Phase A remains unaffected.
 
 *Goal:* When the capacity service says N > 1 fits, the POH batch runs N-way: N banks of
 eval state (render output + score buffers), N CUDA streams, capacity-sized launches per

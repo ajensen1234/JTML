@@ -1,0 +1,464 @@
+#+TITLE: JTML Cost-Evaluation Execution Graph
+#+DATE: 2026-08-17
+#+AUTHOR: JTML engineering notes
+#+PROPERTY: header-args :mkdirp yes
+
+* Purpose
+
+This document describes the current production cost-evaluation path in JTML and the U12
+asynchronous bank architecture. It is intended as a reference for drawing a revised
+higher-level architecture before further compute refactoring.
+
+The central question is: what is persistent, what is rebuilt or overwritten for each pose,
+who owns it, and where can independent evaluations overlap safely?
+
+* Current production graph
+
+#+begin_example
+DirectOptimizer
+  -> OptimizerManager cost adapter
+    -> CostFunctionManager
+      -> GPUModel / RenderEngine
+      -> GPUMetrics
+
+DirectOptimizer::Run()
+  |
+  +- selects potentially-optimal hyperboxes
+  +- creates a physical Point6D
+  +- invokes injected CostFunction(Point6D)
+
+OptimizerManager adapter
+  |
+  +- GPUModel::SetCurrentPrimaryCameraPose(pose)
+  +- CostFunctionManager::callActiveCostFunction()
+       |
+       +- costFunctionDIRECT_DILATION()
+            |
+            +- GPUModel::RenderPrimaryCamera()
+            +- GPUMetrics::FastImplantDilationMetric()
+            +- GPUMetrics::DistanceMapMetric()
+            +- returns scalar double
+#+end_example
+
+The main code anchors are:
+
+- =src/compute/DIRECT_DILATION.cpp:58-83= — the active cost function.
+- =include/compute/CostFunctionManager.h:70-81= — serial and U12 bank-aware cost APIs.
+- =src/coordinator/optimizer_manager.cpp:1460-1480= — the serial cost adapter path.
+- =include/compute/gpu_model.cuh= and =src/compute/gpu_model.cu= — model pose and render orchestration.
+- =include/compute/render_engine.cuh= and =src/compute/render_engine.cu= — rasterization and render-state ownership.
+- =include/compute/gpu_metrics.cuh= and =src/compute/gpu_metrics.cu= — metric reductions and pinned result storage.
+
+* Initialization-time object graph
+
+** OptimizerManager
+
+=OptimizerManager::Initialize= creates the principal =GPUModel=, additional non-principal models, and one =GPUMetrics= object. Each stage's =CostFunctionManager= receives pointers to the active model, metrics, frame data, distance maps, pose storage, and biplane state through =UploadData=.
+
+The principal model is the model being optimized. Non-principal models are display or scene companions and should not silently consume the principal model's asynchronous evaluation banks.
+
+** GPUModel and RenderEngine
+
+A =GPUModel= owns one primary =RenderEngine= and, in biplane mode, one secondary =RenderEngine=. Each RenderEngine owns persistent model geometry and mutable evaluation buffers.
+
+#+begin_example
+GPUModel
++- primary RenderEngine
+|  +- read-only model triangles
+|  +- read-only model normals
+|  +- mutable render scratch
+|  +- renderer output image
+|  +- current pose / rotation state
+|
++- secondary RenderEngine (biplane only)
+#+end_example
+
+** GPUMetrics
+
+One =GPUMetrics= object owns the scalar reduction targets and pinned host result twins
+used by the cost functions. The current serial object has one target for each metric
+family and reuses them on every evaluation.
+
+** CostFunctionManager
+
+Each stage's =CostFunctionManager= selects an active cost-function implementation. The
+generated cost functions call the manager's stored GPU model and metrics pointers. The
+domain optimizer does not see CUDA types.
+
+* Persistent versus per-evaluation data
+
+| Data                     | Lifetime             | Shared between concurrent evaluations? |
+|--------------------------+----------------------+----------------------------------------|
+| Triangle vertices        | Model lifetime       | Yes, read-only                         |
+| Triangle normals         | Model lifetime       | Yes, read-only                         |
+| Edge comparison image    | Frame/study lifetime | Yes, read-only                         |
+| Dilated comparison image | Frame/study lifetime | Yes, read-only                         |
+| Distance map             | Frame/study lifetime | Yes, read-only                         |
+| Pose                     | One evaluation       | No                                     |
+| Rotation matrix          | One evaluation       | No                                     |
+| Projected triangles      | One evaluation       | No                                     |
+| Snapped triangles        | One evaluation       | No                                     |
+| Triangle bounding boxes  | One evaluation       | No                                     |
+| Prefix/scratch buffers   | One evaluation       | No                                     |
+| Rendered output image    | One evaluation       | No                                     |
+| Pixel score reduction    | One evaluation       | No                                     |
+| Distance-map reductions  | One evaluation       | No                                     |
+| Pinned result copies     | One evaluation       | No                                     |
+| CUDA stream/event        | One in-flight bank   | No                                     |
+
+The reusable portion is primarily static model geometry and comparison data. Almost
+everything produced after pose submission is mutable evaluation state and must be private
+to an in-flight bank.
+
+* Detailed serial evaluation path
+
+** Pose transformation
+
+The optimizer supplies a physical =Point6D=:
+
+#+begin_example
+x, y, z, xa, ya, za
+#+end_example
+
+=GPUModel= stores the current pose and derives the rotation matrix. The model geometry is
+not permanently transformed. The current pose and rotation are passed into projection
+kernels for each evaluation.
+
+#+begin_example
+static triangle geometry + current pose/rotation
+        |
+        v
+WorldToPixelKernel
+        |
+        +- projected triangles
+        +- snapped triangles
+        +- backface flags
+#+end_example
+
+** Render output clear
+
+The current =GPUImage= output is cleared and the aggregate bounding box is reset. In the
+serial path this happens on the legacy default stream.
+
+** Triangle projection
+
+=WorldToPixelKernel= reads the persistent triangle geometry and current pose and writes:
+
+- =dev_projected_triangles_=;
+- =dev_projected_triangles_snapped_=;
+- =dev_backface_=.
+
+These are temporary per-evaluation buffers.
+
+** Bounding boxes and prefix scan
+
+Bounding-box kernels write:
+
+- =dev_bounding_box_triangles_=;
+- =dev_bounding_box_triangles_sizes_=;
+- =dev_bounding_box_=.
+
+CUB performs an exclusive scan from the sizes array into
+=dev_bounding_box_triangles_sizes_prefix_=. The CUB temporary storage is also mutable
+scratch state.
+
+** Host packet boundary
+
+=PrepareLaunchPacketKernel= calculates fragment count. The host then copies back:
+
+- =dev_bounding_box_= to a host bounding-box packet;
+- =dev_fragment_fill_= to =fragment_fill_=.
+
+The host needs =fragment_fill_= to calculate the final fill grid, so this is a genuine
+dependency boundary:
+
+#+begin_example
+GPU render preparation
+        |
+        v
+D2H packet copies
+        |
+        v
+host reads fragment count
+        |
+        v
+host computes fill grid
+        |
+        v
+final fill launches
+#+end_example
+
+This boundary is why simply changing every launch to asynchronous does not eliminate all
+serialization.
+
+** Fill the rendered image
+
+The host launches =StridePrefixKernel= and =FillTriangleKernel=. The fill chain reads the
+render intermediates and writes the rendered output image in place.
+
+** Fast implant dilation metric
+
+=FastImplantDilationMetric= reuses the rendered output image:
+
+#+begin_example
+renderer_output_
+      |
+      v
+reset pixel-score reduction
+      |
+      v
+edge kernel (mutates image)
+      |
+      v
+dilation kernel (mutates image)
+      |
+      v
+difference kernel (atomic score reduction)
+      |
+      v
+pixel-score D2H copy
+      |
+      v
+pixel_score_ host value
+#+end_example
+
+The image cannot be reused for another pose until this complete chain finishes.
+
+** Distance-map metric
+
+=DistanceMapMetric= then reads the rendered image and a persistent distance-map image and
+writes two reductions:
+
+#+begin_example
+renderer_output_ + distance_map
+          |
+          v
+DistanceMapMetric_Kernel
+          |
+          +- dev_distance_map_score_
+          +- dev_edge_pixels_count_
+                    |
+                    v
+              pinned host copies
+#+end_example
+
+The cost function returns the sum of the comparison white-pixel baseline, FIDM result, and
+distance-map result.
+
+* U12 target architecture and current prototype
+
+U12 is intended to add complete private state per in-flight pose while preserving a synchronous outer optimizer contract. The checked-in implementation is a correctness-pinned compatibility prototype, not yet a throughput result: the packet boundary synchronizes each bank, the production feeder still has blocking completion points, and the current bank count treats compatibility bank 0 separately from extra leased banks.
+
+#+begin_example
+DirectOptimizer
+  |
+  | synchronous BatchCostFunction(poses) -> scores
+  v
+CostCapacityService::RunCostBatchGreedy
+  |
+  +- checkout free bank
+  +- enqueue one pose
+  +- poll events / recycle completed bank
+  +- preserve input-indexed result ordering
+  v
+Bank 1: explicit non-default stream + private write set + completion event
+Bank 2: explicit non-default stream + private write set + completion event
+  |
+  v
+shared read-only geometry and comparison images
+#+end_example
+
+The outer API need not become =future=-based. The asynchronous portion is internal to the
+compute executor.
+
+** Bank contents
+
+Each extra bank contains private render and metric state:
+
+#+begin_example
+BankState
++- stream
++- completion event
++- primary RenderBuffers
+|  +- output image
+|  +- bbox / fragment buffers and pinned host twins
+|  +- backface / transformed z / tangent
+|  +- projected and snapped triangles
+|  +- triangle bbox / sizes / prefix
+|  +- aggregate bbox
+|  +- stride prefixes
+|  +- CUB scratch
+|
++- MetricBuffers
+   +- pixel score device + pinned host result
+   +- distance/edge score device + pinned host results
+   +- IOU / white-count / curvature targets where reachable
+#+end_example
+
+Triangles and normals remain shared read-only inputs. External bank pointers are
+non-owning views; the service-owned pool frees only extra-bank allocations. Existing bank
+0 remains compatibility-owned by the original RenderEngine/GPUMetrics objects.
+
+** Scheduler lifecycle
+
+#+begin_example
+for each input pose:
+    checkout a free bank
+    bind that bank's RenderBuffers and MetricBuffers
+    enqueue render preparation on bank.stream
+    complete the host-dependent packet boundary
+    enqueue fill and metric work on bank.stream
+    enqueue pinned asynchronous result copies
+    record bank completion event
+    continue feeding other banks
+
+while banks are in flight (target design; current production code still has blocking paths):
+    cudaEventQuery / cudaStreamQuery
+    if NotReady:
+        keep other work moving
+    if Success:
+        rebind the completing bank
+        consume its pinned result values
+        store result by original input index
+        recycle the bank
+    if another CUDA error:
+        abort the complete batch; do not consume partial results
+#+end_example
+
+Within a bank, operations remain ordered. Across banks, independent operations may overlap when the stream path is genuinely non-blocking and the device has resource headroom. The current implementation's lifecycle oracle proves bank ownership and in-flight events; it does not yet establish end-to-end production speedup.
+
+* What is actually asynchronous?
+
+There are two separate meanings of asynchronous:
+
+** Outer optimizer contract
+
+DIRECT remains logically synchronous between iterations:
+
+#+begin_example
+select POH
+  -> evaluate POH
+  -> use scores to select next POH
+#+end_example
+
+It cannot advance to the next iteration without the current scores. Therefore a
+synchronous batch-result API remains a reasonable domain boundary.
+
+** Compute executor
+
+The compute executor is asynchronous with respect to the GPU:
+
+- kernel launches return before completion;
+- stream operations form ordered work queues;
+- non-default streams can execute concurrently when device resources permit;
+- events provide non-blocking completion queries;
+- pinned host memory is required for genuinely asynchronous host/device copies.
+
+This is the part your original queue/greedy-feeder idea was describing.
+
+* Expected speedup and measurement
+
+The current evidence proves concurrency and correctness, not an end-to-end speedup number.
+
+The U12 oracle proves that two extra bank streams can be in flight simultaneously. It does
+not prove that two complete evaluations finish in half the time.
+
+A useful model is Amdahl's law:
+
+#+begin_example
+S(N) = 1 / ((1 - P) + P/N)
+#+end_example
+
+=P= is the fraction of evaluation time that can overlap. The host-dependent fragment
+packet boundary, pose setup, bank checkout, and final result handling reduce =P=. Even
+with two banks:
+
+| Parallel fraction P | Ideal upper bound with N=2 |
+|---------------------+----------------------------|
+|                0.50 |                      1.33x |
+|                0.75 |                      1.60x |
+|                0.90 |                      1.82x |
+|                1.00 |                      2.00x |
+
+The correct experiment is paired and fixed-work:
+
+1. Run the same pose batch serially through bank 0.
+2. Run it with two extra banks.
+3. Run it with the maximum admitted bank count.
+4. Repeat each condition several times after warmup.
+5. Measure wall time, GPU event time, packet-boundary time, and achieved evaluations/sec.
+6. Use Nsight Systems to confirm actual stream overlap rather than inferring it from
+   stream count.
+
+Do not call the Cut-0 GPU/CPU ratio a speedup. Cut-0 measured the relationship between GPU
+event time and host wall time for the old evaluation path.
+
+* CUDA reference grounding
+
+The local CUDA reference snapshot is CUDA Programming Guide 13.3 and CUDA Runtime API
+13.3.1. The project manifest declares CUDA 12.9; the implementation target should be
+verified against that toolkit version.
+
+Relevant local references:
+
+- =cuda-skill/references/cuda-guide/02-basics/asynchronous-execution.md= — streams,
+  events, polling, explicit synchronization, pinned async copies, default-stream behavior.
+- =cuda-skill/references/best-practices-guide/11.5-concurrent-kernel-execution.md= —
+  non-default streams are required for concurrent execution; actual overlap depends on
+  device capability/resources.
+- =cuda-skill/references/best-practices-guide/9.1-timing.md= — CPU timing requires
+  synchronization; CUDA events measure device timeline intervals.
+- =cuda-skill/references/best-practices-guide/4.1-profile.md= — profile realistic
+  workloads and use Amdahl's law to set speedup bounds.
+
+The CUDA guide specifically supports:
+
+- explicit kernel launch syntax: =kernel<<<grid, block, shared_mem, stream>>>=;
+- =cudaMemcpyAsync= with pinned host memory;
+- =cudaStreamQuery= returning =cudaSuccess= or =cudaErrorNotReady=;
+- =cudaEventRecord= and =cudaEventQuery= for progress/completion;
+- =cudaStreamCreateWithFlags(..., cudaStreamNonBlocking)= to avoid legacy default-stream
+  serialization.
+
+* Environment note
+
+The project manifest currently declares CUDA 12.9. During the U12 work, the active =nvcc
+--version= reported
+
+❮ pixi run nvcc --version
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Wed_Apr__9_19:24:57_PDT_2025
+Cuda compilation tools, release 12.9, V12.9.41
+Build cuda_12.9.r12.9/compiler.35813241_0
+
+* Open architecture questions
+
+- Should RenderEngine and GPUMetrics continue to use active-bank pointer rebinding, or
+  should explicit =RenderContext= and =MetricContext= arguments replace mutable aliases?
+- Is the host fragment packet boundary acceptable, or should fill-grid computation move to
+  a device-side fixed-grid strategy?
+- Should one evaluation be represented as a persistent =EvaluationContext= object
+  containing pose, bank, stream, event, and result state?
+- Should the batch executor be the long-term owner of all asynchronous evaluation state,
+  with CostFunctionManager reduced to a serial compatibility facade?
+- What measured parallel fraction =P= does the real workload provide?
+- Is the desired product behavior “maximum throughput” or “shortest latency for one
+  optimizer batch”?
+
+* Recommended next step
+
+Before further U12 implementation, create a focused architecture brainstorm from this
+graph. Draw:
+
+1. an ownership diagram;
+2. a single-evaluation lifecycle;
+3. a two-bank timing/Gantt diagram;
+4. the error/cancellation path;
+5. the API boundary between DirectOptimizer and the asynchronous compute executor.
+
+Then use that diagram to choose whether the long-term design should be:
+
+- the current compatibility-bank migration;
+- an explicit EvaluationContext/EvaluationExecutor architecture; or
+- a more aggressive data-oriented batch evaluator.
