@@ -1544,6 +1544,22 @@ add_test(NAME jtml.cost_capacity_oracle COMMAND jtml_test_cost_capacity_oracle)
 set_tests_properties(jtml.cost_capacity_oracle PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U3: Graph capture preflight probe (oracle;gpu, .cu)
+add_executable(jtml_test_graph_capture_probe
+    oracle/graph_capture_probe_test.cu
+    ${PROJECT_SOURCE_DIR}/src/compute/graph_preflight.cu)
+target_include_directories(jtml_test_graph_capture_probe PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_graph_capture_probe PRIVATE
+    ${JTA_LIBS}
+    ${CUDA_LIBRARIES}
+    Catch2::Catch2WithMain)
+set_property(TARGET jtml_test_graph_capture_probe PROPERTY CUDA_ARCHITECTURES native)
+add_test(NAME jtml.graph_capture_probe COMMAND jtml_test_graph_capture_probe)
+set_tests_properties(jtml.graph_capture_probe PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # Plan 010 U10 bit-identity harness / baseline recorder. GPU-labeled: NEVER in
 # the headless default. Drives the production pose->score path over a fixed
 # frame and records the deterministic (pose,score) sequence; run against the
