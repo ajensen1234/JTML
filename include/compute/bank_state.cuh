@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 /* Plan 010 U12 Stage 1: bank-state ownership contract.
+ * U1 Note: BankState remains as Stage-1 math/alias compatibility; EvaluationContext
+ * (evaluation_context.h) is the primary executed type for the graph-backed greedy executor.
  *
  * This is deliberately allocation-free and CUDA-header-free.  It describes the
  * complete per-evaluation write set and provides checked footprint/admission
@@ -122,6 +124,7 @@ struct BankFootprintInput {
     std::uint64_t maximum_stride_size = 0;
     std::uint64_t cub_storage_bytes = 0;
     std::uint64_t curvature_capacity = 0;
+    std::uint64_t graph_overhead_bytes = 0; // U1: per-context cudaGraphExec + events + counters
     bool biplane = false;
 };
 
@@ -243,7 +246,14 @@ inline BankFootprint footprint(const BankFootprintInput& in) {
     }
     if (!add(result.render_bytes, result.metric_bytes, result.total_bytes)) {
         result.valid = false;
+        return result;
     }
+    // U1: per-context device counters (nextCandidate/nextChunk/overflowFlag) + graph overhead
+    std::uint64_t extra = 0;
+    if (!add(extra, 3 * sizeof(std::int32_t), extra)) { result.valid = false; return result; } // device counters
+    if (!add(extra, 1 * sizeof(std::int32_t), extra)) { result.valid = false; return result; } // host overflow pinned
+    if (!add(extra, in.graph_overhead_bytes, extra)) { result.valid = false; return result; }
+    if (!add(result.total_bytes, extra, result.total_bytes)) { result.valid = false; return result; }
     return result;
 }
 

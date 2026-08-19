@@ -279,3 +279,10 @@ cudaStream_t GPUMetrics::GetExecutionStream() const {
 
 } // namespace gpu_cost_function
 
+// U1: explicit EvaluationContext overloads — stubs.
+namespace gpu_cost_function {
+struct EvaluationContext;
+cudaError_t GPUMetrics::EnqueueFastImplantDilationMetric(GPUImage*, GPUDilatedFrame*, int, EvaluationContext&) { return cudaErrorNotReady; }
+cudaError_t GPUMetrics::EnqueueDistanceMapMetric(GPUImage*, GPUFrame*, int, EvaluationContext&) { return cudaErrorNotReady; }
+} // namespace gpu_cost_function
+

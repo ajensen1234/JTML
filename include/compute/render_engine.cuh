@@ -27,6 +27,7 @@ namespace gpu_cost_function {
 
 class CostCapacityService;  // plan 010 U10 (defined in cost_capacity_service.cuh)
 struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
+struct EvaluationContext;  // U1: primary executed type (evaluation_context.h)
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
     JTML_DLL Pose(
@@ -127,6 +128,11 @@ public:
      * the unchanged bank-0 synchronous wrapper. */
     JTML_DLL cudaError_t RenderPhase(BankState& bank);
     JTML_DLL cudaError_t CompleteRenderPhase(BankState& bank);
+
+    /* U1: explicit EvaluationContext overloads — primary design. Legacy BankState remains shim. */
+    JTML_DLL cudaError_t Render(EvaluationContext& ctx);
+    JTML_DLL cudaError_t RenderPhase(EvaluationContext& ctx);
+    JTML_DLL cudaError_t CompleteRenderPhase(EvaluationContext& ctx);
 
 private:
     /*Host (CPU) Variables*/

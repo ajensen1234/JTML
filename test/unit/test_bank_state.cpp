@@ -84,7 +84,8 @@ TEST_CASE("biplane doubles the render write-set but not shared metrics", "[bank_
     REQUIRE(bi.valid);
     REQUIRE(bi.render_bytes == mono.render_bytes * 2);
     REQUIRE(bi.metric_bytes == mono.metric_bytes);
-    REQUIRE(bi.total_bytes == mono.render_bytes * 2 + mono.metric_bytes);
+    // U1: total includes per-context counters (nextCandidate/nextChunk/overflowFlag) + host overflow + graph overhead
+    REQUIRE(bi.total_bytes == mono.render_bytes * 2 + mono.metric_bytes + 3 * sizeof(std::int32_t) + 1 * sizeof(std::int32_t));
 }
 
 TEST_CASE("footprint arithmetic includes dimensions, scratch, metrics, curvature", "[bank_state]") {

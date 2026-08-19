@@ -20,6 +20,7 @@
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
+struct EvaluationContext;  // U1: primary executed type
 
 /*Class of GPU Metrics*/
 class GPUMetrics {
@@ -111,6 +112,10 @@ public:
         GPUFrame* distance_map,
         int dilation,
         cudaStream_t stream);
+
+    /* U1: explicit EvaluationContext overloads — primary design. */
+    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(GPUImage* rendered_image, GPUDilatedFrame* cf, int dilation, EvaluationContext& ctx);
+    JTML_DLL cudaError_t EnqueueDistanceMapMetric(GPUImage* projected_image, GPUFrame* dm, int dilation, EvaluationContext& ctx);
 
     JTML_DLL double
     CurvatureHeatmapMetric(GPUImage* projected_image, GPUHeatmap* gpu_heatmap);

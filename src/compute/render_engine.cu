@@ -1224,3 +1224,13 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
     return cudaGetLastError();
 }
 } // namespace gpu_cost_function
+
+// U1: explicit EvaluationContext overloads — stubs to keep header linkable.
+// Full graph-backed implementations land in U5/U6; U1 only needs declarations
+// to compile headless tests without pulling CUDA runtime into the header.
+namespace gpu_cost_function {
+struct EvaluationContext;
+cudaError_t RenderEngine::Render(EvaluationContext&) { return cudaErrorNotReady; }
+cudaError_t RenderEngine::RenderPhase(EvaluationContext&) { return cudaErrorNotReady; }
+cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext&) { return cudaErrorNotReady; }
+} // namespace gpu_cost_function
