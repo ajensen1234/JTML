@@ -6,6 +6,14 @@
 /*
  * U3: Graph capture compatibility probe — CUDA-owned implementation.
  * Only this TU includes cuda_runtime; header remains CUDA-free.
+ *
+ * ProbeCapturableOpSet is the core: wraps any operation set in
+ * cudaStreamBeginCapture(Global) and reports capturability from the
+ * observed CUDA API results.
+ * ProbeCurrentSerialPath forwards a caller-supplied operation set to
+ * ProbeCapturableOpSet. The probe discovers blockers from the ACTUAL
+ * hot-path kernels (e.g. RenderPhase's memcpy D2H + synchronize), not
+ * from a self-contained representative duplicate.
  */
 
 #include "compute/graph_preflight.h"
@@ -30,10 +38,10 @@ std::string CudaErrorString(cudaError_t err) {
     const char* s = cudaGetErrorString(err);
     return s ? std::string(s) : std::string("unknown CUDA error");
 }
-
 // Helper that does a minimal synthetic graph capture with a dummy kernel
 // and a memset node. Returns capturable=true on success.
-GraphPreflightResult ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
+GraphPreflightResult
+ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     cudaStream_t stream = reinterpret_cast<cudaStream_t>(stream_ptr);
     bool ownStream = false;
     cudaGraph_t graph = nullptr;
@@ -57,8 +65,8 @@ GraphPreflightResult ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if
         ownStream = true;
     }
     if (!stream) {
-        // No stream provided and not allowed to create — treat as non-capturable
-        // but not a crash. Return deterministic code.
+        // No stream provided and not allowed to create — treat as
+        // non-capturable but not a crash. Return deterministic code.
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "null stream";
         result.reasonString = "null stream without auto-create";
@@ -131,8 +139,8 @@ GraphPreflightResult ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if
 
     err = cudaStreamEndCapture(stream, &graph);
     if (err != cudaSuccess || graph == nullptr) {
-        // Capture invalidation path — per cudaStreamIsCapturing/EndCapture docs,
-        // graph is NULL on error. Must still clean up.
+        // Capture invalidation path — per cudaStreamIsCapturing/EndCapture
+        // docs, graph is NULL on error. Must still clean up.
         if (graph) cudaGraphDestroy(graph);
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "cudaStreamEndCapture";
@@ -167,24 +175,129 @@ GraphPreflightResult ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if
     return result;
 }
 
-}  // namespace
+} // namespace
 
-GraphPreflightResult ProbeCurrentSerialPath() {
-    GraphPreflightResult r;
-    r.capturable = false;
-    r.reasonCode = kSyncBlocker;
-    r.failingNodeHint = "cudaStreamSynchronize in RenderEngine::RenderPhase :1173 + host AABB dependency";
-    r.reasonString = "non-capturable: cudaStreamSynchronize on captured stream and host AABB/fragment_fill packet barrier (R5) — expected red result justifying U4";
-    return r;
+// ---------------------------------------------------------------------------
+// Core capture probe: wraps any operation set in Global capture and reports
+// capturability from observed CUDA API results.
+// ---------------------------------------------------------------------------
+GraphPreflightResult ProbeCapturableOpSet(CaptureOpFn op_fn, void* context) {
+    GraphPreflightResult result;
+    result.capturable = false;
+    result.reasonCode = kGraphCaptureError;
+
+    if (!op_fn) {
+        result.reasonCode = kNoEligibleRecipe;
+        result.failingNodeHint = "null op_fn";
+        result.reasonString = "no operation set callback provided";
+        return result;
+    }
+
+    // Create non-blocking stream.
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+    if (err != cudaSuccess) {
+        result.reasonCode = static_cast<int>(err);
+        result.failingNodeHint = "cudaStreamCreateWithFlags";
+        result.reasonString = CudaErrorString(err);
+        return result;
+    }
+
+    // Begin capture in Global mode — even legacy-stream use invalidates.
+    err = cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal);
+    if (err != cudaSuccess) {
+        result.reasonCode = kGraphCaptureError;
+        result.failingNodeHint = "cudaStreamBeginCapture";
+        result.reasonString = CudaErrorString(err);
+        cudaStreamDestroy(stream);
+        return result;
+    }
+
+    // Execute the operation set on the captured stream.
+    void* stream_ptr = static_cast<void*>(stream);
+    int op_err = op_fn(stream_ptr, context);
+
+    // End capture — may fail if the callback invalidated it (e.g. sync).
+    cudaGraph_t graph = nullptr;
+    err = cudaStreamEndCapture(stream, &graph);
+
+    if (err != cudaSuccess || graph == nullptr) {
+        // Capture was invalidated (e.g. cudaStreamSynchronize in Global mode).
+        if (graph) cudaGraphDestroy(graph);
+
+        // cudaErrorIllegalState (719) or cudaErrorStreamCaptureInvalidated
+        // (919) both indicate the capture was invalidated by a blocking API
+        // call.
+        if (err == cudaErrorIllegalState ||
+            err == cudaErrorStreamCaptureInvalidated) {
+            result.reasonCode = kSyncBlocker;
+            result.failingNodeHint =
+                "cudaStreamSynchronize on captured stream (Global mode)";
+            result.reasonString =
+                "operation set includes blocking sync that invalidates capture";
+        } else {
+            result.reasonCode = kGraphCaptureError;
+            result.failingNodeHint = "cudaStreamEndCapture";
+            result.reasonString = CudaErrorString(err);
+        }
+
+        // Clear sticky errors from invalidated capture, drain and destroy.
+        cudaGetLastError();
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+        return result;
+    }
+
+    // Capture succeeded — check if the operation set itself reported an error.
+    if (op_err != 0) {
+        result.reasonCode = kGraphCaptureError;
+        result.failingNodeHint = "operation set callback returned error";
+        result.reasonString =
+            "op_fn returned error code " + std::to_string(op_err);
+        cudaGraphDestroy(graph);
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+        return result;
+    }
+
+    // Try to instantiate the graph — validates topology and resource usage.
+    cudaGraphExec_t exec = nullptr;
+    err = cudaGraphInstantiate(&exec, graph, nullptr, nullptr, 0);
+    if (err != cudaSuccess) {
+        result.reasonCode = kGraphInstantiateError;
+        result.failingNodeHint = "cudaGraphInstantiate";
+        result.reasonString = CudaErrorString(err);
+        cudaGraphDestroy(graph);
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+        return result;
+    }
+
+    // Complete success — clean up and report.
+    cudaGraphExecDestroy(exec);
+    cudaGraphDestroy(graph);
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
+
+    result.capturable = true;
+    result.reasonCode = kPreflightOk;
+    result.failingNodeHint.clear();
+    result.reasonString = "capturable";
+    return result;
+}
+
+// ---------------------------------------------------------------------------
+// Probe the current serial render path via a caller-supplied operation set.
+// Thin forwarder: the caller supplies the real hot-path callback, and the
+// probe discovers blockers from the ACTUAL kernels (e.g. RenderPhase's
+// memcpy D2H + cudaStreamSynchronize), not from a self-contained
+// representative duplicate.
+// ---------------------------------------------------------------------------
+GraphPreflightResult ProbeCurrentSerialPath(CaptureOpFn op_fn, void* context) {
+    return ProbeCapturableOpSet(op_fn, context);
 }
 
 GraphPreflightResult ProbeSyntheticMicroGraph(void* stream) {
-    return ProbeSyntheticInternal(stream, true);
-}
-
-GraphPreflightResult ProbeRealSyntheticGraph(void* stream) {
-    // Real synthetic graph is same as synthetic micro-graph for U3;
-    // both prove the toolchain can capture at all.
     return ProbeSyntheticInternal(stream, true);
 }
 
@@ -206,7 +319,8 @@ GraphPreflightResult ProbeOverflowCase(void* stream) {
     GraphPreflightResult r;
     r.capturable = false;
     r.reasonCode = kOverflow;
-    r.failingNodeHint = "fragment_fill > maximum_stride_size * (threads_per_block-1)";
+    r.failingNodeHint =
+        "fragment_fill > maximum_stride_size * (threads_per_block-1)";
     r.reasonString = "non-capturable: maximum_stride_size overflow guard";
     return r;
 }
@@ -219,4 +333,4 @@ std::string FormatPreflightResult(const GraphPreflightResult& r) {
     return out;
 }
 
-}  // namespace gpu_cost_function
+} // namespace gpu_cost_function

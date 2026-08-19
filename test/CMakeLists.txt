@@ -1553,12 +1553,17 @@ add_executable(jtml_test_graph_capture_probe
     ${PROJECT_SOURCE_DIR}/src/compute/graph_preflight.cu)
 target_include_directories(jtml_test_graph_capture_probe PRIVATE
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/compute)
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(jtml_test_graph_capture_probe PRIVATE
     ${JTA_LIBS}
     ${CUDA_LIBRARIES}
+    ${OpenCV_LIBRARIES}
     Catch2::Catch2WithMain)
 set_property(TARGET jtml_test_graph_capture_probe PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_graph_capture_probe PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.graph_capture_probe COMMAND jtml_test_graph_capture_probe)
 set_tests_properties(jtml.graph_capture_probe PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

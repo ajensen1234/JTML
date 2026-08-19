@@ -276,7 +276,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 ---
 
-- [ ] U3. **Graph capture compatibility probe (preflight truth)**
+- [x] U3. **Graph capture compatibility probe (preflight truth)**
 
 **Goal:** Deterministic yes/no for whether the cost recipe's operation set is graph-capturable on the real `CUDA 12.9` build, before the device-driven redesign is hardened.
 

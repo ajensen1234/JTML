@@ -43,24 +43,39 @@ enum GraphPreflightReason : int {
     kGraphInstantiateError = 201,
 };
 
-// Opaque stream handle — costs no CUDA header in this header.
-// Caller passes cudaStream_t as void* (reinterpret_cast) or nullptr for auto-create.
-GraphPreflightResult ProbeCurrentSerialPath();
+// Operation set callback for ProbeCapturableOpSet.
+// Receives void* stream (cudaStream_t cast) and opaque context pointer.
+// Should enqueue the full operation set on the stream (may include sync).
+// Returns 0 on success, non-zero on CUDA error.
+using CaptureOpFn = int (*)(void* stream, void* context);
 
-// Synthetic capturable micro-graph: WorldToPixel-like dummy kernel +
-// cudaMemcpyAsync/cudaMemsetAsync with fixed grid. Proves the toolchain
-// can capture at all. Takes optional stream (nullptr = create one).
+// Core probe: wraps the operation set in cudaStreamBeginCapture(Global).
+// Reports whether the operation set is graph-capturable + instantiable.
+// Cleans up all resources and clears sticky errors on every path.
+GraphPreflightResult ProbeCapturableOpSet(CaptureOpFn op_fn, void* context);
+
+// Probe the current serial render path via a caller-supplied operation set.
+// The callback is invoked inside ProbeCapturableOpSet's capture cycle so the
+// probe discovers blockers from the ACTUAL hot-path kernels (e.g.
+// RenderPhase's memset → WorldToPixel → CUB scan → D2H → synchronize),
+// not from a self-contained representative duplicate.
+//
+// The callback must enqueue the full operation set on the provided stream
+// (which is inside a cudaStreamBeginCapture/EndCapture cycle). Callers that
+// temporarily substitute an owned stream must restore the original handle.
+GraphPreflightResult ProbeCurrentSerialPath(CaptureOpFn op_fn, void* context);
+
+// Synthetic capturable micro-graph: dummy kernel + cudaMemsetAsync with
+// fixed grid. Proves the toolchain can capture at all.
+// Takes optional stream (nullptr = create one).
 GraphPreflightResult ProbeSyntheticMicroGraph(void* stream = nullptr);
 
-// Edge cases — never crash, return capturable=false with specific reasonCode.
+// Edge cases — never crash, return capturable=false with specific
+// reasonCode.
 GraphPreflightResult ProbeZeroTriangle(void* stream = nullptr);
 GraphPreflightResult ProbeOverflowCase(void* stream = nullptr);
-
-// Real synthetic graph probe that does allocation + capture + instantiate.
-// Used by Oracle test to verify end-to-end capturability.
-GraphPreflightResult ProbeRealSyntheticGraph(void* stream = nullptr);
 
 // Helper to format a GraphPreflightResult for logging.
 std::string FormatPreflightResult(const GraphPreflightResult& r);
 
-}  // namespace gpu_cost_function
+} // namespace gpu_cost_function
