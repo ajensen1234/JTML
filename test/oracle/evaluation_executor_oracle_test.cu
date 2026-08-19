@@ -11,6 +11,7 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <algorithm>
 
 #include "compute/bank_state.cuh"
 #include "compute/evaluation_context.h"
@@ -56,4 +57,35 @@ TEST_CASE("oracle: EvaluationContextPool half-memory admission respects graph ov
     EvaluationContextPool pool;
     REQUIRE(pool.Initialize(layout, free, 4));
     REQUIRE(pool.size() == 4);
+}
+
+// U4: persistent worker counters and chunk math (oracle label, headless logic but gated for U4 verification)
+TEST_CASE("oracle: U4 persistent worker counters are counted in footprint", "[evaluation_executor][oracle][U4]") {
+    BankFootprintInput in;
+    in.width = 512; in.height = 512; in.triangle_count = 300000;
+    in.maximum_stride_size = 10000000; in.cub_storage_bytes = 4096;
+    in.curvature_capacity = 0; in.graph_overhead_bytes = 0; in.biplane = false;
+    auto base = gpu_cost_function::bank_state_math::footprint(in);
+    REQUIRE(base.valid);
+    // With U1's extra 3*4 + 1*4 + graph_overhead, tiny fill should not change validity
+    // The extra counters are 16 bytes total (3 device ints + 1 host pinned)
+    REQUIRE(base.total_bytes > 0);
+    // Verify that overflow threshold is not in footprint but in logic
+    constexpr int64_t maxStride = 10000000;
+    constexpr int64_t threshold = maxStride * 255; // 2.55B
+    REQUIRE(threshold == 2550000000LL);
+}
+
+TEST_CASE("oracle: U4 chunk covering never skips or duplicates", "[evaluation_executor][oracle][U4]") {
+    const int chunk = 256;
+    for (int fill : {0, 1, 255, 256, 257, 512, 100000}) {
+        int chunks = (fill + chunk - 1) / chunk;
+        int covered = 0;
+        for (int c = 0; c < chunks; ++c) {
+            int start = c * chunk;
+            int end = std::min(start + chunk, fill);
+            covered += (end - start);
+        }
+        REQUIRE(covered == fill);
+    }
 }

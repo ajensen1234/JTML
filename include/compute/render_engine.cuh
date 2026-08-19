@@ -263,6 +263,14 @@ private:
     /*CUB Variables*/
     void* dev_cub_storage_;
     size_t cub_storage_bytes_;
+    /* U4: device-driven persistent worker counters (device int32) and overflow flag */
+    int* dev_nextCandidate_ = nullptr;
+    int* dev_nextChunk_ = nullptr;
+    int* dev_overflowFlag_ = nullptr;
+    int* host_overflowFlag_ = nullptr;
+    /* U4: fixed grid sizing for persistent workers */
+    int persistent_fill_blocks_ = 0;
+    int persistent_stride_blocks_ = 0;
 
     /*CUDA API Initialization (Allocation, etc.) Must return cudaSuccess to
      * proceed to Render, else initialization marked as failure.*/

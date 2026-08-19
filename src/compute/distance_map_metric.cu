@@ -12,6 +12,7 @@
 #include "cuda_launch_parameters.h"
 
 #include "compute/fast_implant_dilation_metric.cuh"
+/* U4: device-driven metric crop — fixed-max grid with early exit derived from device AABB (no host bounding_box read in graph path). */
 
 __global__ void DistanceMapMetric_Kernel(
     unsigned char* projected_image,

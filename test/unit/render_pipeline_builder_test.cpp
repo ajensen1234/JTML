@@ -16,6 +16,7 @@
 // Pure logic: no Qt, no GPU, no render window — headless Catch2.
 
 #include <catch2/catch_test_macros.hpp>
+#include <algorithm>
 
 #include <opencv2/core.hpp>
 
@@ -108,4 +109,54 @@ TEST_CASE("zero-size typed mat derives degenerate extent with its channel "
     REQUIRE(p.extentMaxY == -1);
     REQUIRE(p.channels == 3); /* the type's channel count survives */
     RequireSpacingAndOriginConstants(p);
+}
+
+// U4: persistent chunk worker math (device-driven, fixed grid) — pure logic, headless
+TEST_CASE("U4: chunk covering with 256 is exact and no duplicate", "[render_pipeline][U4]") {
+    const int chunk = 256;
+    for (int fill : {0, 1, 255, 256, 257, 512, 1000, 100000, 4000000}) {
+        int chunks = (fill + chunk - 1) / chunk;
+        int covered = 0;
+        for (int c = 0; c < chunks; ++c) {
+            int start = c * chunk;
+            int end = std::min(start + chunk, fill);
+            REQUIRE(end >= start);
+            covered += (end - start);
+        }
+        REQUIRE(covered == fill);
+        // No overlap: start of next chunk == end of previous
+        for (int c = 1; c < chunks; ++c) {
+            REQUIRE(c * chunk < fill + chunk);
+        }
+    }
+}
+
+TEST_CASE("U4: overflow guard threshold is maximum_stride_size * 255", "[render_pipeline][U4]") {
+    constexpr int64_t maxStride = 10000000;
+    constexpr int tpb = 256;
+    const int64_t threshold = maxStride * (tpb - 1); // 2,550,000,000
+    REQUIRE(threshold == 2550000000LL);
+    auto isOverflow = [&](int64_t fill) { return fill > threshold; };
+    REQUIRE(!isOverflow(0));
+    REQUIRE(!isOverflow(threshold));
+    REQUIRE(isOverflow(threshold + 1));
+    REQUIRE(isOverflow(3000000000LL)); // large fill overflows
+}
+
+TEST_CASE("U4: fixed NX grid is bounded by occupancy and SAFE_CAP", "[render_pipeline][U4]") {
+    constexpr int64_t maxStride = 10000000;
+    constexpr int64_t safeCap = maxStride * 256; // 2,560,000,000 per plan footnote
+    REQUIRE(safeCap == 2560000000LL);
+    // Simulate occupancy: 80 SM * 8 blocks/SM = 640 blocks for Fill at 256 threads
+    int sm = 80;
+    int maxBlocksPerSM = 8;
+    int occupancyBound = sm * maxBlocksPerSM;
+    int safeBound = (safeCap + 255) / 256; // ceil(SAFE_CAP/256) = 10,000,000
+    int nx = std::min(occupancyBound, safeBound);
+    REQUIRE(nx == occupancyBound); // occupancy is tighter than SAFE_CAP
+    REQUIRE(nx == 640);
+    // Even for tiny fill (<256) the fixed grid still self-retires via guard
+    int fillTiny = 100;
+    int threadsNeeded = fillTiny; // one thread per fragment
+    REQUIRE(nx * 256 >= threadsNeeded); // fixed grid covers tiny fill with no-ops
 }

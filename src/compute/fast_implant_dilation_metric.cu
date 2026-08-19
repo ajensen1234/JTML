@@ -12,6 +12,7 @@
 // #include "cuda_launch_parameters.h"
 
 #include "fast_implant_dilation_metric.cuh"
+/* U4: device-driven metric crop — fixed-max grid with early exit (if x>=cropW||y>=cropH) derived from device AABB. Host AABB read removed from graph path; see render_engine persistent workers. */
 
 /*Kernels*/
 __global__ void

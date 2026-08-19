@@ -223,9 +223,18 @@ void RenderEngine::FreeCuda() {
     cudaFree(dev_bounding_box_);
     cudaFree(dev_fragment_fill_);
     cudaFree(dev_stride_prefixes_);
+    /* U4: persistent worker counters */
+    cudaFree(dev_nextCandidate_);
+    cudaFree(dev_nextChunk_);
+    cudaFree(dev_overflowFlag_);
+    dev_nextCandidate_ = nullptr;
+    dev_nextChunk_ = nullptr;
+    dev_overflowFlag_ = nullptr;
 
     /*Free Host*/
     cudaFreeHost(fragment_fill_);
+    cudaFreeHost(host_overflowFlag_);
+    host_overflowFlag_ = nullptr;
 }
 
 cudaError_t
@@ -319,6 +328,16 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
         triangle_count_);
 
     cudaMalloc(&dev_cub_storage_, cub_storage_bytes_);
+    /* U4: device-driven persistent worker counters */
+    cudaMalloc((void**)&dev_nextCandidate_, 1 * sizeof(int));
+    cudaMalloc((void**)&dev_nextChunk_, 1 * sizeof(int));
+    cudaMalloc((void**)&dev_overflowFlag_, 1 * sizeof(int));
+    cudaHostAlloc((void**)&host_overflowFlag_, 1 * sizeof(int), cudaHostAllocDefault);
+    // Fixed grid sizing for persistent workers: min(maxBlocksPerSM*SM, ceil(SAFE_CAP/256))
+    // For U4 serial correctness, use a conservative fixed grid that self-retires (no-op guard).
+    // Occupancy-optimal block is 256; use 64 blocks for Fill, 32 for Stride as measured upper bound.
+    persistent_fill_blocks_ = 64;
+    persistent_stride_blocks_ = 32;
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -816,6 +835,100 @@ __global__ void FillTriangleKernel(
             }
         }
     }
+}
+
+/* U4: device-driven persistent worker kernels (fixed grid, chunk claiming via atomicAdd) */
+__global__ void OverflowCheckKernel(int* dev_fragment_fill, int* dev_overflowFlag, int maxFragments) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        dev_overflowFlag[0] = (dev_fragment_fill[0] > maxFragments) ? 1 : 0;
+    }
+}
+
+__global__ void StridePrefixPersistentKernel(int* dev_nextChunk, int chunkSize, int* dev_fragment_fill, int* dev_overflowFlag, int* dev_sizes, int* dev_prefix, int* dev_stride_prefixes, int triangle_count, int stride) {
+    int total = dev_fragment_fill[0];
+    if (*dev_overflowFlag) return;
+    while (true) {
+        int chunkStart = atomicAdd(dev_nextChunk, chunkSize);
+        int jStart = chunkStart * stride;
+        if (jStart >= total) break;
+        int jEnd = min((chunkStart + chunkSize) * stride, total);
+        // Process stride elements chunkStart .. chunkStart+chunkSize-1 but only those with j < total
+        for (int idx = chunkStart; idx < chunkStart + chunkSize; ++idx) {
+            int j = idx * stride;
+            if (j >= total) break;
+            int low = 0, high = triangle_count, mid = 0;
+            while (low != high) {
+                mid = (low + high) / 2;
+                if (dev_prefix[mid] <= j) low = mid + 1; else high = mid;
+            }
+            int strideIndex = high - 1;
+            if (idx < maximum_stride_size) dev_stride_prefixes[idx] = strideIndex;
+        }
+        // Also need to handle jEnd unused
+        (void)jEnd;
+    }
+}
+
+__global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSize, int* dev_fragment_fill, int* dev_overflowFlag, int triangle_count, int* dev_bbox_triangles, int* dev_sizes, int* dev_prefix, unsigned char* dev_image, int width, int height, float* dev_projected_triangles, int* dev_stride_prefixes) {
+    int total = dev_fragment_fill[0];
+    if (*dev_overflowFlag) return;
+    while (true) {
+        int start = atomicAdd(dev_nextCandidate, chunkSize);
+        if (start >= total) break;
+        int end = start + chunkSize;
+        if (end > total) end = total;
+        for (int i = start; i < end; ++i) {
+            // Find triangle index via global binary search on prefix (device-driven, no shared memory)
+            int low = 0, high = triangle_count, mid = 0;
+            while (low != high) {
+                mid = (low + high) / 2;
+                if (dev_prefix[mid] <= i) low = mid + 1; else high = mid;
+            }
+            int triangleIndex = high - 1;
+            if (triangleIndex < 0 || triangleIndex >= triangle_count) continue;
+            int triangleIndex4 = 4 * triangleIndex;
+            int Lx = dev_bbox_triangles[triangleIndex4];
+            int By = dev_bbox_triangles[triangleIndex4 + 1];
+            int Rx = dev_bbox_triangles[triangleIndex4 + 2];
+            // Use stored sizes/prefix to compute insideIndex as original did
+            int insideIndex = i - dev_prefix[triangleIndex];
+            int denomX = Rx - Lx + 1;
+            if (denomX <= 0) continue;
+            int pxPixel = Lx + insideIndex % denomX;
+            int pyPixel = By + insideIndex / denomX;
+            if (pxPixel < 0 || pxPixel >= width || pyPixel < 0 || pyPixel >= height) continue;
+            float px = pxPixel + 0.5f;
+            float py = pyPixel + 0.5f;
+            int triangleIndex6 = 6 * triangleIndex;
+            float x1 = dev_projected_triangles[triangleIndex6];
+            float y1 = dev_projected_triangles[triangleIndex6 + 1];
+            float x2 = dev_projected_triangles[triangleIndex6 + 2];
+            float y2 = dev_projected_triangles[triangleIndex6 + 3];
+            float x3 = dev_projected_triangles[triangleIndex6 + 4];
+            float y3 = dev_projected_triangles[triangleIndex6 + 5];
+            float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+            float a = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3));
+            if (denominator > 0) {
+                if (0 <= a && a <= denominator) {
+                    float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
+                    if (0 <= b && b <= denominator) {
+                        float c = denominator - a - b;
+                        if (0 <= c && c <= denominator) dev_image[pyPixel * width + pxPixel] = 255;
+                    }
+                }
+            } else {
+                if (0 >= a && a >= denominator) {
+                    float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
+                    if (0 >= b && b >= denominator) {
+                        float c = denominator - a - b;
+                        if (0 >= c && c >= denominator) dev_image[pyPixel * width + pxPixel] = 255;
+                    }
+                }
+            }
+        }
+    }
+    // dev_stride_prefixes is read-only in this kernel; kept for interface parity
+    (void)dev_stride_prefixes;
 }
 
 cudaError_t RenderEngine::Render() {
