@@ -1,3 +1,7 @@
+# user tools
+ │ C++ / CUDA: readseek mis-detects .h as C and .cu/.cuh as unknown. For .h, .cu, .cuh always pass
+ │ language: "cpp" on digest/edit/grep/search/refs/def calls (.cpp/.hpp/.hh/.hxx are already correct).
+
 # JTML — Agent Working Guide
 
 JTML is a Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 built against Qt6 + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant
