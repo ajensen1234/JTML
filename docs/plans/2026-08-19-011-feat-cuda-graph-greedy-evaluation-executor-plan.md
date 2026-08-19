@@ -233,7 +233,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 **Test scenarios:**
 - Happy path: `EvaluationContext` null-init leaves every destructor-freed pointer null/false; zero-work construction (`0 triangles` or `0 curvature`) returns `initialized_correctly_=true` with no allocation.
-- Happy path: `BankAdmission` half-memory math matches `bank_state.cuh` precedent for representative `300k` tri / `512x512` frame / `cubStorageBytes` from `RenderEngine::GetCubStorageBytes()`.
+- Happy path: `BankAdmission` half-memory math matches `bank_state.cuh` precedent for the real Kneel_1 fixture (`12412` tri / `1024x1024` frame / `cubStorageBytes` from `RenderEngine::GetCubStorageBytes()`).
 - Happy path: `GraphRecipeRegistry` admits only `DIRECT_DILATION && !biplane`; unknown cost name or biplane returns ineligible with serial-fallback sentinel, never instantiates a graph.
 - Error path: `U1` construct with `curvature_capacity` derived from a garbage-initialized input fails (mirrors `frame.h` `num_curvature_keypoints_` guard lesson) — but correct path requires fully-initialized `BankFootprintInput`.
 - Integration: `RenderEngine::Render(EvaluationContext&)` routes through the same `WorldToPixelKernel`/`BoundingBox*Kernel` as `RenderPhase` but without the internal `cudaMemcpy/cudaStreamSynchronize` dispersal — prove by inspecting that the bank path uses explicit stream only.
@@ -242,7 +242,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 ---
 
-- [ ] U2. **Test-impact matrix + fixed-work baseline harness (characterization-first)**
+- [x] U2. **Test-impact matrix + fixed-work baseline harness (characterization-first)**
 
 **Goal:** Preserve-by-default stewardship and a pinned serial baseline so graph work is gateable before any behavior changes.
 
@@ -261,7 +261,7 @@ Graph (captured once per context/key, relaunched per pose):
 **Approach:**
 - Produce a `TEST_IMPACT_MATRIX.md` (or appendix in this plan's follow-up) enumerating every affected test (`unit/*`, `lifecycle/*`, `oracle/bit_identity_test.cpp`, `cost_capacity_oracle_test.cu`, `multistage_oracle_test.cpp`, `z_profile_test.cpp`, `qml/*`) as retained/retained-with-coverage/superseded/obsolete with rationale + replacement.
 - Characterization-first: record the pre-unit serial `pose->score` sequence and rendered images over `test/golden` frames and `test/oracle` fixtures (bit-identity baseline), plus `DirectOptimizer` replay-ordered bookkeeping (`GetCostFunctionCalls` + `GetOptimumLocation/Value` + `SetCallOffset` cumulative caps).
-- Define and **freeze** the fixed representative POH workloads for U8 as a checked-in `test/golden/graph_pre_registration.json` — `8/16/32` pose batches from a `~300k`-triangle implant at `512x512`, dilation `6`, `N=1,2,4` (clamped by `BankAdmission` half-memory **including graph VRAM, probed by an instantiate trial before admission**), discard first `3` launches per config, `10` trials, report `p50/p99`, material latency regression `>10%` p99 **AND** `>5%` stage-level wall-time. Define Layer-C tolerance there (`abs 1e-12` or `rel 1e-9` with rationale). This committed artifact is what U8 verifies against; any change requires re-approval as a scope change.
+- Define and **freeze** the fixed representative POH workloads for U8 as a checked-in `test/golden/graph_pre_registration.json` — `8/16/32` pose batches from the real Kneel_1 fixture (`12412`-triangle implant at `1024x1024`), dilation `6`, `N=1,2,4` (clamped by `BankAdmission` half-memory **including graph VRAM, probed by an instantiate trial before admission**), discard first `3` launches per config, `10` trials, report `p50/p99`, material latency regression `>10%` p99 **AND** `>5%` stage-level wall-time. Define Layer-C tolerance there (`abs 1e-12` or `rel 1e-9` with rationale). This committed artifact is what U8 verifies against; any change requires re-approval as a scope change.
 
 **Patterns to follow:** `docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md` two-tier oracle (Tier-1 analytic + Tier-2 silhouette IoU≥0.85, vertically flipped, repo-root `WORKING_DIRECTORY`, cumulative `20k->35k` budget) + `direct_data_storage.cpp`/`data_structures_6D.cpp` direct-compile isolation; `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md` wrapper pattern `MakeCompatibilityContext->Submit->Complete`.
 
@@ -381,7 +381,7 @@ Graph (captured once per context/key, relaunched per pose):
 **Patterns to follow:** `cuda-guide/04-special-topics/cuda-graphs.md` topology stability + `cudaGraphExec*NodeSetParams` reuse; `cost_capacity_service.cu` half-memory admission (`BankAdmission.admitted`).
 
 **Test scenarios:**
-- Happy path: capture+instantiate of `direct_dilation_monoplane` graph succeeds for a representative `512x512` frame + `300k` tri implant on RTX 3090/4090 class hardware; `cudaGraphLaunch` on an unpopulated context succeeds (smoke).
+- Happy path: capture+instantiate of `direct_dilation_monoplane` graph succeeds for the real Kneel_1 fixture (`1024x1024` frame + `12412` tri implant) on RTX 3090/4090 class hardware; `cudaGraphLaunch` on an unpopulated context succeeds (smoke).
 - Happy path: graph relaunch with a different pose reuses the same topology after only node-param updates — second pose's `PrepareLaunchPacketKernel` output differs (new `fragment_fill`) yet the `Exec` relaunch succeeds without re-capture.
 - Happy path: two `EvaluationContext`s each with their own `cudaGraphExec_t`+`cudaStreamNonBlocking`+`pinned twins` can be in-flight simultaneously and each produces the correct pose->score mapping when run serially (correctness before concurrency).
 - Edge case: `preflight` with biplane or `DIRECT_MAHFOUZ` returns deterministic `capturable=false` with a stable reasonCode; caller retains `BuildGpuCostAdapter` serial path.
@@ -495,7 +495,7 @@ Graph (captured once per context/key, relaunched per pose):
   1. Serial `N=1` through `BuildGpuCostAdapter` (compatibility `MakeCompatibilityContext` wrapper, `src/coordinator/optimizer_manager.cpp:1299-1337` serial path)
   2. Graph-greedy `N=2`
   3. Graph-greedy `N=max admitted` (`BankAdmission.bank_count`, half-memory)
-  for representative workloads `8/16/32` pose batches from a `~300k`-triangle implant at `512x512`, dilation `direct_dilation` default. Repeat `10` trials per config after discarding first `3` launches per config (warmup). Record per run: wall time, GPU event time, per-eval `p50/p99`, `evals/sec`. Run on the same `RTX 3090 class` machine that produced `test/golden/cut0_measurement.md`'s `~98us` gate.
+  for representative workloads `8/16/32` pose batches from the real Kneel_1 fixture (`12412`-triangle implant at `1024x1024`), dilation `direct_dilation` default. Repeat `10` trials per config after discarding first `3` launches per config (warmup). Record per run: wall time, GPU event time, per-eval `p50/p99`, `evals/sec`. Run on the same `RTX 3090 class` machine that produced `test/golden/cut0_measurement.md`'s `~98us` gate.
 - Nsight Systems: `nsys profile -o graph-greedy` -> `nsys stats --report cuda_gpu_kern_sum` + timeline; confirm actual `cudaGraphLaunch` + kernel overlap across streams, and identify remaining `cudaStreamSynchronize`/`cudaEventSynchronize` gaps (must be absent on bank path).
 - Decision: retain the graph-backed path only when (a) throughput gain fits the Amdahl pre-registered band for the measured `P` (reference `bank_state.cuh` admission + `cut0_measurement.md`), (b) POH-batch latency `p99` does not materially regress (`>10%` p99 **AND** `>5%` stage-level `DirectOptimizer` wall-time including graph update/warmup), (c) U7 layered gate passes, **and (d) Nsight Systems confirms ≥30% concurrent kernel time at N=2, max host-to-device launch gap <50us, and zero `cudaStreamSynchronize`/`cudaEventSynchronize`/`cudaMemcpy` on admitted graph path (grep + timeline)**. Otherwise revert the admission in the same change (R14 revert rule `jj abandon`) with the `TEST_IMPACT_MATRIX` and baseline artifacts retained (revert only the functional change).
 

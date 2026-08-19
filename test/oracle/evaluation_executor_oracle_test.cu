@@ -19,11 +19,13 @@
 using gpu_cost_function::BankFootprintInput;
 using gpu_cost_function::EvaluationContextPool;
 
-TEST_CASE("oracle: BankFootprint with graph overhead is additive and valid", "[evaluation_executor][oracle]") {
+TEST_CASE(
+    "oracle: BankFootprint with graph overhead is additive and valid",
+    "[evaluation_executor][oracle]") {
     BankFootprintInput in;
-    in.width = 512;
-    in.height = 512;
-    in.triangle_count = 300000;
+    in.width = 1024;
+    in.height = 1024;
+    in.triangle_count = 12412;
     in.maximum_stride_size = 10000000;
     in.cub_storage_bytes = 4096;
     in.curvature_capacity = 0;
@@ -37,11 +39,14 @@ TEST_CASE("oracle: BankFootprint with graph overhead is additive and valid", "[e
     REQUIRE(with.total_bytes == base.total_bytes + 2ULL * 1024 * 1024);
 }
 
-TEST_CASE("oracle: EvaluationContextPool half-memory admission respects graph overhead", "[evaluation_executor][oracle]") {
+TEST_CASE(
+    "oracle: EvaluationContextPool half-memory admission respects graph "
+    "overhead",
+    "[evaluation_executor][oracle]") {
     BankFootprintInput layout;
-    layout.width = 512;
-    layout.height = 512;
-    layout.triangle_count = 300000;
+    layout.width = 1024;
+    layout.height = 1024;
+    layout.triangle_count = 12412;
     layout.maximum_stride_size = 10000000;
     layout.cub_storage_bytes = 4096;
     layout.curvature_capacity = 0;
@@ -59,16 +64,24 @@ TEST_CASE("oracle: EvaluationContextPool half-memory admission respects graph ov
     REQUIRE(pool.size() == 4);
 }
 
-// U4: persistent worker counters and chunk math (oracle label, headless logic but gated for U4 verification)
-TEST_CASE("oracle: U4 persistent worker counters are counted in footprint", "[evaluation_executor][oracle][U4]") {
+// U4: persistent worker counters and chunk math (oracle label, headless logic
+// but gated for U4 verification).
+TEST_CASE(
+    "oracle: U4 persistent worker counters are counted in footprint",
+    "[evaluation_executor][oracle][U4]") {
     BankFootprintInput in;
-    in.width = 512; in.height = 512; in.triangle_count = 300000;
-    in.maximum_stride_size = 10000000; in.cub_storage_bytes = 4096;
-    in.curvature_capacity = 0; in.graph_overhead_bytes = 0; in.biplane = false;
+    in.width = 1024;
+    in.height = 1024;
+    in.triangle_count = 12412;
+    in.maximum_stride_size = 10000000;
+    in.cub_storage_bytes = 4096;
+    in.curvature_capacity = 0;
+    in.graph_overhead_bytes = 0;
+    in.biplane = false;
     auto base = gpu_cost_function::bank_state_math::footprint(in);
     REQUIRE(base.valid);
-    // With U1's extra 3*4 + 1*4 + graph_overhead, tiny fill should not change validity
-    // The extra counters are 16 bytes total (3 device ints + 1 host pinned)
+    // U1's three device counters and one pinned host counter add 16 bytes;
+    // tiny fill inputs do not change validity.
     REQUIRE(base.total_bytes > 0);
     // Verify that overflow threshold is not in footprint but in logic
     constexpr int64_t maxStride = 10000000;

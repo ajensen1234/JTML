@@ -3,6 +3,20 @@
   "date": "2026-08-19",
   "frozen": true,
   "note": "Frozen pre-registration artifact for U2 (rev 2). Rev 1 invented representative_300k/512x512; rev 2 replaces with the REAL production fixture (Kneel_1 femur KR_right_7_fem.stl at 1024x1024, per-stage dilation 6/4/1) so the U8 paired measurement is grounded in the actual workload. Any change requires re-approval as scope change.",
+  "graph_key": [
+    "recipeId",
+    "biplaneFlag",
+    "width",
+    "height",
+    "triangle_count",
+    "dilationParam",
+    "cameraCalibHash",
+    "cub_storage_bytes",
+    "curvature_capacity",
+    "maximum_stride_size",
+    "graph_overhead_bytes",
+    "version"
+  ],
   "workloads": [
     {
       "pose_batch_size": 8,

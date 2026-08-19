@@ -72,19 +72,62 @@ TEST_CASE("GraphPreflightResult default is not capturable", "[graph_recipe]") {
     REQUIRE(r.reasonCode == 0);
 }
 
-TEST_CASE("graph_pre_registration.json is frozen and contains required keys", "[graph_recipe]") {
+TEST_CASE(
+    "graph_pre_registration.json is frozen and contains required keys",
+    "[graph_recipe]") {
     std::ifstream f("test/golden/graph_pre_registration.json");
     REQUIRE(f.good());
-    std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    REQUIRE(content.find("\"frozen\"") != std::string::npos);
-    REQUIRE(content.find("true") != std::string::npos);
+    std::string content(
+        (std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+    // Top-level frozen flag
+    REQUIRE(content.find("\"frozen\": true") != std::string::npos);
+
+    // Complete graph-key dimension schema frozen for U5/U8. Fixture-dependent
+    // values remain in workloads; runtime-probed dimensions must not be
+    // invented.
+    const auto graph_key_field = content.find("\"graph_key\"");
+    REQUIRE(graph_key_field != std::string::npos);
+    const auto graph_key_start = content.find('[', graph_key_field);
+    REQUIRE(graph_key_start != std::string::npos);
+    const auto graph_key_end = content.find(']', graph_key_start);
+    REQUIRE(graph_key_end != std::string::npos);
+    const std::string graph_key_schema =
+        content.substr(graph_key_start, graph_key_end - graph_key_start + 1);
+    for (const char* dimension : {
+             "recipeId",
+             "biplaneFlag",
+             "width",
+             "height",
+             "triangle_count",
+             "dilationParam",
+             "cameraCalibHash",
+             "cub_storage_bytes",
+             "curvature_capacity",
+             "maximum_stride_size",
+             "graph_overhead_bytes",
+             "version",
+         }) {
+        INFO("missing graph-key dimension: " << dimension);
+        REQUIRE(
+            graph_key_schema.find("\"" + std::string(dimension) + "\"") !=
+            std::string::npos);
+    }
+
+    // Real Kneel_1 fixture values are frozen in the workload entries.
+    REQUIRE(content.find("\"width\": 1024") != std::string::npos);
+    REQUIRE(content.find("\"height\": 1024") != std::string::npos);
+    REQUIRE(content.find("\"triangle_count\": 12412") != std::string::npos);
+    REQUIRE(content.find("\"dilation\": 6") != std::string::npos);
+
+    // Workload fixture values (real Kneel_1)
     REQUIRE(content.find("\"pose_batch_size\"") != std::string::npos);
     REQUIRE(content.find("\"N_values\"") != std::string::npos);
+
+    // Layer-C tolerance frozen artifact
     REQUIRE(content.find("\"layer_c_tolerance\"") != std::string::npos);
-    REQUIRE(content.find("\"abs\"") != std::string::npos);
-    REQUIRE(content.find("\"graph_key\"") != std::string::npos);
-    REQUIRE(content.find("recipeId") != std::string::npos);
-    REQUIRE(content.find("biplaneFlag") != std::string::npos);
+    REQUIRE(content.find("\"abs\": 1e-12") != std::string::npos);
+    REQUIRE(content.find("\"rel\": 1e-9") != std::string::npos);
 }
 
 TEST_CASE("TEST_IMPACT_MATRIX covers required touching files", "[graph_recipe]") {
