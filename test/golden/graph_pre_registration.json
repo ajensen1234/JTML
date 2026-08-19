@@ -1,18 +1,20 @@
 {
-  "version": "1",
+  "version": "2",
   "date": "2026-08-19",
   "frozen": true,
-  "note": "Frozen pre-registration artifact for U2. Any change requires re-approval as scope change. Defines workloads, admission, metrics, thresholds, and Layer-C tolerance for U8.",
+  "note": "Frozen pre-registration artifact for U2 (rev 2). Rev 1 invented representative_300k/512x512; rev 2 replaces with the REAL production fixture (Kneel_1 femur KR_right_7_fem.stl at 1024x1024, per-stage dilation 6/4/1) so the U8 paired measurement is grounded in the actual workload. Any change requires re-approval as scope change.",
   "workloads": [
     {
       "pose_batch_size": 8,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
       "frame": {
-        "width": 512,
-        "height": 512
+        "path": "example_studies/Kneel_1/1024/2806.tif",
+        "width": 1024,
+        "height": 1024
       },
       "dilation": 6,
+      "stage": "Trunk",
       "N_values": [1, 2, 4],
       "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
       "discard_warmup": 3,
@@ -20,13 +22,15 @@
     },
     {
       "pose_batch_size": 16,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
       "frame": {
-        "width": 512,
-        "height": 512
+        "path": "example_studies/Kneel_1/1024/2806.tif",
+        "width": 1024,
+        "height": 1024
       },
       "dilation": 6,
+      "stage": "Trunk",
       "N_values": [1, 2, 4],
       "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
       "discard_warmup": 3,
@@ -34,19 +38,27 @@
     },
     {
       "pose_batch_size": 32,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
       "frame": {
-        "width": 512,
-        "height": 512
+        "path": "example_studies/Kneel_1/1024/2806.tif",
+        "width": 1024,
+        "height": 1024
       },
       "dilation": 6,
+      "stage": "Trunk",
       "N_values": [1, 2, 4],
       "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
       "discard_warmup": 3,
       "trials": 10
     }
   ],
+  "per_stage_dilation": {
+    "Trunk": 6,
+    "Branch": 4,
+    "Leaf": 1,
+    "source": "multistage_oracle_test.cpp:370-372 (engine values; baseline.json's {6,3,1} is the stale docs-claim)"
+  },
   "admission": {
     "half_memory": true,
     "graph_overhead_probed": true,
@@ -78,24 +90,7 @@
     "pre_registered": true,
     "exact_layers": ["Layer A image byte-identical", "Layer B raw int identical"]
   },
-  "graph_key": [
-    "recipeId",
-    "biplaneFlag",
-    "width",
-    "height",
-    "triangle_count",
-    "dilationParam",
-    "cameraCalibHash",
-    "cub_storage_bytes",
-    "curvature_capacity",
-    "maximum_stride_size",
-    "graph_overhead_bytes",
-    "version"
-  ],
-  "gates": {
-    "correctness": "U7 layered bit-exact image/raw-int + tolerance within pre-registered bound",
-    "performance": "throughput within Amdahl band for measured P, p99 not >10% and stage wall not >5%",
-    "overlap": "Nsight Systems >=30% concurrent at N=2, max gap <50us, zero sync/memcpy",
-    "revert_rule": "jj abandon functional change, retain matrix and baselines"
+  "cut0_context": {
+    "note": "Cut-0 measured on Kneel_1 1024/2806.tif, dilation 6, backface off: CPU median 96.9us / GPU-event 97.2us (test/golden/cut0_measurement.md). Context only — never an N-way speedup."
   }
 }

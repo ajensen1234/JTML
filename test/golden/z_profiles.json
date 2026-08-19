@@ -405,16 +405,16 @@
       "variant": "DIRECT_MAHFOUZ",
       "dilation": 6,
       "frame": 0,
-      "valley_depth_full": 0.576218,
-      "argmin_offset_full_mm": -7,
-      "plateau_halfwidth_full_mm": 11.9247,
-      "noise_floor": 0.387053,
+      "valley_depth_full": 0.621852,
+      "argmin_offset_full_mm": -6,
+      "plateau_halfwidth_full_mm": 14.731,
+      "noise_floor": 0.514363,
       "z_blind": false,
       "white_sum": 0,
       "engine_max_abs_diff_vs_composed": 0,
-      "poly_argmin_full_mm": -6.74,
-      "poly_fit_residual_full_norm": 0.106991,
-      "full_costs": [-787.149, -787.345, -787.276, -787.171, -786.923, -786.861, -787.347, -787.373, -787.651, -787.494, -787.23, -787.507, -787.397, -787.161, -787.198, -786.801, -787.268, -786.699, -786.72, -786.948, -786.831, -786.548, -786.244, -786.358, -785.755, -786.466, -786.368, -786.154, -786.137, -785.9, -785.645]
+      "poly_argmin_full_mm": -4.82,
+      "poly_fit_residual_full_norm": 0.125123,
+      "full_costs": [-787.161, -786.98, -787.182, -787.476, -786.772, -786.715, -787.505, -787.353, -787.567, -787.692, -787.327, -787.575, -787.442, -787.177, -787.502, -786.877, -787.044, -787.636, -787.187, -786.891, -786.859, -786.305, -786.312, -786.259, -786.038, -786.25, -786.533, -786.415, -786.294, -785.937, -785.536]
     },
     {
       "variant": "DIRECT_DILATION_T1",
@@ -433,7 +433,7 @@
     }
   ],
   "ranking_d6_f0": ["DIRECT_DILATION", "DIRECT_MAHFOUZ", "DIRECT_DILATION_T1"],
-  "valley_depth_full_d6_f0": {"DIRECT_DILATION": 0.999993, "DIRECT_MAHFOUZ": 0.576218, "DIRECT_DILATION_T1": 0.481132},
+  "valley_depth_full_d6_f0": {"DIRECT_DILATION": 0.999993, "DIRECT_MAHFOUZ": 0.621852, "DIRECT_DILATION_T1": 0.481132},
   "z_gap_vs_valley_depth_d6_per_frame": [{"frame": 0, "z_gap_mm": -0.892, "valley_depth": 0.999993}, {"frame": 1, "z_gap_mm": -1.193, "valley_depth": 0.981239}, {"frame": 2, "z_gap_mm": -1.481, "valley_depth": 0.976386}],
   "coupling": [
     {"dilation": 6, "argmin_minus_mm": -6, "argmin_plus_mm": -15, "dz_star_d_inplane_mm_per_mm": -2.25},

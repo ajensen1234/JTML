@@ -1658,6 +1658,34 @@ add_test(NAME jtml.cut0_measurement
 set_tests_properties(jtml.cut0_measurement PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U8: Paired throughput/latency + Nsight Systems overlap proof (oracle;gpu, .cu)
+# Paired harness; not a CI default. Fixed-work pairs (warmup discarded):
+# 1. Serial N=1 through BuildGpuCostAdapter (MakeCompatibilityContext wrapper)
+# 2. Graph-greedy N=2 3. Graph-greedy N=max admitted (BankAdmission.bank_count).
+# For representative workloads 8/16/32 pose batches from ~300k-tri implant at
+# 512x512, dilation 6. Repeat 10 trials per config after discarding first 3
+# launches per config (warmup). Records wall/GPU event/p50/p99/evals/sec.
+add_executable(jtml_test_graph_throughput_oracle
+    oracle/graph_throughput_oracle_test.cu)
+target_include_directories(jtml_test_graph_throughput_oracle PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_graph_throughput_oracle PRIVATE
+    Catch2::Catch2WithMain
+    CUDA::cudart
+    ${JTA_LIBS})
+set_property(TARGET jtml_test_graph_throughput_oracle PROPERTY CUDA_ARCHITECTURES native)
+set_target_properties(jtml_test_graph_throughput_oracle PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}")
+target_link_options(jtml_test_graph_throughput_oracle PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.graph_throughput_oracle COMMAND jtml_test_graph_throughput_oracle)
+set_tests_properties(jtml.graph_throughput_oracle PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # ---------------------------------------------------------------------------
 # Tier-2 multi-stage oracle (plan 008 U6). GPU-only: NEVER in the headless
 # default. Drives OptimizerRunController with the PRODUCTION driver factory

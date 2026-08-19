@@ -1,0 +1,123 @@
+{
+  "version": "1",
+  "date": "2026-08-19",
+  "commit": "pending-manual-gpu-run",
+  "device": {
+    "requested": "RTX 3090 class (same as test/golden/cut0_measurement.md)",
+    "actual": "no CUDA device during headless creation — manual RTX 3090 run required",
+    "cuda_version": "12.9",
+    "nvcc_version": "12.9.41"
+  },
+  "pre_registration_ref": "test/golden/graph_pre_registration.json",
+  "pre_registration_frozen": true,
+  "workloads": [
+    {
+      "pose_batch_size": 8,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": { "width": 512, "height": 512 },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "discard_warmup": 3,
+      "trials": 10
+    },
+    {
+      "pose_batch_size": 16,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": { "width": 512, "height": 512 },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "discard_warmup": 3,
+      "trials": 10
+    },
+    {
+      "pose_batch_size": 32,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": { "width": 512, "height": 512 },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "discard_warmup": 3,
+      "trials": 10
+    }
+  ],
+  "method": {
+    "pairs": "serial N=1 via BuildGpuCostAdapter (MakeCompatibilityContext wrapper, src/coordinator/optimizer_manager.cpp:1299-1337) vs graph-greedy N=2 vs N=max_admitted (BankAdmission.half-memory including graph_overhead_bytes, probed by instantiate trial)",
+    "warmup": "discard first 3 launches per config, repeat 10 trials",
+    "metrics": ["wall_time_ms", "gpu_event_time_ms", "p50_pose_latency_us", "p99_pose_latency_us", "evals_per_sec_throughput", "nsight_concurrent_kernel_percent", "max_host_to_device_gap_us", "stage_wall_time_ms"],
+    "nsys": "nsys profile -o graph-greedy && nsys stats --report cuda_gpu_kern_sum + timeline; confirm cudaGraphLaunch + kernel overlap and zero cudaStreamSynchronize/cudaEventSynchronize/cudaMemcpy on admitted graph path (grep + timeline)",
+    "cut0_context": "test/golden/cut0_measurement.md median 98.364us CPU / 98.624us GPU-event is context only; never used as N-way speedup. Paired serial-vs-N measurement is the speedup."
+  },
+  "results_stub": {
+    "note": "Headless creation — no GPU. Values below are synthetic placeholders to document the report shape; manual RTX 3090 run must replace them. This harness correctly gates on pre-registration and reports nsys stub without claiming overlap from stream count.",
+    "nsys": "nsys not available, manual run required",
+    "per_workload": [
+      {
+        "pose_batch_size": 8,
+        "N=1_wall_ms_p50": 0.82,
+        "N=1_evals_per_sec": 9756,
+        "N=2_wall_ms_p50": 0.58,
+        "N=2_evals_per_sec": 13793,
+        "N=max_wall_ms_p50": 0.51,
+        "N=max_evals_per_sec": 15686,
+        "p50_us": 98,
+        "p99_us": 105,
+        "measured_P": null,
+        "amdahl_S_N2": null,
+        "nsight_concurrent_percent_N2": null,
+        "max_gap_us": null,
+        "zero_sync": null
+      },
+      {
+        "pose_batch_size": 16,
+        "N=1_wall_ms_p50": 1.62,
+        "N=1_evals_per_sec": 9876,
+        "N=2_wall_ms_p50": 1.08,
+        "N=2_evals_per_sec": 14814,
+        "N=max_wall_ms_p50": 0.95,
+        "N=max_evals_per_sec": 16842,
+        "p50_us": 98,
+        "p99_us": 106,
+        "measured_P": null,
+        "amdahl_S_N2": null,
+        "nsight_concurrent_percent_N2": null,
+        "max_gap_us": null,
+        "zero_sync": null
+      },
+      {
+        "pose_batch_size": 32,
+        "N=1_wall_ms_p50": 3.21,
+        "N=1_evals_per_sec": 9968,
+        "N=2_wall_ms_p50": 2.05,
+        "N=2_evals_per_sec": 15609,
+        "N=max_wall_ms_p50": 1.78,
+        "N=max_evals_per_sec": 17977,
+        "p50_us": 99,
+        "p99_us": 108,
+        "measured_P": null,
+        "amdahl_S_N2": null,
+        "nsight_concurrent_percent_N2": null,
+        "max_gap_us": null,
+        "zero_sync": null
+      }
+    ]
+  },
+  "gates": {
+    "correctness": "U7 layered bit-exact image/raw-int + Layer-C abs 1e-12 / rel 1e-9 must pass before measuring (U7 PASS required)",
+    "performance": "throughput within Amdahl band S(N)=1/((1-P)+P/N) for measured P; p99 not >10% and stage wall not >5% vs serial N=1",
+    "overlap": "Nsight Systems >=30% concurrent kernel time at N=2, max host-to-device gap <50us, zero cudaStreamSynchronize/cudaEventSynchronize/cudaMemcpy on admitted graph path (grep + timeline)",
+    "cut0_distinction": "Cut-0 98us is context, not speedup; paired serial-vs-N is speedup"
+  },
+  "decision": {
+    "status": "pending_manual_gpu_run",
+    "retained": null,
+    "reason": "Headless stub — no GPU. Manual RTX 3090 run with nsys must populate measured_P, amdahl_S_N2, nsight_concurrent_percent_N2, max_gap_us, zero_sync and then decide retain vs jj abandon (R14). TEST_IMPACT_MATRIX and baselines retained regardless.",
+    "revert_rule": "If any gate fails, jj abandon functional change, retain matrix and baselines (revert only functional change)"
+  },
+  "commands": {
+    "nsys_profile": "nsys profile -o graph-greedy <harness>",
+    "nsys_stats": "nsys stats --report cuda_gpu_kern_sum graph-greedy.nsys-rep",
+    "timeline": "nvidia-nsight-systems timeline (confirm cudaGraphLaunch + kernel overlap across N=2 streams)"
+  }
+}

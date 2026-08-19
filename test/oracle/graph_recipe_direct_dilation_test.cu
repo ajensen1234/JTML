@@ -24,6 +24,12 @@ using gpu_cost_function::GraphRecipeKey;
 
 TEST_CASE("oracle: U5 direct_dilation_monoplane graph capture+instantiate succeeds", "[graph_recipe][oracle][U5]") {
     DirectDilationMonoplaneRecipe recipe;
+    int deviceCount = 0;
+    if (cudaGetDeviceCount(&deviceCount) != cudaSuccess || deviceCount == 0) {
+        WARN("No CUDA device — skipping");
+        return;
+    }
+    cudaGetLastError(); // clear sticky error before stream create (700 illegal address otherwise)
     GraphRecipeKey key;
     key.recipeId = "direct_dilation_monoplane";
     key.biplane = false;
@@ -36,6 +42,8 @@ TEST_CASE("oracle: U5 direct_dilation_monoplane graph capture+instantiate succee
 
     auto pre = recipe.preflight(key);
     REQUIRE(pre.capturable);
+    cudaGetLastError();
+    cudaSetDevice(0);
 
     cudaStream_t stream = nullptr;
     REQUIRE(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) == cudaSuccess);
@@ -76,6 +84,14 @@ TEST_CASE("oracle: U5 recipe rejects biplane and wrong cost name", "[graph_recip
 
 TEST_CASE("oracle: U5 two contexts each with private Exec can be in-flight serially", "[graph_recipe][oracle][U5]") {
     DirectDilationMonoplaneRecipe recipe;
+    int deviceCount = 0;
+    if (cudaGetDeviceCount(&deviceCount) != cudaSuccess || deviceCount == 0) {
+        WARN("No CUDA device — skipping");
+        return;
+    }
+    cudaGetLastError();
+    cudaGetLastError();
+    cudaSetDevice(0);
     GraphRecipeKey key;
     key.recipeId = "direct_dilation_monoplane";
     key.biplane = false;

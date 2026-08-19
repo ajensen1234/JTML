@@ -23,6 +23,11 @@ __global__ void U5_DummyKernel(int* out) {
     if (threadIdx.x == 0 && blockIdx.x == 0) *out = 42;
 }
 
+struct GraphExecWrapper {
+    cudaGraphExec_t exec;
+    int* d_out;
+};
+
 std::string DirectDilationMonoplaneRecipe::recipeId() const {
     return "direct_dilation_monoplane";
 }
@@ -74,7 +79,7 @@ bool DirectDilationMonoplaneRecipe::createGraph(
             return false;
     }
 
-    // Allocate dummy device int for graph to write
+    // Allocate dummy device int for graph to write — lifetime tied to exec via wrapper
     int* d_out = nullptr;
     if (cudaMalloc(&d_out, sizeof(int)) != cudaSuccess) {
         if (needCreateStream) cudaStreamDestroy(s);
@@ -92,14 +97,18 @@ bool DirectDilationMonoplaneRecipe::createGraph(
         if (capErr == cudaSuccess && graph != nullptr) {
             if (cudaGraphInstantiate(&exec, graph, nullptr, nullptr, 0) ==
                 cudaSuccess) {
-                *out_graphExec = reinterpret_cast<void*>(exec);
+                auto* wrapper = new GraphExecWrapper{exec, d_out};
+                *out_graphExec = reinterpret_cast<void*>(wrapper);
                 ok = true;
             }
+            cudaGraphDestroy(graph);
         }
-        if (graph) cudaGraphDestroy(graph);
     }
 
-    cudaFree(d_out);
+    if (!ok) {
+        if (exec) cudaGraphExecDestroy(exec);
+        cudaFree(d_out);
+    }
     if (needCreateStream) cudaStreamDestroy(s);
     // key is pose-independent, so same graph can be relaunched for any pose
     (void)key;
@@ -111,6 +120,8 @@ bool DirectDilationMonoplaneRecipe::updateParams(
     // For dummy graph, no params to update — but verify Exec is valid and
     // context is not in-flight with overflow
     if (!graphExec) return false;
+    auto* wrapper = reinterpret_cast<GraphExecWrapper*>(graphExec);
+    if (!wrapper->exec) return false;
     // In real implementation, this would call cudaGraphExecKernelNodeSetParams
     // for pose constants For U5 dummy, just check context is initialized
     (void)ctx;
@@ -120,7 +131,8 @@ bool DirectDilationMonoplaneRecipe::updateParams(
 bool DirectDilationMonoplaneRecipe::launch(
     void* graphExec, void* stream) const {
     if (!graphExec || !stream) return false;
-    cudaGraphExec_t exec = reinterpret_cast<cudaGraphExec_t>(graphExec);
+    auto* wrapper = reinterpret_cast<GraphExecWrapper*>(graphExec);
+    cudaGraphExec_t exec = wrapper->exec;
     cudaStream_t s = reinterpret_cast<cudaStream_t>(stream);
     return cudaGraphLaunch(exec, s) == cudaSuccess;
 }
@@ -133,8 +145,10 @@ double DirectDilationMonoplaneRecipe::complete(EvaluationContext& ctx) const {
 
 void DirectDilationMonoplaneRecipe::destroyGraph(void* graphExec) const {
     if (!graphExec) return;
-    cudaGraphExec_t exec = reinterpret_cast<cudaGraphExec_t>(graphExec);
-    cudaGraphExecDestroy(exec);
+    auto* wrapper = reinterpret_cast<GraphExecWrapper*>(graphExec);
+    cudaGraphExecDestroy(wrapper->exec);
+    cudaFree(wrapper->d_out);
+    delete wrapper;
 }
 
 std::unique_ptr<GraphRecipe> CreateDirectDilationMonoplaneRecipe() {

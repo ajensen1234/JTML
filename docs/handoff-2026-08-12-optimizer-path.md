@@ -180,11 +180,25 @@ Read order if you prefer files: `docs/optimizer-stage-graphs.md` →
 `docs/brainstorms/2026-08-12-optimizer-path-requirements.md` (R10–R14 for
 the perf workstream).
 
-## 7. Suggested next moves (pick one)
+## 7. Evaluation-executor workstream — graph-backed greedy (plan 011, U1-U8)
+
+**Status 2026-08-19 — U1-U7 landed, U8 harness pending manual GPU run:**
+- U1 `EvaluationContext` + generic `GraphRecipe` (private mutable state, null-init, destruction wait, `BankAdmission` half-memory + `graph_overhead_bytes`, one private `cudaGraphExec_t` per context) — `feat(compute): private EvaluationContext + generic GraphRecipe surface (U1)` (9703aba0)
+- U2 `TEST_IMPACT_MATRIX.md` + frozen `test/golden/graph_pre_registration.json` (`8/16/32` poses, `512x512`, `300k` tri, `N=1/2/4`, `abs 1e-12 / rel 1e-9`, `p99>10%` + stage `>5%`) — `feat(test): test-impact matrix + frozen baseline harness (U2)` (f5234bd5)
+- U3 `GraphPreflight` Global capture probe (`cub::DeviceScan::ExclusiveSum` + pinned `memcpy` + `atomicAdd`, `GraphPreflightResult`) — `feat(compute): graph capture compatibility probe (U3)` (5df29074)
+- U4 device-driven persistent chunk workers (`cudaMemsetAsync(0) -> PrepareLaunchPacketKernel -> overflowCheck(dev_overflowFlag) -> Stride/Fill predicated`, fixed `NX = min(maxBlocksPerSM*SMcount, ceil(SAFE_CAP/256))`, `dev_nextCandidate/dev_nextChunk` in footprint, metric `max(2048x2048)` fixed-max) — `feat(compute): device-driven persistent chunk workers (U4)` (b8029028)
+- U5 `direct_dilation_monoplane` graph recipe (reusable topology key `recipeId+biplane+cub_storage+curvature+maximum_stride_size`, one private Exec per context, `SetParams` update, two-contexts-in-flight test) — `feat(compute): monoplane DIRECT_DILATION graph recipe (U5)` (c4fce8ed)
+- U6 `EvaluationExecutor::RunBatch` greedy lease/checkout, `firstSubmission` atomic `R7/R8` split, ordered `result[lease.input]`, `QSignalSpy` `A1/R11` + watchdog — `feat(compute): greedy batch wiring + ordered assembly (U6)` (1a19b463)
+- U7 layered oracle gate (Layer A image byte-identical, Layer B raw int `pixel/distance/edge/union` identical, Layer C `double` within `abs 1e-12 / rel 1e-9`, `>=3x` repeats, Tier-2 `IoU≥0.85`) — `feat(oracle): layered oracle gate (U7)` (3fef7471)
+- U8 paired harness `test/oracle/graph_throughput_oracle_test.cu` (warmup 3 discard, 10 trials, `p50/p99`, `evals/sec`, Amdahl `S(N)=1/((1-P)+P/N)`) + `test/golden/graph_performance_baseline.json` stub (`nsys not available, manual run required`, `pending_manual_gpu_run`) — `feat(oracle): paired throughput/latency + Nsight proof (U8)` (pending). Gates: (a) Amdahl band, (b) `p99>10%` + stage `>5%`, (c) U7 PASS, (d) Nsight `≥30%` concurrent at N=2, `<50us` gap, zero `Synchronize`/`Memcpy` (grep + timeline). Revert rule `jj abandon` functional change, retain matrix/baselines. Cut-0 `98us` is context, not speedup. Run on RTX 3090 class as `cut0_measurement.md`.
+
+Next: run U8 harness on RTX 3090 with `nsys profile` to populate `graph_performance_baseline.json` (`measured_P`, `amdahl_S_N2`, `nsight_concurrent_percent_N2`, `max_gap_us`, `zero_sync`) and decide retain vs `jj abandon`.
+
+## 8. Suggested next moves (pick one)
 
 1. Execute plan 009 (U1–U3; the UI picker parked) — smallest, ready now.
 2. Brainstorm → plan the CUDA/perf workstream (re-based on ~7k evals/s) —
-  the highest-value arc.
+  the highest-value arc — **now superseded by plan 011 execution above for the greedy executor**.
 3. The measurement plan (ablation runner) — the scoring surface everything
   else (algorithm/polish) is judged on.
 4. The hygiene pass — small, unblocks the meter visibility + the parameter
