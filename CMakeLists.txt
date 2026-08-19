@@ -37,7 +37,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
-# Build the test suite (headless default; GPU/oracle cases are a separate label)
+# Build tests (headless default; expensive fixture/render/performance gates use oracle labels)
 option(JTML_BUILD_TESTS "Build and enable JTML tests" ON)
 
 #=============================

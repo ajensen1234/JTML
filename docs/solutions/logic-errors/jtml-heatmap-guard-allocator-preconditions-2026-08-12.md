@@ -90,9 +90,7 @@ frees only null pointers.
   condition variable is initialized on ALL construction paths.
 - Keep the frame-aligned vector contract: a skipped upload must still push
   a valid (0-keypoint) object so index-based consumers stay aligned.
-- The 0-keypoint GPU path is oracle/manual-visual territory (no headless
-  GPU) — the pins are the constructor/guard invariants plus the owner's
-  heatmap-less run; run compute-sanitizer on teardown after such a run.
+- The 0-keypoint GPU path may run as a fast compute-only headless test; any visual/render assertion remains oracle/manual-visual territory. Pin the constructor/guard invariants and run compute-sanitizer on teardown after a heatmap-less run.
 
 ## Related Issues
 

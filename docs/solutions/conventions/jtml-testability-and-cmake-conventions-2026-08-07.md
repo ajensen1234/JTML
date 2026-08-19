@@ -73,8 +73,8 @@ set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 
 ```
 
 - A **run-level timeout** (`ctest --timeout 600` + per-test `TIMEOUT`) converts any hang into a failing test, not a hung job (R13/AE5).
-- The default `headless` label must **never touch GPU, VTK render, or a widget**; GPU cases go under a separate `oracle`/`gpu` label excluded by default.
-- Pure-data and DIRECT tests are compiled **CUDA-free** directly from the data-structure `.cpp` files rather than linking the CUDA-heavy `jtml_core` (U3/R11) — that is what lets the headless suite run with GPU never initialized.
+- The default `headless` label means **no GUI/display dependency, VTK render window, or widget**. Fast compute-only CUDA tests may initialize a GPU; expensive fixture/render-fidelity/performance gates remain under separate `oracle`/`gpu` labels.
+- Pure-data and DIRECT tests remain compiled **CUDA-free** directly from their `.cpp` files rather than linking the CUDA-heavy compute target; allowing focused CUDA lifecycle tests does not weaken the pure-domain boundary.
 
 ### 2. CMake AUTOMOC gotcha: list Q_OBJECT headers in `add_executable`
 
@@ -197,11 +197,11 @@ Apply when you have a **C++ desktop app coupling pure algorithms to GPU and/or G
 - Hangs and thread-orchestration bugs are the dominant failure mode and only manifest by clicking the GUI.
 - CUDA/numeric output is not bit-reproducible — so you need a tolerance/appearance-based gate, not an equality assertion.
 
-The hybrid Catch2/QtTest split (pure math vs threading seam) is key: don't force pure numerics into QtTest, and don't run widget/GPU tests in the default suite.
+The hybrid Catch2/QtTest split (pure math vs threading seam) is key: don't force pure numerics into QtTest, and don't put GUI/VTK-render or expensive fixture/performance oracles in the default suite.
 
 ## Examples
 
-- `pixi run test` → `ctest -L headless --timeout 600` → 11 tests pass (no GPU/display). `ctest -L oracle` runs the GPU Tier-2 gate only on a GPU machine.
+- `pixi run test` → `ctest -L headless --timeout 600`: no GUI/display or VTK render window; fast compute-only CUDA tests are allowed. `ctest -L oracle` runs the expensive Tier-2/render/performance gates.
 - Tier-1 golden — `test/unit/test_direct_optimizer.cpp` (Catch2): converges an analytic quadratic to its known min; asserts budget accounting (seed consumes one unit) matches the cumulative cap.
 - Lifecycle seam — `test/lifecycle/coordinator_test.cpp` (QtTest): stub cost drives Idle→Running→Finished→Idle, re-launches, refuses double-start, recovers from injected cost-init failure, and a stuck worker fails via timeout (AE5).
 - MVVM controller+builder — `test/unit/test_optimize_intent_controller.cpp`, `test/unit/test_model_list_builder.cpp` (+ hegel PBT `test/unit/test_model_list_builder_properties.cpp`): lock the widget-free intent predicate and the dedup quirks.

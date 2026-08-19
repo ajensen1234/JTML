@@ -26,8 +26,8 @@ Add any new C++ test framework/tool to `pixi.toml` (the lockfile is `pixi.lock`)
 ## Test suite
 
 Layout under `test/`, all registered in `test/CMakeLists.txt`:
-- `test/unit/` — **Catch2** pure-logic tests (no Qt event loop, no GPU): data structures,
-  the pure `DirectOptimizer` (Tier-1 analytic golden), future persistence.
+- `test/unit/` — **Catch2** logic and fast compute-lifecycle tests (no GUI/display or VTK render):
+  data structures, the pure `DirectOptimizer` (Tier-1 analytic golden), CUDA ownership seams, future persistence.
 - `test/lifecycle/` — **QtTest** for QObject/QThread/QSignalSpy seams (the headless
   `OptimizeCoordinator`), run under `QCoreApplication` with zero GPU/display.
 - `test/golden/` — golden-oracle baseline (`baseline.json`, `fem_golden.jts`,
@@ -48,8 +48,7 @@ Conventions:
   deterministic Catch2 unit test — PBT complements, never replaces, the deterministic cases.
   See `test/HEGEL-PBT-GUIDE.md` for the authoring patterns, built-in generator survey, and
   how to discover the hegel API.
-- **Default `headless` label must never touch GPU, VTK render, or a widget.** GPU/real-VTK
-  cases go under a separate `oracle`/`gpu` label, run explicitly on a GPU machine.
+- **Default `headless` means no GUI/display dependency, VTK render window, or widget.** Fast compute-only CUDA tests are allowed and may initialize a GPU. Expensive fixture/render/performance gates stay under separate `oracle`/`gpu` labels.
 - **New Qt test target gotcha:** CMake AUTOMOC does not auto-moc an included shared header,
   so add the Q_OBJECT header to the `add_executable(...)` source list (see
   `jtml_test_coordinator` in `test/CMakeLists.txt`).

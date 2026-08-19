@@ -13,108 +13,146 @@
 
 #include <cuda_runtime.h>
 
+#include <cstdint>
+
 namespace gpu_cost_function {
 
 EvaluationContextPool::~EvaluationContextPool() {
     Shutdown();
 }
 
-bool EvaluationContextPool::Initialize(const BankFootprintInput& layout,
-                                       std::uint64_t free_device_bytes,
-                                       std::size_t n_max) {
+bool EvaluationContextPool::Initialize(
+    const BankFootprintInput& layout,
+    std::uint64_t free_device_bytes,
+    std::size_t n_max) {
     Shutdown();
-    // Compute footprint (includes RenderBuffers + MetricBuffers)
-    // Graph VRAM is probed separately in U3/U5; U1 admission uses the
-    // Stage-1 math as the budget and floors at 1 (serial fallback).
-    BankFootprint fp = bank_state_math::footprint(layout);
-    if (!fp.valid || fp.total_bytes == 0) {
+
+    // Graph object memory is added by U3/U5 through graph_overhead_bytes.
+    // U1 uses the Stage-1 render/metric footprint plus its worker counters
+    // and always keeps the compatibility floor of one context.
+    const BankFootprint footprint = bank_state_math::footprint(layout);
+    if (!footprint.valid || footprint.total_bytes == 0) {
         return false;
     }
-    BankAdmission adm = bank_state_math::admit(free_device_bytes, fp, n_max);
-    std::size_t n = adm.bank_count;
-    if (n == 0) n = 1;
+    const BankAdmission admission =
+        bank_state_math::admit(free_device_bytes, footprint, n_max);
+    const std::size_t count =
+        admission.bank_count == 0 ? 1 : admission.bank_count;
 
-    contexts_.resize(n);
-    checked_out_.assign(n, false);
-    for (std::size_t i = 0; i < n; ++i) {
+    contexts_.resize(count);
+    checked_out_.assign(count, false);
+
+    for (std::size_t i = 0; i < count; ++i) {
         EvaluationContext& ctx = contexts_[i];
         ctx.index = i;
         ctx.width = static_cast<int>(layout.width);
         ctx.height = static_cast<int>(layout.height);
         ctx.status = EvaluationStatus::Idle;
         ctx.in_flight = false;
-        ctx.stream = nullptr;
-        ctx.completion_event = nullptr;
-        ctx.graph_exec = nullptr;
-        ctx.dev_nextCandidate = nullptr;
-        ctx.dev_nextChunk = nullptr;
-        ctx.dev_overflowFlag = nullptr;
-        ctx.host_overflowFlag = nullptr;
         ctx.input_index = -1;
         ctx.initialized_correctly = false;
 
-        // U1 does not yet allocate CUDA resources for worker counters;
-        // allocation lands in the executor/graph recipe. We keep the
-        // context correctly null-initted so a zero-work construction
-        // is safely destructible (cudaFree(nullptr) is a no-op) and
-        // initialized_correctly remains false until a later stage
-        // successfully allocates.
-        if (n == 1 && layout.triangle_count == 0) {
-            ctx.initialized_correctly = true;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) !=
+            cudaSuccess) {
+            Shutdown();
+            return false;
         }
+        ctx.stream = reinterpret_cast<void*>(stream);
+
+        cudaEvent_t event = nullptr;
+        if (cudaEventCreateWithFlags(&event, cudaEventDisableTiming) !=
+            cudaSuccess) {
+            Shutdown();
+            return false;
+        }
+        ctx.completion_event = reinterpret_cast<void*>(event);
+
+        if (cudaMalloc(&ctx.dev_nextCandidate, sizeof(std::int32_t)) !=
+                cudaSuccess ||
+            cudaMalloc(&ctx.dev_nextChunk, sizeof(std::int32_t)) !=
+                cudaSuccess ||
+            cudaMalloc(&ctx.dev_overflowFlag, sizeof(std::int32_t)) !=
+                cudaSuccess ||
+            cudaHostAlloc(
+                &ctx.host_overflowFlag,
+                sizeof(std::int32_t),
+                cudaHostAllocDefault) != cudaSuccess) {
+            Shutdown();
+            return false;
+        }
+
+        *static_cast<std::int32_t*>(ctx.host_overflowFlag) = 0;
+        if (cudaMemsetAsync(
+                ctx.dev_nextCandidate, 0, sizeof(std::int32_t), stream) !=
+                cudaSuccess ||
+            cudaMemsetAsync(
+                ctx.dev_nextChunk, 0, sizeof(std::int32_t), stream) !=
+                cudaSuccess ||
+            cudaMemsetAsync(
+                ctx.dev_overflowFlag, 0, sizeof(std::int32_t), stream) !=
+                cudaSuccess ||
+            cudaStreamSynchronize(stream) != cudaSuccess) {
+            Shutdown();
+            return false;
+        }
+
+        ctx.initialized_correctly = true;
     }
-    // For U1 the pool is considered initialized if we created at least
-    // one context, even without CUDA allocations (null-init correctness).
-    // Real CUDA streams/events/graphExecs are created in U5/U6.
-    if (!contexts_.empty()) {
-        contexts_[0].initialized_correctly = true;
-    }
+
     return true;
 }
 
 void EvaluationContextPool::Shutdown() {
-    // Destruction waits for each context's stream/event before freeing,
-    // mirroring jtml-heatmap-guard preconditions. U1 pool has no
-    // allocations yet, but we implement the wait correctly for future
-    // stages.
     for (auto& ctx : contexts_) {
-        if (ctx.stream) {
-            auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
+        auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
+        if (stream != nullptr) {
+            // Every per-context allocation may still be referenced by queued
+            // graph work. Drain the owning stream before destroying the graph
+            // or releasing any of its mutable write set.
             cudaStreamSynchronize(stream);
-            cudaStreamDestroy(stream);
-            ctx.stream = nullptr;
+        } else if (ctx.in_flight && ctx.completion_event != nullptr) {
+            cudaEventSynchronize(
+                reinterpret_cast<cudaEvent_t>(ctx.completion_event));
         }
-        if (ctx.completion_event) {
-            auto event = reinterpret_cast<cudaEvent_t>(ctx.completion_event);
-            // Wait for event before destroying (if in-flight, synchronize)
-            cudaEventSynchronize(event);
-            cudaEventDestroy(event);
-            ctx.completion_event = nullptr;
-        }
-        if (ctx.graph_exec) {
-            auto exec = reinterpret_cast<cudaGraphExec_t>(ctx.graph_exec);
-            cudaGraphExecDestroy(exec);
+
+        if (ctx.graph_exec != nullptr) {
+            cudaGraphExecDestroy(
+                reinterpret_cast<cudaGraphExec_t>(ctx.graph_exec));
             ctx.graph_exec = nullptr;
         }
-        if (ctx.dev_nextCandidate) {
+        if (ctx.completion_event != nullptr) {
+            cudaEventDestroy(
+                reinterpret_cast<cudaEvent_t>(ctx.completion_event));
+            ctx.completion_event = nullptr;
+        }
+        if (ctx.dev_nextCandidate != nullptr) {
             cudaFree(ctx.dev_nextCandidate);
             ctx.dev_nextCandidate = nullptr;
         }
-        if (ctx.dev_nextChunk) {
+        if (ctx.dev_nextChunk != nullptr) {
             cudaFree(ctx.dev_nextChunk);
             ctx.dev_nextChunk = nullptr;
         }
-        if (ctx.dev_overflowFlag) {
+        if (ctx.dev_overflowFlag != nullptr) {
             cudaFree(ctx.dev_overflowFlag);
             ctx.dev_overflowFlag = nullptr;
         }
-        if (ctx.host_overflowFlag) {
+        if (ctx.host_overflowFlag != nullptr) {
             cudaFreeHost(ctx.host_overflowFlag);
             ctx.host_overflowFlag = nullptr;
         }
+        if (stream != nullptr) {
+            cudaStreamDestroy(stream);
+            ctx.stream = nullptr;
+        }
+
+        ctx.initialized_correctly = false;
         ctx.in_flight = false;
         ctx.status = EvaluationStatus::Idle;
+        ctx.input_index = -1;
     }
+
     contexts_.clear();
     checked_out_.clear();
 }

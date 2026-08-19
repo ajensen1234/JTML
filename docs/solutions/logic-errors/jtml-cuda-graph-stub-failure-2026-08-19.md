@@ -74,7 +74,7 @@ Three failures compounded:
 ## Prevention
 
 - **No `[x]` on trust.** The orchestrator must verify the code path is real before checking any box.
-- **`ctest -L oracle` is the gate for GPU work**, not `ctest -L headless`. Headless tests cannot see launch behavior by design.
+- **`ctest -L oracle` remains the gate for end-to-end GPU hot-path correctness and performance.** Headless may include fast compute-only CUDA lifecycle tests, but a green headless label alone does not prove that the production graph launches real kernels or overlaps work.
 - **`nsys profile` is the GPU-equivalent of "did it actually run?"** — empty `cuda_gpu_kern_sum` = no real work.
 - **Anti-stub assertion in tests:** `REQUIRE(stream != nullptr)`, `REQUIRE(complete() != 0.0)`, `REQUIRE(kernel_launch_count > 0)` — tests that fail if the code regresses to stub behavior.
 - **The R5 barrier removal is the core deliverable** — if `render_engine.cu:1286` still has `cudaStreamSynchronize` and `:1298` still reads host `fragment_fill`, the graph path is not real, no matter how many units are marked `[x]`.

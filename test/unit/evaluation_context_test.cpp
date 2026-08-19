@@ -3,11 +3,12 @@
  */
 
 /* U2: EvaluationContext — private mutable state per in-flight evaluation.
- * Covers R4/R6: null-init, half-memory admission with graph overhead, pool Checkout/Recycle.
- * Headless: CUDA-free, header-only (evaluation_context.h is opaque void* handles).
+ * Covers R4/R6: null-init, half-memory admission, real CUDA ownership, and
+ * Checkout/Recycle. These tests are compute-only and remain headless.
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <cuda_runtime.h>
 
 #include <cstdint>
 
@@ -70,7 +71,9 @@ TEST_CASE("BankAdmission half-memory includes graph overhead and device counters
     REQUIRE(adm.bank_count >= 1);
 }
 
-TEST_CASE("EvaluationContextPool zero-work construction is safely destructible", "[evaluation_context]") {
+TEST_CASE(
+    "EvaluationContextPool allocates real resources for zero-work layouts",
+    "[evaluation_context][gpu]") {
     BankFootprintInput layout;
     layout.width = 1;
     layout.height = 1;
@@ -80,18 +83,51 @@ TEST_CASE("EvaluationContextPool zero-work construction is safely destructible",
     layout.curvature_capacity = 0;
     layout.graph_overhead_bytes = 0;
     layout.biplane = false;
+
     EvaluationContextPool pool;
-    const bool ok = pool.Initialize(layout, 1024ULL * 1024 * 1024, 4);
-    REQUIRE(ok);
+    REQUIRE(pool.Initialize(layout, 1024ULL * 1024 * 1024, 4));
     REQUIRE(pool.size() >= 1);
-    REQUIRE(pool.context(0) != nullptr);
-    // Zero-work pool has at least one correctly null-initted context
+
     const auto* ctx = pool.context(0);
-    REQUIRE(ctx->stream == nullptr);
-    REQUIRE(ctx->completion_event == nullptr);
+    REQUIRE(ctx != nullptr);
+    REQUIRE(ctx->stream != nullptr);
+    REQUIRE(ctx->completion_event != nullptr);
+    REQUIRE(ctx->dev_nextCandidate != nullptr);
+    REQUIRE(ctx->dev_nextChunk != nullptr);
+    REQUIRE(ctx->dev_overflowFlag != nullptr);
+    REQUIRE(ctx->host_overflowFlag != nullptr);
+    REQUIRE(*static_cast<const std::int32_t*>(ctx->host_overflowFlag) == 0);
+    REQUIRE(ctx->initialized_correctly);
+
+    unsigned int stream_flags = 0;
+    REQUIRE(
+        cudaStreamGetFlags(
+            reinterpret_cast<cudaStream_t>(ctx->stream), &stream_flags) ==
+        cudaSuccess);
+    REQUIRE((stream_flags & cudaStreamNonBlocking) != 0);
+
+    std::int32_t device_value = -1;
+    for (void* counter :
+         {ctx->dev_nextCandidate, ctx->dev_nextChunk, ctx->dev_overflowFlag}) {
+        REQUIRE(
+            cudaMemcpy(
+                &device_value,
+                counter,
+                sizeof(device_value),
+                cudaMemcpyDeviceToHost) == cudaSuccess);
+        REQUIRE(device_value == 0);
+        device_value = -1;
+    }
+
+    pool.Shutdown();
+    REQUIRE(pool.size() == 0);
+    pool.Shutdown();
+    REQUIRE(pool.size() == 0);
 }
 
-TEST_CASE("EvaluationContextPool Checkout/Recycle mirrors BankCheckoutTracker", "[evaluation_context]") {
+TEST_CASE(
+    "EvaluationContextPool Checkout/Recycle owns distinct CUDA contexts",
+    "[evaluation_context][gpu]") {
     BankFootprintInput layout;
     layout.width = 512;
     layout.height = 512;
@@ -101,19 +137,32 @@ TEST_CASE("EvaluationContextPool Checkout/Recycle mirrors BankCheckoutTracker", 
     layout.curvature_capacity = 0;
     layout.graph_overhead_bytes = 0;
     layout.biplane = false;
+
     EvaluationContextPool pool;
     REQUIRE(pool.Initialize(layout, 24ULL * 1024 * 1024 * 1024, 4));
     REQUIRE(pool.size() >= 2);
+
     const int a = pool.Checkout();
     const int b = pool.Checkout();
     REQUIRE(a >= 0);
     REQUIRE(b >= 0);
     REQUIRE(a != b);
-    REQUIRE((pool.Checkout() >= 0 || pool.size() == 2)); // third checkout fails if N=2
-    REQUIRE(pool.IsInFlight(static_cast<std::size_t>(a)) == true);
-    REQUIRE(pool.Recycle(static_cast<std::size_t>(a), false) == false);
-    REQUIRE(pool.Recycle(static_cast<std::size_t>(a), true) == true);
-    REQUIRE(pool.IsInFlight(static_cast<std::size_t>(a)) == false);
+
+    const auto* context_a = pool.context(static_cast<std::size_t>(a));
+    const auto* context_b = pool.context(static_cast<std::size_t>(b));
+    REQUIRE(context_a != nullptr);
+    REQUIRE(context_b != nullptr);
+    REQUIRE(context_a->stream != nullptr);
+    REQUIRE(context_b->stream != nullptr);
+    REQUIRE(context_a->stream != context_b->stream);
+    REQUIRE(context_a->completion_event != context_b->completion_event);
+    REQUIRE(context_a->dev_nextCandidate != context_b->dev_nextCandidate);
+
+    REQUIRE((pool.Checkout() >= 0 || pool.size() == 2));
+    REQUIRE(pool.IsInFlight(static_cast<std::size_t>(a)));
+    REQUIRE_FALSE(pool.Recycle(static_cast<std::size_t>(a), false));
+    REQUIRE(pool.Recycle(static_cast<std::size_t>(a), true));
+    REQUIRE_FALSE(pool.IsInFlight(static_cast<std::size_t>(a)));
 }
 
 TEST_CASE("admission falls back to N=1 for insufficient free bytes", "[evaluation_context]") {

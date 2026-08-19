@@ -3,12 +3,13 @@
 
 # JTML test harness.
 #
-# Conventions (from docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md):
-#  - The default (`headless`) label runs with no GUI, VTK render window, or GPU.
-#  - The `oracle`/`gpu` label is excluded from the default run; run it
-#    explicitly on a GPU machine (U2/U6).
+# Conventions:
+#  - The default (`headless`) label has no GUI/display or VTK render-window dependency;
+#    fast compute-only CUDA tests are allowed.
+#  - The `oracle`/`gpu` label is excluded from the default run and is reserved for
+#    expensive fixture, render-fidelity, and performance gates.
 #  - QtTest (`Qt<major>::Test`) is used for QObject/QThread/QSignalSpy seams;
-#    Catch2 is used for pure-math / data-structure tests.
+#    Catch2 is used for pure math, data structures, and compute lifecycle tests.
 
 # The old nfd / vtk subdirectories were dead code (commented out of the build)
 # and were never wired into CTest. They are intentionally NOT registered here so

@@ -31,7 +31,7 @@ Keep the VIEW (colors/opacity/VTK render updates) in the slots; only the STATE m
 - **jj only**: `jj describe` → `jj new` per change; never git.
 - **Cumulative budget 20k/25k/30k** (`settings_constants`: trunk 20000, branch 5000, leaf 5000) is load-bearing — don't "fix" to per-stage in the optimizer.
 - New core `.cpp` must be added to the **explicit** `src/core/CMakeLists.txt` source list (file(GLOB) only catches headers → AUTOMOC link breakage otherwise).
-- Headless tests must never touch GPU/VTK/widget; GPU cases go under `oracle`/`gpu` label only.
+- Headless tests must not require a GUI/display, VTK render window, or widget. Fast compute-only CUDA is allowed; expensive fixture/render/performance gates use `oracle`/`gpu` labels.
 - `SessionState` is a plain state holder, NOT an observable ViewModel — Qt Widgets has no binding (plan R12 anti-over-engineering); signal/notify lives in the QObject coordinator (`OptimizeCoordinator`).
 - hegel PBT is a swappable FetchContent layer (network at configure; `dl` + rpath needed).
 - Oracle label TIFFs are bottom-left y-origin → the oracle vertically flips them; run oracle from the repo root (`WORKING_DIRECTORY` set).

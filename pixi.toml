@@ -147,8 +147,8 @@ env = {"QT_QPA_PLATFORM" = "xcb"}
 #set(USE_CUDNN 1)
 
 [tasks.test]
-# Run the headless test suite (no GUI/VTK/GPU). Run GPU/oracle tests explicitly
-# with: ctest --test-dir .build -L oracle
+# Run the headless suite: no GUI/display or VTK render window. Fast compute-only
+# CUDA tests are allowed; expensive fixture/render/performance gates use -L oracle.
 cmd = ["ctest", "--test-dir", ".build", "--output-on-failure", "--timeout", "600", "-L", "headless"]
 depends-on = ["build"]
 env = {"QT_QPA_PLATFORM" = "offscreen"}

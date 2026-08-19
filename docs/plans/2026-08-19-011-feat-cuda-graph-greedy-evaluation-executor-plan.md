@@ -207,7 +207,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 ## Implementation Units
 
-- [ ] U1. **Private EvaluationContext + generic GraphRecipe surface**
+- [x] U1. **Private EvaluationContext + generic GraphRecipe surface**
 
 **Goal:** Durable ownership that makes greedy graph execution safe by construction; legacy bank alias is compatibility-only.
 
