@@ -38,6 +38,7 @@ add_library(jtml_compute SHARED
     cost_capacity_service.cu
     evaluation_context.cpp
     graph_preflight.cu
+    graph_recipe_direct_dilation.cu
     distance_map_metric.cu
     fast_implant_dilation_metric.cu
     gpu_heatmaps.cu
