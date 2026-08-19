@@ -58,6 +58,23 @@ struct GraphPreflightResult {
 };
 
 class EvaluationContext;  // forward
+class RenderEngine;
+class GPUMetrics;
+class GPUImage;
+class GPUDilatedFrame;
+class GPUFrame;
+
+// Production objects used while capturing the U4 render + metric topology.
+// The recipe never owns these objects; they must outlive createGraph().
+struct GraphRecipeCaptureInputs {
+    EvaluationContext* context = nullptr;
+    RenderEngine* render = nullptr;
+    GPUMetrics* metrics = nullptr;
+    GPUImage* rendered_image = nullptr;
+    GPUDilatedFrame* comparison_frame = nullptr;
+    GPUFrame* distance_map = nullptr;
+    int dilation = 6;
+};
 
 class GraphRecipe {
 public:
@@ -66,14 +83,23 @@ public:
     virtual std::string recipeId() const = 0;
     virtual bool isEligible(const std::string& costName, bool biplane) const = 0;
     virtual GraphPreflightResult preflight(const GraphRecipeKey& key) const = 0;
+    virtual GraphPreflightResult preflight(
+        const GraphRecipeKey& key,
+        const GraphRecipeCaptureInputs& inputs) const {
+        (void)inputs;
+        return preflight(key);
+    }
     virtual GraphRecipeKey keyForContext(const GraphRecipeKey& base) const = 0;
 
     // Graph lifecycle — CUDA-owned in .cu, headless in this header.
     // createGraph builds and instantiates a private cudaGraphExec_t per context.
     // updateParams patches pose/buffer addresses for a new pose without
     // re-capturing topology.
-    virtual bool createGraph(const GraphRecipeKey& key, void* stream,
-                             void** out_graphExec) const = 0;
+    virtual bool createGraph(
+        const GraphRecipeKey& key,
+        void* stream,
+        const GraphRecipeCaptureInputs& inputs,
+        void** out_graphExec) const = 0;
     virtual bool updateParams(void* graphExec, EvaluationContext& ctx) const = 0;
     virtual bool launch(void* graphExec, void* stream) const = 0;
     virtual double complete(EvaluationContext& ctx) const = 0;

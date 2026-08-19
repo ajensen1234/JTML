@@ -1589,17 +1589,19 @@ set_tests_properties(jtml.u4_production_integration PROPERTIES LABELS "oracle;gp
 
 # U5: Monoplane DIRECT_DILATION graph recipe oracle (oracle;gpu, .cu)
 add_executable(jtml_test_graph_recipe_direct_dilation
-    oracle/graph_recipe_direct_dilation_test.cu
-    ${PROJECT_SOURCE_DIR}/src/compute/graph_recipe_direct_dilation.cu
-    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp)
+    oracle/graph_recipe_direct_dilation_test.cu)
 target_include_directories(jtml_test_graph_recipe_direct_dilation PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/compute
     ${CUDA_INCLUDE_DIRS})
 target_link_libraries(jtml_test_graph_recipe_direct_dilation PRIVATE
     Catch2::Catch2WithMain
+    ${JTA_LIBS}
     CUDA::cudart)
 set_property(TARGET jtml_test_graph_recipe_direct_dilation PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_graph_recipe_direct_dilation PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.graph_recipe_direct_dilation COMMAND jtml_test_graph_recipe_direct_dilation)
 set_tests_properties(jtml.graph_recipe_direct_dilation PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

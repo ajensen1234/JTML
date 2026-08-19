@@ -1468,12 +1468,12 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
 namespace gpu_cost_function {
 
 cudaError_t RenderEngine::Render(EvaluationContext& ctx) {
-    cudaError_t err = RenderPhase(ctx);
+    cudaError_t err = EnqueueRenderPhase(ctx);
     if (err != cudaSuccess) return err;
     return CompleteRenderPhase(ctx);
 }
 
-cudaError_t RenderEngine::RenderPhase(EvaluationContext& ctx) {
+cudaError_t RenderEngine::EnqueueRenderPhase(EvaluationContext& ctx) {
     // A context is a checked-out lease, not merely a bag of pointers.  Reject
     // stale/recycled contexts before rebinding the engine's raw aliases.
     if (!ctx.initialized_correctly || !ctx.in_flight || ctx.stream == nullptr ||
@@ -1715,6 +1715,10 @@ cudaError_t RenderEngine::RenderPhase(EvaluationContext& ctx) {
     // Restore bank-0 aliases — all GPU work is enqueued, no sync yet.
     RestoreBank0Pointers();
     return cudaSuccess;
+}
+
+cudaError_t RenderEngine::RenderPhase(EvaluationContext& ctx) {
+    return EnqueueRenderPhase(ctx);
 }
 
 cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext& ctx) {

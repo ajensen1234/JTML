@@ -19,9 +19,16 @@ public:
     std::string recipeId() const override;
     bool isEligible(const std::string& costName, bool biplane) const override;
     GraphPreflightResult preflight(const GraphRecipeKey& key) const override;
+    GraphPreflightResult preflight(
+        const GraphRecipeKey& key,
+        const GraphRecipeCaptureInputs& inputs) const override;
     GraphRecipeKey keyForContext(const GraphRecipeKey& base) const override;
 
-    bool createGraph(const GraphRecipeKey& key, void* stream, void** out_graphExec) const override;
+    bool createGraph(
+        const GraphRecipeKey& key,
+        void* stream,
+        const GraphRecipeCaptureInputs& inputs,
+        void** out_graphExec) const override;
     bool updateParams(void* graphExec, EvaluationContext& ctx) const override;
     bool launch(void* graphExec, void* stream) const override;
     double complete(EvaluationContext& ctx) const override;

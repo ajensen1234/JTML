@@ -52,6 +52,11 @@ struct EvaluationContext {
     float z_angle = 0;
 
     int input_index = -1;
+    // DIRECT_DILATION monoplane: frozen per-frame baseline used by the graph
+    // recipe's complete() (white-pixel sum of the dilated comparison image A).
+    // Pose-independent, set once per frame-index by the executor; the serial
+    // path adds the same constant via the DIRECT_DILATION custom variable.
+    int comparison_image_white_sum = 0;
     EvaluationStatus status = EvaluationStatus::Idle;
     bool initialized_correctly = false;
     bool in_flight = false;

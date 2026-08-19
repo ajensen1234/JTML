@@ -131,6 +131,9 @@ public:
 
     /* U1: explicit EvaluationContext overloads — primary design. Legacy BankState remains shim. */
     JTML_DLL cudaError_t Render(EvaluationContext& ctx);
+    // Enqueue the production U4 render chain without synchronizing. This is
+    // the single enqueue path shared by serial completion and graph capture.
+    JTML_DLL cudaError_t EnqueueRenderPhase(EvaluationContext& ctx);
     JTML_DLL cudaError_t RenderPhase(EvaluationContext& ctx);
     JTML_DLL cudaError_t CompleteRenderPhase(EvaluationContext& ctx);
 
