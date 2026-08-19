@@ -1,0 +1,259 @@
+* CUDA-Graph Greedy Evaluation Executor
+:PROPERTIES:
+:CUSTOM_ID: cuda-graph-greedy-evaluation-executor
+:END:
+** Problem Frame
+:PROPERTIES:
+:CUSTOM_ID: problem-frame
+:END:
+JTML's DIRECT optimizer already has the correct algorithmic boundary: each iteration
+submits a set of potentially-optimal hyperbox (POH) poses and must receive their costs
+before selecting the next set. The opportunity is entirely within that cost-evaluation
+interval.
+
+The current monoplane =DIRECT_DILATION= path produces pose-dependent raster work. It sends
+a five-integer packet---the rendered AABB and total candidate-fragment count---from device
+to host, synchronizes the stream, and lets the host select the fill and metric launch
+grids. That interruption prevents a whole evaluation from being repeatedly launched as a
+CUDA Graph and limits effective greedy overlap among independent poses.
+
+The product outcome is faster cost acquisition for a POH batch without changing DIRECT's
+synchronous algorithm semantics or silently compromising registration correctness.
+
+--------------
+
+** Actors
+:PROPERTIES:
+:CUSTOM_ID: actors
+:END:
+- A1. DIRECT optimizer: submits an ordered POH pose set and requires the corresponding
+  ordered cost vector before its next iteration.
+- A2. Greedy evaluation executor: schedules independent pose evaluations onto available
+  private evaluation contexts and returns results by input index.
+- A3. Cost-function graph recipe: defines the graphable device-side cost workflow for one
+  supported cost family.
+- A4. Registration developer: selects a supported cost family and receives clear fallback
+  or failure behavior.
+- A5. Test and measurement harness: arbitrates correctness, compatibility, and performance
+  claims.
+
+--------------
+
+** Key Flows
+:PROPERTIES:
+:CUSTOM_ID: key-flows
+:END:
+- F1. *Graph-backed POH evaluation*
+  - *Trigger:* DIRECT supplies an ordered POH pose vector.
+  - *Actors:* A1, A2, A3.
+  - *Steps:* The executor leases a ready private evaluation context, binds one pose,
+    launches its reusable cost graph, records completion, and continues feeding ready
+    contexts. Completed results are stored at their original input indices. Once every
+    pose is complete, the executor returns the full ordered vector.
+  - *Outcome:* DIRECT observes one synchronous =poses -> costs= operation and advances
+    exactly as it does today.
+  - *Covered by:* R1, R2, R4, R6.
+- F2. *Unsupported recipe or graph setup*
+  - *Trigger:* The requested cost recipe is unsupported or cannot capture/instantiate
+    during preflight.
+  - *Actors:* A2, A3, A4.
+  - *Steps:* The recipe is declared unavailable before any graph-backed pose is submitted;
+    the run selects the established serial cost path.
+  - *Outcome:* The application remains functional without an implicit partial graph mode.
+  - *Covered by:* R3, R10.
+- F3. *Runtime CUDA failure*
+  - *Trigger:* A graph launch, asynchronous CUDA operation, or completion reports an error
+    after graph-backed work has begun.
+  - *Actors:* A1, A2, A5.
+  - *Steps:* The executor stops the affected batch, consumes no partial result vector,
+    releases its contexts safely, and reports the failure through the existing stage error
+    path.
+  - *Outcome:* No batch mixes graph-backed and serial scores or re-evaluates uncertain
+    work invisibly.
+  - *Covered by:* R7, AE4.
+
+--------------
+
+** Requirements
+:PROPERTIES:
+:CUSTOM_ID: requirements
+:END:
+*DIRECT and execution semantics*
+
+- R1. The domain-facing contract remains synchronous and ordered: DIRECT submits one POH
+  pose vector and receives a cost vector in the same input order before beginning its next
+  iteration.
+- R2. The executor greedily feeds poses to available evaluation contexts; it must not
+  require callers to pre-partition a POH vector into fixed-size sub-batches.
+- R3. A generic cost-function graph-recipe interface represents graph eligibility,
+  preflight, launch, completion, and cleanup. The first implemented and admitted recipe is
+  monoplane =DIRECT_DILATION=; unsupported recipes, including biplane, retain the
+  established serial path.
+- R4. An in-flight evaluation owns private mutable state: pose inputs, device write set,
+  stream, completion state, and result storage. Immutable geometry and comparison data may
+  remain shared only when explicitly verified read-only.
+
+*Graphable device execution*
+
+- R5. The admitted recipe removes the device-to-host packet barrier from the critical
+  render-to-metric path: the device, not the host, drives pose-dependent raster work and
+  metric-region work after graph launch.
+- R6. The graph recipe is reusable for repeated evaluations with stable topology and
+  per-evaluation parameter/buffer updates. It must be compatible with concurrently active
+  private contexts.
+- R7. A runtime CUDA or graph error after graph-backed submission aborts the stage through
+  the existing error path. Partial graph results must not be combined with serial fallback
+  results.
+- R8. A recipe that fails preflight capture/instantiation before any graph-backed
+  submission is deterministically marked unavailable for that run and uses the serial
+  path.
+
+*Correctness and test stewardship*
+
+- R9. Correctness gates are layered: rendered output and raw integer metric reductions are
+  bit-exact against the serial baseline; only the final floating-point composition may use
+  a pre-registered, tightly bounded tolerance with a written rationale.
+- R10. Every existing affected test is classified before modification as retained
+  unchanged, retained with graph coverage, intentionally superseded with a named
+  replacement and rationale, or genuinely obsolete. No existing test is deleted merely
+  because internals change.
+- R11. The graph-backed path preserves replay-ordered DIRECT bookkeeping: calls, optimum
+  sequence, non-finite handling, and callback order match the serial semantics.
+
+*Measurement and promotion*
+
+- R12. Performance claims use fixed-work paired experiments after warmup: serial,
+  graph-backed greedy execution at multiple admitted context counts, and repeated trials.
+  Throughput is primary; POH-batch latency distribution is also reported and must not
+  materially regress.
+- R13. Nsight Systems evidence must confirm real device overlap and identify remaining
+  synchronization/launch gaps; stream/context count alone is not evidence of concurrent
+  progress.
+- R14. A graph-backed recipe is retained only when it passes the correctness gates and
+  demonstrates its pre-registered performance result; a measured no-go keeps the serial
+  path as the supported implementation.
+
+--------------
+
+** Acceptance Examples
+:PROPERTIES:
+:CUSTOM_ID: acceptance-examples
+:END:
+- AE1. *Covers R1, R2, R11.* Given an ordered POH vector, when contexts complete out of
+  order, the returned scores, optimizer call count, optimum sequence, and callbacks are
+  observed in the serial input order.
+- AE2. *Covers R3, R4, R6.* Given two admitted monoplane =DIRECT_DILATION= contexts, when
+  two poses are in flight, they use separate mutable write sets and completion state while
+  sharing only verified read-only model and comparison inputs.
+- AE3. *Covers R5, R9.* Given representative registration poses, when the graph-backed
+  recipe executes, it does not synchronize at the former raster packet boundary and
+  produces a bit-exact rendered image and raw integer metric reductions against serial
+  evaluation.
+- AE4. *Covers R7, R8.* Given graph setup failure before a batch, when the recipe is
+  selected, evaluation uses serial deterministically. Given an error after graph-backed
+  work begins, when the executor detects it, the stage fails without returning a mixed
+  partial score vector.
+- AE5. *Covers R10, R12, R13, R14.* Given the refactor test inventory and a fixed
+  representative POH workload, when the recipe is evaluated, every affected existing test
+  has a classification and the result report includes correctness, throughput, latency,
+  and timeline-overlap evidence.
+
+--------------
+
+** Success Criteria
+:PROPERTIES:
+:CUSTOM_ID: success-criteria
+:END:
+- DIRECT obtains correct ordered POH costs faster in steady state without changing its
+  iteration semantics.
+- The initial =DIRECT_DILATION= graph recipe preserves visual and raw-reduction
+  correctness against the serial baseline, with any allowed floating comparison explicitly
+  bounded.
+- A downstream implementation plan can identify the graph-recipe boundary, private
+  evaluation-context ownership, error modes, test replacements, and measurement gates
+  without inventing product behavior.
+
+--------------
+
+** Scope Boundaries
+:PROPERTIES:
+:CUSTOM_ID: scope-boundaries
+:END:
+- First implementation supports only monoplane =DIRECT_DILATION=; biplane and other cost
+  families remain serial until each has its own explicitly verified recipe.
+- This work does not change DIRECT selection, partitioning, budgets, callback semantics,
+  or the synchronous iteration boundary.
+- This is not an adoption of Laine--Karras's general-purpose bin/coarse/fine rasterization
+  pipeline. The target is a narrowly scoped device-driven replacement for JTML's current
+  host-sized raster and metric launch boundary.
+- No unconditional performance claim follows from context count, CUDA Graph adoption, or
+  successful overlap alone.
+- No silent fallback occurs inside an already-submitted graph-backed batch.
+
+--------------
+
+** Key Decisions
+:PROPERTIES:
+:CUSTOM_ID: key-decisions
+:END:
+- *Generic recipe surface, one initial recipe:* enable future cost families without
+  claiming unverified compatibility; implement and admit only monoplane =DIRECT_DILATION=
+  first.
+- *Greedy contexts, not caller-defined batches:* the executor continuously fills available
+  contexts from the POH vector while preserving input-indexed results.
+- *Layered correctness:* preserve bit-exact visible output and raw integer reductions;
+  constrain any final floating composition through a documented tolerance.
+- *Preserve tests by default:* internal changes do not justify discarding established
+  behavioral or oracle coverage.
+- *Throughput primary, latency protected:* seek higher steady-state evaluations per second
+  while reporting and guarding POH-batch completion latency.
+- *Preflight fallback; runtime fail closed:* unavailable graph setup selects serial before
+  submission; runtime CUDA failures abort the stage rather than mixing execution modes.
+
+--------------
+
+** Dependencies / Assumptions
+:PROPERTIES:
+:CUSTOM_ID: dependencies-assumptions
+:END:
+- =DirectOptimizer='s optional batch-cost seam remains the only domain boundary; CUDA
+  types remain outside the domain layer.
+- The initial recipe can preserve or replace the current flattened candidate-fragment
+  representation while keeping rendered output and raw reductions exact.
+- The GPU environment supports graph capture/instantiation for the final admitted
+  operation set; unsupported capture operations must be detected during preflight.
+- Existing GPU oracle fixtures and bit-identity baselines remain available as
+  compatibility evidence.
+
+--------------
+
+** Outstanding Questions
+:PROPERTIES:
+:CUSTOM_ID: outstanding-questions
+:END:
+*** Deferred to Planning
+:PROPERTIES:
+:CUSTOM_ID: deferred-to-planning
+:END:
+- [Technical] Which device-driven raster-work distribution best meets R5 and R9:
+  persistent chunk workers over the existing flattened candidate list, a bounded
+  fixed-grid strategy, or another approach justified by a focused prototype?
+- [Technical] How should device-resident AABB data drive the FIDM and distance-map metric
+  regions without restoring a host packet barrier?
+- [Technical] What graph lifecycle keys define compatible reusable instances (frame
+  dimensions, model geometry, dilation parameters, cost recipe, and context count)?
+- [Technical] What final floating-point tolerance, if any, is justified once raw integer
+  components are pinned exactly?
+- [Needs research] Which graph capture restrictions apply to the exact CUDA 12.9 build and
+  CUB operations used by JTML, and what preflight diagnostic should expose them?
+- [Measurement] What fixed representative POH workloads, context counts, warmup policy,
+  and material-latency-regression threshold should be pre-registered?
+
+--------------
+
+** Next Steps
+:PROPERTIES:
+:CUSTOM_ID: next-steps
+:END:
+-> =/ce-plan= for structured implementation planning after a focused CUDA-Graph
+feasibility and capture-compatibility investigation.
