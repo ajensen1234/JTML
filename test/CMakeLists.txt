@@ -1579,6 +1579,42 @@ add_test(NAME jtml.graph_recipe_direct_dilation COMMAND jtml_test_graph_recipe_d
 set_tests_properties(jtml.graph_recipe_direct_dilation PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U7: Layered oracle gate — bit-exact image/raw-int, tolerated double composition.
+# Compares graph-admitted DIRECT_DILATION (via EvaluationExecutor) against serial
+# BuildGpuCostAdapter over the same Kneel_1 golden frame. Layer A/B exact,
+# Layer C bounded by frozen tolerance in test/golden/graph_pre_registration.json.
+# Repeats >=3x to catch interleaving races. Oracle;gpu, TIMEOUT 3600.
+add_executable(jtml_test_layered_correctness
+    oracle/layered_correctness_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp)
+target_include_directories(jtml_test_layered_correctness PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
+target_link_libraries(jtml_test_layered_correctness PRIVATE
+    Catch2::Catch2WithMain
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${CUDA_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen)
+set_target_properties(jtml_test_layered_correctness PROPERTIES
+    BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}")
+target_link_options(jtml_test_layered_correctness PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib"
+    "-Wl,-rpath,${VTK_LIB_DIR}")
+add_test(NAME jtml.layered_correctness COMMAND jtml_test_layered_correctness)
+set_tests_properties(jtml.layered_correctness PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # Plan 010 U10 bit-identity harness / baseline recorder. GPU-labeled: NEVER in
 # the headless default. Drives the production pose->score path over a fixed
 # frame and records the deterministic (pose,score) sequence; run against the

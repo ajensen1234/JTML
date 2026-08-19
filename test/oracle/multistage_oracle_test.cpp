@@ -88,6 +88,7 @@
 #include "compute/Stage.h"
 #include "compute/camera_calibration.h"
 #include "compute/frame.h"
+#include "compute/graph_recipe.h"
 #include "compute/gpu_image.cuh"
 #include "compute/gpu_metrics.cuh"
 #include "compute/gpu_model.cuh"
@@ -1581,6 +1582,38 @@ TEST_CASE(
         {29998, "Branch 2"}, {30001, "Extra Z-Translation"},
         {34999, "Extra Z-Translation"}};
     REQUIRE(!CheckCapsGate(skipped_b1, kProductionCaps, kCapsBand).pass);
+}
+
+// U7 retained-with-coverage: graph-admitted DIRECT_DILATION still satisfies the
+// production caps gate and Tier-2 IoU contract, per docs/TEST_IMPACT_MATRIX.md.
+// The multistage harness remains the human-visible gate (IoU >=0.85) while
+// layered_correctness_test.cu is the code gate for graph admission. This test
+// verifies the admission check and frozen tolerance artifact without re-running
+// the full 3-frame optimization (which is exercised above).
+TEST_CASE("U7 multistage: graph-admitted DIRECT_DILATION caps and admission", "[oracle][gpu]") {
+    // Admission: only DIRECT_DILATION monoplane is admitted; biplane and other
+    // cost families must remain serial. This pins the Scope Boundaries fence.
+    {
+        gpu_cost_function::GraphRecipeRegistry reg;
+        reg.Register(gpu_cost_function::CreateDirectDilationMonoplaneRecipe());
+        REQUIRE(reg.IsAdmitted("DIRECT_DILATION", false));
+        REQUIRE(!reg.IsAdmitted("DIRECT_DILATION", true)); // biplane
+        REQUIRE(!reg.IsAdmitted("DIRECT_MAHFOUZ", false));
+        REQUIRE(!reg.IsAdmitted("sym_trap_function", false));
+        std::cout << "[multistage U7] GraphRecipeRegistry admission fence — PASS" << std::endl;
+    }
+    // Frozen tolerance artifact must exist and carry the pre-registered bound.
+    {
+        std::ifstream in("test/golden/graph_pre_registration.json");
+        REQUIRE(in.good());
+        std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        REQUIRE(s.find("layer_c_tolerance") != std::string::npos);
+        std::cout << "[multistage U7] frozen Layer-C tolerance artifact present — PASS" << std::endl;
+    }
+    // Production caps gate is still the load-bearing check for the graph path.
+    REQUIRE(kProductionCaps == std::vector<int>({20000, 25000, 30000, 35000}));
+    REQUIRE(kCapsBand == 500);
+    REQUIRE(kIouGate == 0.85);
 }
 // NOTE: the baseline.json oracle_multistage block is assembled by the
 // worker from the printed [baseline-json] blocks + the two record files.

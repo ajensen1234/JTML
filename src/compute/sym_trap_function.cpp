@@ -75,18 +75,18 @@ double CostFunctionManager::costFunctionsym_trap_function() {
 
     /*Create shorthand variables for trig vals*/
     float czp = cos(p.z_angle_ * std::numbers::pi_v<float> / 180.0f);
-    float szp = sin(p.z_angle_ * 3.14159265358979323846f / 180.0f);
-    float cxp = cos(p.x_angle_ * 3.14159265358979323846f / 180.0f);
-    float sxp = sin(p.x_angle_ * 3.14159265358979323846f / 180.0f);
-    float cyp = cos(p.y_angle_ * 3.14159265358979323846f / 180.0f);
-    float syp = sin(p.y_angle_ * 3.14159265358979323846f / 180.0f);
+    float szp = sin(p.z_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float cxp = cos(p.x_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float sxp = sin(p.x_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float cyp = cos(p.y_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float syp = sin(p.y_angle_ * std::numbers::pi_v<float> / 180.0f);
 
-    float cz = cos(np.z_angle_ * 3.14159265358979323846f / 180.0f);
-    float sz = sin(np.z_angle_ * 3.14159265358979323846f / 180.0f);
-    float cx = cos(np.x_angle_ * 3.14159265358979323846f / 180.0f);
-    float sx = sin(np.x_angle_ * 3.14159265358979323846f / 180.0f);
-    float cy = cos(np.y_angle_ * 3.14159265358979323846f / 180.0f);
-    float sy = sin(np.y_angle_ * 3.14159265358979323846f / 180.0f);
+    float cz = cos(np.z_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float sz = sin(np.z_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float cx = cos(np.x_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float sx = sin(np.x_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float cy = cos(np.y_angle_ * std::numbers::pi_v<float> / 180.0f);
+    float sy = sin(np.y_angle_ * std::numbers::pi_v<float> / 180.0f);
 
     /* Creating a Homogeneous Transformation Matrix (Xray -> tibia) */
     /* float x2p[4][4] = {{cyp * czp + sxp * syp * szp, -cyp * szp + czp * sxp *

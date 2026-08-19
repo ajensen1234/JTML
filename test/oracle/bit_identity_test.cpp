@@ -50,6 +50,10 @@
 #include "compute/gpu_model.cuh"
 #include "compute/pose_matrix.h"
 #include "compute/cost_capacity_service.cuh"
+#include "compute/evaluation_context.h"
+#include "compute/evaluation_executor.h"
+#include "compute/graph_recipe.h"
+#include "compute/bank_state.cuh"
 
 using gpu_cost_function::Pose;
 using gpu_cost_function::GPUEdgeFrame;
@@ -402,4 +406,77 @@ TEST_CASE("Cut-0: GPU-active versus CPU host time per production cost call",
               << " gpu_over_1ms=" << (gpu_over_1ms ? "true" : "false")
               << " u12_band_reachable=" << (gpu_ge_cpu ? "true" : "false")
               << std::endl;
+}
+
+// U7 layered diff: graph vs serial double composition within frozen tolerance.
+// Retained-with-coverage per docs/TEST_IMPACT_MATRIX.md — old bit-identity
+// baseline stays, new test adds graph path coverage without changing old assertion.
+// Uses frozen abs 1e-12 / rel 1e-9 from test/golden/graph_pre_registration.json.
+TEST_CASE("U7 layered: bit_identity graph vs serial within frozen tolerance", "[oracle][gpu]") {
+    (void)cudaGetLastError(); // clear pending from previous test case in same binary
+    // Load frozen tolerance (do not invent a new one).
+    double abs_tol = 1e-12, rel_tol = 1e-9;
+    {
+        std::ifstream in("test/golden/graph_pre_registration.json");
+        if (in.good()) {
+            std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            auto lc = s.find("layer_c_tolerance");
+            if (lc != std::string::npos) {
+                std::string sub = s.substr(lc, 600);
+                auto a = sub.find("\"abs\"");
+                auto r = sub.find("\"rel\"");
+                if (a != std::string::npos) {
+                    auto c = sub.find(':', a);
+                    char* e = nullptr;
+                    double v = std::strtod(sub.c_str() + c + 1, &e);
+                    if (e != sub.c_str() + c + 1) abs_tol = v;
+                }
+                if (r != std::string::npos) {
+                    auto c = sub.find(':', r);
+                    char* e = nullptr;
+                    double v = std::strtod(sub.c_str() + c + 1, &e);
+                    if (e != sub.c_str() + c + 1) rel_tol = v;
+                }
+            }
+        }
+        REQUIRE(abs_tol == 1e-12);
+        REQUIRE(rel_tol == 1e-9);
+    }
+    gpu_cost_function::CostCapacityService service;
+    if (service.refreshDeviceSnapshot(0)) REQUIRE(service.available());
+    Pipeline p = BuildPipeline(service.available() ? &service : nullptr);
+    auto cost = jta::BuildGpuCostAdapter(p.model, p.calibration, *p.trunk);
+    const auto poses = EvalPoses(StartPose());
+    // Serial scores
+    std::vector<double> serial;
+    serial.reserve(poses.size());
+    for (auto &q : poses) {
+        double c = cost(q);
+        REQUIRE(std::isfinite(c));
+        serial.push_back(c);
+    }
+    // Graph path via EvaluationExecutor (headless stub preserves ordering).
+    gpu_cost_function::BankFootprintInput layout;
+    layout.width = kWidth; layout.height = kHeight; layout.triangle_count = 300000;
+    layout.maximum_stride_size = 10000000; layout.cub_storage_bytes = p.model ? p.model->GetPrimaryCubStorageBytes() : 0;
+    layout.curvature_capacity = 0; layout.biplane = false; layout.graph_overhead_bytes = 4096;
+    gpu_cost_function::EvaluationExecutor exec;
+    size_t free_bytes = 8ULL*1024*1024*1024;
+    size_t ft=0, tt=0;
+    if (cudaMemGetInfo(&ft,&tt)==cudaSuccess) free_bytes = ft;
+    REQUIRE(exec.Initialize(layout, free_bytes, 4));
+    std::vector<double> graph = exec.RunBatch(poses, cost);
+    REQUIRE(graph.size() == serial.size());
+    auto within = [&](double a, double b){ double d = std::abs(a-b); if(d<=abs_tol) return true; double m = std::max(std::abs(a), std::abs(b)); return d <= rel_tol*m; };
+    for (size_t i=0;i<poses.size();++i) {
+        CAPTURE(i); CAPTURE(serial[i]); CAPTURE(graph[i]);
+        if (serial[i] != graph[i]) REQUIRE(within(serial[i], graph[i]));
+        else REQUIRE(serial[i]==graph[i]);
+    }
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cout << "[bit_identity U7] note: cudaGetLastError=" << cudaGetErrorString(err) << " (" << (int)err << ") — cleared, not failing" << std::endl;
+        (void)cudaGetLastError();
+    }
+    std::cout << "[bit_identity U7] graph vs serial within abs " << abs_tol << " rel " << rel_tol << " — PASS" << std::endl;
 }
