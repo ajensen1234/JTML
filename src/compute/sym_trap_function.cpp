@@ -4,7 +4,7 @@
 /*sym_trap_function Source*/
 #include "compute/CostFunctionManager.h"
 #include "sym_trap_functionCustomVariables.h"
-
+#include <numbers>
 namespace jta_cost_function {
 bool CostFunctionManager::initializesym_trap_function(
     std::string& error_message) {
@@ -74,7 +74,7 @@ double CostFunctionManager::costFunctionsym_trap_function() {
             ->GetCurrentPrimaryCameraPose(); // this is the pose to the femur
 
     /*Create shorthand variables for trig vals*/
-    float czp = cos(p.z_angle_ * 3.14159265358979323846f / 180.0f);
+    float czp = cos(p.z_angle_ * std::numbers::pi_v<float> / 180.0f);
     float szp = sin(p.z_angle_ * 3.14159265358979323846f / 180.0f);
     float cxp = cos(p.x_angle_ * 3.14159265358979323846f / 180.0f);
     float sxp = sin(p.x_angle_ * 3.14159265358979323846f / 180.0f);

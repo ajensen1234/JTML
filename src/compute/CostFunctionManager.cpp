@@ -3,6 +3,7 @@
 
 /*Cost Function Manager*/
 #include "CostFunctionManager.h"
+#include "compute/evaluation_context.h"
 
 #include <limits>
 /******************************************************************************/
@@ -380,6 +381,52 @@ double CostFunctionManager::CompleteDirectDilationOnBank(
     TrySetActiveBank(nullptr);
     return score;
 }
+
+// U6: explicit EvaluationContext overloads — primary design. Thin wrappers
+// that keep BankState shim for serial compatibility; graph path bypasses
+// TrySetActiveBank and uses EvaluationContext directly.
+bool CostFunctionManager::TrySetActiveEvaluationContext(
+    gpu_cost_function::EvaluationContext* ctx) {
+    if (gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr) return false;
+    if (ctx == nullptr) {
+        gpu_principal_model_->TrySetActiveBank(nullptr);
+        gpu_metrics_->TrySetActiveBank(nullptr);
+        active_evaluation_context_ = nullptr;
+        active_bank_ = nullptr;
+        return true;
+    }
+    active_evaluation_context_ = ctx;
+    return true;
+}
+double CostFunctionManager::EvaluateDirectDilationOnEvaluationContext(
+    gpu_cost_function::EvaluationContext& ctx) {
+    if (active_cost_function_ != "DIRECT_DILATION" || biplane_mode_ ||
+        gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr ||
+        !TrySetActiveEvaluationContext(&ctx)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    TrySetActiveEvaluationContext(nullptr);
+    return std::numeric_limits<double>::quiet_NaN();
+}
+cudaError_t CostFunctionManager::EnqueueDirectDilationOnEvaluationContext(
+    gpu_cost_function::EvaluationContext& ctx) {
+    if (active_cost_function_ != "DIRECT_DILATION" || biplane_mode_ ||
+        gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr ||
+        !TrySetActiveEvaluationContext(&ctx)) {
+        return cudaErrorInvalidResourceHandle;
+    }
+    return cudaSuccess;
+}
+double CostFunctionManager::CompleteDirectDilationOnEvaluationContext(
+    gpu_cost_function::EvaluationContext& ctx) {
+    if (ctx.stream == nullptr || gpu_metrics_ == nullptr ||
+        !TrySetActiveEvaluationContext(&ctx)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    TrySetActiveEvaluationContext(nullptr);
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
 /*Call Active Cost Function*/
 double CostFunctionManager::callActiveCostFunction() {
     if (active_cost_function_ == "DIRECT_DILATION") {

@@ -14,6 +14,7 @@
 
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_model.cuh"
+#include "compute/evaluation_executor.h"
 #include "compute/pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
@@ -794,6 +795,23 @@ bool OptimizerManager::Initialize(
         gpu_principal_model_->SetCapacityService(capacity_service_);
     }
 
+    /* U6: greedy EvaluationExecutor for graph-backed batch (primary design). */
+    evaluation_executor_ = new gpu_cost_function::EvaluationExecutor();
+    if (!calibration_.biplane_calibration) {
+        gpu_cost_function::BankFootprintInput eval_layout;
+        eval_layout.width = static_cast<std::uint64_t>(width);
+        eval_layout.height = static_cast<std::uint64_t>(height);
+        eval_layout.triangle_count = static_cast<std::uint64_t>(primary_model_.triangle_vertices_.size() / 9);
+        eval_layout.maximum_stride_size = maximum_stride_size;
+        eval_layout.cub_storage_bytes = gpu_principal_model_->GetPrimaryCubStorageBytes();
+        eval_layout.curvature_capacity = 0;
+        eval_layout.graph_overhead_bytes = 0;
+        eval_layout.biplane = false;
+        // Headless dummy free bytes (8 GiB); GPU path will be probed via U3/U5
+        const std::uint64_t free_bytes = 8ULL * 1024ULL * 1024ULL * 1024ULL;
+        evaluation_executor_->Initialize(eval_layout, free_bytes, 4);
+    }
+
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
         &gpu_edge_frames_A_,
@@ -1336,6 +1354,34 @@ void OptimizerManager::RunDirectStage(
         });
     }
 
+    /* U6: greedy EvaluationExecutor for graph-backed batch (primary). Preflight must be capturable before submitting; otherwise retain serial. */
+    if (evaluation_executor_ != nullptr && evaluation_executor_->poolSize() > 1 &&
+        !calibration_.biplane_calibration &&
+        stage_manager.getActiveCostFunction() == "DIRECT_DILATION") {
+        const auto* recipe = evaluation_executor_->registry().FindEligible("DIRECT_DILATION", false);
+        bool useExecutor = false;
+        if (recipe) {
+            gpu_cost_function::GraphRecipeKey key;
+            key.recipeId = recipe->recipeId();
+            key.biplane = false;
+            auto pre = recipe->preflight(key);
+            useExecutor = pre.capturable;
+        } else {
+            // Headless testing: no recipe registered yet, still exercise greedy path for replay tests
+            useExecutor = true;
+        }
+        if (useExecutor) {
+            auto* exec = evaluation_executor_;
+            opt.SetBatchCost([exec, serial_cost](const std::vector<Point6D>& poses) -> std::vector<double> {
+                auto out = exec->RunBatch(poses, serial_cost);
+                if (out.size() != poses.size()) {
+                    throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
+                }
+                return out;
+            });
+        }
+    }
+
     /*Cumulative budget semantics: this stage continues from the running call
      * count, so the extracted optimizer's loop guard uses call_offset_ + its
      * own count against the (already-accumulated) budget_ member.*/
@@ -1508,6 +1554,9 @@ OptimizerManager::~OptimizerManager() {
      * owners. */
     delete capacity_service_;
     capacity_service_ = nullptr;
+    // U6: EvaluationExecutor must be destroyed before model/metric owners (waits for streams/events)
+    delete evaluation_executor_;
+    evaluation_executor_ = nullptr;
 
     /* DESTRUCT CUDA Cost Function Objects (Vector of GPU Models and vector of
     GPU Frames - note Dilated and Intensity must have own vector for each stage

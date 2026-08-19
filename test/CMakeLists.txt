@@ -104,9 +104,11 @@ add_executable(jtml_test_direct_optimizer_batch
     unit/test_direct_optimizer_batch.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
-    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp)
-target_include_directories(jtml_test_direct_optimizer_batch PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2WithMain)
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp)
+target_include_directories(jtml_test_direct_optimizer_batch PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2WithMain CUDA::cudart)
 add_test(NAME jtml.direct_optimizer_batch COMMAND jtml_test_direct_optimizer_batch)
 set_tests_properties(jtml.direct_optimizer_batch PROPERTIES LABELS "headless" TIMEOUT 300)
 

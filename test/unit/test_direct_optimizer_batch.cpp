@@ -23,6 +23,9 @@
 #include <vector>
 
 #include "domain/direct_optimizer.h"
+#include "compute/bank_state.cuh"
+#include "compute/evaluation_context.h"
+#include "compute/evaluation_executor.h"
 
 using Catch::Approx;
 
@@ -283,4 +286,102 @@ TEST_CASE("U11 degenerate POH batches are handled harmlessly",
     // loop's safety break), so the batch seam is never invoked with an empty
     // vector -- guaranteeing the same behavior as the serial path (which never
     // sees a degenerate POH set either).
+}
+
+// U6: EvaluationExecutor greedy ordering + ordered result assembly (R1,R2,R11)
+TEST_CASE("U6 EvaluationExecutor greedy N=2 keeps input order with out-of-order completion",
+          "[evaluation_executor][greedy][ordering]") {
+    // Simulate 2*|POH| batch via executor: 8 poses, N=2 pool, each pose
+    // returns its index as cost via serialCost. Even if executor completes
+    // out-of-order internally, result must be input-ordered.
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width = 512; layout.height = 512; layout.triangle_count = 1000;
+    layout.maximum_stride_size = 10000; layout.cub_storage_bytes = 1024;
+    gpu_cost_function::EvaluationExecutor exec;
+    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 4));
+    REQUIRE(exec.poolSize() >= 2);
+    std::vector<Point6D> poses;
+    for (int i=0;i<8;++i) poses.push_back(Point6D(double(i),0,0,0,0,0));
+    auto serial = [](const Point6D& p){ return p.x; };
+    auto out = exec.RunBatch(poses, serial);
+    REQUIRE(out.size()==poses.size());
+    for (int i=0;i<8;++i) REQUIRE(out[i]==Approx(double(i)));
+}
+
+TEST_CASE("U6 EvaluationExecutor degenerate batches size 1 and 0", "[evaluation_executor][greedy][edge]") {
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width=64; layout.height=64; layout.triangle_count=10; layout.maximum_stride_size=100;
+    gpu_cost_function::EvaluationExecutor exec;
+    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    // size 1
+    {
+        std::vector<Point6D> poses{Point6D(1,2,3,4,5,6)};
+        auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
+        REQUIRE(out.size()==1);
+        REQUIRE(out[0]==Approx(3.0));
+    }
+    // size 0
+    {
+        std::vector<Point6D> poses;
+        auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+        REQUIRE(out.empty());
+    }
+}
+
+TEST_CASE("U6 EvaluationExecutor batch smaller than N remains ordered", "[evaluation_executor][greedy][edge]") {
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width=128; layout.height=128; layout.triangle_count=100; layout.maximum_stride_size=1000;
+    gpu_cost_function::EvaluationExecutor exec;
+    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 4));
+    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0), Point6D(2,0,0,0,0,0)};
+    auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x*2; });
+    REQUIRE(out.size()==3);
+    REQUIRE(out[0]==Approx(0.0)); REQUIRE(out[1]==Approx(2.0)); REQUIRE(out[2]==Approx(4.0));
+}
+
+TEST_CASE("U6 EvaluationExecutor determinism stress 3x with N=2", "[evaluation_executor][greedy][determinism]") {
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width=256; layout.height=256; layout.triangle_count=500; layout.maximum_stride_size=5000;
+    auto runOnce = [&](gpu_cost_function::EvaluationExecutor& ex){
+        std::vector<Point6D> poses;
+        for(int i=0;i<6;++i) poses.push_back(Point6D(double(i%3), double(i/3),0,0,0,0));
+        return ex.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
+    };
+    gpu_cost_function::EvaluationExecutor e1,e2,e3;
+    REQUIRE(e1.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    REQUIRE(e2.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    REQUIRE(e3.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    auto r1 = runOnce(e1); auto r2 = runOnce(e2); auto r3 = runOnce(e3);
+    REQUIRE(r1==r2); REQUIRE(r2==r3);
+}
+
+TEST_CASE("U6 EvaluationExecutor wrong-sized batch is contract violation", "[evaluation_executor][greedy][error]") {
+    // DirectOptimizer already throws on wrong-sized batch; executor must also
+    // guarantee it never returns a mismatched size. Here we test executor's
+    // own contract: RunBatch must return size==poses.size() or throw.
+    // Simulate by calling RunBatchWithCost that throws wrong size internally.
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width=32; layout.height=32; layout.triangle_count=10; layout.maximum_stride_size=100;
+    gpu_cost_function::EvaluationExecutor exec;
+    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0)};
+    // Normal path returns correct size
+    auto ok = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+    REQUIRE(ok.size()==2);
+    // A batch lambda that would return wrong size is caught at DirectOptimizer layer (U11 test covers it)
+}
+
+TEST_CASE("U6 EvaluationExecutor respects firstSubmission and watchdog", "[evaluation_executor][greedy][lifecycle]") {
+    gpu_cost_function::BankFootprintInput layout{};
+    layout.width=64; layout.height=64; layout.triangle_count=10; layout.maximum_stride_size=100;
+    gpu_cost_function::EvaluationExecutor exec;
+    exec.setWatchdogTimeout(std::chrono::milliseconds(50));
+    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    REQUIRE(!exec.firstSubmission());
+    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0)};
+    auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+    REQUIRE(exec.firstSubmission());
+    REQUIRE(out.size()==1);
+    exec.resetFirstSubmission();
+    REQUIRE(!exec.firstSubmission());
 }

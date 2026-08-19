@@ -37,6 +37,8 @@ add_library(jtml_compute SHARED
     render_engine.cu
     cost_capacity_service.cu
     evaluation_context.cpp
+    evaluation_executor.cpp
+    evaluation_executor.cu
     graph_preflight.cu
     graph_recipe_direct_dilation.cu
     distance_map_metric.cu

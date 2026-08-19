@@ -20,6 +20,9 @@
 #include "compute/gpu_metrics.cuh"
 #include "compute/gpu_model.cuh"
 #include "compute/render_engine.cuh"
+
+// U6 forward declare — CUDA-free, avoids pulling cuda_runtime into this header
+namespace gpu_cost_function { struct EvaluationContext; }
 /*Stage Enum*/
 #include "Stage.h"
 #include "compute/gpu_heatmaps.cuh"
@@ -79,6 +82,15 @@ public:
         gpu_cost_function::BankState& bank);
     JTML_DLL double CompleteDirectDilationOnBank(
         gpu_cost_function::BankState& bank);
+
+    // U6: explicit EvaluationContext overloads — primary design. Legacy BankState remains shim.
+    JTML_DLL bool TrySetActiveEvaluationContext(gpu_cost_function::EvaluationContext* ctx);
+    JTML_DLL double EvaluateDirectDilationOnEvaluationContext(
+        gpu_cost_function::EvaluationContext& ctx);
+    JTML_DLL cudaError_t EnqueueDirectDilationOnEvaluationContext(
+        gpu_cost_function::EvaluationContext& ctx);
+    JTML_DLL double CompleteDirectDilationOnEvaluationContext(
+        gpu_cost_function::EvaluationContext& ctx);
 
     /*Get Active Cost Function*/
     JTML_DLL std::string getActiveCostFunction();
@@ -193,6 +205,8 @@ private:
 
     /* U12 Stage 4B: non-owning active bank for one in-flight evaluation. */
     gpu_cost_function::BankState* active_bank_ = nullptr;
+    // U6: non-owning active EvaluationContext for graph path (primary design)
+    gpu_cost_function::EvaluationContext* active_evaluation_context_ = nullptr;
 
 /******************************************************************************/
 /************************COST FUNCTION VARIABLES END***************************/
