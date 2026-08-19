@@ -147,6 +147,41 @@ target_link_libraries(jtml_test_bank_binding_api PRIVATE Catch2::Catch2WithMain)
 add_test(NAME jtml.bank_binding_api COMMAND jtml_test_bank_binding_api)
 set_tests_properties(jtml.bank_binding_api PROPERTIES LABELS "headless" TIMEOUT 120)
 
+# U2: EvaluationContext pool + half-memory admission with graph overhead (headless, CUDA-free header + BankState math)
+add_executable(jtml_test_evaluation_context unit/evaluation_context_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp)
+target_include_directories(jtml_test_evaluation_context PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_evaluation_context PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+add_test(NAME jtml.evaluation_context COMMAND jtml_test_evaluation_context)
+set_tests_properties(jtml.evaluation_context PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# U2: GraphRecipe registry + frozen pre-registration artifact (headless, header-only)
+add_executable(jtml_test_graph_recipe_preflight unit/graph_recipe_preflight_test.cpp)
+target_include_directories(jtml_test_graph_recipe_preflight PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_graph_recipe_preflight PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.graph_recipe_preflight COMMAND jtml_test_graph_recipe_preflight)
+set_tests_properties(jtml.graph_recipe_preflight PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+# U2 oracle: EvaluationContext pool / graph overhead smoke (oracle;gpu, .cu)
+add_executable(jtml_test_evaluation_executor_oracle oracle/evaluation_executor_oracle_test.cu
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp)
+target_include_directories(jtml_test_evaluation_executor_oracle PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_evaluation_executor_oracle PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+set_property(TARGET jtml_test_evaluation_executor_oracle PROPERTY CUDA_ARCHITECTURES native)
+add_test(NAME jtml.evaluation_executor_oracle COMMAND jtml_test_evaluation_executor_oracle)
+set_tests_properties(jtml.evaluation_executor_oracle PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # Pose / kinematics persistence service round-trip tests (plan U7, R2/R8/R9).
 # Pure file-format logic; compiled CUDA/Qt-free alongside the real golden
 # fixture with the data-structure source, no event loop, no GPU.

@@ -1,0 +1,101 @@
+{
+  "version": "1",
+  "date": "2026-08-19",
+  "frozen": true,
+  "note": "Frozen pre-registration artifact for U2. Any change requires re-approval as scope change. Defines workloads, admission, metrics, thresholds, and Layer-C tolerance for U8.",
+  "workloads": [
+    {
+      "pose_batch_size": 8,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": {
+        "width": 512,
+        "height": 512
+      },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
+      "discard_warmup": 3,
+      "trials": 10
+    },
+    {
+      "pose_batch_size": 16,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": {
+        "width": 512,
+        "height": 512
+      },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
+      "discard_warmup": 3,
+      "trials": 10
+    },
+    {
+      "pose_batch_size": 32,
+      "implant": "representative_300k",
+      "triangle_count": 300000,
+      "frame": {
+        "width": 512,
+        "height": 512
+      },
+      "dilation": 6,
+      "N_values": [1, 2, 4],
+      "clamped_by": "BankAdmission half-memory including graph_overhead_bytes, probed by instantiate trial before admission",
+      "discard_warmup": 3,
+      "trials": 10
+    }
+  ],
+  "admission": {
+    "half_memory": true,
+    "graph_overhead_probed": true,
+    "graph_overhead_bytes_field": "BankFootprintInput.graph_overhead_bytes",
+    "fallback": "N=1 serial compatibility"
+  },
+  "metrics": [
+    "p50_pose_latency_us",
+    "p99_pose_latency_us",
+    "wall_time_ms",
+    "gpu_event_time_ms",
+    "evals_per_sec_throughput",
+    "nsight_concurrent_kernel_percent",
+    "max_host_to_device_gap_us",
+    "stage_wall_time_ms"
+  ],
+  "thresholds": {
+    "material_latency_regression_p99_percent": 10,
+    "stage_wall_time_percent": 5,
+    "nsight_concurrent_kernel_percent_N2": 30,
+    "max_host_to_device_gap_us": 50,
+    "zero_sync": true,
+    "zero_cudaMemcpy_on_graph_path": true
+  },
+  "layer_c_tolerance": {
+    "abs": 1e-12,
+    "rel": 1e-9,
+    "rationale": "bit-exact raw int reductions (pixel_score, distance_score/edge_count, intersection/union, white_count) vs serial baseline; tolerance only for final double composition double score = baseline_white_sum + (-pixel_score) + distance/edge+0.1",
+    "pre_registered": true,
+    "exact_layers": ["Layer A image byte-identical", "Layer B raw int identical"]
+  },
+  "graph_key": [
+    "recipeId",
+    "biplaneFlag",
+    "width",
+    "height",
+    "triangle_count",
+    "dilationParam",
+    "cameraCalibHash",
+    "cub_storage_bytes",
+    "curvature_capacity",
+    "maximum_stride_size",
+    "graph_overhead_bytes",
+    "version"
+  ],
+  "gates": {
+    "correctness": "U7 layered bit-exact image/raw-int + tolerance within pre-registered bound",
+    "performance": "throughput within Amdahl band for measured P, p99 not >10% and stage wall not >5%",
+    "overlap": "Nsight Systems >=30% concurrent at N=2, max gap <50us, zero sync/memcpy",
+    "revert_rule": "jj abandon functional change, retain matrix and baselines"
+  }
+}
