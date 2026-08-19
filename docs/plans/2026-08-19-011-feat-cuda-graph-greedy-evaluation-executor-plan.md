@@ -307,7 +307,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 ---
 
-- [ ] U4. **Device-driven persistent chunk workers (remove the packet barrier)**
+- [x] U4. **Device-driven persistent chunk workers (remove the packet barrier)**
 
 **Goal:** Make raster and metric work device-resident so the full cost chain is graph-internal.
 

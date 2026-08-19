@@ -30,6 +30,16 @@ struct SharedReadOnlyGeometry {
 /* Non-owning names for every render-side write target identified by the U12
  * ownership audit.  Pointers are opaque until the stream/buffer migration;
  * Stage 1 does not allocate or bind any of them. */
+
+/* U4: device-side metric crop parameters derived from dev_bounding_box.
+ * Written by ComputeMetricCropKernel on device; metric kernels read crop
+ * bounds directly from this device struct (no host-side dependency). */
+struct MetricCropParams {
+    int sub_left_x = 0, sub_bottom_y = 0, sub_right_x = 0, sub_top_y = 0;
+    int sub_cropped_width = 0, sub_cropped_height = 0;
+    int diff_left_x = 0, diff_bottom_y = 0, diff_right_x = 0, diff_top_y = 0;
+    int diff_cropped_width = 0, diff_cropped_height = 0;
+};
 struct RenderBuffers {
     void* output = nullptr;
     void* host_bounding_box = nullptr;
@@ -47,6 +57,8 @@ struct RenderBuffers {
     void* dev_stride_prefixes = nullptr;
     void* dev_cub_storage = nullptr;
     std::size_t cub_storage_bytes = 0;
+    // U4: device-side metric crop params (derived from dev_bounding_box)
+    void* dev_metric_crop = nullptr;
 };
 
 /* Non-owning names for every metric reduction target and pinned host twin in
@@ -205,6 +217,7 @@ inline std::uint64_t renderBytesPerCamera(const BankFootprintInput& in,
     add(in.maximum_stride_size, sizeof(std::int32_t));   // stride prefixes
     addScaled(in.width, in.height, sizeof(float));        // z-line values
     add(in.cub_storage_bytes, 1);                         // CUB scratch
+    add(1, sizeof(MetricCropParams));                     // U4: metric crop device
     return bytes;
 }
 

@@ -4,8 +4,9 @@
  */
 
 /*
- * U1: EvaluationContextPool — CUDA-aware implementation.
- * Null-init, destruction waits for stream/event, then frees.
+ * U1/U4: EvaluationContextPool — CUDA-aware implementation.
+ * Allocates full RenderBuffers + MetricBuffers per context (U4 requirement).
+ * Null-init, destruction waits for stream/event, then frees everything.
  * This TU is the only place that includes cuda_runtime.
  */
 
@@ -13,9 +14,138 @@
 
 #include <cuda_runtime.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <new>
 
 namespace gpu_cost_function {
+
+namespace {
+
+// ── Free helpers ────────────────────────────────────────────────────
+void FreeDevice(void*& p) {
+    if (p != nullptr) {
+        cudaFree(p);
+        p = nullptr;
+    }
+}
+void FreeHost(void*& p) {
+    if (p != nullptr) {
+        cudaFreeHost(p);
+        p = nullptr;
+    }
+}
+
+void Release(RenderBuffers& render) {
+    FreeDevice(render.output);
+    FreeHost(render.host_bounding_box);
+    FreeDevice(render.dev_backface);
+    FreeDevice(render.dev_transformed_vertex_zs);
+    FreeDevice(render.dev_tangent_triangle);
+    FreeDevice(render.dev_projected_triangles);
+    FreeDevice(render.dev_projected_triangles_snapped);
+    FreeDevice(render.dev_bounding_box_triangles);
+    FreeDevice(render.dev_bounding_box_triangles_sizes);
+    FreeDevice(render.dev_bounding_box_triangles_sizes_prefix);
+    FreeDevice(render.dev_bounding_box);
+    FreeDevice(render.dev_fragment_fill);
+    FreeHost(render.host_fragment_fill);
+    FreeDevice(render.dev_stride_prefixes);
+    FreeDevice(render.dev_cub_storage);
+    FreeDevice(render.dev_metric_crop);
+}
+
+void Release(MetricBuffers& metrics) {
+    FreeHost(metrics.host_pixel_score);
+    FreeDevice(metrics.dev_pixel_score);
+    FreeHost(metrics.host_intersection);
+    FreeHost(metrics.host_union);
+    FreeDevice(metrics.dev_intersection);
+    FreeDevice(metrics.dev_union);
+    FreeHost(metrics.host_white_count);
+    FreeDevice(metrics.dev_white_count);
+    FreeHost(metrics.host_distance_score);
+    FreeDevice(metrics.dev_distance_score);
+    FreeHost(metrics.host_edge_count);
+    FreeDevice(metrics.dev_edge_count);
+    FreeHost(metrics.host_curvature);
+    FreeDevice(metrics.dev_curvature);
+}
+
+// Mirror CostCapacityService helpers: zero-byte allocations succeed with
+// null pointers (documented 0-keypoint/0-work guard).
+bool HostAlloc(void** ptr, std::size_t bytes) {
+    if (bytes == 0) { *ptr = nullptr; return true; }
+    return cudaHostAlloc(ptr, bytes, cudaHostAllocDefault) == cudaSuccess;
+}
+bool DeviceAlloc(void** ptr, std::size_t bytes) {
+    if (bytes == 0) { *ptr = nullptr; return true; }
+    return cudaMalloc(ptr, bytes) == cudaSuccess;
+}
+
+// ── U4: Full RenderBuffers allocation (mirrors BankAllocation) ──────
+bool AllocateRender(RenderBuffers& render, const BankFootprintInput& in) {
+    const std::size_t pixels = in.width * in.height;
+    const std::size_t triangles = in.triangle_count;
+    const std::size_t stride = in.maximum_stride_size;
+    if (!DeviceAlloc(&render.output, pixels * sizeof(std::uint8_t)) ||
+        !HostAlloc(&render.host_bounding_box, 4 * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_backface, triangles * sizeof(std::uint8_t)) ||
+        !DeviceAlloc(&render.dev_transformed_vertex_zs,
+                     3 * triangles * sizeof(float)) ||
+        !DeviceAlloc(&render.dev_tangent_triangle,
+                     3 * triangles * sizeof(std::uint8_t)) ||
+        !DeviceAlloc(&render.dev_projected_triangles,
+                     6 * triangles * sizeof(float)) ||
+        !DeviceAlloc(&render.dev_projected_triangles_snapped,
+                     6 * triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_bounding_box_triangles,
+                     4 * triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_bounding_box_triangles_sizes,
+                     triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_bounding_box_triangles_sizes_prefix,
+                     triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_bounding_box, 4 * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_fragment_fill, sizeof(std::int32_t)) ||
+        !HostAlloc(&render.host_fragment_fill, sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_stride_prefixes,
+                     stride * sizeof(std::int32_t)) ||
+        !DeviceAlloc(&render.dev_metric_crop, sizeof(MetricCropParams))) {
+        return false;
+    }
+    std::size_t cub_bytes = in.cub_storage_bytes;
+    if (cub_bytes == 0) {
+        // Conservative reserve: legacy engine may report zero from in-place probe.
+        cub_bytes = std::max<std::size_t>(64, triangles * 64);
+    }
+    render.cub_storage_bytes = cub_bytes;
+    return DeviceAlloc(&render.dev_cub_storage, cub_bytes);
+}
+
+// ── U4: Full MetricBuffers allocation (mirrors BankAllocation) ──────
+bool AllocateMetrics(MetricBuffers& metrics, const BankFootprintInput& in) {
+    const std::size_t curvature = in.curvature_capacity;
+    return HostAlloc(&metrics.host_pixel_score, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_pixel_score, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_intersection, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_union, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_intersection, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_union, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_white_count, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_white_count, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_distance_score, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_distance_score, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_edge_count, sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_edge_count, sizeof(std::int32_t)) &&
+           HostAlloc(&metrics.host_curvature,
+                     curvature * sizeof(std::int32_t)) &&
+           DeviceAlloc(&metrics.dev_curvature,
+                       curvature * sizeof(std::int32_t));
+}
+
+}  // anonymous namespace
+
+// ── Pool lifecycle ──────────────────────────────────────────────────
 
 EvaluationContextPool::~EvaluationContextPool() {
     Shutdown();
@@ -28,7 +158,7 @@ bool EvaluationContextPool::Initialize(
     Shutdown();
 
     // Graph object memory is added by U3/U5 through graph_overhead_bytes.
-    // U1 uses the Stage-1 render/metric footprint plus its worker counters
+    // U1/U4 uses the full render/metric footprint plus worker counters
     // and always keeps the compatibility floor of one context.
     const BankFootprint footprint = bank_state_math::footprint(layout);
     if (!footprint.valid || footprint.total_bytes == 0) {
@@ -52,6 +182,7 @@ bool EvaluationContextPool::Initialize(
         ctx.input_index = -1;
         ctx.initialized_correctly = false;
 
+        // ── Stream + Event ──
         cudaStream_t stream = nullptr;
         if (cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) !=
             cudaSuccess) {
@@ -68,6 +199,14 @@ bool EvaluationContextPool::Initialize(
         }
         ctx.completion_event = reinterpret_cast<void*>(event);
 
+        // ── U4: Full RenderBuffers + MetricBuffers ──
+        if (!AllocateRender(ctx.primary, layout) ||
+            !AllocateMetrics(ctx.metrics, layout)) {
+            Shutdown();
+            return false;
+        }
+
+        // ── Persistent worker counters ──
         if (cudaMalloc(&ctx.dev_nextCandidate, sizeof(std::int32_t)) !=
                 cudaSuccess ||
             cudaMalloc(&ctx.dev_nextChunk, sizeof(std::int32_t)) !=
@@ -126,6 +265,11 @@ void EvaluationContextPool::Shutdown() {
                 reinterpret_cast<cudaEvent_t>(ctx.completion_event));
             ctx.completion_event = nullptr;
         }
+
+        // U4: release full RenderBuffers + MetricBuffers
+        Release(ctx.primary);
+        Release(ctx.metrics);
+
         if (ctx.dev_nextCandidate != nullptr) {
             cudaFree(ctx.dev_nextCandidate);
             ctx.dev_nextCandidate = nullptr;

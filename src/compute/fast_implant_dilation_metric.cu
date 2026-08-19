@@ -154,6 +154,186 @@ ResetDistanceTransformScoreKernel(int* dev_distance_transform_score_) {
     dev_distance_transform_score_[0] = 0;
 }
 
+
+/* U4: derive metric crop parameters from device-side bounding box.
+ * Single-thread kernel — writes to a device MetricCropParams struct so that
+ * metric enqueues can read crop bounds without a host bounding_box dependency.
+ * Launched once per evaluation at the end of RenderPhase, before metric kernels. */
+__global__ void ComputeMetricCropKernel(
+    const int* dev_bounding_box, int dilation, int width, int height,
+    gpu_cost_function::MetricCropParams* dev_crop) {
+    if (threadIdx.x != 0 || blockIdx.x != 0) return;
+    // Guard: reject nonpositive dimensions to avoid divide-by-zero or
+    // negative crop widths/heights in downstream graph kernels.
+    if (width <= 0 || height <= 0) {
+        dev_crop->sub_left_x = 0; dev_crop->sub_bottom_y = 0;
+        dev_crop->sub_right_x = 0; dev_crop->sub_top_y = 0;
+        dev_crop->sub_cropped_width = 0; dev_crop->sub_cropped_height = 0;
+        dev_crop->diff_left_x = 0; dev_crop->diff_bottom_y = 0;
+        dev_crop->diff_right_x = 0; dev_crop->diff_top_y = 0;
+        dev_crop->diff_cropped_width = 0; dev_crop->diff_cropped_height = 0;
+        return;
+    }
+    const int lx = dev_bounding_box[0];
+    const int by = dev_bounding_box[1];
+    const int rx = dev_bounding_box[2];
+    const int ty = dev_bounding_box[3];
+    dev_crop->sub_left_x   = max(lx - dilation, dilation);
+    dev_crop->sub_bottom_y = max(by - dilation, dilation);
+    dev_crop->sub_right_x  = min(rx + dilation, width - dilation - 1);
+    dev_crop->sub_top_y    = min(ty + dilation, height - dilation - 1);
+    // Clamp so width/height are always nonnegative.
+    if (dev_crop->sub_right_x < dev_crop->sub_left_x)
+        dev_crop->sub_right_x = dev_crop->sub_left_x;
+    if (dev_crop->sub_top_y < dev_crop->sub_bottom_y)
+        dev_crop->sub_top_y = dev_crop->sub_bottom_y;
+    dev_crop->sub_cropped_width  = dev_crop->sub_right_x - dev_crop->sub_left_x + 1;
+    dev_crop->sub_cropped_height = dev_crop->sub_top_y - dev_crop->sub_bottom_y + 1;
+    dev_crop->diff_left_x   = max(lx - dilation, 0);
+    dev_crop->diff_bottom_y = max(by - dilation, 0);
+    dev_crop->diff_right_x  = min(rx + dilation, width - 1);
+    dev_crop->diff_top_y    = min(ty + dilation, height - 1);
+    if (dev_crop->diff_right_x < dev_crop->diff_left_x)
+        dev_crop->diff_right_x = dev_crop->diff_left_x;
+    if (dev_crop->diff_top_y < dev_crop->diff_bottom_y)
+        dev_crop->diff_top_y = dev_crop->diff_bottom_y;
+    dev_crop->diff_cropped_width  = dev_crop->diff_right_x - dev_crop->diff_left_x + 1;
+    dev_crop->diff_cropped_height = dev_crop->diff_top_y - dev_crop->diff_bottom_y + 1;
+}
+
+/* U4 graph-capturable kernel variants.
+ * Each reads crop parameters from a device-resident MetricCropParams struct.
+ * Launch grids are fixed-max (frame dims or 2048x2048); in-kernel guards
+ * retire threads whose pixel index falls outside the actual crop.
+ * Legacy host-scalar kernels above are unchanged. */
+
+/* EdgeKernel_Graph: 2D fixed grid over the frame.  One thread per pixel;
+ * reads 8 neighbours from global memory (no shared-memory tile).
+ * Semantics match the original EdgeKernel: WHITE_PIXEL with any BLACK_PIXEL
+ * neighbour becomes EDGE_PIXEL. */
+__global__ void FastImplantDilationMetric_EdgeKernel_Graph(
+    unsigned char* dev_image,
+    const gpu_cost_function::MetricCropParams* crop,
+    int width, int height, int dilation) {
+    int px = blockIdx.x * blockDim.x + threadIdx.x;
+    int py = blockIdx.y * blockDim.y + threadIdx.y;
+    if (px >= width || py >= height) return;
+
+    /* Guard: only process pixels within the sub-crop region.
+     * The DilateKernel reads EDGE_PIXELs from this region. */
+    if (px < crop->sub_left_x || px > crop->sub_right_x ||
+        py < crop->sub_bottom_y || py > crop->sub_top_y) return;
+
+    /* Need a 1-px border for neighbour access. */
+    if (px == 0 || px == width - 1 || py == 0 || py == height - 1) return;
+
+    int loc = py * width + px;
+    if (dev_image[loc] != WHITE_PIXEL) return;
+
+    /* Check 8-connected neighbours - same predicate as the shared-memory
+     * version (left, right, top, bottom, and 4 diagonals). */
+    if (dev_image[loc - 1]          == BLACK_PIXEL ||
+        dev_image[loc + 1]          == BLACK_PIXEL ||
+        dev_image[loc - width]      == BLACK_PIXEL ||
+        dev_image[loc + width]      == BLACK_PIXEL ||
+        dev_image[loc - width - 1]  == BLACK_PIXEL ||
+        dev_image[loc - width + 1]  == BLACK_PIXEL ||
+        dev_image[loc + width - 1]  == BLACK_PIXEL ||
+        dev_image[loc + width + 1]  == BLACK_PIXEL) {
+        dev_image[loc] = EDGE_PIXEL;
+    }
+}
+
+/* DilateKernel_Graph: 1D fixed grid, 4 threads per crop pixel (one per
+ * search quadrant).  Reads crop bounds from device struct. */
+__global__ void FastImplantDilationMetric_DilateKernel_Graph(
+    unsigned char* dev_image,
+    int width, int height,
+    const gpu_cost_function::MetricCropParams* crop,
+    int dilation) {
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+    int l = 2 * ((i % 4) / 2) - 1;
+    int r = 2 * (i % 2) - 1;
+    i = i / 4;
+
+    /* Guard: retire threads beyond the actual crop pixel count. */
+    if (i >= crop->sub_cropped_width * crop->sub_cropped_height) return;
+
+    i = (i / crop->sub_cropped_width) * width
+      + (i % crop->sub_cropped_width)
+      + crop->sub_bottom_y * width + crop->sub_left_x;
+
+    if (i >= width * height) return;
+    if (dev_image[i] != EDGE_PIXEL) return;
+
+    for (int j = 1; j <= dilation; j++) {
+        for (int k = 1; k <= dilation; k++) {
+            int location = i + l * j * width + r * k;
+            if (location >= 0 && location < width * height) {
+                int pixel = dev_image[location];
+                if (pixel == WHITE_PIXEL || pixel == BLACK_PIXEL)
+                    dev_image[location] = DILATED_PIXEL;
+            }
+        }
+    }
+}
+
+/* DifferenceKernel_Graph: 1D fixed grid over the diff-crop region.
+ * Reads diff bounds from device MetricCropParams. */
+__global__ void FastImplantDilationMetric_DifferenceKernel_Graph(
+    unsigned char* dev_image,
+    unsigned char* dev_comparison_image,
+    int* result,
+    int width, int height,
+    const gpu_cost_function::MetricCropParams* crop) {
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+    /* Guard: retire threads beyond the actual diff-crop pixel count. */
+    if (i >= crop->diff_cropped_width * crop->diff_cropped_height) return;
+
+    i = (i / crop->diff_cropped_width) * width
+      + (i % crop->diff_cropped_width)
+      + crop->diff_bottom_y * width + crop->diff_left_x;
+
+    if (i >= width * height) return;
+
+    int pixel = dev_image[i];
+    if (pixel == DILATED_PIXEL || pixel == EDGE_PIXEL) {
+        if (dev_comparison_image[i] == WHITE_PIXEL)
+            atomicAdd(&result[0], 1);
+        else
+            atomicSub(&result[0], 1);
+    }
+}
+
+/* DistanceMapMetric_Kernel_Graph: 1D fixed grid over the diff-crop region.
+ * Reads diff bounds from device MetricCropParams. */
+__global__ void DistanceMapMetric_Kernel_Graph(
+    unsigned char* projected_image,
+    unsigned char* distance_map,
+    int* distance_map_score,
+    int* edge_pixel_count,
+    int width, int height,
+    const gpu_cost_function::MetricCropParams* crop) {
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+    /* Guard: retire threads beyond the actual diff-crop pixel count. */
+    if (i >= crop->diff_cropped_width * crop->diff_cropped_height) return;
+
+    int bb_row = i / crop->diff_cropped_width;
+    int bb_col = i % crop->diff_cropped_width;
+    int orig_row = bb_row + crop->diff_bottom_y;
+    int orig_col = bb_col + crop->diff_left_x;
+    int orig_loc = orig_col + orig_row * width;
+
+    if (orig_loc < width * height) {
+        if (projected_image[orig_loc] == EDGE_PIXEL) {
+            atomicAdd(edge_pixel_count, 1);
+            atomicAdd(distance_map_score, distance_map[orig_loc]);
+        }
+    }
+}
 namespace gpu_cost_function {
 
 /*Computes DIRECT-JTA Dilation Metric Very Quickly*/

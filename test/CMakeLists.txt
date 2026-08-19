@@ -1568,6 +1568,25 @@ add_test(NAME jtml.graph_capture_probe COMMAND jtml_test_graph_capture_probe)
 set_tests_properties(jtml.graph_capture_probe PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U4: Real production-path GPU integration oracle (oracle;gpu, .cu)
+# Exercises real RenderEngine + EvaluationContext + GPUMetrics production methods.
+add_executable(jtml_test_u4_production_integration oracle/u4_production_integration_test.cu)
+target_include_directories(jtml_test_u4_production_integration PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_u4_production_integration PRIVATE
+    Catch2::Catch2WithMain
+    ${JTA_LIBS}
+    ${CUDA_LIBRARIES})
+set_property(TARGET jtml_test_u4_production_integration PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_u4_production_integration PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.u4_production_integration COMMAND jtml_test_u4_production_integration)
+set_tests_properties(jtml.u4_production_integration PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # U5: Monoplane DIRECT_DILATION graph recipe oracle (oracle;gpu, .cu)
 add_executable(jtml_test_graph_recipe_direct_dilation
     oracle/graph_recipe_direct_dilation_test.cu

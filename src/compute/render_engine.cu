@@ -1,5 +1,6 @@
 /*Render Engine Header*/
 #include "compute/cost_capacity_service.cuh" // plan 010 U10
+#include "compute/evaluation_context.h"
 #include "compute/render_engine.cuh"
 
 /*Cub Library (CUDA)*/
@@ -8,6 +9,7 @@
 #include "cub/util_allocator.cuh"
 
 /*Standard Library*/
+#include <algorithm>
 #include <iostream>
 
 /*OpenCV 3.1 Library*/
@@ -73,6 +75,32 @@ RotationMatrix::RotationMatrix() {
     rotation_21_ = 0;
     rotation_22_ = 1;
 }
+
+// U4: forward declarations for occupancy query in InitializeCUDA
+__global__ void FillTrianglePersistentKernel(
+    int* dev_nextCandidate,
+    int chunkSize,
+    int* dev_fragment_fill,
+    int* dev_overflowFlag,
+    int triangle_count,
+    int* dev_bbox_triangles,
+    int* dev_sizes,
+    int* dev_prefix,
+    unsigned char* dev_image,
+    int width,
+    int height,
+    float* dev_projected_triangles,
+    int* dev_stride_prefixes);
+__global__ void StridePrefixPersistentKernel(
+    int* dev_nextChunk,
+    int chunkSize,
+    int* dev_fragment_fill,
+    int* dev_overflowFlag,
+    int* dev_sizes,
+    int* dev_prefix,
+    int* dev_stride_prefixes,
+    int triangle_count,
+    int stride);
 
 RenderEngine::RenderEngine(
     int width,
@@ -332,12 +360,53 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     cudaMalloc((void**)&dev_nextCandidate_, 1 * sizeof(int));
     cudaMalloc((void**)&dev_nextChunk_, 1 * sizeof(int));
     cudaMalloc((void**)&dev_overflowFlag_, 1 * sizeof(int));
-    cudaHostAlloc((void**)&host_overflowFlag_, 1 * sizeof(int), cudaHostAllocDefault);
-    // Fixed grid sizing for persistent workers: min(maxBlocksPerSM*SM, ceil(SAFE_CAP/256))
-    // For U4 serial correctness, use a conservative fixed grid that self-retires (no-op guard).
-    // Occupancy-optimal block is 256; use 64 blocks for Fill, 32 for Stride as measured upper bound.
-    persistent_fill_blocks_ = 64;
-    persistent_stride_blocks_ = 32;
+    cudaHostAlloc(
+        (void**)&host_overflowFlag_, 1 * sizeof(int), cudaHostAllocDefault);
+    // Fixed grid sizing for persistent workers: min(maxBlocksPerSM*SM,
+    // ceil(SAFE_CAP/256)) Compute occupancy-derived fixed upper bounds from the
+    // real kernels. SAFE_CAP = maximum_stride_size * threads_per_block (max
+    // fragment count).
+    {
+        int numSMs = 0;
+        cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, device);
+
+        int maxActiveFill = 0;
+        cudaError_t occErr1 = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &maxActiveFill, FillTrianglePersistentKernel, threads_per_block, 0);
+
+        int maxActiveStride = 0;
+        cudaError_t occErr2 = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &maxActiveStride,
+            StridePrefixPersistentKernel,
+            threads_per_block,
+            0);
+
+        // Fail initialization if occupancy/device queries fail — do not
+        // silently restore hardcoded values that could produce incorrect grid
+        // sizes.
+        if (occErr1 != cudaSuccess || occErr2 != cudaSuccess || numSMs <= 0 ||
+            maxActiveFill <= 0 || maxActiveStride <= 0) {
+            initialized_correctly_ = false;
+            FreeCuda();
+            return cudaErrorUnknown;
+        }
+
+        // Upper bound on useful chunks per kernel type:
+        //   Fill: each chunk processes threads_per_block candidates → max
+        //   chunks = maximum_stride_size Stride: each chunk processes
+        //   threads_per_block stride entries → max chunks = maximum_stride_size
+        //   / threads_per_block
+        const int maxFillChunks = maximum_stride_size;
+        const int maxStrideChunks =
+            (maximum_stride_size + threads_per_block - 1) / threads_per_block;
+
+        // Occupancy-derived = maxActive * numSMs, clamped to the safe upper
+        // bound.
+        persistent_fill_blocks_ =
+            std::min(maxActiveFill * numSMs, maxFillChunks);
+        persistent_stride_blocks_ =
+            std::min(maxActiveStride * numSMs, maxStrideChunks);
+    }
 
     /*Check for Errors*/
     cudaStatus = cudaGetLastError();
@@ -837,14 +906,30 @@ __global__ void FillTriangleKernel(
     }
 }
 
-/* U4: device-driven persistent worker kernels (fixed grid, chunk claiming via atomicAdd) */
-__global__ void OverflowCheckKernel(int* dev_fragment_fill, int* dev_overflowFlag, int maxFragments) {
+/* U4: device-driven persistent worker kernels (fixed grid, chunk claiming via
+ * atomicAdd) */
+__global__ void OverflowCheckKernel(
+    int* dev_fragment_fill, int* dev_overflowFlag, long long maxFragments) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        dev_overflowFlag[0] = (dev_fragment_fill[0] > maxFragments) ? 1 : 0;
+        // Treat any signed overflow (negative fragment_fill) OR exceeding the
+        // safe fragment budget as overflow.  maxFragments is long long to avoid
+        // the int-wrapping bug (10,000,000 * 255 > INT_MAX).
+        const int ff = dev_fragment_fill[0];
+        dev_overflowFlag[0] =
+            (ff < 0 || static_cast<long long>(ff) > maxFragments) ? 1 : 0;
     }
 }
 
-__global__ void StridePrefixPersistentKernel(int* dev_nextChunk, int chunkSize, int* dev_fragment_fill, int* dev_overflowFlag, int* dev_sizes, int* dev_prefix, int* dev_stride_prefixes, int triangle_count, int stride) {
+__global__ void StridePrefixPersistentKernel(
+    int* dev_nextChunk,
+    int chunkSize,
+    int* dev_fragment_fill,
+    int* dev_overflowFlag,
+    int* dev_sizes,
+    int* dev_prefix,
+    int* dev_stride_prefixes,
+    int triangle_count,
+    int stride) {
     int total = dev_fragment_fill[0];
     if (*dev_overflowFlag) return;
     while (true) {
@@ -852,24 +937,42 @@ __global__ void StridePrefixPersistentKernel(int* dev_nextChunk, int chunkSize, 
         int jStart = chunkStart * stride;
         if (jStart >= total) break;
         int jEnd = min((chunkStart + chunkSize) * stride, total);
-        // Process stride elements chunkStart .. chunkStart+chunkSize-1 but only those with j < total
+        // Process stride elements chunkStart .. chunkStart+chunkSize-1 but only
+        // those with j < total
         for (int idx = chunkStart; idx < chunkStart + chunkSize; ++idx) {
             int j = idx * stride;
             if (j >= total) break;
             int low = 0, high = triangle_count, mid = 0;
             while (low != high) {
                 mid = (low + high) / 2;
-                if (dev_prefix[mid] <= j) low = mid + 1; else high = mid;
+                if (dev_prefix[mid] <= j)
+                    low = mid + 1;
+                else
+                    high = mid;
             }
             int strideIndex = high - 1;
-            if (idx < maximum_stride_size) dev_stride_prefixes[idx] = strideIndex;
+            if (idx < maximum_stride_size)
+                dev_stride_prefixes[idx] = strideIndex;
         }
         // Also need to handle jEnd unused
         (void)jEnd;
     }
 }
 
-__global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSize, int* dev_fragment_fill, int* dev_overflowFlag, int triangle_count, int* dev_bbox_triangles, int* dev_sizes, int* dev_prefix, unsigned char* dev_image, int width, int height, float* dev_projected_triangles, int* dev_stride_prefixes) {
+__global__ void FillTrianglePersistentKernel(
+    int* dev_nextCandidate,
+    int chunkSize,
+    int* dev_fragment_fill,
+    int* dev_overflowFlag,
+    int triangle_count,
+    int* dev_bbox_triangles,
+    int* dev_sizes,
+    int* dev_prefix,
+    unsigned char* dev_image,
+    int width,
+    int height,
+    float* dev_projected_triangles,
+    int* dev_stride_prefixes) {
     int total = dev_fragment_fill[0];
     if (*dev_overflowFlag) return;
     while (true) {
@@ -878,11 +981,15 @@ __global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSi
         int end = start + chunkSize;
         if (end > total) end = total;
         for (int i = start; i < end; ++i) {
-            // Find triangle index via global binary search on prefix (device-driven, no shared memory)
+            // Find triangle index via global binary search on prefix
+            // (device-driven, no shared memory)
             int low = 0, high = triangle_count, mid = 0;
             while (low != high) {
                 mid = (low + high) / 2;
-                if (dev_prefix[mid] <= i) low = mid + 1; else high = mid;
+                if (dev_prefix[mid] <= i)
+                    low = mid + 1;
+                else
+                    high = mid;
             }
             int triangleIndex = high - 1;
             if (triangleIndex < 0 || triangleIndex >= triangle_count) continue;
@@ -896,7 +1003,9 @@ __global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSi
             if (denomX <= 0) continue;
             int pxPixel = Lx + insideIndex % denomX;
             int pyPixel = By + insideIndex / denomX;
-            if (pxPixel < 0 || pxPixel >= width || pyPixel < 0 || pyPixel >= height) continue;
+            if (pxPixel < 0 || pxPixel >= width || pyPixel < 0 ||
+                pyPixel >= height)
+                continue;
             float px = pxPixel + 0.5f;
             float py = pyPixel + 0.5f;
             int triangleIndex6 = 6 * triangleIndex;
@@ -913,7 +1022,8 @@ __global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSi
                     float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
                     if (0 <= b && b <= denominator) {
                         float c = denominator - a - b;
-                        if (0 <= c && c <= denominator) dev_image[pyPixel * width + pxPixel] = 255;
+                        if (0 <= c && c <= denominator)
+                            dev_image[pyPixel * width + pxPixel] = 255;
                     }
                 }
             } else {
@@ -921,13 +1031,15 @@ __global__ void FillTrianglePersistentKernel(int* dev_nextCandidate, int chunkSi
                     float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
                     if (0 >= b && b >= denominator) {
                         float c = denominator - a - b;
-                        if (0 >= c && c >= denominator) dev_image[pyPixel * width + pxPixel] = 255;
+                        if (0 >= c && c >= denominator)
+                            dev_image[pyPixel * width + pxPixel] = 255;
                     }
                 }
             }
         }
     }
-    // dev_stride_prefixes is read-only in this kernel; kept for interface parity
+    // dev_stride_prefixes is read-only in this kernel; kept for interface
+    // parity
     (void)dev_stride_prefixes;
 }
 
@@ -1338,12 +1450,300 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
 }
 } // namespace gpu_cost_function
 
-// U1: explicit EvaluationContext overloads — stubs to keep header linkable.
-// Full graph-backed implementations land in U5/U6; U1 only needs declarations
-// to compile headless tests without pulling CUDA runtime into the header.
+// ── U4: EvaluationContext overloads — real kernel launches, no host barrier ──
+//
+// RenderPhase(EvaluationContext&): runs the full render pipeline on ctx.stream
+// using the same kernel chain as the BankState path, then launches the U4
+// persistent workers (StridePrefixPersistent + FillTrianglePersistent) with a
+// fixed grid and device-side overflow predication.  NO D2H copy and NO sync
+// here — that eliminates the host packet barrier (R5).
+//
+// CompleteRenderPhase(EvaluationContext&): syncs the stream, copies the
+// overflow flag D2H, then checks it.  Also copies bbox/fragment_fill D2H so
+// downstream metric kernels have the host-side values they need.
+//
+// Render(EvaluationContext&): synchronous wrapper = RenderPhase +
+// CompleteRenderPhase.
+
 namespace gpu_cost_function {
-struct EvaluationContext;
-cudaError_t RenderEngine::Render(EvaluationContext&) { return cudaErrorNotReady; }
-cudaError_t RenderEngine::RenderPhase(EvaluationContext&) { return cudaErrorNotReady; }
-cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext&) { return cudaErrorNotReady; }
+
+cudaError_t RenderEngine::Render(EvaluationContext& ctx) {
+    cudaError_t err = RenderPhase(ctx);
+    if (err != cudaSuccess) return err;
+    return CompleteRenderPhase(ctx);
+}
+
+cudaError_t RenderEngine::RenderPhase(EvaluationContext& ctx) {
+    // A context is a checked-out lease, not merely a bag of pointers.  Reject
+    // stale/recycled contexts before rebinding the engine's raw aliases.
+    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.stream == nullptr ||
+        ctx.completion_event == nullptr) {
+        return cudaErrorInvalidResourceHandle;
+    }
+    auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
+
+    // ── Build a temporary BankState view from ctx so we can reuse
+    // BindBankPointers ──
+    BankState view;
+    view.index = ctx.index;
+    view.width = ctx.width;
+    view.height = ctx.height;
+    view.primary = ctx.primary;
+    view.stream = ctx.stream;
+    view.completion_event = ctx.completion_event;
+    view.in_flight = ctx.in_flight;
+
+    if (!BindBankPointers(&view)) return cudaErrorInvalidValue;
+    auto& r = view.primary;
+    auto output = active_output_device_;
+    if (output == nullptr) {
+        RestoreBank0Pointers();
+        return cudaErrorInvalidValue;
+    }
+
+    cudaError_t err;
+
+    // 1. Clear image
+    err = cudaMemsetAsync(
+        output, 0, width_ * height_ * sizeof(unsigned char), stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 2. Reset bbox
+    ResetKernel<<<1, 1, 0, stream>>>(
+        static_cast<int*>(r.dev_bounding_box), width_, height_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 3. WorldToPixel
+    WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block, 0, stream>>>(
+        dev_triangles_,
+        static_cast<float*>(r.dev_projected_triangles),
+        static_cast<int*>(r.dev_projected_triangles_snapped),
+        3 * triangle_count_,
+        dist_over_pix_pitch_,
+        pix_conversion_x_,
+        pix_conversion_y_,
+        model_pose_.x_location_,
+        model_pose_.y_location_,
+        model_pose_.z_location_,
+        model_rotation_mat_,
+        dev_normals_,
+        static_cast<bool*>(r.dev_backface),
+        use_backface_culling_,
+        fx_,
+        fy_,
+        cx_,
+        cy_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 4. BoundingBoxForTriangles
+    BoundingBoxForTrianglesKernel<<<
+        dim_grid_bounding_box_,
+        threads_per_block,
+        0,
+        stream>>>(
+        static_cast<int*>(r.dev_bounding_box_triangles),
+        static_cast<int*>(r.dev_projected_triangles_snapped),
+        triangle_count_,
+        width_,
+        height_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 5. BoundingBoxSizes
+    BoundingBoxSizesKernel<<<
+        dim_grid_triangles_,
+        threads_per_block,
+        0,
+        stream>>>(
+        static_cast<int*>(r.dev_bounding_box_triangles),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        triangle_count_,
+        static_cast<int*>(r.dev_bounding_box),
+        static_cast<bool*>(r.dev_backface));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 6. CUB exclusive prefix sum
+    err = cub::DeviceScan::ExclusiveSum(
+        r.dev_cub_storage,
+        r.cub_storage_bytes,
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        triangle_count_,
+        stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 7. PrepareLaunchPacket (writes dev_fragment_fill on device)
+    PrepareLaunchPacketKernel<<<1, 1, 0, stream>>>(
+        static_cast<int*>(r.dev_fragment_fill),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        triangle_count_);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // ── U4: persistent workers ──────────────────────────────────────
+    // Clear the per-context atomic counters (stream-ordered, no host sync).
+    auto* nextCandidate = static_cast<int*>(ctx.dev_nextCandidate);
+    auto* nextChunk = static_cast<int*>(ctx.dev_nextChunk);
+    auto* overflowFlag = static_cast<int*>(ctx.dev_overflowFlag);
+
+    if (!nextCandidate || !nextChunk || !overflowFlag) {
+        RestoreBank0Pointers();
+        return cudaErrorInvalidValue;
+    }
+
+    err = cudaMemsetAsync(nextCandidate, 0, sizeof(int), stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+    err = cudaMemsetAsync(nextChunk, 0, sizeof(int), stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+    err = cudaMemsetAsync(overflowFlag, 0, sizeof(int), stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 8. OverflowCheckKernel (device-side: writes overflowFlag)
+    // Use long long to avoid int overflow (10,000,000 * 255 > INT_MAX).
+    const long long maxFragments =
+        static_cast<long long>(maximum_stride_size) * (threads_per_block - 1);
+    OverflowCheckKernel<<<1, 1, 0, stream>>>(
+        static_cast<int*>(r.dev_fragment_fill), overflowFlag, maxFragments);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 9. StridePrefixPersistentKernel — fixed grid, self-retiring,
+    //    predicated on !overflowFlag.
+    StridePrefixPersistentKernel<<<
+        persistent_stride_blocks_,
+        threads_per_block,
+        0,
+        stream>>>(
+        nextChunk,
+        threads_per_block,
+        static_cast<int*>(r.dev_fragment_fill),
+        overflowFlag,
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        static_cast<int*>(r.dev_stride_prefixes),
+        triangle_count_,
+        threads_per_block);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // 10. FillTrianglePersistentKernel — fixed grid, self-retiring,
+    //     predicated on !overflowFlag.  No shared-memory stride stage;
+    //     each thread does a global binary search on the prefix array.
+    FillTrianglePersistentKernel<<<
+        persistent_fill_blocks_,
+        threads_per_block,
+        0,
+        stream>>>(
+        nextCandidate,
+        threads_per_block,
+        static_cast<int*>(r.dev_fragment_fill),
+        overflowFlag,
+        triangle_count_,
+        static_cast<int*>(r.dev_bounding_box_triangles),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
+        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
+        output,
+        width_,
+        height_,
+        static_cast<float*>(r.dev_projected_triangles),
+        static_cast<int*>(r.dev_stride_prefixes));
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // U4 chain tail: async D2H of overflow flag to pinned host memory.
+    // CompleteRenderPhase will sync then read from the pinned twin — no
+    // blocking cudaMemcpy on the graph path.
+    {
+        auto* host_overflow = static_cast<int*>(ctx.host_overflowFlag);
+        if (overflowFlag && host_overflow) {
+            err = cudaMemcpyAsync(
+                host_overflow,
+                overflowFlag,
+                sizeof(int),
+                cudaMemcpyDeviceToHost,
+                stream);
+            if (err != cudaSuccess) {
+                RestoreBank0Pointers();
+                return err;
+            }
+        }
+    }
+
+    // Restore bank-0 aliases — all GPU work is enqueued, no sync yet.
+    RestoreBank0Pointers();
+    return cudaSuccess;
+}
+
+cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext& ctx) {
+    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.stream == nullptr ||
+        ctx.completion_event == nullptr || ctx.host_overflowFlag == nullptr) {
+        return cudaErrorInvalidResourceHandle;
+    }
+    auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
+
+    // Sync: wait for the full render→overflow→persistent chain to finish.
+    cudaError_t err = cudaStreamSynchronize(stream);
+    if (err != cudaSuccess) {
+        RestoreBank0Pointers();
+        return err;
+    }
+
+    // Read overflow flag from pinned host memory (async D2H was enqueued
+    // in RenderPhase at chain tail — no blocking D2H needed here).
+    auto* host_overflow = static_cast<int*>(ctx.host_overflowFlag);
+    // host_overflow is always valid if ctx was properly initialized.
+    // Check overflow (now safe — device value is in host memory).
+    if (*host_overflow) {
+        fragment_overflow_ = true;
+        RestoreBank0Pointers();
+        return cudaErrorMemoryAllocation;
+    }
+
+    RestoreBank0Pointers();
+    return cudaSuccess;
+}
+
 } // namespace gpu_cost_function
