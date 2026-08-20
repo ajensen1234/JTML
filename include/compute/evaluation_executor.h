@@ -20,6 +20,7 @@
 #include "compute/bank_state.cuh"
 #include "compute/evaluation_context.h"
 #include "compute/graph_recipe.h"
+#include "compute/batch_outcome.h"
 #include "domain/data_structures_6D.h"
 
 namespace gpu_cost_function {
@@ -47,18 +48,17 @@ public:
     const GraphRecipeRegistry& registry() const { return registry_; }
 
     // Domain-facing greedy batch. Serial cost is the BuildGpuCostAdapter
-    // closure (Point6D -> double). Returns ordered vector<double> size==poses.size().
-    // Throws std::invalid_argument if batch returns wrong size (contract violation).
-    // On real CUDA error after firstSubmission, clears result, waits for all
-    // streams/events, and returns empty vector as failure sentinel for
-    // OptimizerManager to translate via Optimize() bool/String + OptimizerError.
-    std::vector<double> RunBatch(
-        const std::vector<Point6D>& poses,
-        const std::function<double(const Point6D&)>& serialCost);
+    // closure (Point6D -> double). Returns typed BatchOutcome (plan 012 U1):
+    // OrderedScores for success (including empty input), NotSubmitted for
+    // pre-submission failure, PostLaunchAbort/WatchdogPoisoned for R7 after
+    // firstSubmission. Throws std::invalid_argument only for true wrong-size
+    // contract violation from an injected cost (never as abort sentinel).
+    BatchOutcome RunBatch(const std::vector<Point6D>& poses,
+                          const std::function<double(const Point6D&)>& serialCost);
 
     // Overload for testing: inject per-pose cost with index, to simulate
     // out-of-order completions while still preserving ordered store.
-    std::vector<double> RunBatchWithCost(
+    BatchOutcome RunBatchWithCost(
         const std::vector<Point6D>& poses,
         const std::function<double(const Point6D&, std::size_t)>& costWithIndex);
 

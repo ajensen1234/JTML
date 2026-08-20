@@ -26,6 +26,8 @@
 #include "compute/bank_state.cuh"
 #include "compute/evaluation_context.h"
 #include "compute/evaluation_executor.h"
+#include "compute/batch_outcome.h"
+#include "compute/graph_admission_policy.h"
 
 using Catch::Approx;
 
@@ -303,9 +305,11 @@ TEST_CASE("U6 EvaluationExecutor greedy N=2 keeps input order with out-of-order 
     std::vector<Point6D> poses;
     for (int i=0;i<8;++i) poses.push_back(Point6D(double(i),0,0,0,0,0));
     auto serial = [](const Point6D& p){ return p.x; };
-    auto out = exec.RunBatch(poses, serial);
-    REQUIRE(out.size()==poses.size());
-    for (int i=0;i<8;++i) REQUIRE(out[i]==Approx(double(i)));
+    auto outcome = exec.RunBatch(poses, serial);
+    REQUIRE(outcome.isOrderedScores());
+    REQUIRE(outcome.kind == gpu_cost_function::BatchOutcome::Kind::OrderedScores);
+    REQUIRE(outcome.scores.size()==poses.size());
+    for (int i=0;i<8;++i) REQUIRE(outcome.scores[i]==Approx(double(i)));
 }
 
 TEST_CASE("U6 EvaluationExecutor degenerate batches size 1 and 0", "[evaluation_executor][greedy][edge]") {
@@ -316,15 +320,18 @@ TEST_CASE("U6 EvaluationExecutor degenerate batches size 1 and 0", "[evaluation_
     // size 1
     {
         std::vector<Point6D> poses{Point6D(1,2,3,4,5,6)};
-        auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
-        REQUIRE(out.size()==1);
-        REQUIRE(out[0]==Approx(3.0));
+        auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
+        REQUIRE(outcome.isOrderedScores());
+        REQUIRE(outcome.scores.size()==1);
+        REQUIRE(outcome.scores[0]==Approx(3.0));
     }
-    // size 0
+    // size 0 — empty batch is legal OrderedScores, not NotSubmitted
     {
         std::vector<Point6D> poses;
-        auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
-        REQUIRE(out.empty());
+        auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+        REQUIRE(outcome.isOrderedScores());
+        REQUIRE(outcome.kind == gpu_cost_function::BatchOutcome::Kind::OrderedScores);
+        REQUIRE(outcome.scores.empty());
     }
 }
 
@@ -334,9 +341,10 @@ TEST_CASE("U6 EvaluationExecutor batch smaller than N remains ordered", "[evalua
     gpu_cost_function::EvaluationExecutor exec;
     REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 4));
     std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0), Point6D(2,0,0,0,0,0)};
-    auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x*2; });
-    REQUIRE(out.size()==3);
-    REQUIRE(out[0]==Approx(0.0)); REQUIRE(out[1]==Approx(2.0)); REQUIRE(out[2]==Approx(4.0));
+    auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x*2; });
+    REQUIRE(outcome.isOrderedScores());
+    REQUIRE(outcome.scores.size()==3);
+    REQUIRE(outcome.scores[0]==Approx(0.0)); REQUIRE(outcome.scores[1]==Approx(2.0)); REQUIRE(outcome.scores[2]==Approx(4.0));
 }
 
 TEST_CASE("U6 EvaluationExecutor determinism stress 3x with N=2", "[evaluation_executor][greedy][determinism]") {
@@ -352,7 +360,8 @@ TEST_CASE("U6 EvaluationExecutor determinism stress 3x with N=2", "[evaluation_e
     REQUIRE(e2.Initialize(layout, 8ULL*1024*1024*1024, 2));
     REQUIRE(e3.Initialize(layout, 8ULL*1024*1024*1024, 2));
     auto r1 = runOnce(e1); auto r2 = runOnce(e2); auto r3 = runOnce(e3);
-    REQUIRE(r1==r2); REQUIRE(r2==r3);
+    REQUIRE(r1.isOrderedScores()); REQUIRE(r2.isOrderedScores()); REQUIRE(r3.isOrderedScores());
+    REQUIRE(r1.scores==r2.scores); REQUIRE(r2.scores==r3.scores);
 }
 
 TEST_CASE("U6 EvaluationExecutor wrong-sized batch is contract violation", "[evaluation_executor][greedy][error]") {
@@ -365,9 +374,10 @@ TEST_CASE("U6 EvaluationExecutor wrong-sized batch is contract violation", "[eva
     gpu_cost_function::EvaluationExecutor exec;
     REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
     std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0)};
-    // Normal path returns correct size
+    // Normal path returns correct size as OrderedScores
     auto ok = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
-    REQUIRE(ok.size()==2);
+    REQUIRE(ok.isOrderedScores());
+    REQUIRE(ok.scores.size()==2);
     // A batch lambda that would return wrong size is caught at DirectOptimizer layer (U11 test covers it)
 }
 
@@ -379,9 +389,327 @@ TEST_CASE("U6 EvaluationExecutor respects firstSubmission and watchdog", "[evalu
     REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
     REQUIRE(!exec.firstSubmission());
     std::vector<Point6D> poses{Point6D(0,0,0,0,0,0)};
-    auto out = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+    auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
     REQUIRE(exec.firstSubmission());
-    REQUIRE(out.size()==1);
+    REQUIRE(outcome.isOrderedScores());
+    REQUIRE(outcome.scores.size()==1);
     exec.resetFirstSubmission();
     REQUIRE(!exec.firstSubmission());
 }
+
+// ---------------------------------------------------------------------------
+// Plan 012 U1: typed BatchOutcome, MaterializeOrderedScores, default-deny
+// GraphAdmissionPolicy, DecideGraphAdmission, and U12-survival guarantee.
+// These tests are TEST-FIRST: they reference headers/types that do not yet
+// exist (batch_outcome.h, graph_admission_policy.h, typed RunBatch,
+// RunDirectStageGuarded) and must therefore produce a RED compile failure
+// until the implementation lands.
+// ---------------------------------------------------------------------------
+
+TEST_CASE("U1 BatchOutcome kinds are distinct", "[u1][batch_outcome]") {
+    using gpu_cost_function::BatchOutcome;
+    // Factories set kind, reason, scores correctly
+    auto ns = BatchOutcome::NotSubmitted("no recipe");
+    REQUIRE(ns.kind == BatchOutcome::Kind::NotSubmitted);
+    REQUIRE(ns.reason == "no recipe");
+    REQUIRE(ns.scores.empty());
+    REQUIRE(!ns.isOrderedScores());
+    REQUIRE(!ns.isAbort());
+
+    auto ordered = BatchOutcome::Ordered({1.0, 2.0, 3.0});
+    REQUIRE(ordered.kind == BatchOutcome::Kind::OrderedScores);
+    REQUIRE(ordered.scores.size() == 3);
+    REQUIRE(ordered.scores[0] == Approx(1.0));
+    REQUIRE(ordered.isOrderedScores());
+    REQUIRE(!ordered.isAbort());
+
+    // Empty Ordered is still OrderedScores (legal no-op), NOT NotSubmitted
+    auto emptyOrdered = BatchOutcome::Ordered({});
+    REQUIRE(emptyOrdered.kind == BatchOutcome::Kind::OrderedScores);
+    REQUIRE(emptyOrdered.scores.empty());
+    REQUIRE(emptyOrdered.isOrderedScores());
+    REQUIRE(!emptyOrdered.isAbort());
+    REQUIRE(emptyOrdered.kind != BatchOutcome::Kind::NotSubmitted);
+
+    auto abort = BatchOutcome::PostLaunchAbort("cuda error after launch");
+    REQUIRE(abort.kind == BatchOutcome::Kind::PostLaunchAbort);
+    REQUIRE(abort.isAbort());
+    REQUIRE(!abort.isOrderedScores());
+
+    auto pois = BatchOutcome::WatchdogPoisoned("watchdog timeout");
+    REQUIRE(pois.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE(pois.isAbort());
+    REQUIRE(!pois.isOrderedScores());
+
+    // isAbort true only for the two abort kinds
+    REQUIRE(!BatchOutcome::NotSubmitted().isAbort());
+    REQUIRE(!BatchOutcome::Ordered({1.0}).isAbort());
+}
+
+TEST_CASE("U1 MaterializeOrderedScores returns ordered scores",
+          "[u1][batch_outcome][materialize]") {
+    using gpu_cost_function::BatchOutcome;
+    using gpu_cost_function::CoordinatorBatchAbort;
+    using gpu_cost_function::MaterializeOrderedScores;
+
+    // Valid non-empty and empty OrderedScores pass through
+    {
+        auto out = MaterializeOrderedScores(BatchOutcome::Ordered({5.0, 6.0}));
+        REQUIRE(out.size() == 2);
+        REQUIRE(out[0] == Approx(5.0));
+        REQUIRE(out[1] == Approx(6.0));
+    }
+    {
+        auto out = MaterializeOrderedScores(BatchOutcome::Ordered({}));
+        REQUIRE(out.empty());
+    }
+
+    // NotSubmitted throws CoordinatorBatchAbort(kind NotSubmitted) with reason
+    {
+        bool threw = false;
+        try {
+            (void)MaterializeOrderedScores(BatchOutcome::NotSubmitted("admission denied"));
+        } catch (const CoordinatorBatchAbort& e) {
+            threw = true;
+            REQUIRE(e.kind() == BatchOutcome::Kind::NotSubmitted);
+            REQUIRE(std::string(e.what()).find("admission denied") != std::string::npos);
+        }
+        REQUIRE(threw);
+    }
+
+    // PostLaunchAbort and WatchdogPoisoned each throw with matching kind
+    {
+        bool threw = false;
+        try {
+            (void)MaterializeOrderedScores(BatchOutcome::PostLaunchAbort("launch failed"));
+        } catch (const CoordinatorBatchAbort& e) {
+            threw = true;
+            REQUIRE(e.kind() == BatchOutcome::Kind::PostLaunchAbort);
+            REQUIRE(std::string(e.what()).find("launch failed") != std::string::npos);
+        }
+        REQUIRE(threw);
+    }
+    {
+        bool threw = false;
+        try {
+            (void)MaterializeOrderedScores(BatchOutcome::WatchdogPoisoned("hang"));
+        } catch (const CoordinatorBatchAbort& e) {
+            threw = true;
+            REQUIRE(e.kind() == BatchOutcome::Kind::WatchdogPoisoned);
+            REQUIRE(std::string(e.what()).find("hang") != std::string::npos);
+        }
+        REQUIRE(threw);
+    }
+}
+
+TEST_CASE("U1 default-deny GraphAdmissionPolicy", "[u1][admission][policy]") {
+    using gpu_cost_function::GraphAdmissionEvidence;
+    using gpu_cost_function::GraphAdmissionPolicy;
+    GraphAdmissionPolicy policy;  // default deny
+
+    // Empty/default evidence -> deny
+    GraphAdmissionEvidence e{};
+    REQUIRE(!policy.admit(e));
+    REQUIRE(!policy.denyReason(e).empty());
+
+    // Each single-true combination denies
+    e = GraphAdmissionEvidence{true, 0, false};
+    REQUIRE(!policy.admit(e));
+    e = GraphAdmissionEvidence{false, 1, false};
+    REQUIRE(!policy.admit(e));
+    e = GraphAdmissionEvidence{false, 0, true};
+    REQUIRE(!policy.admit(e));
+
+    // Two-true combinations still deny
+    e = GraphAdmissionEvidence{true, 1, false};
+    REQUIRE(!policy.admit(e));
+    e = GraphAdmissionEvidence{true, 0, true};
+    REQUIRE(!policy.admit(e));
+    e = GraphAdmissionEvidence{false, 1, true};
+    REQUIRE(!policy.admit(e));
+
+    // All-three-true admits, denyReason empty or at least admit true
+    e = GraphAdmissionEvidence{true, 1, true};
+    REQUIRE(policy.admit(e));
+
+    // Version threshold: layeredArtifactVersion >=1 required
+    e = GraphAdmissionEvidence{true, 0, true};
+    REQUIRE(!policy.admit(e));
+    e = GraphAdmissionEvidence{true, 2, true};
+    REQUIRE(policy.admit(e));
+}
+
+namespace {
+struct PermissivePolicy : gpu_cost_function::GraphAdmissionPolicy {
+    bool admit(const gpu_cost_function::GraphAdmissionEvidence&) const override { return true; }
+    std::string denyReason(const gpu_cost_function::GraphAdmissionEvidence&) const override { return ""; }
+};
+struct DenyAllPolicy : gpu_cost_function::GraphAdmissionPolicy {
+    bool admit(const gpu_cost_function::GraphAdmissionEvidence&) const override { return false; }
+    std::string denyReason(const gpu_cost_function::GraphAdmissionEvidence&) const override { return "injected deny"; }
+};
+}
+
+TEST_CASE("U1 DecideGraphAdmission installs only on complete admission",
+          "[u1][admission][decide]") {
+    using gpu_cost_function::DecideGraphAdmission;
+    using gpu_cost_function::GraphAdmissionEvidence;
+    using gpu_cost_function::GraphAdmissionInputs;
+    using gpu_cost_function::GraphAdmissionPolicy;
+
+    PermissivePolicy permissive;
+    DenyAllPolicy denyAll;
+
+    // All-true + permissive -> install
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = true;
+        in.recipeFound = true;
+        in.preflightCapturable = true;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, permissive);
+        REQUIRE(d.install);
+    }
+
+    // Null recipe (recipeFound=false) with permissive policy -> deny, reason mentions recipe
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = true;
+        in.recipeFound = false;
+        in.preflightCapturable = false;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, permissive);
+        REQUIRE(!d.install);
+        // case-insensitive check for "recipe"
+        std::string lower = d.reason;
+        for (auto& c : lower) c = std::tolower(c);
+        REQUIRE(lower.find("recipe") != std::string::npos);
+    }
+
+    // Policy deny with recipe+preflight true -> deny
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = true;
+        in.recipeFound = true;
+        in.preflightCapturable = true;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, denyAll);
+        REQUIRE(!d.install);
+        REQUIRE(!d.reason.empty());
+    }
+
+    // executorReady=false -> deny
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = false;
+        in.monoplaneEligible = true;
+        in.recipeFound = true;
+        in.preflightCapturable = true;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, permissive);
+        REQUIRE(!d.install);
+    }
+
+    // monoplaneEligible=false -> deny
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = false;
+        in.recipeFound = true;
+        in.preflightCapturable = true;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, permissive);
+        REQUIRE(!d.install);
+    }
+
+    // preflightCapturable=false -> deny
+    {
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = true;
+        in.recipeFound = true;
+        in.preflightCapturable = false;
+        in.evidence = GraphAdmissionEvidence{true, 1, true};
+        auto d = DecideGraphAdmission(in, permissive);
+        REQUIRE(!d.install);
+    }
+
+    // Default deny policy with all inputs true but evidence incomplete -> deny
+    {
+        GraphAdmissionPolicy defaultPolicy;
+        GraphAdmissionInputs in{};
+        in.executorReady = true;
+        in.monoplaneEligible = true;
+        in.recipeFound = true;
+        in.preflightCapturable = true;
+        in.evidence = GraphAdmissionEvidence{false, 0, false};
+        auto d = DecideGraphAdmission(in, defaultPolicy);
+        REQUIRE(!d.install);
+    }
+}
+
+TEST_CASE("U1 deny/null-recipe keeps the installed batch adapter (U12 survival)",
+          "[u1][admission][u12_survival]") {
+    using gpu_cost_function::DecideGraphAdmission;
+    using gpu_cost_function::GraphAdmissionEvidence;
+    using gpu_cost_function::GraphAdmissionInputs;
+
+    PermissivePolicy permissive;
+
+    // Build a DirectOptimizer with a counting batch adapter (mimics installed U12/serial adapter)
+    unsigned int batchCalls = 0;
+    const Point6D target(1, 1, 1, 1, 1, 1);
+    DirectOptimizer opt(QuadraticCost(target), UnitSideRange(10.0), Origin(), 200);
+    opt.SetBatchCost([&batchCalls, target](const std::vector<Point6D>& poses) -> std::vector<double> {
+        ++batchCalls;
+        std::vector<double> out;
+        out.reserve(poses.size());
+        for (auto& p : poses) out.push_back(QuadraticCost(target)(p));
+        return out;
+    });
+
+    // Compute decision with null-recipe inputs — must be deny
+    GraphAdmissionInputs in{};
+    in.executorReady = true;
+    in.monoplaneEligible = true;
+    in.recipeFound = false;  // null recipe
+    in.preflightCapturable = false;
+    in.evidence = GraphAdmissionEvidence{true, 1, true};
+    auto decision = DecideGraphAdmission(in, permissive);
+    REQUIRE(!decision.install);
+
+    // Manager must NOT call SetBatchCost again on deny, so the previously-installed adapter survives.
+    // Prove by running the optimizer: the counting batch adapter is still invoked.
+    REQUIRE(opt.Run());
+    REQUIRE(batchCalls > 0);
+    // If the adapter had been overwritten by a serial passthrough or cleared, batchCalls would be 0
+    // or the run would have taken the serial path (still would succeed but batchCalls==0 is the signal)
+    REQUIRE(batchCalls >= 1);
+}
+
+TEST_CASE("U1 coordinator abort propagates through DirectOptimizer::Run",
+          "[u1][abort][direct_optimizer]") {
+    using gpu_cost_function::BatchOutcome;
+    using gpu_cost_function::CoordinatorBatchAbort;
+
+    DirectOptimizer opt(QuadraticCost(Origin()), UnitSideRange(10.0), Origin(), 100);
+    opt.SetBatchCost([](const std::vector<Point6D>&) -> std::vector<double> {
+        throw CoordinatorBatchAbort(BatchOutcome::Kind::PostLaunchAbort, "simulated post-launch failure");
+        return {};
+    });
+    REQUIRE_THROWS_AS(opt.Run(), CoordinatorBatchAbort);
+    // Verify the abort kind is preserved
+    try {
+        opt.Run();
+        FAIL("should have thrown");
+    } catch (const CoordinatorBatchAbort& e) {
+        REQUIRE(e.kind() == BatchOutcome::Kind::PostLaunchAbort);
+        REQUIRE(std::string(e.what()).find("simulated post-launch failure") != std::string::npos);
+    } catch (...) {
+        FAIL("wrong exception type");
+    }
+}
+

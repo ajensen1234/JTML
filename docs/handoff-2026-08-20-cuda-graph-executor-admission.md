@@ -1,6 +1,6 @@
 # Handoff: CUDA-Graph Executor Admission and Lifecycle (Plan 012)
 
-**Prepared:** 2026-08-20 — replacement plan for remaining Plan 011 U6–U8; no implementation yet
+**Prepared:** 2026-08-20 — replacement plan for remaining Plan 011 U6–U8; **U1 landed** (typed BatchOutcome, default-deny policy, null-recipe override removed, guarded RunDirectStage)
 
 - **Active plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md`
 - **Do not implement:** Plan 011 U6 as written. 011 U1–U5 stay landed.
@@ -34,11 +34,11 @@ A CUDA-aware review of deepened 011 U6 found unresolved **lifecycle/admission de
 
 ---
 
-## What to implement first
+## Status
 
-**012 U1 only:** typed `BatchOutcome`, default-deny `GraphAdmissionPolicy`, delete the null-recipe `useExecutor=true` override, catch abort/`invalid_argument` in `RunDirectStage` → `OptimizerError`. Do **not** allocate the dummy 8 GiB graph pool. Do **not** start capture, hooks, or U7 rewrite in the same change.
+**U1 landed** (one jj change): `include/compute/batch_outcome.h` (BatchOutcome + CoordinatorBatchAbort + MaterializeOrderedScores), `include/compute/graph_admission_policy.h` (default-deny policy + DecideGraphAdmission), typed `EvaluationExecutor::RunBatch/RunBatchWithCost`, `RunDirectStage` now: (a) leaves the U12/serial adapter installed on every deny path, (b) no longer allocates the 8 GiB dummy executor pool (lazy per C10 — executor stays uninitialized, poolSize()==0), (c) runs through `jta::RunDirectStageGuarded` (CoordinatorBatchAbort + invalid_argument → OptimizerError). Headless 58/59 green (only pre-existing `qml_lint`). Reviewer follow-ups (non-blocking): add a manager-level SetBatchCost count characterization before U3 prepare lands; U12-survival is currently proven at unit level.
 
-Then U2 (key + `CaptureGeneration`) beside or after U1. Capture coordinator / wrappers are U3.
+**Next: U2** (capture-input provider + generation identity), then U3 (capture coordinator + wrappers).
 
 ---
 

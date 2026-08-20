@@ -333,7 +333,7 @@ flowchart TB
 
 ---
 
-- [ ] U1. **Typed outcome, admission policy, and U12 coexistence**
+- [x] U1. **Typed outcome, admission policy, and U12 coexistence**
 
 **Goal:** Make R8/R7 distinguishable without installing a graph path, and stop the null-recipe branch from replacing U12 with executor serial passthrough.
 

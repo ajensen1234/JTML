@@ -59,11 +59,11 @@ bool EvaluationExecutor::pollOneLease(const Lease& lease,
     return true;
 }
 
-std::vector<double> EvaluationExecutor::RunBatch(
+BatchOutcome EvaluationExecutor::RunBatch(
     const std::vector<Point6D>& poses,
     const std::function<double(const Point6D&)>& serialCost) {
     if (!serialCost) {
-        return {};
+        return BatchOutcome::NotSubmitted("null serialCost");
     }
     auto costWithIndex = [&](const Point6D& p, std::size_t) -> double {
         return serialCost(p);
@@ -71,14 +71,14 @@ std::vector<double> EvaluationExecutor::RunBatch(
     return RunBatchWithCost(poses, costWithIndex);
 }
 
-std::vector<double> EvaluationExecutor::RunBatchWithCost(
+BatchOutcome EvaluationExecutor::RunBatchWithCost(
     const std::vector<Point6D>& poses,
     const std::function<double(const Point6D&, std::size_t)>& costWithIndex) {
     if (!costWithIndex) {
-        return {};
+        return BatchOutcome::NotSubmitted("null costWithIndex");
     }
     if (poses.empty()) {
-        return {};
+        return BatchOutcome::Ordered({});
     }
     // Degenerate N<=1: serial fallback, still ordered, still respects firstSubmission
     // but does not exercise greedy. This keeps headless deterministic and
@@ -97,7 +97,7 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
         if (out.size() != poses.size()) {
             throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
         }
-        return out;
+        return BatchOutcome::Ordered(std::move(out));
     }
 
     // Greedy N>1 path
@@ -123,9 +123,9 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
                     // clear ordered result vector, wait for all streams/events (noop headless), abort
                     result.clear();
                     for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
-                    return {};
+                    return BatchOutcome::PostLaunchAbort("null context after checkout");
                 }
-                return {};
+                return BatchOutcome::NotSubmitted("null context before submission");
             }
             ctx->input_index = static_cast<int>(nextPos);
             ctx->status = EvaluationStatus::InFlight;
@@ -144,7 +144,7 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
             // Check watchdog
             if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
                 result.clear();
-                return {};
+                return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
             }
             std::this_thread::yield();
             continue;
@@ -162,7 +162,7 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
             for (auto &l : inFlight) {
                 if (l.ctxIdx != cur.ctxIdx) pool_.Recycle(l.ctxIdx, false);
             }
-            return {};
+            return BatchOutcome::PostLaunchAbort("pollOneLease failed");
         }
         inFlight.erase(inFlight.begin());
         watchdogStart = std::chrono::steady_clock::now();
@@ -171,7 +171,7 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
         if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
             result.clear();
             for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
-            return {};
+            return BatchOutcome::WatchdogPoisoned("watchdog expiry");
         }
     }
 
@@ -179,7 +179,7 @@ std::vector<double> EvaluationExecutor::RunBatchWithCost(
         throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
     }
     // Determinism stress: result must be input-ordered regardless of completion order
-    return result;
+    return BatchOutcome::Ordered(std::move(result));
 }
 
 }  // namespace gpu_cost_function

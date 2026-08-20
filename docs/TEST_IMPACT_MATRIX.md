@@ -92,6 +92,17 @@ This matrix enumerates every test that exists at U2 time and its disposition for
 |---|---|
 | `test/qml/tst_*` (PoseCell, PosesTable, SettingsPanel, StudyFlows, Theme) + fakes | retained — view layer, no compute executor touch |
 
+## Plan 012 U1 — typed outcome, admission policy, U12 coexistence
+
+**Plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U1). Dispositions for the U1 change only; retain-by-default rule and the frozen plan-011 rows above are unchanged. No `obsolete`/`superseded` rows.
+
+| Test file | Disposition | Rationale |
+|---|---|---|
+| `test/unit/test_direct_optimizer_batch.cpp` | **retained-with-coverage** | U1 migrates the six U6 executor cases to the typed `BatchOutcome` API (same ordering/edge assertions) and adds six U1 cases: outcome kinds, `MaterializeOrderedScores`, default-deny policy, `DecideGraphAdmission` deny matrix, null-recipe U12-survival, abort propagation through `DirectOptimizer::Run` |
+| `test/lifecycle/optimizer_run_controller_test.cpp` | **retained-with-coverage** | U1 updates `EvaluationExecutorGreedyOrderingMatchesSerial` to `MaterializeOrderedScores` (same ordering assertions) and adds four `RunDirectStageGuarded` slots: CoordinatorAbort / InvalidArgument / WatchdogPoisoned → stage error, and success passthrough |
+| `test/oracle/layered_correctness_test.cpp` | retained | compile-only adaptation to the typed `RunBatch` return; assertion semantics unchanged |
+| `test/oracle/bit_identity_test.cpp` | retained | compile-only adaptation to the typed `RunBatch` return; assertion semantics unchanged |
+
 ## Notes
 
 - No test is marked `obsolete` or `superseded` at U2 — deletions merely because internals change are prohibited (R10). A future `superseded` row would require a named replacement + rationale and code-owner sign-off.

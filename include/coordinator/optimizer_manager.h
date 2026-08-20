@@ -23,7 +23,7 @@
 /*QT Threading*/
 #include <qobject.h>
 #include <qthread.h>
-
+#include <QString>
 #include <QModelIndex>
 
 /*Frame and Model and Location Storage*/
@@ -310,6 +310,10 @@ private:
 };
 
 namespace jta {
+
+// Plan 012 U1: guarded runner that converts coordinator abort and invalid_argument
+// into a stage error (C9). Returns true on success, false with *errorOut set.
+bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut);
 
 /*Plan 008 U9 (Cut B): the shared GPU cost adapter — the injected-cost lambda
  * body of RunDirectStage (src/coordinator/optimizer_manager.cpp) and the

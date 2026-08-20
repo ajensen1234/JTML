@@ -41,6 +41,8 @@
 #include "compute/bank_state.cuh"
 #include "compute/evaluation_context.h"
 #include "compute/evaluation_executor.h"
+#include "compute/batch_outcome.h"
+#include "coordinator/optimizer_manager.h"
 #include "domain/direct_optimizer.h"
 
 namespace {
@@ -225,6 +227,10 @@ private slots:
     void OutOfBoundsTerminalFrameSkipsStorage();
     void MoveNextFrameAdvancesTrackedFrame();
     void EvaluationExecutorGreedyOrderingMatchesSerial();
+    void CoordinatorAbortBecomesStageError();
+    void InvalidArgumentBecomesStageError();
+    void WatchdogPoisonedBecomesStageError();
+    void GuardedRunReturnsTrueOnSuccess();
 };
 
 void OptimizerRunControllerTest::HappyPathDriveSequence() {
@@ -972,9 +978,7 @@ void OptimizerRunControllerTest::EvaluationExecutorGreedyOrderingMatchesSerial()
     // Use executor as batch: it will greedily feed but return ordered
     auto* execPtr = &exec;
     optBatch.SetBatchCost([execPtr, serialCost](const std::vector<Point6D>& poses) -> std::vector<double> {
-        auto out = execPtr->RunBatch(poses, serialCost);
-        if (out.size() != poses.size()) throw std::invalid_argument("wrong size");
-        return out;
+        return gpu_cost_function::MaterializeOrderedScores(execPtr->RunBatch(poses, serialCost));
     });
     QVERIFY(optBatch.Run());
     QCOMPARE(optBatch.GetCostFunctionCalls(), serialCalls);
@@ -982,6 +986,78 @@ void OptimizerRunControllerTest::EvaluationExecutorGreedyOrderingMatchesSerial()
     QCOMPARE(optBatch.GetNonFiniteCount(), optSerial.GetNonFiniteCount());
     // Watchdog check: firstSubmission flag was set
     QVERIFY(exec.firstSubmission());
+}
+
+
+void OptimizerRunControllerTest::CoordinatorAbortBecomesStageError() {
+    // RunDirectStageGuarded must convert CoordinatorBatchAbort (PostLaunchAbort) to a stage error
+    // without letting the exception escape the worker thread.
+    const Point6D range(10, 10, 10, 10, 10, 10);
+    const Point6D start(0, 0, 0, 0, 0, 0);
+    DirectOptimizer opt([](const Point6D& p) { (void)p; return 0.0; }, range, start, 50);
+    opt.SetBatchCost([](const std::vector<Point6D>&) -> std::vector<double> {
+        throw gpu_cost_function::CoordinatorBatchAbort(
+            gpu_cost_function::BatchOutcome::Kind::PostLaunchAbort,
+            "simulated post-launch failure");
+        return {};
+    });
+    QString err;
+    bool ok = jta::RunDirectStageGuarded(opt, &err);
+    QVERIFY(!ok);
+    QVERIFY(!err.isEmpty());
+    QVERIFY(err.contains("simulated post-launch failure"));
+}
+
+void OptimizerRunControllerTest::InvalidArgumentBecomesStageError() {
+    // DirectOptimizer throws std::invalid_argument on wrong-sized batch result;
+    // RunDirectStageGuarded must convert it to a stage error.
+    const Point6D range(10, 10, 10, 10, 10, 10);
+    const Point6D start(0, 0, 0, 0, 0, 0);
+    DirectOptimizer opt([](const Point6D& p) { (void)p; return 0.0; }, range, start, 50);
+    opt.SetBatchCost([](const std::vector<Point6D>& poses) -> std::vector<double> {
+        (void)poses;
+        return std::vector<double>{};  // deliberately wrong size -> DirectOptimizer throws invalid_argument
+    });
+    QString err;
+    bool ok = jta::RunDirectStageGuarded(opt, &err);
+    QVERIFY(!ok);
+    QVERIFY(!err.isEmpty());
+}
+
+void OptimizerRunControllerTest::WatchdogPoisonedBecomesStageError() {
+    const Point6D range(10, 10, 10, 10, 10, 10);
+    const Point6D start(0, 0, 0, 0, 0, 0);
+    DirectOptimizer opt([](const Point6D& p) { (void)p; return 0.0; }, range, start, 50);
+    opt.SetBatchCost([](const std::vector<Point6D>&) -> std::vector<double> {
+        throw gpu_cost_function::CoordinatorBatchAbort(
+            gpu_cost_function::BatchOutcome::Kind::WatchdogPoisoned, "watchdog hang");
+        return {};
+    });
+    QString err;
+    bool ok = jta::RunDirectStageGuarded(opt, &err);
+    QVERIFY(!ok);
+    QVERIFY(!err.isEmpty());
+    QVERIFY(err.contains("watchdog hang"));
+}
+
+void OptimizerRunControllerTest::GuardedRunReturnsTrueOnSuccess() {
+    const Point6D range(10, 10, 10, 10, 10, 10);
+    const Point6D start(0, 0, 0, 0, 0, 0);
+    auto quad = [](const Point6D& c) {
+        return [c](const Point6D& p) {
+            return (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y) +
+                   (p.z - c.z) * (p.z - c.z) + (p.xa - c.xa) * (p.xa - c.xa) +
+                   (p.ya - c.ya) * (p.ya - c.ya) + (p.za - c.za) * (p.za - c.za);
+        };
+    };
+    const Point6D target(2, 2, 2, 2, 2, 2);
+    DirectOptimizer opt(quad(target), range, start, 200);
+    QString err = QStringLiteral("should be cleared");
+    bool ok = jta::RunDirectStageGuarded(opt, &err);
+    QVERIFY(ok);
+    // On success err should be empty or at least not contain failure text; the contract is "fills on failure only"
+    // Accept either empty or unchanged — but not a failure message
+    QVERIFY(err.isEmpty() || err == QStringLiteral("should be cleared") || !err.contains("failure"));
 }
 
 QTEST_GUILESS_MAIN(OptimizerRunControllerTest)

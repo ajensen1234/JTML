@@ -272,7 +272,8 @@ TEST_CASE("U7 layered: graph vs serial double composition within frozen toleranc
             serial_scores.push_back(c);
         }
 
-        std::vector<double> graph_scores = exec.RunBatch(poses, serialCost);
+        auto outcome = exec.RunBatch(poses, serialCost);
+        std::vector<double> graph_scores = gpu_cost_function::MaterializeOrderedScores(outcome);
         REQUIRE(graph_scores.size() == serial_scores.size());
 
         // Layer B: raw int metric reductions are exact — in this harness they manifest as
@@ -338,7 +339,8 @@ TEST_CASE("U7 layered: flat/high-detail fragment_fill<256 still passes layered e
     std::vector<Point6D> poses = { StartPose() };
     for (int r=0; r<3; ++r) {
         double s = serialCost(poses[0]);
-        auto g = exec.RunBatch(poses, serialCost);
+        auto g_outcome = exec.RunBatch(poses, serialCost);
+        auto g = gpu_cost_function::MaterializeOrderedScores(g_outcome);
         REQUIRE(g.size()==1);
         CAPTURE(r); CAPTURE(s); CAPTURE(g[0]);
         REQUIRE(WithinTolerance(s, g[0], tol.abs, tol.rel));

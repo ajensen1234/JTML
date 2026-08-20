@@ -477,7 +477,8 @@ TEST_CASE("U7 layered: bit_identity graph vs serial within frozen tolerance", "[
     size_t ft=0, tt=0;
     if (cudaMemGetInfo(&ft,&tt)==cudaSuccess) free_bytes = ft;
     REQUIRE(exec.Initialize(layout, free_bytes, 4));
-    std::vector<double> graph = exec.RunBatch(poses, cost);
+    auto graph_outcome = exec.RunBatch(poses, cost);
+    std::vector<double> graph = gpu_cost_function::MaterializeOrderedScores(graph_outcome);
     REQUIRE(graph.size() == serial.size());
     auto within = [&](double a, double b){ double d = std::abs(a-b); if(d<=abs_tol) return true; double m = std::max(std::abs(a), std::abs(b)); return d <= rel_tol*m; };
     for (size_t i=0;i<poses.size();++i) {

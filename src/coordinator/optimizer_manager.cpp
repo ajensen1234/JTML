@@ -15,6 +15,8 @@
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_model.cuh"
 #include "compute/evaluation_executor.h"
+#include "compute/batch_outcome.h"
+#include "compute/graph_admission_policy.h"
 #include "compute/pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
@@ -795,22 +797,11 @@ bool OptimizerManager::Initialize(
         gpu_principal_model_->SetCapacityService(capacity_service_);
     }
 
-    /* U6: greedy EvaluationExecutor for graph-backed batch (primary design). */
+    /* Plan 012 U1 (C10): graph pool is lazy — default-deny means no preparation
+     * attempt and no 8 GiB dummy allocation at manager setup.
+     * evaluation_executor_ stays constructed but uninitialized (poolSize()==0).
+     */
     evaluation_executor_ = new gpu_cost_function::EvaluationExecutor();
-    if (!calibration_.biplane_calibration) {
-        gpu_cost_function::BankFootprintInput eval_layout;
-        eval_layout.width = static_cast<std::uint64_t>(width);
-        eval_layout.height = static_cast<std::uint64_t>(height);
-        eval_layout.triangle_count = static_cast<std::uint64_t>(primary_model_.triangle_vertices_.size() / 9);
-        eval_layout.maximum_stride_size = maximum_stride_size;
-        eval_layout.cub_storage_bytes = gpu_principal_model_->GetPrimaryCubStorageBytes();
-        eval_layout.curvature_capacity = 0;
-        eval_layout.graph_overhead_bytes = 0;
-        eval_layout.biplane = false;
-        // Headless dummy free bytes (8 GiB); GPU path will be probed via U3/U5
-        const std::uint64_t free_bytes = 8ULL * 1024ULL * 1024ULL * 1024ULL;
-        evaluation_executor_->Initialize(eval_layout, free_bytes, 4);
-    }
 
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
@@ -1354,30 +1345,39 @@ void OptimizerManager::RunDirectStage(
         });
     }
 
-    /* U6: greedy EvaluationExecutor for graph-backed batch (primary). Preflight must be capturable before submitting; otherwise retain serial. */
-    if (evaluation_executor_ != nullptr && evaluation_executor_->poolSize() > 1 &&
-        !calibration_.biplane_calibration &&
-        stage_manager.getActiveCostFunction() == "DIRECT_DILATION") {
-        const auto* recipe = evaluation_executor_->registry().FindEligible("DIRECT_DILATION", false);
-        bool useExecutor = false;
-        if (recipe) {
+    /* Plan 012 U1: graph executor admission is default-deny (C10/R14).
+     * The U12/serial adapter above stays installed unless a complete
+     * admission transaction (policy + recipe + preflight) succeeds —
+     * which no production path can reach yet. */
+    {
+        bool monoplaneEligible = !calibration_.biplane_calibration &&
+                                 stage_manager.getActiveCostFunction() == "DIRECT_DILATION";
+        const auto* recipe = (evaluation_executor_ != nullptr)
+                                 ? evaluation_executor_->registry().FindEligible("DIRECT_DILATION", false)
+                                 : nullptr;
+        bool recipeFound = recipe != nullptr;
+        bool preflightCapturable = false;
+        if (recipeFound) {
             gpu_cost_function::GraphRecipeKey key;
             key.recipeId = recipe->recipeId();
             key.biplane = false;
             auto pre = recipe->preflight(key);
-            useExecutor = pre.capturable;
-        } else {
-            // Headless testing: no recipe registered yet, still exercise greedy path for replay tests
-            useExecutor = true;
+            preflightCapturable = pre.capturable;
         }
-        if (useExecutor) {
+        bool executorReady =
+            evaluation_executor_ != nullptr && evaluation_executor_->poolSize() > 1;
+        gpu_cost_function::GraphAdmissionInputs inputs;
+        inputs.executorReady = executorReady;
+        inputs.monoplaneEligible = monoplaneEligible;
+        inputs.recipeFound = recipeFound;
+        inputs.preflightCapturable = preflightCapturable;
+        inputs.evidence = gpu_cost_function::GraphAdmissionEvidence{};
+        gpu_cost_function::GraphAdmissionPolicy defaultPolicy;
+        auto decision = gpu_cost_function::DecideGraphAdmission(inputs, defaultPolicy);
+        if (decision.install) {
             auto* exec = evaluation_executor_;
             opt.SetBatchCost([exec, serial_cost](const std::vector<Point6D>& poses) -> std::vector<double> {
-                auto out = exec->RunBatch(poses, serial_cost);
-                if (out.size() != poses.size()) {
-                    throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
-                }
-                return out;
+                return gpu_cost_function::MaterializeOrderedScores(exec->RunBatch(poses, serial_cost));
             });
         }
     }
@@ -1415,10 +1415,14 @@ void OptimizerManager::RunDirectStage(
         }
     });
 
-    if (!opt.Run()) {
-        emit OptimizerError("Error optimizing current frame!");
-        error_occurrred_ = true;
-        return;
+    {
+        QString stageError;
+        if (!jta::RunDirectStageGuarded(opt, &stageError)) {
+            emit OptimizerError(stageError.isEmpty() ? QStringLiteral("Error optimizing current frame!")
+                                                      : stageError);
+            error_occurrred_ = true;
+            return;
+        }
     }
 
     /*Write the stage result back into the running members.*/
@@ -1613,6 +1617,28 @@ OptimizerManager::~OptimizerManager() {
         delete gpu_non_principal_models_[i];
     }
 };
+
+namespace jta {
+bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut) {
+    try {
+        bool ok = opt.Run();
+        if (!ok) {
+            if (errorOut) *errorOut = QStringLiteral("Error optimizing current frame!");
+            return false;
+        }
+        if (errorOut) errorOut->clear();
+        return true;
+    } catch (const gpu_cost_function::CoordinatorBatchAbort& e) {
+        if (errorOut) *errorOut = QString::fromStdString(std::string(e.what()));
+        return false;
+    } catch (const std::invalid_argument& e) {
+        if (errorOut) {
+            *errorOut = QString::fromStdString(std::string("DirectOptimizer contract violation: ") + e.what());
+        }
+        return false;
+    }
+}
+}  // namespace jta
 
 std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
     gpu_cost_function::GPUModel* principal_model,
