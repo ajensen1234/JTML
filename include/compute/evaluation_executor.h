@@ -72,6 +72,9 @@ public:
     bool firstSubmission() const { return firstSubmission_.load(); }
     void resetFirstSubmission() { firstSubmission_.store(false); }
 
+    // Plan 012 U5 (C8): terminal hang latch. Once set, Prepare/RunBatch refuse.
+    bool isPoisoned() const { return poisoned_.load(); }
+
     // Plan 012 U3 C2/C5: executor-owned wrappers + CUDA-free hook seam
     using PrepareHookFn = std::function<void*(std::size_t idx, const GraphRecipeKey& key)>;
     using DestroyHookFn = std::function<void(std::size_t idx)>;
@@ -107,6 +110,7 @@ private:
     EvaluationContextPool pool_{};
     GraphRecipeRegistry registry_{};
     std::atomic<bool> firstSubmission_{false};
+    std::atomic<bool> poisoned_{false};
     std::chrono::milliseconds watchdogTimeout_{5000};
     std::vector<void*> graphExecs_{};
     PrepareHookFn prepareHook_{};

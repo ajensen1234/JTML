@@ -3,6 +3,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <chrono>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -348,5 +349,103 @@ TEST_CASE("poll Error after some Done does not leave a completed context re-poll
     // No context was polled more than once (no re-poll of a completed context).
     for (auto& kv : pollCount) {
         REQUIRE(kv.second == 1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Plan 012 U5 — watchdog hang poisons, refuses further work, shutdown safety
+// ---------------------------------------------------------------------------
+
+TEST_CASE("watchdog hang poisons in-flight contexts and returns WatchdogPoisoned",
+          "[hook_feeder][u5][poison]") {
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(1));
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Pending; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 0.0; });
+    exec.InstallTeardownHook([]() {});
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 1.0; });
+    REQUIRE(o.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE(exec.isPoisoned());
+    // Hang is terminal: BOTH in-flight contexts must be LeavePoisoned (kept
+    // checked out, marked poisoned), NOT ForceReleased. A ForceRelease-on-
+    // watchdog impl would leave them not-poisoned / reusable and fail here.
+    REQUIRE(exec.pool().IsPoisoned(0));
+    REQUIRE(exec.pool().IsPoisoned(1));
+    // Operational half: poisoned contexts STAY checked out (Checkout refuses).
+    REQUIRE(exec.pool().IsInFlight(0));
+    REQUIRE(exec.pool().IsInFlight(1));
+}
+
+TEST_CASE("a poisoned executor refuses further RunBatch and Prepare", "[hook_feeder][u5][poison]") {
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(1));
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Pending; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 0.0; });
+    exec.InstallTeardownHook([]() {});
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto first = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 1.0; });
+    REQUIRE(first.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE(exec.isPoisoned());
+
+    bool enqueued = false;
+    exec.InstallEnqueueHook([&](std::size_t, std::size_t, const Point6D&) -> bool {
+        enqueued = true;
+        return true;
+    });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Done; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 42.0; });
+    auto second = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 42.0; });
+    REQUIRE(second.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE_FALSE(enqueued);
+
+    bool prepared = false;
+    exec.InstallPrepareHook([&](std::size_t, const gpu_cost_function::GraphRecipeKey&) -> void* {
+        prepared = true;
+        return reinterpret_cast<void*>(0x1);
+    });
+    gpu_cost_function::GraphRecipeKey key;
+    key.recipeId = "direct_dilation_monoplane";
+    auto prep = exec.Prepare(key, 1);
+    REQUIRE(prep.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE_FALSE(prepared);
+}
+
+TEST_CASE("Shutdown after poison does not crash", "[hook_feeder][u5][poison]") {
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(1));
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Pending; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 0.0; });
+    exec.InstallTeardownHook([]() {});
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 1.0; });
+    REQUIRE(o.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE(exec.isPoisoned());
+    exec.Shutdown();
+    REQUIRE(exec.pool().size() == 0);
+}
+
+TEST_CASE("ordinary poll Error is PostLaunchAbort not poison", "[hook_feeder][u5][poison]") {
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Error; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 0.0; });
+    exec.InstallTeardownHook([]() {});
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 1.0; });
+    REQUIRE(o.kind == BatchOutcome::Kind::PostLaunchAbort);
+    REQUIRE_FALSE(exec.isPoisoned());
+    for (std::size_t i = 0; i < 2; ++i) {
+        REQUIRE_FALSE(exec.pool().IsPoisoned(i));
+        // Ordinary error is a drain + ForceRelease: contexts must be released
+        // (reusable), NOT left checked-out (that would be a leak/poison).
+        REQUIRE_FALSE(exec.pool().IsInFlight(i));
     }
 }

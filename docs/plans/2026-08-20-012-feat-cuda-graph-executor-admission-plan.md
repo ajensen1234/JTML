@@ -491,7 +491,7 @@ flowchart TB
 
 ---
 
-- [ ] U5. **Watchdog poison, teardown, and terminal recovery**
+- [x] U5. **Watchdog poison, teardown, and terminal recovery**
 
 **Goal:** Distinguish ordinary terminal CUDA errors from a hung device, and make shutdown safe in both cases.
 

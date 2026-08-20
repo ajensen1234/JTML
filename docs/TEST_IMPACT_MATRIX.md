@@ -133,6 +133,15 @@ This matrix enumerates every test that exists at U2 time and its disposition for
 | `test/unit/test_direct_optimizer_batch.cpp` | retained | U4 hook-driven loop keeps the null-hook legacy path byte-identical; U1 executor/outcome cases unchanged and green (no regression) |
 | `test/oracle/evaluation_executor_graph_test.cu` | **new** | U4 anti-stub GPU oracle (`oracle;gpu`) — real `EvaluationExecutor` + real monoplane recipe + real `InstallCudaFeederHooks`; proves real `cudaGraphLaunch` + event query + `completeFromPins` returns distinct finite non-zero scores (247167.97 / 247148.97) |
 
+## Plan 012 U5 — watchdog poison, teardown, terminal recovery
+
+**Plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U5). Dispositions for the U5 change only; retain-by-default; no `obsolete`/`superseded` rows.
+
+| Test file | Disposition | Rationale |
+|---|---|---|
+| `test/unit/hook_feeder_test.cpp` | **retained-with-coverage** | U4 `hook_feeder` extends with 4 `[u5][poison]` cases: watchdog hang poisons all in-flight (LeavePoisoned, kept checked-out), poisoned executor refuses RunBatch/Prepare, Shutdown-after-poison safe, ordinary poll Error is PostLaunchAbort-not-poison (drain vs hang split) |
+| `test/unit/evaluation_context_lease_test.cpp` | retained | U3 LeavePoisoned/ForceRelease/Shutdown-skip already pins the pool poison semantics U5 builds on |
+
 ## Notes
 
 - No test is marked `obsolete` or `superseded` at U2 — deletions merely because internals change are prohibited (R10). A future `superseded` row would require a named replacement + rationale and code-owner sign-off.

@@ -31,10 +31,13 @@ bool EvaluationExecutor::Initialize(const BankFootprintInput& layout,
 }
 
 void EvaluationExecutor::Shutdown() {
-    // Destroy executor-owned wrappers via destroy hook before pool teardown (C2)
+    // Destroy executor-owned wrappers via destroy hook before pool teardown (C2),
+    // EXCEPT poisoned contexts (U5/C8): their graph may be hung, so destroying
+    // would block. Leak poisoned wrappers until process exit — pool_.Shutdown()
+    // also skips their buffers. The DestroyHook for a poisoned idx is never run.
     for (std::size_t i = 0; i < graphExecs_.size(); ++i) {
         if (graphExecs_[i] != nullptr) {
-            if (destroyHook_) {
+            if (destroyHook_ && !pool_.IsPoisoned(i)) {
                 destroyHook_(i);
             }
             graphExecs_[i] = nullptr;
@@ -88,6 +91,9 @@ std::size_t EvaluationExecutor::preparedContextCount() const {
 }
 
 BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t count) {
+    if (poisoned_.load()) {
+        return BatchOutcome::WatchdogPoisoned("executor poisoned");
+    }
     if (count == 0) {
         return BatchOutcome::Ordered({});
     }
@@ -185,6 +191,9 @@ bool EvaluationExecutor::pollOneLease(const Lease& lease,
 BatchOutcome EvaluationExecutor::RunBatch(
     const std::vector<Point6D>& poses,
     const std::function<double(const Point6D&)>& serialCost) {
+    if (poisoned_.load()) {
+        return BatchOutcome::WatchdogPoisoned("executor poisoned");
+    }
     if (!serialCost) {
         return BatchOutcome::NotSubmitted("null serialCost");
     }
@@ -197,6 +206,9 @@ BatchOutcome EvaluationExecutor::RunBatch(
 BatchOutcome EvaluationExecutor::RunBatchWithCost(
     const std::vector<Point6D>& poses,
     const std::function<double(const Point6D&, std::size_t)>& costWithIndex) {
+    if (poisoned_.load()) {
+        return BatchOutcome::WatchdogPoisoned("executor poisoned");
+    }
     if (!costWithIndex) {
         return BatchOutcome::NotSubmitted("null costWithIndex");
     }
@@ -273,6 +285,7 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             if (inFlight.empty()) {
                 if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
                     result.clear();
+                    poisoned_.store(true);
                     return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
                 }
                 std::this_thread::yield();
@@ -319,7 +332,8 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
                 if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
                     result.clear();
                     if (teardownHook_) teardownHook_();
-                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                    for (auto &l : inFlight) pool_.LeavePoisoned(l.ctxIdx);
+                    poisoned_.store(true);
                     return BatchOutcome::WatchdogPoisoned("watchdog expiry");
                 }
                 std::this_thread::yield();
