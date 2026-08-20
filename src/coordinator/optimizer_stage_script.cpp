@@ -41,22 +41,25 @@ void ThrowIfNegative(
 
 /*Validate the settings' numeric fields.*/
 void ValidateSettings(const OptimizerSettings& settings) {
-    ThrowIfNegative("trunk_budget", settings.trunk_budget,
-                    "budgets must be non-negative");
-    ThrowIfNegative("branch_budget", settings.branch_budget,
-                    "budgets must be non-negative");
-    ThrowIfNegative("leaf_budget", settings.leaf_budget,
-                    "budgets must be non-negative");
-    ThrowIfNegative("number_branches", settings.number_branches,
-                    "the branch count must be non-negative");
+    ThrowIfNegative(
+        "trunk_budget", settings.trunk_budget, "budgets must be non-negative");
+    ThrowIfNegative(
+        "branch_budget",
+        settings.branch_budget,
+        "budgets must be non-negative");
+    ThrowIfNegative(
+        "leaf_budget", settings.leaf_budget, "budgets must be non-negative");
+    ThrowIfNegative(
+        "number_branches",
+        settings.number_branches,
+        "the branch count must be non-negative");
 }
 
 /*The five normal directives — frame-selection directives, stage-shape
  * neutral (the shape is identical across them; only img_indices_ differs).*/
 bool IsNormalDirective(const std::string& directive) {
-    return directive == "Single" || directive == "All" ||
-           directive == "Each" || directive == "From" ||
-           directive == "Backward";
+    return directive == "Single" || directive == "All" || directive == "Each" ||
+           directive == "From" || directive == "Backward";
 }
 
 /*The v1 graph — jtml-production — the run shape today's Optimize() executes:
@@ -68,17 +71,26 @@ bool IsNormalDirective(const std::string& directive) {
  * docs-claim, reconciled by the U5 probe data in the hygiene pass).*/
 StageGraph JtmlProductionGraph() {
     return StageGraph{
-        "jtml-production",
-        {{StageKind::Trunk, TRUNK_RANGE,
-          static_cast<unsigned int>(TRUNK_BUDGET), 1u, 0u},
-         {StageKind::Branch, BRANCH_RANGE,
-          static_cast<unsigned int>(BRANCH_BUDGET),
-          static_cast<unsigned int>(NUMBER_BRANCHES), 1u},
-         {StageKind::Leaf, Z_SEARCH_RANGE,
-          static_cast<unsigned int>(Z_SEARCH_BUDGET), 1u, 2u}}};
+        .name = "jtml-production",
+        .stages = {
+            {.kind = StageKind::Trunk,
+             .range = TRUNK_RANGE,
+             .budget = static_cast<unsigned int>(TRUNK_BUDGET),
+             .repeat = 1u,
+             .cfm_index = 0u},
+            {.kind = StageKind::Branch,
+             .range = BRANCH_RANGE,
+             .budget = static_cast<unsigned int>(BRANCH_BUDGET),
+             .repeat = static_cast<unsigned int>(NUMBER_BRANCHES),
+             .cfm_index = 1u},
+            {.kind = StageKind::Leaf,
+             .range = Z_SEARCH_RANGE,
+             .budget = static_cast<unsigned int>(Z_SEARCH_BUDGET),
+             .repeat = 1u,
+             .cfm_index = 2u}}};
 }
 
-}  // namespace
+} // namespace
 
 StageScript BuildStageScript(
     const OptimizerSettings& settings, const std::string& directive) {
@@ -98,9 +110,12 @@ StageScript BuildStageScript(
         StageScript script;
         if (settings.enable_leaf_) {
             script.push_back(
-                StageSpec{StageKind::Leaf, settings.leaf_range,
-                          static_cast<unsigned int>(settings.leaf_budget),
-                          /*repeat=*/0u, /*cfm_index=*/2u});
+                StageSpec{
+                    StageKind::Leaf,
+                    settings.leaf_range,
+                    static_cast<unsigned int>(settings.leaf_budget),
+                    /*repeat=*/0u,
+                    /*cfm_index=*/2u});
         }
         return script;
     }
@@ -108,8 +123,7 @@ StageScript BuildStageScript(
     if (!IsNormalDirective(directive)) {
         throw std::invalid_argument(
             "BuildStageScript: unrecognized optimization directive: '" +
-            directive +
-            "' (expected Single/All/Each/From/Backward/Sym_Trap)");
+            directive + "' (expected Single/All/Each/From/Backward/Sym_Trap)");
     }
 
     /*Verbatim transcription of the Optimize() loop's enabled-flag gating:
@@ -122,21 +136,29 @@ StageScript BuildStageScript(
      * all of them.*/
     StageScript script;
     script.push_back(
-        StageSpec{StageKind::Trunk, settings.trunk_range,
-                  static_cast<unsigned int>(settings.trunk_budget),
-                  /*repeat=*/1u, /*cfm_index=*/0u});
+        StageSpec{
+            StageKind::Trunk,
+            settings.trunk_range,
+            static_cast<unsigned int>(settings.trunk_budget),
+            /*repeat=*/1u,
+            /*cfm_index=*/0u});
     if (settings.enable_branch_ && settings.number_branches > 0) {
         script.push_back(
-            StageSpec{StageKind::Branch, settings.branch_range,
-                      static_cast<unsigned int>(settings.branch_budget),
-                      static_cast<unsigned int>(settings.number_branches),
-                      /*cfm_index=*/1u});
+            StageSpec{
+                StageKind::Branch,
+                settings.branch_range,
+                static_cast<unsigned int>(settings.branch_budget),
+                static_cast<unsigned int>(settings.number_branches),
+                /*cfm_index=*/1u});
     }
     if (settings.enable_leaf_) {
         script.push_back(
-            StageSpec{StageKind::Leaf, settings.leaf_range,
-                      static_cast<unsigned int>(settings.leaf_budget),
-                      /*repeat=*/1u, /*cfm_index=*/2u});
+            StageSpec{
+                StageKind::Leaf,
+                settings.leaf_range,
+                static_cast<unsigned int>(settings.leaf_budget),
+                /*repeat=*/1u,
+                /*cfm_index=*/2u});
     }
     return script;
 }
@@ -214,7 +236,9 @@ const std::vector<std::string>& ReservedStubGraphNames() {
     return names;
 }
 
-std::vector<StageGraph> ListStageGraphs() { return {JtmlProductionGraph()}; }
+std::vector<StageGraph> ListStageGraphs() {
+    return {JtmlProductionGraph()};
+}
 
 const StageGraph& StageGraphByName(const std::string& name) {
     static const StageGraph production = JtmlProductionGraph();
@@ -233,4 +257,4 @@ const StageGraph& StageGraphByName(const std::string& name) {
         "StageGraphByName: unknown stage graph: '" + name + "'");
 }
 
-}  // namespace jta
+} // namespace jta
