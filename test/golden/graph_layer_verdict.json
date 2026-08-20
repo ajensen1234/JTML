@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "layer_a_byte_identical": true,
+  "layer_b_ints_exact": true,
+  "layer_c_within_tolerance": true,
+  "verdict": "PASS"
+}

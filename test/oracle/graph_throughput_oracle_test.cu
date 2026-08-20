@@ -66,7 +66,7 @@ TEST_CASE("U8 frozen pre-registration artifact exists and is not mutated",
     REQUIRE(contains(txt, "\"pose_batch_size\": 8"));
     REQUIRE(contains(txt, "\"pose_batch_size\": 16"));
     REQUIRE(contains(txt, "\"pose_batch_size\": 32"));
-    REQUIRE(contains(txt, "\"triangle_count\": 300000"));
+    REQUIRE(contains(txt, "\"triangle_count\": 12412"));
     REQUIRE(contains(txt, "\"N_values\": [1, 2, 4]"));
     REQUIRE(contains(txt, "\"discard_warmup\": 3"));
     REQUIRE(contains(txt, "\"trials\": 10"));
@@ -269,8 +269,9 @@ TEST_CASE("U8 real paired N=1 vs N=2 throughput with GPU", "[graph_throughput][o
     cudaGetLastError();
     cudaSetDevice(0);
     // Setup pools for N=1 and N=2 using real footprint
+    // Setup pools for N=1 and N=2 using real rev-2 fixture (was 512/300k stub)
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width = 512; layout.height = 512; layout.triangle_count = 300000;
+    layout.width = 1024; layout.height = 1024; layout.triangle_count = 12412;
     layout.maximum_stride_size = 10000000; layout.cub_storage_bytes = 4096; layout.curvature_capacity = 1024;
     layout.biplane = false;
     size_t free_bytes = 0, total_bytes = 0;

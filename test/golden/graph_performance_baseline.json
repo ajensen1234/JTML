@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "date": "2026-08-19",
+  "date": "2026-08-20",
   "commit": "pending-manual-gpu-run",
   "device": {
     "requested": "RTX 3090 class (same as test/golden/cut0_measurement.md)",
@@ -13,9 +13,9 @@
   "workloads": [
     {
       "pose_batch_size": 8,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
-      "frame": { "width": 512, "height": 512 },
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
+      "frame": { "width": 1024, "height": 1024, "path": "example_studies/Kneel_1/1024/2806.tif" },
       "dilation": 6,
       "N_values": [1, 2, 4],
       "discard_warmup": 3,
@@ -23,9 +23,9 @@
     },
     {
       "pose_batch_size": 16,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
-      "frame": { "width": 512, "height": 512 },
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
+      "frame": { "width": 1024, "height": 1024, "path": "example_studies/Kneel_1/1024/2806.tif" },
       "dilation": 6,
       "N_values": [1, 2, 4],
       "discard_warmup": 3,
@@ -33,9 +33,9 @@
     },
     {
       "pose_batch_size": 32,
-      "implant": "representative_300k",
-      "triangle_count": 300000,
-      "frame": { "width": 512, "height": 512 },
+      "implant": "example_studies/Kneel_1/KR_right_7_fem.stl",
+      "triangle_count": 12412,
+      "frame": { "width": 1024, "height": 1024, "path": "example_studies/Kneel_1/1024/2806.tif" },
       "dilation": 6,
       "N_values": [1, 2, 4],
       "discard_warmup": 3,
@@ -43,10 +43,10 @@
     }
   ],
   "method": {
-    "pairs": "serial N=1 via BuildGpuCostAdapter (MakeCompatibilityContext wrapper, src/coordinator/optimizer_manager.cpp:1299-1337) vs graph-greedy N=2 vs N=max_admitted (BankAdmission.half-memory including graph_overhead_bytes, probed by instantiate trial)",
+    "pairs": "serial N=1 via BuildGpuCostAdapter vs graph-greedy N=2 vs N=max_admitted (BankAdmission.half-memory including graph_overhead_bytes, probed by instantiate trial)",
     "warmup": "discard first 3 launches per config, repeat 10 trials",
     "metrics": ["wall_time_ms", "gpu_event_time_ms", "p50_pose_latency_us", "p99_pose_latency_us", "evals_per_sec_throughput", "nsight_concurrent_kernel_percent", "max_host_to_device_gap_us", "stage_wall_time_ms"],
-    "nsys": "nsys profile -o graph-greedy && nsys stats --report cuda_gpu_kern_sum + timeline; confirm cudaGraphLaunch + kernel overlap and zero cudaStreamSynchronize/cudaEventSynchronize/cudaMemcpy on admitted graph path (grep + timeline)",
+    "nsys": "nsys profile -o graph-greedy && nsys stats --report cuda_gpu_kern_sum + timeline; confirm cudaGraphLaunch + kernel overlap and zero cudaStreamSynchronize/cudaEventSynchronize/cudaMemcpy on admitted graph path",
     "cut0_context": "test/golden/cut0_measurement.md median 98.364us CPU / 98.624us GPU-event is context only; never used as N-way speedup. Paired serial-vs-N measurement is the speedup."
   },
   "results_stub": {

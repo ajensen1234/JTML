@@ -97,6 +97,15 @@
     "zero_sync": true,
     "zero_cudaMemcpy_on_graph_path": true
   },
+  "minimum_benefit": {
+    "N2_vs_serial_N1_paired_throughput_multiplier": 1.20,
+    "stage_wall_time_no_regress_percent": 5,
+    "N1_launch_overhead_criterion_if_N_lt_2": 0.90,
+    "p99_pose_latency_no_regress_percent": 10,
+    "nsight_concurrent_kernel_percent_N2_min": 30,
+    "max_host_to_device_gap_us": 50,
+    "rationale": "Owner may record different numbers before measurement; later 'it fit Amdahl' is not retain"
+  },
   "layer_c_tolerance": {
     "abs": 1e-12,
     "rel": 1e-9,
