@@ -4,6 +4,8 @@
 #include "compute/graph_recipe.h"
 
 #include <cuda_runtime.h>
+#include <chrono>
+#include <thread>
 
 #include <limits>
 
@@ -39,6 +41,18 @@ void InstallCudaFeederHooks(EvaluationExecutor& exec) {
         if (q == cudaSuccess) return PollResult::Done;
         if (q == cudaErrorNotReady) return PollResult::Pending;
         return PollResult::Error;
+    });
+
+    // Plan 013 U2: bounded pacing for the many-context sweep. The greedy loop
+    // calls this between zero-completion sweeps. Fixed bounded sleep (10 us)
+    // tuned to the ~97 us per-eval residency: enough to stop hot-spinning the
+    // driver while keeping the host well ahead of device completion. No
+    // cudaEventSynchronize anywhere on the admitted path (R13 / zero_sync).
+    // Headless unit tests never install this hook; they use the no-op/yield
+    // default, so the 1 ms-watchdog pins are unaffected.
+    exec.InstallPacingHook([&exec]() {
+        (void)exec;
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
     });
 
     exec.InstallCompleteFromPinsHook([&exec](std::size_t ctxIdx) -> double {

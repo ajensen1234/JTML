@@ -326,6 +326,56 @@ TEST_CASE("no pacing invocation when the sweep completes work", "[hook_feeder][p
     REQUIRE(pacingCalls == 0);
 }
 
+TEST_CASE("sole remaining context is polled once per sweep, watchdog-porous", "[hook_feeder][u2][sole]") {
+    // Plan 013 U2: when only one context remains in flight (pool 1, 1 pose),
+    // the loop must poll it once per iteration (Pending->Done, exactly 2 polls),
+    // never hot-spin, and the watchdog must still poison on a hang. The general
+    // sweep already satisfies this; the pin guards regressions to the sole tail.
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(1);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(500));
+
+    int polls = 0;
+    int pacingCalls = 0;
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([&](std::size_t) -> PollResult {
+        ++polls;
+        return polls == 1 ? PollResult::Pending : PollResult::Done;
+    });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 7.0; });
+    exec.InstallTeardownHook([]() {});
+    exec.InstallPacingHook([&]() { ++pacingCalls; });
+
+    std::vector<Point6D> poses{MakePose(1)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 0.0; });
+
+    REQUIRE(o.isOrderedScores());
+    REQUIRE(o.scores[0] == Approx(7.0));
+    // Exactly 2 polls (Pending, Done) — never a third poll of the completed lease.
+    REQUIRE(polls == 2);
+    // One zero-completion sweep (the first poll was Pending) -> exactly one pacing call.
+    REQUIRE(pacingCalls == 1);
+}
+
+TEST_CASE("sole-context hang still poisons the executor", "[hook_feeder][u2][sole][poison]") {
+    // Plan 013 U2: a hung sole context must still poison (bounded wait, not a
+    // blocking cudaEventSynchronize that would defeat the watchdog).
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(1);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(1));
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Pending; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 0.0; });
+    exec.InstallTeardownHook([]() {});
+
+    std::vector<Point6D> poses{MakePose(1)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 0.0; });
+    REQUIRE(o.kind == BatchOutcome::Kind::WatchdogPoisoned);
+    REQUIRE(exec.isPoisoned());
+    REQUIRE(exec.pool().IsPoisoned(0));
+    REQUIRE(exec.pool().IsInFlight(0));
+}
+
 TEST_CASE("poll Error returns PostLaunchAbort and drains", "[hook_feeder][error]") {
     EvaluationExecutor exec;
     exec.pool().InitForTest(3);

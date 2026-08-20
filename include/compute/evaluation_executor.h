@@ -101,6 +101,10 @@ public:
     void* graphExecAt(std::size_t idx) const;
     std::size_t preparedContextCount() const;
     BatchOutcome Prepare(const GraphRecipeKey& key, std::size_t count);
+    // Plan 013 U2: true when a custom pacing hook was installed (CUDA feeder
+    // installs bounded sleep; unit tests install spies). Distinguishes an
+    // explicit install from the default yield lambda.
+    bool pacingHookInstalled() const { return pacingInstalled_; }
 
 private:
     struct Lease {
@@ -127,6 +131,7 @@ private:
     CompleteFromPinsHookFn completeFromPinsHook_{};
     TeardownHookFn teardownHook_{};
     PacingHookFn pacingHook_{[]() { std::this_thread::yield(); }};
+    bool pacingInstalled_ = false;
 };
 
 

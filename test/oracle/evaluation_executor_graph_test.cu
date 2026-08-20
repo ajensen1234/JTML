@@ -225,8 +225,48 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     REQUIRE(outcome.scores[0] != outcome.scores[1]);
     REQUIRE(exec.firstSubmission());
 
-    // Verify no per-eval sync on admitted path (recipe completeFromPins is the path).
-    // complete() would sync; completeFromPins must not. The .cu installer uses completeFromPins.
-    // We grep the production feeder: no cudaStreamSynchronize / cudaDeviceSynchronize in the admitted loop.
-    // (Checked here as documentation; the real grep is in the worker's verification step.)
+    // Plan 013 U2 (persona-gate F3/graph-lifecycle P2): a CODE-LEVEL census,
+    // not a comment. `InstallCudaFeederHooks` (the admitted-path feeder) must
+    // never call the synchronizing variants: we read the .cu source and assert
+    // it contains no cudaEventSynchronize / cudaStreamSynchronize / blocking
+    // cudaMemcpy on the accepted path (complete() is the synchronizing serial
+    // helper and is expressly not referenced by the feeder).
+    {
+        std::ifstream cu("src/compute/evaluation_executor.cu");
+        REQUIRE(cu.is_open());
+        std::ostringstream ss;
+        ss << cu.rdbuf();
+        const std::string src = ss.str();
+        // Strip line comments so the census checks actual calls, not prose.
+        std::string code;
+        code.reserve(src.size());
+        {
+            std::size_t i = 0;
+            while (i < src.size()) {
+                if (src[i] == '/' && i + 1 < src.size() && src[i + 1] == '/') {
+                    while (i < src.size() && src[i] != '\n') ++i;
+                } else {
+                    code.push_back(src[i]);
+                    ++i;
+                }
+            }
+        }
+        REQUIRE(code.find("cudaEventSynchronize") == std::string::npos);
+        REQUIRE(code.find("cudaStreamSynchronize") == std::string::npos);
+        REQUIRE(code.find("cudaDeviceSynchronize") == std::string::npos);
+        // The feeder must complete via completeFromPins, never the sync'ing complete().
+        REQUIRE(code.find("complete(") == std::string::npos);
+        REQUIRE(code.find("completeFromPins") != std::string::npos);
+    }
+    // The pacing hook must be installed by the CUDA feeder (bounded sleep).
+    REQUIRE(exec.pacingHookInstalled());
+}
+
+// Plan 013 U2: InstallCudaFeederHooks must install a bounded pacing hook
+// (never leave the default hot-spin-yield on the real GPU path).
+TEST_CASE("cuda feeder installs bounded pacing", "[graph_executor][sync]") {
+    gpu_cost_function::EvaluationExecutor exec;
+    // No pool needed: InstallCudaFeederHooks only wires hooks.
+    gpu_cost_function::InstallCudaFeederHooks(exec);
+    REQUIRE(exec.pacingHookInstalled());
 }

@@ -78,6 +78,7 @@ void EvaluationExecutor::InstallTeardownHook(TeardownHookFn hook) {
 
 void EvaluationExecutor::InstallPacingHook(PacingHookFn hook) {
     pacingHook_ = std::move(hook);
+    pacingInstalled_ = true;
 }
 
 std::size_t EvaluationExecutor::graphExecsSize() const {
