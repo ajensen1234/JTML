@@ -215,10 +215,11 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
     if (poses.empty()) {
         return BatchOutcome::Ordered({});
     }
-    // Degenerate N<=1: serial fallback, still ordered, still respects firstSubmission
-    // but does not exercise greedy. This keeps headless deterministic and
-    // preserves the serial adapter semantics for trivial batches (R1,R2,R11).
-    if (poolSize() <= 1) {
+    // Degenerate N<=1: serial fallback ONLY when no hooks installed (headless stub).
+    // When hooks are installed (real graph), even N=1 must go through the hook-driven
+    // greedy path to actually launch graphs (U7 N=1 overhead arm).
+    const bool useHooksEarly = static_cast<bool>(enqueueHook_) && static_cast<bool>(pollHook_) && static_cast<bool>(completeFromPinsHook_);
+    if (poolSize() <= 1 && !useHooksEarly) {
         std::vector<double> out;
         out.reserve(poses.size());
         for (std::size_t i = 0; i < poses.size(); ++i) {
@@ -237,9 +238,7 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
 
     // Greedy N>1 path
     // Greedy N>1 path — hook-driven when all hooks set (U4), else headless stub
-    const bool useHooks = static_cast<bool>(enqueueHook_) &&
-                          static_cast<bool>(pollHook_) &&
-                          static_cast<bool>(completeFromPinsHook_);
+    const bool useHooks = useHooksEarly;
     if (useHooks) {
         std::vector<double> result(poses.size(), 0.0);
         std::vector<Lease> inFlight;

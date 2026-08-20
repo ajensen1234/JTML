@@ -25,28 +25,33 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <numeric>
-#include <string>
 #include <vector>
 
+#include <cstring>
+#include <unistd.h>
+
 #include <cuda_runtime.h>
-#include <memory>
-#include <sstream>
+
+#include <opencv2/imgcodecs.hpp>
 
 #include "compute/bank_state.cuh"
-#include "compute/graph_recipe.h"
-#include "compute/graph_recipe_direct_dilation.h"
+#include "compute/camera_calibration.h"
 #include "compute/evaluation_context.h"
 #include "compute/evaluation_executor.h"
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_frame.cuh"
 #include "compute/gpu_image.cuh"
 #include "compute/gpu_metrics.cuh"
+#include "compute/graph_recipe.h"
+#include "compute/graph_recipe_direct_dilation.h"
 #include "compute/render_engine.cuh"
-#include "compute/camera_calibration.h"
 #include "domain/data_structures_6D.h"
+#include "throughput_serial_pipeline.h"
 
 // ---------------------------------------------------------------------------
 // Helpers: frozen pre-registration verification (R12, no GPU needed)
@@ -271,6 +276,10 @@ TEST_CASE("U8 serial N=1 smoke still available on GPU (or skipped)",
     SUCCEED("GPU present — serial N=1 smoke passed (full paired timing deferred to manual RTX 3090 run)");
 }
 
+// Helpers for TRUE serial BuildGpuCostAdapter baseline — delegated to helper compiled as host C++
+// (avoids nvcc Qt conflict). See throughput_serial_pipeline.h/.cpp
+#include "throughput_serial_pipeline.h"
+
 // Real 4-arm helpers (mirrors evaluation_executor_graph_test.cu proven pattern)
 namespace {
 constexpr int kW = 1024; constexpr int kH = 1024; constexpr int kTri = 12412; constexpr int kDil = 6;
@@ -316,10 +325,7 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
     int dc=0; if(cudaGetDeviceCount(&dc)!=cudaSuccess||dc==0){ SUCCEED("No CUDA device — real 4-arm skipped"); return; }
     cudaGetLastError(); cudaSetDevice(0);
     ThrFixture fix; REQUIRE(fix.setup());
-    // Build serial pipeline for BuildGpuCostAdapter baseline (like layered test)
-    // Minimal pipeline: create a Pipeline-like serial cost via the same GPU objects
-    // For throughput, serial timing uses direct BuildGpuCostAdapter if available; fallback to executor N=1 serial path.
-    // We reuse the proven executor graph path for graph arms.
+    // Build TRUE serial pipeline via helper (host C++ compiled, avoids nvcc Qt)
     auto makeGraphExec = [&](int N, ThrFixture& f, gpu_cost_function::GraphRecipeKey key) -> std::unique_ptr<gpu_cost_function::EvaluationExecutor> {
         auto exec = std::make_unique<gpu_cost_function::EvaluationExecutor>();
         gpu_cost_function::BankFootprintInput lo{}; lo.width=kW; lo.height=kH; lo.triangle_count=kTri;
@@ -346,49 +352,130 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
     gkey.maximum_stride_size=10000000; gkey.graph_overhead_bytes=4*1024*1024; gkey.version="1";
     const std::vector<int> batches={8,16,32};
     const int warmup=3, trials=10;
+    struct ArmResult { int batch=0; double serial_ms_p50=0, serial_p50_us=0, serial_p99_us=0, serial_eps=0; double gN1_ms_p50=0, gN1_eps=0; double gN2_ms_p50=0, gN2_p99_us=0, gN2_eps=0; double gNmax_ms_p50=0, gNmax_eps=0; int admitted_N=0; };
+    std::vector<ArmResult> allResults;
+    auto preRegTxt = readFile("test/golden/graph_pre_registration.json");
+    auto parseDouble = [&](const std::string& key, double def){ auto pos=preRegTxt.find("\""+key+"\""); if(pos==std::string::npos) return def; pos=preRegTxt.find(':',pos); if(pos==std::string::npos) return def; char* e=nullptr; double v=std::strtod(preRegTxt.c_str()+pos+1,&e); return (e!=preRegTxt.c_str()+pos+1)?v:def; };
+    double minBenefit = parseDouble("N2_vs_serial_N1_paired_throughput_multiplier", 1.20);
+    double stageWallNoRegress = parseDouble("stage_wall_time_no_regress_percent", 5.0);
+    double p99NoRegress = parseDouble("p99_pose_latency_no_regress_percent", 10.0);
+    double n1Criterion = parseDouble("N1_launch_overhead_criterion_if_N_lt_2", 0.90);
+    std::cout << "[throughput] thresholds: minBenefit " << minBenefit << " stageWall " << stageWallNoRegress << "% p99 " << p99NoRegress << "% N1crit " << n1Criterion << std::endl;
+    auto serialCtx = throughput_serial::CreateSerialContext();
+    auto& serialCost = serialCtx.cost;
+    REQUIRE(static_cast<bool>(serialCost));
     for(int batch: batches){
         auto poses = ThrPoses(batch);
-        // Serial N=1 via direct executor N=1 fallback (no graph) — timed with cudaEvent pair (separate timing events)
-        cudaEvent_t sS,sE; cudaEventCreateWithFlags(&sS,0); cudaEventCreateWithFlags(&sE,0);
+        // Serial N=1 via TRUE BuildGpuCostAdapter — HOST steady_clock wall per batch (correct, not cudaEvent on stream 0)
         std::vector<double> tSerial; tSerial.reserve(warmup+trials);
-        auto serialExec = makeGraphExec(1, fix, gkey);
-        // For serial, we run via executor with N=1 but hooks installed -> still graph; to get true serial baseline
-        // we run the raw cost loop via the same executor's serial fallback by temporarily clearing hooks.
-        // Simpler: measure serial as graph N=1 with hooks vs graph N=2; the 1.20x gate is N2 vs serial N1.
-        // Here we measure serial as: executor N=1 with hooks (graph N=1 overhead arm) vs N=2 overlap arm.
-        // The true BuildGpuCostAdapter serial would be similar wall time to graph N=1; we use graph N=1 as serial proxy for now and assert N2 faster.
         for(int t=0; t<warmup+trials; ++t){
-            cudaEventRecord(sS,0);
-            auto out = serialExec->RunBatchWithCost(poses, [](const Point6D&, std::size_t)->double{ return 0; });
-            cudaEventRecord(sE,0); cudaEventSynchronize(sE);
-            float ms=0; cudaEventElapsedTime(&ms,sS,sE);
-            if(t>=warmup){ REQUIRE(out.isOrderedScores()); tSerial.push_back((double)ms); }
+            auto t0 = std::chrono::steady_clock::now();
+            for(auto &q: poses){ double c = serialCost(q); (void)c; REQUIRE(std::isfinite(c)); }
+            auto t1 = std::chrono::steady_clock::now();
+            double ms = std::chrono::duration<double, std::milli>(t1-t0).count();
+            if(t>=warmup) tSerial.push_back(ms);
         }
-        cudaEventDestroy(sS); cudaEventDestroy(sE);
         std::sort(tSerial.begin(), tSerial.end());
         double p50_s = percentile(tSerial,0.5);
-        // Graph N=2
+        double p99_s = percentile(tSerial,0.99);
+        REQUIRE(p50_s>0); REQUIRE(std::isfinite(p50_s));
+        double eps_s = batch / p50_s * 1000.0;
+        // Graph N=1 (launch overhead arm) — HOST steady_clock wall per batch
+        auto exec1 = makeGraphExec(1, fix, gkey);
+        std::vector<double> tG1; tG1.reserve(warmup+trials);
+        for(int t=0; t<warmup+trials; ++t){
+            auto t0 = std::chrono::steady_clock::now();
+            auto out = exec1->RunBatchWithCost(poses, [](const Point6D&, std::size_t)->double{ return 0; });
+            auto t1 = std::chrono::steady_clock::now();
+            double ms = std::chrono::duration<double, std::milli>(t1-t0).count();
+            if(t>=warmup){ REQUIRE(out.isOrderedScores()); REQUIRE(out.scores.size()==poses.size()); for(double s: out.scores) REQUIRE(std::isfinite(s)); tG1.push_back(ms); }
+        }
+        std::sort(tG1.begin(), tG1.end());
+        double p50_g1 = percentile(tG1,0.5);
+        double eps_g1 = batch / p50_g1 * 1000.0;
+        // Graph N=2 (overlap arm)
         auto exec2 = makeGraphExec(2, fix, gkey);
-        cudaEvent_t gS,gE; cudaEventCreateWithFlags(&gS,0); cudaEventCreateWithFlags(&gE,0);
+        int admitted_N2 = (int)exec2->pool().size();
         std::vector<double> tG2; tG2.reserve(warmup+trials);
         for(int t=0; t<warmup+trials; ++t){
-            cudaEventRecord(gS,0);
+            auto t0 = std::chrono::steady_clock::now();
             auto out = exec2->RunBatchWithCost(poses, [](const Point6D&, std::size_t)->double{ return 0; });
-            cudaEventRecord(gE,0); cudaEventSynchronize(gE);
-            float ms=0; cudaEventElapsedTime(&ms,gS,gE);
-            if(t>=warmup){ REQUIRE(out.isOrderedScores()); REQUIRE(out.scores.size()==poses.size());
-                for(double s: out.scores) REQUIRE(std::isfinite(s));
-                tG2.push_back((double)ms); }
+            auto t1 = std::chrono::steady_clock::now();
+            double ms = std::chrono::duration<double, std::milli>(t1-t0).count();
+            if(t>=warmup){ REQUIRE(out.isOrderedScores()); REQUIRE(out.scores.size()==poses.size()); for(double s: out.scores) REQUIRE(std::isfinite(s)); tG2.push_back(ms); }
         }
-        cudaEventDestroy(gS); cudaEventDestroy(gE);
         std::sort(tG2.begin(), tG2.end());
         double p50_g2 = percentile(tG2,0.5), p99_g2 = percentile(tG2,0.99);
         double eps_g2 = batch / p50_g2 * 1000.0;
-        std::cout << "[throughput] batch " << batch << " graph N=1 p50 " << p50_s << " ms | N=2 p50 " << p50_g2 << " ms p99 " << p99_g2 << " eps " << eps_g2 << std::endl;
-        REQUIRE(p50_g2 > 0);
-        REQUIRE(std::isfinite(p50_g2));
-        // Basic anti-stub: graph N=2 must produce finite timing (not 0) and not crash
-        (void)p50_s;
+        // Graph N=max (try 4, admitted may be less)
+        auto execMax = makeGraphExec(4, fix, gkey);
+        int admitted_Nmax = (int)execMax->pool().size();
+        std::vector<double> tGmax; tGmax.reserve(warmup+trials);
+        for(int t=0; t<warmup+trials; ++t){
+            auto t0 = std::chrono::steady_clock::now();
+            auto out = execMax->RunBatchWithCost(poses, [](const Point6D&, std::size_t)->double{ return 0; });
+            auto t1 = std::chrono::steady_clock::now();
+            double ms = std::chrono::duration<double, std::milli>(t1-t0).count();
+            if(t>=warmup){ REQUIRE(out.isOrderedScores()); tGmax.push_back(ms); }
+        }
+        std::sort(tGmax.begin(), tGmax.end());
+        double p50_gmax = percentile(tGmax,0.5);
+        double eps_gmax = batch / p50_gmax * 1000.0;
+        double p50_s_us = p50_s*1000.0/batch, p99_s_us = p99_s*1000.0/batch;
+        double p50_g2_us = p50_g2*1000.0/batch; double p99_g2_us = p99_g2*1000.0/batch;
+        std::cout << "[throughput] batch " << batch << " serial p50 " << p50_s << " ms eps " << eps_s << " p99 " << p99_s*1000.0/batch << "us | graph N=1 p50 " << p50_g1 << " eps " << eps_g1 << " | N=2 p50 " << p50_g2 << " p99 " << p99_g2 << " eps " << eps_g2 << " admitted " << admitted_N2 << " | Nmax " << admitted_Nmax << " p50 " << p50_gmax << " eps " << eps_gmax << std::endl;
+        REQUIRE(p50_g2 > 0); REQUIRE(std::isfinite(p50_g2));
+        REQUIRE(p50_s > 0);
+        ArmResult r; r.batch=batch; r.serial_ms_p50=p50_s; r.serial_p50_us=p50_s_us; r.serial_p99_us=p99_s_us; r.serial_eps=eps_s; r.gN1_ms_p50=p50_g1; r.gN1_eps=eps_g1; r.gN2_ms_p50=p50_g2; r.gN2_p99_us=p99_g2_us; r.gN2_eps=eps_g2; r.gNmax_ms_p50=p50_gmax; r.gNmax_eps=eps_gmax; r.admitted_N=admitted_Nmax;
+        allResults.push_back(r);
+        (void)p50_s_us; (void)p50_g2_us;
     }
-    SUCCEED("Real 4-arm throughput harness executed (graph N=1/N=2 via real EvaluationExecutor + separate timing events)");
+    ArmResult* gate = nullptr; for(auto &r: allResults) if(r.batch==16) gate=&r;
+    REQUIRE(gate != nullptr);
+    double benefit = (gate->serial_eps>0) ? (gate->gN2_eps / gate->serial_eps) : 0;
+    std::cout << "[throughput] GATE batch16: serial eps " << gate->serial_eps << " vs graph N=2 eps " << gate->gN2_eps << " => benefit " << benefit << "x (need >=" << minBenefit << ")" << std::endl;
+    double wallRegress = (gate->gN2_ms_p50 - gate->serial_ms_p50)/gate->serial_ms_p50*100.0;
+    double p99Regress = (gate->gN2_p99_us - gate->serial_p99_us)/gate->serial_p99_us*100.0;
+    std::cout << "[throughput] wall regress " << wallRegress << "% (allow +" << stageWallNoRegress << "%), p99 regress " << p99Regress << "% (allow +" << p99NoRegress << "%)" << std::endl;
+    bool overlapAvailable = true; for(auto &r: allResults) if(r.admitted_N <2) overlapAvailable=false;
+    std::string verdict="blocked"; std::string reason;
+    bool nsysAvailable = isNsysAvailable();
+    // nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle  (orchestrator runs nsys separately)
+    if(!nsysAvailable){
+        verdict="blocked"; reason="nsys not available, manual run required";
+    } else if(gate->admitted_N <2 || !overlapAvailable){
+        double n1Benefit = (gate->serial_eps>0) ? (gate->gN1_eps / gate->serial_eps) : 0;
+        std::cout << "[throughput] overlap unavailable (admitted N<2), N=1 benefit " << n1Benefit << " need >=" << n1Criterion << std::endl;
+        if(n1Benefit >= n1Criterion && wallRegress <= stageWallNoRegress){
+            verdict="retained"; reason="N<2 overlap unavailable but N=1 launch overhead criterion met";
+        } else {
+            verdict="reverted"; reason="N<2 overlap unavailable and N=1 criterion not met";
+        }
+    } else {
+        bool benefitOk = benefit >= minBenefit;
+        bool wallOk = wallRegress <= stageWallNoRegress;
+        bool p99Ok = p99Regress <= p99NoRegress;
+        if(benefitOk && wallOk && p99Ok){
+            verdict="retained"; reason="N=2 benefit + wall/p99 within thresholds";
+        } else {
+            verdict="reverted"; reason="gate failed: benefitOk="+std::to_string(benefitOk)+" wallOk="+std::to_string(wallOk)+" p99Ok="+std::to_string(p99Ok);
+        }
+    }
+    for(auto &r: allResults){ REQUIRE(r.serial_eps>0); REQUIRE(r.gN2_eps>0); REQUIRE(std::isfinite(r.gN2_ms_p50)); }
+    {
+        std::ofstream out("test/golden/graph_performance_baseline.json");
+        REQUIRE(out.good());
+        std::string commit="unknown"; { char buf[128]={}; FILE* p=popen("git rev-parse HEAD 2>/dev/null | tr -d '\\n'","r"); if(p){ if(fgets(buf,sizeof(buf),p)) commit=buf; pclose(p);} if(commit.empty()) commit="unknown"; }
+        std::string hostname="unknown"; { char h[128]={}; if(gethostname(h,sizeof(h))==0) hostname=h; }
+        std::string gpu="RTX 3090 Ti"; { cudaDeviceProp prop{}; if(cudaGetDeviceProperties(&prop,0)==cudaSuccess) gpu=prop.name; }
+        int driverVer=0; cudaDriverGetVersion(&driverVer);
+        out << "{\n  \"version\": \"1\",\n  \"date\": \"2026-08-20\",\n  \"commit\": \"" << commit << "\",\n";
+        out << "  \"device\": {\"hostname\": \"" << hostname << "\", \"gpu\": \"" << gpu << "\", \"cuda_driver\": " << driverVer << "},\n";
+        out << "  \"pre_registration_ref\": \"test/golden/graph_pre_registration.json\",\n  \"method\": {\"pairs\": \"serial N=1 via BuildGpuCostAdapter vs graph N=1/N=2/Nmax (steady_clock wall, warmup 3 discard, 10 trials)\", \"nsys\": \"nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle\"},\n";
+        out << "  \"per_workload\": [\n";
+        for(size_t i=0;i<allResults.size();++i){ auto &r=allResults[i]; out << "    {\"pose_batch_size\": " << r.batch << ", \"serial_ms_p50\": " << r.serial_ms_p50 << ", \"serial_eps\": " << r.serial_eps << ", \"gN1_ms_p50\": " << r.gN1_ms_p50 << ", \"gN1_eps\": " << r.gN1_eps << ", \"gN2_ms_p50\": " << r.gN2_ms_p50 << ", \"gN2_p99_us\": " << r.gN2_p99_us << ", \"gN2_eps\": " << r.gN2_eps << ", \"gNmax_ms_p50\": " << r.gNmax_ms_p50 << ", \"gNmax_eps\": " << r.gNmax_eps << ", \"admitted_N\": " << r.admitted_N << "}"; if(i+1<allResults.size()) out << ","; out << "\n"; }
+        out << "  ],\n  \"verdict\": \"" << verdict << "\",\n  \"reason\": \"" << reason << "\",\n  \"benefit_N2_vs_serial\": " << benefit << ", \"nsys\": \"" << (nsysAvailable?"nsys available":"nsys not available, manual run required") << "\"\n}\n";
+        std::cout << "[throughput] wrote test/golden/graph_performance_baseline.json verdict " << verdict << " benefit " << benefit << "x" << std::endl;
+    }
+    SUCCEED("Real 4-arm throughput harness executed (serial via BuildGpuCostAdapter + graph N=1/N=2/Nmax via real EvaluationExecutor, steady_clock wall)");
 }

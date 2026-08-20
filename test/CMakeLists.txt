@@ -1776,6 +1776,9 @@ set_tests_properties(jtml.cut0_measurement PROPERTIES LABELS "oracle;gpu" TIMEOU
 # launches per config (warmup). Records wall/GPU event/p50/p99/evals/sec.
 add_executable(jtml_test_graph_throughput_oracle
     oracle/graph_throughput_oracle_test.cu
+    oracle/throughput_serial_pipeline.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp
     ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp)
 target_include_directories(jtml_test_graph_throughput_oracle PRIVATE
     ${PROJECT_SOURCE_DIR}/include
