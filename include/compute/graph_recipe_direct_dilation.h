@@ -32,6 +32,7 @@ public:
     bool updateParams(void* graphExec, EvaluationContext& ctx) const override;
     bool launch(void* graphExec, void* stream) const override;
     double complete(EvaluationContext& ctx) const override;
+    double completeFromPins(EvaluationContext& ctx) const override;
     void destroyGraph(void* graphExec) const override;
 };
 

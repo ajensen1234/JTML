@@ -25,6 +25,8 @@
 
 namespace gpu_cost_function {
 
+enum class PollResult { Pending, Done, Error };
+
 class EvaluationExecutor {
 public:
     EvaluationExecutor() = default;
@@ -73,9 +75,20 @@ public:
     // Plan 012 U3 C2/C5: executor-owned wrappers + CUDA-free hook seam
     using PrepareHookFn = std::function<void*(std::size_t idx, const GraphRecipeKey& key)>;
     using DestroyHookFn = std::function<void(std::size_t idx)>;
+    // Plan 012 U4 (C5/C6): hook-driven greedy feeder + no-sync completion.
+    // Header stays CUDA-free (no cuda_runtime.h). .cu installs real CUDA hooks.
+    using EnqueueHookFn = std::function<bool(std::size_t ctxIdx, std::size_t inputPos, const Point6D& pose)>;
+    using PollHookFn = std::function<PollResult(std::size_t ctxIdx)>;
+    using CompleteFromPinsHookFn = std::function<double(std::size_t ctxIdx)>;
+    using TeardownHookFn = std::function<void()>;
+    void InstallEnqueueHook(EnqueueHookFn hook);
+    void InstallPollHook(PollHookFn hook);
+    void InstallCompleteFromPinsHook(CompleteFromPinsHookFn hook);
+    void InstallTeardownHook(TeardownHookFn hook);
     void InstallPrepareHook(PrepareHookFn hook);
     void InstallDestroyHook(DestroyHookFn hook);
     std::size_t graphExecsSize() const;
+    void* graphExecAt(std::size_t idx) const;
     std::size_t preparedContextCount() const;
     BatchOutcome Prepare(const GraphRecipeKey& key, std::size_t count);
 
@@ -98,6 +111,16 @@ private:
     std::vector<void*> graphExecs_{};
     PrepareHookFn prepareHook_{};
     DestroyHookFn destroyHook_{};
+    EnqueueHookFn enqueueHook_{};
+    PollHookFn pollHook_{};
+    CompleteFromPinsHookFn completeFromPinsHook_{};
+    TeardownHookFn teardownHook_{};
 };
+
+
+// Plan 012 U4 (C5): CUDA feeder hooks installer defined in .cu.
+// Headless tests link without .cu, so this symbol is only required
+// when the .cu TU is linked (coordinator links full jtml_compute).
+void InstallCudaFeederHooks(EvaluationExecutor& exec);
 
 }  // namespace gpu_cost_function

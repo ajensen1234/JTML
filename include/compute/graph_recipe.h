@@ -125,7 +125,23 @@ public:
     virtual bool launch(void* graphExec, void* stream) const = 0;
     virtual double complete(EvaluationContext& ctx) const = 0;
     virtual void destroyGraph(void* graphExec) const = 0;
+
+    // Plan 012 U4 (C6): no-sync twin of complete() — reads pinned scores
+    // without stream sync. Caller guarantees D2H landed via event query.
+    virtual double completeFromPins(EvaluationContext& ctx) const {
+        return complete(ctx);
+    }
 };
+
+// Plan 012 U4 (C6): shared composition helper — the syncing complete()
+// and the no-sync completeFromPins() must produce identical scores.
+inline double ComposeDirectDilationScore(int white_sum, int pixel_score,
+                                         int distance_score, int edge_count) {
+    return static_cast<double>(white_sum) +
+           (-1.0 * static_cast<double>(pixel_score)) +
+           (static_cast<double>(distance_score) /
+            (static_cast<double>(edge_count) + 0.1));
+}
 
 // Registry enumerates recipes; admits only DIRECT_DILATION monoplane initially.
 class GraphRecipeRegistry {

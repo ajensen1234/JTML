@@ -467,26 +467,30 @@ double DirectDilationMonoplaneRecipe::complete(EvaluationContext& ctx) const {
         ctx.status = EvaluationStatus::Failed;
         return std::numeric_limits<double>::quiet_NaN();
     }
-    ctx.status = EvaluationStatus::Ready;
+    return completeFromPins(ctx);
+}
 
-    // DIRECT_DILATION monoplane composition (mirrors the serial path,
-    // CostFunctionManager/CompleteDirectDilationOnBank):
-    //   score = comparison_image_white_sum + (-pixel_score)
-    //           + host_distance_score/(host_edge_count+0.1)
-    // The white-sum baseline is a frozen per-frame constant set by the
-    // executor (dilated comparison image A); omitting it would shift every
-    // graph score by a large constant relative to the serial path.
+double DirectDilationMonoplaneRecipe::completeFromPins(EvaluationContext& ctx) const {
+    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.host_overflowFlag == nullptr) {
+        ctx.status = EvaluationStatus::Failed;
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    if (*static_cast<int*>(ctx.host_overflowFlag) != 0) {
+        ctx.status = EvaluationStatus::Failed;
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    ctx.status = EvaluationStatus::Ready;
     if (ctx.metrics.host_pixel_score == nullptr ||
         ctx.metrics.host_distance_score == nullptr ||
         ctx.metrics.host_edge_count == nullptr) {
         ctx.status = EvaluationStatus::Failed;
         return std::numeric_limits<double>::quiet_NaN();
     }
-    const double score =
-        static_cast<double>(ctx.comparison_image_white_sum) +
-        (-1.0 * static_cast<double>(*static_cast<int*>(ctx.metrics.host_pixel_score))) +
-        (static_cast<double>(*static_cast<int*>(ctx.metrics.host_distance_score)) /
-         (static_cast<double>(*static_cast<int*>(ctx.metrics.host_edge_count)) + 0.1));
+    const double score = ComposeDirectDilationScore(
+        ctx.comparison_image_white_sum,
+        *static_cast<int*>(ctx.metrics.host_pixel_score),
+        *static_cast<int*>(ctx.metrics.host_distance_score),
+        *static_cast<int*>(ctx.metrics.host_edge_count));
     if (!std::isfinite(score)) {
         ctx.status = EvaluationStatus::Failed;
         return std::numeric_limits<double>::quiet_NaN();

@@ -113,6 +113,19 @@ target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2Wit
 add_test(NAME jtml.direct_optimizer_batch COMMAND jtml_test_direct_optimizer_batch)
 set_tests_properties(jtml.direct_optimizer_batch PROPERTIES LABELS "headless" TIMEOUT 300)
 
+# Plan 012 U4 — hook-driven greedy feeder + ComposeDirectDilationScore (headless)
+add_executable(jtml_test_hook_feeder
+    unit/hook_feeder_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_optimizer.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp)
+target_include_directories(jtml_test_hook_feeder PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_hook_feeder PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+add_test(NAME jtml.hook_feeder COMMAND jtml_test_hook_feeder)
+set_tests_properties(jtml.hook_feeder PROPERTIES LABELS "headless" TIMEOUT 300)
+
 # CostCapacityService pure capacity sizing math (plan 010 U9). The service's
 # sizing functions are INLINE in the header (cost_capacity_service.cuh), so this
 # headless test compiles the header only -- no CUDA link -- against injected fake

@@ -13,6 +13,7 @@
 
 #include "compute/evaluation_executor.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <chrono>
 #include <thread>
@@ -56,10 +57,30 @@ void EvaluationExecutor::InstallDestroyHook(DestroyHookFn hook) {
     destroyHook_ = std::move(hook);
 }
 
+void EvaluationExecutor::InstallEnqueueHook(EnqueueHookFn hook) {
+    enqueueHook_ = std::move(hook);
+}
+
+void EvaluationExecutor::InstallPollHook(PollHookFn hook) {
+    pollHook_ = std::move(hook);
+}
+
+void EvaluationExecutor::InstallCompleteFromPinsHook(CompleteFromPinsHookFn hook) {
+    completeFromPinsHook_ = std::move(hook);
+}
+
+void EvaluationExecutor::InstallTeardownHook(TeardownHookFn hook) {
+    teardownHook_ = std::move(hook);
+}
+
 std::size_t EvaluationExecutor::graphExecsSize() const {
     return graphExecs_.size();
 }
 
+void* EvaluationExecutor::graphExecAt(std::size_t idx) const {
+    if (idx >= graphExecs_.size()) return nullptr;
+    return graphExecs_[idx];
+}
 std::size_t EvaluationExecutor::preparedContextCount() const {
     std::size_t c = 0;
     for (auto* p : graphExecs_) if (p != nullptr) ++c;
@@ -203,26 +224,126 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
     }
 
     // Greedy N>1 path
+    // Greedy N>1 path — hook-driven when all hooks set (U4), else headless stub
+    const bool useHooks = static_cast<bool>(enqueueHook_) &&
+                          static_cast<bool>(pollHook_) &&
+                          static_cast<bool>(completeFromPinsHook_);
+    if (useHooks) {
+        std::vector<double> result(poses.size(), 0.0);
+        std::vector<Lease> inFlight;
+        inFlight.reserve(poses.size());
+        std::size_t nextPos = 0;
+        auto watchdogStart = std::chrono::steady_clock::now();
+        while (nextPos < poses.size() || !inFlight.empty()) {
+            while (nextPos < poses.size()) {
+                int idx = pool_.Checkout();
+                if (idx < 0) break;
+                EvaluationContext* ctx = pool_.context(static_cast<std::size_t>(idx));
+                if (!ctx) {
+                    if (firstSubmission_.load()) {
+                        result.clear();
+                        if (teardownHook_) teardownHook_();
+                        for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                        pool_.ForceRelease(static_cast<std::size_t>(idx));
+                        return BatchOutcome::PostLaunchAbort("null context after checkout");
+                    }
+                    pool_.ForceRelease(static_cast<std::size_t>(idx));
+                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                    return BatchOutcome::NotSubmitted("null context before submission");
+                }
+                ctx->input_index = static_cast<int>(nextPos);
+                ctx->status = EvaluationStatus::InFlight;
+                ctx->in_flight = true;
+                bool enqOk = enqueueHook_(static_cast<std::size_t>(idx), nextPos, poses[nextPos]);
+                if (!enqOk) {
+                    result.clear();
+                    if (teardownHook_) teardownHook_();
+                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                    pool_.ForceRelease(static_cast<std::size_t>(idx));
+                    if (firstSubmission_.load()) {
+                        return BatchOutcome::PostLaunchAbort("enqueue/launch failed");
+                    }
+                    return BatchOutcome::NotSubmitted("enqueue failed before first submission");
+                }
+                firstSubmission_.store(true);
+                inFlight.push_back(Lease{static_cast<std::size_t>(idx), nextPos});
+                ++nextPos;
+                if (inFlight.size() >= pool_.size()) break;
+            }
+            if (inFlight.empty()) {
+                if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+                    result.clear();
+                    return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
+                }
+                std::this_thread::yield();
+                continue;
+            }
+            // Poll ALL inFlight to allow OOO completion.
+            std::vector<Lease> survivors;
+            survivors.reserve(inFlight.size());
+            bool anyDone = false;
+            bool abort = false;
+            BatchOutcome abortOutcome = BatchOutcome::PostLaunchAbort("poll error");
+            for (auto cur : inFlight) {
+                PollResult pr = pollHook_(cur.ctxIdx);
+                if (pr == PollResult::Done) {
+                    double s = completeFromPinsHook_(cur.ctxIdx);
+                    if (!std::isfinite(s)) {
+                        abort = true;
+                        abortOutcome = BatchOutcome::PostLaunchAbort("overflow/non-finite");
+                        // fall through to abort handling after polling all
+                    } else {
+                        result[cur.inputPos] = s;
+                        pool_.Recycle(cur.ctxIdx, true);
+                        anyDone = true;
+                        watchdogStart = std::chrono::steady_clock::now();
+                        continue;
+                    }
+                } else if (pr == PollResult::Error) {
+                    abort = true;
+                    abortOutcome = BatchOutcome::PostLaunchAbort("poll error");
+                } else {
+                    survivors.push_back(cur);
+                }
+            }
+            if (abort) {
+                result.clear();
+                if (teardownHook_) teardownHook_();
+                for (auto &l : inFlight) {
+                    pool_.ForceRelease(l.ctxIdx);
+                }
+                return abortOutcome;
+            }
+            inFlight = std::move(survivors);
+            if (!anyDone) {
+                if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+                    result.clear();
+                    if (teardownHook_) teardownHook_();
+                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                    return BatchOutcome::WatchdogPoisoned("watchdog expiry");
+                }
+                std::this_thread::yield();
+            }
+        }
+        if (result.size() != poses.size()) {
+            throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
+        }
+        return BatchOutcome::Ordered(std::move(result));
+    }
+    // Legacy headless stub (null hooks) — preserve exact U1/U3 behavior
     std::vector<double> result(poses.size(), 0.0);
     std::vector<Lease> inFlight;
     inFlight.reserve(poses.size());
     std::size_t nextPos = 0;
     auto watchdogStart = std::chrono::steady_clock::now();
-
-    // For headless determinism, we finish in input order but simulate
-    // out-of-order completion by polling oldest first; result is still
-    // stored at input index, so out-of-order does not affect ordering.
     while (nextPos < poses.size() || !inFlight.empty()) {
-        // Try to checkout as many as possible up to pool size
         while (nextPos < poses.size()) {
             int idx = pool_.Checkout();
             if (idx < 0) break;
             EvaluationContext* ctx = pool_.context(static_cast<std::size_t>(idx));
             if (!ctx) {
                 pool_.Recycle(static_cast<std::size_t>(idx), false);
-                // Real CUDA error after firstSubmission should abort
                 if (firstSubmission_.load()) {
-                    // clear ordered result vector, wait for all streams/events (noop headless), abort
                     result.clear();
                     for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
                     return BatchOutcome::PostLaunchAbort("null context after checkout");
@@ -232,18 +353,12 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             ctx->input_index = static_cast<int>(nextPos);
             ctx->status = EvaluationStatus::InFlight;
             ctx->in_flight = true;
-            // Simulate graph param update + launch
-            // In GPU build this would be: registry.FindEligible->updateParams + cudaGraphLaunch
-            // Here we just mark firstSubmission
             firstSubmission_.store(true);
             inFlight.push_back(Lease{static_cast<std::size_t>(idx), nextPos});
             ++nextPos;
             if (inFlight.size() >= pool_.size()) break;
         }
-
         if (inFlight.empty()) {
-            // No work in flight but still have pending poses — should not happen
-            // Check watchdog
             if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
                 result.clear();
                 return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
@@ -251,16 +366,10 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             std::this_thread::yield();
             continue;
         }
-
-        // Poll oldest lease first (headless immediate success). Real GPU would
-        // loop over inFlight with cudaEventQuery and handle NotReady vs error.
         Lease cur = inFlight.front();
-        // Simulate EventQuery: always success in headless (no NotReady)
         bool ok = pollOneLease(cur, result, costWithIndex, poses);
         if (!ok) {
-            // Real CUDA error after firstSubmission -> abort batch, clear vector
             result.clear();
-            // Wait for all streams/events (headless noop) and recycle remaining
             for (auto &l : inFlight) {
                 if (l.ctxIdx != cur.ctxIdx) pool_.Recycle(l.ctxIdx, false);
             }
@@ -268,20 +377,17 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
         }
         inFlight.erase(inFlight.begin());
         watchdogStart = std::chrono::steady_clock::now();
-
-        // Watchdog check for hangs
         if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
             result.clear();
             for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
             return BatchOutcome::WatchdogPoisoned("watchdog expiry");
         }
     }
-
     if (result.size() != poses.size()) {
         throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
     }
-    // Determinism stress: result must be input-ordered regardless of completion order
     return BatchOutcome::Ordered(std::move(result));
+
 }
 
 }  // namespace gpu_cost_function

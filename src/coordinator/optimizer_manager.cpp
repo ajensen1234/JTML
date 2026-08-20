@@ -1364,6 +1364,8 @@ void OptimizerManager::RunDirectStage(
                                  : nullptr;
         bool recipeFound = recipe != nullptr;
         bool preflightCapturable = false;
+        gpu_cost_function::GraphRecipeKey preparedKey;
+        bool haveKey = false;
         if (recipeFound) {
             int liveDilation = 6;
             // Canonical dilation read (graph_recipe.h:9-11) — NOT a by-value
@@ -1396,6 +1398,8 @@ void OptimizerManager::RunDirectStage(
             kin.biplane = false;
             kin.version = "1";
             auto key = gpu_cost_function::AssembleGraphRecipeKey(kin);
+            preparedKey = key;
+            haveKey = true;
             gpu_cost_function::GraphRecipeCaptureInputs capInputs;
             bool inputsOk = stage_manager.GetGraphRecipeCaptureInputs(capInputs);
             int stage_id = 0;
@@ -1430,9 +1434,21 @@ void OptimizerManager::RunDirectStage(
         auto decision = gpu_cost_function::DecideGraphAdmission(inputs, defaultPolicy);
         if (decision.install) {
             auto* exec = evaluation_executor_;
-            opt.SetBatchCost([exec, serial_cost](const std::vector<Point6D>& poses) -> std::vector<double> {
-                return gpu_cost_function::MaterializeOrderedScores(exec->RunBatch(poses, serial_cost));
-            });
+            // Plan 012 U4 (C5): install CUDA feeder hooks only after admission.
+            gpu_cost_function::InstallCudaFeederHooks(*exec);
+            bool prepareOk = false;
+            if (haveKey && exec->poolSize() > 1) {
+                auto prep = exec->Prepare(preparedKey, exec->poolSize());
+                prepareOk = prep.isOrderedScores();
+            } else if (haveKey) {
+                // Pool not yet sized (lazy) — treat as prepare not needed for U4 seam compile
+                prepareOk = true;
+            }
+            if (prepareOk) {
+                opt.SetBatchCost([exec, serial_cost](const std::vector<Point6D>& poses) -> std::vector<double> {
+                    return gpu_cost_function::MaterializeOrderedScores(exec->RunBatch(poses, serial_cost));
+                });
+            }
         }
     }
 
