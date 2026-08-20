@@ -262,14 +262,18 @@ TEST_CASE("U7 layered: graph vs serial double composition within frozen toleranc
     // so the executor exercises real CUDA graphs. If Prepare fails (e.g. no GPU
     // or capturability check), the test still validates serial-vs-executor
     // determinism headlessly, but the Layer A/B pass head requires real launch.
+    // U6 anti-stub gate: the layered PASS / verdict is only meaningful if the
+    // REAL graph path was genuinely exercised (Prepare succeeded + hooks
+    // installed + real cudaGraphLaunch over >=3 repeats). If Prepare fails
+    // (no GPU / capture fail), the test MUST FAIL CLOSED — plan U5/U6: failed
+    // layered gate keeps GraphAdmissionPolicy deny. Serial-vs-serial (null-hook
+    // RunBatch) equality is NOT evidence.
+    bool realGraphAdmitted = false;
     {
         auto recipe = gpu_cost_function::CreateDirectDilationMonoplaneRecipe();
         if (recipe) {
             auto* raw = recipe.get();
             exec.registry().Register(std::move(recipe));
-            // Build capture inputs from pipeline for real graph creation.
-            // Use pipeline's GPU objects as shared inputs; per-context stream
-            // comes from exec.pool().context(idx) inside the hook.
             gpu_cost_function::GraphRecipeCaptureInputs baseCap;
             bool capOk = p.trunk->GetGraphRecipeCaptureInputs(baseCap);
             if (!capOk) {
@@ -307,9 +311,10 @@ TEST_CASE("U7 layered: graph vs serial double composition within frozen toleranc
             auto prep = exec.Prepare(gkey, exec.poolSize());
             if (prep.isOrderedScores()) {
                 gpu_cost_function::InstallCudaFeederHooks(exec);
+                realGraphAdmitted = true;
                 std::cout << "[layered] real graph Prepare succeeded, installed CUDA feeder hooks" << std::endl;
             } else {
-                std::cout << "[layered] Prepare not submitted (" << prep.reason << ") — falling back to serial path for Layer C check" << std::endl;
+                std::cout << "[layered] Prepare not submitted (" << prep.reason << ") — layered gate will FAIL CLOSED (no real graph)" << std::endl;
             }
         }
     }
@@ -364,12 +369,15 @@ TEST_CASE("U7 layered: graph vs serial double composition within frozen toleranc
         REQUIRE(cudaGetLastError() == cudaSuccess);
     }
 
-    std::cout << "[layered] U7 Layer A/B exact, Layer C within abs " << tol.abs << " rel " << tol.rel << " over 3 repeats — PASS" << std::endl;
-    // U6: write machine-readable verdict for GraphAdmissionPolicy
+    // Fail closed (anti-stub): without a real graph launch over the repeats,
+    // this gate has proven NOTHING and must not write PASS.
+    REQUIRE(realGraphAdmitted);
+    std::cout << "[layered] U6 Layer A/B exact, Layer C within abs " << tol.abs << " rel " << tol.rel << " over 3 repeats on REAL graph — PASS" << std::endl;
+    // U6: write machine-readable verdict ONLY on a real-graph layered PASS
     {
         std::ofstream out("test/golden/graph_layer_verdict.json");
         if (out) {
-            out << "{\n  \"schema_version\": 1,\n  \"layer_a_byte_identical\": true,\n  \"layer_b_ints_exact\": true,\n  \"layer_c_within_tolerance\": true,\n  \"verdict\": \"PASS\"\n}\n";
+            out << "{\n  \"schema_version\": 1,\n  \"real_graph_launch\": true,\n  \"layer_a_byte_identical\": true,\n  \"layer_b_ints_exact\": true,\n  \"layer_c_within_tolerance\": true,\n  \"verdict\": \"PASS\"\n}\n";
             std::cout << "[layered] wrote test/golden/graph_layer_verdict.json PASS" << std::endl;
         }
     }

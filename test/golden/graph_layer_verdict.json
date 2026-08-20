@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "real_graph_launch": true,
   "layer_a_byte_identical": true,
   "layer_b_ints_exact": true,
   "layer_c_within_tolerance": true,
