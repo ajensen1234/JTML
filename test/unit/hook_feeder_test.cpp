@@ -261,6 +261,71 @@ TEST_CASE("1-pose and batch < pool size still ordered with hooks", "[hook_feeder
     }
 }
 
+TEST_CASE("pacing hook invoked exactly once per zero-completion sweep", "[hook_feeder][pacing]") {
+    // Plan 013 U1: the greedy loop must call the injected pacing hook exactly
+    // once when a sweep completes nothing (never zero-delay hot-spin, never
+    // multiple pacing calls per zero-completion sweep). Pending->Done fake:
+    // sweep 1 polls both ctxs (Pending, Pending) -> one zero-completion sweep
+    // -> pacing must be invoked exactly once; sweep 2 both Done -> no pacing.
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.setWatchdogTimeout(std::chrono::milliseconds(50));
+
+    std::unordered_map<std::size_t, int> pollCountPerCtx;
+    std::unordered_map<std::size_t, std::size_t> ctxToInput;
+    int pacingCalls = 0;
+
+    exec.InstallEnqueueHook([&](std::size_t ctxIdx, std::size_t inputPos, const Point6D&) -> bool {
+        ctxToInput[ctxIdx] = inputPos;
+        pollCountPerCtx[ctxIdx] = 0;
+        return true;
+    });
+    exec.InstallPollHook([&](std::size_t ctxIdx) -> PollResult {
+        int& c = pollCountPerCtx[ctxIdx];
+        ++c;
+        return c == 1 ? PollResult::Pending : PollResult::Done;
+    });
+    exec.InstallCompleteFromPinsHook([&](std::size_t ctxIdx) -> double {
+        return 100.0 + static_cast<double>(ctxToInput[ctxIdx]);
+    });
+    exec.InstallTeardownHook([]() {});
+    exec.InstallPacingHook([&]() { ++pacingCalls; });
+
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 0.0; });
+
+    REQUIRE(o.isOrderedScores());
+    REQUIRE(o.scores[0] == Approx(100.0));
+    REQUIRE(o.scores[1] == Approx(101.0));
+    // Exactly one zero-completion sweep -> exactly one pacing call.
+    REQUIRE(pacingCalls == 1);
+    // Poll-count pins still hold: each ctx polled exactly twice (Pending, Done).
+    for (auto& kv : pollCountPerCtx) {
+        REQUIRE(kv.second == 2);
+    }
+}
+
+TEST_CASE("no pacing invocation when the sweep completes work", "[hook_feeder][pacing]") {
+    // Plan 013 U1: completions must never be delayed by the pacing hook
+    // (continue-immediately on Done). All-Done fake -> pacing count == 0.
+    EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    int pacingCalls = 0;
+
+    exec.InstallEnqueueHook([](std::size_t, std::size_t, const Point6D&) -> bool { return true; });
+    exec.InstallPollHook([](std::size_t) -> PollResult { return PollResult::Done; });
+    exec.InstallCompleteFromPinsHook([](std::size_t) -> double { return 1.0; });
+    exec.InstallTeardownHook([]() {});
+    exec.InstallPacingHook([&]() { ++pacingCalls; });
+
+    std::vector<Point6D> poses{MakePose(1), MakePose(2)};
+    auto o = exec.RunBatchWithCost(poses, [](const Point6D&, std::size_t) -> double { return 0.0; });
+
+    REQUIRE(o.isOrderedScores());
+    REQUIRE(o.scores.size() == 2);
+    REQUIRE(pacingCalls == 0);
+}
+
 TEST_CASE("poll Error returns PostLaunchAbort and drains", "[hook_feeder][error]") {
     EvaluationExecutor exec;
     exec.pool().InitForTest(3);

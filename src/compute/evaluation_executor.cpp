@@ -76,6 +76,10 @@ void EvaluationExecutor::InstallTeardownHook(TeardownHookFn hook) {
     teardownHook_ = std::move(hook);
 }
 
+void EvaluationExecutor::InstallPacingHook(PacingHookFn hook) {
+    pacingHook_ = std::move(hook);
+}
+
 std::size_t EvaluationExecutor::graphExecsSize() const {
     return graphExecs_.size();
 }
@@ -335,7 +339,7 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
                     poisoned_.store(true);
                     return BatchOutcome::WatchdogPoisoned("watchdog expiry");
                 }
-                std::this_thread::yield();
+                pacingHook_();   // Plan 013 U1: injectable bounded pacing (default yield, CUDA adaptive)
             }
         }
         if (result.size() != poses.size()) {

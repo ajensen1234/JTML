@@ -15,6 +15,7 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <thread>
 #include <vector>
 
 #include "compute/bank_state.cuh"
@@ -88,6 +89,12 @@ public:
     void InstallPollHook(PollHookFn hook);
     void InstallCompleteFromPinsHook(CompleteFromPinsHookFn hook);
     void InstallTeardownHook(TeardownHookFn hook);
+    // Plan 013 U1: injectable poll pacing. Called between zero-completion
+    // sweeps so the host never hot-spins cudaEventQuery. Default = yield()
+    // (byte-identical to the pre-013 loop). CUDA installer overrides with
+    // bounded adaptive sleep (U2).
+    using PacingHookFn = std::function<void()>;
+    void InstallPacingHook(PacingHookFn hook);
     void InstallPrepareHook(PrepareHookFn hook);
     void InstallDestroyHook(DestroyHookFn hook);
     std::size_t graphExecsSize() const;
@@ -119,6 +126,7 @@ private:
     PollHookFn pollHook_{};
     CompleteFromPinsHookFn completeFromPinsHook_{};
     TeardownHookFn teardownHook_{};
+    PacingHookFn pacingHook_{[]() { std::this_thread::yield(); }};
 };
 
 
