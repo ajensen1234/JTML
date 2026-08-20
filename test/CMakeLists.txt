@@ -1775,15 +1775,25 @@ set_tests_properties(jtml.cut0_measurement PROPERTIES LABELS "oracle;gpu" TIMEOU
 # 512x512, dilation 6. Repeat 10 trials per config after discarding first 3
 # launches per config (warmup). Records wall/GPU event/p50/p99/evals/sec.
 add_executable(jtml_test_graph_throughput_oracle
-    oracle/graph_throughput_oracle_test.cu)
+    oracle/graph_throughput_oracle_test.cu
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp)
 target_include_directories(jtml_test_graph_throughput_oracle PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/compute
-    ${CUDA_INCLUDE_DIRS})
+    ${CUDA_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${VTK_INCLUDE_DIRS})
 target_link_libraries(jtml_test_graph_throughput_oracle PRIVATE
     Catch2::Catch2WithMain
-    CUDA::cudart
-    ${JTA_LIBS})
+    ${REQUIRED_LIBS_QUALIFIED}
+    jtml_coordinator
+    ${JTA_LIBS}
+    ${VTK_LIBRARIES}
+    ${TORCH_LIBRARIES}
+    ${CUDA_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    Eigen3::Eigen)
 set_property(TARGET jtml_test_graph_throughput_oracle PROPERTY CUDA_ARCHITECTURES native)
 set_target_properties(jtml_test_graph_throughput_oracle PROPERTIES
     BUILD_RPATH "$ORIGIN/../lib:$ENV{CONDA_PREFIX}/lib:${VTK_LIB_DIR}")
