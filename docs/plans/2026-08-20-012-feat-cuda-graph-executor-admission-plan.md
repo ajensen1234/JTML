@@ -450,7 +450,7 @@ flowchart TB
 
 ---
 
-- [ ] U4. **Hook-driven greedy feeder and no-sync completion**
+- [x] U4. **Hook-driven greedy feeder and no-sync completion**
 
 **Goal:** One synchronous `BatchCostFunction` call greedily launches real per-context graphs, polls completion events, and stores scores in input order without per-eval stream sync.
 

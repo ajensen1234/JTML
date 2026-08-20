@@ -123,6 +123,16 @@ This matrix enumerates every test that exists at U2 time and its disposition for
 | `test/unit/capture_coordinator_test.cpp` | **new** | U3 — CUDA-free `CaptureCoordinator` lock + park registry: park-failure → refuse, all-parks success, release unparks, idempotent name, reentrant, rollback unparks only parked, no-producers |
 | `test/unit/graph_key_assembler_test.cpp` | **retained-with-coverage** | U3 adds `EvaluationExecutor::Prepare` cases (fake `InstallPrepareHook` returns wrapper; failure destroys created wrappers + ForceReleases; never sets firstSubmission) — existing U2 assembler/hash/provider cases unchanged |
 
+## Plan 012 U4 — hook-driven greedy feeder and no-sync completion
+
+**Plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U4). Dispositions for the U4 change only; retain-by-default; no `obsolete`/`superseded` rows.
+
+| Test file | Disposition | Rationale |
+|---|---|---|
+| `test/unit/hook_feeder_test.cpp` | **new** | U4 — `ComposeDirectDilationScore` composition, AE1 out-of-order completion → input-ordered scores, Pending no-re-poll, 1-pose/batch<N, poll Error drain, overflow/non-finite → abort, deep no-re-poll (headless, real `RunBatchWithCost` + fake hooks) |
+| `test/unit/test_direct_optimizer_batch.cpp` | retained | U4 hook-driven loop keeps the null-hook legacy path byte-identical; U1 executor/outcome cases unchanged and green (no regression) |
+| `test/oracle/evaluation_executor_graph_test.cu` | **new** | U4 anti-stub GPU oracle (`oracle;gpu`) — real `EvaluationExecutor` + real monoplane recipe + real `InstallCudaFeederHooks`; proves real `cudaGraphLaunch` + event query + `completeFromPins` returns distinct finite non-zero scores (247167.97 / 247148.97) |
+
 ## Notes
 
 - No test is marked `obsolete` or `superseded` at U2 — deletions merely because internals change are prohibited (R10). A future `superseded` row would require a named replacement + rationale and code-owner sign-off.

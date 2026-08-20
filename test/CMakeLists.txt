@@ -1667,6 +1667,27 @@ add_test(NAME jtml.graph_recipe_direct_dilation COMMAND jtml_test_graph_recipe_d
 set_tests_properties(jtml.graph_recipe_direct_dilation PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U4: Real greedy feeder oracle — proves the hook-driven EvaluationExecutor
+# actually cudaGraphLaunch's real graphs on GPU and returns finite input-ordered scores.
+add_executable(jtml_test_evaluation_executor_graph
+    oracle/evaluation_executor_graph_test.cu
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp)
+target_include_directories(jtml_test_evaluation_executor_graph PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_evaluation_executor_graph PRIVATE
+    Catch2::Catch2WithMain
+    ${JTA_LIBS}
+    CUDA::cudart)
+set_property(TARGET jtml_test_evaluation_executor_graph PROPERTY CUDA_ARCHITECTURES native)
+target_link_options(jtml_test_evaluation_executor_graph PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.evaluation_executor_graph COMMAND jtml_test_evaluation_executor_graph)
+set_tests_properties(jtml.evaluation_executor_graph PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # U7: Layered oracle gate — bit-exact image/raw-int, tolerated double composition.
 # Compares graph-admitted DIRECT_DILATION (via EvaluationExecutor) against serial
 # BuildGpuCostAdapter over the same Kneel_1 golden frame. Layer A/B exact,
