@@ -227,11 +227,77 @@ TEST_CASE("GetGraphRecipeCaptureInputs reads active dilation live",
     REQUIRE(out.dilation == 4);
 }
 
-TEST_CASE("CostFunctionManager getCurrentFrameIndex mirrors set",
-          "[graph_key_assembler]") {
+TEST_CASE("CostFunctionManager getCurrentFrameIndex mirrors set", "[graph_key_assembler]") {
     jta_cost_function::CostFunctionManager cfm;
     cfm.setCurrentFrameIndex(3);
     REQUIRE(cfm.getCurrentFrameIndex() == 3);
     cfm.setCurrentFrameIndex(0);
     REQUIRE(cfm.getCurrentFrameIndex() == 0);
+}
+
+// ---------------------------------------------------------------------------
+// E. EvaluationExecutor Prepare (fake hooks, headless)
+// ---------------------------------------------------------------------------
+#include "compute/evaluation_executor.h"
+#include "compute/batch_outcome.h"
+
+TEST_CASE("Prepare with fake success hook stores wrappers, contexts idle", "[graph_key_assembler][prepare]") {
+    gpu_cost_function::EvaluationExecutor exec;
+    exec.pool().InitForTest(4);
+    // Hook returns a dummy wrapper pointer (non-null = success); Prepare stores it
+    // into graphExecs_[idx]. This pins wrapper OWNERSHIP by the executor.
+    exec.InstallPrepareHook([](std::size_t, const gpu_cost_function::GraphRecipeKey&) -> void* {
+        return reinterpret_cast<void*>(0x1ULL);
+    });
+    exec.InstallDestroyHook([](std::size_t) {});
+    gpu_cost_function::GraphRecipeKey key;
+    key.recipeId = "direct_dilation_monoplane";
+    auto outcome = exec.Prepare(key, 2);
+    REQUIRE(outcome.isOrderedScores());
+    REQUIRE(exec.graphExecsSize() >= 2);
+    REQUIRE(exec.preparedContextCount() >= 2);
+    // C4: after successful prepare, contexts are idle-but-graph-ready (not in flight)
+    REQUIRE_FALSE(exec.pool().IsInFlight(0));
+    REQUIRE_FALSE(exec.pool().IsInFlight(1));
+    // C2: executor owns the wrapper; ctx.graph_exec stays null
+    REQUIRE(exec.pool().context(0)->graph_exec == nullptr);
+    REQUIRE_FALSE(exec.firstSubmission());
+}
+
+TEST_CASE("Prepare failure returns NotSubmitted and cleans up all created wrappers", "[graph_key_assembler][prepare]") {
+    gpu_cost_function::EvaluationExecutor exec;
+    exec.pool().InitForTest(4);
+    int callCount = 0;
+    int destroyCount = 0;
+    // Fails on the 2nd context; returns a live wrapper pointer on the 1st.
+    exec.InstallPrepareHook([&](std::size_t, const gpu_cost_function::GraphRecipeKey&) -> void* {
+        ++callCount;
+        if (callCount == 2) return nullptr;
+        return reinterpret_cast<void*>(0x1ULL);
+    });
+    exec.InstallDestroyHook([&](std::size_t) { ++destroyCount; });
+    gpu_cost_function::GraphRecipeKey key;
+    key.recipeId = "direct_dilation_monoplane";
+    auto outcome = exec.Prepare(key, 3);
+    REQUIRE(outcome.kind == gpu_cost_function::BatchOutcome::Kind::NotSubmitted);
+    // C4: the successfully-created context-0 wrapper must ALSO be destroyed;
+    // destroyCount == 1 (only one was created) not just >=1 (catches wrapper leak).
+    REQUIRE(destroyCount == 1);
+    // wrappers cleared back to 0; contexts drained (not in flight)
+    REQUIRE(exec.preparedContextCount() == 0);
+    REQUIRE_FALSE(exec.pool().IsInFlight(0));
+    REQUIRE_FALSE(exec.pool().IsInFlight(1));
+    REQUIRE_FALSE(exec.firstSubmission());
+}
+
+TEST_CASE("Prepare does not set firstSubmission", "[graph_key_assembler][prepare]") {
+    gpu_cost_function::EvaluationExecutor exec;
+    exec.pool().InitForTest(2);
+    exec.InstallPrepareHook([](std::size_t, const gpu_cost_function::GraphRecipeKey&) { return reinterpret_cast<void*>(0x1ULL); });
+    exec.InstallDestroyHook([](std::size_t) {});
+    REQUIRE_FALSE(exec.firstSubmission());
+    gpu_cost_function::GraphRecipeKey key;
+    auto o = exec.Prepare(key, 2);
+    REQUIRE(o.isOrderedScores());
+    REQUIRE_FALSE(exec.firstSubmission());
 }

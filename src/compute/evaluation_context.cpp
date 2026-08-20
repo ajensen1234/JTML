@@ -171,6 +171,7 @@ bool EvaluationContextPool::Initialize(
 
     contexts_.resize(count);
     checked_out_.assign(count, false);
+    poisoned_.assign(count, false);
 
     for (std::size_t i = 0; i < count; ++i) {
         EvaluationContext& ctx = contexts_[i];
@@ -243,7 +244,18 @@ bool EvaluationContextPool::Initialize(
 }
 
 void EvaluationContextPool::Shutdown() {
-    for (auto& ctx : contexts_) {
+    for (std::size_t idx = 0; idx < contexts_.size(); ++idx) {
+        auto& ctx = contexts_[idx];
+        bool isPoisoned = (idx < poisoned_.size() && poisoned_[idx]);
+        if (isPoisoned) {
+            // C8: poisoned/hung contexts must not be synchronized or freed;
+            // leak intentionally until process exit; just reset bookkeeping.
+            ctx.initialized_correctly = false;
+            ctx.in_flight = false;
+            ctx.status = EvaluationStatus::Idle;
+            ctx.input_index = -1;
+            continue;
+        }
         auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
         if (stream != nullptr) {
             // Every per-context allocation may still be referenced by queued
@@ -299,6 +311,7 @@ void EvaluationContextPool::Shutdown() {
 
     contexts_.clear();
     checked_out_.clear();
+    poisoned_.clear();
 }
 
 std::size_t EvaluationContextPool::size() const {
@@ -317,7 +330,8 @@ const EvaluationContext* EvaluationContextPool::context(std::size_t idx) const {
 
 int EvaluationContextPool::Checkout() {
     for (std::size_t i = 0; i < checked_out_.size(); ++i) {
-        if (!checked_out_[i]) {
+        bool isPoisoned = (i < poisoned_.size() && poisoned_[i]);
+        if (!checked_out_[i] && !isPoisoned) {
             checked_out_[i] = true;
             contexts_[i].in_flight = true;
             contexts_[i].status = EvaluationStatus::InFlight;
@@ -339,6 +353,46 @@ bool EvaluationContextPool::Recycle(std::size_t idx, bool completion_ready) {
 bool EvaluationContextPool::IsInFlight(std::size_t idx) const {
     if (idx >= checked_out_.size()) return false;
     return checked_out_[idx];
+}
+
+void EvaluationContextPool::InitForTest(std::size_t count) {
+    contexts_.resize(count);
+    checked_out_.assign(count, false);
+    poisoned_.assign(count, false);
+    for (std::size_t i = 0; i < count; ++i) {
+        EvaluationContext& ctx = contexts_[i];
+        ctx = EvaluationContext{};
+        ctx.index = i;
+        ctx.status = EvaluationStatus::Idle;
+        ctx.in_flight = false;
+        ctx.initialized_correctly = false;
+        ctx.input_index = -1;
+    }
+}
+
+bool EvaluationContextPool::ForceRelease(std::size_t idx) {
+    if (idx >= checked_out_.size() || !checked_out_[idx]) return false;
+    if (idx < poisoned_.size() && poisoned_[idx]) return false;
+    checked_out_[idx] = false;
+    contexts_[idx].in_flight = false;
+    contexts_[idx].status = EvaluationStatus::Idle;
+    contexts_[idx].input_index = -1;
+    return true;
+}
+
+bool EvaluationContextPool::LeavePoisoned(std::size_t idx) {
+    if (idx >= checked_out_.size() || !checked_out_[idx]) return false;
+    if (idx >= poisoned_.size()) {
+        poisoned_.resize(checked_out_.size(), false);
+    }
+    poisoned_[idx] = true;
+    contexts_[idx].status = EvaluationStatus::Failed;
+    return true;
+}
+
+bool EvaluationContextPool::IsPoisoned(std::size_t idx) const {
+    if (idx >= poisoned_.size()) return false;
+    return poisoned_[idx];
 }
 
 }  // namespace gpu_cost_function

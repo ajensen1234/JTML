@@ -40,7 +40,9 @@ A CUDA-aware review of deepened 011 U6 found unresolved **lifecycle/admission de
 
 **U2 landed** (next jj change): `CaptureGeneration` (C7 identity incl. upload epoch), header-only `graph_key_assembler.h` (AssembleGraphRecipeKey, HashCameraCalibrationParams FNV-1a, AssembleCaptureGeneration, ValidateGraphKeyVsInputs), CostFunctionManager upload-epoch + `GetGraphRecipeCaptureInputs` provider, GPUModel `GetPrimaryRenderEngine`, full-key assembler + epoch bump wired in optimizer_manager. Headless 59/60 green (pre-existing qml_lint). Adversarial review: no blockers; both should-fixes applied (canonical dilation read via getActiveCostFunctionClass; provider test now asserts out.dilation==4).
 
-**Next: U3** (capture coordinator + wrappers). Carry into U3: manager-level SetBatchCost count characterization (U1 review); coordinator stage_id/frame_index wiring test before `gen` is consumed for graph dispatch (U2 review); wire real curvature_capacity/graph_overhead_bytes.
+**U3 landed** (next jj change): CUDA-free `CaptureCoordinator` (timed_mutex lock + park registry, reentrant, rollback), `ForceRelease`/`LeavePoisoned`/`IsPoisoned`/`InitForTest` on `EvaluationContextPool` (Checkout skips poisoned, Shutdown skips poisoned per C8), executor `graphExecs_` wrapper map + `Prepare`/`InstallPrepareHook`/`InstallDestroyHook` (batch checkout, cleanup on failure, never firstSubmission, re-prepare destroys stale wrapper). Headless 61/62 green (pre-existing qml_lint). Review: no blockers; re-prepare leak fixed (destroy stale wrapper before overwrite); Shutdown poison-skip + ctx.graph_exec-null confirmed. NOTE: CaptureCoordinator/Prepare NOT yet wired into optimizer_manager RunDirectStage — that's U4.
+
+**Next: U4** (hook-driven greedy feeder + no-sync completion). Carry into U4: manager-level SetBatchCost count characterization (U1 review); coordinator stage_id/frame_index wiring test before `gen` consumed (U2 review); install CaptureCoordinator + Prepare into the admission/prepare transaction; wire real curvature_capacity/graph_overhead_bytes; empty park registry until VTK/UI producers enumerated (refuse capture if any producer can't park).
 
 ---
 

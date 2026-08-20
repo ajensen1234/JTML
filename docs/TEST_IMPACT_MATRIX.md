@@ -112,6 +112,17 @@ This matrix enumerates every test that exists at U2 time and its disposition for
 | `test/unit/graph_recipe_preflight_test.cpp` | **retained-with-coverage** | U2 adds `CaptureGeneration` default-vs-assembled inequality (C7 identity includes epoch); existing six preflight cases unchanged |
 | `test/unit/graph_key_assembler_test.cpp` | **new** | U2 — `AssembleGraphRecipeKey` fills all 12 fields, `HashCameraCalibrationParams` deterministic/distinct, `CaptureGeneration` equality across all 7 identity fields, `ValidateGraphKeyVsInputs` gates, CFM `BumpUploadEpoch`/`GetGraphRecipeCaptureInputs`/`getCurrentFrameIndex` (real `CostFunctionManager`, CPU-only ctor, headless via JTA_LIBS target) |
 
+## Plan 012 U3 — capture coordinator, preparation leases, wrapper ownership
+
+**Plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U3). Dispositions for the U3 change only; retain-by-default; no `obsolete`/`superseded` rows.
+
+| Test file | Disposition | Rationale |
+|---|---|---|
+| `test/unit/evaluation_context_test.cpp` | **retained-with-coverage** | U3 adds `ForceRelease`/`LeavePoisoned` lease case via `InitForTest`; existing null-init/admission/alloc cases unchanged |
+| `test/unit/evaluation_context_lease_test.cpp` | **new** | U3 — `ForceRelease` reusable, `LeavePoisoned` prevents reuse, `Checkout` skips poisoned, `Shutdown` skips poisoned (C4/C8), invalid-index guards (headless via `InitForTest`) |
+| `test/unit/capture_coordinator_test.cpp` | **new** | U3 — CUDA-free `CaptureCoordinator` lock + park registry: park-failure → refuse, all-parks success, release unparks, idempotent name, reentrant, rollback unparks only parked, no-producers |
+| `test/unit/graph_key_assembler_test.cpp` | **retained-with-coverage** | U3 adds `EvaluationExecutor::Prepare` cases (fake `InstallPrepareHook` returns wrapper; failure destroys created wrappers + ForceReleases; never sets firstSubmission) — existing U2 assembler/hash/provider cases unchanged |
+
 ## Notes
 
 - No test is marked `obsolete` or `superseded` at U2 — deletions merely because internals change are prohibited (R10). A future `superseded` row would require a named replacement + rationale and code-owner sign-off.

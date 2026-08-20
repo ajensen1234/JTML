@@ -70,6 +70,15 @@ public:
     bool firstSubmission() const { return firstSubmission_.load(); }
     void resetFirstSubmission() { firstSubmission_.store(false); }
 
+    // Plan 012 U3 C2/C5: executor-owned wrappers + CUDA-free hook seam
+    using PrepareHookFn = std::function<void*(std::size_t idx, const GraphRecipeKey& key)>;
+    using DestroyHookFn = std::function<void(std::size_t idx)>;
+    void InstallPrepareHook(PrepareHookFn hook);
+    void InstallDestroyHook(DestroyHookFn hook);
+    std::size_t graphExecsSize() const;
+    std::size_t preparedContextCount() const;
+    BatchOutcome Prepare(const GraphRecipeKey& key, std::size_t count);
+
 private:
     struct Lease {
         std::size_t ctxIdx = 0;
@@ -86,6 +95,9 @@ private:
     GraphRecipeRegistry registry_{};
     std::atomic<bool> firstSubmission_{false};
     std::chrono::milliseconds watchdogTimeout_{5000};
+    std::vector<void*> graphExecs_{};
+    PrepareHookFn prepareHook_{};
+    DestroyHookFn destroyHook_{};
 };
 
 }  // namespace gpu_cost_function

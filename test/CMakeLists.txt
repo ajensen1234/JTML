@@ -161,6 +161,16 @@ target_link_libraries(jtml_test_evaluation_context PRIVATE Catch2::Catch2WithMai
 add_test(NAME jtml.evaluation_context COMMAND jtml_test_evaluation_context)
 set_tests_properties(jtml.evaluation_context PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_executable(jtml_test_evaluation_context_lease unit/evaluation_context_lease_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp)
+target_include_directories(jtml_test_evaluation_context_lease PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_evaluation_context_lease PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+add_test(NAME jtml.evaluation_context_lease COMMAND jtml_test_evaluation_context_lease)
+set_tests_properties(jtml.evaluation_context_lease PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # U2: GraphRecipe registry + frozen pre-registration artifact (headless, header-only)
 add_executable(jtml_test_graph_recipe_preflight unit/graph_recipe_preflight_test.cpp)
@@ -199,6 +209,15 @@ target_link_options(jtml_test_graph_key_assembler PRIVATE
     "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
 add_test(NAME jtml.graph_key_assembler COMMAND jtml_test_graph_key_assembler)
 set_tests_properties(jtml.graph_key_assembler PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_executable(jtml_test_capture_coordinator unit/capture_coordinator_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/compute/capture_coordinator.cpp)
+target_include_directories(jtml_test_capture_coordinator PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute)
+target_link_libraries(jtml_test_capture_coordinator PRIVATE Catch2::Catch2WithMain)
+add_test(NAME jtml.capture_coordinator COMMAND jtml_test_capture_coordinator)
+set_tests_properties(jtml.capture_coordinator PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 # U2 oracle: EvaluationContext pool / graph overhead smoke (oracle;gpu, .cu)

@@ -181,3 +181,23 @@ TEST_CASE("admission falls back to N=1 for insufficient free bytes", "[evaluatio
     REQUIRE(adm.bank_count == 1);
     REQUIRE_FALSE(adm.admitted);
 }
+
+TEST_CASE("ForceRelease makes context checkout-able again; LeavePoisoned does not", "[evaluation_context][lease]") {
+    EvaluationContextPool pool;
+    pool.InitForTest(4);
+    int a = pool.Checkout();
+    REQUIRE(a >= 0);
+    REQUIRE(pool.ForceRelease(static_cast<std::size_t>(a)));
+    REQUIRE_FALSE(pool.IsPoisoned(static_cast<std::size_t>(a)));
+    int b = pool.Checkout();
+    REQUIRE(b >= 0);
+    REQUIRE_FALSE(pool.IsPoisoned(static_cast<std::size_t>(b)));
+    int c = pool.Checkout();
+    REQUIRE(c >= 0);
+    REQUIRE(pool.LeavePoisoned(static_cast<std::size_t>(c)));
+    REQUIRE(pool.IsPoisoned(static_cast<std::size_t>(c)));
+    // c is poisoned, further checkout should skip it
+    int d = pool.Checkout();
+    REQUIRE(d >= 0);
+    REQUIRE(d != c);
+}

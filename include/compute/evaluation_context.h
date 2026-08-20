@@ -88,9 +88,16 @@ public:
     bool Recycle(std::size_t idx, bool completion_ready);
     bool IsInFlight(std::size_t idx) const;
 
+    // Plan 012 U3 C4/C8: preparation leases + poisoned handling (headless testable)
+    void InitForTest(std::size_t count);
+    bool ForceRelease(std::size_t idx);
+    bool LeavePoisoned(std::size_t idx);
+    bool IsPoisoned(std::size_t idx) const;
+
 private:
     std::vector<EvaluationContext> contexts_{};
     std::vector<bool> checked_out_{};
+    std::vector<bool> poisoned_{};
 };
 
 }  // namespace gpu_cost_function

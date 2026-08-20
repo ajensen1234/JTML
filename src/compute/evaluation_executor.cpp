@@ -30,12 +30,114 @@ bool EvaluationExecutor::Initialize(const BankFootprintInput& layout,
 }
 
 void EvaluationExecutor::Shutdown() {
+    // Destroy executor-owned wrappers via destroy hook before pool teardown (C2)
+    for (std::size_t i = 0; i < graphExecs_.size(); ++i) {
+        if (graphExecs_[i] != nullptr) {
+            if (destroyHook_) {
+                destroyHook_(i);
+            }
+            graphExecs_[i] = nullptr;
+        }
+    }
+    graphExecs_.clear();
     pool_.Shutdown();
     firstSubmission_.store(false);
 }
 
 std::size_t EvaluationExecutor::poolSize() const {
     return pool_.size();
+}
+
+void EvaluationExecutor::InstallPrepareHook(PrepareHookFn hook) {
+    prepareHook_ = std::move(hook);
+}
+
+void EvaluationExecutor::InstallDestroyHook(DestroyHookFn hook) {
+    destroyHook_ = std::move(hook);
+}
+
+std::size_t EvaluationExecutor::graphExecsSize() const {
+    return graphExecs_.size();
+}
+
+std::size_t EvaluationExecutor::preparedContextCount() const {
+    std::size_t c = 0;
+    for (auto* p : graphExecs_) if (p != nullptr) ++c;
+    return c;
+}
+
+BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t count) {
+    if (count == 0) {
+        return BatchOutcome::Ordered({});
+    }
+    // Ensure graphExecs_ can hold any pool index up to pool_.size() and count
+    std::size_t needed = std::max(count, pool_.size());
+    if (graphExecs_.size() < needed) {
+        graphExecs_.resize(needed, nullptr);
+    }
+    std::vector<std::size_t> successIdxs;
+    successIdxs.reserve(count);
+    std::vector<int> checkedOutIndices;
+    checkedOutIndices.reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        int idx = pool_.Checkout();
+        if (idx < 0) {
+            for (auto sIdx : successIdxs) {
+                if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
+                    if (destroyHook_) destroyHook_(sIdx);
+                    graphExecs_[sIdx] = nullptr;
+                }
+            }
+            for (int cIdx : checkedOutIndices) {
+                pool_.ForceRelease(static_cast<std::size_t>(cIdx));
+            }
+            return BatchOutcome::NotSubmitted("Prepare: no free context");
+        }
+        checkedOutIndices.push_back(idx);
+        if (!prepareHook_) {
+            for (auto sIdx : successIdxs) {
+                if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
+                    if (destroyHook_) destroyHook_(sIdx);
+                    graphExecs_[sIdx] = nullptr;
+                }
+            }
+            for (int cIdx : checkedOutIndices) {
+                pool_.ForceRelease(static_cast<std::size_t>(cIdx));
+            }
+            return BatchOutcome::NotSubmitted("Prepare: no prepare hook");
+        }
+        void* w = prepareHook_(static_cast<std::size_t>(idx), key);
+        if (!w) {
+            for (auto sIdx : successIdxs) {
+                if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
+                    if (destroyHook_) destroyHook_(sIdx);
+                    graphExecs_[sIdx] = nullptr;
+                }
+            }
+            for (int cIdx : checkedOutIndices) {
+                pool_.ForceRelease(static_cast<std::size_t>(cIdx));
+            }
+            return BatchOutcome::NotSubmitted("Prepare: createGraph failed");
+        }
+        if (static_cast<std::size_t>(idx) >= graphExecs_.size()) {
+            graphExecs_.resize(static_cast<std::size_t>(idx) + 1, nullptr);
+        }
+        // C2/C4 re-prepare safety: if a wrapper from an earlier Prepare lives at
+        // this index (e.g. a generation change or a second Prepare), destroy the
+        // stale one BEFORE overwriting — never leak a graph exec.
+        if (graphExecs_[static_cast<std::size_t>(idx)] != nullptr) {
+            if (destroyHook_) destroyHook_(static_cast<std::size_t>(idx));
+            graphExecs_[static_cast<std::size_t>(idx)] = nullptr;
+        }
+        graphExecs_[static_cast<std::size_t>(idx)] = w;
+        successIdxs.push_back(static_cast<std::size_t>(idx));
+    }
+    // All count contexts prepared successfully — recycle so contexts are idle-but-graph-ready (C4)
+    for (int cIdx : checkedOutIndices) {
+        pool_.Recycle(static_cast<std::size_t>(cIdx), true);
+    }
+    // Do not set firstSubmission_
+    return BatchOutcome::Ordered({});
 }
 
 bool EvaluationExecutor::pollOneLease(const Lease& lease,

@@ -408,7 +408,7 @@ flowchart TB
 
 ---
 
-- [ ] U3. **Capture coordinator, preparation leases, and wrapper ownership**
+- [x] U3. **Capture coordinator, preparation leases, and wrapper ownership**
 
 **Goal:** Make Global capture legal and wrapper lifetime safe before any greedy launch exists.
 
