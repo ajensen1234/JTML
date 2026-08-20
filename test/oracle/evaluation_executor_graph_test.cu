@@ -219,11 +219,10 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     REQUIRE(std::isfinite(outcome.scores[1]));
     REQUIRE(outcome.scores[0] != Catch::Approx(0.0));
     REQUIRE(outcome.scores[1] != Catch::Approx(0.0));
-    // Input-ordered: caller can check that swapping poses would swap scores.
-    // Here we at least prove ordered (not push_back in completion order) by
-    // checking scores are distinct and not trivially equal (different poses -> different render).
-    // The two poses are intentionally distinct; allow small chance of equality but require finite.
-    // Also prove no per-eval sync was introduced: grep check is below, runtime check is firstSubmission.
+    // Anti-stub distinctness: the two poses render different silhouettes through
+    // the real RenderEngine, so real metric composition MUST yield different
+    // scores. A constant-returning completeFromPins stub would fail this.
+    REQUIRE(outcome.scores[0] != outcome.scores[1]);
     REQUIRE(exec.firstSubmission());
 
     // Verify no per-eval sync on admitted path (recipe completeFromPins is the path).
