@@ -52,7 +52,7 @@ The frozen "reverted" verdict stands as the honest baseline — the starting poi
 
 ### Deferred to Follow-Up Work
 
-- **N-raise (>4) to plan 016** — the harness n_max (`graph_throughput_oracle_test.cu:411`), the frozen `N_values`, and the half-memory admit formula (`bank_state.cuh:281`) all cap at 4. Demonstrating N=8–16 needs a bigger scratch fixture or an admission change — after this plan proves the wait + U0-probe result.
+- **N-raise (>4) to plan 016** — the harness n_max (`graph_throughput_oracle_test.cu:411`), the frozen `N_values`, and the half-memory admit formula (`bank_state.cuh:281`) all cap at 4. **Required invariant (cuda-skill graph refs): N admitted == N distinct `cudaGraphExec` handles == pool().size(); a graph exec cannot run concurrently with itself (cuda-graphs.md §4.2.7) — an N-raise must grow the per-context handle vector and the pool together, each launch on its own per-context stream.**
 - **Production pool init + admission evidence wiring** (`optimizer_manager.cpp:806,1425-1448`): unreachable today; meaningful only after retain.
 
 ## Context & Research
@@ -96,17 +96,28 @@ Greedy hook loop (executor.cpp):
   for pose: acquire free ctx; enqueue on ctx.stream; record completion event
   while in-flight or pending:
       poll all in-flight leases -> {Done, Pending, Error}
+      if ANY lease returned Error (or completeFromPins non-finite):
+          result.clear(); teardownHook_(); ForceRelease every lease in inFlight (incl. errored);
+          return PostLaunchAbort                    # error arm FIRST (correctness P1)
       for each Done: completeFromPins -> store at original index; recycle
       if any Done: reset watchdog; continue       # no sleep on Done
       if inFlight.size()==1 && nextPos==poses.size():
-          # sole remaining: still query-paced, but watchdog-check each iter
-          sweep again (poll the 1 lease) with D2 bounded wait; 
-          if watchdog timed out: LeavePoisoned; return WatchdogPoisoned
+          # sole remaining: SINGLE poll per iteration (no double-poll), watchdog-checked
+          loop:
+              pr = pollHook_(sole_lease)
+              if pr == Done: completeFromPins; recycle; remove from inFlight; break
+              if pr == Error: result.clear(); teardownHook_(); ForceRelease; return PostLaunchAbort
+              if now - watchdogStart > timeout:   # only when still Pending
+                  result.clear(); teardownHook_(); LeavePoisoned(sole_lease); poisoned_.store(true);
+                  return WatchdogPoisoned
+              pacing.wait()   # bounded adaptive (no-op in unit tests)
       else:
           pacing.wait()   # adaptive sleep clamp(T/2N,3us,25us); no-op in unit tests
-          if watchdog exceeded: LeavePoisoned; return WatchdogPoisoned
+          if watchdog exceeded and nothing completed:
+              for each l in inFlight: LeavePoisoned(l.ctxIdx)
+              poisoned_.store(true); return WatchdogPoisoned   # poison-set + latch
   # --- gate readout ---
-  # after batch: assert nsys >=30% concurrent, <50us gap, layer_vpass==PASS
+  # after batch: assert NCU concurrent-COMPUTE >=30% at N=2, nsys gap <50us, layer PASS
   # ONLY then record retained/reverted with machine-qualified fields
 ```
 
@@ -118,10 +129,10 @@ Greedy hook loop (executor.cpp):
 
 - Files: add `test/oracle/throughput_probe_test.cu` (or an in-harness probe arm), `test/golden/probe_measurement.md` (read-only unless JTML_UPDATE_GOLDEN=1)
 - Approach:
-  - Run ONLY the graph N=1 arm (no overlap, no admitted-N effect) with the corrected feeder under nsys. Measure per-pose host floor `h_N1` and median launch-to-completion residency `T`.
-  - if `h_N1 >= ~111 µs` → the 1.20× gate is unreachable at N=2 (Amdahl); **stop, record `probe=unreachable`, do not spend the time gate.** This is the honest decision point.
-  - if `h_N1 <= ~40 µs` → the gate is reachable; proceed to U1–U3.
-  - Record nsys SM-overlap fraction `f` (at N=2, non-jump start) for later armed-plan projection.
+  - Run the graph N=1 arm with the CORRECTED feeder (depends on U1/U2; reorder so U1/U2 land BEFORE U0). Measure per-pose host floor `h_N1` and median launch-to-completion residency `T`, with pacing isolated (no-op or subtract the sleep term) so the 25 us sleep does not bias the screen (concurrency P1).
+  - The reachability GATE is the N=2 SM-overlap fraction `f` (Nsight Compute SM-occupancy / concurrent-KERNEL census), measured at N=2 with the feeder fix. If `f < ~0.28` OR per-pose host > ~12 us → the 1.20x gate is out of device reachability at N=2; record `probe=unreachable` and stop (honest device outcome, not a gate spend).
+  - If `f >= ~0.28` and host <= ~12 us → the gate is reachable; proceed to U3. No middle-band ambiguity: binary on (f, host) vs the 1.20x budget.
+  - Report h_N1 (pacing-isolated), T, and f to `probe_measurement.md`; any `reverted` later records these as device-evidence.
 - **Execution note:** Test-first light; this is a measurement probe, not a behavior gate. Must run on the GPU.
 - **Patterns to follow:** anti-stub (real kernels, nsys census, complete()!=0.0).
 - **Verification:** `probe_measurement.md` written with h_N1, T, f; the gate-reachability decision recorded.
@@ -170,9 +181,10 @@ Greedy hook loop (executor.cpp):
 - Test: `test/hook_feeder_test.cpp` (sole-context: bounded loop, watchdog); `test/oracle/evaluation_executor_graph_test.cu` (assert no blocking sync at any node, incl. tail).
 
 **Approach:**
-- Sole-context branch: `while (inFlight==1 && no extra poses)`: query the gaze-only; if Done → complete; if watchdog elapsed → LeavePoisoned + WatchdogPoisoned; else bounded-adaptive wait and re-probe. **No call to `cudaEventSynchronize` anywhere.**
+- Sole-context branch: single-query-per-iteration loop `pollHook_(L)`; Done → complete + recycle; Error → PostLaunchAbort + drain + ForceRelease; watchdog elapsed (gated on still-Pending) → `result.clear(); teardownHook_(); LeavePoisoned(L); poisoned_.store(true); return WatchdogPoisoned`; else bounded wait + re-probe. **No `cudaEventSynchronize` and no second poll per iteration anywhere** (poll-count oracle preserved).
+- Multi-context watchdog path: poison ALL in-flight (not just one), latch `poisoned_.store(true)` (mirror `evaluation_executor.cpp:334-335`).
 - CUDA installer: pollHook stays `cudaEventQuery` tri-state; pacing = adaptive sleep.
-- Anti-stub: real kernels, distinct scores, input-ordered; oracle asserts zero sync in tail.
+- Anti-stub: real kernels, distinct scores, input-ordered; oracle sync-census scoped to the batch path (enqueue→poll→completeFromPinsHook, never the synchronizing complete()).
 
 **Test scenarios:**
 - Happy (unit): 1 pose pool 1 — sole-context bounded wait invoked, result correct, no blocking sync call.
@@ -191,7 +203,7 @@ Greedy hook loop (executor.cpp):
 **Goal:** Run the four-arm harness with the corrected profile, now with the harness **asserting the nsys + layered gates BEFORE `retained`, and read-back asserting the written JSON.**
 
 **Files:**
-- Modify: `test/oracle/graph_throughput_oracle_test.cu` — (a) read `test/golden/graph_layer_verdict.json`, require `verdict==PASS` before `retained`; (b) parse the nsys stats/ SM-census → assert ≥30% concurrent at N=2, <50 µs gap before `retained`; (c) raise trials ≥50 + bootstrapped p90 benefit interval; (d) read-back assert the written JSON (verdict — computed, commit/hostname/driver/admitted_N present).
+- Modify: `test/oracle/graph_throughput_oracle_test.cu` — (a) read `test/golden/graph_layer_verdict.json`, require `verdict==PASS` before `retained`; (b) parse NCU SM-occupancy / concurrent-KERNEL census → assert ≥30% concurrent-COMPUTE at N=2 (NCU metric), plus an nsys Nsight-Systems timeline for the <50 µs host-device gap, before `retained` — do NOT use nsys stats for the SM/occupancy gate (cuda-measurement P1); (c) raise trials ≥50 + bootstrapped p90 benefit interval; (d) read-back assert the written JSON (verdict — computed, commit/hostname/driver/admitted_N present).
 - Reference: `test/golden/graph_pre_registration.json` thresholds.
 
 **Approach:** after U2. The verdict logic (`:441-463`) must be extended, not just the prose G (`:454-462`), so `retained` cannot be written without nsys/layered evidence.
