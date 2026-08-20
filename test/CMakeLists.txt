@@ -1688,6 +1688,31 @@ add_test(NAME jtml.evaluation_executor_graph COMMAND jtml_test_evaluation_execut
 set_tests_properties(jtml.evaluation_executor_graph PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# Plan 014 POC: graph-free two-stream overlap proof-of-concept. Drives the
+# real U4 pure-enqueue chain (EnqueueRenderPhase + metrics + EventRecord) on
+# two per-context streams, measures the 2-eval overlap window vs 194us serial.
+# Plan 014 POC: graph-free two-stream overlap proof-of-concept. Host .cpp that
+# links the CUDA-backed jtml_compute lib (render/metric enqueues) and drives the
+# real U4 pure-enqueue chain on two per-context streams; measures the 2-eval
+# overlap window vs 194us serial. Mirrors layered_correctness_test.cpp pattern.
+add_executable(jtml_test_graph_free_overlap_poc
+    oracle/graph_free_overlap_poc_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp)
+target_include_directories(jtml_test_graph_free_overlap_poc PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS})
+target_link_libraries(jtml_test_graph_free_overlap_poc PRIVATE
+    Catch2::Catch2WithMain
+    ${JTA_LIBS}
+    CUDA::cudart)
+target_link_options(jtml_test_graph_free_overlap_poc PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.graph_free_overlap_poc COMMAND jtml_test_graph_free_overlap_poc)
+set_tests_properties(jtml.graph_free_overlap_poc PROPERTIES LABELS "oracle;gpu" TIMEOUT 3600
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # U7: Layered oracle gate — bit-exact image/raw-int, tolerated double composition.
 # Compares graph-admitted DIRECT_DILATION (via EvaluationExecutor) against serial
 # BuildGpuCostAdapter over the same Kneel_1 golden frame. Layer A/B exact,

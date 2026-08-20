@@ -27,7 +27,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #=============================
 # Basic Project Setup
 #=============================
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 4.2)
 project(joint-track-machine-learning LANGUAGES CXX CUDA)
 message(STATUS ${CUDA_INCLUDE_DIRS})
 

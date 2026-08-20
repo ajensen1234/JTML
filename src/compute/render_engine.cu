@@ -1200,7 +1200,6 @@ bool RenderEngine::WriteImage(std::string file_name) {
         std::cout << "\nCUDA not Initialized for Render Engine - Cannot Write!";
         return false;
     }
-
     /*Array for Storing Device Image on Host*/
     auto host_image = static_cast<unsigned char*>(
         malloc(width_ * height_ * sizeof(unsigned char)));

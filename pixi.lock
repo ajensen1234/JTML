@@ -35,7 +35,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/clang_impl_linux-64-19.1.7-default_hbd963a2_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx-19.1.7-default_h36abe19_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx_impl_linux-64-19.1.7-default_hbd963a2_9.conda
-      - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.8-hc85cc9f_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/cmake-4.2.3-hc85cc9f_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/compiler-rt-19.1.7-hb700be7_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/conda-gcc-specs-14.4.0-h611768e_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cuda-command-line-tools-12.9.0-ha770c72_0.conda
@@ -387,7 +387,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/clang_impl_linux-64-19.1.7-default_hbd963a2_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx-19.1.7-default_h36abe19_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx_impl_linux-64-19.1.7-default_hbd963a2_9.conda
-      - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.8-hc85cc9f_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/cmake-4.2.3-hc85cc9f_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/compiler-rt-19.1.7-hb700be7_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/conda-gcc-specs-14.4.0-h611768e_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cuda-command-line-tools-12.9.0-ha770c72_0.conda
@@ -738,7 +738,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/clang_impl_linux-64-19.1.7-default_hbd963a2_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx-19.1.7-default_h36abe19_9.conda
       - conda: https://prefix.dev/conda-forge/linux-64/clangxx_impl_linux-64-19.1.7-default_hbd963a2_9.conda
-      - conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.8-hc85cc9f_0.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/cmake-4.2.3-hc85cc9f_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/compiler-rt-19.1.7-hb700be7_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/conda-gcc-specs-14.4.0-h611768e_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cuda-command-line-tools-12.9.0-ha770c72_0.conda
@@ -1348,16 +1348,16 @@ packages:
   run_exports: {}
   size: 24701
   timestamp: 1776984272214
-- conda: https://prefix.dev/conda-forge/linux-64/cmake-3.31.8-hc85cc9f_0.conda
-  sha256: 10660ed21b9d591f8306028bd36212467b94f23bc2f78faec76524f6ee592613
-  md5: 057e16a12847eea846ecf99710d3591b
+- conda: https://prefix.dev/conda-forge/linux-64/cmake-4.2.3-hc85cc9f_1.conda
+  sha256: 5ece78754577b8d9030ec1f09ce1cd481125f27d8d6fcdcfe2c1017661830c61
+  md5: 51d37989c1758b5edfe98518088bf700
   depends:
   - __glibc >=2.17,<3.0.a0
   - bzip2 >=1.0.8,<2.0a0
-  - libcurl >=8.14.1,<9.0a0
-  - libexpat >=2.7.1,<3.0a0
+  - libcurl >=8.18.0,<9.0a0
+  - libexpat >=2.7.4,<3.0a0
   - libgcc >=14
-  - liblzma >=5.8.1,<6.0a0
+  - liblzma >=5.8.2,<6.0a0
   - libstdcxx >=14
   - libuv >=1.51.0,<2.0a0
   - libzlib >=1.3.1,<2.0a0
@@ -1367,8 +1367,8 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   run_exports: {}
-  size: 20991288
-  timestamp: 1757877168657
+  size: 22330508
+  timestamp: 1771383666798
 - conda: https://prefix.dev/conda-forge/linux-64/compiler-rt-19.1.7-hb700be7_1.conda
   sha256: 1f3839f485cbdd4c9f5577094380547c3327009ada9522b7de3757724333645e
   md5: c88428a4cdec24439445266941b67507
