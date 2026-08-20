@@ -1,16 +1,16 @@
 {
   "version": "1",
   "date": "2026-08-20",
-  "commit": "b8b668f26b72d9b39c0fcbf079921eb5355b3f6a",
+  "commit": "c55a1dec481c951645746fbea47d1527064485a5",
   "device": {"hostname": "nebby-fedora", "gpu": "NVIDIA GeForce RTX 3090 Ti", "cuda_driver": 13030},
   "pre_registration_ref": "test/golden/graph_pre_registration.json",
-  "method": {"pairs": "serial N=1 via BuildGpuCostAdapter vs graph N=1/N=2/Nmax (steady_clock wall, warmup 3 discard, 10 trials)", "nsys": "nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle"},
+  "method": {"pairs": "serial N=1 via BuildGpuCostAdapter vs graph N=1/N=2/Nmax (steady_clock wall, warmup 3 discard, 50 trials)", "nsys": "nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle"},
   "per_workload": [
-    {"pose_batch_size": 8, "serial_ms_p50": 1.20564, "serial_eps": 6635.49, "gN1_ms_p50": 10.1468, "gN1_eps": 788.43, "gN2_ms_p50": 5.85205, "gN2_p99_us": 750.336, "gN2_eps": 1367.04, "gNmax_ms_p50": 4.65905, "gNmax_eps": 1717.09, "admitted_N": 4},
-    {"pose_batch_size": 16, "serial_ms_p50": 1.77594, "serial_eps": 9009.32, "gN1_ms_p50": 19.3216, "gN1_eps": 828.09, "gN2_ms_p50": 11.695, "gN2_p99_us": 923.213, "gN2_eps": 1368.11, "gNmax_ms_p50": 8.78666, "gNmax_eps": 1820.94, "admitted_N": 4},
-    {"pose_batch_size": 32, "serial_ms_p50": 3.49955, "serial_eps": 9144.04, "gN1_ms_p50": 40.3772, "gN1_eps": 792.527, "gN2_ms_p50": 24.1724, "gN2_p99_us": 835.948, "gN2_eps": 1323.82, "gNmax_ms_p50": 16.7737, "gNmax_eps": 1907.75, "admitted_N": 4}
+    {"pose_batch_size": 8, "serial_ms_p50": 0.779563, "serial_eps": 10262.2, "gN1_ms_p50": 10.6325, "gN1_eps": 752.413, "gN2_ms_p50": 6.94034, "gN2_p99_us": 1149.72, "gN2_eps": 1152.68, "gNmax_ms_p50": 5.32303, "gNmax_eps": 1502.9, "admitted_N": 4},
+    {"pose_batch_size": 16, "serial_ms_p50": 1.29109, "serial_eps": 12392.6, "gN1_ms_p50": 21.0106, "gN1_eps": 761.522, "gN2_ms_p50": 13.5512, "gN2_p99_us": 1031.28, "gN2_eps": 1180.71, "gNmax_ms_p50": 10.4154, "gNmax_eps": 1536.18, "admitted_N": 4},
+    {"pose_batch_size": 32, "serial_ms_p50": 2.6804, "serial_eps": 11938.5, "gN1_ms_p50": 45.8367, "gN1_eps": 698.131, "gN2_ms_p50": 27.4831, "gN2_p99_us": 1101.52, "gN2_eps": 1164.35, "gNmax_ms_p50": 18.3219, "gNmax_eps": 1746.54, "admitted_N": 4}
   ],
   "verdict": "reverted",
   "reason": "gate failed: benefitOk=0 wallOk=0 p99Ok=0",
-  "benefit_N2_vs_serial": 0.151855, "nsys": "nsys available"
+  "benefit_N2_vs_serial": 0.095275, "nsys": "nsys available"
 }

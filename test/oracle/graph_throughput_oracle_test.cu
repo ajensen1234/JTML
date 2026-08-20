@@ -351,7 +351,7 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
     gkey.camera_calib_hash=0x1198000000000175ULL; gkey.cub_storage_bytes=fix.eng->GetCubStorageBytes();
     gkey.maximum_stride_size=10000000; gkey.graph_overhead_bytes=4*1024*1024; gkey.version="1";
     const std::vector<int> batches={8,16,32};
-    const int warmup=3, trials=10;
+    const int warmup=3, trials=50;
     struct ArmResult { int batch=0; double serial_ms_p50=0, serial_p50_us=0, serial_p99_us=0, serial_eps=0; double gN1_ms_p50=0, gN1_eps=0; double gN2_ms_p50=0, gN2_p99_us=0, gN2_eps=0; double gNmax_ms_p50=0, gNmax_eps=0; int admitted_N=0; };
     std::vector<ArmResult> allResults;
     auto preRegTxt = readFile("test/golden/graph_pre_registration.json");
@@ -441,13 +441,51 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
     std::string verdict="blocked"; std::string reason;
     bool nsysAvailable = isNsysAvailable();
     // nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle  (orchestrator runs nsys separately)
+
+    // Plan 013 U3: retain requires REAL layered-correctness evidence and REAL
+    // measurement census evidence — never a fabricated number.
+    // (a) layered verdict: read test/golden/graph_layer_verdict.json, require
+    //     verdict==PASS and real_graph_launch==true.
+    bool layeredPass = false;
+    {
+        auto lv = readFile("test/golden/graph_layer_verdict.json");
+        layeredPass = lv.find("\"verdict\"\s*:\s*\"PASS\"") != std::string::npos;
+        if (layeredPass && lv.find("\"real_graph_launch\"\s*:\s*true") != std::string::npos) {
+            layeredPass = true;
+        } else {
+            layeredPass = false;
+        }
+    }
+    // (b) measurement census: if the orchestrator produced an ncu/nsys census
+    //     file, gate on it (>=30% concurrent-COMPUTE at N=2, <50 us host-device
+    //     gap). Absent census => retain is impossible (blocked, honest).
+    bool censusOk = false;
+    double censusConcurrent = -1, censusGapUs = -1;
+    {
+        auto c = readFile("test/golden/graph_measurement_census.json");
+        if (!c.empty()) {
+            // Minimal parse: "concurrent_pct": 33.1, "host_device_gap_us": 12.3
+            auto num = [&](const std::string& key) -> double {
+                auto pos = c.find("\"" + key + "\"");
+                if (pos == std::string::npos) return -1.0;
+                pos = c.find(':', pos);
+                if (pos == std::string::npos) return -1.0;
+                return std::strtod(c.c_str() + pos + 1, nullptr);
+            };
+            censusConcurrent = num("concurrent_pct");
+            censusGapUs = num("host_device_gap_us");
+            censusOk = (censusConcurrent >= 30.0) && (censusGapUs >= 0.0 && censusGapUs < 50.0);
+        }
+    }
+    std::cout << "[throughput] layeredPASS=" << layeredPass << " censusConcurrent=" << censusConcurrent
+              << "% gap=" << censusGapUs << "us censusOk=" << censusOk << std::endl;
     if(!nsysAvailable){
         verdict="blocked"; reason="nsys not available, manual run required";
     } else if(gate->admitted_N <2 || !overlapAvailable){
         double n1Benefit = (gate->serial_eps>0) ? (gate->gN1_eps / gate->serial_eps) : 0;
         std::cout << "[throughput] overlap unavailable (admitted N<2), N=1 benefit " << n1Benefit << " need >=" << n1Criterion << std::endl;
-        if(n1Benefit >= n1Criterion && wallRegress <= stageWallNoRegress){
-            verdict="retained"; reason="N<2 overlap unavailable but N=1 launch overhead criterion met";
+        if(n1Benefit >= n1Criterion && wallRegress <= stageWallNoRegress && layeredPass && censusOk){
+            verdict="retained"; reason="N<2 overlap unavailable but N=1 launch overhead criterion met + layeredPASS + censusOk";
         } else {
             verdict="reverted"; reason="N<2 overlap unavailable and N=1 criterion not met";
         }
@@ -455,8 +493,8 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
         bool benefitOk = benefit >= minBenefit;
         bool wallOk = wallRegress <= stageWallNoRegress;
         bool p99Ok = p99Regress <= p99NoRegress;
-        if(benefitOk && wallOk && p99Ok){
-            verdict="retained"; reason="N=2 benefit + wall/p99 within thresholds";
+        if(benefitOk && wallOk && p99Ok && layeredPass && censusOk){
+            verdict="retained"; reason="N=2 benefit + wall/p99 within thresholds + layeredPASS + censusOk";
         } else {
             verdict="reverted"; reason="gate failed: benefitOk="+std::to_string(benefitOk)+" wallOk="+std::to_string(wallOk)+" p99Ok="+std::to_string(p99Ok);
         }
@@ -471,11 +509,25 @@ TEST_CASE("U7 real 4-arm throughput measurement (serial N=1 vs graph N=1/N=2/Nma
         int driverVer=0; cudaDriverGetVersion(&driverVer);
         out << "{\n  \"version\": \"1\",\n  \"date\": \"2026-08-20\",\n  \"commit\": \"" << commit << "\",\n";
         out << "  \"device\": {\"hostname\": \"" << hostname << "\", \"gpu\": \"" << gpu << "\", \"cuda_driver\": " << driverVer << "},\n";
-        out << "  \"pre_registration_ref\": \"test/golden/graph_pre_registration.json\",\n  \"method\": {\"pairs\": \"serial N=1 via BuildGpuCostAdapter vs graph N=1/N=2/Nmax (steady_clock wall, warmup 3 discard, 10 trials)\", \"nsys\": \"nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle\"},\n";
+        out << "  \"pre_registration_ref\": \"test/golden/graph_pre_registration.json\",\n  \"method\": {\"pairs\": \"serial N=1 via BuildGpuCostAdapter vs graph N=1/N=2/Nmax (steady_clock wall, warmup 3 discard, 50 trials)\", \"nsys\": \"nsys profile --stats=true -o /tmp/u7_profile .build/bin/jtml_test_graph_throughput_oracle\"},\n";
         out << "  \"per_workload\": [\n";
         for(size_t i=0;i<allResults.size();++i){ auto &r=allResults[i]; out << "    {\"pose_batch_size\": " << r.batch << ", \"serial_ms_p50\": " << r.serial_ms_p50 << ", \"serial_eps\": " << r.serial_eps << ", \"gN1_ms_p50\": " << r.gN1_ms_p50 << ", \"gN1_eps\": " << r.gN1_eps << ", \"gN2_ms_p50\": " << r.gN2_ms_p50 << ", \"gN2_p99_us\": " << r.gN2_p99_us << ", \"gN2_eps\": " << r.gN2_eps << ", \"gNmax_ms_p50\": " << r.gNmax_ms_p50 << ", \"gNmax_eps\": " << r.gNmax_eps << ", \"admitted_N\": " << r.admitted_N << "}"; if(i+1<allResults.size()) out << ","; out << "\n"; }
         out << "  ],\n  \"verdict\": \"" << verdict << "\",\n  \"reason\": \"" << reason << "\",\n  \"benefit_N2_vs_serial\": " << benefit << ", \"nsys\": \"" << (nsysAvailable?"nsys available":"nsys not available, manual run required") << "\"\n}\n";
         std::cout << "[throughput] wrote test/golden/graph_performance_baseline.json verdict " << verdict << " benefit " << benefit << "x" << std::endl;
+        out.flush();
+        out.close();
+        // Plan 013 U3 readback: re-read the written JSON and assert the verdict
+        // matches what we computed, machine-qualified fields are populated, and
+        // admitted_N present for every workload row.
+        {
+            std::string rb = readFile("test/golden/graph_performance_baseline.json");
+            REQUIRE(!rb.empty());
+            REQUIRE(rb.find("\"verdict\": \"" + verdict + "\"") != std::string::npos);
+            REQUIRE(rb.find("\"reason\": \"" + reason + "\"") != std::string::npos);
+            REQUIRE(rb.find("\"hostname\": \"" + hostname + "\"") != std::string::npos);
+            REQUIRE(rb.find("\"admitted_N\": " + std::to_string(gate->admitted_N)) != std::string::npos);
+            REQUIRE(rb.find("\"commit\": \"" + commit + "\"") != std::string::npos);
+        }
     }
     SUCCEED("Real 4-arm throughput harness executed (serial via BuildGpuCostAdapter + graph N=1/N=2/Nmax via real EvaluationExecutor, steady_clock wall)");
 }
