@@ -138,7 +138,7 @@ The current monoplane `DIRECT_DILATION` path produces pose-dependent raster work
 - **Device-driven persistent chunk workers over the flattened candidate list (Option B).** Replaces the 5-int packet barrier. Workers claim `chunk_size` via `atomicAdd(&next_candidate, chunk_size)` while `start < fragment_fill` (device-resident), using the existing `FillTriangleKernel:726-742` and `StridePrefixKernel:698-703` guards. This is substantially narrower than Laine--Karras bin/coarse/fine/multisample rerasterization; it preserves the same candidate-fragment list and advances the plan's preferred implementation.
 - **Metric crop also device-resident.** Derive `left/bottom/right/top`, `sub_cropped_width/height`, `crop_width/height` entirely from the device AABB written by the bbox phase and launch metric kernels with a **fixed-max grid + early-exit guard** (`if (x>=cropW||y>=cropH) return`, matching current `698-703`/`726-742` semantics). No host `bounding_box` read between render and metrics within a graph. The host-load alternative is rejected; U3 probes the fixed-max grid for capturability.
 - **Reusable graph topology per context, per-evaluation param/buffer updates.** Capture once per compatible key (recipeId + biplane flag + frame dims + triangle count + camera calib + dilation + cub_storage_bytes + curvature_capacity + footprint), instantiate **one private `cudaGraphExec_t` per `EvaluationContext`** (no sharing), relaunch many times via `cudaGraphExecKernelNodeSetParams`/`cudaGraphExecMemcpyNodeSetParams` for pose/buffer addresses (pinned host twins remain graph nodes where needed). Preflight probes `cudaStreamBeginCapture`/`cudaGraphInstantiate` legality for this workload (including `cub::DeviceScan::ExclusiveSum`) and surfaces a deterministic fallback to serial. A pooled-Exec alternative is rejected — it would mutate node params while concurrent contexts are in-flight, violating R4/R6.
-- **Layered correctness.** Bit-exact `renderer_output` image and raw `int` metric reductions (`pixel_score`, `distance_map_score`/`edge_pixels_count`, `intersection/union`, `white_count`) vs serial baseline. Only final `double score = baseline_white_sum + (-pixel_score) + distance/edge+0.1` may use a tight tolerance **pre-registered in U2** (proposed `abs 1e-12` or `rel 1e-9` landed in `test/golden/graph_pre_registration.json` with rationale) — U4/U7 must not derive tolerance after the fact. This advances the origin's `Split the gate by layer` decision.
+- **Layered correctness.** Bit-exact `renderer_output` image and raw `int` metric reductions vs the serial baseline. For the monoplane `DIRECT_DILATION` recipe the per-eval reductions are `pixel_score` (FID) and `distance_score`/`edge_count` (distance-map); `comparison_image_white_sum` is a capture-time constant, NOT a per-eval reduction, and `intersection/union/white_count` belong to other cost paths, not this one. Only the final `double score = comparison_image_white_sum + (-pixel_score) + distance/(edge_count+0.1)` may use a tight tolerance **pre-registered in U2** (`abs 1e-12` / `rel 1e-9` landed in `test/golden/graph_pre_registration.json` with rationale) — U4/U7 must not derive tolerance after the fact. This advances the origin's `Split the gate by layer` decision.
 - **Test stewardship: matrix before mutation.** Every affected test gets one of four dispositions (retained unchanged / retained with graph coverage / superseded with named replacement+Rationale / genuinely obsolete) **approved before U4 mutates any `src/compute` file**; an `obsolete` row requires code-owner sign-off. Internal changes alone never justify discarding oracle/bit-identity coverage. `TEST_IMPACT_MATRIX.md` is the gate for U4.
 - **Measurement: paired warmup + Nsight Systems overlap proof.** Serial vs graph-greedy at admitted `N=1,2,4` (clamped by `BankAdmission` half-memory **plus graph object VRAM, probed by an instantiate trial before admission**), warmup `N` launches discarded, repeated trials, throughput `evals/sec` primary, `p50/p99` pose latency and POH-batch latency also reported, Nsight Systems timeline as overlap artifact **with quantitative gates: ≥30% concurrent kernel time at N=2, max host-to-device launch gap <50us, zero `cudaStreamSynchronize`/`cudaEventSynchronize`/`cudaMemcpy` on admitted graph path (grep + timeline)** (origin: R12-R13).
 - **Error: preflight fallback, runtime abort.** Setup failure (capture/instantiate/update) before the first `cudaGraphLaunch` (`firstSubmission` flag clear) marks that recipe unavailable for the run and selects the serial `BuildGpuCostAdapter` at the `OptimizerManager` branch (no sentinel inside `DirectOptimizer`). After first submission (`firstSubmission` set atomically on first successful `cudaGraphLaunch`), any real CUDA error (`cudaEventQuery`/`cudaStreamQuery` ≠ `cudaErrorNotReady`) aborts the whole POH batch: **clear the ordered result vector, wait for all context streams/events, then report via the existing `Optimize() bool/String` + `OptimizerError` signal** (no partial vector, no sentinel inside `BatchCostFunction`). Add a watchdog timeout for `cudaEventQuery` spin. (origin: R7-R8, `cost_capacity_service.cu:403-413` precedent).
@@ -200,7 +200,9 @@ Graph (captured once per context/key, relaunched per pose):
   FillTriangle persistent chunk workers:  while nextCandidate < fragment_fill -> map candidate->triangle/pixel -> barycentric test -> write output
   FIDM chain (device AABB bounds) + distance-map chain (device AABB bounds)  (no host bbox read)
   cudaMemcpyAsync raw int reductions -> pinned host twins
-  record completion event
+  (completion event is NOT captured here — the executor calls cudaEventRecord on the
+   context stream AFTER cudaGraphLaunch, outside capture; querying an event recorded
+   inside a capture is prohibited)
 ```
 
 ---
@@ -353,7 +355,7 @@ Graph (captured once per context/key, relaunched per pose):
 
 ---
 
-- [ ] U5. **Monoplane `DIRECT_DILATION` graph recipe (reusable topology)**
+- [x] U5. **Monoplane `DIRECT_DILATION` graph recipe (reusable topology)**
 
 **Goal:** One reusable graph recipe that embodies the entire `DIRECT_DILATION` cost chain for monoplane, capturable and relaunchable per evaluation context.
 
@@ -391,124 +393,170 @@ Graph (captured once per context/key, relaunched per pose):
 
 ---
 
-- [ ] U6. **Greedy batch wiring + ordered result assembly**
+- [ ] U6. **Greedy batch wiring + ordered result assembly (real CUDA graph path)**
 
-**Goal:** DIRECT observes one synchronous `BatchCostFunction` call that internally feeds independent pose evaluations greedily and returns costs in input order.
+**Goal:** Make one synchronous `BatchCostFunction` call feed an ordered POH vector greedily to real per-context CUDA graphs, while preserving DIRECT replay/callback semantics. This realizes the 08-17 executor pattern: private `cudaStreamNonBlocking` contexts, executor-recorded completion events, `cudaEventQuery` polling (`cudaErrorNotReady` is pending, any other non-success is a real error), and result storage at original input indices.
 
-**Requirements:** R1, R2, R7, R8, R11
+**Requirements:** R1, R2, R3, R4, R5, R6, R7, R8, R11.
 
-**Dependencies:** U1, U5 (contexts + recipe), U2 (replay contract)
+**Dependencies:** U1 (pool), U2 (frozen replay contract), U5 (real graph recipe), and the U2 test-impact matrix.
+
+**Post-U5 reality / constraints:**
+- `EvaluationExecutor::RunBatch` in `evaluation_executor.cpp` is still a serial-cost simulation; `evaluation_executor.cu` is a dummy. Headless tests intentionally link only the host `.cpp` path.
+- `DirectDilationMonoplaneRecipe::createGraph` returns a caller-owned `GraphExecWrapper*` (owns both `cudaGraph_t` and `cudaGraphExec_t`) via `void** out_graphExec`; `recipe->destroyGraph` is its only correct deallocator.
+- `EvaluationContextPool::Shutdown()` treats `ctx.graph_exec` as a raw `cudaGraphExec_t`. **Never store a `GraphExecWrapper*` in `ctx.graph_exec`**; the executor owns wrappers in a separate per-context collection.
+- The current OptimizerManager U6 null-recipe fallback sets `useExecutor=true`, which replaces the real U12 bank batch with serial passthrough. This is a regression: no eligible/preflight-failed recipe must leave the existing U12 bank batch or serial adapter intact (R8).
+- The U5 recipe's `complete()` synchronizes its stream. U6 must move greedy completion to event-query + a no-sync `completeFromPins()` path; otherwise U8 cannot honestly claim overlap or zero per-eval synchronization.
+
+**Key design decisions:**
+1. **Executor-owned wrapper lifetime.** Add `graphExecs_` and `graphKeys_` collections indexed by context index. Entries contain the `GraphExecWrapper*`, full `GraphRecipeKey`, and a frame/parameter generation token. On executor shutdown: drain known-pending streams, call `recipe->destroyGraph(wrapper)` once per non-null entry, clear every entry, then let the pool release raw buffers/events. `Shutdown()` is idempotent, so destructor-after-explicit-Shutdown is a no-op.
+2. **Headless/real CUDA split — use injected hooks, not a direct `.cpp → .cu` call.** Headless tests link `evaluation_executor.cpp` but not the `.cu` TU; a direct `RunBatchGpu` symbol call would not link. Keep one ordered greedy loop in `.cpp`, driven by CUDA-free hook members declared in `evaluation_executor.h`: `enqueue(ctxIdx, pose) -> bool`, `poll(ctxIdx) -> {Pending, Done, Error}`, `completeFromPins(ctxIdx) -> double`, and `teardown()`. `evaluation_executor.cu` defines/installs the real hooks through `InstallEvaluationExecutorGpuPath(EvaluationExecutor&)`; hooks remain null for headless/unsupported paths, leaving exact serial passthrough. `.cpp` never references a `.cu`-only symbol.
+3. **Capture-input provider and complete key assembler.** `CostFunctionManager` owns stage/frame-specific inputs. Add `GetGraphRecipeCaptureInputs(GraphRecipeCaptureInputs&)` and `GPUModel::GetPrimaryRenderEngine()`. The provider fills render engine, metrics, rendered image, dilated comparison frame, distance map, and active dilation; executor supplies `inputs.context`. Add one shared `GraphRecipeKey` assembler used by both OptimizerManager admission and executor capture: active-frame width/height, model triangle count, `maximum_stride_size`, `cub_storage_bytes`, `curvature_capacity`, active dilation, camera-calibration hash, graph overhead, recipe id, and biplane flag. Validate `key.dilation == inputs.dilation` and non-null `rendered_image` before capture. A zero/default key is a deterministic R8 not-submitted failure, never a reason to weaken recipe preflight.
+4. **Invalidate and prepare graphs at a quiescent pre-batch boundary.** U5 captures with `cudaStreamCaptureModeGlobal`; do NOT lazily call `createGraph` during a live greedy feed while other contexts/UI CUDA work may be active. Before any launch for a batch/frame/stage, assemble the complete key and a frame/parameter generation token for every needed context, compare with stored entries, drain/destroy stale wrappers, then capture/recreate required graphs on the feeder thread while no graph contexts are in flight. `createGraph` failure in this preparation phase is `NOT_SUBMITTED` (R8 → U12/serial). This also prevents reuse of frame-A comparison pointers, dilation, or `comparison_image_white_sum` for frame B.
+5. **Greedy state machine (single interleaved lease loop; no recycled-lease re-poll):**
+```
+graphExecs_ := executor-owned map contextIndex -> GraphExecWrapper*  // NOT ctx.graph_exec
+pre-batch quiescent preparation for each pool context that may be used:
+  key := assembleKey(context)
+  if wrapper absent OR storedKey != key OR storedGeneration != currentGeneration:
+      destroy stale wrapper if present
+      inputs := provider(); inputs.context = context
+      if !recipe->createGraph(key, context.stream, inputs, &graphExecs_[context]):
+          return NOT_SUBMITTED      // R8: no graph launch; caller retains U12/serial
+      storedKey := key; storedGeneration := currentGeneration
+leases := []
+for input in input order:
+  ctx := checkout(); if none free: finishOneOldestLease()
+  ctx.in_flight = true; ctx.status = InFlight; ctx.input_index = input
+  copy poses[input] into ctx pose fields
+  if !recipe->updateParams(graphExecs_[ctx], ctx):
+      if firstSubmission: abortPostSubmission() else return NOT_SUBMITTED
+  if !recipe->launch(graphExecs_[ctx], ctx.stream):
+      if firstSubmission: abortPostSubmission() else return NOT_SUBMITTED
+  firstSubmission := true                    // only after a successful launch
+  cudaEventRecord(ctx.completion_event, ctx.stream)  // executor-side, outside capture
+  leases.push({ctx, input, done=false})
+while any lease is not done:
+  progress := false
+  for each unfinished lease:
+      r := cudaEventQuery(lease.ctx.completion_event)
+      if r == cudaSuccess:
+          score := recipe->completeFromPins(lease.ctx) // no CUDA sync
+          if lease.ctx.status == Failed: abortPostSubmission()
+          result[lease.input] := score
+          lease.done = true; recycle(lease.ctx, true); progress = true
+      else if r == cudaErrorNotReady:
+          continue
+      else:
+          abortPostSubmission()
+  if !progress and watchdog since last progress expired:
+      abortPostSubmission()
+```
+`finishOneOldestLease()` marks that lease done and removes it from the active set before re-checkout; a context can never be re-polled under an old input index.
+6. **No-sync completion API.** Add `virtual double GraphRecipe::completeFromPins(EvaluationContext&) const`; default implementation delegates to `complete()` for non-graph recipes. `DirectDilationMonoplaneRecipe::completeFromPins()` is `complete()` minus `cudaStreamSynchronize`: after event success it reads only pinned scores and `host_overflowFlag`, marks `EvaluationStatus::Failed` on overflow/null/non-finite, and calls the same composition helper as `complete()` (`comparison_image_white_sum + (-pixel_score) + distance_score/(edge_count+0.1)`). Test parity between the two completion entry points on identical pins.
+7. **R7/R8 and watchdog semantics.** Before first successful launch, provider/key/create/update/launch failure returns `NOT_SUBMITTED`; OptimizerManager keeps U12/serial and never installs graph `SetBatchCost`. After first launch, any launch/event/watchdog/overflow error clears the ordered vector and reports a structured failure to `RunDirectStage`; `RunDirectStage` catches/converts it to the existing bool/String + `OptimizerError` path rather than allowing `std::invalid_argument` to escape the worker thread. A watchdog failure marks the executor poisoned until re-initialized; do not blocking-sync a suspect hung stream. A true wedged GPU may need device recovery.
+8. **Admission and rollout.** Replace OptimizerManager's hard-coded 8 GiB/zero graph-overhead executor initialization with measured `cudaMemGetInfo` capacity minus already committed pools and U5 graph-overhead measurement. Resolve the U12 coexistence explicitly: keep it as the graph-unavailable serial/bank fallback but never run both schedulers for one `SetBatchCost`. Keep production graph admission disabled behind an explicit experimental/runtime flag until U7 passes and U8 records a retained verdict; U6 itself must not silently ship an unmeasured graph path.
 
 **Files:**
-- Create: `include/compute/evaluation_executor.h`
-- Create: `src/compute/evaluation_executor.cu`
-- Modify: `src/compute/CostFunctionManager.cpp` (`EnqueueDirectDilationOnBank`/`CompleteDirectDilationOnBank` gain explicit-context graph path)
-- Modify: `src/coordinator/optimizer_manager.cpp` (`src/coordinator/optimizer_manager.cpp:1299-1337` batch bridge — second admission path for graph recipe)
-- Modify: `include/compute/CostFunctionManager.h` (explicit-context overloads)
-- Test: `test/unit/test_direct_optimizer_batch.cpp` (extend — greedy ordering + non-finite replay)
-- Test: `test/lifecycle/optimizer_run_controller_test.cpp` (QtTest seam for error propagation)
-
-**Approach:**
-- `EvaluationExecutor` owns the `EvaluationContextPool` (from U1) and a `GraphRecipeRegistry` (from U5). `RunBatch(poses)->vector<double>` is the sole domain-facing entry point.
-- Greedy loop:
-  ```
-  leases = []
-  for input in 0..poses.size()-1:
-    ctx = checkout() // BankCheckoutTracker same-device path
-    if no ctx free: finishOneOldestLeaseViaEventQuery // discriminates NotReady vs error
-    set ctx.pose = Pose(poses[input]); set ctx.status=inFlight; ctx.input_index=input
-    update graph node params for ctx (pose/buffers)
-    cudaGraphLaunch(ctx.graphExec, ctx.stream)
-    record lease {ctx, input}
-  for lease in leases: finishViaEvent(lease) // cudaEventQuery loop, then pinned result -> result[input]
-  recycle each ctx; if any real CUDA error: abortBatch -> return failure sentinel
-  ```
-- Failure semantics (R7/R8 split with atomic `firstSubmission` flag):
-  - **Preflight-unavailable** (`firstSubmission==false`, no `cudaGraphLaunch` yet, U5/U3 `GraphPreflightResult.capturable==false`) -> graph never submitted -> `OptimizerManager` selects the serial `BuildGpuCostAdapter` at its branch (no sentinel inside `DirectOptimizer`) (R8).
-  - **After first successful `cudaGraphLaunch`** (`firstSubmission` set atomically) any real CUDA error (`cudaEventQuery`/`cudaStreamQuery` ≠ `cudaErrorNotReady`, `cudaGraphLaunch` error, or watchdog timeout) -> **clear the ordered result vector, wait for all context streams/events, then report via the existing `Optimize() bool/String` + `OptimizerError` signal** (no partial vector, no `cudaEventSynchronize` spin without timeout). Add a watchdog timeout for the `cudaEventQuery` poll loop (R7, `cost_capacity_service.cu:403-413` abort precedent).
-- `src/compute/gpu_model.cu:310-331` active-bank rebinding is deprecated for the graph path: `GPUModel::TrySetActiveBank` is not called; pose is set on the explicit context.
-
-**Patterns to follow:** `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md` greedy pseudocode (`for pose in order -> acquire -> enqueue -> record; while in flight poll cudaEventQuery; on cudaSuccess read only that context's pinned result -> ordered store`), plus `DirectOptimizer::SetBatchCost` Tier-0 replay contract (`include/domain/direct_optimizer.h:30-41` — per-eval side effects replay in input order).
+- Modify: `include/compute/evaluation_executor.h` (hook seam; executor-owned wrapper/key collections; capture-input provider; poisoned/error state)
+- Modify: `src/compute/evaluation_executor.cpp` (single ordered greedy loop, headless serial fallback, R7/R8 split)
+- Modify: `src/compute/evaluation_executor.cu` (real event-query feeder hooks, post-launch `cudaEventRecord`, no `cudaDeviceSynchronize`)
+- Modify: `include/compute/graph_recipe.h` + `src/compute/graph_recipe_direct_dilation.cu` (`completeFromPins`, shared composition helper, provider validation)
+- Modify: `src/compute/CostFunctionManager.cpp` + `include/compute/CostFunctionManager.h` (`GetGraphRecipeCaptureInputs`; explicit-context path)
+- Modify: `include/compute/gpu_model.cuh` (`GetPrimaryRenderEngine()` accessor)
+- Modify: `src/coordinator/optimizer_manager.cpp` (register recipe, install provider/hooks, populate real key, remove null-recipe override, catch/emit graph failure)
+- Test: `test/unit/test_direct_optimizer_batch.cpp` (ordered leases, no re-poll, non-finite/replay, R7/R8 hook injection)
+- Test: `test/lifecycle/optimizer_run_controller_test.cpp` (QSignalSpy callback and `OptimizerError` ordering on graph success/failure)
+- Test: new `test/oracle/evaluation_executor_graph_test.cu` (real two-context launch/poll/key-invalidation on the real Kneel_1 fixture)
 
 **Test scenarios:**
-- Covers AE1, AE2. Happy path: `2*|POH|` POH batch (2 per POH box, `TrisectPotentiallyOptimal` pairwise independent) completes with `N=2` contexts available but some contexts finish out-of-order — returned `vector<double>` is input-ordered and `DirectOptimizer::GetCostFunctionCalls()` / `GetOptimumLocation/Value()` match the serial run.
-- Happy path: `POH` batch of size `1` and `0` are degenerate — greedy takes the batch path harmlessly or falls back, but always returns the correct ordered result (pinned either way).
-- Edge case: budget that exhausts mid-final-iteration — batch evaluates the full final POH set with no truncation, so `cost_function_calls_` overshoot matches serial exactly.
-- Edge case: batch smaller than `N` — only needed contexts launch; results remain ordered.
-- Edge case: determinism stress — same multi-context batch repeated `>=3x` with adjacent poses scheduled on different contexts produces an identical `bit-identity` diff each run (catches interleaving-dependent races).
-- Error path: `BatchCostFunction` returning wrong-sized vector is a contract violation — fail fast via assert/exception, never silent mis-bookkeeping (existing U11 Tier-0 expectation).
-- Error path: graph-admitted path that encounters a real CUDA error after submission aborts the stage (no `DirectOptimizer` callback for that batch is observed as success).
-- **Lifecycle / QSignalSpy (covers R11/A1):** drive `DirectOptimizer` via `BatchCostFunction` with a recording fake that captures `SetCallOffset` cumulative caps `20k->25k->30k->35k`, non-finite injection, and via `OptimizeCoordinator` (`include/coordinator/optimize_coordinator.h`) `QSignalSpy` verify `UpdateDisplay`/`UpdateOptimum`/`OptimizerError` ordering matches the serial adapter even when contexts complete out-of-order; include a watchdog timeout for the `cudaEventQuery` poll loop.
+- Keep green: `2*|POH|`, degenerate 0/1 batches, batch `< N`, repeated `>=3x` determinism, wrong-sized batch contract.
+- New R8: no recipe, incomplete key, or null `rendered_image` leaves `firstSubmission` false and preserves U12/serial instead of overwriting `SetBatchCost`.
+- New R7: injected post-launch real CUDA error returns no partial vector, keeps `firstSubmission`, and reaches `OptimizerError` without serial re-fallback or an escaped throw.
+- New lifetime: checkout a context, create a live wrapper, call executor Shutdown, assert `destroyGraph` exactly once; destructor-after-Shutdown remains safe.
+- New invalidation: reuse one pool across two frame/parameter generations; frame two recreates wrappers and matches serial.
+- New overflow: graph overflow/status `Failed` follows the serial hard-error path, not an ordinary DIRECT non-finite cost.
+- GPU oracle: two real graph contexts complete out of order yet return scores in input order; event polling, `completeFromPins`, and no-sync path are exercised.
 
-**Verification:** `ctest -L headless --timeout 600` green including the new `test_direct_optimizer_batch` greedy ordering tests; lifecycle QtTest `OptimizerError` path passes; no default-stream implicit sync remains (grep gate: `grep -R cudaDeviceSynchronize src/compute/evaluation_executor.cu` empty, all bank-path launches use the context stream and `cudaGraphLaunch`).
+**Verification:** `ctest -L headless --timeout 600` green; lifecycle `OptimizerError`/callback-order QtTest green; GPU executor oracle green on the target GPU; grep production sources (`src/compute/evaluation_executor.cu`, executor/recipe admitted path) for no `cudaDeviceSynchronize`; do not grep test serial-reference code where D2H validation is intentional.
 
 ---
 
+
 - [ ] U7. **Layered oracle gate (bit-exact image/raw-int, tolerated composition)**
 
-**Goal:** Make the admission gate enforceable without weakening expected correctness.
+**Goal:** Make graph admission enforceable with a REAL graph-vs-serial oracle: rendered image and recipe-owned raw reductions exact, final score bounded only by the frozen Layer-C tolerance. A serial-passthrough executor comparison is explicitly NOT evidence.
 
-**Requirements:** R9, R10
+**Requirements:** R5, R9, R10, R14.
 
-**Dependencies:** U2 (matrix/golden), U4 (device workers), U5 (recipe), U6 (greedy)
+**Dependencies:** U2 (matrix + frozen rev-2 workload/tolerance), U4 (device workers), U5 (recipe), and U6-real (real graph launch/poll/completion). U8 may not measure or retain the graph path until this gate passes.
+
+**Current reality / why this unit remains open:**
+- `test/oracle/layered_correctness_test.cpp`, the U7 block in `bit_identity_test.cpp`, and a multistage admission fence already exist, but they call `exec.RunBatch(poses, serialCost)`. While RunBatch is serial passthrough, `graph == serial` is tautological plumbing coverage, not a graph oracle.
+- The current test has no Layer-A image byte compare, no Layer-B device/pinned raw-int compare, and fabricated `triangle_count=300000` / 4 MB overhead values rather than the frozen real Kneel_1 workload.
+- `docs/solutions/architecture-patterns/graph-tiered-correctness-2026-08-19.md` is explicitly aspirational because the prior U7 path was circular. It remains a design sketch until this unit proves the gate.
+
+**Layer contract (do not blur layers):**
+1. **Layer A — exact image.** For the same real Kneel_1 frame and pose, copy the graph `ctx.primary.output` and serial render output to host after their respective completion points. Require identical dimensions and byte-for-byte equality (`diff == 0`). The test's validation D2H copy is allowed; it is not part of the admitted production graph path.
+2. **Layer B — exact recipe reductions.** Compare only reductions actually produced by monoplane `DIRECT_DILATION`: `pixel_score` (FID), `distance_score`, and `edge_count` (distance-map). Graph pinned host twins must equal serial bank/metric hosts exactly. `comparison_image_white_sum` is a capture-time per-frame constant, not a per-eval reduction. `intersection`/`union`/`white_count` belong to other cost paths and are out of this recipe's Layer-B gate; do not claim they were compared.
+3. **Layer C — bounded composition.** Use the single recipe composition helper: `comparison_image_white_sum + (-pixel_score) + distance_score/(edge_count+0.1)`. Read frozen `abs=1e-12` and `rel=1e-9` from `test/golden/graph_pre_registration.json`; never derive or widen them after observing a diff. Layer-C tolerance never excuses a Layer-A/B mismatch.
+4. **Fixture identity.** Use the rev-2 frozen workload: Kneel_1 femur, 12412 triangles, 1024x1024, Canny 3/0/150, dilation 6, backface off, real calibration/key values. Remove every U7 `300000`/`4MB` fabricated fixture constant.
+5. **Concurrency/determinism.** Execute neighboring poses through at least two real contexts and repeat the same workload >=3 times. Assert context-private device reduction pointers differ, Layer A/B remain exact on every run, and every ordered result vector is identical. This catches write-set aliasing that a host-struct-address check misses.
+6. **Retention gate.** U7 is an R14 prerequisite: if any Layer A/B mismatch or Layer-C out-of-bound occurs, graph admission stays disabled and U8 is blocked. Do not "fix" the oracle by changing frozen tolerance or reference data.
 
 **Files:**
-- Create: `test/oracle/layered_correctness_test.cu`
-- Modify: `test/oracle/bit_identity_test.cpp` (add graph vs serial layered diff)
-- Modify: `test/oracle/multistage_oracle_test.cpp` (drive through `jtml-production` equivalent but via graph-admitted `DIRECT_DILATION`)
-- Create: `docs/solutions/architecture-patterns/graph-tiered-correctness-YYYY-MM-DD.md` (only if a new convention is proven)
-
-**Approach:**
-- Layer A (must be exact): rendered `unsigned char` image after `FillTriangleKernel` (graph vs serial byte compare over golden frames). Layer B (must be exact): raw `int` metric reductions after `cudaMemcpyAsync` (`pixel_score`, `distance_score`/`edge_count`, `intersection`/`union`, `white_count`) — both pinned in U2's `graph_pre_registration.json` as exact gates. Layer C (bounded): `double` score = `direct_dilation` white-sum + `FIDM` + `distanceScore/edge+0.1` **within the tolerance pre-registered in U2** (not derived after U7); document rationale alongside the frozen workloads.
-- Tier-2 oracle (`oracle_test.cpp` / `multistage_oracle_test.cpp`) arbitrates IoU≥0.85 on the GPU machine as the human-visible gate, but U7's `bit_identity` layered gate is the code gate for graph admission.
-- Apply `TEST_IMPACT_MATRIX` dispositions from U2 before changing any existing oracle — if an existing test's assertion must change, its `superseded by layered_correctness_test.cu` rationale is in the matrix.
-
-**Patterns to follow:** `docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md` two-tier oracle (Tier-1 analytic bit-exact vs Tier-2 silhouette IoU), vertically-flipped frame handling, repo-root `WORKING_DIRECTORY`.
+- Rewrite: `test/oracle/layered_correctness_test.cpp` (real graph arm, real fixture, Layer A/B/C assertions, three-run stress)
+- Modify: `test/oracle/bit_identity_test.cpp` (U7 section drives real graph executor and checks the same frozen contract)
+- Modify: `test/oracle/multistage_oracle_test.cpp` (only graph-admitted monoplane DIRECT_DILATION may enter the staged graph path; unsupported paths remain serial)
+- Update only after proof: `docs/solutions/architecture-patterns/graph-tiered-correctness-2026-08-19.md` (aspirational → proven, with exact recipe reduction set and fixture)
 
 **Test scenarios:**
-- Happy path: graph vs serial rendered image byte-identical over `test/golden/fem_golden.jts` / `test/golden/baseline.json` frames (diff `0` bytes).
-- Happy path: graph vs serial raw `int` metric reductions identical (`pixel_score`, `distance_score`, `edge_count`) over the same frame.
-- Happy path: final `double` score within the pre-registered bound while raw ints are exact — the tolerance rationale is documented, not used to hide an `int` mismatch.
-- Edge case: flat/high-detail frames where `U4` chunk workers schedule no-ops (tiny `fragment_fill<256`) still pass layered exactness.
-- Error path: a metric path that silently shares a reduction target across concurrent contexts fails the bit-identity diff nondeterministically — the test repeats `>=3x` to catch it.
+- Happy path: graph vs serial Layer-A rendered image diff is zero over the golden frame.
+- Happy path: Layer-B `pixel_score`, `distance_score`, and `edge_count` match exactly; Layer-C meets frozen tolerance using the shared composition helper.
+- Edge: tiny/flat `fragment_fill < 256` and high-detail poses retain Layer A/B exactness.
+- Concurrency: N=2, adjacent poses, >=3 repeated batches; device reduction targets are distinct and ordered outputs are deterministic.
+- Failure: intentionally shared reduction target or wrong frame-generation token yields a deterministic Layer A/B failure; a failed U7 gate leaves graph admission disabled.
 
-**Verification:** `ctest -L oracle` layered gate green; Tier-2 oracle IoU≥0.85 still required on the GPU machine; no existing oracle test was deleted without its matrix row.
+**Verification:** `ctest -L oracle` passes on a REAL graph executor (not serial passthrough); Tier-2 IoU>=0.85 remains required on the GPU machine; every changed/deleted oracle has a `TEST_IMPACT_MATRIX` disposition. Only then mark the graph-tiered-correctness solution doc as proven.
 
 ---
 
 - [ ] U8. **Paired throughput/latency + Nsight Systems overlap proof**
+**Goal:** Make a measured, reversible retain/revert decision for the graph-backed `DIRECT_DILATION` executor. Nothing synthetic, no fabricated throughput, and no production admission retained without correctness and timeline evidence.
 
-**Goal:** Decide whether the graph-backed greedy executor stays as the supported `DIRECT_DILATION` path using only measured evidence.
+**Requirements:** R9, R12, R13, R14.
 
-**Requirements:** R12, R13, R14
+**Dependencies:** U6-real (real graph launch/event polling/no-sync completion), U7-real (Layer A/B/C gate), U2 (frozen rev-2 workload and pre-registration).
 
-**Dependencies:** U7 (correctness gates must pass before measuring speedup), U2 (fixed workloads), U6 (executor)
+**Current state / expected red:**
+- `test/oracle/graph_throughput_oracle_test.cu` is synthetic scaffolding: fake percentile data, fabricated wall times/P=0.85, `which nsys`, dummy CUDA work, no `EvaluationExecutor::RunBatch`, no `BuildGpuCostAdapter` serial arm, and a fabricated 1.5x p99 gate.
+- **BLOCKER (fails the oracle suite right now — expected red; `ctest -L headless` is unaffected):** it asserts rev-1 `triangle_count=300000` / 512x512 against rev-2 `graph_pre_registration.json` (`12412`, 1024x1024, Kneel_1 `2806.tif`). U8 must remove every rev-1 assertion before measurement.
+- `graph_performance_baseline.json` contains placeholders, not evidence. `pending_manual_gpu_run` is not a retained verdict.
+- U8 is blocked until U6 removes per-eval stream synchronization and U7 passes; current `CompleteRenderPhase`/recipe `complete()` sync behavior cannot support honest overlap claims.
+
+**Measurement contract (freeze before the first U8 run):**
+1. **Rev-2 fixture only.** Use Kneel_1 femur, 12412 triangles, 1024x1024 `2806.tif`, Canny 3/0/150, dilation 6, stage Trunk; batch sizes 8/16/32; discard 3 warmups; run 10 trials. Do not change `graph_pre_registration.json` after seeing results.
+2. **Four paired arms, not three.** (a) serial N=1 via `BuildGpuCostAdapter`/compatibility path; (b) graph N=1, which isolates graph launch/reuse overhead from concurrency; (c) graph N=2, which measures overlap; (d) graph N=max admitted. Record admitted N per hardware. If max admitted N<2, record the overlap premise as not achievable on that hardware; do not substitute N=1 for the N=2 overlap gate, and retain only if the pre-registered N=1 launch-overhead criterion is met.
+3. **Metrics and timing.** Record wall_time_ms, per-pose p50/p99, evals/sec, stage wall time, and GPU event time. The executor completion events are `cudaEventDisableTiming` and MUST NOT be used for elapsed timing; the harness creates its own timing-enabled event pair around each measured run. Compute measured P and Amdahl `S(N)=1/((1-P)+P/N)` only as a consistency ceiling, never as proof of benefit.
+4. **Minimum benefit is a gate, not an afterthought.** Before the first measurement, add an owner-approved explicit threshold to `graph_pre_registration.json`. Default proposed threshold for review: graph N=2 on the 16-pose workload must deliver >=1.20x paired throughput versus serial N=1 AND a non-negative stage-wall result; measured speedup must also fall within the pre-registered Amdahl-consistency band. If the owner selects a different threshold, record it in the frozen artifact before running. A marginal gain that merely "fits Amdahl" is not sufficient to retain this complexity.
+5. **R13 timeline gate is mandatory.** Run `nsys profile -o graph-greedy <real-harness>` then `nsys stats --report cuda_gpu_kern_sum graph-greedy.nsys-rep`, plus inspect the timeline. Retention requires real `cudaGraphLaunch` work, >=30% concurrent kernel time at N=2, max host-to-device launch gap <50us, and production-path absence of `cudaStreamSynchronize`/`cudaEventSynchronize`/blocking `cudaMemcpy`. Scope the source grep to the admitted production executor/recipe/render sources; do not flag test-side serial references or validation D2H copies. Stream count alone is not overlap. If `nsys` is unavailable, the retain decision is **BLOCKED**: `decision.status` remains `pending_manual_gpu_run`, graph admission stays disabled, and serial remains supported. A deferred timeline gate never counts as a pass.
+6. **Latency, error, and availability behavior.** p99 must not regress >10% and stage-level `DirectOptimizer` wall time must not regress >5%. Probe-unavailable retains serial without failing the suite. Any post-submission CUDA/watchdog error aborts that measurement and records `failed`, never `0 evals/sec` or a partial number.
+7. **R14 retain/revert.** Retain only when U7 passes, the explicit minimum-benefit + Amdahl consistency gates pass, latency gates pass, and the mandatory Nsight timeline gate passes. Otherwise keep graph admission disabled and `jj abandon`/revert only the functional admission change while retaining TEST_IMPACT_MATRIX, frozen workloads, and the measured no-go artifact. Cut-0 (~98us) is context only; never present CPU/GPU Cut-0 ratio as N-way speedup.
 
 **Files:**
-- Create: `test/oracle/graph_throughput_oracle_test.cu` (paired harness; not a CI default)
-- Create: `test/golden/graph_performance_baseline.json` (result artifact + run doc)
-- Modify: `docs/handoff-2026-08-12-optimizer-path.md` (evaluation-executor workstream status)
-- Modify: `docs/architecture/jtml-cost-evaluation-execution-graph.org` (update with measured `P` and final worker strategy)
-
-**Approach:**
-- Fixed-work pairs (warmup discarded):
-  1. Serial `N=1` through `BuildGpuCostAdapter` (compatibility `MakeCompatibilityContext` wrapper, `src/coordinator/optimizer_manager.cpp:1299-1337` serial path)
-  2. Graph-greedy `N=2`
-  3. Graph-greedy `N=max admitted` (`BankAdmission.bank_count`, half-memory)
-  for representative workloads `8/16/32` pose batches from the real Kneel_1 fixture (`12412`-triangle implant at `1024x1024`), dilation `direct_dilation` default. Repeat `10` trials per config after discarding first `3` launches per config (warmup). Record per run: wall time, GPU event time, per-eval `p50/p99`, `evals/sec`. Run on the same `RTX 3090 class` machine that produced `test/golden/cut0_measurement.md`'s `~98us` gate.
-- Nsight Systems: `nsys profile -o graph-greedy` -> `nsys stats --report cuda_gpu_kern_sum` + timeline; confirm actual `cudaGraphLaunch` + kernel overlap across streams, and identify remaining `cudaStreamSynchronize`/`cudaEventSynchronize` gaps (must be absent on bank path).
-- Decision: retain the graph-backed path only when (a) throughput gain fits the Amdahl pre-registered band for the measured `P` (reference `bank_state.cuh` admission + `cut0_measurement.md`), (b) POH-batch latency `p99` does not materially regress (`>10%` p99 **AND** `>5%` stage-level `DirectOptimizer` wall-time including graph update/warmup), (c) U7 layered gate passes, **and (d) Nsight Systems confirms ≥30% concurrent kernel time at N=2, max host-to-device launch gap <50us, and zero `cudaStreamSynchronize`/`cudaEventSynchronize`/`cudaMemcpy` on admitted graph path (grep + timeline)**. Otherwise revert the admission in the same change (R14 revert rule `jj abandon`) with the `TEST_IMPACT_MATRIX` and baseline artifacts retained (revert only the functional change).
-
-**Patterns to follow:** `best-practices-guide/11.5-concurrent-kernel-execution.md`, `best-practices-guide/9.1-timing.md`, `best-practices-guide/4.1-profile.md` for Nsight Systems vs Nsight Compute scoping (Systems first for timeline/overlap, Compute only for a selected kernel's achieved throughput).
+- Rewrite: `test/oracle/graph_throughput_oracle_test.cu` (real four-arm paired harness; remove rev-1/synthetic proofs; correct error/availability paths)
+- Rewrite: `test/golden/graph_performance_baseline.json` (real fixture, threshold, machine/driver/commit, admitted N, all measured values, Nsight evidence, `retained`/`reverted`/`pending_manual_gpu_run` decision)
+- Modify: `test/golden/graph_pre_registration.json` BEFORE running U8 (owner-approved minimum-benefit/Amdahl-consistency threshold; never post-hoc)
+- Modify after measurement: `docs/handoff-2026-08-12-optimizer-path.md` and `docs/architecture/jtml-cost-evaluation-execution-graph.org` (measured P, hardware, decision, final worker strategy)
 
 **Test scenarios:**
-- Covers AE5. Happy path: on a `16`-pose POH batch, graph-greedy `N=2` shows measured `P` and throughput within the band derived from `S(N)=1/((1-P)+P/N)`; Nsight Systems shows two streams with overlapping kernels and no serializing `cudaStreamSynchronize` on the admitted path.
-- Happy path: `8`-pose batch (smaller than max admitted) completes with only needed contexts and still input-ordered; `evals/sec` is lower than the `32`-pose case but wall-time is lower — both are reported.
-- Edge case: a run where the probe marked the recipe unavailable correctly retains serial performance without aborting the benchmark suite.
-- Error path: any CUDA error in the throughput harness aborts the measurement run and is recorded as `failed`, not as `0 evals/sec`.
-- Integration: `cut0_measurement.md` CPU/GPU ratio is reported as context but never as an `N-way speedup`; the report distinguishes `Cut-0 ≈98us` from the paired serial-vs-N measurement.
+- Real 16-pose graph N=2 passes the pre-registered benefit/latency gates and Nsight shows overlapping kernels with no production-path serializing sync.
+- Graph N=1 quantifies graph overhead; graph N=2 isolates overlap; graph N=max records saturation; 8/32 pose batches report the wall-time/throughput tradeoff.
+- N<2 hardware path records overlap as unavailable and does not claim an N=2 win.
+- Probe-unavailable retains serial; injected CUDA/watchdog failure is recorded as `failed` with no fabricated throughput.
+- `cut0_measurement.md` remains context, never a speedup claim.
 
-**Verification:** Report artifact landed in `test/golden/graph_performance_baseline.json` + doc; or the unit is abandoned in the same `jj` change with a measured no-go note and the serial path remains supported.
+**Verification:** Land a real report artifact with raw trial summaries, machine/toolkit/driver/commit, admitted N, measured P, timing events, Nsight stats/timeline reference, and explicit retained/reverted/blocked status — or land a measured no-go note with graph admission disabled. U8 is never "done" merely because the harness compiles.
 
 ---
 

@@ -36,7 +36,8 @@ Layout under `test/`, all registered in `test/CMakeLists.txt`:
   `OptimizeCoordinator`), run under `QCoreApplication` with zero GPU/display.
 - `test/golden/` — golden-oracle baseline (`baseline.json`, `fem_golden.jts`,
   `fem_oracle_captured.jtak`, `calibration.txt`).
-- `test/oracle/` — the GPU-labeled Tier-2 appearance oracle (built, U6).
+- `test/oracle/` — GPU-labeled oracles: Tier-2 appearance, bit-identity, layered-correctness,
+  evaluation-executor, and the U8 throughput harness (plan 011). Never in the headless default.
 - `test/qml/` — **Qt Quick Test** for the view layer (plan 007 U6):
   `quick_test_main` harness over the REAL `src/app/experimental/*.qml`
   sources (qrc-aliased, no drift) with injected fake bridges; headless
@@ -59,21 +60,32 @@ Conventions:
 - `QSignalSpy` must observe a signal on the **main/test thread**, never the worker thread
   (QTBUG-2842) — the coordinator re-emits on its own thread.
 
-## The in-flight refactor (testability + MVVM)
+## Where to find information
 
-- Plan: `docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md` (Units U1..U8, stable
-  U-IDs; checkboxes track progress).
+`docs/` is the knowledge store. Fastest way in: run `ctx_index` over `docs/` once per
+session, then `ctx_search` for focused snippets. It holds plans (`docs/plans/`), handoffs
+(`docs/handoff-*.md`), brainstorms/requirements (`docs/brainstorms/`), and documented
+solutions (`docs/solutions/` — bugs, best practices, and workflow patterns organized by
+category with YAML frontmatter `module`/`tags`/`problem_type`). Search it before
+implementing or debugging in a documented area.
+
+## Current work (plan 011 — CUDA-Graph greedy evaluation executor)
+
+- **Active plan:** `docs/plans/2026-08-19-011-feat-cuda-graph-greedy-evaluation-executor-plan.md`
+  (U1..U8, real CUDA-Graph greedy evaluation executor). U1–U5 are landed and checkpointed;
+  U6–U8 are deepened designs pending implementation.
+- **Status / what's next:** `docs/handoff-2026-08-19-cuda-graph-greedy-evaluation-executor.md`.
+  Treat the plan checkboxes + handoff as the current source of truth.
+- Requirements: `docs/brainstorms/2026-08-19-cuda-graph-greedy-evaluation-executor-requirements.org`
+
+## Prior refactor (testability + MVVM) — landed / historical
+
+- Plan: `docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md` (U1..U8, done).
 - Requirements: `docs/brainstorms/2026-08-07-testability-mvvm-refactor-requirements.md`
-  (R1..R16, AE1..AE5 — normative contract).
+  (R1..R16, AE1..AE5 — normative contract for that refactor).
 - Oracle spec: `golden_oracle.org` (two-tier; **Tier-2 is appearance-based**: render the
   implant at the optimized pose and compare the silhouette to `Labels/`, NOT the raw pose,
   because DIRECT convergence is noisy). Baselines in `test/golden/baseline.json`.
-- Current status / what's next: see `docs/handoff-2026-08-07-testability-mvvm.md`.
-- **Documented solutions:** `docs/solutions/` — resolved problems and conventions (bugs,
-  best practices, workflow patterns), organized by category with YAML frontmatter
-  (`module`, `tags`, `problem_type`). Search it when implementing or debugging in an area
-  that already has a documented learning (e.g. headless-testing / CMake-AUTOMOC
-  conventions).
 
 Architecture seams introduced so far:
 - `include/domain/direct_optimizer.h` / `src/domain/direct_optimizer.cpp` — pure DIRECT with an
@@ -82,6 +94,11 @@ Architecture seams introduced so far:
   callbacks for the production caller.
 - `include/coordinator/optimize_coordinator.h` / `src/coordinator/optimize_coordinator.cpp` — headless
   state machine (Idle→Running→Idle) + persistent worker thread, for the GUI to bind to.
+- Plan-011 compute layer (CUDA-graph executor): `include/compute/evaluation_context.h`
+  (context + pool), `include/compute/evaluation_executor.h` (greedy `RunBatch`),
+  `include/compute/graph_recipe.h` + `src/compute/graph_recipe_direct_dilation.cu`
+  (per-context graph capture of the production render+metric chain) — see the plan-011
+  handoff for details.
 
 > **003 layered layout:** `src/core`+`include/core` was split into `domain/` (pure
 > logic), `services/` (non-pure headless services), `coordinator/` (QObject

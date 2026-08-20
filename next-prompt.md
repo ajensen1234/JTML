@@ -1,37 +1,59 @@
-# Next Agent Prompt — JTML (resume here)
+# Next Agent Prompt — JTML Plan 011 Resume
 
-**Repo:** `JTML` — Qt6 (qt6-main/wayland 6.7.2) + VTK 9.3 (built against Qt6) + CUDA 12.4 + OpenCV C++20 desktop app for 2D-3D knee-implant registration (DIRECT global optimizer over a GPU cost). **VCS is `jj` (NOT git)** — owner's workflow: `jj describe -m "<scope>: <msg>"` then `jj new` per logical change. **Build via pixi only**: `pixi run configure`, `pixi run build`, `pixi run test` (headless), `ctest --test-dir .build -L oracle` (GPU). Never run bare cmake/nvcc.
+## Mission
 
-## Read these first (durable record)
-- `AGENTS.md` — conventions (jj, pixi, test layout, AUTOMOC/file(GLOB) gotcha, R12: no god-object characterization, no Qt-mocking).
-- `docs/plans/2026-08-07-001-refactor-testability-mvvm-plan.md` — the plan (U1–U8; most done, U7 partially).
-- `docs/handoff-2026-08-07-testability-mvvm.md` — status, marked COMPLETE (U1–U8) with re-scoped follow-ons.
-- `docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md` + `docs/solutions/tooling-decisions/qt6-hegel-oracle-tooling-recipes-2026-08-08.md` — compounded learnings (Qt6 recipe, hegel CMake `dl`+rpath, oracle vertical-flip label, conda `BUILD_RPATH` override, cumulative-budget 20k/25k/30k).
-- `golden_oracle.org` + `test/golden/baseline.json` — two-tier oracle spec (Tier-1 CPU analytic in CI; Tier-2 appearance gate IoU > 0.85, measured 0.9936).
+Continue **Plan 011 — CUDA-Graph Greedy Evaluation Executor**. U1–U5 are real, reviewed, checkpointed; do **not** reimplement them. The next implementation unit is **U6: real greedy CUDA graph executor wiring**. U7/U8 are fully deepened designs, not implementation work yet.
 
-## CURRENT STATE (verified green under Qt6)
-- Full build green; `pixi run test` → **8/8 headless**; `ctest -L oracle` → passes on the RTX 3090.
-- Committed (recent chain, oldest→newest): ... (U6 step1 DirectOptimizer+hegel), (U6 step2 RunDirectStage rewire), (U6 Tier-2 GPU oracle), (U6 docs), (U7 pose_file_io), (U7 MainScreen strangle), (U7 session_state extraction), (**fix** review F1 stop + F2 kinematics alignment), (**refactor** remove dead DIRECT internals from OptimizerManager M-1), (docs compound tools+conventions+AGENTS).
-- `SessionState` (`include/core/session_state.h`, `src/core/session_state.cpp`, `test/unit/test_session_state.cpp`) is EXTRACTED, tested (headless 8/8), and wired into `jtml_core`, but **NOT yet consumed by MainScreen** — it is a tested service with zero production consumers.
+## First turn: orient without broad exploration
 
-The two-part Tier-2 oracle runs a single stage / budget 3000 / frame 0 only; it does NOT exercise `RunDirectStage`'s cumulative multi-stage + biplane path end-to-end (documented gap).
+1. Read `AGENTS.md`.
+2. Run `ctx_index` over `docs/` if `jtml-docs` is not already indexed; use `ctx_search` for focused facts:
+   - `U6 graph executor wrapper lifetime completeFromPins`
+   - `U6 GraphRecipeKey provider null recipe U12 fallback`
+   - `U7 layered correctness circular serial passthrough`
+   - `U8 rev-2 throughput 12412 Nsight retain threshold`
+3. Read these in order:
+   - `docs/plans/2026-08-19-011-feat-cuda-graph-greedy-evaluation-executor-plan.md` — **U6 section first**
+   - `docs/handoff-2026-08-19-cuda-graph-greedy-evaluation-executor.md`
+   - `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md`
+   - `docs/solutions/logic-errors/jtml-cuda-graph-stub-failure-2026-08-19.md`
+4. `jj st`, `jj log --no-graph -r '@-::@-'`, then `pixi run build`.
 
-## NEXT TASK — U7 MVVM: wire `SessionState` into `MainScreen`
-This is the strangle continuation and resolves the code-review flag M-2 (SessionState shipped-tested-but-unused). Per the plan U7: extract app-state/command orchestration (model-list, selection, primary model, current frame, optimize intent) OUT of the 5,620-line `MainScreen` god object into headless-tested services/controllers; keep render binding in `Viewer`; shrink MainScreen (R10: line count + `ui.`-reference count trend DOWN, currently ~5620 lines / ~830 `ui.`).
+## Current checkpointed state
 
-Concrete first slice (behavior-preserving):
-1. Add `jta::SessionState session_state_;` member to `MainScreen` (`include/gui/mainscreen.h`).
-2. Sync it from widget state: model count (`loaded_models.size()`), frame count (`loaded_frames`/image-list), selection (`ui.model_list_widget->selectionModel()->selectedRows()` → rows), current frame (`ui.image_list_widget->currentRow()`) — called at the two selection-changed slots (`on_model_list_widget_itemSelectionChanged`, `on_image_list_widget_itemSelectionChanged`) and where models/frames load.
-3. Replace app-state reads with the service: primary model = `session_state_.GetPrimaryModelIndex()` (was `selected[0].row()` — SAME rule: first selected row), `GetSelectedModels()`, `GetCurrentFrame()` — especially in `LaunchOptimizer` (primary model) and the pose/kinematics commands.
-Keep the VIEW (colors/opacity/VTK render updates) in the slots; only the STATE moves.
+- **U1 real pool:** `llxwvusv` — private context stream/event/counters/pinned overflow.
+- **U2 rev-2 frozen contract:** `ktpnwxll` — real Kneel_1 12412-triangle / 1024x1024 fixture.
+- **U3 real capture probe:** `srlpqvvp`.
+- **U4 persistent workers:** `ytvowmkl` — production `RenderPhase(EvaluationContext&)`, device crop + graph-capturable metrics.
+- **U5 real graph recipe:** `ntqxnwox` / `62855b11` — captures production enqueue chain, `cudaGraphExecKernelNodeSetParams`, real white-sum baseline, non-blank serial-parity oracle.
+- **Test hygiene:** `lmrxuoss` / `243976c8` — Cut-0 measurement no longer rewrites tracked golden unless `JTML_UPDATE_GOLDEN=1`.
 
-**Per-layer gate (R9):** logic/service/coordinator extraction → headless unit gate; presentation-only cuts → compile + scheduled manual-visual check (no `MainScreen` characterization — R12). Verify: `pixi run build` green, `pixi run test` 8/8, `ctest -L oracle` green; do a bounded manual GUI smoke (offscreen + real display) after wiring.
+The working copy should contain only this documentation-preparation change. Commit it separately before U6 code.
 
-## Key gotchas / decisions to preserve
-- **jj only**: `jj describe` → `jj new` per change; never git.
-- **Cumulative budget 20k/25k/30k** (`settings_constants`: trunk 20000, branch 5000, leaf 5000) is load-bearing — don't "fix" to per-stage in the optimizer.
-- New core `.cpp` must be added to the **explicit** `src/core/CMakeLists.txt` source list (file(GLOB) only catches headers → AUTOMOC link breakage otherwise).
-- Headless tests must not require a GUI/display, VTK render window, or widget. Fast compute-only CUDA is allowed; expensive fixture/render/performance gates use `oracle`/`gpu` labels.
-- `SessionState` is a plain state holder, NOT an observable ViewModel — Qt Widgets has no binding (plan R12 anti-over-engineering); signal/notify lives in the QObject coordinator (`OptimizeCoordinator`).
-- hegel PBT is a swappable FetchContent layer (network at configure; `dl` + rpath needed).
-- Oracle label TIFFs are bottom-left y-origin → the oracle vertically flips them; run oracle from the repo root (`WORKING_DIRECTORY` set).
+## U6: non-negotiable implementation constraints
+
+1. **Wrapper lifetime:** `DirectDilationMonoplaneRecipe::createGraph()` returns a `GraphExecWrapper*`. The executor owns it and destroys it through `recipe->destroyGraph()`. Never put that wrapper into `ctx.graph_exec`: pool Shutdown treats that field as a raw `cudaGraphExec_t`.
+2. **Headless / CUDA TU split:** headless tests link `evaluation_executor.cpp`, not the `.cu` TU. Keep one ordered greedy loop in `.cpp`, driven by injected CUDA-free hooks (`enqueue`, `poll`, `completeFromPins`, `teardown`) declared in the header and installed by `.cu`. Do not direct-call a `.cu`-only symbol from `.cpp`.
+3. **Provider + real key:** CostFunctionManager must supply `GraphRecipeCaptureInputs`; GPUModel needs a primary RenderEngine accessor. Build one real `GraphRecipeKey` (frame dims, model triangles, stride, CUB storage, dilation, calibration hash, etc.) for BOTH admission and capture. Current production key is zero-filled and would always preflight false.
+4. **Frame/stage invalidation:** graph capture bakes comparison-frame pointers, dilation, and white sum. Cache wrapper + full key + frame/parameter generation; destroy/recreate when any change occurs.
+5. **Polling:** executor calls `cudaEventRecord(ctx.completion_event, ctx.stream)` only AFTER `cudaGraphLaunch`, outside capture. `cudaEventQuery == cudaErrorNotReady` means pending; any other non-success is a real error. After success, call a new no-sync `completeFromPins()`, never syncing `recipe.complete()` in the greedy path.
+6. **R7/R8:** before first successful launch, provider/key/create/update/launch failure is `NOT_SUBMITTED` and preserves U12/serial. After first launch, error/overflow/watchdog clears results and reaches `OptimizerError` — never an uncaught `std::invalid_argument` or silent serial fallback.
+7. **Production rollout:** fix OptimizerManager's null-recipe branch that currently overwrites U12 with executor serial passthrough. Graph admission remains experimental/off until U7 + U8 prove it.
+
+## Tests and expected reds
+
+- Run focused tests before broad suites: `jtml.evaluation_context`, `jtml.graph_recipe_preflight`, `jtml.graph_capture_probe`, `jtml.u4_production_integration`, `jtml.graph_recipe_direct_dilation`, then new U6 targets.
+- `ctest -L headless` has one known pre-existing red: `jtml.qml_lint`.
+- `jtml.graph_throughput_oracle` is an **expected U8 oracle red** until U8 replaces the rev-1 `triangle_count=300000` stub. Do not change it in U6.
+- Normal Cut-0 runs now leave `test/golden/cut0_measurement.md` clean. Never use `jj restore` to clean test side effects; identify and fix the producer.
+
+## Tooling discipline
+
+- **jj only:** `jj describe -m "<scope>: <message>"`, then `jj new`, one logical change at a time. Never raw git.
+- **pixi only:** `pixi run build`, `pixi run test`; no raw cmake/make/nvcc.
+- **ReadSeek:** digest → edit → digest → edit. Use `language: "cpp"` for `.h`, `.cu`, `.cuh` reads/searches.
+- **CUDA references:** `~/.pi/agent/skills/cuda-skill/references/` — event query (`cuda-runtime-docs/modules/group__cudart__event.md`), capture/query modes (`group__cudart__stream.md`), graph lifecycle (`group__cudart__graph.md`, `cuda-guide/04-special-topics/cuda-graphs.md`).
+
+## Definition of a good U6 checkpoint
+
+A single atomic U6 change with real hook-installed graph launch/event polling, real key/provider/wrapper lifetime, R7/R8 error semantics, headless injection tests + GPU executor oracle, focused tests green, independent correctness review, then `jj describe` + `jj new`. Do not start U7 until that checkpoint is reviewed.
