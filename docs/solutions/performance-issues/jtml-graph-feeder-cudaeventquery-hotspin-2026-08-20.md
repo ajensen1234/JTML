@@ -52,6 +52,21 @@ Admission is also a factor: the max arm admits only `N=4` on this small fixture 
 
 ## Solution
 
+**Resolved 2026-08-20 (plan 013):** the hot-spin was replaced with an injectable bounded
+pacing hook (default yield; CUDA installer = 10 µs bounded sleep), a watchdog-porous
+sole-context wait (no `cudaEventSynchronize` anywhere on the admitted path), and the U7
+harness now gates `retained` on layered-verdict + NCU/nsys census + readback. The
+re-qualification honestly records **`reverted` (0.095×)** — the U0 probe showed the graph
+path is **host-bound**, not poll-bound: `cudaGraphLaunch` is ~29.4 µs host-side per
+launch, per-pose host floor ~73 µs ≳ serial, GPU busy ~1.5 %. The wait fix was necessary
+and is real (cudaEventQuery 0.78 µs avg, no hot-spin); it was simply not sufficient
+because the bottleneck moved to the per-pose host launch cost. Default-deny stays.
+
+Follow-up levers (plan 016 / future): cut per-pose `cudaGraphLaunch` host cost (batched
+params / multi-param update / `cudaGraphUpload`), reduce per-pose pinned D2H, or move
+host work off the critical path on a fixture where host and device floors allow overlap.
+Evidence: `test/golden/probe_measurement.md`, `test/golden/graph_performance_baseline.json`.
+
 Replace the hot-spin `cudaEventQuery` poll with a proper event wait or backoff so the host thread is not busy-synchronizing at GHz cadence, then raise admitted N and re-measure.
 
 Exact hot-spin sites (quoted from source):

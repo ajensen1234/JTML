@@ -123,7 +123,7 @@ Greedy hook loop (executor.cpp):
 
 ## Implementation Units
 
-- [ ] U0. **[Pre-flight probe: host floor + SM-overlap, decide gate reachability]**
+- [x] U0. **[Pre-flight probe: host floor + SM-overlap, decide gate reachability]** — DONE 2026-08-20: nsys census shows host-bound graph path (cudaGraphLaunch 29.4 µs host/pose, per-pose host ~73 µs ≳ serial, GPU busy 1.5 %). **probe=unreachable**; 1.20× at N=2 not within device reachability on this fixture/machine. Evidence: `test/golden/probe_measurement.md`.
 
 **Goal:** Measure the spin-free per-pose host floor and the actual SM-overlap fraction **before** committing the 1.20× gate spend. This is the anti-artifact fix from the perf/adversarial review — stop it from running a scripted second `reverted`.
 
@@ -139,7 +139,7 @@ Greedy hook loop (executor.cpp):
 
 ---
 
-- [ ] U1. **[Injectable adaptive poll pacing in the greedy loop]**
+- [x] U1. **[Injectable adaptive poll pacing in the greedy loop]** — DONE 2026-08-20: `PacingHookFn` + `InstallPacingHook` (default yield), greedy loop uses `pacingHook_()`; pacing-exactly-once + no-pacing-on-Done + sole-tail single-poll pins. Headless green.
 
 **Goal:** Replace the zero-delay yield-only backoff with an injectable adaptive pacing seam — while preserving OOO input-order completion, pending-lease-pending, no-re-poll, watchdog poison, and the exact poll-count pins.
 
@@ -169,7 +169,7 @@ Greedy hook loop (executor.cpp):
 
 ---
 
-- [ ] U2. **[Sole-context bounded timed wait + CUDA adaptive pacing hooks]**
+- [x] U2. **[Sole-context bounded timed wait + CUDA adaptive pacing hooks]** — DONE 2026-08-20: CUDA installer sets bounded 10 µs pacing; no `cudaEventSynchronize` anywhere; sole-context watchdog-porous pins + code-level no-sync census in graph oracle. Oracle + layered green.
 
 **Goal:** Implement the sole-remaining-context **bounded, watchdog-porous wait** (NOT blocking `cudaEventSynchronize`), and the CUDA adaptive accelerator hooks, keeping the accepted path sync-free (R3 / frozen `zero_sync`).
 
@@ -198,7 +198,7 @@ Greedy hook loop (executor.cpp):
 
 ---
 
-- [ ] U3. **[U7 re-qualification, nsys+layered+readback-gated]**
+- [x] U3. **[U7 re-qualification, nsys+layered+readback-gated]** — DONE 2026-08-20: trials ≥50; `retained` requires layered verdict PASS + NCU/nsys census + readback assert. Measured **reverted 0.095×** (machine-qualified).
 
 **Goal:** Run the four-arm harness with the corrected profile, now with the harness **asserting the nsys + layered gates BEFORE `retained`, and read-back asserting the written JSON.**
 
@@ -216,7 +216,7 @@ Greedy hook loop (executor.cpp):
 
 ---
 
-- [ ] U4. **[Docs + knowledge store sync]**
+- [x] U4. **[Docs + knowledge store sync]** — DONE 2026-08-20: handoff residual judgments updated; compound finding resolution appended; blueprint band corrected; plan checkboxes + outcomes recorded.
 
 **Files:**
 - `docs/handoff-2026-08-20-cuda-graph-executor-admission.md`, `docs/plans/2026-08-20-012-feat-...-plan.md` (fix stale "no minimum-benefit"/"blocking wait allowed" if present), `docs/solutions/...feature-tagged-solution` compound (append the resolution), `refreshed blueprint` (correct the 50–200 µs band to adaptive).

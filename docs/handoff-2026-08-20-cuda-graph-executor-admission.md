@@ -64,8 +64,8 @@ A CUDA-aware review of deepened 011 U6 found unresolved **lifecycle/admission de
 
 ## Residual product judgments (not blockers for U1)
 
-- U7 still measures after machinery U3–U5 exists; a no-go keeps default-deny.
-- Retain is paired batch throughput (proposed 1.20× N=2), not end-to-end POH wall.
+- U7 measured (plan 013 U3, 2026-08-20): **reverted 0.095×** with the corrected (paced) feeder. Plan 013 U0 probe explains it: the graph path is host-bound — `cudaGraphLaunch` costs ~29.4 µs host-side per launch, per-pose host floor ~73 µs ≳ serial ~104 µs wall, GPU busy ~1.5 %. **No-go: default-deny stays** (machine-qualified evidence in `test/golden/graph_performance_baseline.json` + `test/golden/probe_measurement.md`).
+- Retain remains paired batch throughput (proposed 1.20× N=2); plan 013 U0 shows it is **unreachable on this fixture/machine** (host-bound graph path) — recorded `probe=unreachable`.
 - Recapture tax is reported, not a hard gate.
 
 ---

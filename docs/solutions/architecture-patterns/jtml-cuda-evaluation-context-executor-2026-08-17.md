@@ -105,7 +105,7 @@ Event polling is the correct CUDA API usage for distinguishing `cudaErrorNotRead
 
 - **The hot spin, not the graph, is the measured bottleneck.** The nsys profile of the greedy CUDA-graph feeder (plan 012 U7) shows 1,526,320 `cudaEventQuery` calls — 81.8% of all CUDA API time in the measured window — while the GPU was only 1.6% busy (27.6 ms of kernels over a 1764 ms span, ~2.36 us average kernel on the 12412-triangle Kneel_1 mesh; launch-to-launch host gap p50 = 712 us).
 - **This is a host-bound polling artifact, not a graph-capability limit.** With the GPU 60x under-utilized, the measured graph-vs-serial ratio of 0.114x is not an architecture verdict.
-- **Stop the spin, keep polling correct.** Use bounded backoff between re-polls (sleep/yield 50-200 us or adaptive), OR block on the completion event (`cudaEventSynchronize`) for a dedicated serialized step / for the only remaining in-flight context, OR sweep a small event set and service only its Done events while the others keep running. NEVER busy-poll the entire lease set at zero delay.
+- **Stop the spin, keep polling correct.** Use bounded backoff between re-polls (10–25 µs for µs-scale evals — the 50–200 µs band is too coarse: ~4–10 eval-residencies wide on a 97 µs per-eval fixture; plan 013 measured 10 µs works), OR block on the completion event (`cudaEventSynchronize`) for a dedicated serialized step / for the only remaining in-flight context, OR sweep a small event set and service only its Done events while the others keep running. NEVER busy-poll the entire lease set at zero delay.
 - **Admission (N) must saturate the device.** A half-memory bank ceiling capping N=4 on a small fixture destroys the concurrency story before the poll loop even matters.
 
 Cross-references: `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md` (compound analysis) and `test/golden/graph_performance_baseline.json` (measured reverted artifact). Normalize the earlier absolute on `cudaEventSynchronize`: it is acceptable for the serialized step / last remaining context, not on a per-context non-blocking stream that other live work shares (capture-invalidator rule).
@@ -167,7 +167,7 @@ for pose in input order:
 
 while contexts remain in flight:
     if cudaEventQuery(context.event) == cudaErrorNotReady:
-        yield or sleep a bounded backoff (50-200 us); # NOT a hot spin
+        yield or sleep a bounded backoff (10-25 us, adaptive); # NOT a hot spin
         continue feeding other contexts
     if cudaEventQuery(context.event) == cudaSuccess:
         read only this context's pinned result
