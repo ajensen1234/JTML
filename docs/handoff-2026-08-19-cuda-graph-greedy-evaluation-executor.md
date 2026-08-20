@@ -1,8 +1,10 @@
-# Handoff: CUDA-Graph Greedy Evaluation Executor (Plan 011)
+# Handoff: CUDA-Graph Greedy Evaluation Executor (Plan 011) — SUPERSEDED for remaining work
 
 **Prepared:** 2026-08-19 — post-U5 implementation, full-docs reconciliation, and U6–U8 design review
 
-- **Active plan:** `docs/plans/2026-08-19-011-feat-cuda-graph-greedy-evaluation-executor-plan.md`
+- **Active plan is now 012:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md`
+- **012 handoff:** `docs/handoff-2026-08-20-cuda-graph-executor-admission.md`
+- **This file:** historical 011 U1–U5 status only. Do **not** implement 011 U6 from the sections below.
 - **Requirements:** `docs/brainstorms/2026-08-19-cuda-graph-greedy-evaluation-executor-requirements.org`
 - **Architecture blueprint:** `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md`
 - **Anti-stub learning:** `docs/solutions/logic-errors/jtml-cuda-graph-stub-failure-2026-08-19.md`

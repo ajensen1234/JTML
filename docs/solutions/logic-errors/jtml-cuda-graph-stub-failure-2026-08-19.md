@@ -85,3 +85,4 @@ Three failures compounded:
 - `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md` (6 pool conditions blueprint)
 - `docs/plans/2026-08-19-011-feat-cuda-graph-greedy-evaluation-executor-plan.md` (plan 011)
 - `docs/handoff-2026-08-19-cuda-graph-greedy-evaluation-executor.md` (honest state + next steps)
+- `docs/solutions/workflow-issues/jtml-deepened-unit-not-implementation-ready-2026-08-20.md` (earlier gate: a deepened remaining unit is not automatically implementation-ready)

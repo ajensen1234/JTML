@@ -69,13 +69,12 @@ solutions (`docs/solutions/` — bugs, best practices, and workflow patterns org
 category with YAML frontmatter `module`/`tags`/`problem_type`). Search it before
 implementing or debugging in a documented area.
 
-## Current work (plan 011 — CUDA-Graph greedy evaluation executor)
+## Current work (plan 012 — CUDA-graph executor admission and lifecycle)
 
-- **Active plan:** `docs/plans/2026-08-19-011-feat-cuda-graph-greedy-evaluation-executor-plan.md`
-  (U1..U8, real CUDA-Graph greedy evaluation executor). U1–U5 are landed and checkpointed;
-  U6–U8 are deepened designs pending implementation.
-- **Status / what's next:** `docs/handoff-2026-08-19-cuda-graph-greedy-evaluation-executor.md`.
-  Treat the plan checkboxes + handoff as the current source of truth.
+- **Active plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md`
+  (replaces remaining Plan 011 U6–U8). Plan 011 U1–U5 stay landed; do not reimplement them.
+- **Status / what's next:** `docs/handoff-2026-08-20-cuda-graph-executor-admission.md`.
+  Plan 011 U1–U5 status remains in the historical 011 handoff. Do not implement 011 U6.
 - Requirements: `docs/brainstorms/2026-08-19-cuda-graph-greedy-evaluation-executor-requirements.org`
 
 ## Prior refactor (testability + MVVM) — landed / historical
