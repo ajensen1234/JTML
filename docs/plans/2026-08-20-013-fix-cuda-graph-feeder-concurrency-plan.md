@@ -3,6 +3,7 @@ title: Fix the CUDA-graph greedy feeder hot-spin poll (U7 re-qualification)
 type: fix
 status: active
 date: 2026-08-20
+deepened: 2026-08-20
 origin: docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md
 ---
 
@@ -10,326 +11,239 @@ origin: docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md
 
 ## Overview
 
-Plan 012 U7 measured the greedy CUDA-graph `EvaluationExecutor` at **0.114× serial** and recorded a `reverted` verdict in `test/golden/graph_performance_baseline.json`. nsys diagnostics proved this verdict is a **host-bound measurement artifact, not a graph-capability limit**: the feeder's poll loop hot-spins `cudaEventQuery` (1,526,320 calls = 81.8% of all CUDA API time, ~0.5 µs each) while the GPU idles at **1.6% busy** and the launch-to-launch host gap sits at **p50 = 712 µs** on a ~2.36 µs kernel (12412-tri Kneel_1 fixture).
+Plan 012 U7 measured the greedy CUDA-graph `EvaluationExecutor` at **0.114× serial** and recorded a `reverted` verdict in `test/golden/graph_performance_baseline.json`. nsys diagnostics showed the verdict is dominated by a **host-bound hot-spin artifact**: the feeder's poll loop calls `cudaEventQuery` 1,526,320 times (81.8% of all CUDA API time, ~0.5 µs each) while the GPU idles. The launch-to-launch host gap (p50 = 712 µs) dwarfs the work being fed.
 
-This plan replaces the zero-delay busy poll with a **bounded, event-driven wait discipline** at the greedy-loop / `pollHook_` seam, re-qualifies U7 with the corrected feeder, and makes the retain/revert decision meaningful (GPU-busy as the constrained resource). The U7 gate numbers (1.20× N=2, stage-wall ≤5%, p99 ≤10%, nsys ≥30% concurrent) are **already pre-registered** in `test/golden/graph_pre_registration.json` and are treated as frozen; this plan does not re-negotiate them.
-
-The measured "reverted" verdict stands as the honest frozen baseline — it is the *starting point* this plan fixes, not a conclusion. `test/golden/graph_performance_baseline.json` will be regenerated only after the corrected feeder passes the oracle gates.
-
----
+This plan replaces the zero-delay busy poll with a **bounded, event-driven wait discipline** at the greedy-loop / `pollHook_` seam, re-qualifies U7, and makes the retain/revert decision meaningful. Critically, this revision corrects the **work-quantum framing**: the meaningful GPU work quantum is ~97 µs per-eval residency (pre-registered cut0 GPU-event 97.2 µs), not the 2.36 µs mean kernel — so the honest device ceiling is ~4.6× (N=4 perfect CPU packing), not 60×. A second `reverted` verdict is a **real possible outcome** of this plan, not just a deferred-N artifact; the plan's U0 probe decides reachability *before* spending the gate run.
 
 ## Problem Frame
 
-- **User/business problem:** the CUDA-graph batch cost path (the proposed throughput mechanism for POH evaluation in DIRECT registration) cannot be admitted because its first honest measurement is 8.8× slower than serial. The verdict is a host-poll artifact, but until the feeder waits properly, retain is impossible and the 011/012 machinery stays default-deny.
-- **Technical root cause (nsys-verified):** `src/compute/evaluation_executor.cpp:299-300` polls every in-flight lease with `pollHook_` every loop iteration, and `:338` backs off with only `std::this_thread::yield()` — no sleep, no backoff. `src/compute/evaluation_executor.cu:34-42` installs the busy `cudaEventQuery` tri-state as `pollHook_`. The host burns a driver round-trip per poll while the GPU is idle.
-- **Scope:** the wait/pacing logic of the greedy feeder only. No change to DIRECT semantics, the graph recipe, capture, admission policy shape, or lease bookkeeping. The admitted-N ceiling is exercised by the harness (n_max=4 at `test/oracle/graph_throughput_oracle_test.cu:411`) and the frozen `N_values [1,2,4]` in `test/golden/graph_pre_registration.json`; raising it is **explicitly deferred** (see Scope Boundaries).
-- **Success criteria (frozen, not re-negotiated):** benefit = gN2_eps / serial_eps ≥ **1.20×** at batch 16; stage wall regress ≤ **5%**; p99 latency regress ≤ **10%**; nsys shows **≥30% concurrent kernel time at N=2** and **max host-to-device gap < 50 µs**; **zero production-path `cudaStreamSynchronize` / `cudaEventSynchronize` / blocking `cudaMemcpy`** in the admitted path; `nsys` unavailable ⇒ `blocked`, not retained.
+- **User/business problem:** the CUDA-graph batch cost path cannot be admitted because its first honest measurement was 8.8× slower than serial, and the verdict was a host-poll artifact. Until the feeder waits properly, retain is impossible and the machinery stays default-deny.
+- **Technical root cause (nsys-verified):** `src/compute/evaluation_executor.cpp:299-300` polls every in-flight lease with `pollHook_` every loop iteration; `:338` backs off with only `std::this_thread::yield()` — no sleep, no backoff. `src/compute/evaluation_executor.cu:34-42` installs the busy `cudaEventQuery` tri-state as `pollHook_`. The host burns ~0.5 µs/query while the GPU idles.
+- **Scope:** wait/pacing logic of the greedy feeder only. No change to DIRECT, the graph recipe, capture, admission policy shape, or lease bookkeeping. Raising admitted-N (beyond n_max=4) and production wiring stay **explicitly deferred** (Scope Boundaries).
+- **Success criteria:** the frozen gates (benefit = gN2/serial ≥ **1.20×** at batch 16; wall ≤5%; p99 ≤10%; nsys ≥30% concurrent at N=2; <50 µs gap; zero production-path sync) are **pre-registered** in `test/golden/graph_pre_registration.json` and are the gate **only after** the U0 probe (below) confirms they are reachable at N≤4. The U7 gate itself is **contested by this plan's honest band** (1.1–1.30× at N=2): the plan keeps the 1.20× threshold but does **not** treat a second `reverted` as failure *if the probe bounds show the gate is not within device reachability*. This distinction is the anti-false-confidence posture.
+
+The frozen "reverted" verdict stands as the honest baseline — the starting point this plan fixes. `graph_performance_baseline.json` is regenerated **only** when the corrected feeder qualifies through the oracle + nsys gates, and the regeneration is itself verified by read-back assertion (M9).
 
 ---
+
+## Problem Statement
+
+- **Root cause (nsys-verified, ¥F1):** host-bound hot-spin of `cudaEventQuery`.
+- **Measured magnitude (baseline.json:10, compound finding):** graph N=1 1207 µs/pose vs serial 111 µs/pose (batch 16) — the spin accounts for most of the 10.9×.
+- **Amdahl reality (performance-audited):** serial per-pose **111 µs** wall, of which **~97 µs is GPU residency** (cut0 GPU-event 97.2 µs). Serial is already ~87% device-saturated. Overlapping N device-saturated evals caps N=2 at ~2.06× perfect, N=4 at ~4.6× perfect. **60× is a misreading of GPU-idle; the true ceiling is ~4.6×.** The 1.20× gate at N=2 needs overlap fraction **f ≥ ~0.28** with per-pose host ≤ ~12 µs — thin, and measurable only by an nsys SM census (U0), not inferable from the spin numbers.
 
 ## Requirements Trace
-
-- R1. The greedy feeder must stop hot-spinning `cudaEventQuery`; the host wait must be bounded so GPU busy% is the constraint, not the poll loop. (Compound finding, fix direction 2/3.)
-- R2. The corrected feeder must preserve the executor's existing semantics: out-of-order completion → input-ordered scores, pending leases stay in flight, completed contexts never re-polled, error → PostLaunchAbort + drain + ForceRelease, watchdog → LeavePoisoned + poisoned latch. (Pinned by `test/unit/hook_feeder_test.cpp`.)
-- R3. The admitted (graph) path must stay **sync-free**: no `cudaStreamSynchronize` / `cudaEventSynchronize` / blocking `cudaMemcpy` in the concurrent path (R13 of plan 012). Blocking wait is allowed only for the sole-remaining-context / dedicated serialized step, where the capture-invalidator rule permits it.
-- R4. Pacing must be **injectable/configurable** so headless fake-hook tests (which use a 1 ms watchdog and exact per-lease poll-count pins) are not broken by fixed sleeps.
-- R5. The U7 harness must re-qualify with the corrected feeder and regenerate `test/golden/graph_performance_baseline.json` — with GPU busy% and nsys timeline as the constraint evidence (anti-stub: real `cudaGraphLaunch`, real kernels, non-zero distinct scores).
-- R6. The retain verdict, if achieved, must be **machine-qualified** (hostname/GPU/driver/commit recorded) and must not flip production `GraphAdmissionPolicy` (which stays default-deny; runtime opt-in + layered artifact ≥1 + retained verdict is the production contract, out of scope here).
-
----
+- R1. Stop the hot-spin; bounded, event-driven wait so GPU busy% is the constraint. (Compound dir. 2/3; perf review.)
+- R2. Preserve executor semantics: OOO → input-ordered scores; pending leases stay in flight; no re-poll of completed; error → PostLaunchAbort + drain + ForceRelease; watchdog → LeavePoisoned + poisoned latch. (Pinned by `test/unit/hook_feeder_test.cpp`.)
+- R3. The admitted (graph) path must stay **sync-free** — no `cudaStreamSynchronize` / `cudaEventSynchronize` / blocking `cudaMemcpy` — **including the sole-remaining-context case** (this revision: the `zero_sync` frozen gate admits no carve-out). The sole-context tail uses a **bounded timed wait** (query+pacing loop), never a blocking sync. (Testing F1, adversarial F-C; frozen `graph_pre_registration.json:97`.)
+- R4. Pacing is **injectable/configurable** (headless fake-hook tests use a 1 ms watchdog + exact poll-count pins; a fixed sleep breaks them).
+- R5. U7 harness re-qualifies with the corrected feeder and regenerates the baseline **only with machine-qualified + nsys-constraint + layered-verdict assertion before `retained`** (testing F3/F6) and a read-back assertion (M9).
+- R6. Retain is machine-qualified (hostname/GPU/driver/commit) and does **not** flip production `GraphAdmissionPolicy` (default-deny unchanged; runtime opt-in + layered artifact ≥1 + retained verdict is a separate follow-up).
 
 ## Scope Boundaries
 
-- **In scope:** poll-loop pacing (bounded backoff / event sweep / sole-context blocking wait) in `src/compute/evaluation_executor.cpp` + the CUDA `pollHook_` in `src/compute/evaluation_executor.cu`; a paced, injectable wait primitive; the U7 harness re-qualification run; the regenerated baseline JSON; tests for the new pacing.
+- **In scope:** poll-loop pacing (event sweep + adaptive wait) in `src/compute/evaluation_executor.cpp` + CUDA `pollHook` in `src/compute/evaluation_executor.cu`; injectable wait primitive; U0 probe; U7 harness extension (nsys + layered + readback assertions); baseline regeneration; tests.
 - **Explicit non-goals:**
-  - No change to DIRECT semantics, the graph recipe, `graph_key_assembler`, `CaptureCoordinator`, or `GraphAdmissionPolicy` shape.
-  - No change to lease bookkeeping (`Checkout`/`Recycle`/`ForceRelease`/`LeavePoisoned` semantics).
-  - No production wiring (production executor pool stays uninitialized; `optimizer_manager.cpp` default-deny stands).
-  - No change to the frozen `N_values [1,2,4]` or the 1.20×/0.90× thresholds in `test/golden/graph_pre_registration.json`.
-  - No in-process `cudaDeviceReset`; hang recovery stays terminal/restart.
+  - No DIRECT/graph-recipe/capture/admission-policy change.
+  - No lease bookkeeping change (`Checkout`/`Recycle`/`ForceRelease`/`LeavePoisoned`).
+  - No production wiring.
+  - No change to frozen `N_values [1,2,4]` or thresholds (`graph_pre_registration.json`).
+  - No in-process `cudaDeviceReset`.
 
 ### Deferred to Follow-Up Work
 
-- **Raising the admitted-N ceiling** (beyond N=4): on the 12412-tri fixture the binding cap is the harness n_max (`graph_throughput_oracle_test.cu:411`) and the frozen `N_values`; the half-memory formula (`bank_state.cuh:281`) is a secondary ceiling. Demonstrating N=8–16 overlap needs either a larger scratch fixture (more triangles → bigger kernels → longer per-eval wall so overlap matters) or a framework admission change — a separate plan (016) after this one proves the wait fix.
-- **Production pool initialization + admission evidence wiring** (`optimizer_manager.cpp:806, 1425-1448`): currently unreachable (default-deny); only meaningful after a retained machine-qualified verdict exists.
-
----
+- **N-raise (>4) to plan 016** — the harness n_max (`graph_throughput_oracle_test.cu:411`), the frozen `N_values`, and the half-memory admit formula (`bank_state.cuh:281`) all cap at 4. Demonstrating N=8–16 needs a bigger scratch fixture or an admission change — after this plan proves the wait + U0-probe result.
+- **Production pool init + admission evidence wiring** (`optimizer_manager.cpp:806,1425-1448`): unreachable today; meaningful only after retain.
 
 ## Context & Research
 
-### Relevant Code and Patterns
-
-- **Hot-spin sites (verified, current tree):**
-  - `src/compute/evaluation_executor.cpp:242-345` — hook-driven greedy loop; `:299-300` polls all in-flight leases; `:338` `std::this_thread::yield()` only; `:285-291` same no-backoff in empty-in-flight branch.
-  - `src/compute/evaluation_executor.cu:34-42` — `InstallCudaFeederHooks` pollHook: `cudaEventQuery(ev)` tri-state (`cudaSuccess→Done`, `cudaErrorNotReady→Pending`, else `Error`).
-  - `src/compute/evaluation_executor.cpp:352-398` — legacy headless stub loop (same shape; gated off when hooks installed; leave alone).
-- **Existing blocking-wait precedent:** `src/compute/cost_capacity_service.cu:384,408` — the enqueue/complete callback path already uses `cudaEventSynchronize(event)` after `cudaEventRecord` — documented in-repo distinction between blocking wait (serial completion) and event polling (greedy feeder).
-- **The executor seam:** `include/compute/evaluation_executor.h:79-92` (six hook types + installers), `:28` `PollResult` tri-state, `:114` watchdog (5 s default), `:68` `setWatchdogTimeout`. Completion events are `cudaEventDisableTiming` (`evaluation_context.cpp:188-201`).
-- **U7 harness:** `test/oracle/graph_throughput_oracle_test.cu` four arms (`:364-423`), steady_clock wall timing, warmup 3 / trials 10, gate at `:433-463`, writes baseline JSON `:466-478`; `makeGraphExec` at `:329-348`.
-- **Test seams:** `test/unit/hook_feeder_test.cpp` (fake hooks, poll-count pins), `test/unit/evaluation_context_lease_test.cpp` (pool semantics), `test/oracle/evaluation_executor_graph_test.cu` (anti-stub real-GPU), `test/oracle/layered_correctness_test.cpp` (Layer A/B/C).
+- Hot-spin sites (`evaluation_executor.cpp:242-345` greedy loop, `:299-300` poll-all, `:338` yield-only; `evaluation_executor.cu:34-42` tri-state pollHook; `cost_capacity_service.cu:384` blocking-wait precedent, non-graph path).
+- Executor seam (`evaluation_executor.h:79-92` hooks, `:28` PollResult, `:114` watchdog 5 s, `:68` setWatchdogTimeout; completion events disable-timing `evaluation_context.cpp:188-201`).
+- U7 harness four arms (`graph_throughput_oracle_test.cu:364-423`), steady_clock wall, warmup 3 / trials 10 (***raised to ≥50, perf review***), gate `:433-463`, baseline write `:466-478`.
+- Tests: `hook_feeder_test.cpp`, `evaluation_context_lease_test.cpp`, `evaluation_executor_graph_test.cu`, `layered_correctness_test.cpp`.
 
 ### Institutional Learnings
-
-- `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md` — THE compound finding: root cause, fix directions, prevention rules ("measure GPU busy% before trusting a verdict").
-- `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md` (refreshed 2026-08-20) — corrected poll discipline: bounded backoff, blocking wait only for serialized/last context (capture-invalidator rule), sweep-Done, "NEVER busy-poll the entire lease set at zero delay".
-- `docs/solutions/logic-errors/jtml-cuda-graph-stub-failure-2026-08-19.md` — anti-stub protocol (no `[x]` on trust; `ctest -L oracle`; nsys kernel census; non-circular tests; `complete() != 0.0`).
-- `docs/solutions/workflow-issues/jtml-deepened-unit-not-implementation-ready-2026-08-20.md` — nine readiness questions; admission transaction and failure vocabulary.
-- `docs/solutions/conventions/jtml-testability-and-cmake-conventions-2026-08-07.md` — headless vs oracle labels; CMake GLOB trap (new `.cpp`/`.cu` must be in the explicit list at `src/compute/CMakeLists.txt:39-48`).
+- Compound finding (`jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md`): fix directions, "measure busy% before verdict".
+- Refreshed blueprint (`jtml-cuda-evaluation-context-executor-2026-08-17.md`): corrected poll discipline; bounded backoff; "NEVER busy-poll the whole lease set at zero delay"; capture-invalidator rule.
+- Anti-stub protocol (`jtml-cuda-graph-stub-failure-2026-08-19.md`).
+- Readiness questions (`jtml-deepened-unit-not-implementation-ready-2026-08-20.md`).
+- CMake GLOB trap (`jtml-testability-and-cmake-conventions-2026-08-07.md`).
 
 ### External References
-
-- CUDA Programming Guide §2.5.1 (blocking vs non-blocking vs callback), §2.5.7 (`cudaStreamWaitEvent`), §2.5.8 ("synchronization of any kind should be delayed as long as possible"), §4.2 CUDA Graphs (instantiate once, launch ~2.5 µs flat on Ampere; `cudaGraphExec_t` cannot run concurrently with itself ⇒ N distinct instances for N in-flight). https://docs.nvidia.com/cuda/cuda-programming-guide/
-- NVIDIA Technical Blog: "Constant Time Launch for Straight-Line CUDA Graphs" (Ampere ~2.5 µs + ~1 ns/node), "Getting Started with CUDA Graphs" (first launch ~33% slower; ~400 µs instantiate once).
-- **Key refinement over the compound/blueprint numbers:** the 50–200 µs sleep band is **wrong for 2.36 µs kernels** — 50 µs ≈ 20 kernel executions wide; it would idle the GPU longer than the work lasts. The corrected bound is a **few-ten-µs sleep** (e.g. 10–25 µs) or, better, graph-launch constant-time + multi-event sweep with sub-kernel-window backoff.
+- CUDA Programming Guide §2.5 (blocking vs non-blocking vs callback; "delay synchronization", §2.5.8), §4.2 CUDA Graphs (instantiate once, constant-time ~2.5 µs on Ampere; launch cannot run concurrently with itself).
+- NVIDIA Tech Blog "Constant Time Launch" (Ampere ~2.5 µs + ~1 ns/node), "Getting Started with CUDA Graphs" (first launch ~33% slower).
 
 ---
 
-## Key Technical Decisions
+## Key Decisions (revised by review)
 
-- **Decision 1 — Pacing primitive: injectable bounded-backoff + multi-event sweep, NOT fixed 50–200 µs sleep, NOT `cudaEventSynchronize` in the admitted path.**
-  Rationale: CUDA-docs research showed fixed 50–200 µs backoff idles the GPU ~20 kernels wide on this fixture; the guide recommends delaying sync and issuing all independent work first. The admitted path must stay sync-free (R13), so `cudaEventSynchronize` is restricted to the sole-remaining-context / dedicated serialized step (capture-invalidator rule), where the existing `cost_capacity_service.cu:384` precedent lives. The poll remains `cudaEventQuery` tri-state (correct API usage), but paced by an injectable wait strategy.
-- **Decision 2 — Wait strategy selection is a hook-level decision, injectable from tests.**
-  Rationale: the headless tests (`hook_feeder_test.cpp`) use fake hooks with a 1 ms watchdog and exact poll-count pins (`:213-216`); a fixed sleep inside `RunBatchWithCost` would break them. The pacing lives behind a small injectable seam (e.g. `setPollPacing` or an installed wait-strategy hook with a `sleep_for` override), so headless tests keep tight-loop semantics while the CUDA path paces. Test-only override, no production behavior change.
-- **Decision 3 — The single allowed blocking wait is the "last lease" case.** When `inFlight.size()==1 && nextPos==poses.size()` (nothing left to enqueue, one context in flight), the host may block on that context's completion event (`cudaEventSynchronize`) instead of polling — this is the sole case where blocking is safe (no other live work shares the stream) and matches the blueprint's "when only one context remains". The multi-context path stays query+backoff/sweep.
-- **Decision 4 — Keep the U7 gate numbers frozen; regenerate the baseline only after the oracle gates pass.** The 1.20×/0.90×/5%/10%/30%/50 µs thresholds are already pre-registered (`graph_pre_registration.json:100-108`); the plan-012 text claiming they are absent (plan `:157`) is stale — this plan does not re-litigate them. The current `reverted` baseline JSON is the honest starting artifact and is regenerated by the harness only when the corrected feeder qualifies.
-- **Decision 5 — No new `.cu`/`.cpp` TU unless needed; if a wait-strategy helper is extracted, add it to the explicit source list (`src/compute/CMakeLists.txt:39-48`).** Avoids the CMake GLOB trap.
-
----
-
-## Open Questions
-
-### Resolved During Planning
-
-- *Is `cudaEventSynchronize` allowed on the graph path?* — Only for the sole-remaining-context / dedicated serialized step (Decision 3), consistent with the capture-invalidator rule and the `cost_capacity_service.cu:384` precedent. The admitted multi-context path stays sync-free.
-- *What backoff bound?* — Few-ten-µs (10–25 µs) for the multi-event sweep, not the 50–200 µs band (wrong for µs-scale kernels). Adaptive option deferred.
-- *How do tests keep their poll-count pins?* — Pacing is injectable; headless tests use the no-sleep override.
-
-### Deferred to Implementation
-
-- *Exact sleep bound (10 vs 25 µs) and whether adaptive* — tune empirically under nsys; must stay below the per-eval wall target.
-- *Whether the sweep services events in index order or oldest-first* — preserve OOO completion (input-ordered result store); decide against the pinned tests.
-- *Exact hook/seam shape* — `setPollPacing` vs a wait-strategy hook; implementer chooses the smallest seam that keeps headless tests green.
+- **D1 — Ordering.** Preserve the existing "**submit all independent work first, then wait**" shape (already present at `:282` pool-size gate). This is not a new change; it's the baseline the review confirmed.
+- **D2 — Wait primitive: injectable adaptive query-sweep, no blocking sync.** The multi-context path sweeps `cudaEventQuery`, handles `Done`, then **bounded adaptive wait** `sleep = clamp(T_on_completion / (2N), 3 µs, 25 µs)`, resampled per sweep. Drops the fixed 50–200 µs band (review: 50 µs ≈ 4–10 evals wide; and the correct anchor is the ~97 µs per-eval residency, not the 2.36 µs kernel). No `cudaEventSynchronize` anywhere on the graph path (R13 + frozen `zero_sync`).
+- **D3 — Sole-context: bounded timed wait, NOT blocking.** When `inFlight.size()==1 && nextPos==poses.size()` (last lease), still poll with pacing, BUT observe the **watchdog boundary**: a hung GPU on the last lease must still poison. Binding `cudaEventSynchronize` would ignore the watchdog (R2 violation). Use the same confined query+pacing loop with a watchdog check every iteration (D2).
+- **D4 — GPU-busy is a pre-gate, and the harness must assert it.** A `retained` verdict requires the harness to assert the nsys gates (≥30% concurrent, <50 µs gap) and the layered `graph_layer_verdict.json` PASS **before** writing. GPU busy% is measured, not assumed. A run with benefit ≥1.20 but busy ~1.6% is `blocked`/`reverted`, never `retained` (anti-artifact).
+- **D5 — Trial count raised to ≥50** (or bootstrapped p90 interval) so the p99 slicing is not max-of-10 noise; report a real p5–p95 band. (Perf review.)
+- **D6 — No new `.cu`/`.cpp` extracted unless needed; if the wait helper is extracted, add to `src/compute/CMakeLists.txt:39-48`. (CMake GLOB.)
 
 ---
 
 ## High-Level Technical Design
 
-> *This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce.*
+> *Directional guidance for review, not implementation specification.*
 
 ```text
-Greedy loop (src/compute/evaluation_executor.cpp, hook path) with injected pacing:
-
-for pose in input order:
-    acquire free context
-    enqueue pose work on context.stream
-    record completion event (cudaEventDisableTiming)
-
-while in-flight or pending poses:
-    # Submit-all-first, then wait (CUDA guide 2.5.8: delay sync)
-    poll all in-flight leases once -> {Done, Pending, Error}
-    for each Done:
-        completeFromPins -> store result at original input index
-        recycle context
-    if any Done:
-        reset watchdog
-        continue (immediate re-sweep: completions just happened)
-    if inFlight.size()==1 && nextPos==poses.size():
-        # Sole-remaining-context: blocking wait allowed (capture-invalidator safe)
-        cudaEventSynchronize(completion_event)   # ONLY this case
-        completeFromPins -> store -> recycle
-    else:
-        # Multi-context pending: bounded backoff, then re-poll
-        pacingHook_.wait()    # injectable: sleep_for(10-25us) or yield or no-op (tests)
-        if watchdog exceeded: LeavePoisoned all in-flight; return WatchdogPoisoned
+Greedy hook loop (executor.cpp):
+  # submit-all-first (existing :282 gate)
+  for pose: acquire free ctx; enqueue on ctx.stream; record completion event
+  while in-flight or pending:
+      poll all in-flight leases -> {Done, Pending, Error}
+      for each Done: completeFromPins -> store at original index; recycle
+      if any Done: reset watchdog; continue       # no sleep on Done
+      if inFlight.size()==1 && nextPos==poses.size():
+          # sole remaining: still query-paced, but watchdog-check each iter
+          sweep again (poll the 1 lease) with D2 bounded wait; 
+          if watchdog timed out: LeavePoisoned; return WatchdogPoisoned
+      else:
+          pacing.wait()   # adaptive sleep clamp(T/2N,3us,25us); no-op in unit tests
+          if watchdog exceeded: LeavePoisoned; return WatchdogPoisoned
+  # --- gate readout ---
+  # after batch: assert nsys >=30% concurrent, <50us gap, layer_vpass==PASS
+  # ONLY then record retained/reverted with machine-qualified fields
 ```
-
-Key points:
-- The **poll hook stays `cudaEventQuery` tri-state** (correct API); only the pacing around it changes.
-- **All independent work is issued before any waiting** — the current code already enqueues up to `pool_.size()` before polling; keep that ordering.
-- The **sweep services only Done events**; pending leases are re-polled after backoff — never hot-spun at zero delay.
-- The **sole-context blocking wait** is the only `cudaEventSynchronize` on the hook path, and it is safe because no other live work shares that stream.
-- Watchdog stays a host-side steady-clock timer; pacing must keep poll intervals far below the 5 s watchdog floor (and the 1 ms test floor uses the injectable override).
-
----
 
 ## Implementation Units
 
-- [ ] U1. **[Injectable poll pacing in the greedy loop]**
+- [ ] U0. **[Pre-flight probe: host floor + SM-overlap, decide gate reachability]**
 
-**Goal:** Replace the zero-delay `yield()`-only backoff in the hook-driven greedy loop with an injectable, bounded pacing strategy — while preserving OOO completion, input-ordered scores, watchdog poison, and all pinned poll-count semantics.
+**Goal:** Measure the spin-free per-pose host floor and the actual SM-overlap fraction **before** committing the 1.20× gate spend. This is the anti-artifact fix from the perf/adversarial review — stop it from running a scripted second `reverted`.
+
+- Files: add `test/oracle/throughput_probe_test.cu` (or an in-harness probe arm), `test/golden/probe_measurement.md` (read-only unless JTML_UPDATE_GOLDEN=1)
+- Approach:
+  - Run ONLY the graph N=1 arm (no overlap, no admitted-N effect) with the corrected feeder under nsys. Measure per-pose host floor `h_N1` and median launch-to-completion residency `T`.
+  - if `h_N1 >= ~111 µs` → the 1.20× gate is unreachable at N=2 (Amdahl); **stop, record `probe=unreachable`, do not spend the time gate.** This is the honest decision point.
+  - if `h_N1 <= ~40 µs` → the gate is reachable; proceed to U1–U3.
+  - Record nsys SM-overlap fraction `f` (at N=2, non-jump start) for later armed-plan projection.
+- **Execution note:** Test-first light; this is a measurement probe, not a behavior gate. Must run on the GPU.
+- **Patterns to follow:** anti-stub (real kernels, nsys census, complete()!=0.0).
+- **Verification:** `probe_measurement.md` written with h_N1, T, f; the gate-reachability decision recorded.
+
+---
+
+- [ ] U1. **[Injectable adaptive poll pacing in the greedy loop]**
+
+**Goal:** Replace the zero-delay yield-only backoff with an injectable adaptive pacing seam — while preserving OOO input-order completion, pending-lease-pending, no-re-poll, watchdog poison, and the exact poll-count pins.
 
 **Requirements:** R1, R2, R4
 
-**Dependencies:** None
-
 **Files:**
-- Modify: `src/compute/evaluation_executor.cpp` (greedy loop `:242-345`; add pacing seam)
-- Modify: `include/compute/evaluation_executor.h` (pacing seam declaration, e.g. `setPollPacing` or wait-strategy hook type + installer)
-- Test: `test/unit/hook_feeder_test.cpp` (extend: pacing seam override keeps existing pins green; add a pacing-invocation test)
+- Modify: `src/compute/evaluation_executor.cpp` (greedy loop `:242-345`, pacing seam)
+- Modify: `include/compute/evaluation_executor.h` (pacing seam type + installer)
+- Test: `test/unit/hook_feeder_test.cpp` (extend)
 
 **Approach:**
-- Add a small injectable wait strategy (e.g. `PollPacing` with a `wait()` step: `sleep_for` / `yield` / no-op). Default for the CUDA path: bounded backoff (few-ten-µs) between sweeps; default for headless tests: no-op/yield so existing 1 ms-watchdog and exact poll-count pins hold.
-- In the greedy loop: after a sweep with no completions and >1 lease in flight, invoke the pacing wait before the next sweep; on the sole-remaining-context case, use the blocking wait (U2). Preserve "reset watchdog on any Done; continue immediately on Done" so completions are not delayed by backoff.
-- Do not touch lease bookkeeping, `Checkout`/`Recycle`, or the `useHooks` gating.
+- Add `PollPacing` injectable wait (adaptive-sleep / yield / no-op). CUDA default = adaptive (D2/D5); headless default = no-op.
+- Greedy loop: sweep, handle Dones; on any Done, continue immediately; else bounded many-context adaptive sleep; sole-context uses the D2 timed loop (U2).
+- Do not re-poll completed; do not reorder result index.
 
-**Execution note:** Test-first. Extend `hook_feeder_test.cpp` first (pacing seam override + a test that the pacing hook is invoked between sweeps), then implement the loop change.
-
-**Patterns to follow:**
-- Existing hook installers (`InstallPollHook` etc.) at `include/compute/evaluation_executor.h:87-92` for the seam shape.
-- `cost_capacity_service.cu:384` blocking-wait precedent for the sole-context case (U2).
+**Patterns to follow:** hook installers at `evaluation_executor.h:87-92`; `cost_capacity_service.cu` blocking-wait precedent only as the *serial* helper, not the admitted path.
 
 **Test scenarios:**
-- Happy path: fake hooks, 3 poses, pool 2 — scores input-ordered despite OOO completion; poll counts unchanged from today's pins (each pending lease polled exactly twice: Pending then Done; doneSet never re-polled).
-- Happy path: pacing seam with a `sleep_for` override is invoked between sweeps when nothing completes (spy on the pacing hook; assert ≥1 call with zero completions).
-- Happy path: completion immediately after a sweep resets the watchdog and re-sweeps without backoff (completions are not delayed by pacing).
-- Edge case: pacing override = no-op — behavior identical to today (existing 1 ms watchdog tests still pass unchanged).
-- Error path: pollHook returns `Error` mid-batch — PostLaunchAbort + drain + ForceRelease; pacing must not mask the error (unchanged from today's pins `:264-293`).
-- Integration: `test/unit/hook_feeder_test.cpp` whole suite green (poll-count, OOO, watchdog, poisoned-refusal pins unchanged).
+- Happy: fake hooks, 3 poses, pool 2, OOO done → input-ordered scores; poll counts == today's (each pending polled twice; done never re-polled).
+- Happy: **pacing-exactly-once** — zero completions, pool 2 → the pacing hook called exactly once per sweep (spy count == 1), not ≥1.
+- Happy: **no-pacing-on-Done** — pool 2 both Done in the same sweep → pacing count == 0 (pacing only when no completion).
+- Edge: pacing = no-op → identical to today (1 ms watchdog tests stay green).
+- Error: pollHook Error mid-batch → PostLaunchAbort + drain + ForceRelease (unchanged).
+- Integration (oracle): real graph, distinct scores, no per-eval sync.
 
-**Verification:** All `jtml.hook_feeder` tests pass with the pacing seam; a spy test proves the pacing hook is invoked between zero-completion sweeps; the sole-context blocking path is exercised (U2) with the sync restricted to that case.
+**Verification:** `jtml.hook_feeder` green; spy proves **exactly-once** pacing per zero-completion sweep; no-pacing-on-Done.
 
 ---
 
-- [ ] U2. **[Sole-remaining-context blocking wait + CUDA pacing hooks]**
+- [ ] U2. **[Sole-context bounded timed wait + CUDA adaptive pacing hooks]**
 
-**Goal:** Implement the only allowed `cudaEventSynchronize` (sole-remaining-context) and wire the CUDA-side pacing (bounded backoff) into `InstallCudaFeederHooks`, so the real GPU path paces correctly and stays sync-free in the multi-context admitted path.
+**Goal:** Implement the sole-remaining-context **bounded, watchdog-porous wait** (NOT blocking `cudaEventSynchronize`), and the CUDA adaptive accelerator hooks, keeping the accepted path sync-free (R3 / frozen `zero_sync`).
 
 **Requirements:** R1, R3
 
-**Dependencies:** U1
-
 **Files:**
-- Modify: `src/compute/evaluation_executor.cu` (`InstallCudaFeederHooks`: install the bounded-backoff pacing for the multi-context path; keep `cudaEventQuery` tri-state pollHook)
-- Modify: `src/compute/evaluation_executor.cpp` (sole-context case invokes a blocking wait hook — installed by the CUDA feeder as `cudaEventSynchronize`, headless tests leave it unset/no-op)
-- Test: `test/unit/hook_feeder_test.cpp` (sole-context path: fake hook returns Done after the blocking-wait hook is invoked)
-- Test: `test/oracle/evaluation_executor_graph_test.cu` (extend: nsys/anti-stub — real launches, distinct scores, no per-eval sync in the multi-context admitted path; sole-context case may sync)
+- Modify: `src/compute/evaluation_executor.cu` (`InstallCudaFeederHooks`): adaptive watchdog-aware pacing; **no `cudaEventSynchronize`** in any path.
+- Modify: `src/compute/evaluation_executor.cpp` (sole-context uses the timed query+wait loop, watchdog-checked; no blocking primitive).
+- Test: `test/hook_feeder_test.cpp` (sole-context: bounded loop, watchdog); `test/oracle/evaluation_executor_graph_test.cu` (assert no blocking sync at any node, incl. tail).
 
 **Approach:**
-- Add a `WaitSoleContextHookFn`-style hook (or extend the pacing seam) that the CUDA installer sets to `cudaEventSynchronize(ctx->completion_event)`; headless tests install a no-op or fake. The greedy loop calls it only when `inFlight.size()==1 && nextPos==poses.size()`.
-- CUDA installer (`evaluation_executor.cu`): install pacing = `std::this_thread::sleep_for(10-25 µs)` (bounded, tunable constant) between sweeps; the 1 ms-test floor is not hit because headless tests never install this installer.
-- Keep completion events `cudaEventDisableTiming`; do not add `cudaEventBlockingSync` (the blocking-sync flag is a follow-up decision, not needed for the sole-context case).
-- Anti-stub: the oracle must show real `cudaGraphLaunch` + real kernels + non-zero distinct scores, and the nsys timeline must show the multi-context path free of sync gaps (R13).
-
-**Execution note:** GPU-oracle verification is mandatory before marking done (`ctest -L oracle`, nsys kernel census).
-
-**Patterns to follow:**
-- `cost_capacity_service.cu:384` (`cudaEventSynchronize(event)` after `cudaEventRecord`) for the blocking-wait precedent.
-- `evaluation_executor.cu:34-42` tri-state pollHook shape.
+- Sole-context branch: `while (inFlight==1 && no extra poses)`: query the gaze-only; if Done → complete; if watchdog elapsed → LeavePoisoned + WatchdogPoisoned; else bounded-adaptive wait and re-probe. **No call to `cudaEventSynchronize` anywhere.**
+- CUDA installer: pollHook stays `cudaEventQuery` tri-state; pacing = adaptive sleep.
+- Anti-stub: real kernels, distinct scores, input-ordered; oracle asserts zero sync in tail.
 
 **Test scenarios:**
-- Happy path (unit, fake hooks): 1 pose, pool 1 — sole-context blocking-wait hook invoked exactly once; result correct; poll hook not re-polled after Done.
-- Happy path (unit): 2 poses, pool 2 — multi-context path never invokes the blocking-wait hook (only the pacing backoff).
-- Edge case: sole-context blocking-wait hook returns (i.e. event completes) with an error status — mapped to PostLaunchAbort + drain, not a hang.
-- Integration (oracle, real GPU): `evaluation_executor_graph_test.cu` — real graph launches, distinct non-zero scores, input-ordered, no per-eval sync in multi-context path; sole-context case may sync (assert allowed sites only).
-- Integration (oracle): nsys on the fixed harness shows GPU busy% up from 1.6% and host-to-device gap well below the 50 µs R13 bound in the multi-context arms.
+- Happy (unit): 1 pose pool 1 — sole-context bounded wait invoked, result correct, no blocking sync call.
+- Edge: **sole-context hang still poisons** — fake hook never Done, watchdog 1 ms → `WatchdogPoisoned` + `isPoisoned()` + `IsPoisoned`. **(This was impossible under the pre-review blocking design; the goal.)**
+- Happy (unit): 2 poses pool 2, both Done same sweep — sole branch not entered.
+- Edge: sole-context query error → PostLaunchAbort + drain.
+- Integration (oracle): 2-context batch input-ordered scores; **zero `cudaEventSynchronize` observed** on the oracle's sync-census (assert at code, not comment).
+- Integration (perf/probe): N=2 SMP overlap f measured; nsys shows gap < 50 µs.
 
-**Verification:** `jtml.hook_feeder` + `jtml.evaluation_executor_graph` green; nsys on the oracle shows real kernels and a paced (not hot-spun) poll loop; multi-context path sync-free per R13.
+**Verification:** `jtml.hook_feeder` (incl. hang-poisons), `jtml.evaluation_executor_graph`; oracle sync-census == 0; nsys gap < 50 µs.
 
 ---
 
-- [ ] U3. **[U7 re-qualification run + baseline regeneration]**
+- [ ] U3. **[U7 re-qualification, nsys+layered+readback-gated]**
 
-**Goal:** Re-run the U7 paired harness with the corrected feeder, capture the machine-qualified measurement, and regenerate `test/golden/graph_performance_baseline.json` only if the oracle gates pass.
-
-**Requirements:** R5, R6
-
-**Dependencies:** U2 (and U6 of plan 012 — layered oracle must pass before retain)
+**Goal:** Run the four-arm harness with the corrected profile, now with the harness **asserting the nsys + layered gates BEFORE `retained`, and read-back asserting the written JSON.**
 
 **Files:**
-- Modify: `test/golden/graph_performance_baseline.json` (regenerated by the harness; only after gates pass)
-- Read-only: `test/oracle/graph_throughput_oracle_test.cu`, `test/golden/graph_pre_registration.json`
+- Modify: `test/oracle/graph_throughput_oracle_test.cu` — (a) read `test/golden/graph_layer_verdict.json`, require `verdict==PASS` before `retained`; (b) parse the nsys stats/ SM-census → assert ≥30% concurrent at N=2, <50 µs gap before `retained`; (c) raise trials ≥50 + bootstrapped p90 benefit interval; (d) read-back assert the written JSON (verdict — computed, commit/hostname/driver/admitted_N present).
+- Reference: `test/golden/graph_pre_registration.json` thresholds.
 
-**Approach:**
-- Run `pixi run build`; then the U7 harness under nsys: `nsys profile --stats=true -o /tmp/u7_profile_req .build/bin/jtml_test_graph_throughput_oracle` (per the harness's documented method string).
-- Record GPU busy%, concurrent kernel time at N=2 (≥30%), max host-to-device gap (<50 µs), benefit (≥1.20× at batch 16), stage wall (≤5%), p99 (≤10%).
-- Verdict logic is in the harness (`graph_throughput_oracle_test.cu:441-463`): `nsys` missing ⇒ `blocked`; N<2 ⇒ N=1 criterion only; else retained iff benefitOk && wallOk && p99Ok. **Do not hand-edit the verdict.**
-- Anti-stub: nsys must show real `FillTriangle` / metric kernels (not 4-byte memsets); `complete() != 0.0`; non-circular.
-- If the gates fail: document the numbers honestly in the baseline (verdict `reverted` again with reason), keep default-deny, and treat this plan's retain outcome as a no-go with the honest numbers — the compound finding's prevention rule ("measure GPU busy% before accepting a verdict") makes a second host-bound artifact impossible to hide.
-
-**Execution note:** GPU-machine run; `ctest -L oracle` first, then the nsys profile. No `[x]` on trust.
-
-**Patterns to follow:**
-- Anti-stub protocol (`jtml-cuda-graph-stub-failure-2026-08-19.md`).
-- Frozen pre-registration as the single source of thresholds (`graph_pre_registration.json:100-108`).
+**Approach:** after U2. The verdict logic (`:441-463`) must be extended, not just the prose G (`:454-462`), so `retained` cannot be written without nsys/layered evidence.
 
 **Test scenarios:**
-- Integration: four-arm harness runs end-to-end under nsys; verdict artifact written with machine/driver/commit; `admitted_N` recorded.
-- Integration: nsys kernel census shows real kernels; GPU busy% reported (target: meaningfully >1.6%, device-constrained).
-- Error path: if `nsys` unavailable on the run machine — verdict `blocked`, baseline unchanged, plan outcome recorded as blocked (not retained).
-- Regression: `jtml.layered_correctness` still green (Layer A/B/C within frozen tolerance) after the pacing change.
-
-**Verification:** `graph_performance_baseline.json` regenerated with the corrected numbers and machine-qualified fields; the nsys reference stored; verdict reflects the honest gate outcome. If `retained`, the machine-qualified artifact is the input to the (separate, deferred) production admission wiring.
+- Integration: nsys kernel census real; deliver `retained` only when gate + layered + nsys all pass.
+- Integration: gap unluckily >50 µs but benefit 1.25× — **assert `reverted`, not retained** (proves the new gate bites).
+- Integration: layered verdict != PASS → `blocked`, baseline not `retained`.
+- Readback: after write, re-read the JSON; assert verdict/reason/commit/hostname/admitted_N present; mismatch → fail.
 
 ---
 
 - [ ] U4. **[Docs + knowledge store sync]**
 
-**Goal:** Update the handoff, plan-012 residual judgments, and any stale claims so the knowledge store reflects the corrected feeder and the re-qualification outcome.
-
-**Requirements:** (supporting) R6
-
-**Dependencies:** U3 (outcome known)
-
 **Files:**
-- Modify: `docs/handoff-2026-08-20-cuda-graph-executor-admission.md` (U7 status: poll fixed; re-qualification outcome; residual judgments updated)
-- Modify: `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U7 section: note the corrected feeder + this plan's outcome; fix the stale "no minimum-benefit multiplier" claim at `:157` if still present)
-- Modify: `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md` (append the resolution: the fix landed / re-qualification result)
-- Modify: `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md` (note the implemented pacing, correct the 50–200 µs band to the few-ten-µs bound per the CUDA-docs finding)
+- `docs/handoff-2026-08-20-cuda-graph-executor-admission.md`, `docs/plans/2026-08-20-012-feat-...-plan.md` (fix stale "no minimum-benefit"/"blocking wait allowed" if present), `docs/solutions/...feature-tagged-solution` compound (append the resolution), `refreshed blueprint` (correct the 50–200 µs band to adaptive).
 
-**Approach:**
-- Only after U3 outcome: if `retained` — update the handoff residual judgment "a no-go keeps default-deny" to reflect the machine-qualified retain and note the separate production-wiring follow-up (016). If `reverted` again or `blocked` — record the honest numbers, keep default-deny, and note the compound finding's prevention rule was honored (GPU busy% measured).
-- Fix the stale 50–200 µs backoff band in the refreshed blueprint to the corrected few-ten-µs bound (CUDA-docs finding: 50 µs ≈ 20 kernel widths on this fixture).
-
-**Execution note:** Doc-only; no code.
-
-**Patterns to follow:** `docs/solutions/` frontmatter + `jj describe`/`jj new` per logical change (AGENTS.md).
-
-**Test scenarios:**
-- Test expectation: none — docs only. (Rationale: no behavioral change; the re-qualification outcome is the artifact.)
-
-**Verification:** handoff/plan/compound/blueprint reflect the corrected feeder + actual U3 outcome; no stale "reverted as graph-capability limit" or "50–200 µs backoff" claims remain.
+**Approach:** after U3 outcome; per `jj describe`+`jj new`.
 
 ---
 
 ## System-Wide Impact
 
-- **Interaction graph:** the greedy loop (`evaluation_executor.cpp`) → `pollHook_`/pacing seam → `InstallCudaFeederHooks` (`evaluation_executor.cu`) → `EvaluationContextPool` (untouched). The U7 harness and both GPU oracles consume the executor directly.
-- **Error propagation:** unchanged — pollHook `Error` → PostLaunchAbort + drain + ForceRelease; watchdog → LeavePoisoned + `WatchdogPoisoned`; pacing must not convert either into a hang (bounded intervals below the watchdog floor).
-- **State lifecycle risks:** pacing sleeps must not starve the 1 ms-watchdog headless tests (injectable no-op override) nor the 5 s production watchdog (bounded 10–25 µs intervals are 3–4 orders of magnitude below the floor).
-- **API surface parity:** no public API change; the pacing seam is a new installer only. `PollResult` tri-state, hook types, and pool semantics unchanged.
-- **Integration coverage:** `jtml.hook_feeder` (fake hooks), `jtml.evaluation_executor_graph` (real GPU, anti-stub), `jtml.layered_correctness` (Layer A/B/C), `jtml.graph_throughput_oracle` (U7 gate).
-- **Unchanged invariants:** DIRECT semantics, graph recipe, capture, admission policy shape, lease bookkeeping, completion events stay `cudaEventDisableTiming`.
-
----
+- **Interaction:** greedy loop → pacing seam → `pollHook_`/CUDA-feeder → `EvaluationContextPool` (lease bookkeeping untouched). Harness + both oracles consume it.
+- **Error propagation:** Error → PostLaunchAbort + drain + ForceRelease; watchdog → LeavePoisoned; both respect the bounded pacing (never blocked to hang).
+- **State lifecycle:** the sole-context hang now poisons (U2); pacing ≤25 µs vs 1 ms test floor is 40× margin → no flake; 5 s production watchdog orders far below.
+- **API surface:** no public change; a new pacing installer only.
+- **Integration coverage:** hook_feeder, evaluation_executor_graph, layered_correct, graph_throughput_oracle (with nsys+layered gates).
+- **Unchanged invariants:** DIRECT, recipe, capture, admission, lease, `disable-timing` events, and the frozen `zero_sync`.
 
 ## Risks & Dependencies
 
 | Risk | Mitigation |
-|------|------------|
-| Backoff bound still idles the GPU (10–25 µs vs ~2.36 µs kernel) | Keep the bound tunable and measure under nsys; the multi-event sweep + graph constant-time launch (~2.5 µs) narrow the host gap; GPU busy% is the gate, not the sleep constant |
-| Sole-context `cudaEventSynchronize` violates R13 as written | Restricted to the sole-remaining-context case (capture-invalidator rule); nsys evidence shows the multi-context admitted path sync-free; document the single allowed sync site in U2/U3 |
-| Headless tests break on pacing (1 ms watchdog, exact poll counts) | Pacing is injectable; headless tests keep the no-op override; a spy test proves the seam is invoked without changing pins |
-| `cudaEventQuery`-based sweep degenerates to hot-spin | The pacing seam guarantees a bounded interval between sweeps; a unit test asserts ≥1 pacing invocation per zero-completion sweep |
-| N=4 ceiling still caps overlap; re-qualification may fail the 1.20× gate even with a perfect poll | Honest outcome: the gate numbers stay frozen; a second `reverted` records the true device-constrained number (with GPU busy% evidence) and N-raise moves to the deferred follow-up (016); no fake retain |
-| nsys unavailable on the run machine | Verdict `blocked` (harness logic); baseline unchanged; plan outcome recorded as blocked |
-| Regenerated baseline is misread as "graph proven" | Baseline stays machine-qualified; production `GraphAdmissionPolicy` remains default-deny; retain only wires admission in the separate deferred follow-up |
-
----
+|---|---|
+| Backoff bound 10–25 µs on 2.36 µs kernel still 4–10 kernel-wide | Correct anchor is ~97 µs per-eval residency; bound is 3–25 µs = small fraction of one eval; resample adaptive; GPU busy is the pre-gate, harness-asserted (D5) |
+| 1.20 × may be unreachable at N=2 (f<0.28, h>12 µs) | U0 probe decides reachability before U3; if `probehind`, record `reverted` as honest device outcome — not a fake retain |
+| A second `reverted` reads as "graph-capability limit" | The probe + nsys-gate + layered + readback make it device-evidence-based; the compound's prevention rule is honored by measuring busy |
+| `zero_sync` frozen gate vs any sync | This plan keeps **zero** `cudaEventSynchronize` on the accepted path (D2/D3); no carve-out to renegotiate |
+| Headless 1 ms watchdog / poll pins break on pacing | Pacing is injectable (no-op in unit tests); throttled |
+| nsys unavailable | Harness verdict = `blocked`; baseline unchanged |
+| GPU busy still ~1.6% after fix | Sequence => `reverted`/`blocked`, not `retained` (anti-artifact) |
 
 ## Documentation / Operational Notes
 
-- The U7 harness regenerates `test/golden/graph_performance_baseline.json` in place; the commit field is the jj-tracked git ref (`graph_throughput_oracle_test.cu:468`).
-- nsys command (harness method string): `nsys profile --stats=true -o /tmp/u7_profile_req .build/bin/jtml_test_graph_throughput_oracle`.
-- No production rollout: the executor pool stays uninitialized in production; this plan changes harness/oracle-visible behavior only.
-
----
+- nsys cmd: `nsys profile --stats=true -o /tmp/u7_probe_req ...` and `/tmp/u7_req`.
+- Baseline regenerated only on qualified harness; `commit` = jj-tracked git ref.
+- No production rollout.
 
 ## Sources & References
-
-- **Origin document:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U7 section `:569-605`, C6 `:63,199`, R13 `:588`)
-- Compound finding: `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md`
-- Refreshed blueprint: `docs/solutions/architecture-patterns/jtml-cuda-evaluation-context-executor-2026-08-17.md`
-- Anti-stub: `docs/solutions/logic-errors/jtml-cuda-graph-stub-failure-2026-08-19.md`
-- Frozen gates: `test/golden/graph_pre_registration.json` (`minimum_benefit` `:100-108`, `N_values [1,2,4]`)
-- Current artifact: `test/golden/graph_performance_baseline.json` (reverted verdict)
-- External: CUDA Programming Guide §2.5/§4.2, NVIDIA blogs (Constant Time Launch, Getting Started with CUDA Graphs)
+- Origin: plan-012 U7 (`:569-605`), C6/R13
+- Compound: `jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md`
+- Refreshed blueprint (corrected band deferred to U4)
+- Anti-stub, layer-gate, readiness
+- Frozen `graph_pre_registration.json` (`N_values [1,2,4]`; 1.20×; 30% N2; 50 µs; zero_sync) and current `graph_performance_baseline.json` (reverted)
+- External: CUDA guide §2.5/§4.2; NVIDIA blogs
