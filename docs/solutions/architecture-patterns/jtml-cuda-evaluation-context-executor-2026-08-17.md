@@ -1,6 +1,8 @@
 ---
 title: "JTML CUDA cost evaluation: prefer explicit evaluation contexts and an executor"
 date: 2026-08-17
+last_refreshed: 2026-08-20
+status: refreshed
 category: docs/solutions/architecture-patterns
 module: JTML CUDA cost evaluation
 problem_type: architecture_pattern
@@ -51,7 +53,7 @@ The first U12 implementation used service-owned extra banks, explicit streams, a
 - the current tests prove lifecycle and correctness, but not trustworthy end-to-end throughput speedup;
 - an executor that merely creates multiple objects still needs private mutable state and explicit non-default streams inside every object.
 
-The Cut-0 measurement is a gate, not a speedup result. The latest artifact records roughly 98 microseconds of CPU host time and 98 microseconds of GPU-event time per evaluation. The same workload must still be timed serially versus N-way before claiming improvement.
+The Cut-0 measurement is a gate, not a speedup result. The latest artifact records roughly 98 microseconds of GPU-event time per evaluation. The same workload must still be timed serially versus N-way before claiming improvement.
 
 ## Guidance
 
@@ -97,42 +99,51 @@ submit context
   -> completion event
 ```
 
-**Target design:** Across contexts, use non-default streams and event polling. `cudaEventQuery` or `cudaStreamQuery` should distinguish `cudaErrorNotReady` from real errors. Do not use `cudaEventSynchronize` in the feeder when the goal is to keep other contexts moving. The current implementation does not yet satisfy this target everywhere; that gap is the reason for the new EvaluationExecutor workstream.
+### Corrected poll discipline (2026-08-20)
+
+Event polling is the correct CUDA API usage for distinguishing `cudaErrorNotReady` from real errors. The host must never hot-spin the poll loop at GHz cadence. Each `cudaEventQuery` is a host-to-driver round trip (~0.5 us), and a zero-delay busy poll starves the GPU:
+
+- **The hot spin, not the graph, is the measured bottleneck.** The nsys profile of the greedy CUDA-graph feeder (plan 012 U7) shows 1,526,320 `cudaEventQuery` calls — 81.8% of all CUDA API time in the measured window — while the GPU was only 1.6% busy (27.6 ms of kernels over a 1764 ms span, ~2.36 us average kernel on the 12412-triangle Kneel_1 mesh; launch-to-launch host gap p50 = 712 us).
+- **This is a host-bound polling artifact, not a graph-capability limit.** With the GPU 60x under-utilized, the measured graph-vs-serial ratio of 0.114x is not an architecture verdict.
+- **Stop the spin, keep polling correct.** Use bounded backoff between re-polls (sleep/yield 50-200 us or adaptive), OR block on the completion event (`cudaEventSynchronize`) for a dedicated serialized step / for the only remaining in-flight context, OR sweep a small event set and service only its Done events while the others keep running. NEVER busy-poll the entire lease set at zero delay.
+- **Admission (N) must saturate the device.** A half-memory bank ceiling capping N=4 on a small fixture destroys the concurrency story before the poll loop even matters.
+
+Cross-references: `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md` (compound analysis) and `test/golden/graph_performance_baseline.json` (measured reverted artifact). Normalize the earlier absolute on `cudaEventSynchronize`: it is acceptable for the serialized step / last remaining context, not on a per-context non-blocking stream that other live work shares (capture-invalidator rule).
+
+**Target design:** Across contexts, use non-default streams and event polling. `cudaEventQuery`/`cudaStreamQuery` distinguish `cudaErrorNotReady` from real errors. Poll with bounded backoff, do not hot-spin. This paragraph replaces the earlier over-broad "never synchronize" guidance; the current implementation's poll loop is being corrected toward the bounded contract above.
 
 ## Why This Matters
 
-CUDA streams express concurrency but do not guarantee it. NVIDIA's CUDA Programming Guide and Best Practices Guide state that multiple non-default streams can execute concurrently when device resources permit. A stream count is not a throughput result.
+CUDA streams express concurrency but do not guarantee it. Multiple non-default streams can execute concurrently when device resources permit; that is a property of the device and the kernels, not a statement we can assume from the caller alone.
 
-The host-dependent fragment packet boundary is a structural serialization point: the host must receive the fragment count before choosing the final fill grid. Other contexts can run while one context waits at that boundary, but the boundary limits the parallel fraction.
+The host-dependent fragment packet boundary is a structural serialization point: the host must receive the fragment count before choosing the final fill grid. Other contexts can run while one waits at that boundary.
 
 Use Amdahl's law for expectations:
 
 ```text
-S(N) = 1 / ((1 - P) + P/N)
+S(N) = 1/((1 - P) + P/N)
 ```
 
-For two concurrent contexts, ideal upper bounds are approximately:
+For two balanced contexts, ideal upper bounds are approximately:
 
-| Overlappable fraction P | Ideal N=2 speedup |
-|---:|---:|
-| 0.50 | 1.33x |
-| 0.75 | 1.60x |
-| 0.90 | 1.82x |
-| 1.00 | 2.00x |
+- P=0.5: 1.33x
+- P=0.75: 1.60x
+- P=0.9: 1.82x
+- P=1.0: 2.0x
 
-The actual `P` must be measured. The Cut-0 GPU/CPU ratio must not be reported as N-way speedup.
+The actual `P` must be measured. The Cut-0 GPU/CPU ratio must not be reported as an N-way speedup. A host-bound measurement is never a graph verdict.
 
 ## When to Apply
 
 Apply this architecture when:
 
-- one GPU-backed evaluation object currently owns mutable scratch state;
 - a batch contains independent evaluations that could overlap;
-- the existing public or domain contract should remain synchronous;
+- the existing public/domain contract should remain synchronous;
 - multiple streams, events, and pinned result buffers are required;
-- correctness depends on keeping per-evaluation outputs and reductions isolated.
+- correctness depends on keeping per-evaluation reductions isolated;
+- the executor admission policy lets enough contexts saturate the device.
 
-Use the simpler compatibility-bank migration only as a bounded transitional step, such as a monoplane `DIRECT_DILATION` experiment. Revisit it before adding more metrics, biplane support, host-thread concurrency, or performance claims.
+Use the simpler compatibility-bank path only as a bounded transitional step (e.g. monoplane `DIRECT_DILATION`). Revisit before adding more metrics, biplane support, or performance claims.
 
 ## Examples
 
@@ -144,47 +155,57 @@ Submit(pose, bank0);
 return Complete(bank0);
 ```
 
-The wrapper preserves the old call shape while routing through the explicit context internally.
+The wrapper preserves the old call shape.
 
-### Greedy executor
+### Corrected greedy executor (bounded poll)
 
 ```text
 for pose in input order:
     acquire a free context
     enqueue pose work on context.stream
-    record context completion event
+    record a completion event
 
 while contexts remain in flight:
     if cudaEventQuery(context.event) == cudaErrorNotReady:
+        yield or sleep a bounded backoff (50-200 us); # NOT a hot spin
         continue feeding other contexts
     if cudaEventQuery(context.event) == cudaSuccess:
-        read only that context's pinned result
+        read only this context's pinned result
         store result at its original input index
         recycle context
     otherwise:
         abort the complete batch
+
+when only one context remains: cudaEventSynchronize on that event instead.
 ```
 
 ### Architecture alternatives
 
-| Option | Strength | Main risk | Recommended use |
+| Option | Strength | Risk | Recommended use |
 |---|---|---|---|
-| Active-bank compatibility migration | Smallest code delta | Mutable aliasing and hidden ownership | Tactical prototype only |
-| Explicit `EvaluationContext` / `EvaluationExecutor` | Clear ownership and lifecycle | Larger API migration | Recommended long-term design |
-| Data-oriented batch arrays / CUDA Graph | Highest possible upside | Largest change; packet boundary complicates capture | Later, after profiling |
+| Active-bank compatibility migration | Smallest code delta | Mutable aliasing, hidden ownership | Tactical prototype only |
+| Explicit `EvaluationContext` / `EvaluationExecutor` | Clear ownership and lifecycle | Larger API migration | Recommended long-term |
+| Data-oriented batch arrays / CUDA Graph | Highest upside | Larger change; packet boundary complicates capture | Later, after measurement |
 
-CUDA references used for this guidance:
+## References
 
 - `cuda-skill/references/cuda-guide/02-basics/asynchronous-execution.md`
 - `cuda-skill/references/best-practices-guide/11.5-concurrent-kernel-execution.md`
 - `cuda-skill/references/best-practices-guide/9.1-timing.md`
 - `cuda-skill/references/best-practices-guide/4.1-profile.md`
 
-The project target is CUDA 12.9. During the implementation session, the project manifest declared 12.9 while the active `nvcc --version` reported 13.2; resolve or document that environment discrepancy before relying on version-specific performance conclusions.
+Environment: project target is CUDA 12.9; during implementation the manifest declared 12.9 while active `nvcc --version` reported 13.2.
 
 ## Related
 
+- `docs/solutions/performance-issues/jtml-graph-feeder-cudaeventquery-hotspin-2026-08-20.md` (plan 012 handle 2026-08-20)
+- `test/golden/graph_performance_baseline.json`
+- `src/compute/evaluation_executor.cpp`, `src/compute/evaluation_executor.cu`
 - `docs/architecture/jtml-cost-evaluation-execution-graph.org`
 - `docs/plans/2026-08-14-010-feat-direct-variants-capacity-launch-plan.org`
 - `test/golden/cut0_measurement.md`
 - `docs/handoff-2026-08-12-optimizer-path.md`
+
+## Refresh
+
+2026-08-20: this doc is a REPLACE-in-place corrected guidance for the CUDA `EvaluationExecutor` feeder. The corrected poll discipline (bounded backoff / `cudaEventSynchronize` / sweep-Done) replaces the earlier hot-spinning; admission (N) must saturate the GPU; measurement discipline requires GPU-busy% + timeline, never a spin-loop rate. All 14 cross-references in handoffs/plans still target this path.
