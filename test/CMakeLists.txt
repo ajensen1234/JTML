@@ -172,6 +172,35 @@ add_test(NAME jtml.graph_recipe_preflight COMMAND jtml_test_graph_recipe_preflig
 set_tests_properties(jtml.graph_recipe_preflight PROPERTIES LABELS "headless" TIMEOUT 120
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# U2: Graph key assembler + CaptureGeneration + CFM provider (headless)
+# Pure assembler + hash are header-only (graph_key_assembler.h + graph_recipe.h);
+# CFM provider (GetGraphRecipeCaptureInputs / BumpUploadEpoch) needs real
+# CostFunctionManager linked from jtml_compute via JTA_LIBS — same fixture
+# recipe as jtml.stage_script (JTA_LIBS + heavy include set + rpath).
+add_executable(jtml_test_graph_key_assembler
+    unit/graph_key_assembler_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/coordinator/optimizer_stage_script.cpp
+    ${PROJECT_SOURCE_DIR}/src/services/optimizer_settings.cpp
+    ${PROJECT_SOURCE_DIR}/src/domain/data_structures_6D.cpp
+)
+target_include_directories(jtml_test_graph_key_assembler PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/compute
+    ${CUDA_INCLUDE_DIRS}
+    $ENV{CONDA_PREFIX}/targets/x86_64-linux/include
+    ${TORCH_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(jtml_test_graph_key_assembler PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    ${JTA_LIBS})
+target_link_options(jtml_test_graph_key_assembler PRIVATE
+    "-Wl,-rpath,$ORIGIN/../lib"
+    "-Wl,-rpath,$ENV{CONDA_PREFIX}/lib")
+add_test(NAME jtml.graph_key_assembler COMMAND jtml_test_graph_key_assembler)
+set_tests_properties(jtml.graph_key_assembler PROPERTIES LABELS "headless" TIMEOUT 120
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 # U2 oracle: EvaluationContext pool / graph overhead smoke (oracle;gpu, .cu)
 add_executable(jtml_test_evaluation_executor_oracle oracle/evaluation_executor_oracle_test.cu
     ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp)

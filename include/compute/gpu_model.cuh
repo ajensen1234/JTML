@@ -108,6 +108,7 @@ public:
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL GPUImage* GetPrimaryCameraRenderedImage();
     JTML_DLL GPUImage* GetSecondaryCameraRenderedImage();
+    JTML_DLL RenderEngine* GetPrimaryRenderEngine() { return primary_cam_render_engine_; }
     JTML_DLL std::size_t GetPrimaryCubStorageBytes() const;
     JTML_DLL int GetPrimaryWidth() const;
     JTML_DLL int GetPrimaryHeight() const;

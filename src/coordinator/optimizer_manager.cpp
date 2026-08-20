@@ -15,6 +15,8 @@
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_model.cuh"
 #include "compute/evaluation_executor.h"
+#include "compute/cuda_launch_parameters.h"
+#include "compute/graph_key_assembler.h"
 #include "compute/batch_outcome.h"
 #include "compute/graph_admission_policy.h"
 #include "compute/pose_matrix.h"
@@ -1291,6 +1293,10 @@ void OptimizerManager::ResetStageDilation(size_t frame_index, int dilation) {
             dilation); /*Reset Dilation In That Image*/
     }
     emit UpdateDilationBackground();
+    // Plan 012 U2: bump upload epoch for generation identity (C7) — CPU dilate rewrites shared frames_A_/B_
+    trunk_manager_.BumpUploadEpoch();
+    branch_manager_.BumpUploadEpoch();
+    leaf_manager_.BumpUploadEpoch();
 }
 
 void OptimizerManager::RunDirectStage(
@@ -1345,9 +1351,10 @@ void OptimizerManager::RunDirectStage(
         });
     }
 
-    /* Plan 012 U1: graph executor admission is default-deny (C10/R14).
-     * The U12/serial adapter above stays installed unless a complete
-     * admission transaction (policy + recipe + preflight) succeeds —
+    /* Plan 012 U1+U2: graph executor admission is default-deny (C10/R14) and
+     * uses the U2 full key+generation assembler. The U12/serial adapter above
+     * stays installed unless a complete admission transaction (policy +
+     * recipe + preflight) succeeds —
      * which no production path can reach yet. */
     {
         bool monoplaneEligible = !calibration_.biplane_calibration &&
@@ -1358,11 +1365,58 @@ void OptimizerManager::RunDirectStage(
         bool recipeFound = recipe != nullptr;
         bool preflightCapturable = false;
         if (recipeFound) {
-            gpu_cost_function::GraphRecipeKey key;
-            key.recipeId = recipe->recipeId();
-            key.biplane = false;
-            auto pre = recipe->preflight(key);
-            preflightCapturable = pre.capturable;
+            int liveDilation = 6;
+            // Canonical dilation read (graph_recipe.h:9-11) — NOT a by-value
+            // getAvailableCostFunctions() copy, which could diverge from the
+            // provider. The active cost function is DIRECT_DILATION here (gated
+            // above) and always present in available_cost_functions_, so
+            // getActiveCostFunctionClass() hits and does not leak.
+            if (auto* cls = stage_manager.getActiveCostFunctionClass()) {
+                int v = 6;
+                cls->getIntParameterValue("Dilation", v);
+                liveDilation = v;
+            }
+            (void)liveDilation;  // consumed below in kin.dilation
+            gpu_cost_function::GraphKeyAssemblerInputs kin;
+            kin.recipeId = recipe->recipeId();
+            kin.width = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryWidth() : 0;
+            kin.height = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryHeight() : 0;
+            kin.triangle_count = gpu_principal_model_ ? static_cast<std::uint64_t>(gpu_principal_model_->GetPrimaryTriangleCount()) : 0;
+            kin.dilation = liveDilation;
+            kin.camera_calib_hash = gpu_cost_function::HashCameraCalibrationParams(
+                calibration_.camera_A_principal_.principal_distance_,
+                calibration_.camera_A_principal_.principal_x_,
+                calibration_.camera_A_principal_.principal_y_,
+                calibration_.camera_A_principal_.pixel_pitch_,
+                calibration_.biplane_calibration);
+            kin.cub_storage_bytes = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryCubStorageBytes() : 0;
+            kin.curvature_capacity = 0;
+            kin.maximum_stride_size = static_cast<std::uint64_t>(maximum_stride_size);
+            kin.graph_overhead_bytes = 0;
+            kin.biplane = false;
+            kin.version = "1";
+            auto key = gpu_cost_function::AssembleGraphRecipeKey(kin);
+            gpu_cost_function::GraphRecipeCaptureInputs capInputs;
+            bool inputsOk = stage_manager.GetGraphRecipeCaptureInputs(capInputs);
+            int stage_id = 0;
+            if (&stage_manager == &branch_manager_) stage_id = 1;
+            else if (&stage_manager == &leaf_manager_) stage_id = 2;
+            gpu_cost_function::CaptureGenerationAssemblerInputs gin;
+            gin.frame_index = static_cast<int>(stage_manager.getCurrentFrameIndex());
+            gin.stage_id = stage_id;
+            gin.dilation = key.dilation;
+            gin.upload_epoch = stage_manager.getUploadEpoch();
+            gin.rendered_image = capInputs.rendered_image;
+            gin.comparison_frame = capInputs.comparison_frame;
+            gin.distance_map = capInputs.distance_map;
+            auto gen = gpu_cost_function::AssembleCaptureGeneration(gin);
+            (void)gen;
+            if (!inputsOk || !gpu_cost_function::ValidateGraphKeyVsInputs(key, capInputs)) {
+                preflightCapturable = false;
+            } else {
+                auto pre = recipe->preflight(key);
+                preflightCapturable = pre.capturable;
+            }
         }
         bool executorReady =
             evaluation_executor_ != nullptr && evaluation_executor_->poolSize() > 1;

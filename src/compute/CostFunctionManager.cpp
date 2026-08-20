@@ -3,6 +3,7 @@
 
 /*Cost Function Manager*/
 #include "CostFunctionManager.h"
+#include "compute/graph_recipe.h"
 #include "compute/evaluation_context.h"
 
 #include <limits>
@@ -274,6 +275,47 @@ void CostFunctionManager::setCurrentFrameIndex(
     unsigned int current_frame_index) {
     current_frame_index_ = current_frame_index;
 };
+
+unsigned int CostFunctionManager::getCurrentFrameIndex() const { return current_frame_index_; }
+
+void CostFunctionManager::BumpUploadEpoch() { ++upload_epoch_; }
+
+std::uint64_t CostFunctionManager::getUploadEpoch() const { return upload_epoch_; }
+
+bool CostFunctionManager::GetGraphRecipeCaptureInputs(
+    gpu_cost_function::GraphRecipeCaptureInputs& out) const {
+    out.context = nullptr;
+    out.render = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryRenderEngine() : nullptr;
+    out.metrics = gpu_metrics_;
+    out.rendered_image = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryCameraRenderedImage() : nullptr;
+    if (gpu_dilated_frames_A_ && !gpu_dilated_frames_A_->empty() &&
+        current_frame_index_ < gpu_dilated_frames_A_->size()) {
+        out.comparison_frame = gpu_dilated_frames_A_->at(current_frame_index_);
+    } else {
+        out.comparison_frame = nullptr;
+    }
+    if (gpu_distance_maps_ && !gpu_distance_maps_->empty() &&
+        current_frame_index_ < gpu_distance_maps_->size()) {
+        out.distance_map = gpu_distance_maps_->at(current_frame_index_);
+    } else {
+        out.distance_map = nullptr;
+    }
+    out.dilation = 6;
+    // Read live dilation without leaking on miss: scan available_cost_functions_ directly
+    for (auto& cf : const_cast<std::vector<CostFunction>&>(available_cost_functions_)) {
+        if (cf.getCostFunctionName() == active_cost_function_) {
+            int v = 6;
+            // getIntParameterValue returns bool; use const_cast to call non-const method
+            auto& mcf = const_cast<CostFunction&>(cf);
+            if (mcf.getIntParameterValue("Dilation", v)) {
+                out.dilation = v;
+            }
+            break;
+        }
+    }
+    return out.render != nullptr && out.metrics != nullptr && out.rendered_image != nullptr &&
+           out.comparison_frame != nullptr && out.distance_map != nullptr;
+}
 
 /******************************** WARNING *************************************/
 /******************************************************************************/

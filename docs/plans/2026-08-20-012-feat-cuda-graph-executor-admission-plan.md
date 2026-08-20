@@ -373,7 +373,7 @@ flowchart TB
 
 ---
 
-- [ ] U2. **Capture-input provider and generation identity**
+- [x] U2. **Capture-input provider and generation identity**
 
 **Goal:** One complete `GraphRecipeKey` and one `CaptureGeneration` used by both admission and later capture, assembled from real stage/frame objects.
 

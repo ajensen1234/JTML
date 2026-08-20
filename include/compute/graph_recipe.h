@@ -50,6 +50,27 @@ struct GraphRecipeKey {
     }
 };
 
+// Plan 012 U2 (C7): generation identity = input identity, NOT computed
+// white-sum. White-sum is a capture OUTPUT cached on the context. Pointer
+// equality alone is insufficient — the upload epoch changes when buffers are
+// rewritten in place.
+struct CaptureGeneration {
+    int frame_index = -1;
+    int stage_id = -1;
+    int dilation = 6;
+    std::uint64_t upload_epoch = 0;
+    const void* rendered_image = nullptr;
+    const void* comparison_frame = nullptr;
+    const void* distance_map = nullptr;
+    bool operator==(const CaptureGeneration& o) const {
+        return frame_index == o.frame_index && stage_id == o.stage_id &&
+               dilation == o.dilation && upload_epoch == o.upload_epoch &&
+               rendered_image == o.rendered_image &&
+               comparison_frame == o.comparison_frame &&
+               distance_map == o.distance_map;
+    }
+};
+
 struct GraphPreflightResult {
     bool capturable = false;
     int reasonCode = 0;  // 0 = ok, non-zero maps to cudaError / CUB alias / overflow

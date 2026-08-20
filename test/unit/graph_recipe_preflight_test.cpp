@@ -11,6 +11,8 @@
 #include <fstream>
 
 #include "compute/graph_recipe.h"
+#include "compute/graph_key_assembler.h"
+#include "compute/bank_state.cuh"
 #include "compute/bank_state.cuh"
 
 using gpu_cost_function::GraphPreflightResult;
@@ -128,6 +130,26 @@ TEST_CASE(
     REQUIRE(content.find("\"layer_c_tolerance\"") != std::string::npos);
     REQUIRE(content.find("\"abs\": 1e-12") != std::string::npos);
     REQUIRE(content.find("\"rel\": 1e-9") != std::string::npos);
+}
+
+TEST_CASE("CaptureGeneration default is not equal to an assembled generation",
+          "[graph_recipe]") {
+    using gpu_cost_function::AssembleCaptureGeneration;
+    using gpu_cost_function::CaptureGeneration;
+    using gpu_cost_function::CaptureGenerationAssemblerInputs;
+    CaptureGeneration def;
+    REQUIRE(def.frame_index == -1);
+    CaptureGenerationAssemblerInputs in;
+    in.frame_index = 0;
+    in.stage_id = 0;
+    in.dilation = 6;
+    in.upload_epoch = 1;
+    unsigned char a = 0, b = 0, c = 0;
+    in.rendered_image = &a;
+    in.comparison_frame = &b;
+    in.distance_map = &c;
+    CaptureGeneration g = AssembleCaptureGeneration(in);
+    REQUIRE_FALSE(def == g);
 }
 
 TEST_CASE("TEST_IMPACT_MATRIX covers required touching files", "[graph_recipe]") {

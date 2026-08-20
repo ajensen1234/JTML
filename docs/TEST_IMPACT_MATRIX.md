@@ -103,6 +103,15 @@ This matrix enumerates every test that exists at U2 time and its disposition for
 | `test/oracle/layered_correctness_test.cpp` | retained | compile-only adaptation to the typed `RunBatch` return; assertion semantics unchanged |
 | `test/oracle/bit_identity_test.cpp` | retained | compile-only adaptation to the typed `RunBatch` return; assertion semantics unchanged |
 
+## Plan 012 U2 — capture-input provider and generation identity
+
+**Plan:** `docs/plans/2026-08-20-012-feat-cuda-graph-executor-admission-plan.md` (U2). Dispositions for the U2 change only; retain-by-default; no `obsolete`/`superseded` rows.
+
+| Test file | Disposition | Rationale |
+|---|---|---|
+| `test/unit/graph_recipe_preflight_test.cpp` | **retained-with-coverage** | U2 adds `CaptureGeneration` default-vs-assembled inequality (C7 identity includes epoch); existing six preflight cases unchanged |
+| `test/unit/graph_key_assembler_test.cpp` | **new** | U2 — `AssembleGraphRecipeKey` fills all 12 fields, `HashCameraCalibrationParams` deterministic/distinct, `CaptureGeneration` equality across all 7 identity fields, `ValidateGraphKeyVsInputs` gates, CFM `BumpUploadEpoch`/`GetGraphRecipeCaptureInputs`/`getCurrentFrameIndex` (real `CostFunctionManager`, CPU-only ctor, headless via JTA_LIBS target) |
+
 ## Notes
 
 - No test is marked `obsolete` or `superseded` at U2 — deletions merely because internals change are prohibited (R10). A future `superseded` row would require a named replacement + rationale and code-owner sign-off.

@@ -8,6 +8,8 @@
 
 /*Class for Storing Cost Function Info*/
 #include "CostFunction.h"
+#include <cstdint>
+namespace gpu_cost_function { struct GraphRecipeCaptureInputs; }
 #include "domain/preprocessor-defs.h"
 
 /*Cost Function Tools Library*/
@@ -106,6 +108,10 @@ public:
 
     /*Set Current Frame Index*/
     JTML_DLL void setCurrentFrameIndex(unsigned int current_frame_index);
+    JTML_DLL unsigned int getCurrentFrameIndex() const;
+    JTML_DLL void BumpUploadEpoch();
+    JTML_DLL std::uint64_t getUploadEpoch() const;
+    JTML_DLL bool GetGraphRecipeCaptureInputs(gpu_cost_function::GraphRecipeCaptureInputs& out) const;
 
     /*Stage accessor — plan 008 U2 second documented wizard-region exception:
     minimal getStage() makes the stage-guard pin observable (stage_ is dead
@@ -195,7 +201,9 @@ private:
     std::vector<gpu_cost_function::GPUModel*>* gpu_non_principal_models_;
     float* prin_dist_;
     /*Current Frame Index (0 based)*/
-    unsigned int current_frame_index_;
+    unsigned int current_frame_index_ = 0;
+    /* Plan 012 U2: upload epoch bumped when dilated/distance/comparison data are rewritten in place (C7) */
+    std::uint64_t upload_epoch_ = 0;
 
     /*Pose Matrix*/
     PoseMatrix* pose_storage_;

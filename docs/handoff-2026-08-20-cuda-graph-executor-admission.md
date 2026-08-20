@@ -38,7 +38,9 @@ A CUDA-aware review of deepened 011 U6 found unresolved **lifecycle/admission de
 
 **U1 landed** (one jj change): `include/compute/batch_outcome.h` (BatchOutcome + CoordinatorBatchAbort + MaterializeOrderedScores), `include/compute/graph_admission_policy.h` (default-deny policy + DecideGraphAdmission), typed `EvaluationExecutor::RunBatch/RunBatchWithCost`, `RunDirectStage` now: (a) leaves the U12/serial adapter installed on every deny path, (b) no longer allocates the 8 GiB dummy executor pool (lazy per C10 — executor stays uninitialized, poolSize()==0), (c) runs through `jta::RunDirectStageGuarded` (CoordinatorBatchAbort + invalid_argument → OptimizerError). Headless 58/59 green (only pre-existing `qml_lint`). Reviewer follow-ups (non-blocking): add a manager-level SetBatchCost count characterization before U3 prepare lands; U12-survival is currently proven at unit level.
 
-**Next: U2** (capture-input provider + generation identity), then U3 (capture coordinator + wrappers).
+**U2 landed** (next jj change): `CaptureGeneration` (C7 identity incl. upload epoch), header-only `graph_key_assembler.h` (AssembleGraphRecipeKey, HashCameraCalibrationParams FNV-1a, AssembleCaptureGeneration, ValidateGraphKeyVsInputs), CostFunctionManager upload-epoch + `GetGraphRecipeCaptureInputs` provider, GPUModel `GetPrimaryRenderEngine`, full-key assembler + epoch bump wired in optimizer_manager. Headless 59/60 green (pre-existing qml_lint). Adversarial review: no blockers; both should-fixes applied (canonical dilation read via getActiveCostFunctionClass; provider test now asserts out.dilation==4).
+
+**Next: U3** (capture coordinator + wrappers). Carry into U3: manager-level SetBatchCost count characterization (U1 review); coordinator stage_id/frame_index wiring test before `gen` is consumed for graph dispatch (U2 review); wire real curvature_capacity/graph_overhead_bytes.
 
 ---
 
