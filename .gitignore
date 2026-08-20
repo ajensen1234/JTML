@@ -74,3 +74,8 @@ Testing/
 
 # Plan 007 U7: qmlprofiler artifacts (traces + reports)
 profiler/
+
+# Cut-0 measurement scratch report (live timing artifact; the committed golden is
+# only refreshed deliberately via JTML_UPDATE_GOLDEN=1).
+cut0_measurement.scratch.md
+*.scratch.md

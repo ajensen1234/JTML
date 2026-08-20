@@ -366,7 +366,19 @@ TEST_CASE("Cut-0: GPU-active versus CPU host time per production cost call",
     const bool gpu_ge_cpu = gpu_median >= cpu_median;
     const bool gpu_over_1ms = gpu_median > 1000.0;
 
-    std::ofstream artifact("test/golden/cut0_measurement.md");
+    // Write the Cut-0 measurement report.  This is a live timing artifact, not
+    // a deterministic fixture: rewriting it on every oracle run would dirty the
+    // tracked golden file (test/golden/cut0_measurement.md) and force a restore.
+    // By default we write to a scratch location so the measurement still runs
+    // and assertions still pass; only when JTML_UPDATE_GOLDEN=1 do we refresh
+    // the committed golden (a deliberate re-baseline action, run on a GPU
+    // machine).  This keeps `ctest -L oracle` repeatable without mutating VCS.
+    const char* update_golden = std::getenv("JTML_UPDATE_GOLDEN");
+    const std::string artifact_path =
+        (update_golden != nullptr && std::string(update_golden) == "1")
+            ? std::string("test/golden/cut0_measurement.md")
+            : std::string("cut0_measurement.scratch.md");
+    std::ofstream artifact(artifact_path);
     REQUIRE(artifact.good());
     artifact << "# Cut-0 measurement: GPU-active versus CPU host time\n\n"
              << "- Device: CUDA device 0\n"
