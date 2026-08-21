@@ -12,13 +12,13 @@
 #include <string>
 #include <thread>
 
+#include "compute/batch_outcome.h"
+#include "compute/cuda_launch_parameters.h"
+#include "compute/evaluation_executor.h"
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_model.cuh"
-#include "compute/evaluation_executor.h"
-#include "compute/cuda_launch_parameters.h"
-#include "compute/graph_key_assembler.h"
-#include "compute/batch_outcome.h"
 #include "compute/graph_admission_policy.h"
+#include "compute/graph_key_assembler.h"
 #include "compute/pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
@@ -1293,7 +1293,8 @@ void OptimizerManager::ResetStageDilation(size_t frame_index, int dilation) {
             dilation); /*Reset Dilation In That Image*/
     }
     emit UpdateDilationBackground();
-    // Plan 012 U2: bump upload epoch for generation identity (C7) — CPU dilate rewrites shared frames_A_/B_
+    // Plan 012 U2: bump upload epoch for generation identity (C7) — CPU dilate
+    // rewrites shared frames_A_/B_
     trunk_manager_.BumpUploadEpoch();
     branch_manager_.BumpUploadEpoch();
     leaf_manager_.BumpUploadEpoch();
@@ -1357,11 +1358,14 @@ void OptimizerManager::RunDirectStage(
      * recipe + preflight) succeeds —
      * which no production path can reach yet. */
     {
-        bool monoplaneEligible = !calibration_.biplane_calibration &&
-                                 stage_manager.getActiveCostFunction() == "DIRECT_DILATION";
-        const auto* recipe = (evaluation_executor_ != nullptr)
-                                 ? evaluation_executor_->registry().FindEligible("DIRECT_DILATION", false)
-                                 : nullptr;
+        bool monoplaneEligible =
+            !calibration_.biplane_calibration &&
+            stage_manager.getActiveCostFunction() == "DIRECT_DILATION";
+        const auto* recipe =
+            (evaluation_executor_ != nullptr)
+                ? evaluation_executor_->registry().FindEligible(
+                      "DIRECT_DILATION", false)
+                : nullptr;
         bool recipeFound = recipe != nullptr;
         bool preflightCapturable = false;
         gpu_cost_function::GraphRecipeKey preparedKey;
@@ -1378,22 +1382,35 @@ void OptimizerManager::RunDirectStage(
                 cls->getIntParameterValue("Dilation", v);
                 liveDilation = v;
             }
-            (void)liveDilation;  // consumed below in kin.dilation
+            (void)liveDilation; // consumed below in kin.dilation
             gpu_cost_function::GraphKeyAssemblerInputs kin;
             kin.recipeId = recipe->recipeId();
-            kin.width = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryWidth() : 0;
-            kin.height = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryHeight() : 0;
-            kin.triangle_count = gpu_principal_model_ ? static_cast<std::uint64_t>(gpu_principal_model_->GetPrimaryTriangleCount()) : 0;
+            kin.width = gpu_principal_model_
+                            ? gpu_principal_model_->GetPrimaryWidth()
+                            : 0;
+            kin.height = gpu_principal_model_
+                             ? gpu_principal_model_->GetPrimaryHeight()
+                             : 0;
+            kin.triangle_count =
+                gpu_principal_model_
+                    ? static_cast<std::uint64_t>(
+                          gpu_principal_model_->GetPrimaryTriangleCount())
+                    : 0;
             kin.dilation = liveDilation;
-            kin.camera_calib_hash = gpu_cost_function::HashCameraCalibrationParams(
-                calibration_.camera_A_principal_.principal_distance_,
-                calibration_.camera_A_principal_.principal_x_,
-                calibration_.camera_A_principal_.principal_y_,
-                calibration_.camera_A_principal_.pixel_pitch_,
-                calibration_.biplane_calibration);
-            kin.cub_storage_bytes = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryCubStorageBytes() : 0;
+            kin.camera_calib_hash =
+                gpu_cost_function::HashCameraCalibrationParams(
+                    calibration_.camera_A_principal_.principal_distance_,
+                    calibration_.camera_A_principal_.principal_x_,
+                    calibration_.camera_A_principal_.principal_y_,
+                    calibration_.camera_A_principal_.pixel_pitch_,
+                    calibration_.biplane_calibration);
+            kin.cub_storage_bytes =
+                gpu_principal_model_
+                    ? gpu_principal_model_->GetPrimaryCubStorageBytes()
+                    : 0;
             kin.curvature_capacity = 0;
-            kin.maximum_stride_size = static_cast<std::uint64_t>(maximum_stride_size);
+            kin.maximum_stride_size =
+                static_cast<std::uint64_t>(maximum_stride_size);
             kin.graph_overhead_bytes = 0;
             kin.biplane = false;
             kin.version = "1";
@@ -1401,12 +1418,16 @@ void OptimizerManager::RunDirectStage(
             preparedKey = key;
             haveKey = true;
             gpu_cost_function::GraphRecipeCaptureInputs capInputs;
-            bool inputsOk = stage_manager.GetGraphRecipeCaptureInputs(capInputs);
+            bool inputsOk =
+                stage_manager.GetGraphRecipeCaptureInputs(capInputs);
             int stage_id = 0;
-            if (&stage_manager == &branch_manager_) stage_id = 1;
-            else if (&stage_manager == &leaf_manager_) stage_id = 2;
+            if (&stage_manager == &branch_manager_)
+                stage_id = 1;
+            else if (&stage_manager == &leaf_manager_)
+                stage_id = 2;
             gpu_cost_function::CaptureGenerationAssemblerInputs gin;
-            gin.frame_index = static_cast<int>(stage_manager.getCurrentFrameIndex());
+            gin.frame_index =
+                static_cast<int>(stage_manager.getCurrentFrameIndex());
             gin.stage_id = stage_id;
             gin.dilation = key.dilation;
             gin.upload_epoch = stage_manager.getUploadEpoch();
@@ -1415,15 +1436,16 @@ void OptimizerManager::RunDirectStage(
             gin.distance_map = capInputs.distance_map;
             auto gen = gpu_cost_function::AssembleCaptureGeneration(gin);
             (void)gen;
-            if (!inputsOk || !gpu_cost_function::ValidateGraphKeyVsInputs(key, capInputs)) {
+            if (!inputsOk ||
+                !gpu_cost_function::ValidateGraphKeyVsInputs(key, capInputs)) {
                 preflightCapturable = false;
             } else {
                 auto pre = recipe->preflight(key);
                 preflightCapturable = pre.capturable;
             }
         }
-        bool executorReady =
-            evaluation_executor_ != nullptr && evaluation_executor_->poolSize() > 1;
+        bool executorReady = evaluation_executor_ != nullptr &&
+                             evaluation_executor_->poolSize() > 1;
         gpu_cost_function::GraphAdmissionInputs inputs;
         inputs.executorReady = executorReady;
         inputs.monoplaneEligible = monoplaneEligible;
@@ -1431,7 +1453,8 @@ void OptimizerManager::RunDirectStage(
         inputs.preflightCapturable = preflightCapturable;
         inputs.evidence = gpu_cost_function::GraphAdmissionEvidence{};
         gpu_cost_function::GraphAdmissionPolicy defaultPolicy;
-        auto decision = gpu_cost_function::DecideGraphAdmission(inputs, defaultPolicy);
+        auto decision =
+            gpu_cost_function::DecideGraphAdmission(inputs, defaultPolicy);
         if (decision.install) {
             auto* exec = evaluation_executor_;
             // Plan 012 U4 (C5): install CUDA feeder hooks only after admission.
@@ -1441,13 +1464,17 @@ void OptimizerManager::RunDirectStage(
                 auto prep = exec->Prepare(preparedKey, exec->poolSize());
                 prepareOk = prep.isOrderedScores();
             } else if (haveKey) {
-                // Pool not yet sized (lazy) — treat as prepare not needed for U4 seam compile
+                // Pool not yet sized (lazy) — treat as prepare not needed for
+                // U4 seam compile
                 prepareOk = true;
             }
             if (prepareOk) {
-                opt.SetBatchCost([exec, serial_cost](const std::vector<Point6D>& poses) -> std::vector<double> {
-                    return gpu_cost_function::MaterializeOrderedScores(exec->RunBatch(poses, serial_cost));
-                });
+                opt.SetBatchCost(
+                    [exec, serial_cost](const std::vector<Point6D>& poses)
+                        -> std::vector<double> {
+                        return gpu_cost_function::MaterializeOrderedScores(
+                            exec->RunBatch(poses, serial_cost));
+                    });
             }
         }
     }
@@ -1488,8 +1515,10 @@ void OptimizerManager::RunDirectStage(
     {
         QString stageError;
         if (!jta::RunDirectStageGuarded(opt, &stageError)) {
-            emit OptimizerError(stageError.isEmpty() ? QStringLiteral("Error optimizing current frame!")
-                                                      : stageError);
+            emit OptimizerError(
+                stageError.isEmpty()
+                    ? QStringLiteral("Error optimizing current frame!")
+                    : stageError);
             error_occurrred_ = true;
             return;
         }
@@ -1628,7 +1657,8 @@ OptimizerManager::~OptimizerManager() {
      * owners. */
     delete capacity_service_;
     capacity_service_ = nullptr;
-    // U6: EvaluationExecutor must be destroyed before model/metric owners (waits for streams/events)
+    // U6: EvaluationExecutor must be destroyed before model/metric owners
+    // (waits for streams/events)
     delete evaluation_executor_;
     evaluation_executor_ = nullptr;
 
@@ -1693,7 +1723,8 @@ bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut) {
     try {
         bool ok = opt.Run();
         if (!ok) {
-            if (errorOut) *errorOut = QStringLiteral("Error optimizing current frame!");
+            if (errorOut)
+                *errorOut = QStringLiteral("Error optimizing current frame!");
             return false;
         }
         if (errorOut) errorOut->clear();
@@ -1703,12 +1734,13 @@ bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut) {
         return false;
     } catch (const std::invalid_argument& e) {
         if (errorOut) {
-            *errorOut = QString::fromStdString(std::string("DirectOptimizer contract violation: ") + e.what());
+            *errorOut = QString::fromStdString(
+                std::string("DirectOptimizer contract violation: ") + e.what());
         }
         return false;
     }
 }
-}  // namespace jta
+} // namespace jta
 
 std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
     gpu_cost_function::GPUModel* principal_model,

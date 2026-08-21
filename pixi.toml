@@ -3,7 +3,7 @@ name = "joint-track-machine-learning"
 version = "0.1.0"
 description = "Joint Track Machine Learning Project"
 authors = ["Your Name <your.email@example.com>"]
-channels = ["https://prefix.dev/conda-forge", "https://prefix.dev/nvidia"]
+channels = ["https://prefix.dev/conda-forge"]
 platforms = [{ platform = "linux-64", cuda = "12.9" }]
 
 [dependencies]
@@ -44,6 +44,7 @@ clangxx = ">=19.1.2,<20"
 cuda-nvtx-dev = ">=12.9.19,<13"
 cuda-nvtx = ">=12.9.19,<13"
 pyyaml = ">=6.0.3,<7"
+rust = ">=1.97.1,<1.98"
 
 [feature.build.dependencies]
 cmake = ">=4.2.3,<5"
@@ -145,6 +146,9 @@ depends-on = ["build"]
 # context (blank render window); xcb (X11/GLX) works. Default the app to xcb.
 env = {"QT_QPA_PLATFORM" = "xcb"}
 #set(USE_CUDNN 1)
+#
+[tasks.cargo-build]
+cmd = "cargo build -m rust/Cargo.toml"
 
 [tasks.test]
 # Run the headless suite: no GUI/display or VTK render window. Fast compute-only
@@ -184,3 +188,4 @@ CUDA_TOOLKIT_ROOT_DIR = "${CONDA_PREFIX}"
 CUDACXX = "${CONDA_PREFIX}/bin/nvcc"
 CXX="clang++"
 CC="clang"
+

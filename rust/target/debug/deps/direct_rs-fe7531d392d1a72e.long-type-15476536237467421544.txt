@@ -1,0 +1,6 @@
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN), &(AV, BV, CV, DV, EV, FV, GV, HV)>
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN), (AV, BV, CV, DV, EV, FV, GV, HV)>
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN, IN), &(AV, BV, CV, DV, EV, FV, GV, HV, IV)>
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN, IN), (AV, BV, CV, DV, EV, FV, GV, HV, IV)>
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN, IN, JN), &(AV, BV, CV, DV, EV, FV, GV, HV, IV, JV)>
+proptest::sugar::NamedArguments<(AN, BN, CN, DN, EN, FN, GN, HN, IN, JN), (AV, BV, CV, DV, EV, FV, GV, HV, IV, JV)>

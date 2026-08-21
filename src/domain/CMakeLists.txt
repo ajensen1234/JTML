@@ -11,6 +11,7 @@ file(GLOB HEADER_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/domain/*.
 
 add_library(jtml_domain STATIC
     ambiguous_pose_processing.cpp
+    cost.cpp
     data_structures_6D.cpp
     direct_data_storage.cpp
     direct_optimizer.cpp

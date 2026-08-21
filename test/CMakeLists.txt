@@ -619,7 +619,7 @@ add_executable(jtml_test_coordinator
     ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_coordinator PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(jtml_test_coordinator PRIVATE Qt6::Core Qt6::Test direct-rs_bridge)
 add_test(NAME jtml.coordinator COMMAND jtml_test_coordinator)
 set_tests_properties(jtml.coordinator PROPERTIES LABELS "headless" TIMEOUT 120)
 

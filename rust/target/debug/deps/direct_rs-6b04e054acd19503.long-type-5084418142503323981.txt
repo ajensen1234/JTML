@@ -1,0 +1,2 @@
+proptest::sugar::NamedArguments<(&str, &str, &str, &str), (f64, f64, u32, direct_data_storage::Pose)>
+TestError<proptest::sugar::NamedArguments<(&str, &str, &str, &str), (f64, f64, u32, direct_data_storage::Pose)>>

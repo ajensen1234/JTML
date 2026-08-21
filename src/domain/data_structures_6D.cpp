@@ -74,7 +74,7 @@ double Point6D::GetDirection(Direction direction) {
         return za;
         break;
     }
-    return 0.0;  // unreachable; silences -Wreturn-type for any out-of-enum value
+    return 0.0; // unreachable; silences -Wreturn-type for any out-of-enum value
 }
 
 void Point6D::UpdateDirection(Direction direction, double updated_value) {
@@ -100,14 +100,12 @@ void Point6D::UpdateDirection(Direction direction, double updated_value) {
     }
 }
 
-HyperBox6D::HyperBox6D(double value, Point6D center, Point6D sides) {
-    value_ = value;
-    center_ = center;
-    sides_ = sides;
+HyperBox6D::HyperBox6D(double value, Point6D center, Point6D sides) :
+    value_(value), sides_(sides), center_(center) {
     size_ = std::sqrt(
-        sides_.x * sides_.x + sides_.y * sides_.y + sides_.z * sides_.z +
-        sides_.xa * sides_.xa + sides_.ya * sides_.ya +
-        sides_.za * sides_.za); /*L2 Norm*/
+        (sides_.x * sides_.x) + (sides_.y * sides_.y) + (sides_.z * sides_.z) +
+        (sides_.xa * sides_.xa) + (sides_.ya * sides_.ya) +
+        (sides_.za * sides_.za)); /*L2 Norm*/
 }
 
 HyperBox6D::HyperBox6D() {

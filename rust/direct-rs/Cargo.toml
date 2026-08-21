@@ -1,0 +1,17 @@
+[package]
+name = "direct-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cxx.workspace = true
+ordered-float = "5.5.0"
+
+[build-dependencies]
+cxx-build.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+crate-type=["staticlib", "cdylib"]

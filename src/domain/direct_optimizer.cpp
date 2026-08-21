@@ -23,8 +23,7 @@ Point6D UnitCenter() {
 // bit-identical-defaults proof (R13). The divergence branches (each guarded
 // on "different from default") land with the algorithm plan (R9).
 void ValidateOptions(const DirectOptimizer::Options& opts) {
-    if (opts.selection !=
-        DirectOptimizer::Options::SelectionMode::Original) {
+    if (opts.selection != DirectOptimizer::Options::SelectionMode::Original) {
         throw std::invalid_argument(
             "DirectOptimizer::Options: selection != Original is a plan-008 "
             "fail-fast stub; variant semantics land with the algorithm plan");
@@ -68,16 +67,16 @@ void ValidateOptions(const DirectOptimizer::Options& opts) {
             "plan");
     }
 }
-}  // namespace
+} // namespace
 
-DirectOptimizer::DirectOptimizer(CostFunction cost, Point6D range,
-                                 Point6D starting_point, unsigned int budget,
-                                 Options options)
-    : cost_(std::move(cost)),
-      range_(range),
-      starting_point_(starting_point),
-      budget_(budget),
-      options_(std::move(options)) {
+DirectOptimizer::DirectOptimizer(
+    CostFunction cost,
+    Point6D range,
+    Point6D starting_point,
+    unsigned int budget,
+    Options options) :
+    cost_(std::move(cost)), range_(range), starting_point_(starting_point),
+    budget_(budget), options_(std::move(options)) {
     // Fail fast at construction: a non-default Options field is a plan-008
     // stub, not a silent behavior change (guarded divergence -- the defaults
     // reproduce today's search bit-identically by construction).
@@ -187,9 +186,9 @@ void DirectOptimizer::ConvexHull() {
             right_size = data_.GetSizeStoredInColumn(right_index);
             potentially_optimal_index = left_index;
             while (left_index >= 0) {
-                slope = (right_value -
-                         data_.GetMinimumHyperboxValue(left_index)) /
-                        (right_size - data_.GetSizeStoredInColumn(left_index));
+                slope =
+                    (right_value - data_.GetMinimumHyperboxValue(left_index)) /
+                    (right_size - data_.GetSizeStoredInColumn(left_index));
                 if (slope >= highest_slope) {
                     highest_slope = slope;
                     potentially_optimal_index = left_index;
@@ -227,20 +226,22 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
      * denormalized side, keep one box at the original center, and move the two
      * outer boxes to the +/- shifted centers and re-evaluate them.*/
     //
-    // Plan 010 U11 (R12) batch seam: when batch_cost_ is set, the changed-center
-    // evals of the WHOLE iteration are collected into ONE batch (packing order:
-    // per POH box the +shift let this A center then the -shift B center, boxes
-    // in POH-column order), sent to the cost layer, and the results replayed in
-    // input order. The storage bookkeeping (oc box stored, then A, then B per
-    // box) is deferred until AFTER the batch result is size-validated, so the
-    // storage order, cost_function_calls_, optimum sequence, and improvement-
-    // callback order are identical to the serial path (R12 / AE2).
+    // Plan 010 U11 (R12) batch seam: when batch_cost_ is set, the
+    // changed-center evals of the WHOLE iteration are collected into ONE batch
+    // (packing order: per POH box the +shift let this A center then the -shift
+    // B center, boxes in POH-column order), sent to the cost layer, and the
+    // results replayed in input order. The storage bookkeeping (oc box stored,
+    // then A, then B per box) is deferred until AFTER the batch result is
+    // size-validated, so the storage order, cost_function_calls_, optimum
+    // sequence, and improvement- callback order are identical to the serial
+    // path (R12 / AE2).
     if (batch_cost_) {
         // Pending boxes in serial storage order: per POH box {oc, A, B}.
-        // changed_index holds the slot into `batch_centers` for A/B (-1 for oc).
+        // changed_index holds the slot into `batch_centers` for A/B (-1 for
+        // oc).
         std::vector<HyperBox6D*> pending;
         std::vector<int> pending_changed_index;
-        std::vector<Point6D> batch_centers;  // denormalized, in packing order
+        std::vector<Point6D> batch_centers; // denormalized, in packing order
 
         for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
             Point6D denormalized_sides =
@@ -266,14 +267,15 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                         sign * box->GetSides().GetDirection(largest_direction));
                 box->SetCenter(updated);
                 const int idx = static_cast<int>(batch_centers.size());
-                batch_centers.push_back(DenormalizeFromCenter(box->GetCenter()));
+                batch_centers.push_back(
+                    DenormalizeFromCenter(box->GetCenter()));
                 pending.push_back(box);
                 pending_changed_index.push_back(idx);
                 return idx;
             };
 
-            make_changed(+1);  // A: +shift
-            make_changed(-1);  // B: -shift
+            make_changed(+1); // A: +shift
+            make_changed(-1); // B: -shift
         }
 
         /*Single batch call over the whole iteration's changed centers.*/
@@ -282,7 +284,8 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
         /*Fail fast on a size-mismatched result (never partially consumed, never
          * silently re-fallen-back to per-point evaluation).*/
         if (results.size() != batch_centers.size()) {
-            for (auto* b : pending) delete b;
+            for (auto* b : pending)
+                delete b;
             throw std::invalid_argument(
                 "DirectOptimizer: batch cost returned the wrong result size "
                 "(contract violation, plan 010 U11)");
@@ -298,7 +301,8 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 continue;
             }
             const double result = results[static_cast<std::size_t>(cidx)];
-            const Point6D denormalized_point = batch_centers[static_cast<std::size_t>(cidx)];
+            const Point6D denormalized_point =
+                batch_centers[static_cast<std::size_t>(cidx)];
 
             cost_function_calls_++;
             if (!std::isfinite(result)) {
@@ -313,8 +317,8 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 current_optimum_value_ = result;
                 current_optimum_location_ = denormalized_point;
                 if (improvement_callback_) {
-                    improvement_callback_(current_optimum_location_,
-                                          current_optimum_value_);
+                    improvement_callback_(
+                        current_optimum_location_, current_optimum_value_);
                 }
             }
         }
@@ -324,8 +328,7 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
     for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
         Point6D denormalized_sides =
             DenormalizeRange(potentially_optimal_hyperboxes_[i].GetSides());
-        Direction largest_direction =
-            denormalized_sides.GetLargestDirection();
+        Direction largest_direction = denormalized_sides.GetLargestDirection();
 
         /*Unchanged-center hyperbox.*/
         auto original_center_hyperbox_ = new HyperBox6D();
@@ -359,8 +362,7 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
         updated_center.UpdateDirection(
             largest_direction,
             updated_center.GetDirection(largest_direction) +
-                changed_hyperbox_a->GetSides().GetDirection(
-                    largest_direction));
+                changed_hyperbox_a->GetSides().GetDirection(largest_direction));
         changed_hyperbox_a->SetCenter(updated_center);
         store_or_delete(
             changed_hyperbox_a,
@@ -374,8 +376,7 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
         updated_center.UpdateDirection(
             largest_direction,
             updated_center.GetDirection(largest_direction) -
-                changed_hyperbox_b->GetSides().GetDirection(
-                    largest_direction));
+                changed_hyperbox_b->GetSides().GetDirection(largest_direction));
         changed_hyperbox_b->SetCenter(updated_center);
         store_or_delete(
             changed_hyperbox_b,
@@ -387,8 +388,8 @@ unsigned int DirectOptimizer::GetNonFiniteCount() const {
     return non_finite_count_;
 }
 
-std::optional<double> DirectOptimizer::EvaluateCostFunction(
-    Point6D unit_point) {
+std::optional<double>
+DirectOptimizer::EvaluateCostFunction(Point6D unit_point) {
     Point6D denormalized_point = DenormalizeFromCenter(unit_point);
     double result = cost_(denormalized_point);
 
@@ -404,7 +405,8 @@ std::optional<double> DirectOptimizer::EvaluateCostFunction(
     // GLh surrogate hook (RESERVED -- documented extension point, NOT wired in
     // this unit; the algorithm plan owns the semantics): when DIRECT-GLh
     // lands, substitute
-    //   result = current_optimum_value_ + ||denormalized_point - current_optimum_location_||
+    //   result = current_optimum_value_ + ||denormalized_point -
+    //   current_optimum_location_||
     // here, making the eval FINITE so it flows through the store/optimum path
     // below. Until then a non-finite eval stays infeasible.
     if (!std::isfinite(result)) {
@@ -420,8 +422,8 @@ std::optional<double> DirectOptimizer::EvaluateCostFunction(
         current_optimum_value_ = result;
         current_optimum_location_ = denormalized_point;
         if (improvement_callback_) {
-            improvement_callback_(current_optimum_location_,
-                                  current_optimum_value_);
+            improvement_callback_(
+                current_optimum_location_, current_optimum_value_);
         }
     }
 

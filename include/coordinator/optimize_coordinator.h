@@ -4,8 +4,8 @@
 #pragma once
 
 #include <QObject>
-#include <QThread>
 #include <QString>
+#include <QThread>
 #include <atomic>
 #include <functional>
 
@@ -28,8 +28,11 @@ class OptimizeWorker : public QObject {
 public:
     using CostFunction = std::function<double(const Point6D&)>;
 
-    OptimizeWorker(CostFunction cost, Point6D range, Point6D starting_point,
-                   unsigned int budget);
+    OptimizeWorker(
+        CostFunction cost,
+        Point6D range,
+        Point6D starting_point,
+        unsigned int budget);
     ~OptimizeWorker() override;
 
     // Cooperative stop requested from another thread.
@@ -42,8 +45,14 @@ public slots:
 
 signals:
     // Optimum location (6 DOF) and value, in physical/denormalized space.
-    void Succeeded(double x, double y, double z, double xa, double ya,
-                   double za, double value);
+    void Succeeded(
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        double value);
     void Failed(QString message);
 
 private:
@@ -53,7 +62,8 @@ private:
     unsigned int budget_;
 
     std::atomic<bool> stop_requested_{false};
-    DirectOptimizer* active_opt_ = nullptr;  // owned by Run(), worker thread only
+    DirectOptimizer* active_opt_ =
+        nullptr; // owned by Run(), worker thread only
 };
 
 class OptimizeCoordinator : public QObject {
@@ -63,8 +73,12 @@ public:
 
     enum class State { Idle = 0, Running = 1 };
 
-    OptimizeCoordinator(CostFunction cost, Point6D range, Point6D starting_point,
-                        unsigned int budget, QObject* parent = nullptr);
+    OptimizeCoordinator(
+        CostFunction cost,
+        Point6D range,
+        Point6D starting_point,
+        unsigned int budget,
+        QObject* parent = nullptr);
     ~OptimizeCoordinator() override;
 
     // Begin an optimize run. Returns false (and does nothing) if already
@@ -77,14 +91,20 @@ public:
     State GetState() const;
 
 signals:
-    void StateChanged(int state);  // OptimizeCoordinator::State as int
+    void StateChanged(int state); // OptimizeCoordinator::State as int
     void Finished(bool ok);
     void ErrorOccurred(QString message);
-    void RunRequested();  // internal: queued to the worker
+    void RunRequested(); // internal: queued to the worker
 
 private slots:
-    void OnSucceeded(double x, double y, double z, double xa, double ya,
-                     double za, double value);
+    void OnSucceeded(
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        double value);
     void OnFailed(QString message);
 
 private:
@@ -94,6 +114,6 @@ private:
     unsigned int budget_;
 
     State state_ = State::Idle;
-    QThread worker_thread_;     // single persistent worker thread
-    OptimizeWorker* worker_ = nullptr;  // owned; moved to worker_thread_
+    QThread worker_thread_;            // single persistent worker thread
+    OptimizeWorker* worker_ = nullptr; // owned; moved to worker_thread_
 };
