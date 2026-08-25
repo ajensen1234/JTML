@@ -1,5 +1,7 @@
+mod cost;
 mod direct_data_storage;
 mod direct_optimizer;
+mod test;
 use crate::direct_optimizer::{DirectOptimizer, POHSettings};
 
 #[cxx::bridge]

@@ -1,1 +1,0 @@
-&mut std::collections::BinaryHeap<std::cmp::Reverse<(ordered_float::OrderedFloat<f64>, direct_data_storage::Pose)>>

@@ -1,1 +1,0 @@
-TestError<proptest::sugar::NamedArguments<(&str, &str, &str), (u8, direct_data_storage::Pose, u32)>>

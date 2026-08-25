@@ -1,2 +1,0 @@
-proptest::sugar::NamedArguments<(&'static str, &'static str, &'static str, &'static str), (Pose, Pose, u32, Pose)>
-proptest::strategy::Map<(impl proptest::strategy::Strategy<Value = Pose>, impl proptest::strategy::Strategy<Value = Pose>, std::ops::Range<u32>, impl proptest::strategy::Strategy<Value = Pose>), {closure@/home/ajj/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proptest-1.11.0/src/sugar.rs:972:17: 972:25}>

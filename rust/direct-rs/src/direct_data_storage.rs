@@ -112,25 +112,12 @@ impl Hyperbox {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::direct_data_storage::{Hyperbox, Pose};
-
-    #[test]
-    fn test_hyperbox_size() {
-        let hb: Hyperbox = Hyperbox {
-            cost_at_center: 25.0,
-            center: Pose {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                xa: 0.0,
-                ya: 0.0,
-                za: 0.0,
-            },
-            depths: [3, 3, 3, 3, 3, 9],
+impl UnscoredHyperbox {
+    pub fn add_score(self, score: f64) -> Hyperbox {
+        return Hyperbox {
+            cost_at_center: score,
+            depths: self.depths,
+            center: self.center,
         };
-
-        println!("{}", hb.size());
     }
 }

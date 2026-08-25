@@ -1,1 +1,0 @@
-proptest::strategy::Map<(impl Strategy<Value = f64> + Clone, impl Strategy<Value = f64> + Clone, impl Strategy<Value = f64> + Clone, impl Strategy<Value = f64> + Clone, impl Strategy<Value = f64> + Clone, impl Strategy<Value = f64> + Clone), {closure@direct-rs/src/properties.rs:42:19: 42:42}>

@@ -30,6 +30,28 @@ implementation in =rust/direct-rs=, keeping the C++ coordinator
 full implementation plan. It records every option considered so the reader can
 choose deliberately.
 
+** Contract at a glance (the C++ engineer's two-minute read)
+
+- **Rust side owns the search.** =rust/direct-rs= exposes =DirectOptimizer=
+  via the bridge; C++ owns cost + lifecycle + the worker thread.
+- **Cost crosses one way.** An opaque =CppCost= handle (wrapping a
+  =std::function=) is passed INTO Rust; Rust calls =evaluate6(x,y,z,xa,ya,za)=.
+  No =std::function= crosses the ABI; the seam is opaque + method.
+- **The boundary surface** (bridge, verbatim at "Rust bridge"):
+  =new_direct_optimizer(range,start,budget,mode) -> Box<DirectOptimizer>=,
+  =run_ffi(&self, cost: &CppCost) -> RunOutcome=, =request_stop(&self)=.
+- **=RunOutcome=** = { best: Pose, best_cost: f64, calls: u32, ok: bool, error: u32 }.
+- **Four truths that must survive any backend** (see Contract): cumulative
+  =calls+offset= budget; SAME optimum per cost sequence (Tier-3 is the gate);
+  eval ordering = calls++ → non-finite → optimum → storage → improvement
+  callback; =evaluate= is serial on one worker thread.
+- **Never let Rust panic across the boundary** — a panic =abort()=s the whole
+  process. Errors become =ok:false= + =error:= code, never a thrown exception.
+- **Lifetime rule:** =CppCost= handle must out-live =run_ffi()=.
+
+That's the agreement. Everything else in this doc teaches /why/ or fills a
+detail. Re-check the verbatim bridge + call-site sections before coding.
+
 ** How to use this doc (learning path)
 
 This is a living handshake *and* a tutor. Every section that teaches a Rust
@@ -96,13 +118,13 @@ rust/direct-rs/
     error.rs            # OptimizerError (thiserror)           (M8)
     optimizer.rs        # DirectOptimizer::run — the loop      (M9)
   tests/
-    parity.rs           # Tier-1 analytic golden vs C++        (Appendix F)
+    parity.rs           # Tier-1 analytic golden + Tier-3 C++ parity replay (Appendix F)
 #+end_src
 
 Why split it this way: =lib.rs= holding *only* the bridge is FFI containment —
 the unsafe surface is one file you can audit. Every other module is ordinary
 safe Rust, unit-testable with no C++ and no GPU in the room. **If a module
-can't be tested headlessly, FFI has leaked into it.** That single rule is worth
+can't be tested headlessly, FFI has leaked into it.** (The one structural exception: `CppCostHandle`'s `Cost` impl in `cost.rs` links against the C++ static lib — that is by design, not leakage.) That single rule is worth
 more than any diagram in this doc.
 
 ** Cargo.toml
@@ -133,6 +155,15 @@ Note =[dev-dependencies]=: these compile for =cargo test= only and never ship
 into the C++ binary. That separation is why a test stub cost (=AnalyticCost=)
 costs the production build nothing.
 
+**Workspace note:** the repo's real =rust/direct-rs/Cargo.toml= is a workspace
+member (edition 2024, =cxx.workspace = true= pinned to 1.0.199 with the =c++20=
+feature, =ordered-float 5.5=, crate-type =["staticlib","cdylib"]=, workspace
+lints). The block above is a *standalone* simplification for teaching. If you
+use the real file: keep edition 2024 (several idioms in this doc — =unsafe
+extern= blocks, =let-else= — assume it), keep the =c++20= feature, and don't
+replace the manifest wholesale — add =[dev-dependencies]= =approx=/ =proptest=
+to the existing file.
+
 ** build.rs (the other half of the handshake)
 
 #+begin_src rust
@@ -145,6 +176,16 @@ fn main() {
     println!("cargo:rerun-if-changed=../../include/domain/cost.h");
 }
 #+end_src
+
+**Build-owner caveat:** the existing repo already generates + compiles the cxx
+bridge via =corrosion_add_cxxbridge(FILES lib.rs)= in =rust/CMakeLists.txt=
+(the =direct-rs_bridge= target). Do NOT add this build.rs alongside it — you'd
+get two independent compilations of the same =src/lib.rs= bridge and
+duplicate-symbol link errors. Pick ONE owner: either keep corrosion (preferred —
+it's the live mechanism and feeds =direct-rs_bridge= into the coordinator), and
+drop build.rs; or drop corrosion and let build.rs own the generated
+=lib.rs.h=. The `cxx_build::bridge` path is shown here as the Cargo-only
+alternative for when you run =cargo test= without CMake.
 
 The header C++ will =#include= lands at:
 
@@ -311,7 +352,7 @@ the terrain.
 
 ** Milestone exercises — write these, don't read them
 
-Each milestone above has a self-check *question*; here is the matching
+Each algorithmic milestone (M1–M6, M8, M9) has a self-check *question*; M0 and M7 stay self-check-only (orientation and C++-side respectively). Here is the matching
 *keystroke*. Do the exercise before you read the corresponding Step, then read
 the Step and see what you'd have done differently. Nothing here needs C++, a
 GPU, or the real cost function — all of it is =cargo test=-able in the crate.
@@ -327,7 +368,7 @@ GPU, or the real cost function — all of it is =cargo test=-able in the crate.
 | E7 | =trisect(parent) -> (Hyperbox, [Hyperbox; 2])=; assert depth sum increased by 1    | three children, parent unusable after (E0382 if you try) |
 | E8 | =trait Cost= + =AnalyticCost= (e.g. sphere function =sum(x_i^2)=)                  | =run()= finds the origin to 1e-6 with no C++       |
 | E9 | =OptimizerError= with =thiserror=; make =run= return =Result=, then flatten to =RunOutcome= | =ok=false= for a zero-range input, no panic  |
-| E10| Wire the loop; run against =AnalyticCost= under a 20k budget                       | =calls + offset < budget= holds exactly, no overrun |
+| E10| Wire the loop; run against =AnalyticCost= under a 20k budget                       | overshoot bounded by last batch; guard checked between iterations; tie-break deterministic |
 
 E3 and E5 are the two that *look* like a waste of time and aren't: they are
 deliberate failures. The point of writing code that doesn't compile is that the
@@ -363,7 +404,7 @@ The C++ =DirectOptimizer::Run()= contract, from =include/domain/direct_optimizer
 Truths that must survive any backend:
 
 - cumulative =calls+offset= budget semantics (canonical caps: trunk 20k → 2x branch 25k/30k → leaf 35k, per direct_optimizer.h)
-- the SAME optimum for the same cost sequence (Tier-1 analytic golden is the judge)
+- the SAME optimum for the same cost sequence (Tier-3: parity replay over recorded C++ cost sequence is the actual gate; Tier-1 headless golden validates shape)
 - eval ordering: calls++ → non-finite → optimum update → storage → improvement callback
 - =evaluate= executed **serially** on one worker thread (GPUModel pose is mutated per call)
 
@@ -654,7 +695,7 @@ void trisect(HyperBox &b, std::vector<...> &out) { /* mutate b, push children */
 
 Idiomatic (consume the parent, return the children):
 #+begin_src rust
-fn trisect(mut parent: Hyperbox) -> (Hyperbox, PendingTwo) {  // take = move
+fn trisect(mut parent: Hyperbox) -> (Hyperbox, [Hyperbox; 2]) {  // take = move
     let (min_idx, _) = parent.depths.iter().enumerate()
         .min_by_key(|&(_, v)| *v).expect("6-element array");
     parent.depths[min_idx] += 1;
@@ -700,6 +741,22 @@ That is the whole algorithm core in seven steps. What remains — cost injection
 batching, FFI, errors — is scaffolding around this loop, which is why the
 Roadmap routes you back to Steps 5-7 the most.
 
+** Reconciliation note — the pedagogical depths model vs the shipped C++
+
+Steps 3–7 model a box as =depths: [u32; 6]= with size derived via
+=3f64.powf(-2.0 * depth)= and trisection on the minimum-depth axis. This is a
+teaching simplification. The real C++ =DirectOptimizer= tracks per-axis side
+lengths (=SetSides= / =TrisectSide=, dividing one side by 3.0), computes size as
+the L2 norm of current sides, and splits on the **largest denormalized** axis
+(=DenormalizeRange(sides).GetLargestDirection()=, first-max tie-break in x..za
+order, per =SplitRule::OneSide=). For anisotropic ranges the chosen axis differs
+from the depth-minimum choice.
+
+When you implement for real: re-anchor on the actual state (per-axis sides or
+depths + the range vector), match =HyperBox6D::SetSides= bit-for-bit, select the
+split axis as the largest denormalized side, and shift children by the current
+side length — not =3^-(depth)=.
+
 * The concrete handshake
 
 ** One-picture flow
@@ -737,12 +794,15 @@ pub mod ffi {
         type DirectOptimizer;
         fn new_direct_optimizer(range: &Pose, start: &Pose,
                                 budget: u32, mode: PohMode) -> Box<DirectOptimizer>;
-        fn run(&mut self, cost: &CppCost) -> RunOutcome;     // M1: run-to-completion
-        // M2 (live progress): see "Milestone options" below
+        fn run_ffi(&mut self, cost: &CppCost) -> RunOutcome;      // M1: run-to-completion
+        fn request_stop(self: &DirectOptimizer);              // cooperative Stop(), from the C++ thread
+        // the Arc<AtomicBool> behind stop() is shared by new_direct_optimizer; reachable
+        // only through request_stop (or an opaque holder returned at construction)
+        // M2 (live progress): see "Milestones — run-to-completion vs live progress" below
     }
 
     // shared struct declared INSIDE the bridge so cxx generates the C++ struct
-    struct RunOutcome { best: Pose, best_cost: f64, calls: u32, ok: bool }
+    struct RunOutcome { best: Pose, best_cost: f64, calls: u32, ok: bool, error: u32 }
 }
 #+end_src
 
@@ -1095,7 +1155,7 @@ pub enum OptimizerError {
 }
 #+end_src
 
-Why the doc chose an **explicit status struct** (=RunOutcome{ ok: bool, ... }=)
+Why the doc chose an **explicit status struct** (=RunOutcome{ ok: bool, error: u32, ... }=)
 rather than Rust's =Result= for the FFI boundary specifically: cxx can map a
 Rust =Result= to a C++ `rust::Error` exception — but that requires C++
 exceptions to be **enabled**, which is uncertain in a Qt/CUDA toolchain, and a
@@ -1189,8 +1249,17 @@ so =direct_rs::DirectOptimizer ≠ ::jta::DirectOptimizer= and
 - =--fno-exceptions= anywhere in Qt/CUDA toolchain? determines =Result= vs
   status-struct
 - Rust =DirectOptimizer= unpin/sized; where the GPU context lives (keep single)
-- first-fixture scale (Tier-1 analytic golden) to gate Rust==C++ numeric parity
+- first-fixture scale (Tier-3 C++ parity replay) to gate Rust==C++ numeric parity
 - callback ordering for M2 (iteration-vs-im-order per eval sequence)
+- budget truncation: does C++ truncate mid-batch or between iterations? Rust
+  =eval_batch= overshoots by up to one batch (Appendix E, item 2) — confirm against
+  =direct_optimizer.h= before Tier-3 call-count comparison is meaningful
+- tie-break determinism: define how the =u64= box id is assigned so equal-cost
+  tie handling reproduces C++ (insertion order through AddHyperBox,
+  TieSelection::All keeping every tied slope in POH candidates)
+- stop channel: M1 bridge has no way for C++ to cancel a running Rust stage;
+  add =request_stop(&self)= to the extern "Rust" block backed by an =AtomicBool=
+  field on =DirectOptimizer=
 
 * Observations / conventions
 
@@ -1566,7 +1635,7 @@ unscored should sort last; =let-else= if unscored is a bug worth returning on;
 Milestone 9 says "wire it together" and the doc never shows the wiring. Here it
 is, and the reason it's worth spelling out is that **the eval-ordering contract
 from "Contract being filled" lives in exactly one function** — get it wrong and
-the Tier-1 golden diverges in a way that's miserable to bisect.
+the Tier-3 parity golden diverges in a way that's miserable to bisect.
 
 Re-read the contract line first:
 
@@ -1584,6 +1653,8 @@ pub struct DirectOptimizer {
     best: Pose,
     best_cost: f64,
     stop: Arc<AtomicBool>,         // cooperative Stop(), set from the C++ thread
+    improved_this_iter: bool,      // tracks whether best changed this iteration
+    range: Pose,                   // for the ZeroRange error payload
 }
 #+end_src
 
@@ -1680,7 +1751,8 @@ pub fn run_ffi(&mut self, cost: &CppCost) -> ffi::RunOutcome {
         best:      self.best,
         best_cost: self.best_cost,
         calls:     self.calls,
-        ok:        result.is_ok(),      // rich error → one bool, deliberately
+        ok:        result.is_ok(),
+        error:     result.as_ref().err().map(|e| e.code()).unwrap_or(0)  // map OptimizerError → u32
     }
 }
 #+end_src
@@ -1714,6 +1786,45 @@ good and you can get parity confidence before any C++ is linked.
 - **rust-skills**: =test-mock-traits=, =err-result-over-panic=,
   =perf-profile-first=.
 
+
+** Per-module test inventory (the coverage contract)
+
+One row per crate module. "Right invariant" is the property that, if it
+regressed, Tier 3 would eventually surface — but these catch it early and
+locally.
+
+| Module       | Required tests                                   | Right invariant asserted                                  | Contract truth guarded       |
+|--------------+--------------------------------------------------+-----------------------------------------------------------+-------------------------------|
+| pose.rs      | shift leaves other axes; DIRECTIONS maps idx→axis | shifting one axis touches exactly that axis field          | value semantics               |
+| hyperbox.rs  | size() monotone in depth; trisect chooses min axis| depth sum +1; axis = min-old-depth; children tile parent  | trisection correctness        |
+| tree.rs      | insert/gather; take_min_of_row; insert_with_cost  | gather = one min per size-row; take returns min & removes | map-key = size invariant      |
+| poh.rs       | convex_hull known-set; pareto_front frontier      | hull min-cost point included; no dominated hull point     | POH soundness                 |
+| cost.rs      | AnalyticCost = Sphere; CppCostHandle smoke       | AnalyticCost returns sum x_i² (headless)                  | trait thumbstone              |
+| error.rs     | Display strings; code() mapping                   | messages lowercase; variants map to stable u32 codes      | error-channel flatten is lossy but |
+|              |                                                  |                                                           | not silent                    |
+| optimizer.rs  | run-loop edges: non-finite, stop mid-batch,      | NaN never becomes best; stop ends after iteration;        | eval-ordering contract;       |
+|              | deferred improvement, sink None/Some             | improvement sink fires only after reinsertion             | callbacks (M2)                |
+
+This table is the regression conscience Appendix E's prose points at. If a
+module appears here with an empty Required-tests cell, it's a known gap, not an
+oversight — fill it before calling the milestone done.
+
+** Wired into the real gates (not just local hygiene)
+
+=approx=/ =proptest= are =[dev-dependencies]=, so they never ship. But they also
+don't RUN until something invokes =cargo test=. Add a pixi task and chain it
+into =tasks.test= so `pixi run test` runs both suites:
+
+#+begin_src toml
+[tasks.cargo-test]
+cmd = "cargo test --manifest-path rust/Cargo.toml"
+# depends-on so it runs before the ctest headless suite
+[tasks.test]
+depends-on = ["cargo-test"]
+#+end_src
+
+Without this, Tiers 0–2 silently drop out of CI and the suite rots to local
+hygiene — the exact decay the "headlessly testable" rule warns about.
 ** Tier 0 — unit tests live next to the code
 
 #+begin_src rust
@@ -1781,17 +1892,29 @@ proptest! {
     // the hull is always a subset of its input
     #[test]
     fn hull_is_subset(pts in prop::collection::vec(any_poh_point(), 1..50)) {
-        for h in convex_hull(&pts) { prop_assert!(pts.contains(&h)); }
+        let hull = convex_hull(&pts);
+        for h in &hull { prop_assert!(pts.contains(h)); }
+        // stability: re-hulling the hull is a no-op (deterministic order)
+        prop_assert_eq!(convex_hull(&hull), hull);
+        // the globally-cheapest point is on the hull (nothing dominates it)
+        let min = pts.iter().min_by_key(|p| OrderedFloat(p.cost)).unwrap();
+        prop_assert!(hull.contains(min));
     }
 
     // trisection never loses volume: children's extents tile the parent's
     #[test]
-    fn trisect_conserves(depths in any::<[u32; 6]>()) {
+    fn trisect_conserves(depths in prop::array::uniform(0u32..64)) {
         let parent = Hyperbox { cost_at_center: Some(0.0), center: Pose::ZERO, depths };
+        let parent_size = parent.size();        // capture BEFORE the move
+        let (min_idx, _) = depths.iter().enumerate()
+            .min_by_key(|&(_, v)| *v).unwrap(); // the axis trisection must pick
         let (c, [p, n]) = Hyperbox::trisect(parent);
-        prop_assert_eq!(c.depths.iter().sum::<u32>(),
-                        depths.iter().sum::<u32>() + 1);
-        prop_assert!(p.size() <= parent_size && n.size() <= parent_size);
+        let deepened = (0..6).filter(|&i| c.depths[i] != depths[i]).collect::<Vec<_>>();
+        prop_assert_eq!(deepened, vec![min_idx]);          // exactly one axis, the min-depth one
+        prop_assert_eq!(c.depths[min_idx], depths[min_idx] + 1);
+        prop_assert!(p.size() < parent_size);
+        prop_assert!(n.size() < parent_size);
+        prop_assert!(c.size()  < parent_size);             // every child strictly shrinks
     }
 }
 #+end_src
@@ -1817,6 +1940,23 @@ struct ReplayCost { records: Vec<(Pose, f64)>, cursor: Cell<usize> }
 // eval(): for each pose, assert_relative_eq! against records[cursor], return cost
 #+end_src
 
+**Capture contract (read before writing the recorder):**
+
+- **Record SERIAL, judge SERIAL.** During capture, force the C++ serial
+evaluate path — do NOT install =SetBatchCost= (the U11 batch adapter). Batch
+capture can carry numerically different costs than serial replay (bank-batched
+kernels vs scalar), so a batch-produced golden is a different function than the
+serial replay you'll judge against.
+- **ReplayCost advances the cursor by =poses.len() per batch.** Rust consumes
+BATCHES (~2×|hull| poses per iteration through one eval() call); the cursor
+must advance by the incoming slice length, matching positionally within the
+batch.
+- **Exhausted tape = a divergence signal, not a panic.** When Rust requests more
+evals than recorded, return a distinct error ("requested eval N > recorded M")
+and let it float up as =ok:false= — do not index-panic on the =Vec=. A raw
+panic here masks the first-divergence index you actually want.
+- Re-record whenever the admission/cost-execution path changes.
+
 This is the single highest-leverage test in the port, and note what it needs:
 =Cost= being a trait, and the batch/serial distinction being a detail the trait
 hides. Two design decisions from M6 exist mostly to make this test possible.
@@ -1825,6 +1965,43 @@ hides. Two design decisions from M6 exist mostly to make this test possible.
 question 3, with =&self= forced on you by the trait signature. A test is also
 the one place a =RefCell= panic is acceptable: it fails the test, which is the
 point.)
+
+** The tests the prose begs for but never names**
+
+The doc repeatedly names behaviors only to stop short of a fixture. These four
+must exist; each is headlessly testable with a stub cost/sink:
+
+#+begin_src rust
+// tie-break is the parity killer — pin it.
+#[test]
+fn tie_break_is_deterministic() {
+    // two boxes, SAME cost, same size-row, distinct u64 ids
+    // take_min_of_row must return the lower-id box EVERY time (or whichever
+    // rule the C++ tie policy mandates — verify vs TieSelection::All)
+}
+
+// eval-ordering contract: non-finite never becomes best.
+#[test]
+fn non_finite_never_becomes_best() {
+    // Cost stub returning [NaN, 1.0]; best_cost==1.0, non_finite==1
+}
+
+// improvement fires only AFTER reinsertion (the deferred-fire contract).
+#[test]
+fn improvement_fires_only_after_reinsertion() {
+    // ProgressSink records on_improvement order vs tree contents;
+    // asserted box must be tree-resident when the sink fires
+}
+
+// M1/M2 'one signature, both milestones' — sink None vs Some.
+#[test]
+fn run_with_and_without_sink_agree() {
+    // same Sphere run with None and Some yields identical best/calls
+}
+#+end_src
+
+Any one of these going red is a real port bug caught headlessly, before any C++
+is linked. Write them when the corresponding milestone lands, not after.
 
 Stop. **Check** — which tier catches "Rust picks a different tie-break when two
 boxes have equal cost"? (Tier 3, immediately, at the first tie — and Tier 2 if
@@ -1939,11 +2116,19 @@ Because a panic crossing FFI is undefined behavior and the design says "never
 let Rust panic across FFI", make that structural rather than aspirational:
 
 #+begin_src rust
-fn run(&mut self, cost: &CppCost) -> ffi::RunOutcome {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        self.run_inner(cost)
-    }))
-    .unwrap_or_else(|_| ffi::RunOutcome { ok: false, ..Default::default() })
+pub fn run_ffi(&mut self, cost: &CppCost, sink: Option<&mut dyn ProgressSink>) -> ffi::RunOutcome {
+    // Canonical: run_ffi is the FFI wrapper around run().
+    // M1 passes sink=None; M2 passes Some(&mut sink).
+    let handle = CppCostHandle(cost);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        self.run(&handle, sink)
+    }));
+    match result {
+        Ok(()) => ffi::RunOutcome { best: self.best, best_cost: self.best_cost,
+                                     calls: self.calls + self.call_offset, ok: true, error: 0 },
+        Err(_) => ffi::RunOutcome { best: Pose { x:0.0,y:0.0,z:0.0,xa:0.0,ya:0.0,za:0.0 },
+                                     best_cost: 0.0, calls: 0, ok: false, error: 1 },
+    }
 }
 #+end_src
 

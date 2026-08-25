@@ -1,1 +1,0 @@
-&mut std::collections::BinaryHeap<(ordered_float::OrderedFloat<f64>, direct_data_storage::Pose)>

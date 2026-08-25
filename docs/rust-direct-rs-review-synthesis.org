@@ -1,0 +1,214 @@
+#+TITLE: ce-doc-review synthesis — rust-direct-rs-ffi-handshake.org
+#+DATE: 2026-08-25
+
+* Review team
+
+- =ce-coherence-reviewer= (always-on) — 13 findings
+- =ce-feasibility-reviewer= (always-on, repo-verified) — 8 findings
+- =ce-adversarial-document-reviewer= (architecture decisions) — 10 findings
+- =ce-testing-reviewer= (testing surface focus) — 11 findings
+- =ce-scope-guardian-reviewer= (scope discipline) — 9 findings
+
+*After dedup across reviewers, ~28 unique findings remain.* Three themes dominate:
+(1) the Stop channel is missing from M1 entirely; (2) the geometry model
+diverges from the actual C++; (3) the testing plan has structural gaps around
+overshoot/tie-break/edge-cases. The rest are documentation consistency issues.
+
+* Summary statistics
+
+| Severity | Count | what it gates                                       |
+|----------+-------+-----------------------------------------------------|
+| P1       | 7     | anything that would make the first A/B test wrong   |
+| P2       | 11    | correctness risk or maintenance debt                |
+| P3       | 10    | nice-to-have / cleaner, no blocking behavior        |
+
+* P1 findings (7)
+
+** 1. M1 omits the cooperative Stop channel [feasibility + coherence + adversarial]
+
+The bridge exposes only =run(&mut self, cost: &CppCost) -> RunOutcome= with no way for C++
+to cancel a running Rust DIRECT stage. The real coordinator delivers stop via the
+iteration callback which calls =opt.Stop()= (setting an =AtomicBool=); M1 drops callbacks
+entirely. A user pressing "Stop" during an Rust-backed run would have to wait for the full
+20k–35k-eval budget to drain.
+
+*Fix:* Add =fn request_stop(self: &DirectOptimizer)= to the extern "Rust" block, backed by
+a =StoreAtomicBool> flag passed into =new_direct_optimizer=. State explicitly in M1 that
+cooperative Stop ships with M1 even though ProgressSink waits for M2.
+
+** 2. Steps 3–7 geometry diverges from the shipped C++ [feasibility]
+
+The teaching core models =depths:[u32;6]= with =size()= via =3f64.powf(-2*depth)= and
+splits on the *minimum* depth axis. The real =DirectOptimizer= tracks =sides= per axis
+(via =SetSides/TrisectSide=, divide one side by 3.0), computes =size= as the L2 norm of
+current sides, and splits on the *largest denormalized* side
+(=DenormalizeRange(sides).GetLargestDirection()=, first-max tie-break in x..za order, per
+=SplitRule::OneSide=). For any anisotropic range (the general JTML case) the chosen axis
+differs from the depth-minimum choice, so a port built from Steps 3–7 will fail Tier-3
+golden at the first trisection.
+
+*Fix:* Re-anchor Steps 3–7 on the real state: store per-axis side lengths (or depths plus
+the range vector), compute size to match =HyperBox6D::SetSides= bit-for-bit, select the
+split axis as the largest denormalized side with =GetLargestDirection='s first-max
+tie-break, and shift children by the current side length. Add an explicit note reconciling
+the pedagogical "depths model" with the shipped OneSide/largest-denormalized rule.
+
+** 3. build.rs duplicates existing corrosion cxxbridge flow [feasibility]
+
+An implementer adding the prescribed build.rs alongside the existing =rust/CMakeLists.txt=
+gets two independent compilations of the same =src/lib.rs= bridge:
+corrosion_add_cxxbridge(FILES lib.rs) generates and compiles the C++ glue for the
+direct-rs_bridge target, while cargo still executes build.rs. Result: duplicate-symbol
+link errors or silent ODR duplication. The doc never mentions corrosion at all.
+
+*Fix:* Pick one owner (either delete build.rs and extend corrosion, or remove
+corrosion_add_cxxbridge), and update the Toolchain section to name it.
+
+** 4. Tier-1 vs Tier-3 mislabeled as parity judge [coherence]
+
+"the SAME optimum for the same cost sequence" is attributed to "Tier-1 analytic golden" in
+the Contract truths, but Appendix F defines Tier 3 as "the actual gate" — replay over
+recorded C++ cost sequence. The crate layout comments reinforce this drift. An implementer
+builds the wrong fixture as the port gate.
+
+*Fix:* In the Contract truths and Appendix E intro, replace "Tier-1" with "Tier-3" where
+the referent is C++ parity on a recorded sequence. Keep Tier-1 for the headless analytic
+golden only.
+
+** 5. run() signature inconsistency [coherence]
+
+Three mutually exclusive shapes: bridge (=run(&mut self, cost: &CppCost) -> RunOutcome=),
+Appendix E (=run(&mut self, cost: &dyn Cost, sink: ...) -> RunResult<()>=), Appendix H
+(=run(&mut self, cost: &CppCost) -> ffi::RunOutcome= delegating to run_inner). An
+implementer can't tell which symbol the bridge must export.
+
+*Fix:* Pick one canonical shape (Appendix E's run + run_ffi split) and update the bridge
+block + Appendix H firewall to use those names consistently.
+
+** 6. E10 "no overrun" contradicts Appendix E [feasibility + coherence + testing]
+
+E10's done-criterion asserts "calls + offset < budget holds exactly, no overrun". Appendix
+E explicitly proves this cannot hold (eval_batch evaluates whole batch, final iteration
+may overshoot). Tier-1 sample test asserts =opt.calls <= 20_000=, but the doc itself says
+overshoot matches C++ behavior.
+
+*Fix:* Rewrite E10 done-criterion to match Appendix E: "guard checked between iterations;
+overshoot bounded by one batch". Adjust Tier-1 assert accordingly.
+
+** 7. Tier-3 replay: serial tape vs batch mismatch [testing]
+
+The golden is a SERIAL tape but Rust evaluates BATCHES. Cursor semantics undefined,
+ordering mismatch when C++ uses SetBatchCost (U11), and replay requests exceeding recorded
+count yield a raw Vec panic rather than a clean divergence signal.
+
+*Fix:* Pin the contract: "record the golden with the same cost-execution path the replay
+will judge (serial today); ReplayCost advances cursor by poses.len() per batch; requests
+exceeding recorded count return a distinct exhausted-tape error."
+
+* P2 findings (11)
+
+** 8. Cargo.toml contradicts actual scaffold [feasibility]
+Doc shows edition 2021 / ordered_float 4 / staticlib+rlib; actual is 2024 / ordered_float
+5.5 / staticlib+cdylib + workspace lints. Copying the doc block drops the c++20 feature
+and changes the artifact set.
+
+** 9. Tie-break determinism unresolved [feasibility + testing u64 id assignment
+unspecified; gather keeps one min-cost per row vs C++ TieSelection::All keeping
+ties. Concrete parity fixture missing. The doc knows it's the "parity killer"
+but doesn't specify the rule.
+
+** 10. BoxTree operation names drift [coherence]
+Different names for the same operation across Step 7 / Appendix A / Appendix E:
+=pop_first=, =take_min_of_row=, =insert_box=, =insert_scored=,
+=insert_with_cost=, =self.boxes= vs =self.tree=.
+
+** 11. Arc<AtomicBool> unreachable [feasibility + coherence]
+Appendix E assumes the stop flag is reachable from C++, but the bridge
+declares no way to set it. Must expose =request_stop= or equivalent.
+
+** 12. Hull tests don't assert convexity [testing]
+=assert!(hull.windows(2).all(|w| w[0].size < w[1].size))= only checks
+sorted-by-size; cross-product sign (the actual convexity predicate) is never
+asserted. A buggy implementation returning an arbitrary sorted subset passes.
+
+** 13. cargo test unwired from project gates [feasibility + testing]
+The doc proposes a full test suite, but pixi.toml's [tasks.test] runs ctest
+only. No cargo-test task exists. The entire proposed suite is optional local
+hygiene.
+
+** 14. No shared fixtures or builders [scope + testing]
+Test snippets hand-roll values; Pose::ZERO and p(size,cost) are undefined.
+Tier-3 ReplayCost schema unspecified.
+
+** 15. Hull tests weak: no dominance/min-cost assertion [testing]
+hull_is_subset is nearly free (function returning first 3 inputs passes). No
+assertion checks that the global min-cost point is included or that no hull
+point is dominated by another.
+
+** 16. Cargo.toml edition 2021 vs 2024 discrepancy [feasibility]
+Several teaching blocks use 2024-era idioms (unsafe extern blocks). Verify all
+snippets compile on edition 2021 or the doc should say edition 2024.
+
+** 17. Appendix E struct missing fields [coherence]
+DirectOptimizer struct block lacks =improved_this_iter: bool= and =range: Pose=,
+both used by the code that follows.
+
+** 18. Batch truncation missing from open questions [feasibility + coherence]
+Appendix E says "This belongs in Remaining open questions" — it doesn't.
+
+* P3 findings (10)
+
+** 19. run() signature: bridge vs Appendix E vs Appendix H [coherence]
+
+** 20. Steps 3–7 vs real C++ — side-length model diverges from pedagogy [feasibility]
+
+** 21. Tier-0 puts trisect test in poh.rs, should be hyperbox.rs [coherence]
+
+** 22. PendingTwo type named once, never defined [coherence]
+
+** 23. Exercises intro promises M0/M7 coverage they lack [coherence]
+
+** 24. Budget caps restated four times [scope]
+
+** 25. Self-check index duplicates roadmap verbatim [scope]
+
+** 26. Week-plan ends Tier 3 skipping E8-E10 [coherence]
+
+** 27. trisect_conserves property: parent_size undefined, u32 overflow risk [testing]
+
+** 28. Appendix E code contradicts earlier definitions [coherence — P2 actually]
+
+* What can be applied automatically (safe_auto)
+
+These have one clear correct fix and don't touch meaning/scope:
+
+1. "Milestone options" → "Milestones — run-to-completion vs live progress" [already fixed]
+2. =Send//Sync= → =Send= / =Sync= [already fixed]
+3. Add batch-truncation bullet to Remaining open questions
+4. =PendingTwo= → =[Hyperbox; 2]= in Step 7
+5. Add =improved_this_iter: bool= and =range: Pose= to Appendix E struct
+6. Move trisect_preserves_depth_budget test to hyperbox.rs snippet
+7. Exercises intro: note M0/M7 are self-check-only
+8. Fix E10 done-criterion to match Appendix E
+
+* What needs your decision (gated_auto)
+
+These have one clear fix but touch the doc's meaning:
+
+- Append "batch-truncation: does C++ truncate mid-batch or between iterations?" to open questions
+- Fix E10 assertions and tier-1 sample assert to account for overshoot
+- Update trisect_conserves property (bind parent_size, constrain depths, assert axis, assert size strictly decreases)
+
+* What requires design decisions (manual)
+
+- build.rs vs corrosion: which owns the bridge? (big change — the doc's entire Toolchain section)
+- Stop channel: expose =request_stop= or keep M1 uncancellable?
+- run() signature: collapse to one canonical form?
+- Tier-1/Tier-3 labeling: which is "the judge"?
+- Steps 3–7 geometry: real sides-based model vs pedagogical depths model (split the doc or reconcile?)
+- BoxTree API: which method names are canonical?
+- ok:bool vs error code in RunOutcome
+
+* Top recommendation
+
+Before tackling any single finding, address the **geometry divergence** (item 2) — it's the deepest feasibility issue and the one most likely to cause confusion during implementation. Every other fix is independent and mechanical.
