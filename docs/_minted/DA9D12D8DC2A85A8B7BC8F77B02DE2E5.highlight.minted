@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// 1. match — when both arms do real work}
+\PYG{k}{match}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n}{record}\PYG{p}{(}\PYG{n}{c}\PYG{p}{),}
+\PYG{+w}{    }\PYG{n+nb}{None}\PYG{+w}{    }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n}{queue\PYGZus{}for\PYGZus{}eval}\PYG{p}{(}\PYG{n}{hb}\PYG{p}{),}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// 2. if let — when only one arm does work}
+\PYG{k}{if}\PYG{+w}{ }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{record}\PYG{p}{(}\PYG{n}{c}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// 3. let\PYGZhy{}else — when None means \PYGZdq{}bail out of this function\PYGZdq{} (the flattener)}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{Err}\PYG{p}{(}\PYG{n}{OptimizerError}\PYG{p}{::}\PYG{n}{Unscored}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZcb{};}
+\PYG{c+c1}{// `c` is a plain f64 from here down — no nesting, no indentation creep}
+
+\PYG{c+c1}{// 4. combinators — when you\PYGZsq{}re transforming, not branching}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{doubled}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Option}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{.}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{n}{c}\PYG{o}{|}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mf}{2.0}\PYG{p}{);}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{shown}\PYG{p}{:}\PYG{+w}{   }\PYG{k+kt}{f64}\PYG{+w}{         }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{.}\PYG{n}{unwrap\PYGZus{}or}\PYG{p}{(}\PYG{k+kt}{f64}\PYG{p}{::}\PYG{n}{INFINITY}\PYG{p}{);}
+\end{MintedVerbatim}

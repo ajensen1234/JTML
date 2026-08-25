@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// CANNOT work in cxx: C++\PYGZhy{}\PYGZgt{}Rust fn pointers aren\PYGZsq{}t implemented}
+\PYG{n}{opt}\PYG{p}{.}\PYG{n}{setProgressCallback}\PYG{p}{([](}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{iter}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{best}\PYG{p}{)\PYGZob{}}\PYG{+w}{ }\PYG{p}{...}\PYG{+w}{ }\PYG{p}{\PYGZcb{});}
+\end{MintedVerbatim}

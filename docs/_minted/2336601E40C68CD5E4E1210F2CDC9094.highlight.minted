@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{p}{::}\PYG{n}{trisect}\PYG{p}{(}\PYG{n}{winner}\PYG{p}{);}\PYG{+w}{  }\PYG{c+c1}{// winner moved OUT}
+\PYG{c+c1}{// batch\PYGZhy{}eval pos/neg\PYGZsq{}s new centers first, then reinsert with costs}
+\end{MintedVerbatim}

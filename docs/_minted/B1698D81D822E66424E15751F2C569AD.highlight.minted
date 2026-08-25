@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+rust/direct\PYGZhy{}rs/
+  Cargo.toml
+  build.rs              \PYGZsh{} cxx\PYGZhy{}build: compiles the generated C++ glue
+  src/
+    lib.rs              \PYGZsh{} \PYGZsh{}[cxx::bridge] ONLY — the boundary, nothing else
+    pose.rs             \PYGZsh{} Pose, Direction                      (Steps 1\PYGZhy{}2)
+    hyperbox.rs         \PYGZsh{} Hyperbox, size(), trisect             (Steps 3, 7)
+    tree.rs             \PYGZsh{} BoxTree: two\PYGZhy{}level BTreeMap, gather, reinsert (Steps 4\PYGZhy{}5)
+    poh.rs              \PYGZsh{} convex\PYGZus{}hull — pure                   (Step 6)
+    cost.rs             \PYGZsh{} trait Cost + AnalyticCost stub + CppCost impl (M6)
+    error.rs            \PYGZsh{} OptimizerError (thiserror)           (M8)
+    optimizer.rs        \PYGZsh{} DirectOptimizer::run — the loop      (M9)
+  tests/
+    parity.rs           \PYGZsh{} Tier\PYGZhy{}1 analytic golden vs C++        (Appendix F)
+\end{MintedVerbatim}

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{Options}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{selection}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u8}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{epsilon}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{delta\PYGZus{}limit}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{bool}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{c+c1}{// a caller writing selection: 8 compiles fine and is wrong at runtime}
+\end{MintedVerbatim}

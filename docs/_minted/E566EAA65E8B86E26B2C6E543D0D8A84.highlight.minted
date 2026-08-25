@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{trait}\PYG{+w}{ }\PYG{n}{Cost}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{eval}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{n}{Pose}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// batch shape, needed later}
+\PYG{p}{\PYGZcb{}}
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{CppCostHandle}\PYG{p}{(}\PYG{c+cm}{/* cxx opaque */}\PYG{p}{);}\PYG{+w}{   }\PYG{c+c1}{// impl Cost by calling evaluate6}
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{AnalyticCost}\PYG{p}{;}\PYG{+w}{                       }\PYG{c+c1}{// test stub for headless Tier\PYGZhy{}1}
+\end{MintedVerbatim}

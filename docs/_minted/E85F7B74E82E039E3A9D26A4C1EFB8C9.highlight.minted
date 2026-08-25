@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+cargo\PYG{+w}{ }expand\PYG{+w}{ }\PYGZhy{}\PYGZhy{}lib\PYG{+w}{ }ffi\PYG{+w}{        }\PYG{c+c1}{\PYGZsh{} the Rust side the bridge macro wrote}
+cat\PYG{+w}{ }target/*/cxxbridge/direct\PYGZhy{}rs/src/lib.rs.h\PYG{+w}{   }\PYG{c+c1}{\PYGZsh{} the C++ side it wrote}
+\end{MintedVerbatim}

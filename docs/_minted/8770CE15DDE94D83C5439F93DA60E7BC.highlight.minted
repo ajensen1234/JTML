@@ -1,0 +1,12 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{run\PYGZus{}ffi}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{CppCost}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{ffi}\PYG{p}{::}\PYG{n}{RunOutcome}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{handle}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{CppCostHandle}\PYG{p}{(}\PYG{n}{cost}\PYG{p}{);}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{result}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{run}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{handle}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{None}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n}{ffi}\PYG{p}{::}\PYG{n}{RunOutcome}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n}{best}\PYG{p}{:}\PYG{+w}{      }\PYG{n+nc}{self}\PYG{p}{.}\PYG{n}{best}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{best\PYGZus{}cost}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{self}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{calls}\PYG{p}{:}\PYG{+w}{     }\PYG{n+nc}{self}\PYG{p}{.}\PYG{n}{calls}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n}{ok}\PYG{p}{:}\PYG{+w}{        }\PYG{n+nc}{result}\PYG{p}{.}\PYG{n}{is\PYGZus{}ok}\PYG{p}{(),}\PYG{+w}{      }\PYG{c+c1}{// rich error → one bool, deliberately}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

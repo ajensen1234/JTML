@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{row}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{boxes}\PYG{p}{.}\PYG{n}{get\PYGZus{}mut}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{key}\PYG{p}{).}\PYG{n}{ok\PYGZus{}or}\PYG{p}{(}\PYG{n}{OptimizerError}\PYG{p}{::}\PYG{n}{MissingRow}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{key}\PYG{+w}{ }\PYG{p}{\PYGZcb{})}\PYG{o}{?}\PYG{p}{;}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{\PYGZus{}k}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{row}\PYG{p}{.}\PYG{n}{pop\PYGZus{}first}\PYG{p}{().}\PYG{n}{ok\PYGZus{}or}\PYG{p}{(}\PYG{n}{OptimizerError}\PYG{p}{::}\PYG{n}{EmptyRow}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{key}\PYG{+w}{ }\PYG{p}{\PYGZcb{})}\PYG{o}{?}\PYG{p}{;}
+\end{MintedVerbatim}

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZsh{}[derive(Clone, Copy)]}\PYG{+w}{ }\PYG{c+c1}{// tiny tag — keep it Copy}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{enum}\PYG{+w}{ }\PYG{n+nc}{Direction}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{X\PYGZus{}DIR}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Y\PYGZus{}DIR}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Z\PYGZus{}DIR}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{XA\PYGZus{}DIR}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{YA\PYGZus{}DIR}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ZA\PYGZus{}DIR}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

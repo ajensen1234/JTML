@@ -1,0 +1,2269 @@
+% Created 2026-08-25 Tue 08:10
+% Intended LaTeX compiler: lualatex
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{minted}
+\def\EDITMODE{}
+\input{~/org/templates/org-export-general-template.tex}
+\loadEquity
+\setcounter{secnumdepth}{5}
+\author{Andrew Jensen}
+\date{2026-08-21 2026-08-24}
+\title{Rust direct-rs ↔ C++ FFI Handshake (reference)}
+\hypersetup{
+ pdfauthor={Andrew Jensen},
+ pdftitle={Rust direct-rs ↔ C++ FFI Handshake (reference)},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={},
+ pdflang={English}}
+\usepackage{biblatex}
+\addbibresource{~/org/biblio.bib}
+\begin{document}
+
+\maketitle
+
+\section{Purpose}
+\label{sec:orgf21adce}
+
+Reference for replacing the C++ DIRECT core (\texttt{DirectOptimizer}) with the Rust
+implementation in \texttt{rust/direct-rs}, keeping the C++ coordinator
+(\texttt{OptimizerManager}, \texttt{CostFunctionManager}, GPU cost) intact. This is a
+\textbf{handshake spec} — the concrete FFI boundary Rust and C++ must agree on — not a
+full implementation plan. It records every option considered so the reader can
+choose deliberately.
+\subsection{How to use this doc (learning path)}
+\label{sec:orgb153688}
+
+This is a living handshake \textbf{and} a tutor. Every section that teaches a Rust
+concept is tagged with three pointers:
+
+\begin{itemize}
+\item \textbf{\textbf{Brown Book}} — the free, interactive, visual book you prefer, at
+\url{https://rust-book.cs.brown.edu/}. A section like ch 04-02 opens at
+\url{https://rust-book.cs.brown.edu/ch04-02-references-and-borrowing.html}.
+The Brown variant adds quizzes and explainers the static book lacks.
+\item \textbf{\textbf{rust-skills}} — one of the 265 prioritized idioms at
+\url{../../.pi/agent/skills/rust-skills/SKILL.md} (rule ids like
+\texttt{own-borrow-over-clone}, one .md per rule).
+\item \textbf{\textbf{normie ↔ idiomatic}} — the shape a C++/Python developer reaches for first,
+and the idiomatic Rust you actually want.
+\end{itemize}
+
+The through-line question for every block: \textbf{``what did the Rust type system
+just make easier for me, and what did it make impossible?''} If a section
+reads as ``translate C++ into Rust'', that's the normie path — re-read it for
+the place where ownership/borrowing, or exhaustive =match=/enums, or
+iterator pipelines change what ``good'' means.
+
+Carry the core line from the Brown book (its ch 4):
+
+> Rust's central feature is \textbf{ownership}, and it pervades even tiny examples.
+
+Coming from \textbf{\textbf{Python}}: ch 3-8 is mostly review (variables, functions,
+structs, control flow). Camp on ch 4 (ownership), ch 9 (errors),
+ch 10 (traits/generics), ch 13 (closures/iterators), ch 15 (smart pointers),
+ch 17 (trait objects), ch 19 (unsafe).
+
+Coming from \textbf{\textbf{C++}}: you'll feel at home in ch 15 (\texttt{Box} ≈ \texttt{unique\_ptr}) and
+ch 19 (\texttt{unsafe} ≈ raw pointers), and least at home in ch 4 (borrowing) —
+Rust's borrow checker is stricter than =const\&- discipline.
+
+Suggested first pass (each 10-25 min, do the quizzes):
+
+\begin{enumerate}
+\item ch 04 — ownership/borrow/slices; the whole doc adheres to this.
+\item ch 09-02 — \texttt{Result} + \texttt{?}; the error-channel section arises from it.
+\item ch 10-02 — traits; the \texttt{Cost} trait and \texttt{IOptimizer} options build on it.
+\item ch 13 — closures/iterators; batching and POH gathering lean on it.
+\item ch 15-01 — \texttt{Box}; where \texttt{rust::Box<DirectOptimizer>} comes from.
+\item ch 19-01 — \texttt{unsafe}; what \texttt{unsafe extern} actually gives up.
+\end{enumerate}
+\section{Toolchain first — make the compiler your tutor}
+\label{sec:org55a873f}
+
+You cannot learn Rust by reading. The borrow checker is the teacher and it only
+speaks when you compile. Before Milestone 0, build a loop where you can ask the
+compiler a question and get an answer in under three seconds. Everything below
+this section assumes that loop exists.
+\subsection{The crate layout this doc implies}
+\label{sec:org8e4a061}
+
+\begin{minted}[]{text}
+rust/direct-rs/
+  Cargo.toml
+  build.rs              # cxx-build: compiles the generated C++ glue
+  src/
+    lib.rs              # #[cxx::bridge] ONLY — the boundary, nothing else
+    pose.rs             # Pose, Direction                      (Steps 1-2)
+    hyperbox.rs         # Hyperbox, size(), trisect             (Steps 3, 7)
+    tree.rs             # BoxTree: two-level BTreeMap, gather, reinsert (Steps 4-5)
+    poh.rs              # convex_hull — pure                   (Step 6)
+    cost.rs             # trait Cost + AnalyticCost stub + CppCost impl (M6)
+    error.rs            # OptimizerError (thiserror)           (M8)
+    optimizer.rs        # DirectOptimizer::run — the loop      (M9)
+  tests/
+    parity.rs           # Tier-1 analytic golden vs C++        (Appendix F)
+\end{minted}
+
+Why split it this way: \texttt{lib.rs} holding \textbf{only} the bridge is FFI containment —
+the unsafe surface is one file you can audit. Every other module is ordinary
+safe Rust, unit-testable with no C++ and no GPU in the room. \textbf{\textbf{If a module
+can't be tested headlessly, FFI has leaked into it.}} That single rule is worth
+more than any diagram in this doc.
+\subsection{Cargo.toml}
+\label{sec:org0aa3014}
+
+\begin{minted}[]{toml}
+[package]
+name = "direct-rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "rlib"]   # staticlib for CMake to link; rlib for Rust tests
+
+[dependencies]
+cxx = "1.0"
+ordered_float = "4"
+thiserror = "2"
+
+[build-dependencies]
+cxx-build = "1.0"
+
+[dev-dependencies]
+approx = "0.5"      # assert_relative_eq! for float parity
+proptest = "1"      # property tests for hull + trisect invariants
+\end{minted}
+
+Note \texttt{[dev-dependencies]}: these compile for \texttt{cargo test} only and never ship
+into the C++ binary. That separation is why a test stub cost (\texttt{AnalyticCost})
+costs the production build nothing.
+\subsection{build.rs (the other half of the handshake)}
+\label{sec:orgf0bdaf7}
+
+\begin{minted}[]{rust}
+fn main() {
+    cxx_build::bridge("src/lib.rs")
+        .include("../../include")            // where domain/cost.h lives
+        .flag_if_supported("-std=c++17")
+        .compile("direct_rs");
+    println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=../../include/domain/cost.h");
+}
+\end{minted}
+
+The header C++ will \texttt{\#include} lands at:
+
+\begin{minted}[]{text}
+target/<profile>/cxxbridge/direct-rs/src/lib.rs.h
+\end{minted}
+
+Open that file on day one. It is the ground truth for every ``verify the
+verbatim signature'' warning in this doc — \texttt{rust::Box<T>}, \texttt{rust::Slice<const
+T>}, the generated \texttt{Pose} struct, all of it. You never have to guess.
+\subsection{The six commands that are your feedback loop}
+\label{sec:org4a84b2f}
+
+\begin{center}
+\begin{tabular}{ll}
+Command & When / why\\
+\hline
+\texttt{cargo check} & every 30 seconds — type-checks without codegen; fastest tutor\\
+\texttt{cargo clippy -{}-{} -W clippy::pedantic} & after it compiles — clippy \textbf{names} the idiom you missed\\
+\texttt{cargo test} & after each Step; \texttt{cargo test hull} filters by name\\
+\texttt{cargo expand -{}-{}lib ffi} & to see what \texttt{\#[cxx::bridge]} actually generated\\
+\texttt{cargo doc -{}-{}open} & read \texttt{ordered\_float} / \texttt{cxx} docs offline, versioned to you\\
+\texttt{cargo fmt} & never argue about layout; the formatter is canonical\\
+\end{tabular}
+\end{center}
+
+Also bind: \texttt{rustc -{}-{}explain E0502} (full prose for any error code) and
+\texttt{rustup doc -{}-{}book} (the offline book, when you want the non-Brown text).
+
+A note on clippy for a learner: run it with \texttt{-W clippy::pedantic} even though
+it's noisy. Half of the 265 rust-skills rules are things clippy will tell you
+for free, with a link. Treat every clippy lint as a flashcard: read the name
+(\texttt{needless\_range\_loop} → \texttt{perf-iter-over-index}), fix it, move on.
+\subsection{Read the error, not the code}
+\label{sec:orgd2631f0}
+
+A rustc error has four parts: the code (\texttt{E0502}), the one-line claim, the
+annotated span, and a \texttt{help:} line that is usually the literal fix. Beginners
+stare at the span. The fastest learners read the \texttt{help:} first, then
+\texttt{rustc -{}-{}explain}, and only then look at their own code. Appendix A's table and
+the glossary's error lookup are the project-specific version of that habit.
+\section{Learning Roadmap (plan it, then fill it)}
+\label{sec:orgf9a092b}
+
+This doc is big enough that the order you read it \textbf{is} a learning path. Use
+this roadmap as your map; the section headings are the terrain. Each milestone
+ends with a self-check you should be able to answer without looking before
+moving on.
+\subsection{Milestone 0 — why this is a two-language project}
+\label{sec:org751644c}
+
+Goal: before any Rust, understand the split. The C++ side owns the cost and
+lifecycle; Rust owns the search algorithm. Everything else is plumbing between
+two runtimes.
+
+\begin{itemize}
+\item Read: \texttt{Purpose}, \texttt{Contract being filled}, \texttt{One-picture flow}.
+\item \textbf{\textbf{Book}}: none — orientation. Return to it after every milestone; the
+handshake diagram is the anchor.
+\item Self-check: state which side owns (1) the cost function, (2) the optimizer's
+search loop, (3) the worker thread, (4) the UI progress, and (5) the
+cumulative budget.
+\end{itemize}
+\subsection{Milestone 1 — value types: Pose + Hyperbox}
+\label{sec:org516a1f0}
+
+Goal: model the data before any algorithm. Internalize \texttt{Copy} vs \texttt{Clone} vs
+move, and why small POD structs cross FFI by value.
+
+\begin{itemize}
+\item Concept: \texttt{\#[derive(Copy, Clone)]} on small structs; what a value is in Rust.
+\item \textbf{\textbf{Book}}: ch 04-01 (moves), ch 05-01 (structs), ch 06 (enums for \texttt{Direction}).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-copy-small}, \texttt{own-move-large}, \texttt{type-enum-states}.
+\item Self-check: explain why \texttt{Pose} is \texttt{Copy} but a \texttt{Hyperbox} whose center is a
+\texttt{Pose} stays \texttt{Copy} (small POD), vs one that wraps a \texttt{Vec} which isn't — i.e.
+what makes a type \texttt{Copy}-eligible and what \texttt{Copy} costs you.
+\end{itemize}
+\subsection{Milestone 2 — the BTreeMap design}
+\label{sec:org3fe326b}
+
+Goal: the central data-structure decision, and the most Rust-flavored one in
+the doc. Learn \texttt{Ord}-based containers and the \texttt{OrderedFloat} wrapper.
+
+\begin{itemize}
+\item Concept: \texttt{f64} is not \texttt{Ord}; \texttt{BTreeMap} needs a total order; wrapping floats.
+\item \textbf{\textbf{Book}}: ch 08 (collections) + the \texttt{ordered\_float} crate docs (the Brown
+book has no \texttt{OrderedFloat} section — this is where you learn to read a
+dependency's docs).
+\item \textbf{\textbf{rust-skills}}: \texttt{coll-map-choice}, \texttt{coll-set-membership}, \texttt{num-float-compare}.
+\item Self-check: why can't you put \texttt{f64} directly as a \texttt{BTreeMap} key, and what is
+the minimum wrapper that fixes it?
+\end{itemize}
+\subsection{Milestone 3 — the gather (read-only borrow)}
+\label{sec:orgc126bce}
+
+The first actual pass over the tree. Internalize \textbf{read-only borrow} = a \texttt{\&self}
+pass with no mutation and no clone.
+
+\begin{itemize}
+\item Concept: \texttt{iter()}, \texttt{first\_key\_value()}, projecting \texttt{(size, cost)} without
+touching the box.
+\item \textbf{\textbf{Book}}: ch 04-02 (borrowing), ch 13-02 (iterator adapters).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-borrow-over-clone}, \texttt{perf-iter-over-index}.
+\item Self-check: why does the gather take \texttt{\&self} (not \texttt{\&mut}), and what would
+break in the type system if you tried to \texttt{.clone()} the box out?
+\end{itemize}
+\subsection{Milestone 4 — POH selection (pure transform)}
+\label{sec:org4cbe915}
+
+Goal: \texttt{convex\_hull(\&[PohPoint]) -> Vec<PohPoint>} as a pure function. Internalize
+value-in/value-out and the absence of side effects.
+
+\begin{itemize}
+\item Concept: mapping (size, cost) pairs through a hull algorithm; returning owned
+\texttt{Vec<PohPoint>}.
+\item \textbf{\textbf{Book}}: ch 10-02 (traits) + ch 13 (closures as data).
+\item \textbf{\textbf{rust-skills}}: \texttt{anti-vec-for-slice}, \texttt{perf-collect-once}.
+\item Self-check: if \texttt{convex\_hull} is pure, what do you pass in and what comes out,
+and how do you know the tree wasn't touched?
+\end{itemize}
+\subsection{Milestone 5 — trisection + the ownership dance}
+\label{sec:orgf7e9ebd}
+
+The crown jewel of the doc and the deepest borrowing lesson: take = move,
+trisect = owned transform, reinsert = move back.
+
+\begin{itemize}
+\item Concept: \texttt{pop\_first()} returns owned; \texttt{\&mut self} is exclusive.
+\item \textbf{\textbf{Book}}: ch 04 (ownership) — the payoff milestone; re-read it.
+\item \textbf{\textbf{rust-skills}}: \texttt{own-move-large}, \texttt{mem-take-replace}, \texttt{own-arc-shared}.
+\item Self-check: why must you pop/remove the winner OUT of the map before
+trisecting it, and why can't you mutate a map-resident box in place?
+\end{itemize}
+\subsection{Milestone 6 — cost injection + the trait}
+\label{sec:orgaa54efa}
+
+Goal: the \texttt{Cost} capability; batch-vs-serial; the one-FFI-hop idea.
+
+\begin{itemize}
+\item Concept: \texttt{trait Cost}, \texttt{impl Fn} vs \texttt{Box<dyn Cost>}.
+\item \textbf{\textbf{Book}}: ch 10-02 (traits), ch 17 (trait objects), ch 13 (closures).
+\item \textbf{\textbf{rust-skills}}: \texttt{trait-dyn-vs-generic}, \texttt{closure-fn-trait-bounds}.
+\item Self-check: why is \texttt{Cost} a trait and not a concrete struct field, and when
+would you prefer \texttt{impl Fn} vs \texttt{Box<dyn Cost>}?
+\end{itemize}
+\subsection{Milestone 7 — the FFI boundary (cxx)}
+\label{sec:org20d1bae}
+
+Goal: see your Rust reach into C++. Own \texttt{\#[cxx::bridge]}, opaque types, shared
+structs/enums, the no-panic rule.
+
+\begin{itemize}
+\item Concept: \texttt{extern "Rust"} vs \texttt{extern "C++"}, \texttt{Box<DirectOptimizer>} on C++ side,
+shared enum \texttt{> wildcard =\_} arm.
+\item \textbf{\textbf{Book}}: ch 19 (unsafe/FFI), ch 16 (threads for Send/Sync).
+\item \textbf{\textbf{rust-skills}}: \texttt{unsafe-safety-comment}, \texttt{err-no-unwrap-prod}.
+\item Self-check: what two things can never cross a cxx boundary, and why does that
+force the status-struct + ProgressSink shapes?
+\end{itemize}
+\subsection{Milestone 8 — errors + status (the gate)}
+\label{sec:org31aa25c}
+
+Goal: the error story inside (\texttt{Result} + =?) vs at the edge (status struct).
+
+\begin{itemize}
+\item Concept: two-tier errors; Result in, status out; panic never crosses.
+\item \textbf{\textbf{Book}}: ch 09 (all of it).
+\item \textbf{\textbf{rust-skills}}: \texttt{err-result-over-panic}, \texttt{err-thiserror-lib}, \texttt{err-question-mark}.
+\item Self-check: converting \texttt{OptimizerError} to a \texttt{RunOutcome.ok} — what is lost
+and what is kept, and why is that acceptable at the FFI edge?
+\end{itemize}
+\subsection{Milestone 9 — assemble the loop + A/B}
+\label{sec:orgef685ed}
+
+The finish: wire gather → POH → trisect → reinsert into one \texttt{run()} behind the
+\texttt{OptimizerBackend} A/B switch.
+
+\begin{itemize}
+\item Concept: glue, ownership flow end-to-end, the \texttt{ok} gate.
+\item \textbf{\textbf{Book}}: ch 04 + ch 13 once more (full recap).
+\item Self-check: walk the ownership of ONE hyperbox from insertion to trisection
+to reinsertion, naming each borrow/move.
+\end{itemize}
+
+Return here after every milestone and re-check the handshake diagram: each one
+fills a corner of it. The roadmap is the planning; the sections that follow are
+the terrain.
+\subsection{Milestone exercises — write these, don't read them}
+\label{sec:orga29badd}
+
+Each milestone above has a self-check \textbf{question}; here is the matching
+\textbf{keystroke}. Do the exercise before you read the corresponding Step, then read
+the Step and see what you'd have done differently. Nothing here needs C++, a
+GPU, or the real cost function — all of it is \texttt{cargo test}-able in the crate.
+
+\begin{center}
+\begin{tabular}{lll}
+\# & Exercise (write it, compile it, test it) & Done when\\
+\hline
+E1 & \texttt{Pose} + \texttt{Direction}; a \texttt{const DIRECTIONS: [Direction; 6]}; \texttt{Pose::shifted(dir, d)} & a test asserts a shift on X leaves Y..ZA untouched\\
+E2 & \texttt{Hyperbox::size()}; unit-test that one trisection on the min axis shrinks size & \texttt{assert!(child.size() < parent.size())}\\
+E3 & Deliberately try \texttt{BTreeMap<f64, Hyperbox>}; read the error; then fix with \texttt{OrderedFloat} & you can quote the trait that's missing (\texttt{Ord})\\
+E4 & \texttt{BoxTree::insert} + \texttt{gather\_poh}; build a 5-box tree by hand in a test & gather returns one point per size-row, min cost\\
+E5 & Try to \texttt{.clone()} a box out of \texttt{gather\_poh} and make it compile with \texttt{\&self} & you can explain \textbf{why} it forces \texttt{\&mut self}\\
+E6 & \texttt{convex\_hull} on a hand-made 6-point set with a known hull & test passes AND the fn takes \texttt{\&[PohPoint]}\\
+E7 & \texttt{trisect(parent) -> (Hyperbox, [Hyperbox; 2])}; assert depth sum increased by 1 & three children, parent unusable after (E0382 if you try)\\
+E8 & \texttt{trait Cost} + \texttt{AnalyticCost} (e.g. sphere function \texttt{sum(x\_i\textasciicircum{}2)}) & \texttt{run()} finds the origin to 1e-6 with no C++\\
+E9 & \texttt{OptimizerError} with \texttt{thiserror}; make \texttt{run} return \texttt{Result}, then flatten to \texttt{RunOutcome} & \texttt{ok=false} for a zero-range input, no panic\\
+E10 & Wire the loop; run against \texttt{AnalyticCost} under a 20k budget & \texttt{calls + offset < budget} holds exactly, no overrun\\
+\end{tabular}
+\end{center}
+
+E3 and E5 are the two that \textbf{look} like a waste of time and aren't: they are
+deliberate failures. The point of writing code that doesn't compile is that the
+error message is the lesson, and you will meet both errors again for real later
+(see Appendix A). Budget \textasciitilde{}20 minutes each; the rest are 30-60.
+
+A good rhythm: exercise → the matching Step in ``Designing DIRECT from scratch''
+→ the Brown Book section it cites → \texttt{cargo clippy} on what you wrote. Four
+passes over the same idea, each from a different angle.
+\section{Contract being filled}
+\label{sec:org144ee96}
+
+The C++ \texttt{DirectOptimizer::Run()} contract, from \texttt{include/domain/direct\_optimizer.h}:
+
+\begin{center}
+\begin{tabular}{lll}
+Method & Signature & Semantics\\
+\hline
+\texttt{Run()} & \texttt{bool Run()} & false=error; loop guard \texttt{(calls+offset)<budget \&\& !stop}\\
+\texttt{GetCostFunctionCalls()} & \texttt{unsigned int} & \texttt{cost\_function\_calls\_ + call\_offset\_}\\
+\texttt{GetNonFiniteCount()} & \texttt{unsigned int} & count of non-finite evals\\
+\texttt{GetOptimumLocation()/Value()} & \texttt{Point6D / double} & denormalized physical best / best cost\\
+\texttt{Stop()} & \texttt{void} & cooperative, checked between iterations\\
+\texttt{SetCallOffset(u)} & \texttt{void} & cumulative offset; canonical caps trunk 20k → 2x branch 25k/30k → leaf 35k\\
+\texttt{SetIterationCallback(f)} & \texttt{void} & after each ConvexHull+Trisect, \textasciitilde{}30fps\\
+\texttt{SetImprovementCallback(f)} & \texttt{void} & on new best (emits UpdateOptimum)\\
+\texttt{SetBatchCost(f)} & \texttt{void} & optional U11 batch sibling\\
+\end{tabular}
+\end{center}
+
+\texttt{Options} struct (8 fields, all fail-fast unless default):
+\texttt{selection} (SelectionMode=Original), =epsilon=0.0, =delta\textsubscript{limit}=bool(false),
+=size\textsubscript{measure}=SizeMeasure=L2, =split\textsubscript{rule}=SplitRule=OneSide,
+=ties=TieSelection=All, =hidden\textsubscript{constraints}=bool(false),
+=globally\textsubscript{biased}=bool(false).
+
+Truths that must survive any backend:
+
+\begin{itemize}
+\item cumulative \texttt{calls+offset} budget semantics (canonical caps: trunk 20k → 2x branch 25k/30k → leaf 35k, per direct\textsubscript{optimizer.h})
+\item the SAME optimum for the same cost sequence (Tier-1 analytic golden is the judge)
+\item eval ordering: calls++ → non-finite → optimum update → storage → improvement callback
+\item \texttt{evaluate} executed \textbf{\textbf{serially}} on one worker thread (GPUModel pose is mutated per call)
+\end{itemize}
+\subsubsection{Rust learning — ``options as data'' vs the god object}
+\label{sec:org18e2fee}
+
+The C++ \texttt{Options} struct is already \textbf{value-shaped} (a struct passed by value)
+— a good instinct. The normie-from-C++ error is to treat it as a bag of
+bools/enums read by \texttt{if} inside \texttt{Run()}. Rust nudges you to make the impossible
+state \textbf{unrepresentable} rather than merely checked.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 05 (structs), ch 06 (enums + exhaustive \texttt{match}),
+ch 10-02 (traits).
+\item \textbf{\textbf{rust-skills}}: \texttt{type-enum-states}, \texttt{type-newtype-validated},
+\texttt{api-parse-dont-validate}, \texttt{api-common-traits}, \texttt{num-float-compare},
+\texttt{anti-over-abstraction}.
+\end{itemize}
+
+Normie (a loose struct with raw codes; callers must remember valid values):
+
+\begin{minted}[]{rust}
+pub struct Options { pub selection: u8, pub epsilon: f64, pub delta_limit: bool }
+// a caller writing selection: 8 compiles fine and is wrong at runtime
+\end{minted}
+
+Idiomatic (a named enum + derive so invalid values can't exist):
+
+\begin{minted}[]{rust}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SelectionMode { Original }      // only one legal value today
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Options { pub selection: SelectionMode }  // Default == the C++ default
+\end{minted}
+
+Why \texttt{epsilon}, \texttt{size\_measure}, \texttt{split\_rule}, \texttt{ties}, \texttt{hidden\_constraints},
+\texttt{globally\_biased} are \textbf{absent} above: the C++ side fails-fast on any
+non-default value. The idiomatic Rust is to \textbf{\textbf{not declare the knob until you
+implement it}} (\texttt{anti-over-abstraction}). Declaring a field you cannot honor
+is a promise the type system can't keep; dropping it entirely is a
+\texttt{compile-time} guarantee that beats the run-time \texttt{ValidateOptions()}.
+
+The cumulative budget caps (trunk 20k → 2x branch 25k/30k → leaf 35k) are
+better as \textbf{\textbf{data}} than scattered literals — a single \texttt{Budget} newtype
+(\texttt{type-newtype-ids}) and the ladder defined once, used everywhere. If you ever
+\textbf{compute} a budget, reach for \texttt{num-overflow-explicit} (checked/saturating
+arithmetic) rather than letting a += overflow wrap.
+\section{Designing DIRECT from scratch, step by step}
+\label{sec:org9315bce}
+
+This is the procedural heart. Forget the FFI and options for a moment: here we
+derive the Rust DIRECT data model and loop \textbf{one step at a time}, in the order
+you'd discover them while porting. Each step introduces exactly one idea,
+usually one type, and checks itself before moving on. This is where the
+``normie → idiomatic'' comparisons get their teeth — each step is a real decision,
+not a style preference.
+
+Throughout, ``deduce'' means \textbf{let the compiler + the borrow checker teach you},
+not just copy a pattern. The Brown Book's ch 4 is the reference for steps 3-5;
+re-open it when a step feels abstract.
+\subsection{Step 1 — model a point: `Pose` (value type)}
+\label{sec:orgd39e1de}
+
+The whole algorithm is a search over 6-D poses. First question: what is a pose
+\textbf{on its own}? A bundle of six \texttt{f64} whose identity is its contents. That is a
+value type — and in Rust the first reflex is to ask: should this be \texttt{Copy}?
+
+Normie-from-C++ (a class with methods + hidden members):
+\begin{minted}[]{cpp}
+class Pose { double x,y,z,xa,ya,za; /* getters, setters... */ };
+\end{minted}
+
+Idiomatic (a plain value struct, \texttt{Copy}, fields public):
+\begin{minted}[]{rust}
+#[derive(Clone, Copy, PartialEq, PartialOrd)]
+pub struct Pose { pub x:f64, pub y:f64, pub z:f64, pub xa:f64, pub ya:f64, pub za:f64 }
+\end{minted}
+
+Why: \texttt{Pose} is 6×=f64= = 48 bytes — genuinely small — and its equality/order are
+meaningful (\texttt{PartialEq}, \texttt{PartialOrd}). \texttt{Copy} is right for a small plain-data
+value (rust-skills \texttt{own-copy-small}): passing it around copies 48 bytes (cheap),
+and \texttt{Copy} lets you read it out of a map key without \texttt{.clone()} ceremony.
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{own-copy-small}, \texttt{type-enum-states}.
+\item \textbf{\textbf{Book}}: ch 04-01 (Copy vs move), ch 05-01 (structs).
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — is a \texttt{Pose} a thing you own or a thing you copy? It is both —
+\texttt{Copy} is the honest label for ``duplicating it is cheap and preserves meaning,''
+which tells the compiler it may copy at will.
+\subsection{Step 2 — model an axis: `Direction` (enum, not ints)}
+\label{sec:orgee4b68a}
+
+DIRECT trisects along one of six axes. The normie input is ints 0..5 or named
+constants; Rust has a better tool: \texttt{Direction} as an \texttt{enum}.
+
+\begin{minted}[]{rust}
+#[derive(Clone, Copy)] // tiny tag — keep it Copy
+pub enum Direction { X_DIR, Y_DIR, Z_DIR, XA_DIR, YA_DIR, ZA_DIR }
+\end{minted}
+
+An \texttt{enum} buys three things the normie approaches lack:
+\begin{enumerate}
+\item no invalid value (no ``axis 7'') — \texttt{type-enum-states};
+\item exhaustive \texttt{match} — the compiler forces all six cases; and
+\item it pairs with an index into \texttt{depths: [u32; 6]} via a small const mapping
+array instead of a cast. You already have `const DIRECTIONS: [Direction; 6]`.
+
+\item \textbf{\textbf{rust-skills}}: \texttt{type-enum-states}, \texttt{pat-exhaustive-enum}.
+\item \textbf{\textbf{Book}}: ch 06 (enums + match).
+\end{enumerate}
+\subsection{Step 3 — model a box: `Hyperbox`}
+\label{sec:org189a25f}
+
+Now the atom of the search. A hyperbox has a center (\texttt{Pose}), a per-axis depth
+\texttt{depths: [u32; 6]} (how many times each axis has been trisected), and a cost at
+that center (\texttt{Option<f64>} — we'll see why).
+
+Normie-from-C++ (a class with a \texttt{size()} method + friends):
+\begin{minted}[]{cpp}
+class HyperBox6D { /* ... */ double GetSides(); /* ... */ };
+\end{minted}
+
+Idiomatic (a plain struct + a method on an \texttt{impl}):
+\begin{minted}[]{rust}
+#[derive(Clone, Copy)]
+pub struct Hyperbox {
+    pub cost_at_center: Option<f64>,
+    pub center: Pose,
+    pub depths: [u32; 6],
+}
+impl Hyperbox {
+    /// L2 norm of box extent from depths — the "size" used by POH.
+    pub fn size(&self) -> f64 {
+        self.depths.iter()
+            .map(|e| 3f64.powf(-2.0 * (*e as f64)))
+            .sum::<f64>()
+            .sqrt()
+    }
+}
+\end{minted}
+
+Two Rust habits to internalize here:
+
+\begin{itemize}
+\item \textbf{\textbf{\texttt{Option<f64>} for ``not scored yet.''}} The center box inherits its parent's
+cost; the two shifted boxes don't exist yet — pending a batch eval. \texttt{Option}
+\end{itemize}
+makes ``not yet known'' an explicit state instead of a magic \texttt{DBL\_MAX=/}-1=
+sentinel. This is \texttt{type-option-nullable} + \texttt{api-parse-dont-validate}: represent
+  the absence; don't smuggle a fake number.
+\begin{itemize}
+\item \textbf{\textbf{A method computes what isn't stored.}} \texttt{size()} is derived from \texttt{depths}
+\end{itemize}
+every time; you don't cache it in the struct. Fewer fields = fewer places to be
+inconsistent. (Add a cache only if it shows up in the profiler =
+\texttt{perf-profile-first}.)
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{type-option-nullable}, \texttt{api-parse-dont-validate},
+\texttt{own-copy-small}, \texttt{perf-profile-first}.
+\item \textbf{\textbf{Book}}: ch 05-01 (structs), ch 06 (Option), ch 13-02 (iterators — the \texttt{sum}
+is already an iterator pipeline).
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — why \texttt{Option<f64>} for cost rather than \texttt{f64} with \texttt{-1}
+``meaning missing''? Because \texttt{-1} might be a valid cost that gets silently used;
+\texttt{None} is a kind the compiler forces you to handle before you can use the box.
+\subsection{Step 4 — the two-level `BTreeMap` (the Ord problem)}
+\label{sec:org12c6f45}
+
+The heart of the data model is a container of hyperboxes keyed by size (outer)
+then cost (inner). The moment you reach for a sorted map you hit a very
+Rust-specific wall: \textbf{\textbf{\texttt{f64} is not \texttt{Ord}.}}
+
+Why: \texttt{BTreeMap} (and \texttt{BTreeSet}, \texttt{BinaryHeap}, sort) needs a \textbf{total order} — the
+\texttt{Ord} trait. But \texttt{f64} has \texttt{NaN}, which compares ``not equal to everything,
+including itself,'' breaking total-order. So the standard library deliberately
+refuses \texttt{f64} as a map key / in \texttt{Ord} contexts.
+
+Normie-from-C++ (map on \texttt{std::map<double,...>} — C++ lets you, NaN foot-gun
+later):
+\begin{minted}[]{cpp}
+std::map<double, std::vector<Box*>> columns;  // NaN quietly poisons comparisons
+\end{minted}
+
+Idiomatic (wrap the float + add an id for ties):
+\begin{minted}[]{rust}
+use ordered_float::OrderedFloat;             // newtype: f64 that IS Ord
+pub type SizeKey = OrderedFloat<f64>;
+pub type CostKey = (OrderedFloat<f64>, u64); // (cost, unique id) so equal costs don't collide
+\end{minted}
+
+\texttt{OrderedFloat<f64>} is a newtype that implements \texttt{Ord} by asserting the value is
+never \texttt{NaN}. It's the idiomatic escape hatch when you know your floats are total
+(your sizes/costs are never NaN). The \texttt{u64} tiebreak makes the inner key injective.
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{num-float-compare}, \texttt{type-newtype-ids}, \texttt{coll-map-choice}.
+\item \textbf{\textbf{Book}}: the \texttt{ordered\_float} crate isn't in the Brown book — this is your
+first ``read a dependency's docs'' moment. The concepts (traits, newtype, \texttt{Ord})
+are ch 10-02 + ch 08.
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — why is the inner key \texttt{(cost, u64)} rather than just \texttt{cost}?
+Because two boxes can have the same cost; a \texttt{BTreeMap} keyed by cost alone
+would let the second silently overwrite the first. The monotonically increasing
+\texttt{u64} box id breaks the tie so both survive — \texttt{type-newtype-ids} in a container.
+\subsection{Step 5 — the gather (read-only pass)}
+\label{sec:orga685729}
+
+Now the first read over the tree: collect, for every size-row, the min-cost
+box's (size, cost) pair — the input to POH. This is a \textbf{\textbf{read-only borrow}} pass
+= \texttt{\&self}, no mutation, no clones.
+
+Normie-from-C++ (a \texttt{const\&} method that iterates + copies minima out):
+\begin{minted}[]{cpp}
+std::vector<std::pair<double,double>> gather(const std::map<...>& rows) {...}
+\end{minted}
+
+Idiomatic (read-only \texttt{iter()} + \texttt{first\_key\_value()}, projecting two numbers):
+\begin{minted}[]{rust}
+fn gather_poh(&self) -> Vec<PohPoint> {
+    let mut rows = Vec::new();
+    for (size_key, cost_val) in self.boxes.iter() {          // &, immutable
+        if let Some((key, _box)) = cost_val.first_key_value() {  // &, immutable
+            rows.push(PohPoint {
+                size: (*size_key).into_inner(),   // copy the f64 out of the key
+                cost: (key.0).into_inner(),       // copy the cost, not the box
+            });
+        }
+    }
+    rows
+}
+\end{minted}
+
+The teaching gold is \textbf{what did NOT happen}: we never \texttt{.clone()} a \texttt{Hyperbox},
+we never mutated the tree, so \texttt{gather\_poh} is \texttt{\&self} and it's callable while
+other borrows are live. If the normie version cloned boxes into a
+\texttt{Vec<Hyperbox>}, it'd be forced into \texttt{\&mut self} (or fight the borrow) and carry
+the whole box when only two numbers were needed. The borrow checker \textbf{points to}
+the leaner shape.
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{own-borrow-over-clone}, \texttt{perf-iter-over-index},
+\texttt{own-slice-over-vec}.
+\item \textbf{\textbf{Book}}: ch 04-02 (borrowing — the whole step), ch 13-02 (iterator
+adapters), ch 04-01 (Copy — why \texttt{*size\_key} is a copy, not a move).
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — why does the gather return \texttt{Vec<PohPoint>} (owned copies of
+(size, cost)) instead of \texttt{Vec<Hyperbox>} or borrows into the map? Because POH
+only needs two numbers; borrowing into the map would ripple \texttt{\&mut self} rules;
+and owned small copies are cheap. Return \emph{values}, not \emph{references} into
+yourself — the whole point of value types.
+\subsection{Step 6 — POH selection (pure transform)}
+\label{sec:org7536280}
+
+POH (potentially-optimal hyperboxes) — convex hull / pareto over the \texttt{PohPoint}
+list. This is a \textbf{\textbf{pure function}}: \texttt{convex\_hull(\&[PohPoint]) -> Vec<PohPoint>}. It
+touches no tree, borrows nothing lasting, allocates only its own return.
+
+Normie-from-C++ (a method that pushes/pops a member list):
+\begin{minted}[]{cpp}
+void convexHull() { m_poh.push_back(...); m_poh.pop_back(); }  // mutates THIS
+\end{minted}
+
+Idiomatic (pure: takes a slice, returns an owned Vec):
+\begin{minted}[]{rust}
+fn convex_hull(poh: &[PohPoint]) -> Vec<PohPoint> {  // &[T], not &Vec<T>
+    let mut hull: Vec<PohPoint> = Vec::new();
+    for p in poh.iter() {
+        while hull.len() >= 2
+              && cross(hull[hull.len()-2].size, hull[hull.len()-1].size, p.size) <= 0.0 {
+            hull.pop();
+        }
+        hull.push(*p);
+    }
+    hull
+}
+\end{minted}
+
+Why does it feel cleaner than the C++? No side channel — input is a slice of
+points, output is an owned \texttt{Vec}, nothing else changes. The absence of side
+effects is not a preference; it's what lets you call it headlessly in a unit
+test with a stub cost (\texttt{test-mock-traits}) with no GPU or UI. (The \texttt{\&[T]} habit
+= \texttt{own-slice-over-vec} also makes it FFI-ready.)
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{anti-vec-for-slice}, \texttt{own-slice-over-vec}, \texttt{perf-collect-once},
+\texttt{test-mock-traits}.
+\item \textbf{\textbf{Book}}: ch 10-02 (pure funcs over traits), ch 13 (iterators), ch 04 (why an
+owned \texttt{Vec<PohPoint>} return is fine — it's moved out, not copied out).
+\end{itemize}
+\subsection{Step 7 — trisection + the ownership dance (THE lesson)}
+\label{sec:orgdfb30e2}
+
+The step that ties the room together: take a selected box out, trisect it into
+center + two shifted boxes, reinsert them. This is where Rust's ownership model
+forces a structurally correct design that C++ lets you violate.
+
+Normie-from-C++ (mutate the box in place, resize a vector):
+\begin{minted}[]{cpp}
+void trisect(HyperBox &b, std::vector<...> &out) { /* mutate b, push children */ }
+\end{minted}
+
+Idiomatic (consume the parent, return the children):
+\begin{minted}[]{rust}
+fn trisect(mut parent: Hyperbox) -> (Hyperbox, PendingTwo) {  // take = move
+    let (min_idx, _) = parent.depths.iter().enumerate()
+        .min_by_key(|&(_, v)| *v).expect("6-element array");
+    parent.depths[min_idx] += 1;
+    // center keeps parent's cost; two shifted children get cost_at_center: None
+    // ... (build pos/neg shifted boxes)
+    (parent, [pos, neg])
+}
+\end{minted}
+
+and the caller re-inserts:
+\begin{minted}[]{rust}
+let (center, [pos, neg]) = Hyperbox::trisect(winner);  // winner moved OUT
+// batch-eval pos/neg's new centers first, then reinsert with costs
+\end{minted}
+
+Why does Rust force ``take it out, transform, put it back''?
+
+\begin{enumerate}
+\item \textbf{\textbf{The map key is the size.}} \texttt{BTreeMap<SizeKey, ...>} — if you mutated a
+map-resident box's \texttt{depths}, its \texttt{size()} changes, so its \texttt{SizeKey} would be
+wrong and the map corrupted. Rust's borrow rules make this hard to even
+express.
+\item \textbf{\textbf{\texttt{pop\_first()} returns \emph{owned}.}} On the inner map it gives you the winner
+as an owned \texttt{Hyperbox} — no lifetime to fight, free to move/transform. That's
+\texttt{mem-take-replace} in the wild.
+\item \textbf{\textbf{Reinsert = move=.}} \texttt{boxes.entry(new\_key).or\_default().insert(id, child)}
+moves the child in. The tree \textbf{owns} it now; your Rust code no longer does.
+\end{enumerate}
+
+This is the single most important ownership lesson in the doc. Carry this:
+\textbf{\textbf{the three phases map to three ownership states — borrow to gather, own to
+transform, move to store — and the borrow checker keeps them honest.}}
+
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{own-move-large}, \texttt{mem-take-replace}, \texttt{own-copy-small},
+\texttt{api-builder-must-use}.
+\item \textbf{\textbf{Book}}: ch 04 (all of it); ch 15 (why \texttt{Box} fits \texttt{unique\_ptr}-shaped
+ownership); ch 08 (BTreeMap entry/remove API).
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — why can't you just mutate a box inside the map and ``put it
+back in place''? Because its size (the map key) changed, and Rust won't give you
+an \texttt{\&mut} into a container while you're keyed by its value (the map re-balances
+on \texttt{insert=/=remove}, not in place).
+
+That is the whole algorithm core in seven steps. What remains — cost injection,
+batching, FFI, errors — is scaffolding around this loop, which is why the
+Roadmap routes you back to Steps 5-7 the most.
+\section{The concrete handshake}
+\label{sec:org55273f9}
+
+\subsection{One-picture flow}
+\label{sec:org34f0fba}
+
+\begin{minted}[]{text}
+C++ (coordinator)                     | Rust (direct-rs)
+---------------------------------------------------------------------------
+RunDirectStage                        |
+  backend = launch.optimizer_backend  |
+  if Rust:                            |
+    CppCost h = build_cpp_cost(BuildGpuCostAdapter...)   // sealed std::function
+    out = direct_rs::new_direct_optimizer(range,start,budget,mode)->run(*h)
+    cost_calls_=out.calls; opt_loc/val=out.best...  |  Box<DirectOptimizer>.run(&CppCost)
+  else: existing DirectOptimizer path                   |       ↳ RunOutcome{best,best_cost,calls,ok}
+\end{minted}
+\subsection{Rust bridge (\texttt{direct-rs/src/lib.rs})}
+\label{sec:orgc0add40}
+
+\begin{minted}[]{rust}
+#[cxx::bridge(namespace = "direct_rs")]
+pub mod ffi {
+    struct Pose { x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64 }
+
+    enum PohMode { ConvexHull = 0, Pareto = 1, Aggressive = 2 }   // shared enum
+
+    unsafe extern "C++" {
+        include!("domain/cost.h");
+        type CppCost;
+        // cost hot path: 6 doubles by-value (bind to CppCost::evaluate6)
+        fn evaluate6(self: &CppCost, x: f64, y: f64, z: f64,
+                     xa: f64, ya: f64, za: f64) -> f64;
+    }
+
+    extern "Rust" {
+        type DirectOptimizer;
+        fn new_direct_optimizer(range: &Pose, start: &Pose,
+                                budget: u32, mode: PohMode) -> Box<DirectOptimizer>;
+        fn run(&mut self, cost: &CppCost) -> RunOutcome;     // M1: run-to-completion
+        // M2 (live progress): see "Milestone options" below
+    }
+
+    // shared struct declared INSIDE the bridge so cxx generates the C++ struct
+    struct RunOutcome { best: Pose, best_cost: f64, calls: u32, ok: bool }
+}
+\end{minted}
+\subsubsection{Rust learning — what does ``shared struct'' mean, and why does cxx care?}
+\label{sec:org54c9231}
+
+The `struct Pose \{ x: f64, \ldots{} \}` inside `\#[cxx::bridge]` is a \textbf{\textbf{shared
+struct}} — one definition, two languages, byte-identical layout. cxx
+generates a C++ `struct Pose` with the same fields in the same order, so a
+`Pose` can be passed \textbf{by value} across the boundary with zero serialization.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 05-01 (defining a struct), ch 19 (unsafe/FFI — how a `\#[repr]`
+ties layout).
+\item \textbf{\textbf{rust-skills}}: \texttt{api-non-exhaustive}, \texttt{name-acronym-word} (name it `Pose`,
+not `POSITION6D`), \texttt{own-copy-small}. `Pose` is 6×f64 = 48 bytes — small and
+`Copy`-able, so passing it by value is cheap (normie-from-Python would
+over-use references/boxes worried about cost; here by-value is the fast
+choice).
+\end{itemize}
+
+Normie-from-C++ (reach for a smart pointer / reference everywhere):
+
+\begin{minted}[]{rust}
+fn run(&mut self, cost: &CppCost, point: &Pose) -> f64   // borrow of a 48-byte POD
+\end{minted}
+
+Idiomatic (small value types cross by value):
+
+\begin{minted}[]{rust}
+fn evaluate6(&self, x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> f64
+\end{minted}
+
+Notice the doc chose the \textbf{six-double} scalar form for the hot path, not the
+`\&Pose`. That's a deliberate cxx/layout decision — a bare `Pose` by value
+would also work, but six scalars make the ABI trivially C-compatible and dodge
+any implicit padding question. The takeaway: \textbf{\textbf{at an FFI boundary, prefer the
+simplest ABI (plain doubles / POD struct) so both compilers agree on layout
+without you reasoning about padding.}} Brown Book ch 19-04 explains why layout
+matters for FFI.
+
+A shared `enum PohMode` becomes a C++ `enum class PohMode` on the other side.
+Because a C++ `enum class` can legally hold an out-of-list value, every \texttt{match}
+on a shared enum in Rust must include a wildcard `\_` arm — cxx cannot prove
+C++ will only send a listed discriminant. This is a genuinely Rust-flavored
+\textasciitilde{}normie= trap: in C++ you never match exhaustively; in Rust the compiler
+\textbf{forces} the `\_` anyway.
+
+\begin{minted}[]{rust}
+let mode = match mode {
+    ffi::PohMode::ConvexHull => ...,
+    ffi::PohMode::Pareto     => ...,
+    ffi::PohMode::Aggressive => ...,
+    _ => Err(UnknownPohMode),   // cxx shared enums can't be trusted to be in-list
+};
+\end{minted}
+
+(\textbf{\textbf{Book ch 06}}, exhaustive matching; this is exactly why Rust prefers exhaustiveness.)
+\subsection{C++ cost-side change (\texttt{include/domain/cost.h})}
+\label{sec:org5c8ead3}
+
+Existing opaque \texttt{CppCost} wraps \texttt{std::function<double(const Point6D\&)>} and
+exposes \texttt{evaluate(const Point6D\&)}. Add a 6-double bridge method so the cxx static assertion matches the Rust bridge:
+
+\begin{minted}[]{cpp}
+class CppCost {
+    double evaluate(const Point6D& point) const { return fn_(point); }
+    // bridge: build Point6D from 6 doubles, delegate to fn_ (no behavior change)
+    double evaluate6(double x,double y,double z,
+                     double xa,double ya,double za) const {
+        return evaluate(Point6D(x,y,z,xa,ya,za));
+    }
+};
+\end{minted}
+\subsection{C++ call site (A/B seam) — inside \texttt{OptimizerManager::RunDirectStage} construction}
+\label{sec:org6d3f999}
+
+Scout finding: the clean kernel-level A/B point is the \textbf{DirectOptimizer
+construction inside \texttt{RunDirectStage}} (\texttt{optimizer\_manager.cpp:1303}), NOT the
+whole-run \texttt{OptimizerRunDriver} (driver wraps the 3-stage manager; we are
+single-stage).
+
+\begin{minted}[]{cpp}
+// settings/launch: enum class OptimizerBackend { Cpp, Rust };
+if (launch_.optimizer_backend == OptimizerBackend::Rust) {
+    auto h = build_cpp_cost(BuildGpuCostAdapter(...)); // std::unique_ptr<CppCost>
+    auto box = direct_rs::new_direct_optimizer(range,start,budget,mode);
+    auto out = box->run(*h);   // *h derefs unique_ptr → CppCost& (matches &CppCost)
+    cost_function_calls_      = out.calls;
+    current_optimum_location_ = Point6D(out.best.x, out.best.y, /* ... */);
+    current_optimum_value_    = out.best_cost;
+    if (!out.ok) { emit OptimizerError("rust direct failed"); error_occurrred_ = true; }
+} else {
+    // existing DirectOptimizer block, byte-identical
+}
+\end{minted}
+
+Rules:
+
+\begin{itemize}
+\item Do NOT put \texttt{backend} into \texttt{DirectOptimizer::Options} — ValidateOptions
+fail-fast any non-default field. A settings-service field +
+\texttt{OptimizerRunLaunch} is the clean home.
+\item The =CppCost handle must out-live the run call (it holds the sealed
+std::function capturing GPU state).
+\end{itemize}
+\section{Options \& landmarks}
+\label{sec:orgcd1847a}
+
+\subsection{backend selection — A/B switch mechanics}
+\label{sec:org08d52fb}
+
+\begin{enumerate}
+\item \textbf{Runtime C++ virtual interface}: define an \texttt{IOptimizer} abstract seam that a
+wrapper around the existing C++ \texttt{DirectOptimizer} AND the Rust backend both
+implement; select at runtime (via the \texttt{OptimizerRunController} factory)
+without touching the stage loop. Cleanest long-term (one objective seam the
+whole app uses); more moving parts up front. cxx opaque types compose with
+C++ inheritance (move-only smart-ptr-handled structs).
+\item \textbf{Compile/link-time toggle} (CMake): \texttt{option(JTML\_USE\_RUST\_OPTIMIZER ...)};
+conditionally \texttt{target\_link\_libraries(... direct-rs-lib)} + define
+\texttt{JTML\_USE\_RUST\_OPTIMIZER}. Pick at build; zero runtime divergence; requires
+rebuild to toggle.
+\item \textbf{Direct single-branch swap} in \texttt{RunDirectStage} (the flow above): least
+injection; both implementations coexist behind \texttt{optimizer\_backend}. Fastest
+to A/B; coordination layer still knows Rust directly.
+\end{enumerate}
+
+Recommend for expedient A/B: \textbf{\textbf{\#3 first}}, then promote to a runtime interface
+(\#1) if you want a settings toggle without recompiling.
+\subsection{Milestones — run-to-completion vs live progress}
+\label{sec:org2b12e68}
+
+\begin{itemize}
+\item \texttt{M1 (recommended first)}: \texttt{run(\&mut self, cost) -> RunOutcome} — run to
+completion, no live UI progress. Shortest to a compilable A/B.
+\item \texttt{M2 (live progress)}: cxx CANNOT take a C++ std::function callback into Rust
+(C++→Rust fn pointers unimplemented). Reverse the wiring: an opaque C++
+\texttt{ProgressSink} with methods \texttt{on\_iteration(calls)/on\_improvement(best)} that
+Rust \textbf{calls out to} (Rust→C++ methods — supported) and C++ re-emits the
+coordinator's \texttt{UpdateDisplay /} UpdateOptimum=. Must match C++ ordering exactly (30fps
+iteration, on-improvement) or the UI regresses.
+\item \texttt{M3 (per-step from C++)}: expose \texttt{step()} that C++ drives in a loop; keeps
+progress control in C++ but diverges from the C++ Run structure. Not
+recommended for a drop-in.
+\end{itemize}
+\subsubsection{Rust learning — callbacks, and why cxx flips the direction}
+\label{sec:orgd845bec}
+
+M2's \texttt{ProgressSink} may look odd if you come from C++/Python where a callback
+is just ``a function you pass in''. Rust draws a sharp line between \textbf{callable
+you can hand out} and \textbf{callable you can accept}, which explains the whole M2
+shape.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 13-01 (closures), ch 13 (Fn-traits), ch 16 (message
+passing/threads — the UI-pacing side).
+\item \textbf{\textbf{rust-skills}}: \texttt{closure-fn-trait-bounds} (\texttt{FnOnce} ⊇ \texttt{FnMut} ⊇ \texttt{Fn};
+request the \textbf{least} restrictive), \texttt{closure-move-capture},
+\texttt{api-builder-must-use}.
+\end{itemize}
+
+The `Fn`/`FnMut`/`FnOnce` hierarchy is Rust's way of saying \textbf{how many times
+and with what exclusivity} a closure may run:
+
+\begin{itemize}
+\item \texttt{FnOnce} — may be called once.
+\item \texttt{FnMut} — may be called repeatedly, may mutate captured state.
+\item \texttt{Fn} — may be called repeatedly, captures immutable (can be shared).
+\end{itemize}
+
+Normie-from-C++ (the host passes a \texttt{std::function} into Rust for progress):
+
+\begin{minted}[]{cpp}
+// CANNOT work in cxx: C++->Rust fn pointers aren't implemented
+opt.setProgressCallback([](int iter, double best){ ... });
+\end{minted}
+
+Why cxx forbids it: function pointers in cxx flow \textbf{\textbf{Rust→C++}} only. So the
+idiomatic M2 is the reverse — Rust calls a method on an opaque C++ object:
+
+\begin{minted}[]{rust}
+// Rust holds an opaque C++ ProgressSink and calls OUT (supported direction)
+run_with_sink(&mut sink);          // sink.on_iteration(calls) etc.
+\end{minted}
+
+The teaching moment: in C++/Python a callback is ambient (implicit, whatever
+the caller wants). In Rust a callback is a \textbf{first-class value/contract} with
+well-defined effects. When the boundary forbids one direction, you invert the
+ownership — the ``sink'' pattern (Rust owns a handle to the host and pokes it)
+is the idiomatic Rust way to express ``the host wants progress while I run''.
+
+M1's simpler shape (run-to-completion, return \texttt{RunOutcome}) skips callbacks
+entirely — which is why it's the recommended first milestone: it lets you get
+the algorithm + the cost crossing right before adding the progress-inversion
+complication. This sequencing — get the pure path correct, then layer the
+callback inversion — mirrors how Rust itself decouples pure logic from IO.
+\subsection{Cost invocation}
+\label{sec:org66a6360}
+
+\begin{itemize}
+\item \textbf{Serial per-point}: keep scalar \texttt{evaluate6(x,6doubles)} in a tight loop. Works,
+but crosses the cpp boundary per point (\textasciitilde{}20k–30k total evals).
+\item \textbf{Batch query} (matches C++ \texttt{BatchCostFunction}): collect new centers → one
+\texttt{\&[Pose]} → \texttt{Vec<f64>} in input order. Recommended for real runs; maps onto
+cxx slices.
+\item \textbf{Slices}: cxx supports slices of shared structs (\texttt{Pose}) and primitives, NOT
+opaque types. \texttt{\&[Pose] ↔ C++ =rust::Slice<const Pose>}. Prefer \texttt{\&[Pose]}
+over a flat \texttt{Vec<f64>} for clarity.
+\end{itemize}
+\subsubsection{Rust learning — slices, iterators, and ``one FFI hop''}
+\label{sec:org83d0c87}
+
+The batch-vs-serial decision is a place where idiomatic Rust and performance
+agree, and it teaches two habits: \textbf{\textbf{slices over references-to-Vecs}}, and
+\textbf{\textbf{iterator pipelines over index loops}}.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 04-03 (slices — `\&[T]` is a fat pointer: pointer + length),
+ch 13-02 (iterators), ch 13-04 (lazy iterators; collect only when needed),
+ch 08 (Vec).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-slice-over-vec}, \texttt{perf-iter-over-index},
+\texttt{perf-iter-lazy}, \texttt{perf-collect-once}, \texttt{anti-vec-for-slice},
+\texttt{anti-index-over-iter}, \texttt{coll-map-choice}.
+\end{itemize}
+
+Normie-from-C++/Python (loop by index, pass \texttt{\&Vec<f64>}):
+
+\begin{minted}[]{rust}
+fn batch_cost(costs: &Vec<f64>) -> Vec<f64> {   // &Vec is a smell
+    let mut out = Vec::with_capacity(costs.len());
+    for i in 0..costs.len() {                    // indexing = bounds checks
+        out.push(costs[i] * 2.0);
+    }
+    out
+}
+\end{minted}
+
+Idiomatic (slice + iterator; accept `\&[f64]`, chain lazily):
+
+\begin{minted}[]{rust}
+fn batch_cost(costs: &[f64]) -> Vec<f64> {      // &[T], not &Vec<T>
+    costs.iter().map(|c| c * 2.0).collect()      // lazy, no manual push
+}
+\end{minted}
+
+Why this matters for the BUFFER seam specifically:
+
+\begin{itemize}
+\item \textbf{\textbf{`\&[Pose]` vs empty-receiving `Vec`}} — a slice is a \emph{view} over contiguous
+memory; cxx maps `\&[T]` to C++ `rust::Slice<const T>`, which lets the C++
+host pass a contiguous `std::vector<Pose>` without copying. That's the
+``zero-copy batched eval'' you wanted.
+\item \textbf{\textbf{One FFI hop beats many}} — each scalar `evaluate6` crossing is a boundary
+transit; a batch collects \textasciitilde{}hundreds of new centers into one `\&[Pose]` and
+makes \textbf{\textbf{one}} call. For 20k-30k evals this is the difference between 20k
+crossings and a handful. The \texttt{BatchCostFunction} sibling in C++ exists for
+precisely this.
+\item \textbf{\textbf{Iterator pipelines compose with your BTreeMap}} — the POH gather you
+already wrote (`self.boxes.iter()\ldots{}first\textsubscript{key}\textsubscript{value}()`) is a READ-ONLY
+borrow pipeline; the trisection (`remove`/=pop\textsubscript{first}=) is the MUTATING side.
+Slice-vector-boundary habits keep the borrows straight.
+\end{itemize}
+
+Reading tip: Brown Book ch 4-03's slice diagram (the fat-pointer of ptr+len)
+is the exact mental model for `rust::Slice<const Pose>`.
+\subsection{Cost injection — Arg-time vs constructor-time}
+\label{sec:org24d74b3}
+
+\begin{itemize}
+\item \texttt{A (cost via method arg)}: \texttt{DirectOptimizer} \{ \texttt{boxes, current\_best = \} and
+  =run(\&mut self, cost: \&CppCost) -> RunOutcome}. Cost flows in at call time.
+\item \texttt{B (cost stored in struct)}: constructor takes the handle; Rust owns it;
+\texttt{run(\&mut self)} alone. Matches the C++ constructor shape.
+\end{itemize}
+
+Both work; A keeps the optimizer pure and the FFI thin.
+\subsubsection{Rust learning — the \texttt{Cost} capability as a trait (not a class)}
+\label{sec:org39030e3}
+
+Option A (cost via method arg) is the idiomatic one, and it's worth
+understanding \textbf{why}: \texttt{DirectOptimizer} becomes a \textbf{\textbf{pure data + algorithm}}
+object and the cost is a small \textbf{\textbf{capability}} it knows how to call, injected
+per-call. In Rust that capability is best expressed as a \textbf{\textbf{trait}} — a
+contract, not a base class.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 10-02 (traits), ch 17-02 (trait objects \texttt{dyn Trait}),
+ch 13 (closures — the cost is eventually a closure over GPU state).
+\item \textbf{\textbf{rust-skills}}: \texttt{trait-dyn-vs-generic}, \texttt{trait-object-safety},
+\texttt{closure-fn-trait-bounds}, \texttt{closure-impl-fn-return}, \texttt{test-mock-traits}.
+\end{itemize}
+
+The normie-from-C++ approach (a base class \texttt{Cost} with virtual \texttt{eval()}, or a
+\texttt{std::function} alias) reads as a concrete \texttt{CppCost} dependency everywhere:
+
+\begin{minted}[]{rust}
+// normie: hard-code the concrete handle into the optimizer
+struct DirectOptimizer { cost: CppCost /* concrete */ }
+\end{minted}
+
+Idiomatic (a trait that \textbf{both} a test stub and the real C++ handle implement):
+
+\begin{minted}[]{rust}
+trait Cost {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64>;   // batch shape, needed later
+}
+struct CppCostHandle(/* cxx opaque */);   // impl Cost by calling evaluate6
+struct AnalyticCost;                       // test stub for headless Tier-1
+\end{minted}
+
+Making \texttt{Cost} a trait vs. a concrete \texttt{CppCost} dependency is what lets you run
+the SAME algorithm against a \textbf{\textbf{test stub}} and the \textbf{\textbf{real GPU cost}} — that's
+\texttt{test-mock-traits}, and it's exactly why the scaffold already sketches a
+\texttt{trait Cost} next to \texttt{CppCost}. Then the two shapes differ only by dispatch:
+
+\begin{itemize}
+\item \textbf{\textbf{\texttt{impl Fn} (generics)}} — zero-cost, monomorphized, great for a hot
+per-call closure. Use when the cost really is a closure.
+\item \textbf{\textbf{\texttt{dyn Fn=/trait object (=Box<dyn Cost>})}} — one vtable, needed when the
+concrete cost is selected/stored at runtime. Your A/B already implies runtime
+selection.
+\end{itemize}
+
+The A/B switch is literally this: two backends are two implementations of one
+contract. Whether that contract is Rust's \texttt{Cost} trait (inside the crate) or
+C++'s \texttt{IOptimizer} virtual interface (across the boundary) is the same idea in
+two languages — which is what the \texttt{IOptimizer} option is pointing at.
+\subsection{Outcome/error channel — Result vs status}
+\label{sec:orgab86884}
+
+\begin{itemize}
+\item cxx \texttt{Result} → C++ throws \texttt{rust::Error} (std::exception). In a Qt/CUDA
+pipeline, exceptions-on is uncertain → prefer \textbf{\textbf{explicit status}}:
+\texttt{RunOutcome \{ ok: bool (or code), best, best\_cost, calls \}}.
+\item Never let Rust panic across FFI (panic logs+aborts). Represent all error
+paths in the status struct / error enum; never unwrap across the boundary.
+\end{itemize}
+\subsubsection{Rust learning — errors as values, not as side effects}
+\label{sec:org647247e}
+
+The whole \texttt{Result} vs status-struct decision is a Rust-native philosophy: Rust
+has \textbf{\textbf{no exceptions}}. Errors are just values returned from functions. This
+changes the normie-from-C++/Python default dramatically.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 09-01 (panic), ch 09-02 (\texttt{Result} + \texttt{?}),
+ch 09-03 (\texttt{unwrap} vs \texttt{expect} — when each is honest).
+\item \textbf{\textbf{rust-skills}}: \texttt{err-result-over-panic}, \texttt{err-thiserror-lib},
+\texttt{err-anyhow-app}, \texttt{err-no-unwrap-prod}, \texttt{err-question-mark},
+\texttt{err-context-chain}, \texttt{err-lowercase-msg}.
+\end{itemize}
+
+Normie-from-C++ (bool return + out-param, or throw an exception):
+
+\begin{minted}[]{cpp}
+bool Run(/* out */ double& best_cost);
+\end{minted}
+
+Normie-from-Python (rely on \texttt{raise} and \texttt{try/except}):
+
+\begin{minted}[]{python}
+def run(...):
+    if bad: raise OptimizerError("bad")
+\end{minted}
+
+Idiomatic Rust (return a \texttt{Result} / explicit status; the \textbf{caller} decides):
+
+\begin{minted}[]{rust}
+type RunResult<T> = Result<T, OptimizerError>;
+
+#[derive(thiserror::Error, Debug)]
+pub enum OptimizerError {
+    #[error("all-zero range {range:?}")]
+    ZeroRange { range: Pose },
+    #[error("non-finite cost {cost}")]
+    NonFiniteCost { cost: f64 },
+    #[error("poisoned executor")]
+    Poisoned,
+}
+\end{minted}
+
+Why the doc chose an \textbf{\textbf{explicit status struct}} (\texttt{RunOutcome\{ ok: bool, ... \}})
+rather than Rust's \texttt{Result} for the FFI boundary specifically: cxx can map a
+Rust \texttt{Result} to a C++ `rust::Error` exception — but that requires C++
+exceptions to be \textbf{\textbf{enabled}}, which is uncertain in a Qt/CUDA toolchain, and a
+Rust panic crossing an FFI boundary is \textbf{undefined behavior} (it =abort()=s the
+whole process). So:
+
+\begin{itemize}
+\item \textbf{\textbf{Inside}} the Rust crate, use \texttt{Result<T, OptimizerError>} freely (=?
+everywhere) — that's idiomatic and safe.
+\item \textbf{\textbf{Across}} the cxx boundary, return a plain status struct, and map the inner
+\texttt{Result} to it as the last step (`out.ok = result.is\textsubscript{ok}()`). This keeps the
+Rust-side ergonomics and the C++-side safety.
+\end{itemize}
+
+This two-tier pattern — rich errors inside, flattened explicit status at the
+FFI edge — is the idiomatic way to bridge Rust's error values to a C++ caller:
+
+the boundary is the ONE place you convert, and you never let a panic or a
+\texttt{rust::Error} exception escape across it.
+\subsection{Ownership / threading}
+\label{sec:org2178209}
+
+\begin{itemize}
+\item \texttt{Box<DirectOptimizer>} → C++ \texttt{rust::Box<DirectOptimizer>} (move-only,
+unique\textsubscript{ptr}-like).
+\item \texttt{\&self} / \texttt{\&mut self} receivers allowed; \texttt{self} by value NOT. Multi-type
+extern-Rust must use explicit \texttt{self: \&T}.
+\item =CppCost handle must out-live the run call (GPU captures).
+\item Serial \texttt{evaluate} from one worker thread.
+\end{itemize}
+\subsubsection{Rust learning — ownership is the point (not a speed bump)}
+\label{sec:org0c05be1}
+
+This whole section is Brown Book ch 4 made concrete. The normie-from-C++
+reaction is ``why do I need \texttt{Box<DirectOptimizer>}'', but in Rust \texttt{Box} is not a
+pointer-with-extras; it's the \textbf{ownership} model made explicit.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 04-01 (what is ownership), ch 04-03 (slices),
+ch 15-01 (\texttt{Box} ``for having a value on the heap''), ch 15 (smart pointers).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-borrow-over-clone}, \texttt{own-copy-small}, \texttt{own-move-large}.
+\end{itemize}
+
+Normie-from-C++ (\texttt{unique\_ptr} everywhere because it's the default):
+
+\begin{minted}[]{rust}
+fn make() -> Box<DirectOptimizer> { Box::new(DirectOptimizer::default()) }
+\end{minted}
+
+\ldots{}is actually fine \textbf{here} — because the C++ side owns the handle move-only, and
+\texttt{Box} is Rust's \texttt{unique\_ptr}-equivalent. The lesson: \texttt{Box} isn't wrong because
+it's a pointer; it's wrong to reach for it when you only need to \emph{borrow}. The
+doc's \texttt{\&self} / \texttt{\&mut self} receivers are the borrow side.
+
+Normie-from-Python mistake: passing \texttt{self} by value everywhere. cxx forbids
+`self` by value for opaque types — and that's not a limitation, it's Rust
+refusing to let you silently \emph{duplicate} something you can only own once. The
+distinction the section hammers (Brown ch 4-01):
+
+\begin{itemize}
+\item \texttt{T} (by value): I \textbf{move} it — I alone own it now.
+\item \texttt{\&T}: I \textbf{borrow} it to read; others can too.
+\item \texttt{\&mut T}: I \textbf{borrow} it to mutate; exclusive.
+\end{itemize}
+
+There is no ``copy'' in that list for a non-\texttt{Copy} type. That absence is the
+point. The rule ``\texttt{CppCost handle must out-live the run call}'' is likewise an
+ownership statement: C++ holds the \texttt{std::function=+GPU captures; Rust borrows
+it for the duration of =run}. The borrow ends when \texttt{run} returns, so the handle
+stays alive — the whole lifetime idea in one sentence.
+\subsection{Name / namespace}
+\label{sec:org624bab5}
+
+Use \texttt{\#[cxx::bridge(namespace = "direct\_rs")]} (or \texttt{cxx\_name=/ =rust\_name})
+so \texttt{direct\_rs::DirectOptimizer ≠ ::jta::DirectOptimizer} and
+\texttt{direct\_rs::Pose} stays distinct from the C++ \texttt{Point6D}.
+\section{Options for the coordinate A/B seam}
+\label{sec:org0944d4b}
+
+\subsection{Seam governance the C++ side offers}
+\label{sec:orgc27d162}
+
+\begin{enumerate}
+\item \texttt{OptimizerRunDriver} (factory-injected) — whole OptimizerManager lifecycle
+(stages + GPU + thread); for ``alternative Manager'', not a single-stage
+optimizer-core drop-in.
+\item \texttt{RunDirectStage} — single-stage optimizer kernel; the least-injection point
+for a Rust \texttt{DirectOptimizer} drop-in.
+\item No existing switch: \texttt{direct\_options} is a \textbf{variant} slot (algorithm knobs),
+not a backend selector, and fail-fast non-default fields.
+\end{enumerate}
+\subsection{Where \texttt{backend} state lives}
+\label{sec:org80750e1}
+
+\begin{itemize}
+\item \texttt{OptimizerRunLaunch} / settings service: add \texttt{OptimizerBackend\{ Cpp, Rust \}}.
+\item NOT in \texttt{Options} (fail-fast); NOT in \texttt{OptimizerRunDriver} (over-scope).
+\end{itemize}
+\section{Remaining open questions}
+\label{sec:org4c5e7e5}
+
+\begin{itemize}
+\item batch ownership: \texttt{rust::Slice<const Pose>} over a C++ contiguous vector
+(zero-copy) vs copying poses into Rust
+\item \texttt{-{}-{}fno-exceptions} anywhere in Qt/CUDA toolchain? determines \texttt{Result} vs
+status-struct
+\item Rust \texttt{DirectOptimizer} unpin/sized; where the GPU context lives (keep single)
+\item first-fixture scale (Tier-1 analytic golden) to gate Rust==C++ numeric parity
+\item callback ordering for M2 (iteration-vs-im-order per eval sequence)
+\end{itemize}
+\section{Observations / conventions}
+\label{sec:org4307221}
+
+\begin{itemize}
+\item Keep the bridge minimal; real structs/methods stay native-side; the bridge is
+only value+pointer transit.
+\item Re-state contract details (eval ordering, budget) here; don't rely on this
+handshake alone.
+\item Re-check file/line targets (\texttt{optimizer\_manager.cpp:1303}, \texttt{cost.h}, \texttt{lib.rs})
+before coding — they drift.
+\item Verify verbatim generated signatures (rust::Box, ::Slice) with a tiny smoke
+crate first; don't trust this doc's shapes.
+\end{itemize}
+\section{Review policy}
+\label{sec:org2e0540b}
+
+This is a \textbf{reference handshake}, not an implementation plan. Decisions to
+double-check before coding:
+
+\begin{enumerate}
+\item \texttt{evaluate6} 6-double hot path vs shared-struct batch seam — which first?
+\item A/B seam = RunDirectStage construction vs \texttt{IOptimizer} virtual adapter.
+\item status-struct return vs cxx \texttt{Result} (exception).
+\item M1-only vs live progress day-one for the first A/B test.
+\end{enumerate}
+
+(Note: exact generated-header shapes for \texttt{rust::Box<T>} and \texttt{rust::Slice<const T>} were
+not verified verbatim from a build artifact; cxx latest \textasciitilde{}1.0.194. Build a tiny smoke)
+\section{Appendix A — deep dive: borrowing and the DIRECT loop}
+\label{sec:org3a7c0b6}
+
+If you only read one appendix, make it this one: it's ownership/borrowing made
+concrete against the exact shapes this project uses. The Brown Book ch 4 is the
+source; here we map it onto \texttt{boxes: BTreeMap<SizeKey, BTreeMap<CostKey,
+Hyperbox>{}>{}} and the run loop.
+\subsection{The four borrow flavors and when the loop uses each}
+\label{sec:orgd12017e}
+
+Re-read this table whenever a borrow error confuses you. Every one of these is
+deliberately exercised by the DIRECT loop.
+
+\begin{center}
+\begin{tabular}{lll}
+Rust expression & borrow kind & in this project\\
+\hline
+\texttt{\&self} / \texttt{\&T} & shared (read-only) & \texttt{gather\_poh} over the whole tree\\
+\texttt{\&mut self} / \texttt{\&mut T} & exclusive (write) & \texttt{trisect\_and\_reinsert} (it removes + inserts)\\
+\texttt{T} by value & move (ownership) & \texttt{pop\_first()} giving you the owned winner\\
+\texttt{\&[T]} & slice (a window) & \texttt{convex\_hull(\&[PohPoint])} — a borrowed view\\
+\end{tabular}
+\end{center}
+
+The rule that governs almost every error here: \textbf{\textbf{you can have many \texttt{\&T} or one
+\texttt{\&mut T}, never both for the same data at the same time.}} (Brown ch 4-02.)
+\subsection{The borrow dance, zoomed to one iteration}
+\label{sec:org7e223e8}
+
+Walk the loop and name the borrow at each breakpoint (this is Milestone 9's
+self-check, but written out):
+
+\begin{minted}[]{rust}
+// 1. GATHER — shared borrow: many readers, no writer
+let mut candidate_points = self.gather_poh();     // &self
+let selected = make_hull(&candidate_points);       // &[PohPoint]
+
+// 2. TRISECT — here we switch from &self to &mut self
+//    `self` was &self during gather; now we need &mut self to mutate the map.
+for point in &selected {
+    // 3. TAKE — move ownership OUT of the map (needs &mut)
+    let winner: Hyperbox = {
+        let row = self.boxes.get_mut(&OrderedFloat(point.size)); // &mut row
+        let (_key, hb) = row.expect("selected row exists").pop_first()
+            .expect("non-empty row");
+        hb                                          // moves the Hyperbox out
+    }; // row borrow ends here
+
+    // 4. TRANSFORM — we OWN `winner` now; no borrow at all
+    let (center, [pos, neg]) = Hyperbox::trisect(winner);
+
+    // 5. REINSERT — move the children BACK in (&mut)
+    self.insert_box(center);   // insert as known-cost
+    // pos/neg: batch-eval their centers, then insert with scores
+}
+\end{minted}
+
+The borrow transitions are the \textbf{spine} of the method:
+
+\begin{itemize}
+\item \texttt{\&self→\&mut self} happens by \textbf{method signature}, not by hand — a method
+\end{itemize}
+either takes \texttt{\&self} or \texttt{\&mut self}, so the compiler forces gather and
+trisect to be separate methods with different receivers. That's why you can't
+have one giant \texttt{\&mut} method that gathers and mutates at once and expect the
+borrow rules to stay sane.
+\begin{itemize}
+\item The \texttt{row} borrow in step 3 is \textbf{\textbf{scoped to the block}}: the \texttt{\&mut row} dies
+\end{itemize}
+at the closing brace, so \texttt{hb} (owned) can be returned out of it. This block-
+scoping is exactly the \texttt{mem-take-replace} / last-use pattern; the compiler ends
+the borrow at the winner's last use.
+\subsection{The three errors you will actually hit (the canon)}
+\label{sec:org835c550}
+
+These are the borrow-error codes you'll encounter in this project, mapped to
+the \emph{cause} and the \emph{fix}:
+
+\begin{center}
+\begin{tabular}{llll}
+Error & What it means & How it bites here & The fix\\
+\hline
+\texttt{E0382} & use of a moved value: you moved it away & reusing a \texttt{Hyperbox} after & don't reuse after move; or\\
+ & then used it again & \texttt{pop\_first()} moved it out & reorder so last use comes first\\
+\texttt{E0502} & cannot borrow as mutable because it's also & \texttt{\&mut self} while a \texttt{\&self} & scope the shared borrow so it ends\\
+ & borrowed as immutable (two borrows, wrong way) & borrow of the map is still alive & before the \texttt{\&mut} begins\\
+\texttt{E0499} & two mutable borrows at once & two live \texttt{\&mut} into the tree & never hold two \texttt{\&mut} into the\\
+ &  & (e.g. nested \texttt{get\_mut} loops) & same map; restructure\\
+\texttt{E0505} & cannot move a value out of a borrow & \texttt{\&self} row then trying to & pop/remove \emph{out} via \texttt{\&mut} or\\
+ &  & return an owned \texttt{Hyperbox} & clone only the fields you need\\
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: the Brown Book has a whole chapter (ch 4) that animates these,
+with an interactive ``editor'' where you drag borrows around.
+\item \textbf{\textbf{rust-skills}}: \texttt{own-borrow-over-clone}, \texttt{own-move-large},
+\texttt{mem-take-replace}, \texttt{anti-index-over-iter}.
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — you hit ``cannot move out of \texttt{*cost} which is behind a \texttt{\&
+reference" earlier. Which error code is that (E0505), and what's the conceptual
+fix — borrow the /fields/ you need, or move the whole value out via =\&mut}? It
+maps to ''project the two numbers (Copy fields) rather than pulling the whole
+box."
+\section{Appendix B — deep dive: ownership, lifetimes, and Send/Sync}
+\label{sec:orgcd07793}
+
+This appendix is for the moments when value/move/borrow isn't enough — when you
+need \texttt{Box}, when a lifetime shows up in a signature, and when the compiler
+starts asking about \texttt{Send} and \texttt{Sync} because of the worker thread + GPU cost.
+\subsection{Lifetimes: what they really are (and aren't)}
+\label{sec:orgd25fa93}
+
+A lifetime is not a value you pass around; it's the compiler's label for ``how
+long a borrow is valid''. You mostly write \texttt{\&T} and let Rust elide lifetimes; an
+explicit lifetime (\texttt{<'a>}) appears when a return type borrows from an argument.
+
+Normie-from-C++ confusion: ``\texttt{\&Point6D} is a const reference, why do I need a
+lifetime?'' The answer: the returned value's lifetime is tied to the borrow's
+origin. In this project you rarely write explicit lifetimes because you \emph{own}
+the values. The one place they appear is cxx opaque types and \texttt{\&CppCost}
+borrows — which cxx manages for you.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 10-03 (lifetimes), Brown ch 4-02 (the borrow table).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-lifetime-elision}, \texttt{type-phantom-marker}.
+\end{itemize}
+\subsection{\texttt{Box}: only when you need a stable address or heap}
+\label{sec:orgd5f35c1}
+
+Recall \texttt{rust::Box<DirectOptimizer>} on the C++ side. Box is one specific tool,
+not a default. You reach for \texttt{Box<T>} when:
+
+\begin{itemize}
+\item T is recursive (a tree node) — not here.
+\item T is huge and you want to move a pointer instead — your \texttt{Hyperbox} is tiny.
+\item you need heap because of a trait object \texttt{Box<dyn Cost>} — only if you pick
+runtime dispatch for the cost (Milestone 6).
+\item FFI wants a stable pointer (cxx \texttt{Box<DirectOptimizer>}) — THIS is your case.
+\end{itemize}
+
+Normie mistake: \texttt{Box} every struct ``just in case''. Stop — value \texttt{Hyperbox=`s by
+default; box only the FFI boundary object. =own-move-large}, \texttt{mem-box-large-
+variant}.
+\subsection{Send and Sync: why the GPU cost blocks one thread}
+\label{sec:org3838b35}
+
+This is where \texttt{Send} and \texttt{Sync} finally matter. The worker thread (on the C++
+side) calls \texttt{run} synchronously; the GPU cost (:CppCost=) mutates \texttt{GPUModel}
+pose state on each \texttt{evaluate}. So:
+
+\begin{itemize}
+\item \texttt{Send} means ``value can be transferred to another thread.'' \texttt{CppCost} wraps
+a \texttt{std::function} + GPU captures — Rust can't prove it's thread-safe, so it
+won't be auto-\texttt{Send}.
+\item \texttt{Sync} means ``\&T can be shared across threads.'' Same story.
+\end{itemize}
+
+Rather than fight that, the design keeps everything on ONE worker thread and
+calls \texttt{run} to completion (M1). That sidesteps \texttt{Send} / \texttt{Sync} entirely — you never
+move \texttt{CppCost} between threads because the C++ side owns the thread and the
+handle. This is why the doc's threading rule is ``serial, one thread'' and why
+=M1 (run-to-completion) is recommended before M2 (which needs care about which
+thread calls into the sink).
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 16 (concurrency — Send/Sync are the runtime of fear \texttt{free}
+threading; \texttt{Rc} vs \texttt{Arc}).
+\item \textbf{\textbf{rust-skills}}: \texttt{own-arc-shared} (when you DO need shared ownership across
+threads, upgrade \texttt{Rc=→=Arc}), \texttt{conc-thread-local}, \texttt{unsafe-send-sync-manual}.
+\end{itemize}
+\subsection{\texttt{Rc=/=Arc=/=RefCell}: the ``when you DON'T need them'' warning}
+\label{sec:org27e1f61}
+
+If you find yourself reaching for \texttt{Rc}, \texttt{Arc}, or \texttt{RefCell} in DIRECT, pause
+hard. They are for \emph{shared} or \emph{interior} ownership, and the whole design avoids
+both:
+
+\begin{itemize}
+\item \texttt{Rc/Arc} for shared ownership — you never share a \texttt{Hyperbox}; the map owns it
+and you move it in/out. You don't need shared pointers at all.
+\item \texttt{RefCell} for interior mutability — you mutate through \texttt{\&mut} methods, not
+through interior mutation. If you're grabbing \texttt{RefCell}, you've probably
+mis-structured a method's receiver (should be \texttt{\&mut self}, not \texttt{\&self} + a
+hidden \texttt{RefCell}).
+\end{itemize}
+
+Intro Section n/a; see Interior Mutability appendix.
+
+Stop. \textbf{\textbf{Check}} — why is \texttt{CppCost} not auto-\texttt{Send/Sync}, and how does keeping
+the run on one thread dodge that (instead of adding \texttt{unsafe impl Send})? Because
+Rust can't verify the captured GPU state is thread-safe; single-threading makes
+the question moot without any unsafe.
+\section{Appendix C — interior mutability: when you do NOT need it}
+\label{sec:org7b1ed64}
+
+Interior mutability (\texttt{Cell}, \texttt{RefCell}, \texttt{Mutex}, \texttt{RwLock}, \texttt{Atomics}) lets you
+mutate through a shared reference. It is a \textbf{workaround for a borrow it gives
+up}, and DIRECT's design exists largely to not need it. This appendix helps you
+recognize the moment you're reaching for it and whether that's a real need or a
+sign you've mis-structured.
+\subsection{The honest use case}
+\label{sec:org103548a}
+
+You need interior mutability when: a value must be mutably changed, but you
+only have \texttt{\&self=/=\&} access, and you can't re-structure to \texttt{\&mut}. Classic
+examples: caches, counters behind an API that only hands out \texttt{\&self}, or raw
+pointer mutation like GPU buffers owned by C++ and visible to Rust as \texttt{\&T}.
+
+In DIRECT, the places you might 'tempt' reach for it:
+
+\begin{itemize}
+\item a \texttt{cost\_function\_calls\_} counter you bump in \texttt{\&self} methods;
+\item a cache of computed \texttt{size()} values;
+\item the \texttt{CppCost} handle that mutates GPU state but comes in as \texttt{\&CppCost}.
+\end{itemize}
+\subsection{Why DIRECT mostly dodges it}
+\label{sec:org307aab7}
+
+\begin{enumerate}
+\item \textbf{\textbf{The counter.}} In the C++ it's a member bumped by all methods. The Rust
+idiomatic move is to make \texttt{\&mut}-taking methods the ONLY mutators, and keep
+the counter next to \texttt{boxes} behind \texttt{\&mut self}. If a counter needs to be
+readable from \texttt{\&self} AND written from elsewhere, \texttt{Cell<u32>} is legitimate
+— but only because you've proven \texttt{\&self} must observe it while \texttt{\&mut}
+writes elsewhere. Often you can reorder so a single \texttt{\&mut self} method owns
+the bump and the read, and \texttt{Cell} never appears.
+\item \textbf{\textbf{The cache.}} \texttt{perf-profile-first}: don't cache until the profiler says so.
+And even then, a \texttt{RefCell} cache turns every read into a potential panic
+(.borrow() twice = panic) — you trade one class of bug for another.
+\item \textbf{\textbf{The GPU \texttt{CppCost}.}} This is the real one. On the C++ side, \texttt{evaluate()}
+mutates \texttt{GPUModel} pose via a mutable closure, but to Rust it arrives as
+\texttt{\&CppCost}. If Rust needed to \emph{store} that handle and call it from multiple
+places, you might reach for \texttt{RefCell<\&CppCost>}. But the design passes =
+\&CppCost= /in to run/=/batch= and finishes the call synchronously, so the
+C++ side alone owns mutation — no interior mutability needed in Rust.
+\end{enumerate}
+\subsection{The ``is it a real need?'' checklist **}
+\label{sec:org9d9a47f}
+
+Ask, in order, before introducing \texttt{RefCell} / \texttt{Cell}:
+
+\begin{enumerate}
+\item Can I change a \texttt{\&self} method to \texttt{\&mut self}? If a mutator touches state,
+it should \emph{take} \texttt{\&mut} — that's the honest signal.
+\item Can I return data instead of mutating in place? (gather returns \texttt{Vec<PohPoint>};
+it doesn't scribble a member.)
+\item Is this genuinely shared mutable state visible across \& reads and \&mut
+writes? Only \emph{then} is \texttt{Cell=/=RefCell=/=Mutex} justified, and pick \texttt{Mutex}
+if it crosses threads.
+\end{enumerate}
+
+If the answer to \#1 or \#2 is yes, you don't need interior mutability — you need
+a better method signature. Reaching for \texttt{RefCell} early is the ``masturbatory
+types'' spike this project wants to avoid (see \texttt{anti-over-abstraction} and the
+Options-as-data block).
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 15-05 (\texttt{RefCell} ``interior mutability''), ch 16 (threads =
+\texttt{Mutex} vs \texttt{RwLock}), rust-skills \texttt{own-refcell-interior} =
+\end{itemize}
+\texttt{own-mutex-interior}.
+\begin{itemize}
+\item \textbf{\textbf{rust-skills}}: \texttt{own-refcell-interior}, \texttt{own-mutex-interior},
+\texttt{own-rc-single-thread}, \texttt{anti-over-abstraction}.
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — you're about to add \texttt{RefCell<u32>} for a call counter. Run
+the checklist: can the bumping method take \texttt{\&mut self}? If yes, drop the
+\texttt{RefCell}. Only keep it when \texttt{\&self} readers MUST see the current count while
+another object owns mutation — which, in DIRECT, the \texttt{\&mut self}-run loop
+handles without interior mutability.
+\section{Appendix D — \texttt{Option} and \texttt{Result} in practice (the Python jump)}
+\label{sec:org82575e4}
+
+Coming from Python, this is the appendix that will save you the most time.
+Python has \texttt{None} and exceptions and they're \textbf{ambient}: any value might be
+\texttt{None}, any call might raise. Rust makes both into ordinary types you must open
+before use. \texttt{Option<f64>} is not ``an f64 that might be missing'' — it is a
+different type from \texttt{f64}, and the compiler will not let you add 1.0 to it.
+
+This is exactly the \texttt{cost\_at\_center: Option<f64>} field from Step 3, so every
+example below is real.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 06-02 (\texttt{match} + \texttt{Option}), ch 06-03 (\texttt{if let}),
+ch 09-02 (\texttt{Result} + \texttt{?}), ch 18 (patterns in depth).
+\item \textbf{\textbf{rust-skills}}: \texttt{type-option-nullable}, \texttt{err-question-mark},
+\texttt{err-no-unwrap-prod}, \texttt{pat-exhaustive-enum}.
+\end{itemize}
+\subsection{The four ways to open an \texttt{Option} (in order of preference)}
+\label{sec:orgab00a42}
+
+\begin{minted}[]{rust}
+// 1. match — when both arms do real work
+match hb.cost_at_center {
+    Some(c) => record(c),
+    None    => queue_for_eval(hb),
+}
+
+// 2. if let — when only one arm does work
+if let Some(c) = hb.cost_at_center { record(c); }
+
+// 3. let-else — when None means "bail out of this function" (the flattener)
+let Some(c) = hb.cost_at_center else { return Err(OptimizerError::Unscored) };
+// `c` is a plain f64 from here down — no nesting, no indentation creep
+
+// 4. combinators — when you're transforming, not branching
+let doubled: Option<f64> = hb.cost_at_center.map(|c| c * 2.0);
+let shown:   f64         = hb.cost_at_center.unwrap_or(f64::INFINITY);
+\end{minted}
+
+\texttt{let-else} (option 3) is the one C++/Python developers never discover on their
+own and then use constantly. It is the idiomatic early-return: the happy path
+stays un-indented, the failure path is one line. Reach for it whenever your
+\texttt{match} has a \texttt{None} arm that just leaves.
+\subsection{The combinator cheat-sheet}
+\label{sec:org730c7f9}
+
+These are the \texttt{Option=/=Result} methods worth memorizing. Every one of them
+replaces an \texttt{if} you'd have written in C++.
+
+\begin{center}
+\begin{tabular}{lll}
+Call & Means & Use here\\
+\hline
+\texttt{.map(f)} & transform the inside, keep the wrapper & scale a cost, keep ``unscored''-ness\\
+\texttt{.and\_then(f)} & \texttt{map} where \texttt{f} itself returns Option/Result & chained lookups (row → box)\\
+\texttt{.unwrap\_or(v)} / \texttt{\_else(f)} & supply a default & treat unscored as \texttt{INFINITY} for sorts\\
+\texttt{.ok\_or(e)} / \texttt{\_else(f)} & \texttt{Option} → \texttt{Result} (attach a reason) & ``selected row missing'' → error\\
+\texttt{.ok()} / \texttt{.err()} & \texttt{Result} → \texttt{Option} (throw the reason away) & the FFI-edge flatten\\
+\texttt{.filter(p)} & keep \texttt{Some} only if predicate holds & ``scored AND finite''\\
+\texttt{.take()} & move the value out, leave \texttt{None} behind & claim a pending cost exactly once\\
+\texttt{.as\_ref()} / \texttt{.as\_mut()} & \texttt{\&Option<T>} → \texttt{Option<\&T>} & peek without moving out of \texttt{\&self}\\
+\texttt{.is\_some\_and(p)} & test the inside without unwrapping & guards in \texttt{if}\\
+\texttt{.zip(other)} & pair two \texttt{Some} into one \texttt{Some((a,b))} & need both center costs or neither\\
+\end{tabular}
+\end{center}
+
+\texttt{.take()} deserves a flag: it is \texttt{mem-take-replace} in miniature and it's how
+you move a non-\texttt{Copy} value out of a struct field you only have \texttt{\&mut} to.
+When the borrow checker says ``cannot move out of \texttt{self.field}'', \texttt{.take()} is
+usually the answer.
+\subsection{\texttt{?} — the operator that makes \texttt{Result} bearable}
+\label{sec:org287c578}
+
+Normie (Python habit: let it raise, or C++ habit: check every return):
+
+\begin{minted}[]{rust}
+let row = match self.boxes.get_mut(&key) {
+    Some(r) => r,
+    None => return Err(OptimizerError::MissingRow { key }),
+};
+let (_k, hb) = match row.pop_first() {
+    Some(p) => p,
+    None => return Err(OptimizerError::EmptyRow { key }),
+};
+\end{minted}
+
+Idiomatic (\texttt{?} = ``unwrap or return the error to my caller''):
+
+\begin{minted}[]{rust}
+let row = self.boxes.get_mut(&key).ok_or(OptimizerError::MissingRow { key })?;
+let (_k, hb) = row.pop_first().ok_or(OptimizerError::EmptyRow { key })?;
+\end{minted}
+
+Six lines to one, with the \textbf{same} control flow and no hidden unwinding. This is
+what ``errors are values'' buys you: \texttt{?} is sugar for an early return, nothing
+more. It works on \texttt{Option} too (returns \texttt{None}), which is why small helper
+functions often return \texttt{Option<T>} just to get \texttt{?}.
+\subsection{\texttt{unwrap} vs \texttt{expect} vs neither}
+\label{sec:org6bac710}
+
+\begin{itemize}
+\item \texttt{.unwrap()} — never in this crate's non-test code. It's a panic, and
+Appendix B tells you a panic across FFI aborts the process.
+\item \texttt{.expect("6-element array")} — acceptable \textbf{\textbf{only}} when the invariant is
+structurally guaranteed, and the string says \textbf{why}. The \texttt{min\_by\_key} call in
+Step 7 is the legitimate case: a \texttt{[u32; 6]} is never empty.
+\item Anything else — \texttt{?} or an explicit \texttt{match}.
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — you have \texttt{Option<f64>} and need an \texttt{f64} to compare. Name
+three different correct moves and when each is right. (\texttt{unwrap\_or(INFINITY)} if
+unscored should sort last; \texttt{let-else} if unscored is a bug worth returning on;
+\texttt{is\_some\_and(|c| c < best)} if you're only testing.)
+\section{Appendix E — the run loop assembled (contract-faithful)}
+\label{sec:org53fd74e}
+
+Milestone 9 says ``wire it together'' and the doc never shows the wiring. Here it
+is, and the reason it's worth spelling out is that \textbf{\textbf{the eval-ordering contract
+from ``Contract being filled'' lives in exactly one function}} — get it wrong and
+the Tier-1 golden diverges in a way that's miserable to bisect.
+
+Re-read the contract line first:
+
+> eval ordering: calls++ → non-finite → optimum update → storage → improvement callback
+\subsection{The struct}
+\label{sec:orgf141497}
+
+\begin{minted}[]{rust}
+pub struct DirectOptimizer {
+    tree: BoxTree,                 // the two-level BTreeMap (Step 4)
+    budget: u32,                   // cumulative cap: trunk 20k → branch 25k/30k → leaf 35k
+    call_offset: u32,              // SetCallOffset — cumulative across stages
+    calls: u32,
+    non_finite: u32,
+    best: Pose,
+    best_cost: f64,
+    stop: Arc<AtomicBool>,         // cooperative Stop(), set from the C++ thread
+}
+\end{minted}
+
+That \texttt{Arc<AtomicBool>} is the \textbf{one} honest interior-mutability case in the
+whole design, and it's worth pausing on — Appendix C told you to be suspicious
+of \texttt{RefCell}, and this is the exception that proves the rule. \texttt{Stop()} is
+called from a different thread than \texttt{run()}, so there is no way to restructure
+it into \texttt{\&mut self}: the checklist's question 3 (``genuinely shared mutable
+state across threads?'') answers \textbf{yes}. \texttt{AtomicBool} not \texttt{Mutex<bool>} because
+it's one bit and never needs to be read-and-written atomically together with
+anything else. Everything else in the struct stays behind \texttt{\&mut self}.
+\subsection{The eval helper — where the contract is enforced}
+\label{sec:org9e959f9}
+
+\begin{minted}[]{rust}
+/// Evaluate a batch and fold the results into optimizer state.
+/// Returns costs in INPUT ORDER (the contract the C++ BatchCostFunction keeps).
+fn eval_batch(&mut self, cost: &dyn Cost, poses: &[Pose]) -> Vec<f64> {
+    let costs = cost.eval(poses);            // ONE FFI hop for the whole batch
+    debug_assert_eq!(costs.len(), poses.len(), "batch cost must preserve length");
+
+    for (pose, &c) in poses.iter().zip(costs.iter()) {
+        self.calls += 1;                     // 1. calls++  (counts non-finite too)
+        if !c.is_finite() {
+            self.non_finite += 1;            // 2. non-finite
+            continue;                        //    a non-finite eval never becomes best
+        }
+        if c < self.best_cost {              // 3. optimum update
+            self.best = *pose;
+            self.best_cost = c;
+            self.improved_this_iter = true;  // 5. deferred — see below
+        }
+    }
+    costs                                    // 4. storage is the caller's job (reinsert)
+}
+\end{minted}
+
+The subtle bit: the contract puts \textbf{\textbf{storage before the improvement callback}},
+but the improvement is \textbf{detected} here during the eval. So you don't fire the
+sink here — you set a flag and fire it after reinsertion. Firing early is the
+classic port bug: the UI shows a new optimum for a box that isn't in the tree
+yet, and if anything downstream reads the tree on that signal, it races.
+\subsection{The loop}
+\label{sec:orgcb7b416}
+
+\begin{minted}[]{rust}
+pub fn run(&mut self, cost: &dyn Cost, sink: Option<&mut dyn ProgressSink>) -> RunResult<()> {
+    if self.tree.is_empty() { return Err(OptimizerError::ZeroRange { range: self.range }); }
+
+    while (self.calls + self.call_offset) < self.budget
+          && !self.stop.load(Ordering::Relaxed)
+    {
+        self.improved_this_iter = false;
+
+        // GATHER — &self borrow, no mutation (Step 5)
+        let points   = self.tree.gather_poh();
+        let selected = convex_hull(&points);          // pure (Step 6)
+        if selected.is_empty() { break; }             // nothing left to split
+
+        // TRISECT — &mut self; take out, transform, put back (Step 7)
+        let mut pending: Vec<(Pose, PendingSlot)> = Vec::new();
+        for point in &selected {
+            let winner = self.tree.take_min_of_row(point.size)?;   // owned
+            let (center, [pos, neg]) = Hyperbox::trisect(winner);
+            self.tree.insert_scored(center);                       // cost inherited
+            pending.push((pos.center, PendingSlot::Pos(pos)));
+            pending.push((neg.center, PendingSlot::Neg(neg)));
+        }
+
+        // ONE FFI hop for every new center this iteration
+        let poses: Vec<Pose> = pending.iter().map(|(p, _)| *p).collect();
+        let costs = self.eval_batch(cost, &poses);
+
+        // STORAGE — then and only then, the callbacks
+        for ((_, slot), c) in pending.into_iter().zip(costs) {
+            self.tree.insert_with_cost(slot.into_box(), c);
+        }
+        if let Some(s) = sink.as_deref_mut() {
+            s.on_iteration(self.calls + self.call_offset);   // ~30fps pacing is C++'s job
+            if self.improved_this_iter { s.on_improvement(self.best, self.best_cost); }
+        }
+    }
+    Ok(())
+}
+\end{minted}
+
+And the FFI edge — the one place \texttt{Result} becomes status (M8):
+
+\begin{minted}[]{rust}
+pub fn run_ffi(&mut self, cost: &CppCost) -> ffi::RunOutcome {
+    let handle = CppCostHandle(cost);
+    let result = self.run(&handle, None);
+    ffi::RunOutcome {
+        best:      self.best,
+        best_cost: self.best_cost,
+        calls:     self.calls,
+        ok:        result.is_ok(),      // rich error → one bool, deliberately
+    }
+}
+\end{minted}
+\subsection{Three things this skeleton exposes that the prose didn't}
+\label{sec:orgf09a45a}
+
+\begin{enumerate}
+\item \textbf{\textbf{Batch granularity is per-iteration, not per-box.}} All the new centers
+from one POH round go in one \texttt{\&[Pose]}. That's the ``one FFI hop'' claim made
+concrete: \textasciitilde{}2×|hull| poses per crossing instead of one.
+\item \textbf{\textbf{The budget can overshoot.}} \texttt{eval\_batch} evaluates the whole batch, so the
+final iteration may push \texttt{calls} past \texttt{budget}. The C++ checks the guard
+\textbf{between} iterations too — so this matches — but confirm it against
+\texttt{direct\_optimizer.h}, because if C++ truncates mid-batch and Rust doesn't,
+the golden diverges on call count. \textbf{\textbf{This belongs in ``Remaining open
+questions''.}}
+\item \textbf{\textbf{\texttt{sink} is \texttt{Option<\&mut dyn ProgressSink>}.}} M1 passes \texttt{None} and the
+whole progress path costs nothing; M2 passes \texttt{Some}. One signature, both
+milestones — this is \texttt{trait-dyn-vs-generic} paying off.
+\end{enumerate}
+
+Stop. \textbf{\textbf{Check}} — trace the calls counter for one iteration with a 4-box hull.
+How many FFI crossings, how many \texttt{calls} increments, and in what order does a
+new best reach the UI?
+\section{Appendix F — testing the port: unit, property, parity}
+\label{sec:org30a290e}
+
+A port has one job: \textbf{be the same}. That makes this the appendix with the
+highest ratio of value to Rust-novelty, because Rust's test story is unusually
+good and you can get parity confidence before any C++ is linked.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 11 (all of it — it's short), ch 11-03 (integration tests).
+\item \textbf{\textbf{rust-skills}}: \texttt{test-mock-traits}, \texttt{err-result-over-panic},
+\texttt{perf-profile-first}.
+\end{itemize}
+\subsection{Tier 0 — unit tests live next to the code}
+\label{sec:orgd955d62}
+
+\begin{minted}[]{rust}
+// bottom of src/poh.rs
+#[cfg(test)]                     // compiled ONLY under `cargo test`
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hull_of_a_known_set() {
+        let pts = vec![p(1.0, 5.0), p(2.0, 3.0), p(3.0, 4.0), p(4.0, 1.0)];
+        let hull = convex_hull(&pts);
+        assert_eq!(hull.len(), 3);
+        assert!(hull.windows(2).all(|w| w[0].size < w[1].size));  // monotone in size
+    }
+
+    #[test]
+    fn trisect_preserves_depth_budget() {
+        let parent = Hyperbox { cost_at_center: Some(1.0), center: Pose::ZERO, depths: [0; 6] };
+        let (center, [pos, neg]) = Hyperbox::trisect(parent);
+        assert_eq!(center.depths.iter().sum::<u32>(), 1);
+        assert!(pos.size() < 1.0 && neg.size() < 1.0);
+        assert!(pos.cost_at_center.is_none());     // not scored yet — Step 3's Option
+    }
+}
+\end{minted}
+
+The \texttt{\#[cfg(test)] mod tests} idiom is worth internalizing: tests sit in the
+\textbf{same file} as the code and can see private items. There is no separate test
+tree to keep in sync, and no header to expose internals through. This is one of
+the places where Rust is simply nicer than C++ and you should exploit it —
+every Step in this doc should end with a test module.
+\subsection{Tier 1 — the analytic golden, headless}
+\label{sec:org59b7e96}
+
+This is why \texttt{Cost} is a trait (M6). With a stub cost you can run the \textbf{entire}
+algorithm with no GPU, no Qt, no C++:
+
+\begin{minted}[]{rust}
+struct Sphere;                                  // f(x) = sum(x_i^2), min at origin
+impl Cost for Sphere {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses.iter()
+             .map(|p| p.x*p.x + p.y*p.y + p.z*p.z + p.xa*p.xa + p.ya*p.ya + p.za*p.za)
+             .collect()
+    }
+}
+
+#[test]
+fn finds_the_origin_within_budget() {
+    let mut opt = DirectOptimizer::new(range(), start(), 20_000, PohMode::ConvexHull);
+    opt.run(&Sphere, None).unwrap();
+    assert_relative_eq!(opt.best_cost, 0.0, epsilon = 1e-6);
+    assert!(opt.calls <= 20_000);
+}
+\end{minted}
+\subsection{Tier 2 — property tests for the invariants prose can't hold}
+\label{sec:org0ad58c2}
+
+\texttt{proptest} generates hundreds of inputs and shrinks failures to a minimal case.
+Use it for the claims this doc makes in English:
+
+\begin{minted}[]{rust}
+proptest! {
+    // the hull is always a subset of its input
+    #[test]
+    fn hull_is_subset(pts in prop::collection::vec(any_poh_point(), 1..50)) {
+        for h in convex_hull(&pts) { prop_assert!(pts.contains(&h)); }
+    }
+
+    // trisection never loses volume: children's extents tile the parent's
+    #[test]
+    fn trisect_conserves(depths in any::<[u32; 6]>()) {
+        let parent = Hyperbox { cost_at_center: Some(0.0), center: Pose::ZERO, depths };
+        let (c, [p, n]) = Hyperbox::trisect(parent);
+        prop_assert_eq!(c.depths.iter().sum::<u32>(),
+                        depths.iter().sum::<u32>() + 1);
+        prop_assert!(p.size() <= parent_size && n.size() <= parent_size);
+    }
+}
+\end{minted}
+
+Property testing is not a Rust-specific idea, but Rust's \texttt{proptest} is where
+most people meet it, and ``the same optimum for the same cost sequence'' is
+precisely a property, not an example.
+\subsection{Tier 3 — parity against the C++ (the actual gate)}
+\label{sec:org0f5e47e}
+
+The contract says the judge is ``the SAME optimum for the same cost sequence''.
+So make the cost sequence the artifact:
+
+\begin{enumerate}
+\item Instrument the C++ \texttt{DirectOptimizer} to dump, per eval: index, the 6 doubles
+in, the cost out. Run one fixture. That file is your golden.
+\item In Rust, implement \texttt{Cost} as a \textbf{replay} over that file: it asserts the
+incoming pose matches the recorded pose and returns the recorded cost.
+\item Any divergence fails at the \textbf{first differing eval}, with an index — instead
+of you comparing two final optima and having no idea where they split.
+\end{enumerate}
+
+\begin{minted}[]{rust}
+struct ReplayCost { records: Vec<(Pose, f64)>, cursor: Cell<usize> }
+// eval(): for each pose, assert_relative_eq! against records[cursor], return cost
+\end{minted}
+
+This is the single highest-leverage test in the port, and note what it needs:
+\texttt{Cost} being a trait, and the batch/serial distinction being a detail the trait
+hides. Two design decisions from M6 exist mostly to make this test possible.
+
+(\texttt{Cell<usize>} for the cursor is legitimate here — Appendix C's checklist,
+question 3, with \texttt{\&self} forced on you by the trait signature. A test is also
+the one place a \texttt{RefCell} panic is acceptable: it fails the test, which is the
+point.)
+
+Stop. \textbf{\textbf{Check}} — which tier catches ``Rust picks a different tie-break when two
+boxes have equal cost''? (Tier 3, immediately, at the first tie — and Tier 2 if
+you write the property. Tier 1 might never notice, because the final optimum
+can match by luck.)
+\section{Appendix G — C++ → Rust and Python → Rust translation tables}
+\label{sec:orgb8611bf}
+
+A lookup for the ``what's the Rust word for this'' moment. Use it to stop
+searching, not to stop thinking — the third column is where the difference
+lives.
+\subsection{From C++}
+\label{sec:org1cfde3b}
+
+\begin{center}
+\begin{tabular}{lll}
+C++ & Rust & The difference that matters\\
+\hline
+\texttt{std::vector<T>} & \texttt{Vec<T>} & \texttt{Vec} is move-only unless \texttt{T: Clone}; no copy ctor\\
+\texttt{const std::vector<T>\&} arg & \texttt{\&[T]} & slice works for arrays/Vec/boxed alike\\
+\texttt{std::array<T, N>} & \texttt{[T; N]} & size is part of the type, same as C++\\
+\texttt{std::unique\_ptr<T>} & \texttt{Box<T>} & no null state; \texttt{Option<Box<T>{}>{}} if you need one\\
+\texttt{std::shared\_ptr<T>} & \texttt{Rc<T>} / \texttt{Arc<T>} & \texttt{Rc} is single-thread only; compiler enforces it\\
+\texttt{T*} (nullable, non-owning) & \texttt{Option<\&T>} & no null deref possible\\
+\texttt{std::optional<T>} & \texttt{Option<T>} & \texttt{Option} must be opened; no implicit bool\\
+\texttt{std::variant<A, B>} & \texttt{enum} with data & exhaustive \texttt{match}, no \texttt{std::visit} ceremony\\
+\texttt{std::map<K, V>} & \texttt{BTreeMap<K, V>} & needs \texttt{K: Ord} — hence the whole Step 4\\
+\texttt{std::unordered\_map<K, V>} & \texttt{HashMap<K, V>} & needs \texttt{K: Hash + Eq}; not sorted\\
+\texttt{std::function<R(A)>} & \texttt{Box<dyn Fn(A) -> R>} & closures are types; \texttt{Fn} tier is explicit\\
+abstract base + \texttt{virtual} & \texttt{trait} + \texttt{dyn Trait} & no inheritance of \textbf{data}, only of contract\\
+template \texttt{<typename T>} & generic \texttt{<T: Bound>} & bounds checked at definition, not instantiation\\
+\texttt{const\&} member fn & \texttt{\&self} & borrow checker enforces it, not convention\\
+\texttt{mutable} member & \texttt{Cell} / \texttt{RefCell} & opt-in and visible in the type (Appendix C)\\
+\texttt{throw} / \texttt{try} & \texttt{Result} + \texttt{?} & no unwinding across FFI; errors are return values\\
+\texttt{std::move(x)} & just \texttt{x} & move is the default; no moved-from husk to read\\
+RAII destructor & \texttt{Drop} & same idea; runs at last use, not scope end (NLL)\\
+\texttt{assert} & \texttt{assert!} / \texttt{debug\_assert!} & \texttt{debug\_assert!} compiles out in release\\
+\end{tabular}
+\end{center}
+\subsection{From Python}
+\label{sec:orgabc436f}
+
+\begin{center}
+\begin{tabular}{lll}
+Python & Rust & The difference that matters\\
+\hline
+\texttt{list} & \texttt{Vec<T>} & one element type, no mixing\\
+\texttt{dict} & \texttt{HashMap} / \texttt{BTreeMap} & key needs \texttt{Hash+Eq} or \texttt{Ord}\\
+\texttt{tuple} & \texttt{(A, B)} & fixed arity in the type\\
+\texttt{None} & \texttt{Option::None} & a different \textbf{type}, not a value of every type\\
+\texttt{raise} / \texttt{except} & \texttt{Result} + \texttt{?} & callers see failure in the signature\\
+duck typing & \texttt{trait} bounds & the contract is written down and checked\\
+\texttt{@dataclass} & \texttt{struct} + \texttt{\#[derive(...)]} & derives are opt-in per capability\\
+list comprehension & \texttt{.iter().map().filter().collect()} & lazy until \texttt{collect}\\
+\texttt{for i in range(len(x))} & \texttt{for item in \&x} & idiomatic Rust rarely indexes (\texttt{perf-iter-over-index})\\
+\texttt{copy.deepcopy} & \texttt{.clone()} & explicit, visible, and usually avoidable\\
+GIL / ``just use threads'' & \texttt{Send} / \texttt{Sync} & data races are compile errors (Appendix B)\\
+\texttt{isinstance} dispatch & \texttt{match} on an \texttt{enum} & exhaustive; new variant = compile error at every site\\
+\end{tabular}
+\end{center}
+
+The Python row worth staring at is the last one. In Python, adding a case means
+hunting for every \texttt{isinstance} chain. In Rust, adding an enum variant makes
+every non-wildcard \texttt{match} fail to compile until you handle it. That is the
+single biggest reason this doc keeps pushing \texttt{enum} over \texttt{u8} — it's not
+tidiness, it's a refactoring superpower.
+\section{Appendix H — debugging the FFI seam}
+\label{sec:orgb59663d}
+
+Everything above assumes things work. This is the appendix for 3pm on the day
+the linker starts shouting. Rust's compile errors are excellent; cxx's and the
+linker's are not, so pattern-matching on the symptom is the fastest route.
+\subsection{First: look at what cxx generated}
+\label{sec:org5eb6b3a}
+
+Two commands answer most questions:
+
+\begin{minted}[]{sh}
+cargo expand --lib ffi        # the Rust side the bridge macro wrote
+cat target/*/cxxbridge/direct-rs/src/lib.rs.h   # the C++ side it wrote
+\end{minted}
+
+Every ``is it \texttt{rust::Box<T>} or \texttt{rust::box<T>}, does the slice come in as
+\texttt{rust::Slice<const Pose>}'' question in this doc is answered by that header, for
+\textbf{your} cxx version, in seconds. This is the smoke-crate advice from ``Review
+policy'', but you don't need a smoke crate — you need to read the artifact.
+\subsection{Symptom → cause table}
+\label{sec:org24fba6e}
+
+\begin{center}
+\begin{tabular}{lll}
+Symptom & Cause & Fix\\
+\hline
+\texttt{undefined reference to direct\_rs::new\_direct\_optimizer} & staticlib not linked, or name mangling differs & check \texttt{crate-type}{[}``staticlib'']= + \texttt{target\_link\_libraries}\\
+\texttt{undefined reference to CppCost::evaluate6} & declared in bridge, not defined in C++ & \texttt{evaluate6} must be a real (non-inline-only) member\\
+cxx: ``unsupported type'' on a bridge signature & tried to pass a non-shared, non-opaque type & shared struct of PODs, or opaque + reference; nothing else\\
+cxx: ``self must be a reference'' & \texttt{fn run(self, ...)} on an opaque type & \texttt{\&self} / \texttt{\&mut self} only (see Ownership/threading)\\
+cxx: function pointer / callback rejected & C++→Rust fn pointers unimplemented & invert to the \texttt{ProgressSink} shape (M2)\\
+process dies with \texttt{thread panicked ... note: aborting} & a panic reached an \texttt{extern} boundary & \texttt{?} the error, return \texttt{ok:false}; never \texttt{unwrap} at the edge\\
+C++ sees garbage in a \texttt{Pose} field & field \textbf{order} differs between the two decls & shared struct means ONE decl — don't hand-write the C++ side\\
+optimum matches, \texttt{calls} doesn't & budget truncation differs mid-batch & see Appendix E, item 2 — settle the open question\\
+\texttt{Pose} values fine, costs all \texttt{inf} & handle outlived / GPU state not set up & the \texttt{CppCost} lifetime rule; check it's alive across \texttt{run}\\
+works in debug, wrong in release & UB, or an \texttt{f64} comparison/=debug\textsubscript{assert}!= & run under sanitizers; don't put logic in \texttt{debug\_assert!}\\
+\end{tabular}
+\end{center}
+\subsection{Tools worth having configured before you need them}
+\label{sec:orgc4672a2}
+
+\begin{itemize}
+\item \texttt{RUST\_BACKTRACE=1} — set it in the launch environment permanently. A Rust
+panic without a backtrace tells you almost nothing.
+\item \texttt{nm -C libdirect\_rs.a | grep direct\_rs} — proves the symbol exists before you
+blame CMake.
+\item \texttt{gdb} / \texttt{lldb} — both step across the boundary; Rust frames show up with
+mangled-but-readable names. Breaking on \texttt{rust\_panic} catches the abort case
+\textbf{at the panic}, not after.
+\item \texttt{RUSTFLAGS}``-Z sanitizer=address''= (nightly) — worth one run once the batch
+slice path is live, because that's the only place raw memory is shared.
+\item \texttt{cargo tree} — when two crates disagree on a \texttt{cxx} version, which produces
+spectacularly confusing layout mismatches.
+\end{itemize}
+\subsection{The panic firewall (do this once, in \texttt{lib.rs})}
+\label{sec:orgbde4324}
+
+Because a panic crossing FFI is undefined behavior and the design says ``never
+let Rust panic across FFI'', make that structural rather than aspirational:
+
+\begin{minted}[]{rust}
+fn run(&mut self, cost: &CppCost) -> ffi::RunOutcome {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        self.run_inner(cost)
+    }))
+    .unwrap_or_else(|_| ffi::RunOutcome { ok: false, ..Default::default() })
+}
+\end{minted}
+
+Caveats worth understanding rather than copying blindly: \texttt{catch\_unwind} does
+nothing under \texttt{panic=abort}, and \texttt{AssertUnwindSafe} is you promising the state
+isn't left half-mutated. It's a net, not a design. The design is \texttt{Result}
+everywhere inside (Appendix D) — this catches the bug you didn't predict, on a
+customer's machine, instead of aborting the whole application.
+
+\begin{itemize}
+\item \textbf{\textbf{Book}}: ch 09-01 (panic and unwinding), ch 19-01 (=unsafe=/FFI).
+\item \textbf{\textbf{rust-skills}}: \texttt{err-no-unwrap-prod}, \texttt{unsafe-safety-comment}.
+\end{itemize}
+
+Stop. \textbf{\textbf{Check}} — the C++ side reports a plausible optimum but \texttt{out.ok =} false=
+every run. Where do you look first? (The \texttt{Result=→=ok} flatten in \texttt{run\_ffi}:
+something inside is returning \texttt{Err} \textbf{after} best was already updated — which is
+exactly the information the flatten throws away. Log the \texttt{OptimizerError}
+on the Rust side before you drop it; this is the ``what is lost at the edge''
+from M8, biting.)
+\section{Rust idiom glossary + Brown Book index}
+\label{sec:org5a07f52}
+
+A cross-reference table: the concept this FFI handshake touches, where to read
+it in the Brown Book, the rust-skills rule, and a one-line ``normie → idiomatic''
+teaser. Use it to jump straight to the depth you need.
+
+\begin{center}
+\begin{tabular}{llll}
+Rust concept & Brown Book & rust-skills rule & normie → idiomatic guardrail\\
+\hline
+ownership / move semantics & ch 04-01 & own-borrow-over-clone & ``don't copy, don't pass by value — move or borrow''\\
+borrowing = \&T / \&mut T & ch 04-02 & own-borrow-over-clone & ``\&mut is exclusive; \& is shared''\\
+slices = \&[T] (fat pointer) & ch 04-03 & own-slice-over-vec & ``accept \&[T], not \&Vec<T>''\\
+structs (value types) & ch 05 & own-copy-small & ``small POD-alleys by value; big/owned on heap''\\
+enums + exhaustive match & ch 06 & type-enum-states & ``use enum for mutually-exclusive states, not u8''\\
+Result / ? / no exceptions & ch 09 & err-result-over-panic & ``errors are values; caller decides''\\
+Box<T> ≈ unique\textsubscript{ptr} & ch 15-01 & own-move-large & ``only box when you need heap or a stable address''\\
+traits as contracts & ch 10-02 & trait-dyn-vs-generic & ``\texttt{Cost} is a trait, not a base class''\\
+dyn Trait / trait objects & ch 17 & trait-object-safety & ``use dyn only when runtime dispatch is needed''\\
+closures: Fn/FnMut/FnOnce & ch 13 & closure-fn-trait-bounds & ``request the least-restrictive Fn you need''\\
+iterators (lazy, chainable) & ch 13 & perf-iter-over-index & ``map/filter/collect, not index loops''\\
+unsafe + FFI / \#[repr(C)] & ch 19 & unsafe-safety-comment & ``boundary-only; never leak a panic''\\
+error type with thiserror & ch 09-02 & err-thiserror-lib & ``derive Error; use ? everywhere inside''\\
+panic = abort across FFI & ch 09-01 & err-no-unwrap-prod & ``unwrap only on verified invariants''\\
+newtype for IDs/units & ch 19-03? & type-newtype-ids & ``BoxBudget(u32), not bare u32''\\
+Default derive for options & ch 05 & api-default-impl & ``Default == C++ default ctor''\\
+\end{tabular}
+\end{center}
+
+Key Brown Book sections to open (each is a chapter page; substitute the number
+into \url{https://rust-book.cs.brown.edu/chNN-0X-...}.html):
+
+\begin{enumerate}
+\item \texttt{ch04-02-references-and-borrowing.html} — the borrow table (move/\&T/\&mut T).
+\item \texttt{ch09-02-recoverable-errors-with-result.html} — Result + ?.
+\item \texttt{ch10-02-traits-defining-shared-behavior.html} — the \texttt{Cost} trait.
+\item \texttt{ch13-01-closures.html} — Fn traits + capture.
+\item \texttt{ch15-01-box-point-to-data-on-the-heap.html} — why Box here.
+\item \texttt{ch19-01-unsafe-rust.html} — what \texttt{unsafe extern} gives up.
+\end{enumerate}
+
+How to grow with this doc: whenever you implement a piece and hit a borrow
+checker error, look it up in the glossary's ``normie → idiomatic'' column first;
+the Brown chapter it points to walks through the visual/physical model, and the
+rust-skills rule gives the sharper 1-3 sentence rule. Re-read ch 4 after every
+few-up milestone — ownership is the book's spine, and the FFI handshake above
+is one long exercise in it.
+\subsection{Borrow-checker error lookup (keep this beside the Brown ch 4 quizzes)}
+\label{sec:org0e75856}
+
+The fastest way to grow from each compiler rejection is to map the error to a
+cause and a move. This is the same canon as Appendix A, but organized as a
+diagnostic cheat-sheet with the \emph{normie} reflex you'll have and the \emph{idiomatic}
+response.
+
+\begin{center}
+\begin{tabular}{llll}
+Error code & You (normie) wrote & What Rust means & The idiomatic move\\
+\hline
+E0382 & reuse a \texttt{Hyperbox} after \texttt{pop\_first()} & ``use of moved value'' — you gave it & reorder so the last use comes first, or \texttt{.clone()} only the small bits\\
+ & moved it & to the map / to trisect & you still need\\
+E0502 & \texttt{\&self} borrow alive while you call =\&mut & "cannot borrow as mutable; it's & scope the shared borrow (block or \texttt{drop}) before the \texttt{\&mut}; or split\\
+ & self=-mutating method & also borrowed as immutable" & into a \&=self= gather + \&=mut= apply\\
+E0499 & two live \texttt{\&mut} into the tree (nested \texttt{get\_mut} loop) & ``cannot borrow as mutable more than once'' & restructure so you never hold two \texttt{\&mut} into the same map\\
+E0505 & "cannot move out of \texttt{*x} behind a =\&\\
+\end{tabular}
+\end{center}
+reference" inside the gather                 | you can't move out of a shared
+borrow                          | copy the small fields (\texttt{*size\_key}.into\textsubscript{inner}()=), not the whole box   |
+\begin{center}
+\begin{tabular}{llll}
+E0596 & calling a mutating method through \texttt{\&self} & ``cannot borrow as mutable'' (receiver is \texttt{\&self}) & change the method to \texttt{\&mut self}, or return data instead of scribbling\\
+E0753 & FFI panic crossed the boundary & ``panic in a function that cannot unwind'' & never let a panic reach an \texttt{extern}; catch it, return a status struct\\
+\end{tabular}
+\end{center}
+
+Read the first column as ``the code are paths where the borrow checker caught a
+C++-shaped habit.'' Each fix is the corresponding Rust-shaped habit.
+\subsection{Self-check index (the Roadmap's questions, collected)}
+\label{sec:orge893455}
+
+Answers you should be able to give — by milestone — without looking. If one is
+fuzzy, that's the part to re-read before implementing.
+
+\begin{center}
+\begin{tabular}{lll}
+\# & Milestone & The self-check question\\
+\hline
+M0 & split & who owns cost / search / thread / UI / budget?\\
+M1 & types & why \texttt{Pose} is \texttt{Copy} but a \texttt{Vec}-wrapping type isn't?\\
+M2 & BTreeMap & why can't \texttt{f64} be a key; what's the minimal fix?\\
+M3 & gather & why \texttt{\&self}; what breaks if you clone the box out?\\
+M4 & POH & how do you know \texttt{convex\_hull} didn't touch the tree?\\
+M5 & trisect & why pop/remove OUT before trisecting? why no in-place map mutation?\\
+M6 & Cost & why a trait? when \texttt{impl Fn} vs \texttt{Box<dyn Cost>}?\\
+M7 & cxx & what two things can't cross a cxx boundary?\\
+M8 & errors & Result-in vs status-out: what's lost at the edge and why OK?\\
+M9 & assemble & walk one \texttt{Hyperbox} borrowing/move end-to-end.\\
+A & borrow & identify E0505 vs E0502 vs E0499 when you see them.\\
+B & lifetime & why \texttt{CppCost} isn't auto-\texttt{Send/Sync}; how one thread dodges it.\\
+C & RefCell & run the 3-step checklist before adding \texttt{RefCell} for the counter.\\
+D & Option & three correct ways to get an \texttt{f64} out of an \texttt{Option<f64>}, and when each.\\
+E & run loop & trace calls/FFI-hops/callback order for one iteration of a 4-box hull.\\
+F & testing & which test tier catches a tie-break divergence, and why not the others?\\
+G & translate & \texttt{std::function} → what? \texttt{std::variant} → what? what changes, not just the name?\\
+H & debugging & first two commands when the linker or the layout goes wrong.\\
+\end{tabular}
+\end{center}
+
+Use this table as a study checklist: each row is \textasciitilde{}10 minutes of reading in the
+linked chapter plus one quiz. When you can answer all eighteen, you own every
+concept the handshake runs on.
+
+And the honest ordering, if you only have a week: Toolchain → exercises E1-E7
+→ Appendix D → Appendix A → Appendix E → Appendix F Tier 3. That path ends with
+a Rust DIRECT that provably matches the C++ on a recorded cost sequence, which
+is the only milestone that actually de-risks the port. The rest of this doc is
+reference you'll re-read as the compiler sends you back to it.
+\end{document}

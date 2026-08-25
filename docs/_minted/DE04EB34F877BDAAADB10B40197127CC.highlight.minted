@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// settings/launch: enum class OptimizerBackend \PYGZob{} Cpp, Rust \PYGZcb{};}
+\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{launch\PYGZus{}}\PYG{p}{.}\PYG{n}{optimizer\PYGZus{}backend}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{OptimizerBackend}\PYG{o}{::}\PYG{n}{Rust}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{h}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{build\PYGZus{}cpp\PYGZus{}cost}\PYG{p}{(}\PYG{n}{BuildGpuCostAdapter}\PYG{p}{(...));}\PYG{+w}{ }\PYG{c+c1}{// std::unique\PYGZus{}ptr\PYGZlt{}CppCost\PYGZgt{}}
+\PYG{+w}{    }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{box}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{direct\PYGZus{}rs}\PYG{o}{::}\PYG{n}{new\PYGZus{}direct\PYGZus{}optimizer}\PYG{p}{(}\PYG{n}{range}\PYG{p}{,}\PYG{n}{start}\PYG{p}{,}\PYG{n}{budget}\PYG{p}{,}\PYG{n}{mode}\PYG{p}{);}
+\PYG{+w}{    }\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{out}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{box}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{run}\PYG{p}{(}\PYG{o}{*}\PYG{n}{h}\PYG{p}{);}\PYG{+w}{   }\PYG{c+c1}{// *h derefs unique\PYGZus{}ptr → CppCost\PYGZam{} (matches \PYGZam{}CppCost)}
+\PYG{+w}{    }\PYG{n}{cost\PYGZus{}function\PYGZus{}calls\PYGZus{}}\PYG{+w}{      }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{out}\PYG{p}{.}\PYG{n}{calls}\PYG{p}{;}
+\PYG{+w}{    }\PYG{n}{current\PYGZus{}optimum\PYGZus{}location\PYGZus{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Point6D}\PYG{p}{(}\PYG{n}{out}\PYG{p}{.}\PYG{n}{best}\PYG{p}{.}\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{out}\PYG{p}{.}\PYG{n}{best}\PYG{p}{.}\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{c+cm}{/* ... */}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n}{current\PYGZus{}optimum\PYGZus{}value\PYGZus{}}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{out}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n}{out}\PYG{p}{.}\PYG{n}{ok}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{emit}\PYG{+w}{ }\PYG{n}{OptimizerError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}rust direct failed\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{error\PYGZus{}occurrred\PYGZus{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{c+c1}{// existing DirectOptimizer block, byte\PYGZhy{}identical}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

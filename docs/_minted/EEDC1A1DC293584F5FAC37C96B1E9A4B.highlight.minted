@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// bottom of src/poh.rs}
+\PYG{c+cp}{\PYGZsh{}[cfg(test)]}\PYG{+w}{                     }\PYG{c+c1}{// compiled ONLY under `cargo test`}
+\PYG{k}{mod}\PYG{+w}{ }\PYG{n+nn}{tests}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{use}\PYG{+w}{ }\PYG{k}{super}\PYG{p}{::}\PYG{o}{*}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[test]}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{hull\PYGZus{}of\PYGZus{}a\PYGZus{}known\PYGZus{}set}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{pts}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nf+fm}{vec!}\PYG{p}{[}\PYG{n}{p}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{5.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{3.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{(}\PYG{l+m+mf}{3.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{4.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{(}\PYG{l+m+mf}{4.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{p}{)];}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{hull}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{convex\PYGZus{}hull}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{pts}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nf+fm}{assert\PYGZus{}eq!}\PYG{p}{(}\PYG{n}{hull}\PYG{p}{.}\PYG{n}{len}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nf+fm}{assert!}\PYG{p}{(}\PYG{n}{hull}\PYG{p}{.}\PYG{n}{windows}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{).}\PYG{n}{all}\PYG{p}{(}\PYG{o}{|}\PYG{n}{w}\PYG{o}{|}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{].}\PYG{n}{size}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{].}\PYG{n}{size}\PYG{p}{));}\PYG{+w}{  }\PYG{c+c1}{// monotone in size}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[test]}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{trisect\PYGZus{}preserves\PYGZus{}depth\PYGZus{}budget}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{parent}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{p}{::}\PYG{n}{ZERO}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{depths}\PYG{p}{:}\PYG{+w}{ }\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{;}\PYG{+w}{ }\PYG{l+m+mi}{6}\PYG{p}{]}\PYG{+w}{ }\PYG{p}{\PYGZcb{};}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{p}{::}\PYG{n}{trisect}\PYG{p}{(}\PYG{n}{parent}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nf+fm}{assert\PYGZus{}eq!}\PYG{p}{(}\PYG{n}{center}\PYG{p}{.}\PYG{n}{depths}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{sum}\PYG{p}{::}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{u32}\PYG{o}{\PYGZgt{}}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nf+fm}{assert!}\PYG{p}{(}\PYG{n}{pos}\PYG{p}{.}\PYG{n}{size}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{.}\PYG{n}{size}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nf+fm}{assert!}\PYG{p}{(}\PYG{n}{pos}\PYG{p}{.}\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{.}\PYG{n}{is\PYGZus{}none}\PYG{p}{());}\PYG{+w}{     }\PYG{c+c1}{// not scored yet — Step 3\PYGZsq{}s Option}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

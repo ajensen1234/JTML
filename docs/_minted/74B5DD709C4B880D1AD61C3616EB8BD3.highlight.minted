@@ -1,0 +1,21 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{[package]}
+\PYG{n}{name}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}direct\PYGZhy{}rs\PYGZdq{}}
+\PYG{n}{version}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}0.1.0\PYGZdq{}}
+\PYG{n}{edition}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}2021\PYGZdq{}}
+
+\PYG{k}{[lib]}
+\PYG{n}{crate\PYGZhy{}type}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}staticlib\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}rlib\PYGZdq{}}\PYG{p}{]}\PYG{+w}{   }\PYG{c+c1}{\PYGZsh{} staticlib for CMake to link; rlib for Rust tests}
+
+\PYG{k}{[dependencies]}
+\PYG{n}{cxx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}1.0\PYGZdq{}}
+\PYG{n}{ordered\PYGZus{}float}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}4\PYGZdq{}}
+\PYG{n}{thiserror}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}2\PYGZdq{}}
+
+\PYG{k}{[build\PYGZhy{}dependencies]}
+\PYG{n}{cxx\PYGZhy{}build}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}1.0\PYGZdq{}}
+
+\PYG{k}{[dev\PYGZhy{}dependencies]}
+\PYG{n}{approx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}0.5\PYGZdq{}}\PYG{+w}{      }\PYG{c+c1}{\PYGZsh{} assert\PYGZus{}relative\PYGZus{}eq! for float parity}
+\PYG{n}{proptest}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}1\PYGZdq{}}\PYG{+w}{      }\PYG{c+c1}{\PYGZsh{} property tests for hull + trisect invariants}
+\end{MintedVerbatim}

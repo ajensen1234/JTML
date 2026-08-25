@@ -1,0 +1,17 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZsh{}[derive(Clone, Copy)]}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{Hyperbox}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Option}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{p}{,}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{p}{,}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{n}{depths}\PYG{p}{:}\PYG{+w}{ }\PYG{p}{[}\PYG{k+kt}{u32}\PYG{p}{;}\PYG{+w}{ }\PYG{l+m+mi}{6}\PYG{p}{],}
+\PYG{p}{\PYGZcb{}}
+\PYG{k}{impl}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{l+s+sd}{/// L2 norm of box extent from depths — the \PYGZdq{}size\PYGZdq{} used by POH.}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{size}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{depths}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{()}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{n}{e}\PYG{o}{|}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{k}{f64}\PYG{p}{.}\PYG{n}{powf}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{2.0}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{*}\PYG{n}{e}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{)))}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n}{sum}\PYG{p}{::}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{p}{()}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n}{sqrt}\PYG{p}{()}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

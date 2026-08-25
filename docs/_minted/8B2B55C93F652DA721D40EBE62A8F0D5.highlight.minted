@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{batch\PYGZus{}cost}\PYG{p}{(}\PYG{n}{costs}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{k+kt}{f64}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{      }\PYG{c+c1}{// \PYGZam{}[T], not \PYGZam{}Vec\PYGZlt{}T\PYGZgt{}}
+\PYG{+w}{    }\PYG{n}{costs}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{n}{c}\PYG{o}{|}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mf}{2.0}\PYG{p}{).}\PYG{n}{collect}\PYG{p}{()}\PYG{+w}{      }\PYG{c+c1}{// lazy, no manual push}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

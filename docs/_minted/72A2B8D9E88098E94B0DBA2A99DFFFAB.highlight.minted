@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{gather\PYGZus{}poh}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{n}{PohPoint}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{rows}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{p}{::}\PYG{n}{new}\PYG{p}{();}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{size\PYGZus{}key}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost\PYGZus{}val}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{boxes}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{          }\PYG{c+c1}{// \PYGZam{}, immutable}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{((}\PYG{n}{key}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}box}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{cost\PYGZus{}val}\PYG{p}{.}\PYG{n}{first\PYGZus{}key\PYGZus{}value}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{  }\PYG{c+c1}{// \PYGZam{}, immutable}
+\PYG{+w}{            }\PYG{n}{rows}\PYG{p}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{PohPoint}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{n}{size}\PYG{p}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{*}\PYG{n}{size\PYGZus{}key}\PYG{p}{).}\PYG{n}{into\PYGZus{}inner}\PYG{p}{(),}\PYG{+w}{   }\PYG{c+c1}{// copy the f64 out of the key}
+\PYG{+w}{                }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{key}\PYG{p}{.}\PYG{l+m+mi}{0}\PYG{p}{).}\PYG{n}{into\PYGZus{}inner}\PYG{p}{(),}\PYG{+w}{       }\PYG{c+c1}{// copy the cost, not the box}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{});}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{rows}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{Sphere}\PYG{p}{;}\PYG{+w}{                                  }\PYG{c+c1}{// f(x) = sum(x\PYGZus{}i\PYGZca{}2), min at origin}
+\PYG{k}{impl}\PYG{+w}{ }\PYG{n}{Cost}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{Sphere}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{eval}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{n}{Pose}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n}{poses}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{()}
+\PYG{+w}{             }\PYG{p}{.}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{n}{p}\PYG{o}{|}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{x}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{x}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{y}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{y}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{z}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{z}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{xa}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{xa}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{ya}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{ya}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{za}\PYG{o}{*}\PYG{n}{p}\PYG{p}{.}\PYG{n}{za}\PYG{p}{)}
+\PYG{+w}{             }\PYG{p}{.}\PYG{n}{collect}\PYG{p}{()}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cp}{\PYGZsh{}[test]}
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{finds\PYGZus{}the\PYGZus{}origin\PYGZus{}within\PYGZus{}budget}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{opt}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{DirectOptimizer}\PYG{p}{::}\PYG{n}{new}\PYG{p}{(}\PYG{n}{range}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{start}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{20\PYGZus{}000}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PohMode}\PYG{p}{::}\PYG{n}{ConvexHull}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n}{opt}\PYG{p}{.}\PYG{n}{run}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{Sphere}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{None}\PYG{p}{).}\PYG{n}{unwrap}\PYG{p}{();}
+\PYG{+w}{    }\PYG{n}{assert\PYGZus{}relative\PYGZus{}eq}\PYG{o}{!}\PYG{p}{(}\PYG{n}{opt}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{epsilon}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mf}{1e\PYGZhy{}6}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n+nf+fm}{assert!}\PYG{p}{(}\PYG{n}{opt}\PYG{p}{.}\PYG{n}{calls}\PYG{+w}{ }\PYG{o}{\PYGZlt{}=}\PYG{+w}{ }\PYG{l+m+mi}{20\PYGZus{}000}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

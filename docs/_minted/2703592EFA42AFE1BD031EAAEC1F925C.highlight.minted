@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{mode}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{match}\PYG{+w}{ }\PYG{n}{mode}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{ffi}\PYG{p}{::}\PYG{n}{PohMode}\PYG{p}{::}\PYG{n}{ConvexHull}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{o}{..}\PYG{p}{.,}
+\PYG{+w}{    }\PYG{n}{ffi}\PYG{p}{::}\PYG{n}{PohMode}\PYG{p}{::}\PYG{n}{Pareto}\PYG{+w}{     }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{o}{..}\PYG{p}{.,}
+\PYG{+w}{    }\PYG{n}{ffi}\PYG{p}{::}\PYG{n}{PohMode}\PYG{p}{::}\PYG{n}{Aggressive}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{o}{..}\PYG{p}{.,}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Err}\PYG{p}{(}\PYG{n}{UnknownPohMode}\PYG{p}{),}\PYG{+w}{   }\PYG{c+c1}{// cxx shared enums can\PYGZsq{}t be trusted to be in\PYGZhy{}list}
+\PYG{p}{\PYGZcb{};}
+\end{MintedVerbatim}

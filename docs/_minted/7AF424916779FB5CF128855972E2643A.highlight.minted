@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{use}\PYG{+w}{ }\PYG{n}{ordered\PYGZus{}float}\PYG{p}{::}\PYG{n}{OrderedFloat}\PYG{p}{;}\PYG{+w}{             }\PYG{c+c1}{// newtype: f64 that IS Ord}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{SizeKey}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{OrderedFloat}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{CostKey}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{OrderedFloat}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{u64}\PYG{p}{);}\PYG{+w}{ }\PYG{c+c1}{// (cost, unique id) so equal costs don\PYGZsq{}t collide}
+\end{MintedVerbatim}

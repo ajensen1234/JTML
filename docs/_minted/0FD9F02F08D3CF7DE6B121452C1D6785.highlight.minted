@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+C++ (coordinator)                     | Rust (direct\PYGZhy{}rs)
+\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}
+RunDirectStage                        |
+  backend = launch.optimizer\PYGZus{}backend  |
+  if Rust:                            |
+    CppCost h = build\PYGZus{}cpp\PYGZus{}cost(BuildGpuCostAdapter...)   // sealed std::function
+    out = direct\PYGZus{}rs::new\PYGZus{}direct\PYGZus{}optimizer(range,start,budget,mode)\PYGZhy{}\PYGZgt{}run(*h)
+    cost\PYGZus{}calls\PYGZus{}=out.calls; opt\PYGZus{}loc/val=out.best...  |  Box\PYGZlt{}DirectOptimizer\PYGZgt{}.run(\PYGZam{}CppCost)
+  else: existing DirectOptimizer path                   |       ↳ RunOutcome\PYGZob{}best,best\PYGZus{}cost,calls,ok\PYGZcb{}
+\end{MintedVerbatim}

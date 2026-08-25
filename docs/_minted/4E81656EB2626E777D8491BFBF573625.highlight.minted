@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{main}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{cxx\PYGZus{}build}\PYG{p}{::}\PYG{n}{bridge}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}src/lib.rs\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}../../include\PYGZdq{}}\PYG{p}{)}\PYG{+w}{            }\PYG{c+c1}{// where domain/cost.h lives}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n}{flag\PYGZus{}if\PYGZus{}supported}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZhy{}std=c++17\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n}{compile}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}direct\PYGZus{}rs\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n+nf+fm}{println!}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}cargo:rerun\PYGZhy{}if\PYGZhy{}changed=src/lib.rs\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n+nf+fm}{println!}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}cargo:rerun\PYGZhy{}if\PYGZhy{}changed=../../include/domain/cost.h\PYGZdq{}}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

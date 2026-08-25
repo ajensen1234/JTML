@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// 1. GATHER — shared borrow: many readers, no writer}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{candidate\PYGZus{}points}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{gather\PYGZus{}poh}\PYG{p}{();}\PYG{+w}{     }\PYG{c+c1}{// \PYGZam{}self}
+\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{selected}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{make\PYGZus{}hull}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{candidate\PYGZus{}points}\PYG{p}{);}\PYG{+w}{       }\PYG{c+c1}{// \PYGZam{}[PohPoint]}
+
+\PYG{c+c1}{// 2. TRISECT — here we switch from \PYGZam{}self to \PYGZam{}mut self}
+\PYG{c+c1}{//    `self` was \PYGZam{}self during gather; now we need \PYGZam{}mut self to mutate the map.}
+\PYG{k}{for}\PYG{+w}{ }\PYG{n}{point}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{selected}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{c+c1}{// 3. TAKE — move ownership OUT of the map (needs \PYGZam{}mut)}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{winner}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Hyperbox}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{row}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{boxes}\PYG{p}{.}\PYG{n}{get\PYGZus{}mut}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{OrderedFloat}\PYG{p}{(}\PYG{n}{point}\PYG{p}{.}\PYG{n}{size}\PYG{p}{));}\PYG{+w}{ }\PYG{c+c1}{// \PYGZam{}mut row}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{\PYGZus{}key}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{hb}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{row}\PYG{p}{.}\PYG{n}{expect}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}selected row exists\PYGZdq{}}\PYG{p}{).}\PYG{n}{pop\PYGZus{}first}\PYG{p}{()}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n}{expect}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}non\PYGZhy{}empty row\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n}{hb}\PYG{+w}{                                          }\PYG{c+c1}{// moves the Hyperbox out}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{};}\PYG{+w}{ }\PYG{c+c1}{// row borrow ends here}
+
+\PYG{+w}{    }\PYG{c+c1}{// 4. TRANSFORM — we OWN `winner` now; no borrow at all}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{p}{::}\PYG{n}{trisect}\PYG{p}{(}\PYG{n}{winner}\PYG{p}{);}
+
+\PYG{+w}{    }\PYG{c+c1}{// 5. REINSERT — move the children BACK in (\PYGZam{}mut)}
+\PYG{+w}{    }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{insert\PYGZus{}box}\PYG{p}{(}\PYG{n}{center}\PYG{p}{);}\PYG{+w}{   }\PYG{c+c1}{// insert as known\PYGZhy{}cost}
+\PYG{+w}{    }\PYG{c+c1}{// pos/neg: batch\PYGZhy{}eval their centers, then insert with scores}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

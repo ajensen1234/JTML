@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{trisect}\PYG{p}{(}\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{parent}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Hyperbox}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Hyperbox}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PendingTwo}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{  }\PYG{c+c1}{// take = move}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{min\PYGZus{}idx}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{parent}\PYG{p}{.}\PYG{n}{depths}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{enumerate}\PYG{p}{()}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n}{min\PYGZus{}by\PYGZus{}key}\PYG{p}{(}\PYG{o}{|\PYGZam{}}\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)}\PYG{o}{|}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{v}\PYG{p}{).}\PYG{n}{expect}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}6\PYGZhy{}element array\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n}{parent}\PYG{p}{.}\PYG{n}{depths}\PYG{p}{[}\PYG{n}{min\PYGZus{}idx}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}
+\PYG{+w}{    }\PYG{c+c1}{// center keeps parent\PYGZsq{}s cost; two shifted children get cost\PYGZus{}at\PYGZus{}center: None}
+\PYG{+w}{    }\PYG{c+c1}{// ... (build pos/neg shifted boxes)}
+\PYG{+w}{    }\PYG{p}{(}\PYG{n}{parent}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{])}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

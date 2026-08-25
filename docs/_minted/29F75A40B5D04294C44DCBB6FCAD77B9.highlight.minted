@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{run}\PYG{p}{(}\PYG{o}{...}\PYG{p}{):}
+    \PYG{k}{if} \PYG{n}{bad}\PYG{p}{:} \PYG{k}{raise} \PYG{n}{OptimizerError}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}bad\PYGZdq{}}\PYG{p}{)}
+\end{MintedVerbatim}

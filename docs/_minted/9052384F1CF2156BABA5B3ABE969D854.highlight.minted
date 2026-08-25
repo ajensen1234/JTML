@@ -1,0 +1,19 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{proptest}\PYG{o}{!}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{c+c1}{// the hull is always a subset of its input}
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[test]}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{hull\PYGZus{}is\PYGZus{}subset}\PYG{p}{(}\PYG{n}{pts}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{prop}\PYG{p}{::}\PYG{n}{collection}\PYG{p}{::}\PYG{n}{vec}\PYG{p}{(}\PYG{n}{any\PYGZus{}poh\PYGZus{}point}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{..}\PYG{l+m+mi}{50}\PYG{p}{))}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{h}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{convex\PYGZus{}hull}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{pts}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{prop\PYGZus{}assert}\PYG{o}{!}\PYG{p}{(}\PYG{n}{pts}\PYG{p}{.}\PYG{n}{contains}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{h}\PYG{p}{));}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{c+c1}{// trisection never loses volume: children\PYGZsq{}s extents tile the parent\PYGZsq{}s}
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[test]}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{trisect\PYGZus{}conserves}\PYG{p}{(}\PYG{n}{depths}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{any}\PYG{p}{::}\PYG{o}{\PYGZlt{}}\PYG{p}{[}\PYG{k+kt}{u32}\PYG{p}{;}\PYG{+w}{ }\PYG{l+m+mi}{6}\PYG{p}{]}\PYG{o}{\PYGZgt{}}\PYG{p}{())}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{parent}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{cost\PYGZus{}at\PYGZus{}center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{center}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{p}{::}\PYG{n}{ZERO}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{depths}\PYG{+w}{ }\PYG{p}{\PYGZcb{};}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{c}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{p}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{n}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{p}{::}\PYG{n}{trisect}\PYG{p}{(}\PYG{n}{parent}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n}{prop\PYGZus{}assert\PYGZus{}eq}\PYG{o}{!}\PYG{p}{(}\PYG{n}{c}\PYG{p}{.}\PYG{n}{depths}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{sum}\PYG{p}{::}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{u32}\PYG{o}{\PYGZgt{}}\PYG{p}{(),}
+\PYG{+w}{                        }\PYG{n}{depths}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{sum}\PYG{p}{::}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{u32}\PYG{o}{\PYGZgt{}}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n}{prop\PYGZus{}assert}\PYG{o}{!}\PYG{p}{(}\PYG{n}{p}\PYG{p}{.}\PYG{n}{size}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZlt{}=}\PYG{+w}{ }\PYG{n}{parent\PYGZus{}size}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{n}{n}\PYG{p}{.}\PYG{n}{size}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZlt{}=}\PYG{+w}{ }\PYG{n}{parent\PYGZus{}size}\PYG{p}{);}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

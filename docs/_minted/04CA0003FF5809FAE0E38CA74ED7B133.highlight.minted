@@ -1,0 +1,22 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s+sd}{/// Evaluate a batch and fold the results into optimizer state.}
+\PYG{l+s+sd}{/// Returns costs in INPUT ORDER (the contract the C++ BatchCostFunction keeps).}
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{eval\PYGZus{}batch}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{dyn}\PYG{+w}{ }\PYG{n}{Cost}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{n}{Pose}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{costs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{.}\PYG{n}{eval}\PYG{p}{(}\PYG{n}{poses}\PYG{p}{);}\PYG{+w}{            }\PYG{c+c1}{// ONE FFI hop for the whole batch}
+\PYG{+w}{    }\PYG{n+nf+fm}{debug\PYGZus{}assert\PYGZus{}eq!}\PYG{p}{(}\PYG{n}{costs}\PYG{p}{.}\PYG{n}{len}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{.}\PYG{n}{len}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}batch cost must preserve length\PYGZdq{}}\PYG{p}{);}
+
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{pose}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{zip}\PYG{p}{(}\PYG{n}{costs}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{())}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{calls}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}\PYG{+w}{                     }\PYG{c+c1}{// 1. calls++  (counts non\PYGZhy{}finite too)}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{o}{!}\PYG{n}{c}\PYG{p}{.}\PYG{n}{is\PYGZus{}finite}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{non\PYGZus{}finite}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}\PYG{+w}{            }\PYG{c+c1}{// 2. non\PYGZhy{}finite}
+\PYG{+w}{            }\PYG{k}{continue}\PYG{p}{;}\PYG{+w}{                        }\PYG{c+c1}{//    a non\PYGZhy{}finite eval never becomes best}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{              }\PYG{c+c1}{// 3. optimum update}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{best}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{pose}\PYG{p}{;}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{c}\PYG{p}{;}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{improved\PYGZus{}this\PYGZus{}iter}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kc}{true}\PYG{p}{;}\PYG{+w}{  }\PYG{c+c1}{// 5. deferred — see below}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{costs}\PYG{+w}{                                    }\PYG{c+c1}{// 4. storage is the caller\PYGZsq{}s job (reinsert)}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

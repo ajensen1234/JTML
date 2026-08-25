@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{convex\PYGZus{}hull}\PYG{p}{(}\PYG{n}{poh}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{n}{PohPoint}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{n}{PohPoint}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{  }\PYG{c+c1}{// \PYGZam{}[T], not \PYGZam{}Vec\PYGZlt{}T\PYGZgt{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{hull}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{n}{PohPoint}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{p}{::}\PYG{n}{new}\PYG{p}{();}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{p}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{poh}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{while}\PYG{+w}{ }\PYG{n}{hull}\PYG{p}{.}\PYG{n}{len}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZgt{}=}\PYG{+w}{ }\PYG{l+m+mi}{2}
+\PYG{+w}{              }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{n}{cross}\PYG{p}{(}\PYG{n}{hull}\PYG{p}{[}\PYG{n}{hull}\PYG{p}{.}\PYG{n}{len}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2}\PYG{p}{].}\PYG{n}{size}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{hull}\PYG{p}{[}\PYG{n}{hull}\PYG{p}{.}\PYG{n}{len}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{].}\PYG{n}{size}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{size}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZlt{}=}\PYG{+w}{ }\PYG{l+m+mf}{0.0}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n}{hull}\PYG{p}{.}\PYG{n}{pop}\PYG{p}{();}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{n}{hull}\PYG{p}{.}\PYG{n}{push}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{);}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{hull}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

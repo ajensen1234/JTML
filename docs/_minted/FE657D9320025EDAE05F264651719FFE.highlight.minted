@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{RunResult}\PYG{o}{\PYGZlt{}}\PYG{n}{T}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Result}\PYG{o}{\PYGZlt{}}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{OptimizerError}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+
+\PYG{c+cp}{\PYGZsh{}[derive(thiserror::Error, Debug)]}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{enum}\PYG{+w}{ }\PYG{n+nc}{OptimizerError}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[error(}\PYG{l+s}{\PYGZdq{}all\PYGZhy{}zero range \PYGZob{}range:?\PYGZcb{}\PYGZdq{}}\PYG{c+cp}{)]}
+\PYG{+w}{    }\PYG{n}{ZeroRange}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{range}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{+w}{ }\PYG{p}{\PYGZcb{},}
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[error(}\PYG{l+s}{\PYGZdq{}non\PYGZhy{}finite cost \PYGZob{}cost\PYGZcb{}\PYGZdq{}}\PYG{c+cp}{)]}
+\PYG{+w}{    }\PYG{n}{NonFiniteCost}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{+w}{ }\PYG{p}{\PYGZcb{},}
+\PYG{+w}{    }\PYG{c+cp}{\PYGZsh{}[error(}\PYG{l+s}{\PYGZdq{}poisoned executor\PYGZdq{}}\PYG{c+cp}{)]}
+\PYG{+w}{    }\PYG{n}{Poisoned}\PYG{p}{,}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

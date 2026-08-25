@@ -1,0 +1,40 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{run}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{dyn}\PYG{+w}{ }\PYG{n}{Cost}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{sink}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Option}\PYG{o}{\PYGZlt{}\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{k}{dyn}\PYG{+w}{ }\PYG{n}{ProgressSink}\PYG{o}{\PYGZgt{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{RunResult}\PYG{o}{\PYGZlt{}}\PYG{p}{()}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{tree}\PYG{p}{.}\PYG{n}{is\PYGZus{}empty}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{Err}\PYG{p}{(}\PYG{n}{OptimizerError}\PYG{p}{::}\PYG{n}{ZeroRange}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{range}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{self}\PYG{p}{.}\PYG{n}{range}\PYG{+w}{ }\PYG{p}{\PYGZcb{});}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{k}{while}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{calls}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{call\PYGZus{}offset}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{budget}
+\PYG{+w}{          }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{o}{!}\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{stop}\PYG{p}{.}\PYG{n}{load}\PYG{p}{(}\PYG{n}{Ordering}\PYG{p}{::}\PYG{n}{Relaxed}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{improved\PYGZus{}this\PYGZus{}iter}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kc}{false}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{c+c1}{// GATHER — \PYGZam{}self borrow, no mutation (Step 5)}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{points}\PYG{+w}{   }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{tree}\PYG{p}{.}\PYG{n}{gather\PYGZus{}poh}\PYG{p}{();}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{selected}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{convex\PYGZus{}hull}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{points}\PYG{p}{);}\PYG{+w}{          }\PYG{c+c1}{// pure (Step 6)}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{selected}\PYG{p}{.}\PYG{n}{is\PYGZus{}empty}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{break}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{             }\PYG{c+c1}{// nothing left to split}
+
+\PYG{+w}{        }\PYG{c+c1}{// TRISECT — \PYGZam{}mut self; take out, transform, put back (Step 7)}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{pending}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{p}{(}\PYG{n}{Pose}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PendingSlot}\PYG{p}{)}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{p}{::}\PYG{n}{new}\PYG{p}{();}
+\PYG{+w}{        }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{point}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{selected}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{winner}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{tree}\PYG{p}{.}\PYG{n}{take\PYGZus{}min\PYGZus{}of\PYGZus{}row}\PYG{p}{(}\PYG{n}{point}\PYG{p}{.}\PYG{n}{size}\PYG{p}{)}\PYG{o}{?}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// owned}
+\PYG{+w}{            }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{neg}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Hyperbox}\PYG{p}{::}\PYG{n}{trisect}\PYG{p}{(}\PYG{n}{winner}\PYG{p}{);}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{tree}\PYG{p}{.}\PYG{n}{insert\PYGZus{}scored}\PYG{p}{(}\PYG{n}{center}\PYG{p}{);}\PYG{+w}{                       }\PYG{c+c1}{// cost inherited}
+\PYG{+w}{            }\PYG{n}{pending}\PYG{p}{.}\PYG{n}{push}\PYG{p}{((}\PYG{n}{pos}\PYG{p}{.}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PendingSlot}\PYG{p}{::}\PYG{n}{Pos}\PYG{p}{(}\PYG{n}{pos}\PYG{p}{)));}
+\PYG{+w}{            }\PYG{n}{pending}\PYG{p}{.}\PYG{n}{push}\PYG{p}{((}\PYG{n}{neg}\PYG{p}{.}\PYG{n}{center}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PendingSlot}\PYG{p}{::}\PYG{n}{Neg}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{)));}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{c+c1}{// ONE FFI hop for every new center this iteration}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{n}{Pose}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{pending}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{p}{)}\PYG{o}{|}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{p}\PYG{p}{).}\PYG{n}{collect}\PYG{p}{();}
+\PYG{+w}{        }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{costs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{eval\PYGZus{}batch}\PYG{p}{(}\PYG{n}{cost}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{poses}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{c+c1}{// STORAGE — then and only then, the callbacks}
+\PYG{+w}{        }\PYG{k}{for}\PYG{+w}{ }\PYG{p}{((}\PYG{n}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{slot}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{c}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{pending}\PYG{p}{.}\PYG{n}{into\PYGZus{}iter}\PYG{p}{().}\PYG{n}{zip}\PYG{p}{(}\PYG{n}{costs}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{tree}\PYG{p}{.}\PYG{n}{insert\PYGZus{}with\PYGZus{}cost}\PYG{p}{(}\PYG{n}{slot}\PYG{p}{.}\PYG{n}{into\PYGZus{}box}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{c}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nb}{Some}\PYG{p}{(}\PYG{n}{s}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{sink}\PYG{p}{.}\PYG{n}{as\PYGZus{}deref\PYGZus{}mut}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n}{s}\PYG{p}{.}\PYG{n}{on\PYGZus{}iteration}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{calls}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{call\PYGZus{}offset}\PYG{p}{);}\PYG{+w}{   }\PYG{c+c1}{// \PYGZti{}30fps pacing is C++\PYGZsq{}s job}
+\PYG{+w}{            }\PYG{k}{if}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{improved\PYGZus{}this\PYGZus{}iter}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{s}\PYG{p}{.}\PYG{n}{on\PYGZus{}improvement}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{best}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{.}\PYG{n}{best\PYGZus{}cost}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n+nb}{Ok}\PYG{p}{(())}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

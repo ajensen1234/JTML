@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{CppCost}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n+nf}{evaluate}\PYG{p}{(}\PYG{k}{const}\PYG{+w}{ }\PYG{n}{Point6D}\PYG{o}{\PYGZam{}}\PYG{+w}{ }\PYG{n}{point}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{const}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{fn\PYGZus{}}\PYG{p}{(}\PYG{n}{point}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{c+c1}{// bridge: build Point6D from 6 doubles, delegate to fn\PYGZus{} (no behavior change)}
+\PYG{+w}{    }\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n+nf}{evaluate6}\PYG{p}{(}\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{,}
+\PYG{+w}{                     }\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{xa}\PYG{p}{,}\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{ya}\PYG{p}{,}\PYG{k+kt}{double}\PYG{+w}{ }\PYG{n}{za}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{const}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{evaluate}\PYG{p}{(}\PYG{n}{Point6D}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{,}\PYG{n}{xa}\PYG{p}{,}\PYG{n}{ya}\PYG{p}{,}\PYG{n}{za}\PYG{p}{));}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{};}
+\end{MintedVerbatim}

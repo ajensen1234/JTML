@@ -1,0 +1,27 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZsh{}[cxx::bridge(namespace = }\PYG{l+s}{\PYGZdq{}direct\PYGZus{}rs\PYGZdq{}}\PYG{c+cp}{)]}
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{mod}\PYG{+w}{ }\PYG{n+nn}{ffi}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{xa}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ya}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{za}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{k}{enum}\PYG{+w}{ }\PYG{n+nc}{PohMode}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{ConvexHull}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Pareto}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Aggressive}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{   }\PYG{c+c1}{// shared enum}
+
+\PYG{+w}{    }\PYG{k}{unsafe}\PYG{+w}{ }\PYG{k}{extern}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}C++\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nf+fm}{include!}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}domain/cost.h\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{        }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{CppCost}\PYG{p}{;}
+\PYG{+w}{        }\PYG{c+c1}{// cost hot path: 6 doubles by\PYGZhy{}value (bind to CppCost::evaluate6)}
+\PYG{+w}{        }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{evaluate6}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{CppCost}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}
+\PYG{+w}{                     }\PYG{n}{xa}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ya}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{za}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{k}{extern}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}Rust\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{DirectOptimizer}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{new\PYGZus{}direct\PYGZus{}optimizer}\PYG{p}{(}\PYG{n}{range}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{Pose}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{start}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{Pose}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{n}{budget}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{mode}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{PohMode}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Box}\PYG{o}{\PYGZlt{}}\PYG{n}{DirectOptimizer}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{run}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{CppCost}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{RunOutcome}\PYG{p}{;}\PYG{+w}{     }\PYG{c+c1}{// M1: run\PYGZhy{}to\PYGZhy{}completion}
+\PYG{+w}{        }\PYG{c+c1}{// M2 (live progress): see \PYGZdq{}Milestone options\PYGZdq{} below}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{c+c1}{// shared struct declared INSIDE the bridge so cxx generates the C++ struct}
+\PYG{+w}{    }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{RunOutcome}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{best}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{best\PYGZus{}cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{calls}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ok}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{bool}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

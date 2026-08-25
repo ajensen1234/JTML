@@ -1,0 +1,12 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{DirectOptimizer}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{tree}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{BoxTree}\PYG{p}{,}\PYG{+w}{                 }\PYG{c+c1}{// the two\PYGZhy{}level BTreeMap (Step 4)}
+\PYG{+w}{    }\PYG{n}{budget}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}\PYG{+w}{                   }\PYG{c+c1}{// cumulative cap: trunk 20k → branch 25k/30k → leaf 35k}
+\PYG{+w}{    }\PYG{n}{call\PYGZus{}offset}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}\PYG{+w}{              }\PYG{c+c1}{// SetCallOffset — cumulative across stages}
+\PYG{+w}{    }\PYG{n}{calls}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n}{non\PYGZus{}finite}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n}{best}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pose}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n}{best\PYGZus{}cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n}{stop}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Arc}\PYG{o}{\PYGZlt{}}\PYG{n}{AtomicBool}\PYG{o}{\PYGZgt{}}\PYG{p}{,}\PYG{+w}{         }\PYG{c+c1}{// cooperative Stop(), set from the C++ thread}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}
