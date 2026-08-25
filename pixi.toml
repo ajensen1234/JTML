@@ -59,6 +59,13 @@ cuda-nvtx-dev = ">=12.9.19,<13"
 
 # Development dependencies
 [feature.dev.dependencies]
+freetype = "*"
+fontconfig = "*"
+expat = "*"
+libpng = "*"
+zlib = "*"
+brotli = "*"
+pkg-config = "*"
 
 [tasks.build-vtk]
 cmd = ["./vtk_installer.sh"]

@@ -1,4 +1,4 @@
-use std::iter::Sum;
+use std::{collections::BTreeMap, iter::Sum};
 
 use ordered_float::OrderedFloat;
 
@@ -24,7 +24,7 @@ const DIRECTIONS: [Direction; 6] = [
     Direction::ZA_DIR,
 ];
 
-#[derive(Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Pose {
     pub x: f64,
     pub y: f64,
@@ -53,6 +53,7 @@ impl Pose {
 
 pub type SizeKey = OrderedFloat<f64>;
 pub type CostKey = (OrderedFloat<f64>, u64);
+pub type DirectTree = BTreeMap<SizeKey, BTreeMap<CostKey, Hyperbox>>;
 
 #[derive(Clone, Copy)]
 pub struct Hyperbox {
@@ -119,5 +120,117 @@ impl UnscoredHyperbox {
             depths: self.depths,
             center: self.center,
         };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{canonical_size, on_lattice, splat};
+    use proptest::prelude::*;
+
+    fn box_at(center: Pose, depths: [u32; 6]) -> Hyperbox {
+        Hyperbox {
+            cost_at_center: 0.0,
+            center,
+            depths,
+        }
+    }
+
+    #[test]
+    fn unit_box_size_is_sqrt_6() {
+        let hb = box_at(splat(0.5), [0; 6]);
+        let got = hb.size();
+        assert!(
+            (got - 6.0_f64.sqrt()).abs() < 1e-12,
+            "unit size {got} != sqrt(6)"
+        );
+    }
+
+    #[test]
+    fn size_is_bit_identical_under_depth_permutation() {
+        let a = [1u32, 2, 0, 3, 0, 4];
+        let mut b = a;
+        b.swap(0, 1);
+        b.swap(2, 5);
+        let sa = box_at(splat(0.5), a).size();
+        let sb = box_at(splat(0.5), b).size();
+        assert_eq!(
+            sa.to_bits(),
+            sb.to_bits(),
+            "size() depends on depth order: {sa} vs {sb} (a={a:?} b={b:?})"
+        );
+    }
+
+    #[test]
+    fn trisect_picks_the_min_depth_axis_and_shrinks() {
+        let parent = box_at(splat(0.5), [2, 0, 1, 3, 1, 4]);
+        let parent_size = parent.size();
+        let (center, [pos, neg]) = parent.trisect();
+        let changed: Vec<usize> = center
+            .depths
+            .iter()
+            .zip([2u32, 0, 1, 3, 1, 4])
+            .enumerate()
+            .filter(|(_, (now, was))| *now != was)
+            .map(|(i, _)| i)
+            .collect();
+        assert_eq!(changed, vec![1], "must deepen the unique min-depth axis");
+        assert_eq!(center.depths[1], 1);
+        assert_eq!(pos.depths, center.depths);
+        assert_eq!(neg.depths, center.depths);
+        assert!(center.size() < parent_size);
+        assert!(canonical_size(pos.depths) < parent_size);
+        assert!(canonical_size(neg.depths) < parent_size);
+    }
+
+    #[test]
+    fn trisect_children_sit_on_the_center_lattice() {
+        let parent = box_at(splat(0.5), [0; 6]);
+        let (center, [pos, neg]) = parent.trisect();
+        for (p, depths) in [
+            (center.center, center.depths),
+            (pos.center, pos.depths),
+            (neg.center, neg.depths),
+        ] {
+            for (c, d) in crate::test_support::coords(&p).iter().zip(depths) {
+                assert!(
+                    on_lattice(*c, d),
+                    "center coord {c} at depth {d} is off-lattice"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn repeated_min_depth_split_keeps_depths_within_one() {
+        let mut hb = box_at(splat(0.5), [0; 6]);
+        for _ in 0..18 {
+            let (next, _) = hb.trisect();
+            hb = next;
+            let min = hb.depths.iter().copied().min().unwrap_or(0);
+            let max = hb.depths.iter().copied().max().unwrap_or(0);
+            assert!(
+                max - min <= 1,
+                "depths {:?} drifted more than 1 apart",
+                hb.depths
+            );
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig { cases: 64, ..ProptestConfig::default() })]
+
+        #[test]
+        fn size_matches_canonical_sorted_sum(d0 in 0u32..8, d1 in 0u32..8, d2 in 0u32..8,
+                                             d3 in 0u32..8, d4 in 0u32..8, d5 in 0u32..8) {
+            let depths = [d0, d1, d2, d3, d4, d5];
+            let got = box_at(splat(0.5), depths).size();
+            let want = canonical_size(depths);
+            prop_assert!(
+                (got - want).abs() < 1e-12,
+                "size {got} != canonical {want} for {depths:?}"
+            );
+        }
     }
 }

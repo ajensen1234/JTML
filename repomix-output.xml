@@ -1,0 +1,2175 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: ./**/*.rs
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+rust/
+  direct-rs/
+    src/
+      bench.rs
+      cost.rs
+      direct_data_storage.rs
+      direct_optimizer.rs
+      dup_diag.rs
+      lib.rs
+      pose.rs
+      properties.rs
+      test_support.rs
+      test.rs
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="rust/direct-rs/src/bench.rs">
+//! Benchmark cost functions for exercising the Rust DIRECT port.
+//!
+//! Each benchmark is a `Cost` impl (input = batch of physical `Pose`s, output =
+//! batch of costs). The point is to be **discriminating** — a naive or buggy
+//! DIRECT should fail these in a way the simple sphere never will.
+//!
+//! Design principles baked into these fixtures (see `bench_design.md`):
+//! 1. **No center-bias.** The global minimum is never at the domain center, so
+//!    the first center sample is meaningful, not a free win.
+//! 2. **Known, distinctive optima.** `f*` values are chosen to be non-round, so
+//!    sign/dimension/early-stop errors show up as a mismatch, not "close to 0".
+//! 3. **Both cost AND pose are asserted**, so a function that is plateau-flat
+//!    near the optimum can't hide a box that isn't refining.
+
+use crate::direct_data_storage::Pose;
+use crate::cost::Cost;
+
+/// A plain sphere: `f(x) = Σ (xᵢ - sᵢ)²`. Unimodal; verifies convergence rate
+/// and that shifting the optimum off-center works. `f* = 0` at `x* = s`.
+#[derive(Clone, Copy)]
+pub struct ShiftedSphere {
+    pub shift: Pose,
+}
+
+impl ShiftedSphere {
+    pub fn fstar() -> f64 {
+        0.0
+    }
+    pub fn xstar(&self) -> Pose {
+        self.shift
+    }
+}
+
+impl Cost for ShiftedSphere {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                (p.x - self.shift.x).powi(2)
+                    + (p.y - self.shift.y).powi(2)
+                    + (p.z - self.shift.z).powi(2)
+                    + (p.xa - self.shift.xa).powi(2)
+                    + (p.ya - self.shift.ya).powi(2)
+                    + (p.za - self.shift.za).powi(2)
+            })
+            .collect()
+    }
+}
+
+/// Anisotropic sphere: `f(x) = Σ wᵢ (xᵢ - sᵢ)²`. The weights are very
+/// different across axes (mm vs angle-like units), which exposes a DIRECT that
+/// subdivides in raw pose units instead of normalized/denormalized space.
+#[derive(Clone, Copy)]
+pub struct AnisotropicSphere {
+    pub shift: Pose,
+    pub weights: [f64; 6],
+}
+
+impl AnisotropicSphere {
+    pub fn fstar() -> f64 {
+        0.0
+    }
+    pub fn xstar(&self) -> Pose {
+        self.shift
+    }
+}
+
+impl Cost for AnisotropicSphere {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                self.weights[0] * (p.x - self.shift.x).powi(2)
+                    + self.weights[1] * (p.y - self.shift.y).powi(2)
+                    + self.weights[2] * (p.z - self.shift.z).powi(2)
+                    + self.weights[3] * (p.xa - self.shift.xa).powi(2)
+                    + self.weights[4] * (p.ya - self.shift.ya).powi(2)
+                    + self.weights[5] * (p.za - self.shift.za).powi(2)
+            })
+            .collect()
+    }
+}
+
+/// Styblinski–Tang: `f(x) = 0.5 Σ (xᵢ⁴ - 16xᵢ² + 5xᵢ)`.
+/// Separable but the optimum sits at a non-round negative value, and
+/// `f* = -234.9959` (n=6) is a distinctive number — catches sign errors,
+/// off-by-one dimension counts, and accidental early stopping.
+#[derive(Clone, Copy)]
+pub struct StyblinskiTang;
+
+impl StyblinskiTang {
+    pub fn fstar() -> f64 {
+        -234.9959
+    }
+    pub fn xstar() -> Pose {
+        Pose { x: -2.903534, y: -2.903534, z: -2.903534, xa: -2.903534, ya: -2.903534, za: -2.903534 }
+    }
+}
+
+impl Cost for StyblinskiTang {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                let f1 = |v: f64| 0.5 * (v.powi(4) - 16.0 * v.powi(2) + 5.0 * v);
+                0.0 + f1(p.x) + f1(p.y) + f1(p.z) + f1(p.xa) + f1(p.ya) + f1(p.za)
+            })
+            .collect()
+    }
+}
+
+/// Rastrigin: `f(x) = 10n + Σ (xᵢ² - 10cos(2πxᵢ))`, shifted so the optimum is at
+/// `x* = shift`, `f* = 0`. Dense lattice of local minima — the actual
+/// global-vs-local test; a method stuck in a local basin fails loudly.
+#[derive(Clone, Copy)]
+pub struct ShiftedRastrigin {
+    pub shift: Pose,
+    pub n: u32,
+}
+
+impl ShiftedRastrigin {
+    pub fn fstar() -> f64 {
+        0.0
+    }
+    pub fn xstar(&self) -> Pose {
+        self.shift
+    }
+}
+
+impl Cost for ShiftedRastrigin {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let base = 10.0 * self.n as f64;
+        let two_pi = 2.0 * std::f64::consts::PI;
+        let t = |d: f64| d * d - 10.0 * (two_pi * d).cos();
+        poses
+            .iter()
+            .map(|p| {
+                let dx = p.x - self.shift.x;
+                let dy = p.y - self.shift.y;
+                let dz = p.z - self.shift.z;
+                let dxa = p.xa - self.shift.xa;
+                let dya = p.ya - self.shift.ya;
+                let dza = p.za - self.shift.za;
+                base + t(dx) + t(dy) + t(dz) + t(dxa) + t(dya) + t(dza)
+            })
+            .collect()
+    }
+}
+
+/// Ackley (shifted): near-flat outer plateau with a narrow central funnel.
+/// Tests that the POH/convex-hull step doesn't stall when cost variation is
+/// tiny. `f* = 0` at `x* = shift` (domain ~ [-5,5]).
+#[derive(Clone, Copy)]
+pub struct ShiftedAckley {
+    pub shift: Pose,
+}
+
+impl ShiftedAckley {
+    pub fn fstar() -> f64 {
+        0.0
+    }
+    pub fn xstar(&self) -> Pose {
+        self.shift
+    }
+}
+
+impl Cost for ShiftedAckley {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let n = 6.0_f64;
+        poses
+            .iter()
+            .map(|p| {
+                let v = |c: f64, s: f64| (c - s) * (c - s);
+                let sum2 = v(p.x, self.shift.x)
+                    + v(p.y, self.shift.y)
+                    + v(p.z, self.shift.z)
+                    + v(p.xa, self.shift.xa)
+                    + v(p.ya, self.shift.ya)
+                    + v(p.za, self.shift.za);
+                let cos2 = (2.0 * std::f64::consts::PI * (p.x - self.shift.x)).cos()
+                    + (2.0 * std::f64::consts::PI * (p.y - self.shift.y)).cos()
+                    + (2.0 * std::f64::consts::PI * (p.z - self.shift.z)).cos()
+                    + (2.0 * std::f64::consts::PI * (p.xa - self.shift.xa)).cos()
+                    + (2.0 * std::f64::consts::PI * (p.ya - self.shift.ya)).cos()
+                    + (2.0 * std::f64::consts::PI * (p.za - self.shift.za)).cos();
+                -20.0 * (-0.2 * (sum2 / n).sqrt()).exp() - ((cos2) / n).exp() + 20.0 + std::f64::consts::E
+            })
+            .collect()
+    }
+}
+
+/// Rosenbrock (n-dim): narrow curved valley. DIRECT is genuinely bad at this —
+/// use it to track how `f_best` decays v. evaluation count, NOT as pass/fail.
+/// For n>=4 there is a second local min near (-1,1,1,...).
+#[derive(Clone, Copy)]
+pub struct Rosenbrock;
+
+impl Cost for Rosenbrock {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                let a = [p.x, p.y, p.z, p.xa, p.ya, p.za];
+                let mut sum = 0.0;
+                for i in 0..5 {
+                    sum += 100.0 * (a[i + 1] - a[i] * a[i]).powi(2) + (1.0 - a[i]).powi(2);
+                }
+                sum
+            })
+            .collect()
+    }
+}
+
+/// Hartmann-6 — the canonical 6D DIRECT benchmark (Jones 1993). Genuinely
+/// multimodal with 6 local minima; the global optimum is at an ugly interior
+/// point, not the center. Domain [0,1]^6. `f* ≈ -3.32237` at
+/// `x* ≈ (0.20169,0.15001,0.47687,0.27533,0.31165,0.65730)`.
+#[derive(Clone, Copy)]
+pub struct Hartmann6;
+
+const H6_ALPHA: [f64; 4] = [1.0, 1.2, 3.0, 3.2];
+
+const H6_A: [[f64; 6]; 4] = [
+    [10.00, 3.00, 17.00, 3.50, 1.70, 8.00],
+    [0.05, 10.00, 17.00, 0.10, 8.00, 14.00],
+    [3.00, 3.50, 1.70, 10.00, 17.00, 8.00],
+    [17.00, 8.00, 0.05, 10.00, 0.10, 14.00],
+];
+
+const H6_P: [[f64; 6]; 4] = [
+    [1312.0, 1696.0, 5569.0, 124.0, 8283.0, 5886.0],
+    [2329.0, 4135.0, 8307.0, 3736.0, 1004.0, 9991.0],
+    [2348.0, 1451.0, 3522.0, 2883.0, 3047.0, 6650.0],
+    [4047.0, 8828.0, 8732.0, 5743.0, 1091.0, 381.0],
+];
+// (P is scaled by 1e-4 at eval time.)
+
+impl Hartmann6 {
+    pub fn fstar() -> f64 {
+        -3.32237
+    }
+    pub fn xstar() -> Pose {
+        Pose { x: 0.20169, y: 0.15001, z: 0.47687, xa: 0.27533, ya: 0.31165, za: 0.65730 }
+    }
+}
+
+impl Cost for Hartmann6 {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                let x = [p.x, p.y, p.z, p.xa, p.ya, p.za];
+                let mut sum = 0.0;
+                for i in 0..4 {
+                    let mut inner = 0.0;
+                    for j in 0..6 {
+                        inner += H6_A[i][j] * (x[j] - H6_P[i][j] * 1e-4).powi(2);
+                    }
+                    sum += H6_ALPHA[i] * (-inner).exp();
+                }
+                -sum
+            })
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::direct_optimizer::DirectOptimizer;
+    use crate::direct_data_storage::Pose;
+
+    // ---------- fixture helpers ----------
+
+    /// A nonzero, non-nice-fraction shift so the optimum is off-center and never
+    /// on a trisection boundary.
+    fn evil_shift() -> Pose {
+        Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 }
+    }
+
+    fn all_ranges(v: f64) -> Pose {
+        Pose { x: v, y: v, z: v, xa: v, ya: v, za: v }
+    }
+
+    fn dist(a: &Pose, b: &Pose) -> f64 {
+        ((a.x - b.x).powi(2)
+            + (a.y - b.y).powi(2)
+            + (a.z - b.z).powi(2)
+            + (a.xa - b.xa).powi(2)
+            + (a.ya - b.ya).powi(2)
+            + (a.za - b.za).powi(2))
+            .sqrt()
+    }
+
+    fn zero() -> Pose {
+        Pose { x: 0.0, y: 0.0, z: 0.0, xa: 0.0, ya: 0.0, za: 0.0 }
+    }
+
+    fn show(p: &Pose) -> String {
+        format!(
+            "({:.3},{:.3},{:.3},{:.3},{:.3},{:.3})",
+            p.x, p.y, p.z, p.xa, p.ya, p.za
+        )
+    }
+
+    // ---------- known-optimum reach tests ----------
+
+    #[test]
+    fn shifted_sphere_reaches_min() {
+        let cost_fn = ShiftedSphere { shift: evil_shift() };
+        let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 20_000);
+        let (best, cost) = opt.run(cost_fn);
+        assert!(
+            (cost - ShiftedSphere::fstar()).abs() < 1e-6,
+            "cost {cost} vs f* {}",
+            ShiftedSphere::fstar()
+        );
+        let target = cost_fn.xstar();
+        assert!(
+            dist(&best, &target) < 5e-3,
+            "best {} far from shift {}",
+            show(&best),
+            show(&target)
+        );
+    }
+
+    #[test]
+    fn anisotropic_ranges_still_reach_min() {
+        // Weights change the *function*; the thing that exposes raw-units
+        // subdivision is anisotropic *ranges* (mm vs degrees).
+        let range = Pose {
+            x: 1000.0,
+            y: 1000.0,
+            z: 1000.0,
+            xa: 0.1,
+            ya: 0.1,
+            za: 0.1,
+        };
+        let shift = Pose {
+            x: 170.0,
+            y: 40.0,
+            z: -210.0,
+            xa: 0.03,
+            ya: -0.04,
+            za: 0.06,
+        };
+        let cost_fn = ShiftedSphere { shift };
+        let mut opt = DirectOptimizer::new(range, zero(), 30_000);
+        let (best, cost) = opt.run(cost_fn);
+        assert!(
+            (cost - ShiftedSphere::fstar()).abs() < 1e-1,
+            "cost {cost} vs f* {}",
+            ShiftedSphere::fstar()
+        );
+        let target = cost_fn.xstar();
+        assert!(
+            dist(&best, &target) < 5.0,
+            "best {} vs shift {}",
+            show(&best),
+            show(&target)
+        );
+    }
+
+    #[test]
+    fn styblinski_reaches_distinctive_fstar() {
+        // f* = -234.9959 — a non-round number that catches sign/dim errors.
+        let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 40_000);
+        let (best, cost) = opt.run(StyblinskiTang);
+        assert!(
+            (cost - StyblinskiTang::fstar()).abs() < 0.5,
+            "cost {cost} vs f* {}",
+            StyblinskiTang::fstar()
+        );
+        let target = StyblinskiTang::xstar();
+        assert!(
+            dist(&best, &target) < 0.5,
+            "best {} far from x* {}",
+            show(&best),
+            show(&target)
+        );
+    }
+
+    #[test]
+    fn hartmann_reaches_global_min() {
+        // Hartmann-6 is the canonical 6D DIRECT benchmark; the optimum is an
+        // interior point, not the center. This is the strongest reach test.
+        let mut opt = DirectOptimizer::new(all_ranges(0.5), all_ranges(0.5), 60_000);
+        let (best, cost) = opt.run(Hartmann6);
+        assert!(
+            (cost - Hartmann6::fstar()).abs() < 0.2,
+            "cost {cost} vs f* {}",
+            Hartmann6::fstar()
+        );
+        assert!(
+            dist(&best, &Hartmann6::xstar()) < 0.1,
+            "best {} far from x* {}",
+            show(&best), show(&Hartmann6::xstar())
+        );
+    }
+
+    #[test]
+    fn shifted_rastrigin_reaches_global_basin() {
+        // Dense local-min lattice. Stuck-in-a-basin fails this loudly.
+        let shift = evil_shift();
+        let cost_fn = ShiftedRastrigin { shift, n: 6 };
+        let mut opt = DirectOptimizer::new(all_ranges(5.12), zero(), 60_000);
+        let (best, cost) = opt.run(cost_fn);
+        assert!(
+            cost < 5.0,
+            "Rastrigin cost {cost} still in a local basin (f* = 0)"
+        );
+        assert!(
+            dist(&best, &shift) < 1.5,
+            "best {} far from shift {}",
+            show(&best),
+            show(&shift)
+        );
+    }
+
+    #[test]
+    fn shifted_ackley_enters_the_funnel() {
+        // Near-flat outer plateau. Without the ε-condition DIRECT can stall.
+        let shift = evil_shift();
+        let cost_fn = ShiftedAckley { shift };
+        let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 60_000);
+        let (best, cost) = opt.run(cost_fn);
+        assert!(
+            (cost - ShiftedAckley::fstar()).abs() < 2.0,
+            "Ackley cost {cost} did not enter the funnel (f* = 0)"
+        );
+        assert!(
+            dist(&best, &shift) < 2.0,
+            "best {} far from shift {}",
+            show(&best),
+            show(&shift)
+        );
+    }
+
+    #[test]
+    fn rosenbrock_improves_on_the_seed() {
+        // Tracking-only: DIRECT is genuinely bad at the banana. Just require
+        // improvement on f(0) = 5*(100+1) = 505, not a reach of f*=0.
+        let mut opt = DirectOptimizer::new(all_ranges(2.0), zero(), 20_000);
+        let (_best, cost) = opt.run(Rosenbrock);
+        assert!(cost < 505.0, "Rosenbrock did not improve on seed 505, got {cost}");
+    }
+
+    // ---------- invariant tests (no known optimum required) ----------
+
+    #[test]
+    fn same_inputs_give_bit_identical_result() {
+        // Determinism: two identical optimizers must produce bit-identical
+        // costs AND poses (DIRECT is deterministic; a HashMap/HashSet seeding
+        // or float-order difference would break this).
+        let a = {
+            let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), 20_000);
+            o.run(ShiftedSphere { shift: evil_shift() })
+        };
+        let b = {
+            let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), 20_000);
+            o.run(ShiftedSphere { shift: evil_shift() })
+        };
+        assert_eq!(a.1.to_bits(), b.1.to_bits(), "costs differ between runs");
+        assert_eq!(a.0.x.to_bits(), b.0.x.to_bits(), "x differs");
+        assert_eq!(a.0.y.to_bits(), b.0.y.to_bits(), "y differs");
+        assert_eq!(a.0.z.to_bits(), b.0.z.to_bits(), "z differs");
+        assert_eq!(a.0.xa.to_bits(), b.0.xa.to_bits(), "xa differs");
+        assert_eq!(a.0.ya.to_bits(), b.0.ya.to_bits(), "ya differs");
+        assert_eq!(a.0.za.to_bits(), b.0.za.to_bits(), "za differs");
+    }
+
+    #[test]
+    fn budget_monotone_decrease() {
+        // run with a small and a large budget on the same (deterministic)
+        // problem: small must never beat large. No known optimum needed.
+        let spend = |budget| {
+            let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), budget);
+            o.run(ShiftedSphere { shift: evil_shift() }).1
+        };
+        let small = spend(2_000);
+        let large = spend(60_000);
+        assert!(
+            large <= small + 1e-12,
+            "more budget must not worsen result: small={small} large={large}"
+        );
+    }
+
+    #[test]
+    fn translation_invariant() {
+        // Shifting the whole domain (start) AND the optimum by the same delta
+        // must leave the result cost bit-identical — catches normalization bugs.
+        let delta = Pose { x: 10.0, y: -4.0, z: 7.0, xa: 2.0, ya: -9.0, za: 5.0 };
+        let (_, c1) = {
+            let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), 20_000);
+            o.run(ShiftedSphere { shift: evil_shift() })
+        };
+        // Same function, domain shifted by delta; optimizer start then = delta.
+        let shifted = Pose { x: delta.x, y: delta.y, z: delta.z, xa: delta.xa, ya: delta.ya, za: delta.za };
+        let (_, c2) = {
+            let mut o = DirectOptimizer::new(all_ranges(5.0), shifted, 20_000);
+            // equivalent: shift the optimum by the same delta
+            o.run(ShiftedSphere { shift: Pose { x: evil_shift().x + delta.x, y: evil_shift().y + delta.y, z: evil_shift().z + delta.z, xa: evil_shift().xa + delta.xa, ya: evil_shift().ya + delta.ya, za: evil_shift().za + delta.za } })
+        };
+        assert!(
+            (c1 - c2).abs() < 1e-9,
+            "translation broke invariant: c1={c1} c2={c2}"
+        );
+    }
+
+    #[test]
+    fn deterministic_with_across_all_costs() {
+        // Repeated run on each cost must be bit-stable (not seeded/greedy).
+        fn run_twice<C: Cost + Copy>(cost: C) -> (f64, f64) {
+            let a = {
+                let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), 30_000);
+                o.run(cost).1
+            };
+            let b = {
+                let mut o = DirectOptimizer::new(all_ranges(5.0), zero(), 30_000);
+                o.run(cost).1
+            };
+            (a, b)
+        }
+        let (a, b) = run_twice(ShiftedSphere { shift: evil_shift() });
+        assert_eq!(a.to_bits(), b.to_bits(), "ShiftedSphere nondeterministic");
+        let (a, b) = run_twice(StyblinskiTang);
+        assert_eq!(a.to_bits(), b.to_bits(), "StyblinskiTang nondeterministic");
+        let (a, b) = run_twice(ShiftedAckley { shift: evil_shift() });
+        assert_eq!(a.to_bits(), b.to_bits(), "Ackley nondeterministic");
+        let (a, b) = {
+            let run = || {
+                let mut o = DirectOptimizer::new(all_ranges(0.5), all_ranges(0.5), 30_000);
+                o.run(Hartmann6).1
+            };
+            (run(), run())
+        };
+        assert_eq!(a.to_bits(), b.to_bits(), "Hartmann6 nondeterministic");
+    }
+
+    // ---------- cost-level integrity (no optimizer) ----------
+
+    #[test]
+    fn batch_order_preserved() {
+        // A strictly monotone separable cost: the i-th returned value must
+        // belong to the i-th input pose, even if we shuffle the batch.
+        let mut poses = vec![
+            Pose { x: 0.0, y: 0.0, z: 0.0, xa: 0.0, ya: 0.0, za: 0.0 },
+            Pose { x: 1.0, y: 1.0, z: 1.0, xa: 1.0, ya: 1.0, za: 1.0 },
+            Pose { x: 2.0, y: 2.0, z: 2.0, xa: 2.0, ya: 2.0, za: 2.0 },
+        ];
+        let c = ShiftedSphere { shift: zero() };
+        let direct = c.eval(&poses);
+        // reverse the batch; costs must reverse correspondingly
+        poses.reverse();
+        let reversed = c.eval(&poses);
+        assert_eq!(direct[0], reversed[2]);
+        assert_eq!(direct[1], reversed[1]);
+        assert_eq!(direct[2], reversed[0]);
+    }
+
+    #[test]
+    fn eval_is_pure_function_of_pose() {
+        // Same pose batch always returns the same costs (no hidden state).
+        let p = vec![evil_shift()];
+        let a = ShiftedSphere { shift: zero() }.eval(&p)[0];
+        let b = ShiftedSphere { shift: zero() }.eval(&p)[0];
+        assert_eq!(a.to_bits(), b.to_bits());
+    }
+
+    // ---------- bounds / duplicate sampling (via a recording wrapper) ----------
+
+    #[test]
+    fn all_sampled_poses_inside_domain() {
+        // DIRECT must never ask the cost about a pose outside [start-range,
+        // start+range] — off-by-one in trisection produces out-of-range samples.
+        // This records every evaluated pose (interior mutability — eval takes
+        // &self, so it needs a Cell/RefCell behind an Arc).
+        let range = 5.0;
+        use std::cell::RefCell;
+        use std::rc::Rc;
+        struct Recorder(Rc<RefCell<Vec<Pose>>>);
+        impl Cost for Recorder {
+            fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+                self.0.borrow_mut().extend(poses.iter().copied());
+                poses.iter().map(|_| 0.0).collect()
+            }
+        }
+        let log = Rc::new(RefCell::new(Vec::new()));
+        let mut opt = DirectOptimizer::new(all_ranges(range), zero(), 5_000);
+        opt.run(Recorder(log.clone()));
+        for p in log.borrow().iter() {
+            for v in [p.x, p.y, p.z, p.xa, p.ya, p.za] {
+                assert!(
+                    (-range..=range).contains(&v),
+                    "sampled pose {} outside [-{range}, {range}]",
+                    show(p),
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn no_duplicate_samples() {
+        // Parent keeps its already-scored center; both children are fresh.
+        // Any re-eval is a subdivision bug — the correct bound is zero dups.
+        use std::cell::RefCell;
+        use std::collections::HashSet;
+        use std::rc::Rc;
+        struct Counter {
+            total: usize,
+            uniq: HashSet<[u64; 6]>,
+        }
+        struct Rec(Rc<RefCell<Counter>>);
+        fn key(p: &Pose) -> [u64; 6] {
+            [p.x, p.y, p.z, p.xa, p.ya, p.za].map(f64::to_bits)
+        }
+        impl Cost for Rec {
+            fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+                let mut c = self.0.borrow_mut();
+                for p in poses {
+                    c.total += 1;
+                    c.uniq.insert(key(p));
+                }
+                poses.iter().map(|_| 0.0).collect()
+            }
+        }
+        let counter = Rc::new(RefCell::new(Counter {
+            total: 0,
+            uniq: HashSet::new(),
+        }));
+        let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 4_000);
+        opt.run(Rec(counter.clone()));
+        let c = counter.borrow();
+        assert!(c.total > 0, "no evals at all");
+        assert_eq!(
+            c.uniq.len(),
+            c.total,
+            "re-evaluated {} duplicate centers (total {}, unique {})",
+            c.total - c.uniq.len(),
+            c.total,
+            c.uniq.len()
+        );
+    }
+}
+</file>
+
+<file path="rust/direct-rs/src/dup_diag.rs">
+//! Temporary diagnostic for the duplicate-sample finding. NEVER SHIP.
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
+use crate::cost::Cost;
+use crate::direct_data_storage::Pose;
+use crate::direct_optimizer::DirectOptimizer;
+use crate::test_support::{splat, zero};
+
+struct Rec(Rc<RefCell<HashMap<[u64; 6], usize>>>);
+impl Cost for Rec {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let mut m = self.0.borrow_mut();
+        for p in poses {
+            *m.entry([p.x, p.y, p.z, p.xa, p.ya, p.za].map(f64::to_bits)).or_insert(0) += 1;
+        }
+        poses.iter().map(|_| 0.0).collect()
+    }
+}
+
+#[test]
+fn diag_duplicates() {
+    let m = Rc::new(RefCell::new(HashMap::new()));
+    let mut opt = DirectOptimizer::new(splat(5.0), zero(), 4_000);
+    opt.run(Rec(Rc::clone(&m)));
+    let m = m.borrow();
+    let mut dups: Vec<_> = m.iter().filter(|&(_, &c)| c > 1).collect();
+    dups.sort_by_key(|(_, c)| **c);
+    println!("total distinct points: {}", m.len());
+    println!("num duplicated points: {}", dups.len());
+    let maxct: usize = dups.iter().map(|&(_, c)| *c).max().unwrap_or(0);
+    println!("max multiplicity: {maxct}");
+    for &(k, c) in dups.iter().rev().take(15) {
+        let p: Vec<f64> = k.iter().map(|&b| f64::from_bits(b)).collect();
+        println!(
+            "dup count={c}: ({:.6},{:.6},{:.6},{:.6},{:.6},{:.6})",
+            p[0], p[1], p[2], p[3], p[4], p[5]
+        );
+    }
+}
+</file>
+
+<file path="rust/direct-rs/src/properties.rs">
+//! Metamorphic / property tests over the public `DirectOptimizer` API.
+//!
+//! Structural internals (volume partition, Jones POH, depth lattice) live in
+//! `#[cfg(test)]` modules next to the types they inspect.
+//!
+//! Deferred: differential-vs-C++ replay. The cxx bridge exposes `CppCost`,
+//! not a runnable C++ `DirectOptimizer`, so there is no linked original to
+//! compare sample tapes against yet.
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use proptest::prelude::*;
+
+use crate::bench::ShiftedSphere;
+use crate::cost::Cost;
+use crate::direct_data_storage::Pose;
+use crate::direct_optimizer::DirectOptimizer;
+use crate::test_support::{
+    coords, denorm, dist, invert, permute_pose, pose, show, splat, unpermute_pose, zero,
+};
+
+const CASES: u32 = 32;
+
+struct Recording<C> {
+    inner: C,
+    log: Rc<RefCell<Vec<Pose>>>,
+    costs: Rc<RefCell<Vec<f64>>>,
+}
+
+impl<C: Cost> Cost for Recording<C> {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let out = self.inner.eval(poses);
+        self.log.borrow_mut().extend(poses.iter().copied());
+        self.costs.borrow_mut().extend(out.iter().copied());
+        out
+    }
+}
+
+struct Affine<C> {
+    inner: C,
+    a: f64,
+    b: f64,
+}
+
+impl<C: Cost> Cost for Affine<C> {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        self.inner
+            .eval(poses)
+            .into_iter()
+            .map(|v| self.a * v + self.b)
+            .collect()
+    }
+}
+
+/// `g(u) = f(denorm_{start,range}(u))` so a unit-cube run matches a physical one.
+struct InUnit<C> {
+    inner: C,
+    start: Pose,
+    range: Pose,
+}
+
+impl<C: Cost> Cost for InUnit<C> {
+    fn eval(&self, units: &[Pose]) -> Vec<f64> {
+        let physical: Vec<Pose> = units
+            .iter()
+            .copied()
+            .map(|u| denorm(self.start, self.range, u))
+            .collect();
+        self.inner.eval(&physical)
+    }
+}
+
+/// `f_perm(x) = f(unpermute(x))` so permuting the domain permutes the cost.
+struct Permuted<C> {
+    inner: C,
+    perm: [usize; 6],
+}
+
+impl<C: Cost> Cost for Permuted<C> {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let unpermuted: Vec<Pose> = poses
+            .iter()
+            .copied()
+            .map(|p| unpermute_pose(p, self.perm))
+            .collect();
+        self.inner.eval(&unpermuted)
+    }
+}
+
+struct Hostile {
+    /// First `nan_prefix` evals return NaN; after that, a sphere about the origin.
+    nan_prefix: usize,
+    seen: RefCell<usize>,
+}
+
+impl Cost for Hostile {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| {
+                let n = {
+                    let mut seen = self.seen.borrow_mut();
+                    let k = *seen;
+                    *seen += 1;
+                    k
+                };
+                if n < self.nan_prefix {
+                    f64::NAN
+                } else {
+                    coords(p).iter().map(|v| v * v).sum()
+                }
+            })
+            .collect()
+    }
+}
+
+fn run_recorded<C: Cost>(
+    range: Pose,
+    start: Pose,
+    budget: u32,
+    cost: C,
+) -> (Pose, f64, Vec<Pose>, Vec<f64>) {
+    let log = Rc::new(RefCell::new(Vec::new()));
+    let costs = Rc::new(RefCell::new(Vec::new()));
+    let rec = Recording {
+        inner: cost,
+        log: Rc::clone(&log),
+        costs: Rc::clone(&costs),
+    };
+    let mut opt = DirectOptimizer::new(range, start, budget);
+    let (best, best_cost) = opt.run(rec);
+    (best, best_cost, log.take(), costs.take())
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig { cases: CASES, ..ProptestConfig::default() })]
+
+    /// Desired contract: the optimizer never evaluates more than `budget`
+    /// points. The current loop checks the guard *before* a `2×|POH|` batch,
+    /// so this is expected to fail until overshoot is bounded.
+    #[test]
+    fn evals_do_not_exceed_budget(
+        range in proptest::array::uniform6(0.1_f64..20.0),
+        start in proptest::array::uniform6(-50.0_f64..50.0),
+        budget in 1_u32..80,
+        shift in proptest::array::uniform6(-5.0_f64..5.0),
+    ) {
+        let range = pose(range);
+        let start = pose(start);
+        let shift = pose(shift);
+        let (_b, _c, samples, _) = run_recorded(
+            range,
+            start,
+            budget,
+            ShiftedSphere { shift },
+        );
+        prop_assert!(
+            samples.len() <= budget as usize,
+            "evaluated {} points against budget {budget}",
+            samples.len()
+        );
+    }
+
+    /// Every physical sample lies in `[start − range, start + range]`.
+    #[test]
+    fn samples_stay_inside_the_search_cube(
+        range in proptest::array::uniform6(0.1_f64..20.0),
+        start in proptest::array::uniform6(-50.0_f64..50.0),
+        budget in 8_u32..60,
+        shift in proptest::array::uniform6(-5.0_f64..5.0),
+    ) {
+        let range = pose(range);
+        let start = pose(start);
+        let shift = pose(shift);
+        let (_b, _c, samples, _) = run_recorded(
+            range,
+            start,
+            budget,
+            ShiftedSphere { shift },
+        );
+        let lo = coords(&start);
+        let hi_span = coords(&range);
+        for p in &samples {
+            for (i, v) in coords(p).iter().enumerate() {
+                let Some(&l) = lo.get(i) else { continue };
+                let Some(&s) = hi_span.get(i) else { continue };
+                prop_assert!(
+                    *v >= l - s - 1e-9 && *v <= l + s + 1e-9,
+                    "sample {} axis {i} = {v} outside [{}, {}]",
+                    show(p),
+                    l - s,
+                    l + s
+                );
+            }
+        }
+    }
+
+    /// Returned incumbent is the recorded argmin (finite costs only).
+    #[test]
+    fn incumbent_is_the_recorded_argmin(
+        range in proptest::array::uniform6(0.1_f64..20.0),
+        start in proptest::array::uniform6(-50.0_f64..50.0),
+        budget in 8_u32..60,
+        shift in proptest::array::uniform6(-5.0_f64..5.0),
+    ) {
+        let range = pose(range);
+        let start = pose(start);
+        let shift = pose(shift);
+        let (best, best_cost, samples, costs) = run_recorded(
+            range,
+            start,
+            budget,
+            ShiftedSphere { shift },
+        );
+        prop_assert_eq!(samples.len(), costs.len());
+        let mut min = f64::INFINITY;
+        let mut argmin = best;
+        for (p, c) in samples.iter().zip(&costs) {
+            if c.is_finite() && *c < min {
+                min = *c;
+                argmin = *p;
+            }
+        }
+        prop_assert!(
+            best_cost.is_finite(),
+            "incumbent cost {best_cost} is not finite"
+        );
+        prop_assert!(
+            (best_cost - min).abs() < 1e-12,
+            "incumbent cost {best_cost} != recorded min {min}"
+        );
+        prop_assert!(
+            dist(&best, &argmin) < 1e-12,
+            "incumbent pose {} != argmin {}",
+            show(&best),
+            show(&argmin)
+        );
+    }
+
+    /// Parent keeps its center; children are fresh. Zero re-evaluations.
+    #[test]
+    fn no_duplicate_samples(
+        range in proptest::array::uniform6(0.1_f64..20.0),
+        start in proptest::array::uniform6(-50.0_f64..50.0),
+        budget in 8_u32..80,
+        shift in proptest::array::uniform6(-5.0_f64..5.0),
+    ) {
+        let range = pose(range);
+        let start = pose(start);
+        let shift = pose(shift);
+        let (_b, _c, samples, _) = run_recorded(
+            range,
+            start,
+            budget,
+            ShiftedSphere { shift },
+        );
+        let mut keys: Vec<[u64; 6]> = samples
+            .iter()
+            .map(|p| coords(p).map(f64::to_bits))
+            .collect();
+        let total = keys.len();
+        keys.sort_unstable();
+        keys.dedup();
+        prop_assert_eq!(
+            keys.len(),
+            total,
+            "re-evaluated {} duplicate centers",
+            total - keys.len()
+        );
+    }
+
+    /// `run(a f + b)` returns the same pose and cost `a c + b` for `a > 0`.
+    #[test]
+    fn positive_affine_cost_is_equivariant(
+        a in 0.05_f64..8.0,
+        b in -20.0_f64..20.0,
+        budget in 20_u32..50,
+        shift in proptest::array::uniform6(-3.0_f64..3.0),
+    ) {
+        let range = splat(5.0);
+        let start = zero();
+        let shift = pose(shift);
+        let base = ShiftedSphere { shift };
+        let mut raw = DirectOptimizer::new(range, start, budget);
+        let (p1, c1) = raw.run(base);
+        let mut aff = DirectOptimizer::new(range, start, budget);
+        let (p2, c2) = aff.run(Affine { inner: base, a, b });
+        prop_assert!(
+            dist(&p1, &p2) < 1e-9,
+            "pose drifted under affine: {} vs {}",
+            show(&p1),
+            show(&p2)
+        );
+        prop_assert!(
+            (c2 - (a * c1 + b)).abs() < 1e-9,
+            "cost {c2} != {a}*{c1}+{b}"
+        );
+    }
+
+    /// Negative scale must *not* preserve the minimizer (guard against abs()).
+    #[test]
+    fn negative_affine_does_not_preserve_minimizer(
+        budget in 20_u32..40,
+    ) {
+        let shift = Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 };
+        let range = splat(5.0);
+        let start = zero();
+        let base = ShiftedSphere { shift };
+        let mut raw = DirectOptimizer::new(range, start, budget);
+        let (p1, _) = raw.run(base);
+        let mut aff = DirectOptimizer::new(range, start, budget);
+        let (p2, _) = aff.run(Affine { inner: base, a: -1.0, b: 0.0 });
+        prop_assert!(
+            dist(&p1, &p2) > 0.5,
+            "negating the cost kept the same pose {}",
+            show(&p1)
+        );
+    }
+
+    /// `run(r, s, f)` and `run(1, 0.5, f ∘ denorm_{r,s})` sample the same
+    /// unit-space centers — the real normalize/denormalize check.
+    #[test]
+    fn domain_affine_equivariance(
+        range in proptest::array::uniform6(1.0_f64..15.0),
+        start in proptest::array::uniform6(-20.0_f64..20.0),
+        budget in 16_u32..40,
+    ) {
+        let range = pose(range);
+        let start = pose(start);
+        let shift = Pose {
+            x: start.x + 0.3 * range.x,
+            y: start.y - 0.2 * range.y,
+            z: start.z + 0.1 * range.z,
+            xa: start.xa - 0.25 * range.xa,
+            ya: start.ya + 0.15 * range.ya,
+            za: start.za - 0.35 * range.za,
+        };
+        let f = ShiftedSphere { shift };
+        let (_b1, _c1, phys, _) = run_recorded(range, start, budget, f);
+        let unit_from_phys: Vec<Pose> = phys
+            .iter()
+            .copied()
+            .map(|p| invert(start, range, p))
+            .collect();
+
+        let g = InUnit { inner: f, start, range };
+        // range=0.5, start=0.5 => denorm is the identity on unit space.
+        let (_b2, _c2, units, _) = run_recorded(splat(0.5), splat(0.5), budget, g);
+
+        let n = unit_from_phys.len().min(units.len());
+        prop_assert!(n > 0, "no samples");
+        for (i, (a, b)) in unit_from_phys.iter().zip(&units).take(n).enumerate() {
+            prop_assert!(
+                dist(a, b) < 1e-9,
+                "unit trajectory diverged at {i}: {} vs {}",
+                show(a),
+                show(b)
+            );
+        }
+    }
+
+    /// At a converging budget, permuting axes of a quadratic must preserve
+    /// the best *cost* (the pose need not permute — `min_by_key` ties break
+    /// toward index 0). Low budgets are allowed to differ; this is the
+    /// converged weaker property.
+    #[test]
+    fn axis_permutation_preserves_best_cost(
+        _pad in 0u8..1,
+    ) {
+        let perm = [5usize, 4, 3, 2, 1, 0];
+        let range = splat(5.0);
+        let start = zero();
+        let shift = Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 };
+        let f = ShiftedSphere { shift };
+        let budget = 8_000;
+        let mut a = DirectOptimizer::new(range, start, budget);
+        let (_p1, c1) = a.run(f);
+        let mut b = DirectOptimizer::new(
+            permute_pose(range, perm),
+            permute_pose(start, perm),
+            budget,
+        );
+        let (_p2, c2) = b.run(Permuted { inner: f, perm });
+        prop_assert!(
+            (c1 - c2).abs() < 1e-6,
+            "permuted run cost {c2} != original {c1}"
+        );
+    }
+
+    /// Sample tape of budget `n` is a prefix of budget `2n`.
+    #[test]
+    fn larger_budget_extends_the_sample_prefix(
+        budget in 8_u32..30,
+        shift in proptest::array::uniform6(-3.0_f64..3.0),
+    ) {
+        let range = splat(5.0);
+        let start = zero();
+        let shift = pose(shift);
+        let f = ShiftedSphere { shift };
+        let (_b1, _c1, small, _) = run_recorded(range, start, budget, f);
+        let (_b2, _c2, large, _) = run_recorded(range, start, budget.saturating_mul(2), f);
+        prop_assert!(
+            large.len() >= small.len(),
+            "larger budget sampled fewer points ({} < {})",
+            large.len(),
+            small.len()
+        );
+        for (i, (a, b)) in small.iter().zip(&large).enumerate() {
+            prop_assert!(
+                dist(a, b) < 1e-12,
+                "prefix diverged at sample {i}: {} vs {}",
+                show(a),
+                show(b)
+            );
+        }
+    }
+
+    /// `range_i = 0` pins that coordinate to `start_i` on every sample.
+    #[test]
+    fn zero_range_axis_stays_pinned_to_start(
+        freeze_mask in 1_u8..63,
+        start in proptest::array::uniform6(-10.0_f64..10.0),
+        budget in 8_u32..40,
+    ) {
+        let mut r = [4.0; 6];
+        for (i, slot) in r.iter_mut().enumerate() {
+            if (freeze_mask >> i) & 1 == 1 {
+                *slot = 0.0;
+            }
+        }
+        let range = crate::test_support::pose(r);
+        let start = pose(start);
+        let shift = start;
+        let (_b, _c, samples, _) = run_recorded(
+            range,
+            start,
+            budget,
+            ShiftedSphere { shift },
+        );
+        let s = coords(&start);
+        for p in &samples {
+            for (i, v) in coords(p).iter().enumerate() {
+                let Some(&si) = s.get(i) else { continue };
+                let Some(&ri) = r.get(i) else { continue };
+                if ri == 0.0 {
+                    prop_assert!(
+                        (*v - si).abs() < 1e-12,
+                        "axis {i} moved to {v} despite range 0 (start {si})"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn nan_prefix_never_becomes_incumbent() {
+    let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
+    let (best, best_cost) = opt.run(Hostile {
+        nan_prefix: 5,
+        seen: RefCell::new(0),
+    });
+    assert!(
+        best_cost.is_finite(),
+        "incumbent cost {best_cost} is not finite"
+    );
+    for v in coords(&best) {
+        assert!(v.is_finite(), "incumbent pose {} has a non-finite coord", show(&best));
+    }
+}
+
+#[test]
+fn all_nan_run_does_not_leave_nan_incumbent() {
+    let mut opt = DirectOptimizer::new(splat(5.0), zero(), 40);
+    let (_best, best_cost) = opt.run(Hostile {
+        nan_prefix: usize::MAX,
+        seen: RefCell::new(0),
+    });
+    assert!(
+        best_cost.is_finite(),
+        "all-NaN run left incumbent cost {best_cost}"
+    );
+}
+</file>
+
+<file path="rust/direct-rs/src/test_support.rs">
+//! Shared helpers for the DIRECT test suite. Compiled only under `cargo test`.
+
+use crate::direct_data_storage::Pose;
+
+pub(crate) fn coords(p: &Pose) -> [f64; 6] {
+    [p.x, p.y, p.z, p.xa, p.ya, p.za]
+}
+
+pub(crate) fn pose(c: [f64; 6]) -> Pose {
+    let [x, y, z, xa, ya, za] = c;
+    Pose { x, y, z, xa, ya, za }
+}
+
+pub(crate) fn splat(v: f64) -> Pose {
+    pose([v; 6])
+}
+
+pub(crate) fn zero() -> Pose {
+    splat(0.0)
+}
+
+pub(crate) fn show(p: &Pose) -> String {
+    format!(
+        "({:.6},{:.6},{:.6},{:.6},{:.6},{:.6})",
+        p.x, p.y, p.z, p.xa, p.ya, p.za
+    )
+}
+
+pub(crate) fn dist(a: &Pose, b: &Pose) -> f64 {
+    coords(a)
+        .iter()
+        .zip(coords(b))
+        .map(|(u, v)| (u - v) * (u - v))
+        .sum::<f64>()
+        .sqrt()
+}
+
+/// physical[i] = start[i] + (unit[i] - 0.5) * 2 * range[i]
+pub(crate) fn denorm(start: Pose, range: Pose, unit: Pose) -> Pose {
+    let s = coords(&start);
+    let r = coords(&range);
+    let u = coords(&unit);
+    let mut out = [0.0; 6];
+    for ((slot, si), (ui, ri)) in out.iter_mut().zip(s).zip(u.iter().zip(r)) {
+        *slot = si + (ui - 0.5) * 2.0 * ri;
+    }
+    pose(out)
+}
+
+/// Inverse of `denorm`. Axes with `range_i == 0` map back to 0.5.
+pub(crate) fn invert(start: Pose, range: Pose, physical: Pose) -> Pose {
+    let s = coords(&start);
+    let r = coords(&range);
+    let p = coords(&physical);
+    let mut out = [0.5; 6];
+    for ((slot, si), (pi, ri)) in out.iter_mut().zip(s).zip(p.iter().zip(r)) {
+        if ri != 0.0 {
+            *slot = 0.5 + (pi - si) / (2.0 * ri);
+        }
+    }
+    pose(out)
+}
+
+/// Unit-space center at depth `d` must sit at an odd multiple of `3^{-d}/2`.
+pub(crate) fn on_lattice(center: f64, depth: u32) -> bool {
+    let scale = 3f64.powi(depth as i32);
+    let scaled = center * 2.0 * scale;
+    let nearest = scaled.round();
+    let n = nearest as i64;
+    (scaled - nearest).abs() < 1e-9 && n.unsigned_abs() % 2 == 1
+}
+
+/// `size = sqrt(Σ 3^{-2 d_i})` with terms summed in sorted order so the
+/// reference is permutation-invariant.
+pub(crate) fn canonical_size(depths: [u32; 6]) -> f64 {
+    let mut terms: [f64; 6] = depths.map(|d| {
+        let v = 3f64.powi(d as i32);
+        1.0 / (v * v)
+    });
+    terms.sort_by(|a, b| a.total_cmp(b));
+    terms.iter().sum::<f64>().sqrt()
+}
+
+pub(crate) fn permute_coords(c: [f64; 6], perm: [usize; 6]) -> [f64; 6] {
+    let mut out = [0.0; 6];
+    for (slot, src) in out.iter_mut().zip(perm) {
+        if let Some(&val) = c.get(src) {
+            *slot = val;
+        }
+    }
+    out
+}
+
+pub(crate) fn permute_pose(p: Pose, perm: [usize; 6]) -> Pose {
+    pose(permute_coords(coords(&p), perm))
+}
+
+pub(crate) fn unpermute_pose(p: Pose, perm: [usize; 6]) -> Pose {
+    let c = coords(&p);
+    let mut out = [0.0; 6];
+    for (src, dst) in c.iter().zip(perm) {
+        if let Some(slot) = out.get_mut(dst) {
+            *slot = *src;
+        }
+    }
+    pose(out)
+}
+</file>
+
+<file path="rust/direct-rs/src/cost.rs">
+use crate::direct_data_storage::Pose;
+
+pub trait Cost {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64>;
+}
+</file>
+
+<file path="rust/direct-rs/src/pose.rs">
+
+</file>
+
+<file path="rust/direct-rs/src/test.rs">
+use crate::{cost::Cost, direct_data_storage::Pose};
+
+struct Sphere;
+
+impl Cost for Sphere {
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        poses
+            .iter()
+            .map(|p| p.x * p.x + p.y * p.y + p.z * p.z + p.xa * p.xa + p.ya * p.ya + p.za * p.za)
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::direct_data_storage::{Hyperbox, Pose};
+
+    #[test]
+    fn hyperbox_size_matches_depth_formula() {
+        let unit = Hyperbox {
+            cost_at_center: 0.0,
+            center: Pose {
+                x: 0.5,
+                y: 0.5,
+                z: 0.5,
+                xa: 0.5,
+                ya: 0.5,
+                za: 0.5,
+            },
+            depths: [0; 6],
+        };
+        let unit_size = unit.size();
+        assert!(
+            (unit_size - 6.0_f64.sqrt()).abs() < 1e-12,
+            "unit box size {unit_size} != sqrt(6)"
+        );
+
+        let hb = Hyperbox {
+            cost_at_center: 25.0,
+            center: Pose {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                xa: 0.0,
+                ya: 0.0,
+                za: 0.0,
+            },
+            depths: [3, 3, 3, 3, 3, 9],
+        };
+        // size = sqrt(Σ 3^{-2 d_i}) = sqrt(5/729 + 1/387420489)
+        let expected = (5.0_f64 / 729.0 + 1.0 / 387_420_489.0).sqrt();
+        let got = hb.size();
+        assert!(
+            (got - expected).abs() < 1e-12,
+            "size {got} != expected {expected}"
+        );
+    }
+
+    #[test]
+    fn sphere_run_decreases_cost() {
+        use super::Sphere;
+        use crate::direct_optimizer::DirectOptimizer;
+
+        let start = Pose {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+            xa: 1.0,
+            ya: 1.0,
+            za: 1.0,
+        };
+        let range = Pose {
+            x: 5.0,
+            y: 5.0,
+            z: 5.0,
+            xa: 5.0,
+            ya: 5.0,
+            za: 5.0,
+        };
+        let mut opt = DirectOptimizer::new(range, start, 5_000);
+        let (_best, best_cost) = opt.run(Sphere);
+        println!("cost={best_cost}");
+        // the global minimum is 0; DIRECT on a sphere should improve on the
+        // seed's sum-of-squares (start=(1,1,1,...) => seed cost 6).
+        assert!(
+            best_cost < 6.0,
+            "expected to improve on seed cost 6, got {best_cost}"
+        );
+    }
+}
+</file>
+
+<file path="rust/direct-rs/src/direct_data_storage.rs">
+use std::iter::Sum;
+
+use ordered_float::OrderedFloat;
+
+use crate::ffi::CppCost;
+
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+pub enum Direction {
+    X_DIR = 0,
+    Y_DIR = 1,
+    Z_DIR = 2,
+    XA_DIR = 3,
+    YA_DIR = 4,
+    ZA_DIR = 5,
+}
+
+const DIRECTIONS: [Direction; 6] = [
+    Direction::X_DIR,
+    Direction::Y_DIR,
+    Direction::Z_DIR,
+    Direction::XA_DIR,
+    Direction::YA_DIR,
+    Direction::ZA_DIR,
+];
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Pose {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub xa: f64,
+    pub ya: f64,
+    pub za: f64,
+}
+
+trait Cost {
+    fn eval(&self, pose: &[Pose]) -> f64;
+}
+
+impl Pose {
+    pub fn shift(&mut self, dir: Direction, amount: f64) {
+        match dir {
+            Direction::X_DIR => self.x += amount,
+            Direction::Y_DIR => self.y += amount,
+            Direction::Z_DIR => self.z += amount,
+            Direction::XA_DIR => self.xa += amount,
+            Direction::YA_DIR => self.ya += amount,
+            Direction::ZA_DIR => self.za += amount,
+        }
+    }
+}
+
+pub type SizeKey = OrderedFloat<f64>;
+pub type CostKey = (OrderedFloat<f64>, u64);
+
+#[derive(Clone, Copy)]
+pub struct Hyperbox {
+    pub cost_at_center: f64,
+    pub center: Pose,
+    pub depths: [u32; 6],
+}
+
+#[derive(Clone, Copy)]
+pub struct UnscoredHyperbox {
+    pub center: Pose,
+    pub depths: [u32; 6],
+}
+
+impl Hyperbox {
+    pub fn size(&self) -> f64 {
+        return self
+            .depths
+            .iter()
+            .map(|e| 3f64.powf(-2.0 * (*e as f64)))
+            .sum::<f64>()
+            .sqrt();
+    }
+    pub fn trisect(mut self) -> (Hyperbox, [UnscoredHyperbox; 2]) {
+        let (min_idx, _) = self
+            .depths
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, v)| *v)
+            .expect("array is fixed-size and non-empty");
+
+        self.depths[min_idx] += 1;
+
+        let mut posc = self.center;
+        let mut negc = self.center;
+        posc.shift(
+            DIRECTIONS[min_idx],
+            3f64.powf(-(self.depths[min_idx] as f64)),
+        );
+
+        negc.shift(
+            DIRECTIONS[min_idx],
+            -3f64.powf(-(self.depths[min_idx] as f64)),
+        );
+
+        let pos_shift: UnscoredHyperbox = UnscoredHyperbox {
+            center: posc,
+            depths: self.depths.clone(),
+        };
+
+        let neg_shift: UnscoredHyperbox = UnscoredHyperbox {
+            center: negc,
+            depths: self.depths.clone(),
+        };
+
+        return (self, [pos_shift, neg_shift]);
+    }
+}
+
+impl UnscoredHyperbox {
+    pub fn add_score(self, score: f64) -> Hyperbox {
+        return Hyperbox {
+            cost_at_center: score,
+            depths: self.depths,
+            center: self.center,
+        };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{canonical_size, on_lattice, splat};
+    use proptest::prelude::*;
+
+    fn box_at(center: Pose, depths: [u32; 6]) -> Hyperbox {
+        Hyperbox {
+            cost_at_center: 0.0,
+            center,
+            depths,
+        }
+    }
+
+    #[test]
+    fn unit_box_size_is_sqrt_6() {
+        let hb = box_at(splat(0.5), [0; 6]);
+        let got = hb.size();
+        assert!(
+            (got - 6.0_f64.sqrt()).abs() < 1e-12,
+            "unit size {got} != sqrt(6)"
+        );
+    }
+
+    #[test]
+    fn size_is_bit_identical_under_depth_permutation() {
+        let a = [1u32, 2, 0, 3, 0, 4];
+        let mut b = a;
+        b.swap(0, 1);
+        b.swap(2, 5);
+        let sa = box_at(splat(0.5), a).size();
+        let sb = box_at(splat(0.5), b).size();
+        assert_eq!(
+            sa.to_bits(),
+            sb.to_bits(),
+            "size() depends on depth order: {sa} vs {sb} (a={a:?} b={b:?})"
+        );
+    }
+
+    #[test]
+    fn trisect_picks_the_min_depth_axis_and_shrinks() {
+        let parent = box_at(splat(0.5), [2, 0, 1, 3, 1, 4]);
+        let parent_size = parent.size();
+        let (center, [pos, neg]) = parent.trisect();
+        let changed: Vec<usize> = center
+            .depths
+            .iter()
+            .zip([2u32, 0, 1, 3, 1, 4])
+            .enumerate()
+            .filter(|(_, (now, was))| *now != was)
+            .map(|(i, _)| i)
+            .collect();
+        assert_eq!(changed, vec![1], "must deepen the unique min-depth axis");
+        assert_eq!(center.depths[1], 1);
+        assert_eq!(pos.depths, center.depths);
+        assert_eq!(neg.depths, center.depths);
+        assert!(center.size() < parent_size);
+        assert!(canonical_size(pos.depths) < parent_size);
+        assert!(canonical_size(neg.depths) < parent_size);
+    }
+
+    #[test]
+    fn trisect_children_sit_on_the_center_lattice() {
+        let parent = box_at(splat(0.5), [0; 6]);
+        let (center, [pos, neg]) = parent.trisect();
+        for (p, depths) in [
+            (center.center, center.depths),
+            (pos.center, pos.depths),
+            (neg.center, neg.depths),
+        ] {
+            for (c, d) in crate::test_support::coords(&p).iter().zip(depths) {
+                assert!(
+                    on_lattice(*c, d),
+                    "center coord {c} at depth {d} is off-lattice"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn repeated_min_depth_split_keeps_depths_within_one() {
+        let mut hb = box_at(splat(0.5), [0; 6]);
+        for _ in 0..18 {
+            let (next, _) = hb.trisect();
+            hb = next;
+            let min = hb.depths.iter().copied().min().unwrap_or(0);
+            let max = hb.depths.iter().copied().max().unwrap_or(0);
+            assert!(
+                max - min <= 1,
+                "depths {:?} drifted more than 1 apart",
+                hb.depths
+            );
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig { cases: 64, ..ProptestConfig::default() })]
+
+        #[test]
+        fn size_matches_canonical_sorted_sum(d0 in 0u32..8, d1 in 0u32..8, d2 in 0u32..8,
+                                             d3 in 0u32..8, d4 in 0u32..8, d5 in 0u32..8) {
+            let depths = [d0, d1, d2, d3, d4, d5];
+            let got = box_at(splat(0.5), depths).size();
+            let want = canonical_size(depths);
+            prop_assert!(
+                (got - want).abs() < 1e-12,
+                "size {got} != canonical {want} for {depths:?}"
+            );
+        }
+    }
+}
+</file>
+
+<file path="rust/direct-rs/src/direct_optimizer.rs">
+use crate::cost::Cost;
+use crate::direct_data_storage::{CostKey, Hyperbox, Pose, SizeKey, UnscoredHyperbox};
+use ordered_float::OrderedFloat;
+use std::collections::BTreeMap;
+use std::iter::zip;
+pub struct DirectOptimizer {
+    boxes: BTreeMap<SizeKey, BTreeMap<CostKey, Hyperbox>>,
+    current_best: (Pose, f64),
+    budget: u32,
+    range: Pose,
+    starting_point: Pose,
+    call_offset: u32,
+    calls: u32,
+    next_box_id: u64,
+}
+
+pub enum POHSettings {
+    ConvexHull = 0,
+}
+
+#[derive(Copy, Clone)]
+struct POHPoint {
+    size: f64,
+    cost: f64,
+}
+
+impl Default for POHSettings {
+    fn default() -> Self {
+        Self::ConvexHull
+    }
+}
+
+impl DirectOptimizer {
+    pub fn new(range: Pose, starting_point: Pose, budget: u32) -> Self {
+        Self {
+            boxes: BTreeMap::new(),
+            current_best: (starting_point, f64::INFINITY),
+            budget,
+            range,
+            starting_point,
+            call_offset: 0,
+            calls: 0,
+            next_box_id: 0,
+        }
+    }
+
+    fn next_id(&mut self) -> u64 {
+        let id = self.next_box_id;
+        self.next_box_id += 1;
+        id
+    }
+
+    pub fn run<T: Cost>(&mut self, cost: T) -> (Pose, f64) {
+        // seed: box lives at the unit center; cost eval at its physical pose
+        let unit = Self::unit_center();
+        let physical = self.denormalize(unit);
+        let seed_cost = cost.eval(&[physical])[0];
+        self.calls += 1;
+        let seed = Hyperbox {
+            cost_at_center: seed_cost,
+            center: unit,
+            depths: [0; 6],
+        };
+        let id = self.next_id();
+        self.boxes
+            .entry(OrderedFloat(seed.size()))
+            .or_default()
+            .insert((OrderedFloat(seed_cost), id), seed);
+        self.current_best = (physical, seed_cost);
+
+        loop {
+            if self.calls + self.call_offset >= self.budget {
+                break;
+            }
+            let poh = self.determine_potentially_optimal(POHSettings::default());
+            if poh.is_empty() {
+                break;
+            }
+            let unscored = self.trisect_and_return_unscored(&poh);
+            if unscored.is_empty() {
+                break;
+            }
+            self.score_and_reinsert(&cost, &unscored);
+        }
+
+        self.best()
+    }
+
+    pub fn best(&self) -> (Pose, f64) {
+        self.current_best
+    }
+
+    /// Map a unit-space pose (each axis in [0,1]) to physical space.
+    /// physical[i] = start[i] + (unit[i] - 0.5) * 2 * range[i]
+    fn denormalize(&self, unit: Pose) -> Pose {
+        Pose {
+            x:  self.starting_point.x  + (unit.x  - 0.5) * 2.0 * self.range.x,
+            y:  self.starting_point.y  + (unit.y  - 0.5) * 2.0 * self.range.y,
+            z:  self.starting_point.z  + (unit.z  - 0.5) * 2.0 * self.range.z,
+            xa: self.starting_point.xa + (unit.xa - 0.5) * 2.0 * self.range.xa,
+            ya: self.starting_point.ya + (unit.ya - 0.5) * 2.0 * self.range.ya,
+            za: self.starting_point.za + (unit.za - 0.5) * 2.0 * self.range.za,
+        }
+    }
+
+    fn unit_center() -> Pose {
+        Pose { x: 0.5, y: 0.5, z: 0.5, xa: 0.5, ya: 0.5, za: 0.5 }
+    }
+    fn trisect_and_return_unscored(&mut self, boxes: &[POHPoint]) -> Vec<UnscoredHyperbox> {
+        let mut unscored: Vec<UnscoredHyperbox> = Vec::new();
+        for poh in boxes {
+            let Some(parent) = self
+                .boxes
+                .get_mut(&OrderedFloat(poh.size))
+                .and_then(|row| row.pop_first())
+                .map(|(_key, hb)| hb)
+            else {
+                continue;
+            };
+
+            let (center, shifted) = parent.trisect();
+            let id = self.next_id();
+            self.boxes
+                .entry(OrderedFloat(center.size()))
+                .or_default()
+                .insert((OrderedFloat(center.cost_at_center), id), center);
+            unscored.extend(shifted);
+        }
+        return unscored;
+    }
+
+    fn score_and_reinsert<T: Cost>(&mut self, cost: &T, unscored: &[UnscoredHyperbox]) {
+        let centers: Vec<Pose> = unscored.iter().map(|p| self.denormalize(p.center)).collect();
+        let evaluated_costs: Vec<f64> = cost.eval(&centers);
+        self.calls += evaluated_costs.len() as u32;
+
+        for scored_box in zip(unscored, evaluated_costs).map(|v| v.0.add_score(v.1)) {
+            let physical = self.denormalize(scored_box.center);
+            if scored_box.cost_at_center < self.current_best.1 {
+                self.current_best = (physical, scored_box.cost_at_center);
+            }
+            let id = self.next_id();
+            self.boxes
+                .entry(OrderedFloat(scored_box.size()))
+                .or_default()
+                .insert((OrderedFloat(scored_box.cost_at_center), id), scored_box);
+        }
+    }
+
+    fn determine_potentially_optimal(&self, settings: POHSettings) -> Vec<POHPoint> {
+        let mut init_hyperboxes: Vec<POHPoint> = Vec::new();
+
+        // Because we're using a BTree based on the size and cost, this
+        // returns the value of the hyperbox per-size with the lowest cost
+        for (size_key, cost_val) in self.boxes.iter() {
+            if let Some((key, _box)) = cost_val.first_key_value() {
+                init_hyperboxes.push(POHPoint {
+                    size: (*size_key).into_inner(),
+                    cost: (key.0).into_inner(),
+                })
+            }
+        }
+        let poh = match settings {
+            POHSettings::ConvexHull => DirectOptimizer::convex_hull(&init_hyperboxes),
+            // POHSettings::PARETO => DirectOptimizer::pareto_front(&init_hyperboxes),
+            // POHSettings::AGGRESSIVE => Vec::new(),
+        };
+        return poh;
+    }
+
+    fn pareto_front(poh: &[POHPoint]) -> Vec<POHPoint> {
+        todo!();
+    }
+
+    fn convex_hull(poh: &[POHPoint]) -> Vec<POHPoint> {
+        let mut poh_true: Vec<POHPoint> = Vec::new();
+
+        for p in poh.iter() {
+            while (poh_true.len() >= 2)
+                && (DirectOptimizer::cross(
+                    (
+                        poh_true[poh_true.len() - 2].size,
+                        poh_true[poh_true.len() - 2].cost,
+                    ),
+                    (
+                        poh_true[poh_true.len() - 1].size,
+                        poh_true[poh_true.len() - 1].cost,
+                    ),
+                    (p.size, p.cost),
+                ) <= 0.0)
+            {
+                poh_true.pop();
+            }
+            poh_true.push(*p);
+        }
+
+        return poh_true;
+    }
+
+    fn cross(o: (f64, f64), p1: (f64, f64), p2: (f64, f64)) -> f64 {
+        return (p1.0 - o.0) * (p2.1 - o.1) - (p1.1 - o.1) * (p2.0 - o.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::bench::ShiftedSphere;
+    use crate::cost::Cost;
+    use crate::test_support::{coords, on_lattice, show, splat, zero};
+    use proptest::prelude::*;
+    use std::collections::BTreeSet;
+
+    fn iter_boxes(opt: &DirectOptimizer) -> impl Iterator<Item = &Hyperbox> {
+        opt.boxes.values().flat_map(|row| row.values())
+    }
+
+    /// Jones potentially-optimal test on `(size, cost)` representatives.
+    /// `j` is POH iff `K_lo <= K_hi` and `K_hi > 0`, with same-size worse
+    /// points treated as dominated.
+    fn jones_poh(points: &[(f64, f64)]) -> Vec<(f64, f64)> {
+        let mut out = Vec::new();
+        for (j, &(dj, fj)) in points.iter().enumerate() {
+            let dominated = points.iter().enumerate().any(|(i, &(di, fi))| {
+                i != j && (di - dj).abs() <= 1e-15 && fi < fj
+            });
+            if dominated {
+                continue;
+            }
+            let mut k_lo = f64::NEG_INFINITY;
+            let mut k_hi = f64::INFINITY;
+            for (i, &(di, fi)) in points.iter().enumerate() {
+                if i == j {
+                    continue;
+                }
+                let dd = dj - di;
+                if dd > 1e-15 {
+                    k_lo = k_lo.max((fj - fi) / dd);
+                } else if dd < -1e-15 {
+                    k_hi = k_hi.min((fi - fj) / (di - dj));
+                }
+            }
+            if k_lo <= k_hi && k_hi > 0.0 {
+                out.push((dj, fj));
+            }
+        }
+        out
+    }
+
+    fn hull_pairs(pts: &[POHPoint]) -> Vec<(f64, f64)> {
+        DirectOptimizer::convex_hull(pts)
+            .into_iter()
+            .map(|p| (p.size, p.cost))
+            .collect()
+    }
+
+    fn volume_checksum(opt: &DirectOptimizer) -> Result<(u128, u128), &'static str> {
+        let sums: Vec<u32> = iter_boxes(opt).map(|b| b.depths.iter().sum()).collect();
+        let Some(&s_max) = sums.iter().max() else {
+            return Err("no boxes");
+        };
+        let rhs = 3u128.checked_pow(s_max).ok_or("pow overflow")?;
+        let mut lhs = 0u128;
+        for s in sums {
+            let term = 3u128.checked_pow(s_max - s).ok_or("pow overflow")?;
+            lhs = lhs.checked_add(term).ok_or("add overflow")?;
+        }
+        Ok((lhs, rhs))
+    }
+
+    #[test]
+    fn jones_rejects_the_descending_left_hull() {
+        // Larger box is cheaper: the small expensive vertices are NOT POH.
+        let pts = [
+            POHPoint { size: 1.0, cost: 10.0 },
+            POHPoint { size: 2.0, cost: 5.0 },
+            POHPoint { size: 3.0, cost: 0.0 },
+        ];
+        let hull = hull_pairs(&pts);
+        let jones = jones_poh(&[(1.0, 10.0), (2.0, 5.0), (3.0, 0.0)]);
+        assert_eq!(jones, vec![(3.0, 0.0)], "oracle sanity");
+        assert_eq!(
+            hull, jones,
+            "convex_hull returned {hull:?}, Jones POH is {jones:?} — \
+             drop vertices left of the global-min-cost hull vertex"
+        );
+    }
+
+    #[test]
+    fn jones_keeps_the_increasing_right_hull() {
+        let pts = [
+            POHPoint { size: 1.0, cost: 0.0 },
+            POHPoint { size: 2.0, cost: 1.0 },
+            POHPoint { size: 3.0, cost: 4.0 },
+        ];
+        let mut hull = hull_pairs(&pts);
+        let mut jones = jones_poh(&[(1.0, 0.0), (2.0, 1.0), (3.0, 4.0)]);
+        hull.sort_by(|a, b| a.0.total_cmp(&b.0));
+        jones.sort_by(|a, b| a.0.total_cmp(&b.0));
+        assert_eq!(hull, jones);
+    }
+
+    #[test]
+    fn hull_of_one_and_two_points() {
+        let one = [POHPoint { size: 1.5, cost: 2.0 }];
+        assert_eq!(hull_pairs(&one).len(), 1);
+        let two = [
+            POHPoint { size: 1.0, cost: 3.0 },
+            POHPoint { size: 2.0, cost: 1.0 },
+        ];
+        assert_eq!(hull_pairs(&two).len(), 2);
+    }
+
+    #[test]
+    fn collinear_lower_hull_keeps_interior_vertices() {
+        // Jones selects every collinear lower-hull point. `cross <= 0` pops them.
+        let pts = [
+            POHPoint { size: 1.0, cost: 1.0 },
+            POHPoint { size: 2.0, cost: 2.0 },
+            POHPoint { size: 3.0, cost: 3.0 },
+        ];
+        let hull = hull_pairs(&pts);
+        assert_eq!(
+            hull.len(),
+            3,
+            "collinear interior vertex dropped ({hull:?}); \
+             Jones keeps all of them — change the comparison deliberately if this is DIRECT-l"
+        );
+    }
+
+    #[test]
+    fn boxes_tile_the_unit_cube_exactly() {
+        let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
+        opt.run(ShiftedSphere {
+            shift: Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 },
+        });
+        let (lhs, rhs) = volume_checksum(&opt).expect("volume checksum");
+        assert_eq!(lhs, rhs, "Σ 3^{{Smax-Σd}} = {lhs} != 3^{{Smax}} = {rhs}");
+    }
+
+    #[test]
+    fn every_box_center_is_on_the_trisection_lattice() {
+        let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
+        opt.run(ShiftedSphere {
+            shift: Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 },
+        });
+        for hb in iter_boxes(&opt) {
+            for (c, d) in coords(&hb.center).iter().zip(hb.depths) {
+                assert!(
+                    on_lattice(*c, d),
+                    "box center {} depth {d:?} off-lattice",
+                    show(&hb.center)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn no_two_boxes_share_a_unit_center() {
+        let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
+        opt.run(ShiftedSphere {
+            shift: Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 },
+        });
+        let mut seen = BTreeSet::new();
+        for hb in iter_boxes(&opt) {
+            let key = coords(&hb.center).map(f64::to_bits);
+            assert!(seen.insert(key), "duplicate unit center {}", show(&hb.center));
+        }
+    }
+
+    #[test]
+    fn each_box_depths_differ_by_at_most_one() {
+        let mut opt = DirectOptimizer::new(splat(5.0), zero(), 120);
+        opt.run(ShiftedSphere {
+            shift: Pose { x: 1.7, y: 0.4, z: -2.1, xa: 0.8, ya: -1.3, za: 2.6 },
+        });
+        for hb in iter_boxes(&opt) {
+            let min = hb.depths.iter().copied().min().unwrap_or(0);
+            let max = hb.depths.iter().copied().max().unwrap_or(0);
+            assert!(
+                max - min <= 1,
+                "depths {:?} violate min-depth split",
+                hb.depths
+            );
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig { cases: 48, ..ProptestConfig::default() })]
+
+        #[test]
+        fn convex_hull_matches_jones_on_unique_sizes(
+            raw in proptest::collection::vec((0.1_f64..12.0, -8.0_f64..8.0), 1..12)
+        ) {
+            // Dedup sizes so the input matches what determine_potentially_optimal feeds.
+            let mut pts = raw;
+            pts.sort_by(|a, b| a.0.total_cmp(&b.0));
+            pts.dedup_by(|a, b| (a.0 - b.0).abs() < 1e-9);
+            prop_assume!(!pts.is_empty());
+            let poh: Vec<POHPoint> = pts
+                .iter()
+                .map(|&(size, cost)| POHPoint { size, cost })
+                .collect();
+            let mut hull = hull_pairs(&poh);
+            let mut jones = jones_poh(&pts);
+            hull.sort_by(|a, b| a.0.total_cmp(&b.0));
+            jones.sort_by(|a, b| a.0.total_cmp(&b.0));
+            prop_assert_eq!(hull, jones);
+        }
+
+        #[test]
+        fn volume_partition_holds_for_random_runs(
+            budget in 8_u32..60,
+            shift in proptest::array::uniform6(-4.0_f64..4.0),
+        ) {
+            let [x, y, z, xa, ya, za] = shift;
+            let mut opt = DirectOptimizer::new(splat(5.0), zero(), budget);
+            opt.run(ShiftedSphere { shift: Pose { x, y, z, xa, ya, za } });
+            match volume_checksum(&opt) {
+                Ok((lhs, rhs)) => prop_assert_eq!(lhs, rhs),
+                Err("pow overflow") => {}
+                Err(e) => prop_assert!(false, "volume checksum failed: {e}"),
+            }
+        }
+    }
+
+    struct Sphere;
+    impl Cost for Sphere {
+        fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+            poses
+                .iter()
+                .map(|p| coords(p).iter().map(|v| v * v).sum())
+                .collect()
+        }
+    }
+
+    #[test]
+    fn seed_evaluation_counts_as_one_call_when_budget_is_zero() {
+        let mut opt = DirectOptimizer::new(splat(5.0), zero(), 0);
+        let _ = opt.run(Sphere);
+        assert_eq!(opt.calls, 1, "seed must still be evaluated at budget 0");
+    }
+}
+</file>
+
+<file path="rust/direct-rs/src/lib.rs">
+mod bench;
+mod cost;
+mod direct_data_storage;
+mod direct_optimizer;
+mod test;
+
+#[cfg(test)]
+mod properties;
+#[cfg(test)]
+mod test_support;
+
+#[cfg(test)]
+mod dup_diag;
+
+use crate::direct_optimizer::{DirectOptimizer, POHSettings};
+
+#[cxx::bridge]
+pub mod ffi {
+
+    extern "Rust" {
+        type DirectOptimizer;
+        type POHSettings;
+    }
+
+    unsafe extern "C++" {
+        include!("domain/cost.h");
+        include!("domain/data_structures_6D.h");
+        type CppCost;
+        type Point6D;
+        pub fn evaluate(self: &CppCost, point: &Point6D) -> f64;
+
+    }
+}
+</file>
+
+</files>
