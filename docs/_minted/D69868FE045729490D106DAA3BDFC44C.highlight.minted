@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{RunOutcome}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{c+cm}{/* five more axes */}
+\PYG{+w}{    }\PYG{n}{value}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n}{calls}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{u32}\PYG{p}{,}\PYG{+w}{     }\PYG{c+c1}{// why does the cumulative\PYGZhy{}budget ladder NEED this?}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

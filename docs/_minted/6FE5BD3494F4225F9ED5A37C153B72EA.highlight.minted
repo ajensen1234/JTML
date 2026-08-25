@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{pub}\PYG{p}{(}\PYG{k}{crate}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{pose\PYGZus{}to\PYGZus{}point}\PYG{p}{(}\PYG{n}{p}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{Pose}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{UniquePtr}\PYG{o}{\PYGZlt{}}\PYG{n}{Point6D}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{Point6D}\PYG{p}{::}\PYG{n}{new}\PYG{p}{(}\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{p}\PYG{p}{.}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{)}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

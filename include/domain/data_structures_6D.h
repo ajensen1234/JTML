@@ -8,6 +8,7 @@
 
 /*Standard*/
 #include <algorithm>
+#include <memory>
 
 /*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/
 
@@ -44,6 +45,9 @@ struct Point6D {
     Direction GetLargestDirection();
 
     double GetDirection(Direction direction);
+
+    std::unique_ptr<Point6D>
+    new_point(double x, double y, double z, double xa, double ya, double za);
 
     void UpdateDirection(Direction direction, double updated_value);
 };

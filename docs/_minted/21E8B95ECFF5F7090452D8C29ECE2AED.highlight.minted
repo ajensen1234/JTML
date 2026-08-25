@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// rust/direct\PYGZhy{}rs/src/lib.rs (current)}
+\PYG{k}{unsafe}\PYG{+w}{ }\PYG{k}{extern}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}C++\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nf+fm}{include!}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}domain/cost.h\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{    }\PYG{n+nf+fm}{include!}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}domain/data\PYGZus{}structures\PYGZus{}6D.h\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{    }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{CppCost}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{Point6D}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{evaluate}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{CppCost}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{point}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{Point6D}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

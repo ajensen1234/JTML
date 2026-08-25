@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{unsafe}\PYG{+w}{ }\PYG{k}{extern}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}C++\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{Point6D}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{x}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{xa}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ya}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{za}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kt}{f64}\PYG{p}{)}
+\PYG{+w}{        }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{UniquePtr}\PYG{o}{\PYGZlt{}}\PYG{n}{Point6D}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

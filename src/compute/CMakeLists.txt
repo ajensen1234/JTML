@@ -81,7 +81,9 @@ target_link_libraries(jtml_compute
 
 target_include_directories(jtml_compute
     PUBLIC
-        ${HEADER_DIR}
-        ${PROJECT_SOURCE_DIR}/include
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+      ${HEADER_DIR}
+      ${PROJECT_SOURCE_DIR}/include
+      ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+      ${OpenCV_INCLUDE_DIRS}
+
 )

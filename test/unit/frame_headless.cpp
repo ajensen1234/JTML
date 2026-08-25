@@ -85,11 +85,7 @@ void Frame::SetEdgeImage(
 void Frame::SetDilatedImage(int dilation) {
     dilation_ = dilation;
     cv::dilate(
-        edge_image_,
-        dilation_image_,
-        cv::Mat(),
-        cv::Point(-1, -1),
-        dilation_);
+        edge_image_, dilation_image_, cv::Mat(), cv::Point(-1, -1), dilation_);
 }
 
 /*Return Original Image*/
@@ -134,8 +130,7 @@ void Frame::SetDistanceMap() {
 
     cv::Mat inverse_edge = cv::Mat(height_, width_, CV_8UC1);
     inverse_edge = (255 - edge_image_);
-    cv::distanceTransform(
-        inverse_edge, distance_map_, cv::DIST_L1, 5, CV_8UC1);
+    cv::distanceTransform(inverse_edge, distance_map_, 1, 5, CV_8UC1);
 }
 
 /*Get Canny Parameters*/

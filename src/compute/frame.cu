@@ -118,7 +118,8 @@ void Frame::SetDistanceMap() {
 
     cv::Mat inverse_edge = cv::Mat(height_, width_, CV_8UC1);
     inverse_edge = (255 - edge_image_);
-    cv::distanceTransform(inverse_edge, distance_map_, cv::DIST_L1, 5, CV_8UC1);
+    auto placeholder =
+        cv::distanceTransform(inverse_edge, distance_map_, 1, 5, CV_8UC1);
 }
 
 /*Get Canny Parameters*/
@@ -153,11 +154,12 @@ void Frame::setCurvatureHeatmaps() {
     num_curvature_keypoints_ = curvature_heatmaps_.size();
     std::vector<std::vector<uchar>> vector_heatmap_char_tmp;
     for (int i = 0; i < num_curvature_keypoints_; i++) {
-        vector_heatmap_char_tmp.push_back(std::vector<uchar>(
-            curvature_heatmaps_[i].data,
-            curvature_heatmaps_[i].data +
-                curvature_heatmaps_[i].total() *
-                    curvature_heatmaps_[i].elemSize()));
+        vector_heatmap_char_tmp.push_back(
+            std::vector<uchar>(
+                curvature_heatmaps_[i].data,
+                curvature_heatmaps_[i].data +
+                    curvature_heatmaps_[i].total() *
+                        curvature_heatmaps_[i].elemSize()));
     }
     curvature_heatmap_chars_ = Frame::flattenVector(vector_heatmap_char_tmp);
 };

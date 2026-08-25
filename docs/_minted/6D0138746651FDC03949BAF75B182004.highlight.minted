@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// include/domain/cost.h:54}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{unique\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{CppCost}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{build\PYGZus{}cpp\PYGZus{}cost}\PYG{p}{(}\PYG{n}{CppCost}\PYG{o}{::}\PYG{n}{CostFunction}\PYG{+w}{ }\PYG{n}{fn}\PYG{p}{);}
+\PYG{c+c1}{//                        \PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{}\PYGZca{} std::function\PYGZlt{}double(const Point6D\PYGZam{})\PYGZgt{}}
+\PYG{c+c1}{//                        cxx has NO representation for std::function — period.}
+\end{MintedVerbatim}

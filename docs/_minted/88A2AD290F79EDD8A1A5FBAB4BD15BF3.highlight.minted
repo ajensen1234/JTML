@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// Door 1: free factory wrapping a (possibly arg\PYGZhy{}less) C++ fn}
+\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{+w}{ }\PYG{n}{build\PYGZus{}cpp\PYGZus{}cost}\PYG{p}{(}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{UniquePtr}\PYG{o}{\PYGZlt{}}\PYG{n}{CppCost}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+
+\PYG{c+c1}{// Door 2: declare the C++ CONSTRUCTOR itself}
+\PYG{c+c1}{// (cxx maps `fn new(...) \PYGZhy{}\PYGZgt{} UniquePtr\PYGZlt{}CppCost\PYGZgt{}` to CppCost(...))}
+\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{+w}{ }\PYG{n}{new}\PYG{p}{(}\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{UniquePtr}\PYG{o}{\PYGZlt{}}\PYG{n}{CppCost}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\end{MintedVerbatim}

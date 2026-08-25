@@ -6,6 +6,7 @@
 /*Standard*/
 #include <cmath>
 #include <iostream>
+#include <memory>
 
 Point6D::Point6D(
     double xval,
@@ -39,6 +40,11 @@ double Point6D::GetDistanceFrom(Point6D otherPoint) {
         ((otherPoint.xa - xa) * (otherPoint.xa - xa)) +
         (otherPoint.ya - ya) * (otherPoint.ya - ya) +
         (otherPoint.za - za) * (otherPoint.za - za));
+}
+
+std::unique_ptr<Point6D> Point6D::new_point(
+    double x, double y, double z, double xa, double ya, double za) {
+    return std::make_unique<Point6D>(Point6D(x, y, z, xa, ya, za));
 }
 
 Direction Point6D::GetLargestDirection() {

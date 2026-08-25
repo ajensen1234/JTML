@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{extern}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}Rust\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{DirectOptimizer}\PYG{p}{;}\PYG{+w}{      }\PYG{c+c1}{// \PYGZlt{}\PYGZhy{} everything below must be ADDED}
+\PYG{+w}{    }\PYG{k}{type}\PYG{+w}{ }\PYG{n+nc}{POHSettings}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\PYG{c+c1}{// waiting behind the wall (direct\PYGZus{}optimizer.rs):}
+\PYG{c+c1}{//   new(range, starting\PYGZus{}point, budget)          (:36)}
+\PYG{c+c1}{//   new\PYGZus{}with\PYGZus{}strat(..., poh\PYGZus{}strat)              (:49)}
+\PYG{c+c1}{//   run\PYGZlt{}T: Cost\PYGZgt{}(\PYGZam{}mut self, cost: T) \PYGZhy{}\PYGZgt{} (Pose, f64)   (:82)}
+\PYG{c+c1}{//   best(\PYGZam{}self) \PYGZhy{}\PYGZgt{} (Pose, f64)                  (:128)}
+\end{MintedVerbatim}

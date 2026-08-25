@@ -8,7 +8,7 @@ platforms = [{ platform = "linux-64", cuda = "12.9" }]
 
 [dependencies]
 # Core dependencies
-opencv = "*"
+opencv = ">=5.0.0,<6"
 pytorch-gpu = ">=2.7.1,<3"
 cuda-version = "12.9.*"
 cuda = "12.9.*"

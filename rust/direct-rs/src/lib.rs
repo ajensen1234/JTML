@@ -13,11 +13,16 @@ mod test_support;
 #[cfg(test)]
 mod dup_diag;
 
-use crate::direct_optimizer::{DirectOptimizer, POHSettings};
+use crate::{
+    cost::Cost,
+    direct_optimizer::{DirectOptimizer, POHSettings},
+    ffi::CppCost,
+};
 
 #[cxx::bridge]
 pub mod ffi {
 
+    #[namespace = "direct_rs"]
     extern "Rust" {
         type DirectOptimizer;
         type POHSettings;
@@ -28,7 +33,24 @@ pub mod ffi {
         include!("domain/data_structures_6D.h");
         type CppCost;
         type Point6D;
-        pub fn evaluate(self: &CppCost, point: &Point6D) -> f64;
+
+        // pub fn evaluate(self: &CppCost, point: &[f64; 6]) -> f64;
+        // pub fn IsBound(self: &CppCost) -> bool;
+
+        // #[Self=CppCost]
+        // pub fn new_cost() -> UniquePtr<CppCost>;
+
+        // #[Self=Point6D]
+        // pub fn new_point(x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> UniquePtr<Point6D>;
 
     }
 }
+
+// impl Cost for CppCost {
+//     fn eval(&self, poses: &[direct_data_storage::Pose]) -> Vec<f64> {
+//         return poses
+//             .iter()
+//             .map(|pose| self.evaluate(&[pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za]))
+//             .collect();
+//     }
+// }

@@ -91,11 +91,14 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     // Contour placeholder
     std::vector<std::vector<cv::Point_<int>>>* contour =
         new std::vector<std::vector<cv::Point_<int>>>;
-    extract_contour_points(binary_input_image, contour); // Use the binarized image
+    extract_contour_points(
+        binary_input_image, contour); // Use the binarized image
 
     // Handle case where no contours are found
     if (contour->empty() || contour->back().empty()) {
-        std::cerr << "DEBUG: No contours found in the image. Returning empty heatmaps." << std::endl;
+        std::cerr << "DEBUG: No contours found in the image. Returning empty "
+                     "heatmaps."
+                  << std::endl;
         delete contour;
         return std::vector<cv::Mat>(); // Return empty vector of heatmaps
     }
@@ -258,6 +261,6 @@ cv::Mat heatmap_at_point(int x, int y, int height, int width) {
     single_dot.at<uchar>(y, x) = 0;
     // now create the distance transform to that single point
     cv::Mat heatmap = cv::Mat(height, width, CV_8UC1);
-    cv::distanceTransform(single_dot, heatmap, cv::DIST_L1, 5, CV_8UC1);
+    cv::distanceTransform(single_dot, heatmap, 1, 5, CV_8UC1);
     return heatmap;
 }

@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{CppCostBridge}\PYG{o}{\PYGZlt{}\PYGZsq{}}\PYG{n+na}{a}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{o}{\PYGZsq{}}\PYG{n+na}{a}\PYG{+w}{ }\PYG{n+nc}{CppCost}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{k}{impl}\PYG{+w}{ }\PYG{n}{Cost}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{CppCostBridge}\PYG{o}{\PYGZlt{}\PYGZsq{}}\PYG{n+nb}{\PYGZus{}}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{eval}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{poses}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{p}{[}\PYG{n}{Pose}\PYG{p}{])}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Vec}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{f64}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n}{poses}\PYG{p}{.}\PYG{n}{iter}\PYG{p}{().}\PYG{n}{map}\PYG{p}{(}\PYG{o}{|}\PYG{n}{p}\PYG{o}{|}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n}{pt}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{pose\PYGZus{}to\PYGZus{}point}\PYG{p}{(}\PYG{n}{p}\PYG{p}{);}
+\PYG{+w}{            }\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{+w}{            }\PYG{c+c1}{// \PYGZlt{}\PYGZhy{} the ONE cxx call that makes this whole thing work}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}).}\PYG{n}{collect}\PYG{p}{()}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k}{pub}\PYG{+w}{ }\PYG{k}{fn}\PYG{+w}{ }\PYG{n+nf}{direct\PYGZus{}rs\PYGZus{}run}\PYG{p}{(}\PYG{n}{this}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nc}{Pin}\PYG{o}{\PYGZlt{}\PYGZam{}}\PYG{k}{mut}\PYG{+w}{ }\PYG{n}{DirectOptimizer}\PYG{o}{\PYGZgt{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cost}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kp}{\PYGZam{}}\PYG{n+nc}{CppCost}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n+nc}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}\PYGZus{}\PYGZus{}}\PYG{+w}{                    }\PYG{c+c1}{// \PYGZlt{}\PYGZhy{} connect adapter + inherent method}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}
