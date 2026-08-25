@@ -34,23 +34,24 @@ pub mod ffi {
         type CppCost;
         type Point6D;
 
-        // pub fn evaluate(self: &CppCost, point: &[f64; 6]) -> f64;
-        // pub fn IsBound(self: &CppCost) -> bool;
+        pub fn evaluate(self: &CppCost, point: &Point6D) -> f64;
+        pub fn IsBound(self: &CppCost) -> bool;
 
-        // #[Self=CppCost]
-        // pub fn new_cost() -> UniquePtr<CppCost>;
-
-        // #[Self=Point6D]
-        // pub fn new_point(x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> UniquePtr<Point6D>;
+        #[Self=Point6D]
+        pub fn new_point(x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> UniquePtr<Point6D>;
 
     }
 }
 
-// impl Cost for CppCost {
-//     fn eval(&self, poses: &[direct_data_storage::Pose]) -> Vec<f64> {
-//         return poses
-//             .iter()
-//             .map(|pose| self.evaluate(&[pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za]))
-//             .collect();
-//     }
-// }
+impl Cost for CppCost {
+    fn eval(&self, poses: &[direct_data_storage::Pose]) -> Vec<f64> {
+        return poses
+            .iter()
+            .map(|pose| {
+                self.evaluate(&ffi::Point6D::new_point(
+                    pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za,
+                ))
+            })
+            .collect();
+    }
+}

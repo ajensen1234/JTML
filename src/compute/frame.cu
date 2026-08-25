@@ -15,6 +15,8 @@
 
 #include "compute/curvature_utilities.h"
 
+#include <opencv2/geometry/2d.hpp>
+
 /*Constructor*/
 Frame::Frame(
     std::string file_location,
@@ -118,8 +120,7 @@ void Frame::SetDistanceMap() {
 
     cv::Mat inverse_edge = cv::Mat(height_, width_, CV_8UC1);
     inverse_edge = (255 - edge_image_);
-    auto placeholder =
-        cv::distanceTransform(inverse_edge, distance_map_, 1, 5, CV_8UC1);
+    cv::distanceTransform(inverse_edge, distance_map_, cv::DIST_L1, 5, CV_8UC1);
 }
 
 /*Get Canny Parameters*/

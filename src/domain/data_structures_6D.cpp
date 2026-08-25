@@ -44,7 +44,8 @@ double Point6D::GetDistanceFrom(Point6D otherPoint) {
 
 std::unique_ptr<Point6D> Point6D::new_point(
     double x, double y, double z, double xa, double ya, double za) {
-    return std::make_unique<Point6D>(Point6D(x, y, z, xa, ya, za));
+    auto pt = Point6D(x, y, z, xa, ya, za);
+    return std::make_unique<Point6D>(pt);
 }
 
 Direction Point6D::GetLargestDirection() {

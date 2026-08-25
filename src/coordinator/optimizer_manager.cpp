@@ -972,7 +972,7 @@ void OptimizerManager::Optimize() {
             cost_function_calls_ = 0;
 
             /*Initialize Search Stage Flag as Trunk*/
-            search_stage_flag_ = Trunk;
+            search_stage_flag_ = Stage::Trunk;
 
             /*Start Clock*/
             start_clock_ = clock();
@@ -1108,7 +1108,7 @@ void OptimizerManager::Optimize() {
                     if (error_occurrred_) break;
 
                     /*Update Search Stage Flag as Branch*/
-                    search_stage_flag_ = Branch;
+                    search_stage_flag_ = Stage::Branch;
 
                     /*Reset Storage, Starting Point, Range, new budget,
                      * comparison image*/
@@ -1157,7 +1157,7 @@ void OptimizerManager::Optimize() {
                 if (optimizer_settings_.enable_leaf_ && !error_occurrred_ &&
                     !sym_trap_call && spec.repeat > 0) {
                     /*Update Search Stage Flag as Leaf*/
-                    search_stage_flag_ = Leaf;
+                    search_stage_flag_ = Stage::Leaf;
 
                     /*Reset Storage, Starting Point, Range, new budget,
                      * comparison image*/
@@ -1314,6 +1314,7 @@ void OptimizerManager::RunDirectStage(
      * read it back after Run().*/
     auto serial_cost = jta::BuildGpuCostAdapter(
         gpu_principal_model_, calibration_, stage_manager);
+    CppCost cost = CppCost(serial_cost);
     DirectOptimizer opt(
         serial_cost, range, starting_point_, budget_, direct_options_);
 

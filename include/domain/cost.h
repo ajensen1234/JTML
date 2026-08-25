@@ -17,7 +17,7 @@
  * Extern "C++" view (written in the cxx::bridge, not this file):
  *   type CppCost;
  *   fn build_cpp_cost(...) -> UniquePtr<CppCost>;
- *   fn evaluate(self: &CppCost, point: Point6D) -> f64;
+ *   fn evaluate(self: &CppCost, point: &Point6D) -> f64;
  */
 #ifndef COST_H
 #define COST_H
@@ -29,20 +29,31 @@
 /*Header for Point6D*/
 #include "domain/data_structures_6D.h"
 
-/*Opaque cost handle: wraps a std::function<double(const Point6D&)> so Rust
-  can call it through an opaque type (UniquePtr<CppCost>) + evaluate().*/
+/*Opaque cost handle: wraps a std::function<double(const Point6D&)> so Rust can
+  call it through an opaque type (UniquePtr<CppCost>) + evaluate().*/
 class CppCost {
 public:
     using CostFunction = std::function<double(const Point6D&)>;
 
-    CppCost() = default;
+    CppCost() = delete; // belt-and-suspenders: prevent unbound cost across FFI
     explicit CppCost(CostFunction fn) : fn_(std::move(fn)) {}
 
-    /*The score of one pose — the sole call the Rust DIRECT loop makes.*/
-    double evaluate(const Point6D& point) const { return fn_(point); }
+    std::unique_ptr<CppCost> new_cost();
+
+    /*The score of one pose — the sole call the Rust DIRECT loop makes. Returns
+      NaN if unbound (belt-and-suspenders: IsBound() guard prevents
+      std::bad_function_call from unwinding through FFI = UB).*/
+    double evaluate(const Point6D& point) const {
+        if (!fn_) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        return fn_(point);
+    }
 
     /*Whether a cost function has been bound yet (for the default ctor).*/
-    bool IsBound() const { return static_cast<bool>(fn_); }
+    bool IsBound() const {
+        return static_cast<bool>(fn_);
+    }
 
 private:
     CostFunction fn_;

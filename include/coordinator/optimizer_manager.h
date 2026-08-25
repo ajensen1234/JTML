@@ -9,22 +9,28 @@
 #define OPTIMIZER_MANAGER_H
 
 /*Custom CUDA Headers*/
-#include <gpu_dilated_frame.cuh>
-#include <gpu_edge_frame.cuh>
-#include <gpu_heatmaps.cuh>
-#include <gpu_intensity_frame.cuh>
-#include <gpu_metrics.cuh>
-#include <gpu_model.cuh>
-#include <cost_capacity_service.cuh>
 #include "compute/evaluation_executor.h"
+#include "domain/cost.h"
+#include <cost_capacity_service.cuh>
 
+namespace gpu_cost_function {
+struct GPUFrame;
+struct GPUDilatedFrame;
+struct GPUEdgeFrame;
+struct GPUIntensityFrame;
+struct GPUModel;
+struct GPUMetrics;
+} // namespace gpu_cost_function
+
+#include "compute/Stage.h"
+#include "domain/sym_trap_functions.h"
 #include "services/calibration.h"
 
 /*QT Threading*/
+#include <QModelIndex>
+#include <QString>
 #include <qobject.h>
 #include <qthread.h>
-#include <QString>
-#include <QModelIndex>
 
 /*Frame and Model and Location Storage*/
 #include "compute/frame.h"
@@ -33,13 +39,11 @@
 
 /*Direct Library*/
 #include "domain/data_structures_6D.h"
-#include "domain/direct_data_storage.h"
 
 /*Extracted pure DIRECT optimizer (plan U5/U6)*/
 #include "domain/direct_optimizer.h"
 
 /*Custom Calibration Struct (Used in CUDA GPU METRICS)*/
-#include "services/calibration.h"
 
 /*Optimizer Settings*/
 #include "services/optimizer_settings.h"
@@ -53,10 +57,8 @@
 #include <functional>
 
 /*Metric Types*/
-#include "domain/metric_enum.h"
 
 /*Cost Function Library*/
-#include "domain/sym_trap_functions.h"
 #include "compute/CostFunctionManager.h"
 
 using namespace gpu_cost_function;
@@ -226,7 +228,8 @@ private:
     /*Models*/
     GPUModel* gpu_principal_model_;
     CostCapacityService* capacity_service_ = nullptr;
-    // U6: greedy EvaluationExecutor for graph-backed batch (primary), BankState shim remains for serial
+    // U6: greedy EvaluationExecutor for graph-backed batch (primary), BankState
+    // shim remains for serial
     gpu_cost_function::EvaluationExecutor* evaluation_executor_ = nullptr;
     std::vector<GPUModel*> gpu_non_principal_models_;
 
@@ -259,8 +262,8 @@ private:
      * pre-shim DeriveStageCostParams calls were (in the stage loop AFTER the
      * stage's InitializeActiveCostFunction — the init-gating order is
      * load-bearing).*/
-    jta::StageCostParams DeriveStageParams(
-        jta_cost_function::CostFunctionManager& manager);
+    jta::StageCostParams
+    DeriveStageParams(jta_cost_function::CostFunctionManager& manager);
 
     /*The stage dilate-A / dilate-B (if biplane) / emit UpdateDilationBackground
      * block — one place for the trunk/branch/leaf stage specs (the dilation
@@ -276,8 +279,7 @@ private:
      * slot (plan 008 U8: direct_options_) is passed to the DirectOptimizer
      * ctor -- defaults reproduce the pre-Options search bit-identically.*/
     void RunDirectStage(
-        Point6D range,
-        jta_cost_function::CostFunctionManager& stage_manager);
+        Point6D range, jta_cost_function::CostFunctionManager& stage_manager);
 
     /*Cost Function Calls*/
     unsigned int cost_function_calls_;
@@ -306,13 +308,14 @@ private:
     jta::StageScript stage_script_;
 
     /*Flag For Being in Either Trunk, Branch, or Z*/
-    unsigned int search_stage_flag_;
+    Stage search_stage_flag_;
 };
 
 namespace jta {
 
-// Plan 012 U1: guarded runner that converts coordinator abort and invalid_argument
-// into a stage error (C9). Returns true on success, false with *errorOut set.
+// Plan 012 U1: guarded runner that converts coordinator abort and
+// invalid_argument into a stage error (C9). Returns true on success, false with
+// *errorOut set.
 bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut);
 
 /*Plan 008 U9 (Cut B): the shared GPU cost adapter — the injected-cost lambda
@@ -336,6 +339,6 @@ std::function<double(const Point6D&)> BuildGpuCostAdapter(
     Calibration calibration,
     jta_cost_function::CostFunctionManager& stage_manager);
 
-}  // namespace jta
+} // namespace jta
 
 #endif /* OPTIMIZER_MANAGER_H */

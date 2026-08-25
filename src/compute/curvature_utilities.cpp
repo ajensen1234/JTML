@@ -6,6 +6,7 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/persistence.hpp>
+#include <opencv2/geometry/2d.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -261,6 +262,6 @@ cv::Mat heatmap_at_point(int x, int y, int height, int width) {
     single_dot.at<uchar>(y, x) = 0;
     // now create the distance transform to that single point
     cv::Mat heatmap = cv::Mat(height, width, CV_8UC1);
-    cv::distanceTransform(single_dot, heatmap, 1, 5, CV_8UC1);
+    cv::distanceTransform(single_dot, heatmap, cv::DIST_L1, 5, CV_8UC1);
     return heatmap;
 }

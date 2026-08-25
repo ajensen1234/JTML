@@ -35,4 +35,4 @@ Point6D tibial_pose_selector(Point6D& femur_pose, Point6D& tibia_pose);
  * @param tibia_pose  The tibia's 6D pose.
  * @return float The varus/valgus angle between the two.
  */
-float varus_valgus_calculation(Point6D& femur_pose, Point6D& tibia_pose);
+double varus_valgus_calculation(Point6D& femur_pose, Point6D& tibia_pose);

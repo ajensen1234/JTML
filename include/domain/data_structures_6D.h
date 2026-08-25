@@ -46,7 +46,7 @@ struct Point6D {
 
     double GetDirection(Direction direction);
 
-    std::unique_ptr<Point6D>
+    static std::unique_ptr<Point6D>
     new_point(double x, double y, double z, double xa, double ya, double za);
 
     void UpdateDirection(Direction direction, double updated_value);

@@ -34,7 +34,6 @@ file(GLOB HEADER_FILES CONFIGURE_DEPENDS
 )
 
 add_library(jtml_coordinator STATIC
-    optimize_coordinator.cpp
     optimizer_manager.cpp
     optimizer_run_controller_core.cpp
     optimizer_run_driver.cpp
