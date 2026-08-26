@@ -67,7 +67,7 @@ void ValidateOptions(const DirectOptimizer::Options& opts) {
             "plan");
     }
 }
-} // namespace
+}  // namespace
 
 DirectOptimizer::DirectOptimizer(
     CostFunction cost,
@@ -75,8 +75,11 @@ DirectOptimizer::DirectOptimizer(
     Point6D starting_point,
     unsigned int budget,
     Options options) :
-    cost_(std::move(cost)), range_(range), starting_point_(starting_point),
-    budget_(budget), options_(std::move(options)) {
+    cost_(std::move(cost)),
+    range_(range),
+    starting_point_(starting_point),
+    budget_(budget),
+    options_(std::move(options)) {
     // Fail fast at construction: a non-default Options field is a plan-008
     // stub, not a silent behavior change (guarded divergence -- the defaults
     // reproduce today's search bit-identically by construction).
@@ -95,8 +98,11 @@ DirectOptimizer::DirectOptimizer(
     Point6D starting_point,
     unsigned int budget,
     Options options) :
-    cost_(std::move(cost)), range_(range), starting_point_(starting_point),
-    budget_(budget), options_(std::move(options)) {
+    cost_(std::move(cost)),
+    range_(range),
+    starting_point_(starting_point),
+    budget_(budget),
+    options_(std::move(options)) {
     // Fail fast at construction: a non-default Options field is a plan-008
     // stub, not a silent behavior change (guarded divergence -- the defaults
     // reproduce today's search bit-identically by construction).
@@ -141,9 +147,13 @@ bool DirectOptimizer::Run() {
             error_occurrred_ = true;
             break;
         }
-        if (error_occurrred_) break;
+        if (error_occurrred_) {
+            break;
+        }
 
-        if (iteration_callback_) iteration_callback_();
+        if (iteration_callback_) {
+            iteration_callback_();
+        }
     }
 
     return !error_occurrred_;
@@ -261,7 +271,7 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
         // oc).
         std::vector<HyperBox6D*> pending;
         std::vector<int> pending_changed_index;
-        std::vector<Point6D> batch_centers; // denormalized, in packing order
+        std::vector<Point6D> batch_centers;  // denormalized, in packing order
 
         for (int i = 0; i < potentially_optimal_hyperboxes_.size(); i++) {
             Point6D denormalized_sides =
@@ -294,8 +304,8 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
                 return idx;
             };
 
-            make_changed(+1); // A: +shift
-            make_changed(-1); // B: -shift
+            make_changed(+1);  // A: +shift
+            make_changed(-1);  // B: -shift
         }
 
         /*Single batch call over the whole iteration's changed centers.*/
@@ -304,8 +314,9 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
         /*Fail fast on a size-mismatched result (never partially consumed, never
          * silently re-fallen-back to per-point evaluation).*/
         if (results.size() != batch_centers.size()) {
-            for (auto* b : pending)
+            for (auto* b : pending) {
                 delete b;
+            }
             throw std::invalid_argument(
                 "DirectOptimizer: batch cost returned the wrong result size "
                 "(contract violation, plan 010 U11)");
@@ -327,7 +338,9 @@ void DirectOptimizer::TrisectPotentiallyOptimal() {
             cost_function_calls_++;
             if (!std::isfinite(result)) {
                 non_finite_count_++;
-                if (iteration_callback_) iteration_callback_();
+                if (iteration_callback_) {
+                    iteration_callback_();
+                }
                 delete box;
                 continue;
             }
@@ -408,8 +421,8 @@ unsigned int DirectOptimizer::GetNonFiniteCount() const {
     return non_finite_count_;
 }
 
-std::optional<double>
-DirectOptimizer::EvaluateCostFunction(Point6D unit_point) {
+std::optional<double> DirectOptimizer::EvaluateCostFunction(
+    Point6D unit_point) {
     Point6D denormalized_point = DenormalizeFromCenter(unit_point);
     double result = std::visit(
         [&denormalized_point](auto&& cost_impl) -> double {

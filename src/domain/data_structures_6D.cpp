@@ -22,6 +22,13 @@ Point6D::Point6D(
     ya = yaval;
     za = zaval;
 }
+Point6D::Point6D(std::array<double, 6> arr) :
+    x(arr.at(0)),
+    y(arr.at(1)),
+    z(arr.at(2)),
+    xa(arr.at(3)),
+    ya(arr.at(4)),
+    za(arr.at(5)) {}
 
 Point6D::Point6D() {
     x = 0;
@@ -43,20 +50,39 @@ double Point6D::GetDistanceFrom(Point6D otherPoint) {
 }
 
 std::unique_ptr<Point6D> Point6D::new_point(
-    double x, double y, double z, double xa, double ya, double za) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     auto pt = Point6D(x, y, z, xa, ya, za);
     return std::make_unique<Point6D>(pt);
+}
+
+std::array<double, 6> Point6D::to_array() const {
+    return {x, y, z, xa, ya, za};
 }
 
 Direction Point6D::GetLargestDirection() {
     double array_directions[6] = {x, y, z, xa, ya, za};
     double max_element =
         *std::max_element(array_directions, array_directions + 6);
-    if (max_element == x) return X_DIRECTION;
-    if (max_element == y) return Y_DIRECTION;
-    if (max_element == z) return Z_DIRECTION;
-    if (max_element == xa) return XA_DIRECTION;
-    if (max_element == ya) return YA_DIRECTION;
+    if (max_element == x) {
+        return X_DIRECTION;
+    }
+    if (max_element == y) {
+        return Y_DIRECTION;
+    }
+    if (max_element == z) {
+        return Z_DIRECTION;
+    }
+    if (max_element == xa) {
+        return XA_DIRECTION;
+    }
+    if (max_element == ya) {
+        return YA_DIRECTION;
+    }
     return ZA_DIRECTION;
 }
 
@@ -81,7 +107,8 @@ double Point6D::GetDirection(Direction direction) {
         return za;
         break;
     }
-    return 0.0; // unreachable; silences -Wreturn-type for any out-of-enum value
+    return 0.0;  // unreachable; silences -Wreturn-type for any out-of-enum
+                 // value
 }
 
 void Point6D::UpdateDirection(Direction direction, double updated_value) {
@@ -149,8 +176,9 @@ bool HyperBox6D::containsPoint(Point6D point) {
         ((center_.ya - 0.5 * sides_.ya) <= point.ya &&
          point.ya <= (center_.ya + 0.5 * sides_.ya)) &&
         ((center_.za - 0.5 * sides_.za) <= point.za &&
-         point.za <= (center_.za + 0.5 * sides_.za)))
+         point.za <= (center_.za + 0.5 * sides_.za))) {
         return true;
+    }
     return false;
 }
 

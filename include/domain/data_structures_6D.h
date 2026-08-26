@@ -8,6 +8,7 @@
 
 /*Standard*/
 #include <algorithm>
+#include <array>
 #include <memory>
 
 /*Header for Data Storage Class of DIRECT algorithm (basically a linked list)*/
@@ -32,6 +33,7 @@ struct Point6D {
         double yaval,
         double zaval);
     Point6D();
+    Point6D(std::array<double, 6> arr);
 
     double x;
     double y;
@@ -48,13 +50,14 @@ struct Point6D {
 
     static std::unique_ptr<Point6D>
     new_point(double x, double y, double z, double xa, double ya, double za);
+    [[nodiscard]] std::array<double, 6> to_array() const;
 
     void UpdateDirection(Direction direction, double updated_value);
 };
 
 /*Storage Class (Linked List of HyperMatrices/Columns) for DIRECT optimization
  * algorithm*/
-struct HyperBox6D // Stores HyperCube Info
+struct HyperBox6D  // Stores HyperCube Info
 {
     HyperBox6D(double value, Point6D center, Point6D sides);
     HyperBox6D();

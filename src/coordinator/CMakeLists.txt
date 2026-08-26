@@ -42,12 +42,11 @@ add_library(jtml_coordinator STATIC
     session_state_controller.cpp
     ${HEADER_FILES}
 )
-option(USING_CPP_COST "Use CppCost instead of CostFunction std::function" ON)
+option(USING_CPP_COST "Use CppCost instead of CostFunction std::function" 0)
 
 target_compile_definitions(jtml_domain PRIVATE
     $<$<BOOL:${USING_CPP_COST}>:USING_CPP_COST>
 )
-
 
 
 target_compile_definitions(jtml_coordinator PRIVATE

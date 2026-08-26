@@ -2,7 +2,6 @@ use std::{collections::BTreeMap, iter::Sum};
 
 use ordered_float::OrderedFloat;
 
-use crate::ffi::CppCost;
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
@@ -34,9 +33,6 @@ pub struct Pose {
     pub za: f64,
 }
 
-trait Cost {
-    fn eval(&self, pose: &[Pose]) -> f64;
-}
 
 impl Pose {
     pub fn shift(&mut self, dir: Direction, amount: f64) {
@@ -48,6 +44,9 @@ impl Pose {
             Direction::YA_DIR => self.ya += amount,
             Direction::ZA_DIR => self.za += amount,
         }
+    }
+    pub fn to_array(&self) -> [f64; 6] {
+        return [self.x, self.y, self.z, self.xa, self.ya, self.za];
     }
 }
 

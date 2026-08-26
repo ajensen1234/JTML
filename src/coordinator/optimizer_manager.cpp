@@ -20,6 +20,7 @@
 #include "compute/graph_admission_policy.h"
 #include "compute/graph_key_assembler.h"
 #include "compute/pose_matrix.h"
+#include "direct-rs_bridge/lib.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
     // this->sym_trap_obj = nullptr;
@@ -79,8 +80,9 @@ bool OptimizerManager::Initialize(
     frames_B_ = camera_B_frame_list;
     if (calibration_.biplane_calibration &&
         frames_A_.size() != frames_B_.size()) {
-        error_message = "Biplane mode enabled, but each camera has a different "
-                        "number of frames!";
+        error_message =
+            "Biplane mode enabled, but each camera has a different "
+            "number of frames!";
         succesfull_initialization_ = false;
         return succesfull_initialization_;
     }
@@ -251,13 +253,16 @@ bool OptimizerManager::Initialize(
     int cuda_device_id = 0, gpu_device_count = 0, device_count;
     struct cudaDeviceProp properties;
     cudaError_t cudaResultCode = cudaGetDeviceCount(&device_count);
-    if (cudaResultCode != cudaSuccess) device_count = 0;
+    if (cudaResultCode != cudaSuccess) {
+        device_count = 0;
+    }
     /* Machines with no GPUs can still report one emulation device */
     for (int device = 0; device < device_count; ++device) {
         cudaGetDeviceProperties(&properties, device);
         if (properties.major != 9999 &&
-            properties.major >= 5) /* 9999 means emulation only */
+            properties.major >= 5) { /* 9999 means emulation only */
             ++gpu_device_count;
+        }
     }
     /*If no Cuda Compatitble Devices with Compute Capability Greater Than 5,
      * Exit*/
@@ -1105,7 +1110,9 @@ void OptimizerManager::Optimize() {
                 for (unsigned int branch_index = 0; branch_index < spec.repeat;
                      branch_index++) {
                     /*If Error*/
-                    if (error_occurrred_) break;
+                    if (error_occurrred_) {
+                        break;
+                    }
 
                     /*Update Search Stage Flag as Branch*/
                     search_stage_flag_ = Stage::Branch;
@@ -1212,8 +1219,9 @@ void OptimizerManager::Optimize() {
         emit UpdateDilationBackground();
 
         /*Move on and Wrap Up*/
-        if (error_occurrred_ || frame_index == end_frame_index_)
+        if (error_occurrred_ || frame_index == end_frame_index_) {
             progress_next_frame_ = false;
+        }
         emit OptimizedFrame(
             current_optimum_location_.x,
             current_optimum_location_.y,
@@ -1301,7 +1309,8 @@ void OptimizerManager::ResetStageDilation(size_t frame_index, int dilation) {
 }
 
 void OptimizerManager::RunDirectStage(
-    Point6D range, jta_cost_function::CostFunctionManager& stage_manager) {
+    Point6D range,
+    jta_cost_function::CostFunctionManager& stage_manager) {
     /*Cross the extracted pure optimizer boundary with the real GPU cost. The
      * DirectOptimizer hands the injected lambda the *denormalized physical*
      * point, so set the GPU model poses from it directly (primary, + biplane
@@ -1312,24 +1321,38 @@ void OptimizerManager::RunDirectStage(
      * cost function; Calibration by value, monoplane default).
      * No here-optimum tracking: DirectOptimizer owns that internally and we
      * read it back after Run().*/
+
     auto serial_cost = jta::BuildGpuCostAdapter(
         gpu_principal_model_, calibration_, stage_manager);
-#ifdef USING_CPP_COST
-    std::cout << "using CPP Cost!!!" << "\n";
+
+#if USE_RUST_DIRECT
     CppCost cost = CppCost(serial_cost);
-    DirectOptimizer opt(cost, range, starting_point_, budget_, direct_options_);
+    std::cout << budget_ << "\n";
+
+    rust::Box<direct_rs::DirectOptimizer> rust_opt = direct_rs::new_rust_opt(
+        range.to_array(),
+        starting_point_.to_array(),
+        (budget_ - cost_function_calls_));
+
+    RunOutcome out = rust_opt->run_rust_opt(cost);
+
+    cost_function_calls_ += out.num_iter;
+    current_optimum_location_ = Point6D(out.optimal_location);
+    current_optimum_value_ = out.optimal_value;
+
 #else
     DirectOptimizer opt(
         serial_cost, range, starting_point_, budget_, direct_options_);
-#endif
 
     /* U12 production batch bridge: only the admitted monoplane
      * DIRECT_DILATION path receives the bank scheduler. All unsupported,
      * biplane, unavailable, or pool-size-one cases retain the exact serial
      * adapter above. */
     if (capacity_service_ != nullptr && capacity_service_->poolSize() > 1 &&
+
         !calibration_.biplane_calibration &&
         stage_manager.getActiveCostFunction() == "DIRECT_DILATION") {
+        std::cout << "Using capacity service\n";
         opt.SetBatchCost([this, &stage_manager, serial_cost](
                              const std::vector<Point6D>& poses) {
             const auto enqueue = [this, &stage_manager](
@@ -1364,14 +1387,12 @@ void OptimizerManager::RunDirectStage(
      * recipe + preflight) succeeds —
      * which no production path can reach yet. */
     {
-        bool monoplaneEligible =
-            !calibration_.biplane_calibration &&
+        bool monoplaneEligible = !calibration_.biplane_calibration &&
             stage_manager.getActiveCostFunction() == "DIRECT_DILATION";
-        const auto* recipe =
-            (evaluation_executor_ != nullptr)
-                ? evaluation_executor_->registry().FindEligible(
-                      "DIRECT_DILATION", false)
-                : nullptr;
+        const auto* recipe = (evaluation_executor_ != nullptr)
+            ? evaluation_executor_->registry().FindEligible(
+                  "DIRECT_DILATION", false)
+            : nullptr;
         bool recipeFound = recipe != nullptr;
         bool preflightCapturable = false;
         gpu_cost_function::GraphRecipeKey preparedKey;
@@ -1388,20 +1409,19 @@ void OptimizerManager::RunDirectStage(
                 cls->getIntParameterValue("Dilation", v);
                 liveDilation = v;
             }
-            (void)liveDilation; // consumed below in kin.dilation
+            (void)liveDilation;  // consumed below in kin.dilation
             gpu_cost_function::GraphKeyAssemblerInputs kin;
             kin.recipeId = recipe->recipeId();
             kin.width = gpu_principal_model_
-                            ? gpu_principal_model_->GetPrimaryWidth()
-                            : 0;
+                ? gpu_principal_model_->GetPrimaryWidth()
+                : 0;
             kin.height = gpu_principal_model_
-                             ? gpu_principal_model_->GetPrimaryHeight()
-                             : 0;
-            kin.triangle_count =
-                gpu_principal_model_
-                    ? static_cast<std::uint64_t>(
-                          gpu_principal_model_->GetPrimaryTriangleCount())
-                    : 0;
+                ? gpu_principal_model_->GetPrimaryHeight()
+                : 0;
+            kin.triangle_count = gpu_principal_model_
+                ? static_cast<std::uint64_t>(
+                      gpu_principal_model_->GetPrimaryTriangleCount())
+                : 0;
             kin.dilation = liveDilation;
             kin.camera_calib_hash =
                 gpu_cost_function::HashCameraCalibrationParams(
@@ -1410,10 +1430,9 @@ void OptimizerManager::RunDirectStage(
                     calibration_.camera_A_principal_.principal_y_,
                     calibration_.camera_A_principal_.pixel_pitch_,
                     calibration_.biplane_calibration);
-            kin.cub_storage_bytes =
-                gpu_principal_model_
-                    ? gpu_principal_model_->GetPrimaryCubStorageBytes()
-                    : 0;
+            kin.cub_storage_bytes = gpu_principal_model_
+                ? gpu_principal_model_->GetPrimaryCubStorageBytes()
+                : 0;
             kin.curvature_capacity = 0;
             kin.maximum_stride_size =
                 static_cast<std::uint64_t>(maximum_stride_size);
@@ -1427,10 +1446,11 @@ void OptimizerManager::RunDirectStage(
             bool inputsOk =
                 stage_manager.GetGraphRecipeCaptureInputs(capInputs);
             int stage_id = 0;
-            if (&stage_manager == &branch_manager_)
+            if (&stage_manager == &branch_manager_) {
                 stage_id = 1;
-            else if (&stage_manager == &leaf_manager_)
+            } else if (&stage_manager == &leaf_manager_) {
                 stage_id = 2;
+            }
             gpu_cost_function::CaptureGenerationAssemblerInputs gin;
             gin.frame_index =
                 static_cast<int>(stage_manager.getCurrentFrameIndex());
@@ -1451,7 +1471,7 @@ void OptimizerManager::RunDirectStage(
             }
         }
         bool executorReady = evaluation_executor_ != nullptr &&
-                             evaluation_executor_->poolSize() > 1;
+            evaluation_executor_->poolSize() > 1;
         gpu_cost_function::GraphAdmissionInputs inputs;
         inputs.executorReady = executorReady;
         inputs.monoplaneEligible = monoplaneEligible;
@@ -1534,6 +1554,7 @@ void OptimizerManager::RunDirectStage(
     cost_function_calls_ = opt.GetCostFunctionCalls();
     current_optimum_location_ = opt.GetOptimumLocation();
     current_optimum_value_ = opt.GetOptimumValue();
+#endif
 }
 
 void OptimizerManager::CalculateSymTrap() {
@@ -1548,7 +1569,7 @@ void OptimizerManager::CalculateSymTrap() {
 
     // Get number of iterations from sym_trap spin box
     // int iter_val = sym_trap_obj->getIterCount() * 3;
-    int iter_val = 60; // iter_count * 3;
+    int iter_val = 60;  // iter_count * 3;
     std::cout << "Sym Trap Iteration size: " << iter_val << std::endl;
 
     // Get pose list from sym trap
@@ -1568,7 +1589,7 @@ void OptimizerManager::CalculateSymTrap() {
             pose_list.at(i).za);
         std::this_thread::sleep_for(std::chrono::milliseconds(5000 / iter_val));
         double myCost =
-            EvaluateCostFunctionAtPoint(pose_list.at(i), 2); // Use leaf
+            EvaluateCostFunctionAtPoint(pose_list.at(i), 2);  // Use leaf
         Costs.push_back(myCost);
         std::cout << i + 1 << ": " << myCost << " @ rotation ("
                   << pose_list.at(i).xa << " " << pose_list.at(i).ya << " "
@@ -1640,7 +1661,9 @@ void OptimizerManager::onStopOptimizer() {
 }
 
 void OptimizerManager::create_image_indices(
-    std::vector<int>& img_indices, int start, int end) {
+    std::vector<int>& img_indices,
+    int start,
+    int end) {
     if (start < end) {
         for (int i = start; i <= end; i++) {
             img_indices.push_back(i);
@@ -1729,14 +1752,19 @@ bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut) {
     try {
         bool ok = opt.Run();
         if (!ok) {
-            if (errorOut)
+            if (errorOut) {
                 *errorOut = QStringLiteral("Error optimizing current frame!");
+            }
             return false;
         }
-        if (errorOut) errorOut->clear();
+        if (errorOut) {
+            errorOut->clear();
+        }
         return true;
     } catch (const gpu_cost_function::CoordinatorBatchAbort& e) {
-        if (errorOut) *errorOut = QString::fromStdString(std::string(e.what()));
+        if (errorOut) {
+            *errorOut = QString::fromStdString(std::string(e.what()));
+        }
         return false;
     } catch (const std::invalid_argument& e) {
         if (errorOut) {
@@ -1746,7 +1774,7 @@ bool RunDirectStageGuarded(::DirectOptimizer& opt, QString* errorOut) {
         return false;
     }
 }
-} // namespace jta
+}  // namespace jta
 
 std::function<double(const Point6D&)> jta::BuildGpuCostAdapter(
     gpu_cost_function::GPUModel* principal_model,

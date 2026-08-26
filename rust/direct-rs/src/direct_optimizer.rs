@@ -1,8 +1,9 @@
-use crate::cost::Cost;
 use crate::direct_data_storage::{CostKey, DirectTree, Hyperbox, Pose, SizeKey, UnscoredHyperbox};
+use crate::ffi::{CppCost, RunOutcome};
 use ordered_float::OrderedFloat;
 use std::collections::BTreeMap;
 use std::iter::zip;
+use std::time::{self, Duration};
 pub struct DirectOptimizer {
     boxes: DirectTree,
     current_best: (Pose, f64),
@@ -34,17 +35,7 @@ impl Default for POHSettings {
 
 impl DirectOptimizer {
     pub fn new(range: Pose, starting_point: Pose, budget: u32) -> Self {
-        Self {
-            boxes: BTreeMap::new(),
-            current_best: (starting_point, f64::INFINITY),
-            budget,
-            range,
-            starting_point,
-            call_offset: 0,
-            calls: 0,
-            next_box_id: 0,
-            poh_selection_strategy: POHSettings::default(),
-        }
+        Self::new_with_strat(range, starting_point, budget, POHSettings::default())
     }
     pub fn new_with_strat(
         range: Pose,
@@ -79,8 +70,10 @@ impl DirectOptimizer {
         }
     }
 
-    pub fn run<T: Cost>(&mut self, cost: T) -> (Pose, f64) {
+    pub fn run<T: Cost>(&mut self, cost: &T) -> (Pose, f64) {
         // seed: box lives at the unit center; cost eval at its physical pose
+        let start = time::Instant::now();
+
         let unit = Self::unit_center();
         let physical = self.denormalize(unit);
         let seed_cost = cost.eval(&[physical])[0];
@@ -115,13 +108,31 @@ impl DirectOptimizer {
             if unscored.is_empty() {
                 break;
             }
-            self.score_and_reinsert(&cost, &unscored);
+            self.score_and_reinsert(cost, &unscored);
         }
+        let elapsed = start.elapsed();
+        let avg_per_call: Duration = elapsed / self.calls;
+        let it_per_sec = self.calls as f64 / elapsed.as_secs_f64();
+        println!("{:?} per iteration", avg_per_call);
+        println!(
+            "{:?} iterations/second for {:?} iterations",
+            it_per_sec, self.calls
+        );
 
         if (self.current_best.1.is_finite()) && (!self.current_best.1.is_nan()) {
             return self.best();
         } else {
             return (physical, f64::INFINITY);
+        }
+    }
+
+    pub fn run_rust_opt(&mut self, cost: &CppCost) -> RunOutcome {
+        self.run(cost);
+        let (best_pose, best_cost) = self.best();
+        RunOutcome {
+            num_iter: self.calls,
+            optimal_value: best_cost,
+            optimal_location: best_pose.to_array(),
         }
     }
 
@@ -225,7 +236,6 @@ impl DirectOptimizer {
         let poh = match settings {
             POHSettings::ConvexHull => DirectOptimizer::convex_hull(&candidates),
             POHSettings::Pareto => DirectOptimizer::pareto_front(&candidates),
-            // POHSettings::AGGRESSIVE => Vec::new(),
         };
         return poh;
     }
@@ -454,7 +464,7 @@ mod tests {
     #[test]
     fn boxes_tile_the_unit_cube_exactly() {
         let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
-        opt.run(ShiftedSphere {
+        opt.run(&ShiftedSphere {
             shift: Pose {
                 x: 1.7,
                 y: 0.4,
@@ -471,7 +481,7 @@ mod tests {
     #[test]
     fn every_box_center_is_on_the_trisection_lattice() {
         let mut opt = DirectOptimizer::new(splat(5.0), zero(), 80);
-        opt.run(ShiftedSphere {
+        opt.run(&ShiftedSphere {
             shift: Pose {
                 x: 1.7,
                 y: 0.4,
@@ -495,7 +505,7 @@ mod tests {
     #[test]
     fn no_two_boxes_share_a_unit_center() {
         let mut opt = DirectOptimizer::new(splat(5.0), zero(), 4_000);
-        opt.run(ShiftedSphere {
+        opt.run(&ShiftedSphere {
             shift: Pose {
                 x: 1.7,
                 y: 0.4,
@@ -519,7 +529,7 @@ mod tests {
     #[test]
     fn each_box_depths_differ_by_at_most_one() {
         let mut opt = DirectOptimizer::new(splat(5.0), zero(), 120);
-        opt.run(ShiftedSphere {
+        opt.run(&ShiftedSphere {
             shift: Pose {
                 x: 1.7,
                 y: 0.4,
@@ -570,7 +580,7 @@ mod tests {
         ) {
             let [x, y, z, xa, ya, za] = shift;
             let mut opt = DirectOptimizer::new(splat(5.0), zero(), budget);
-            opt.run(ShiftedSphere { shift: Pose { x, y, z, xa, ya, za } });
+            opt.run(&ShiftedSphere { shift: Pose { x, y, z, xa, ya, za } });
             match volume_checksum(&opt) {
                 Ok((lhs, rhs)) => prop_assert_eq!(lhs, rhs),
                 Err("pow overflow") => {}
@@ -592,7 +602,7 @@ mod tests {
     #[test]
     fn seed_evaluation_counts_as_one_call_when_budget_is_zero() {
         let mut opt = DirectOptimizer::new(splat(5.0), zero(), 0);
-        let _ = opt.run(Sphere);
+        let _ = opt.run(&Sphere);
         assert_eq!(opt.calls, 1, "seed must still be evaluated at budget 0");
     }
 }

@@ -9,9 +9,10 @@
 #define OPTIMIZER_MANAGER_H
 
 /*Custom CUDA Headers*/
+#include <cost_capacity_service.cuh>
+
 #include "compute/evaluation_executor.h"
 #include "domain/cost.h"
-#include <cost_capacity_service.cuh>
 
 namespace gpu_cost_function {
 struct GPUFrame;
@@ -20,17 +21,18 @@ struct GPUEdgeFrame;
 struct GPUIntensityFrame;
 struct GPUModel;
 struct GPUMetrics;
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #include "compute/Stage.h"
 #include "domain/sym_trap_functions.h"
 #include "services/calibration.h"
 
 /*QT Threading*/
-#include <QModelIndex>
-#include <QString>
 #include <qobject.h>
 #include <qthread.h>
+
+#include <QModelIndex>
+#include <QString>
 
 /*Frame and Model and Location Storage*/
 #include "compute/frame.h"
@@ -59,7 +61,10 @@ struct GPUMetrics;
 /*Metric Types*/
 
 /*Cost Function Library*/
+
 #include "compute/CostFunctionManager.h"
+#include "direct-rs_bridge/lib.h"
+#include "rust/cxx.h"
 
 using namespace gpu_cost_function;
 
@@ -262,8 +267,8 @@ private:
      * pre-shim DeriveStageCostParams calls were (in the stage loop AFTER the
      * stage's InitializeActiveCostFunction — the init-gating order is
      * load-bearing).*/
-    jta::StageCostParams
-    DeriveStageParams(jta_cost_function::CostFunctionManager& manager);
+    jta::StageCostParams DeriveStageParams(
+        jta_cost_function::CostFunctionManager& manager);
 
     /*The stage dilate-A / dilate-B (if biplane) / emit UpdateDilationBackground
      * block — one place for the trunk/branch/leaf stage specs (the dilation
@@ -279,7 +284,8 @@ private:
      * slot (plan 008 U8: direct_options_) is passed to the DirectOptimizer
      * ctor -- defaults reproduce the pre-Options search bit-identically.*/
     void RunDirectStage(
-        Point6D range, jta_cost_function::CostFunctionManager& stage_manager);
+        Point6D range,
+        jta_cost_function::CostFunctionManager& stage_manager);
 
     /*Cost Function Calls*/
     unsigned int cost_function_calls_;
@@ -339,6 +345,6 @@ std::function<double(const Point6D&)> BuildGpuCostAdapter(
     Calibration calibration,
     jta_cost_function::CostFunctionManager& stage_manager);
 
-} // namespace jta
+}  // namespace jta
 
 #endif /* OPTIMIZER_MANAGER_H */

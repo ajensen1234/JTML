@@ -1,5 +1,6 @@
 use crate::{cost::Cost, direct_data_storage::Pose};
 
+#[cfg(test)]
 struct Sphere;
 
 impl Cost for Sphere {
@@ -78,7 +79,7 @@ mod tests {
             za: 5.0,
         };
         let mut opt = DirectOptimizer::new(range, start, 5_000);
-        let (_best, best_cost) = opt.run(Sphere);
+        let (_best, best_cost) = opt.run(&Sphere);
         println!("cost={best_cost}");
         // the global minimum is 0; DIRECT on a sphere should improve on the
         // seed's sum-of-squares (start=(1,1,1,...) => seed cost 6).
