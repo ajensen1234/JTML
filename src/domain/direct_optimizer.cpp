@@ -89,6 +89,26 @@ DirectOptimizer::DirectOptimizer(
     }
 }
 
+DirectOptimizer::DirectOptimizer(
+    CppCost cost,
+    Point6D range,
+    Point6D starting_point,
+    unsigned int budget,
+    Options options) :
+    cost_(std::move(cost)), range_(range), starting_point_(starting_point),
+    budget_(budget), options_(std::move(options)) {
+    // Fail fast at construction: a non-default Options field is a plan-008
+    // stub, not a silent behavior change (guarded divergence -- the defaults
+    // reproduce today's search bit-identically by construction).
+    ValidateOptions(options_);
+
+    // Mirror OptimizerManager::SetSearchRange: a zero (or negative-total) range
+    // marks the search as invalid.
+    if (range.x + range.y + range.z + range.xa + range.ya + range.za > 0) {
+        valid_range_ = true;
+    }
+}
+
 bool DirectOptimizer::Run() {
     // Mirror the per-stage body of OptimizerManager::Optimize() for a single
     // stage: seed with the unit center, then iterate ConvexHull + Trisect until
@@ -391,7 +411,16 @@ unsigned int DirectOptimizer::GetNonFiniteCount() const {
 std::optional<double>
 DirectOptimizer::EvaluateCostFunction(Point6D unit_point) {
     Point6D denormalized_point = DenormalizeFromCenter(unit_point);
-    double result = cost_(denormalized_point);
+    double result = std::visit(
+        [&denormalized_point](auto&& cost_impl) -> double {
+            using T = std::decay_t<decltype(cost_impl)>;
+            if constexpr (std::is_same_v<T, CostFunction>) {
+                return cost_impl(denormalized_point);
+            } else {
+                return cost_impl.evaluate(denormalized_point);
+            }
+        },
+        cost_);
 
     cost_function_calls_++;
 

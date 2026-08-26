@@ -100,7 +100,8 @@ cmd = ["cmake",
     "-DUSE_SYSTEM_NVTX:BOOL=ON",
     "-Dnvtx3_dir=$CONDA_PREFIX/targets/x86_64-linux/include",
     "-DTORCH_CUDA_ARCH_LIST=8.6 8.9 12.0",
-    "-DCMAKE_CUDA_ARCHITECTURES=native",
+  "-DCMAKE_CUDA_ARCHITECTURES=native",
+  "-DUSING_CPP_COST=ON",
 ]
 #inputs = ["CMakeLists.txt"]
 depends-on = ["build-vtk"]

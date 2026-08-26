@@ -5,8 +5,10 @@
 
 #include <functional>
 #include <optional>
+#include <variant>
 #include <vector>
 
+#include "domain/cost.h"
 #include "domain/data_structures_6D.h"
 #include "domain/direct_data_storage.h"
 
@@ -83,8 +85,15 @@ public:
         bool globally_biased = false;    // gb phase switch, off
     };
 
-    DirectOptimizer(
+    explicit DirectOptimizer(
         CostFunction cost,
+        Point6D range,
+        Point6D starting_point,
+        unsigned int budget,
+        Options options = Options());
+
+    explicit DirectOptimizer(
+        CppCost cost,
         Point6D range,
         Point6D starting_point,
         unsigned int budget,
@@ -159,7 +168,8 @@ private:
     [[nodiscard]] Point6D DenormalizeRange(Point6D unit_point) const;
     [[nodiscard]] Point6D DenormalizeFromCenter(Point6D unit_point) const;
 
-    CostFunction cost_;
+    // CostFunction cost_;
+    std::variant<CostFunction, CppCost> cost_;
     // Plan 010 U11 (R12): optional batch cost-query sibling. Empty when unset
     // (default), in which case the per-point serial path is used unchanged.
     BatchCostFunction batch_cost_;

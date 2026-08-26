@@ -1314,9 +1314,14 @@ void OptimizerManager::RunDirectStage(
      * read it back after Run().*/
     auto serial_cost = jta::BuildGpuCostAdapter(
         gpu_principal_model_, calibration_, stage_manager);
+#ifdef USING_CPP_COST
+    std::cout << "using CPP Cost!!!" << "\n";
     CppCost cost = CppCost(serial_cost);
+    DirectOptimizer opt(cost, range, starting_point_, budget_, direct_options_);
+#else
     DirectOptimizer opt(
         serial_cost, range, starting_point_, budget_, direct_options_);
+#endif
 
     /* U12 production batch bridge: only the admitted monoplane
      * DIRECT_DILATION path receives the bank scheduler. All unsupported,

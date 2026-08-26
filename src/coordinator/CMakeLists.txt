@@ -42,6 +42,17 @@ add_library(jtml_coordinator STATIC
     session_state_controller.cpp
     ${HEADER_FILES}
 )
+option(USING_CPP_COST "Use CppCost instead of CostFunction std::function" ON)
+
+target_compile_definitions(jtml_domain PRIVATE
+    $<$<BOOL:${USING_CPP_COST}>:USING_CPP_COST>
+)
+
+
+
+target_compile_definitions(jtml_coordinator PRIVATE
+    $<$<BOOL:${USING_CPP_COST}>:USING_CPP_COST>
+)
 
 # Downward deps: services (-> domain) + the single SHARED compute lib
 # (optimizer_manager uses gpu_*.cuh + CostFunctionManager.h => jtml_compute, merged U4).

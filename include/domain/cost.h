@@ -24,6 +24,7 @@
 
 /*Standard*/
 #include <functional>
+#include <limits>
 #include <memory>
 
 /*Header for Point6D*/
