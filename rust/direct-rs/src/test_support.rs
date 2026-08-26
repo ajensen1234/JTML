@@ -8,7 +8,14 @@ pub(crate) fn coords(p: &Pose) -> [f64; 6] {
 
 pub(crate) fn pose(c: [f64; 6]) -> Pose {
     let [x, y, z, xa, ya, za] = c;
-    Pose { x, y, z, xa, ya, za }
+    Pose {
+        x,
+        y,
+        z,
+        xa,
+        ya,
+        za,
+    }
 }
 
 pub(crate) fn splat(v: f64) -> Pose {

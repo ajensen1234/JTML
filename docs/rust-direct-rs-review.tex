@@ -1,0 +1,274 @@
+% Created 2026-08-26 Wed 14:48
+% Intended LaTeX compiler: lualatex
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{minted}
+\def\EDITMODE{}
+\input{~/org/templates/org-export-general-template.tex}
+\usepackage{xltabular}
+\usepackage{booktabs}
+\setcounter{secnumdepth}{5}
+\author{Andrew Jensen}
+\date{2026-08-26 2026-08-26}
+\title{Rust direct-rs Review — Consolidated Tutoring + CE Code Review}
+\hypersetup{
+ pdfauthor={Andrew Jensen},
+ pdftitle={Rust direct-rs Review — Consolidated Tutoring + CE Code Review},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={},
+ pdflang={English}}
+\usepackage{biblatex}
+\addbibresource{~/org/biblio.bib}
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+\label{sec:orgc37568d}
+This file consolidates two sources into one reference:
+
+\begin{enumerate}
+\item \textbf{Tutoring homework list} — prioritized by \texttt{rust-skills} rule impact (CRITICAL → LOW), derived from a full read of \texttt{rust/direct-rs/src/*.rs} and \texttt{rust/Cargo.toml}.
+\item \textbf{CE code-review synthesis} — 6 parallel persona reviewers (correctness, testing, maintainability, performance, adversarial, project-standards), each forced through the \texttt{rust-skills} rubric, structured JSON, confidence-gated ≥75, deduped.
+\end{enumerate}
+
+\textbf{\textbf{Crate:}} \texttt{rust/direct-rs} as \texttt{staticlib+cdylib} via \texttt{cxx} into the Qt6/CUDA JTML host.
+
+\textbf{\textbf{Intent:}} Verified DIRECT port — Jones POH/convex-hull, trisection, volume tiling, \texttt{OrderedFloat} determinism, batch \texttt{Cost::eval}, 10M-eval Rastrigin reach.
+
+\textbf{\textbf{Suite at review:}} \texttt{46 passed / 0 failed / 2 ignored} (Rastrigin 10M + budget overshoot parked as \texttt{\#[ignore = "..."]}). Your \texttt{5k → 13–15k it/s} is real — lean \texttt{BTreeMap<OrderedFloat,(OrderedFloat,u64)> + Hyperbox\{[u32;6]\}} vs C++ \texttt{std::map} churn.
+
+\textbf{\textbf{Already landed this session}} (not in TODO): deleted ghost \texttt{pose.rs} + \texttt{dup\_diag.rs}, removed ghost \texttt{trait Cost} in \texttt{direct\_data\_storage.rs}, \texttt{\#[cfg(test)]} on \texttt{Sphere}, \texttt{\#[cfg(test)]} on \texttt{bench=/=utils}, deduped \texttt{new()→new\_with\_strat}, captured \texttt{best()} once, parked long-run tests, wired \texttt{AnisotropicSphere} + \texttt{fstar()/xstar()} oracle use.
+
+Subagent artifacts: \texttt{/home/ajj/.pi/agent/sessions/-{}-{}home-ajj-repo-uf-JTML-{}-{}/subagent-artifacts/structured-output/<runId>/pi-subagent-*/output.json}, workflow \texttt{052a3f67-213b-4245-8c08-6f7979b1367f} (raw 47 → merged 47 findings).
+\section{Tutoring Homework List}
+\label{sec:org7a49ecb}
+\textbf{\textbf{How to use:}} Work top-down. Tier 1 is contract/interface — do next session. Tier 2 is quality/hardening — do soon. Tier 3 is advisory — pick when touched.
+\subsection{Tier 1 — Should do next session (contract / interface)}
+\label{sec:org34ebbe3}
+
+\subsubsection{1. Remove \texttt{println!} timing — \texttt{obs-tracing-over-log}, \texttt{obs-library-facade}}
+\label{sec:org2949345}
+Delete the \texttt{println!("\{:?\} per iteration")} block. Library crates emit via \texttt{tracing}, never install a subscriber. Fold stats into \texttt{RunOutcome} (\texttt{avg\_per\_call\_us}, \texttt{it\_per\_sec}) or gate behind \texttt{\#[cfg(debug\_assertions)]}.
+\subsubsection{2. Replace \texttt{INFINITY} sentinel — \texttt{type-option-nullable}, \texttt{api-must-use}}
+\label{sec:orgca70dd3}
+Return \texttt{Result<RunOutcome,NoFiniteIncumbent>} or \texttt{best\_cost: Option<f64>}. Add \texttt{\#[must\_use]} on \texttt{run()}. Sentinels are indistinguishable from real +∞.
+\subsubsection{3. Add \texttt{From<[f64;6]> for Pose} — \texttt{conv-from-not-into}, \texttt{type-newtype-ids}}
+\label{sec:orgdaa08b8}
+\texttt{impl From<[f64;6]> for Pose} (+ inverse). Two hand-rolled index blocks → two one-liners, never transpose an axis.
+\subsubsection{4. Batch the FFI bridge — wall-clock knob}
+\label{sec:org25c47d4}
+Per-pose \texttt{UniquePtr<Point6D>} + one \texttt{cxx} call per pose defeats batch GPU eval. Add \texttt{evaluate\_batch(\&CppCost, \&[f64], \&mut [f64])} seam; keep per-pose fallback for tests.
+\subsubsection{5. Fix budget overshoot}
+\label{sec:org46445b7}
+Guard fires before \texttt{2*|POH|} batch. Cap with \texttt{remaining = budget.saturating\_sub(calls)} and \texttt{min(|POH|, ceil(remaining/2))} then re-enable the property test.
+\subsection{Tier 2 — Worth doing soon (quality / hardening)}
+\label{sec:orgb5f4667}
+
+\subsubsection{6. Rename Direction variants — \texttt{name-types-camel}, allow\textsubscript{attributes} ban}
+\label{sec:org51028b9}
+\texttt{\#[allow(non\_camel\_case\_types)]} violates your own \texttt{allow\_attributes\_without\_reason = "warn"}. Rename to \texttt{X,Y,Z,Xa,Ya,Za} or \texttt{Axis::X}, drop the attribute.
+\subsubsection{7. Use integer exponents and cache size — \texttt{opt-inline-small}}
+\label{sec:org2035f24}
+\texttt{powf → powi(-(2*d as i32))} (integer exponents) + consider caching size on box. Preserve bit-exact term ordering (\texttt{size\_is\_bit\_identical\_under\_depth\_permutation} test).
+\subsubsection{8. Reuse Vec buffers — \texttt{mem-with-capacity}, \texttt{mem-reuse-collections}}
+\label{sec:org8a29744}
+\texttt{Vec::with\_capacity} + reusable scratch buffers as optimizer fields for allocation-free inner loop.
+\subsubsection{9. Document public API — \texttt{doc-all-public}, \texttt{doc-errors-section}}
+\label{sec:org4e9e4ad}
+No \texttt{///} on public items. Document determinism + budget contract, \texttt{POHSettings} variants, whether discriminants =0/=1 are FFI-stable.
+\subsubsection{10. Pin MSRV — \texttt{proj-msrv-declare}}
+\label{sec:orgd43efbf}
+No \texttt{rust-version}. Pin \texttt{rust-version = "1.85"} (2024 edition floor).
+\subsubsection{11. Tune release profile — \texttt{perf-release-profile}, \texttt{opt-lto-release}, \texttt{opt-codegen-units}}
+\label{sec:org795e710}
+No \texttt{[profile.release]}. For \texttt{staticlib} into Qt/CUDA: \texttt{lto}``thin'' codegen-units=1= is free wall-clock.
+\subsubsection{12. Add criterion bench — \texttt{test-criterion-bench}, \texttt{perf-black-box-bench}}
+\label{sec:orgce97339}
+File is fixtures/tests, not a harness. Add \texttt{criterion+black\_box} micro-bench of \texttt{DirectOptimizer::run} vs trivial \texttt{Cost} to substantiate 5k→13k claims.
+\subsection{Tier 3 — Advisory / food-for-thought}
+\label{sec:orgc31ecae}
+
+\subsubsection{13. Jones ε-condition (algorithmic)}
+\label{sec:orgf221901}
+POH lacks classic ε-filter (\texttt{skip if improvement < ε·max(|f\_min|,1e-8)}). Biggest lever for Ackley/Rastrigin — likely cuts 10M substantially.
+\subsubsection{14. Float-order fragility in \texttt{size()}}
+\label{sec:orgf81327e}
+Passes today by luck. Sort terms ascending before sum (like \texttt{canonical\_size} does) so guarantee is structural.
+\subsubsection{15. Non-finite boxes silently vanish}
+\label{sec:orge213c58}
+\texttt{score\_and\_reinsert} drops ±∞/NaN without counter. Document + consider counter so NaN storms are visible.
+\subsubsection{16. Missing crate docs — crate-level =//! =}
+\label{sec:org2906026}
+No top-of-lib blurb. Write what DIRECT is, what's oracle-tested, how it links to C++, what's not implemented (ε, budget bounding).
+\section{CE Code-Review Synthesis}
+\label{sec:org8e90261}
+\textbf{\textbf{Reviewers:}} 6 dispatched, 6 returned, 47 findings, 24 testing gaps, 24 residual risks. Confidence gate ≥75, cross-reviewer promotion applied (merged = raw = 47). Detail-tier \texttt{why=/=evidence} in per-reviewer \texttt{output.json}.
+\subsection{P1 — Critical (must fix)}
+\label{sec:org5686db2}
+
+\subsubsection{P1-1. Budget overshot — guards once per iteration before scoring whole \texttt{2*|POH|} batch}
+\label{sec:org72face8}
+\subsubsection{P1-2. \texttt{println!} timing on every \texttt{run()} through \texttt{cdylib} into Qt host stdout (4-way agreement)}
+\label{sec:org4805ea4}
+\subsubsection{P1-3. \texttt{cargo fmt -{}-{}check} fails (import order, blank lines)}
+\label{sec:orgdb38cf4}
+\subsubsection{P1-4. Only budget contract test is \texttt{\#[ignore]d} against unfixed defect}
+\label{sec:org850f0f0}
+\subsection{P2 — High (should fix)}
+\label{sec:orge4e2a9e}
+
+\subsubsection{P2-5. \texttt{size()} sum order not permutation-invariant (verified)}
+\label{sec:orgef87657}
+\subsubsection{P2-6. \texttt{test=+=utils} compiled into shipped \texttt{staticlib} (panic! + plotters)}
+\label{sec:org663078a}
+\subsubsection{P2-7. \texttt{Pareto=/=new\_with\_strat=/=poh.is\_empty()} untested}
+\label{sec:org8363452}
+\subsubsection{P2-8. Non-finite children deleted vs seed retained (\texttt{sort\_cost} → ∞) — orphans}
+\label{sec:orgb8a3677}
+\subsubsection{P2-9. Hull NaN-poisoned by \texttt{+∞} while \texttt{pareto\_front} filters}
+\label{sec:org1b234c3}
+\subsubsection{P2-10. Second \texttt{run()} duplicates seed, drifts \texttt{calls}}
+\label{sec:org7a96e11}
+\subsubsection{P2-11. Dead \texttt{Pareto} extension point (zero consumers)}
+\label{sec:orge5a973e}
+\subsubsection{P2-12. Zero docs; \texttt{RunOutcome::num\_iter} means evals not iterations}
+\label{sec:org9513db8}
+\subsubsection{P2-13. No MSRV}
+\label{sec:org2411b48}
+\subsubsection{P2-14. No \texttt{[profile.release]} LTO/codegen tuning}
+\label{sec:org78d34ea}
+\subsubsection{P2-15. \texttt{plotters} unconditional in prod}
+\label{sec:org556df1d}
+\subsubsection{P2-16. \texttt{u32} budget wrap at \texttt{MAX} → infinite loop (release)}
+\label{sec:org443983a}
+\subsubsection{P2-17. Only \texttt{restriction} lints warned; \texttt{correctness/suspicious} silent}
+\label{sec:orgba2ac63}
+\subsubsection{P2-18. FFI batch \texttt{UniquePtr<Point6D>} per eval (heap + crossing)}
+\label{sec:org2f3bdd0}
+\subsection{P3 — Polish (pick when touched)}
+\label{sec:org531d5f3}
+
+\subsubsection{P3-1. Dead \texttt{call\_offset} field — initialized to 0, never written, baked into budget guard}
+\label{sec:orgf2c67a4}
+\subsubsection{P3-2. \texttt{pub} everywhere vs \texttt{pub(crate)} — inconsistent with siblings}
+\label{sec:org0c6a20a}
+\subsubsection{P3-3. Duplicated \texttt{denormalize} vs \texttt{test\_support::denorm}}
+\label{sec:org7e11f3c}
+\subsubsection{P3-4. Duplicated helpers \texttt{show()/zero()/dist()} in \texttt{bench.rs:306}}
+\label{sec:org0969ad7}
+\subsubsection{P3-5. Anonymous \texttt{(Pose,f64)} vs named \texttt{RunOutcome}}
+\label{sec:orgf170002}
+\subsubsection{P3-6. Stale comment \texttt{determine\_potentially\_optimal}}
+\label{sec:orged10af9}
+\subsubsection{P3-7. Vendored plotters doc-example test at fixed path}
+\label{sec:orga73607e}
+\subsubsection{P3-8. \texttt{\#[allow(non\_camel\_case\_types)]} vs \texttt{allow\_attributes} ban}
+\label{sec:org9e2987c}
+\subsubsection{P3-9. Missing \texttt{\#[must\_use]} on \texttt{run()} / \texttt{best()}}
+\label{sec:orgc9c0430}
+\subsubsection{P3-10. Vec churn per iteration}
+\label{sec:org4efee39}
+\subsubsection{P3-11. \texttt{bench.rs} naming — fixtures/tests, not a harness}
+\label{sec:org0c9c85e}
+\subsubsection{P3-12. \texttt{run\_rust\_opt} diverges from \texttt{run()} — FFI reports start-position fallback and lifetime-cumulative \texttt{num\_iter}}
+\label{sec:org4ab5f74}
+\subsubsection{P3-13. \texttt{size()} ULP key splits → phantom size columns}
+\label{sec:org9998e8d}
+\section{How to Fix: \texttt{test+utils} in Shipped Lib}
+\label{sec:org970bf5f}
+\textbf{Do not edit — do this yourself:}
+
+In \texttt{rust/direct-rs/src/lib.rs}:
+
+\begin{minted}[]{rust}
+#[cfg(test)]
+mod bench;
+#[cfg(test)]
+mod test;
+#[cfg(test)]
+mod utils;
+
+#[cfg(test)]
+mod properties;
+#[cfg(test)]
+mod test_support;
+\end{minted}
+
+In \texttt{rust/direct-rs/Cargo.toml}:
+
+\begin{minted}[]{toml}
+[dependencies]
+cxx = { workspace = true }
+ordered-float = "5.5.0"
+# plotters removed
+
+[dev-dependencies]
+plotters = { version = "0.3.7", default-features = false, features = ["svg_backend","line_series","point_series"] }
+\end{minted}
+
+Verify:
+
+\begin{minted}[]{shell}
+pixi run cargo check              # no plotters in graph
+pixi run cargo test --lib         # still 46 passed / 2 ignored
+cargo tree | grep plotters        # empty on normal build
+\end{minted}
+
+Optional dev-plot feature: \texttt{\#[cfg(any(test, feature}``dev-plot''))]= + \texttt{plotters = \{ optional = true \}}.
+\section{Testing Gaps \& Residual Risks (aggregated)}
+\label{sec:org2e6ced2}
+
+\subsection{Testing gaps}
+\label{sec:orgb2b3174}
+\begin{itemize}
+\item Repeated \texttt{run()} on same instance (5/6 reviewers)
+\item FFI surface (\texttt{new\_rust\_opt}, \texttt{run\_rust\_opt}, \texttt{Cost for CppCost}, \texttt{RunOutcome} semantics) uncovered
+\item \texttt{Pareto} strategy untested
+\item Non-finite-cost tiling invariants not exercised
+\item \texttt{plots/*.svg} written during \texttt{cargo test} without RAII cleanup
+\item \texttt{volume\_partition\_holds\_for\_random\_runs} silently passes on \texttt{Err("pow overflow")}
+\item \texttt{bench.rs} name implies harness but none
+\end{itemize}
+\subsection{Residual risks}
+\label{sec:org1544025}
+\begin{itemize}
+\item Silently-dropped \texttt{+Inf} subregions orphan domain coverage
+\item \texttt{OrderedFloat(+∞)} vs \texttt{NaN} divergence seed↔children
+\item \texttt{next\_box\_id: u64} exhaustion (theoretical)
+\item Hostile \texttt{CppCost} returning mixed \texttt{NaN/±Inf} can poison hull
+\item \texttt{Hyperbox::size()} ULP key splits → phantom size columns
+\end{itemize}
+\section{Consolidated Prioritized Checklist (do in this order)}
+\label{sec:org6f5277f}
+\begin{enumerate}
+\item{$\square$} \texttt{fmt} + \texttt{println!} removal + budget cap (P1 1–3) — one \texttt{jj new}; re-enable budget property test
+\item{$\square$} Gate \texttt{bench/test/utils} + demote \texttt{plotters} to \texttt{dev-dependencies} (P2 \#6 + \#15)
+\item{$\square$} MSRV + \texttt{[profile.release]} (P2 \#13–14)
+\item{$\square$} \texttt{From<[f64;6]>} for \texttt{Pose} + docs on public API (Tier1 \#2–3, P2 \#12)
+\item{$\square$} Batch FFI \texttt{evaluate\_batch} (Tier1 \#4 / P2 \#18) — biggest wall-clock win after \#1
+\item{$\square$} \texttt{powi} + permutation-invariant \texttt{size()} + Vec reuse buffers (Tier2 \#7–8, P2 \#5)
+\item{$\square$} Jones ε-condition experiment (Tier3 \#13)
+\item{$\square$} Promote \texttt{correctness/suspicious} lints + \texttt{missing\_docs} + \texttt{cargo fmt -{}-{}check} in CI (P3)
+\end{enumerate}
+\section{Verdict}
+\label{sec:org1c6e9c7}
+\textbf{Ready with fixes} — land the P1 batch and the crate is clean to widen the seam. P2/P3 are follow-up \texttt{jj new} commits. Your Jones oracle + volume/lattice + affine-equivariance + prefix-of-budget suite is the right harness — keep it as you add \texttt{evaluate\_batch} and ε.
+\section{Appendix: Sources}
+\label{sec:org175794a}
+\begin{itemize}
+\item Tutoring rubric: \texttt{/home/ajj/.pi/agent/skills/rust-skills/SKILL.md} + \texttt{rules/*.md} (read per-reviewer: \texttt{obs-*}, \texttt{err-*}, \texttt{num-*}, \texttt{api-*}, \texttt{mem-*}, \texttt{opt-*}, \texttt{test-*}, \texttt{lint-*}, \texttt{proj-*})
+\item CE workflow: \texttt{052a3f67-213b-4245-8c08-6f7979b1367f}, reviewer runs: \texttt{945b7640}, \texttt{591488e8}, \texttt{fee591f6}, \texttt{a2026954}, \texttt{e7a35ede}, \texttt{9676e07b}
+\item Prior fixes landed: pose/dup\textsubscript{diag} deletion, ghost \texttt{Cost} removal, \texttt{\#[cfg(test)]} cleanup, constructor dedupe, oracle alignment
+\end{itemize}
+\end{document}

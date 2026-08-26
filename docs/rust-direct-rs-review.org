@@ -1,0 +1,468 @@
+#+TITLE: Rust direct-rs Review — Consolidated Tutoring + CE Code Review
+#+DATE: 2026-08-26
+#+FILETAGS: :rust:direct:review:
+#+PROPERTY: CATEGORY rust-direct-rs
+#+OPTIONS: toc:2
+
+:DRAWER:
+#+date: 2026-08-26
+#+subtitle:
+#+author: Andrew Jensen
+#+filetags: :article:
+#+latex_class: article
+#+latex_class_options: [11pt]
+#+latex_header: \def\EDITMODE{}
+#+latex_header: \input{~/org/templates/org-export-general-template.tex}
+#+LATEX_HEADER: \usepackage{xltabular}
+#+LATEX_HEADER: \usepackage{booktabs}
+#+bibliography: ~/org/biblio.bib
+#+options: toc:nil num:5 h:5
+#+latex_engraved_theme:
+#+latex_compiler: lualatex
+#+cite_export: biblatex
+#+description:
+#+keywords:
+:END:
+
+* Overview
+:PROPERTIES:
+:ID:       rust-direct-rs-review
+:CATEGORY: rust-direct-rs
+:END:
+This file consolidates two sources into one reference:
+
+1. *Tutoring homework list* — prioritized by =rust-skills= rule impact (CRITICAL → LOW), derived from a full read of =rust/direct-rs/src/*.rs= and =rust/Cargo.toml=.
+2. *CE code-review synthesis* — 6 parallel persona reviewers (correctness, testing, maintainability, performance, adversarial, project-standards), each forced through the =rust-skills= rubric, structured JSON, confidence-gated ≥75, deduped.
+
+**Crate:** =rust/direct-rs= as =staticlib+cdylib= via =cxx= into the Qt6/CUDA JTML host.
+
+**Intent:** Verified DIRECT port — Jones POH/convex-hull, trisection, volume tiling, =OrderedFloat= determinism, batch =Cost::eval=, 10M-eval Rastrigin reach.
+
+**Suite at review:** =46 passed / 0 failed / 2 ignored= (Rastrigin 10M + budget overshoot parked as =#[ignore = "..."]=). Your =5k → 13–15k it/s= is real — lean =BTreeMap<OrderedFloat,(OrderedFloat,u64)> + Hyperbox{[u32;6]}= vs C++ =std::map= churn.
+
+**Already landed this session** (not in TODO): deleted ghost =pose.rs= + =dup_diag.rs=, removed ghost =trait Cost= in =direct_data_storage.rs=, =#[cfg(test)]= on =Sphere=, =#[cfg(test)]= on =bench=/=utils=, deduped =new()→new_with_strat=, captured =best()= once, parked long-run tests, wired =AnisotropicSphere= + =fstar()/xstar()= oracle use.
+
+Subagent artifacts: =/home/ajj/.pi/agent/sessions/--home-ajj-repo-uf-JTML--/subagent-artifacts/structured-output/<runId>/pi-subagent-*/output.json=, workflow =052a3f67-213b-4245-8c08-6f7979b1367f= (raw 47 → merged 47 findings).
+
+* Tutoring Homework List
+:PROPERTIES:
+:ID:       tutoring-homework
+:END:
+**How to use:** Work top-down. Tier 1 is contract/interface — do next session. Tier 2 is quality/hardening — do soon. Tier 3 is advisory — pick when touched.
+
+** Tier 1 — Should do next session (contract / interface)
+
+*** 1. Remove =println!= timing — =obs-tracing-over-log=, =obs-library-facade=
+:PROPERTIES:
+:RULE: obs-tracing-over-log, obs-library-facade
+:WHERE: rust/direct-rs/src/direct_optimizer.rs:117 run() println!
+:END:
+Delete the =println!("{:?} per iteration")= block. Library crates emit via =tracing=, never install a subscriber. Fold stats into =RunOutcome= (=avg_per_call_us=, =it_per_sec=) or gate behind =#[cfg(debug_assertions)]=.
+
+*** 2. Replace =INFINITY= sentinel — =type-option-nullable=, =api-must-use=
+:PROPERTIES:
+:RULE: type-option-nullable, api-must-use
+:WHERE: rust/direct-rs/src/direct_optimizer.rs:74 run()->(Pose,f64), rust/direct-rs/src/direct_optimizer.rs:98, rust/direct-rs/src/lib.rs:24 RunOutcome
+:END:
+Return =Result<RunOutcome,NoFiniteIncumbent>= or =best_cost: Option<f64>=. Add =#[must_use]= on =run()=. Sentinels are indistinguishable from real +∞.
+
+*** 3. Add =From<[f64;6]> for Pose= — =conv-from-not-into=, =type-newtype-ids=
+:PROPERTIES:
+:RULE: conv-from-not-into, type-newtype-ids
+:WHERE: rust/direct-rs/src/lib.rs:74 new_rust_opt()
+:END:
+=impl From<[f64;6]> for Pose= (+ inverse). Two hand-rolled index blocks → two one-liners, never transpose an axis.
+
+*** 4. Batch the FFI bridge — wall-clock knob
+:PROPERTIES:
+:RULE: batch-bridge (perf)
+:WHERE: rust/direct-rs/src/lib.rs:59 impl Cost for CppCost
+:END:
+Per-pose =UniquePtr<Point6D>= + one =cxx= call per pose defeats batch GPU eval. Add =evaluate_batch(&CppCost, &[f64], &mut [f64])= seam; keep per-pose fallback for tests.
+
+*** 5. Fix budget overshoot
+:PROPERTIES:
+:RULE: num-saturating-clamp
+:WHERE: rust/direct-rs/src/properties.rs:143, rust/direct-rs/src/direct_optimizer.rs:98 run() loop
+:END:
+Guard fires before =2*|POH|= batch. Cap with =remaining = budget.saturating_sub(calls)= and =min(|POH|, ceil(remaining/2))= then re-enable the property test.
+
+** Tier 2 — Worth doing soon (quality / hardening)
+
+*** 6. Rename Direction variants — =name-types-camel=, allow_attributes ban
+:PROPERTIES:
+:RULE: name-types-camel, lint-allow_attributes
+:WHERE: rust/direct-rs/src/direct_data_storage.rs:7 Direction::{X_DIR..ZA_DIR}
+:END:
+=#[allow(non_camel_case_types)]= violates your own =allow_attributes_without_reason = "warn"=. Rename to =X,Y,Z,Xa,Ya,Za= or =Axis::X=, drop the attribute.
+
+*** 7. Use integer exponents and cache size — =opt-inline-small=
+:PROPERTIES:
+:RULE: opt-inline-small
+:WHERE: rust/direct-rs/src/direct_data_storage.rs:71 Hyperbox::size()
+:END:
+=powf → powi(-(2*d as i32))= (integer exponents) + consider caching size on box. Preserve bit-exact term ordering (=size_is_bit_identical_under_depth_permutation= test).
+
+*** 8. Reuse Vec buffers — =mem-with-capacity=, =mem-reuse-collections=
+:PROPERTIES:
+:RULE: mem-with-capacity, mem-reuse-collections
+:WHERE: rust/direct-rs/src/direct_optimizer.rs:176 trisect_and_return_unscored, rust/direct-rs/src/direct_optimizer.rs:192 score_and_reinsert
+:END:
+=Vec::with_capacity= + reusable scratch buffers as optimizer fields for allocation-free inner loop.
+
+*** 9. Document public API — =doc-all-public=, =doc-errors-section=
+:PROPERTIES:
+:RULE: doc-all-public, doc-errors-section
+:WHERE: rust/direct-rs/src/lib.rs:22 cxx::bridge, rust/direct-rs/src/direct_optimizer.rs:8 DirectOptimizer
+:END:
+No =///= on public items. Document determinism + budget contract, =POHSettings= variants, whether discriminants =0/=1 are FFI-stable.
+
+*** 10. Pin MSRV — =proj-msrv-declare=
+:PROPERTIES:
+:RULE: proj-msrv-declare
+:WHERE: rust/direct-rs/Cargo.toml:4 [package] rust-version, rust/Cargo.toml:5 [workspace.package]
+:END:
+No =rust-version=. Pin =rust-version = "1.85"= (2024 edition floor).
+
+*** 11. Tune release profile — =perf-release-profile=, =opt-lto-release=, =opt-codegen-units=
+:PROPERTIES:
+:RULE: perf-release-profile, opt-lto-release, opt-codegen-units
+:WHERE: rust/direct-rs/Cargo.toml:5 [profile.release], rust/Cargo.toml:15 [profile.*]
+:END:
+No =[profile.release]=. For =staticlib= into Qt/CUDA: =lto="thin" codegen-units=1= is free wall-clock.
+
+*** 12. Add criterion bench — =test-criterion-bench=, =perf-black-box-bench=
+:PROPERTIES:
+:RULE: test-criterion-bench, perf-black-box-bench
+:WHERE: rust/direct-rs/src/bench.rs:1 (rename or add benches/)
+:END:
+File is fixtures/tests, not a harness. Add =criterion+black_box= micro-bench of =DirectOptimizer::run= vs trivial =Cost= to substantiate 5k→13k claims.
+
+** Tier 3 — Advisory / food-for-thought
+
+*** 13. Jones ε-condition (algorithmic)
+:PROPERTIES:
+:RULE: algorithmic (Jones 1993)
+:WHERE: rust/direct-rs/src/direct_optimizer.rs:232 select_potentially_optimal, rust/direct-rs/src/direct_optimizer.rs:272 convex_hull
+:END:
+POH lacks classic ε-filter (=skip if improvement < ε·max(|f_min|,1e-8)=). Biggest lever for Ackley/Rastrigin — likely cuts 10M substantially.
+
+*** 14. Float-order fragility in =size()=
+:PROPERTIES:
+:RULE: num-float-compare
+:WHERE: rust/direct-rs/src/direct_data_storage.rs:71 Hyperbox::size(), rust/direct-rs/src/direct_optimizer.rs:75 size(), rust/direct-rs/src/test_support.rs:75 canonical_size
+:END:
+Passes today by luck. Sort terms ascending before sum (like =canonical_size= does) so guarantee is structural.
+
+*** 15. Non-finite boxes silently vanish
+:PROPERTIES:
+:RULE: err-result-over-panic (spirit)
+:WHERE: rust/direct-rs/src/direct_optimizer.rs:203 score_and_reinsert
+:END:
+=score_and_reinsert= drops ±∞/NaN without counter. Document + consider counter so NaN storms are visible.
+
+*** 16. Missing crate docs — crate-level =//! =
+:PROPERTIES:
+:RULE: doc-all-public
+:WHERE: rust/direct-rs/src/lib.rs:1 (crate root), rust/direct-rs/src/direct_optimizer.rs:1, rust/direct-rs/src/direct_data_storage.rs:1
+:END:
+No top-of-lib blurb. Write what DIRECT is, what's oracle-tested, how it links to C++, what's not implemented (ε, budget bounding).
+
+* CE Code-Review Synthesis
+:PROPERTIES:
+:ID:       ce-synthesis
+:END:
+**Reviewers:** 6 dispatched, 6 returned, 47 findings, 24 testing gaps, 24 residual risks. Confidence gate ≥75, cross-reviewer promotion applied (merged = raw = 47). Detail-tier =why=/=evidence= in per-reviewer =output.json=.
+
+** P1 — Critical (must fix)
+
+*** P1-1. Budget overshot — guards once per iteration before scoring whole =2*|POH|= batch
+:PROPERTIES:
+:FILE: direct_optimizer.rs:98
+:REVIEWERS: correctness, adversarial, performance, standards
+:RULE: num-saturating-clamp
+:ROUTE: gated_auto
+:END:
+
+*** P1-2. =println!= timing on every =run()= through =cdylib= into Qt host stdout (4-way agreement)
+:PROPERTIES:
+:FILE: direct_optimizer.rs:117
+:REVIEWERS: correctness, maintainability, performance, adversarial, standards
+:RULE: obs-tracing-over-log
+:ROUTE: safe_auto
+:END:
+
+*** P1-3. =cargo fmt --check= fails (import order, blank lines)
+:PROPERTIES:
+:FILE: lib.rs:12
+:REVIEWERS: standards
+:RULE: lint-rustfmt-check
+:ROUTE: safe_auto
+:END:
+
+*** P1-4. Only budget contract test is =#[ignore]d= against unfixed defect
+:PROPERTIES:
+:FILE: properties.rs:143
+:REVIEWERS: testing
+:RULE: test-proptest-properties
+:ROUTE: manual
+:END:
+
+** P2 — High (should fix)
+
+*** P2-5. =size()= sum order not permutation-invariant (verified)
+:PROPERTIES:
+:FILE: direct_data_storage.rs:71
+:RULE: num-float-compare
+:SEVERITY: P2 (correctness)
+:END:
+
+*** P2-6. =test=+=utils= compiled into shipped =staticlib= (panic! + plotters)
+:PROPERTIES:
+:FILE: lib.rs:6
+:RULE: err-result-over-panic
+:NOTE: See [[#how-to-fix-test-utils-in-shipped-lib][Fix]]
+:END:
+
+*** P2-7. =Pareto=/=new_with_strat=/=poh.is_empty()= untested
+:PROPERTIES:
+:FILE: direct_optimizer.rs:239
+:RULE: test-proptest-properties
+:SEVERITY: P2 (testing)
+:END:
+
+*** P2-8. Non-finite children deleted vs seed retained (=sort_cost= → ∞) — orphans
+:PROPERTIES:
+:FILE: direct_optimizer.rs:203
+:REVIEWERS: testing, adversarial
+:END:
+
+*** P2-9. Hull NaN-poisoned by =+∞= while =pareto_front= filters
+:PROPERTIES:
+:FILE: direct_optimizer.rs:269
+:RULE: num-float-compare
+:REVIEWER: adversarial
+:END:
+
+*** P2-10. Second =run()= duplicates seed, drifts =calls=
+:PROPERTIES:
+:FILE: direct_optimizer.rs:74
+:REVIEWER: adversarial
+:END:
+
+*** P2-11. Dead =Pareto= extension point (zero consumers)
+:PROPERTIES:
+:FILE: direct_optimizer.rs:20
+:RULE: YAGNI
+:REVIEWER: maintainability
+:END:
+
+*** P2-12. Zero docs; =RunOutcome::num_iter= means evals not iterations
+:PROPERTIES:
+:FILE: lib.rs:72
+:RULE: doc-all-public
+:REVIEWER: standards
+:END:
+
+*** P2-13. No MSRV
+:PROPERTIES:
+:FILE: Cargo.toml:4
+:RULE: proj-msrv-declare
+:REVIEWER: standards
+:END:
+
+*** P2-14. No =[profile.release]= LTO/codegen tuning
+:PROPERTIES:
+:FILE: Cargo.toml:5
+:RULE: opt-lto-release
+:REVIEWER: performance
+:END:
+
+*** P2-15. =plotters= unconditional in prod
+:PROPERTIES:
+:FILE: Cargo.toml:9
+:REVIEWERS: performance, standards
+:END:
+
+*** P2-16. =u32= budget wrap at =MAX= → infinite loop (release)
+:PROPERTIES:
+:FILE: direct_optimizer.rs:199
+:RULE: num-cast-try-from
+:REVIEWER: adversarial
+:END:
+
+*** P2-17. Only =restriction= lints warned; =correctness/suspicious= silent
+:PROPERTIES:
+:FILE: rust/Cargo.toml:7
+:RULE: lint-deny-correctness
+:REVIEWER: standards
+:SEVERITY: P3 in raw report, promoted here for visibility
+:END:
+
+*** P2-18. FFI batch =UniquePtr<Point6D>= per eval (heap + crossing)
+:PROPERTIES:
+:FILE: lib.rs:59
+:REVIEWERS: testing, performance
+:END:
+
+** P3 — Polish (pick when touched)
+
+*** P3-1. Dead =call_offset= field — initialized to 0, never written, baked into budget guard
+:PROPERTIES:
+:FILE: direct_optimizer.rs:14
+:END:
+
+*** P3-2. =pub= everywhere vs =pub(crate)= — inconsistent with siblings
+:PROPERTIES:
+:FILE: direct_optimizer.rs:8, etc.
+:RULE: proj-pub-crate-internal
+:END:
+
+*** P3-3. Duplicated =denormalize= vs =test_support::denorm=
+:PROPERTIES:
+:FILE: test_support.rs:38 vs direct_optimizer.rs:155
+:END:
+
+*** P3-4. Duplicated helpers =show()/zero()/dist()= in =bench.rs:306=
+:PROPERTIES:
+:FILE: bench.rs:306
+:END:
+
+*** P3-5. Anonymous =(Pose,f64)= vs named =RunOutcome=
+:PROPERTIES:
+:FILE: direct_optimizer.rs:74
+:END:
+
+*** P3-6. Stale comment =determine_potentially_optimal=
+:PROPERTIES:
+:FILE: utils.rs:13
+:END:
+
+*** P3-7. Vendored plotters doc-example test at fixed path
+:PROPERTIES:
+:FILE: utils.rs:153
+:END:
+
+*** P3-8. =#[allow(non_camel_case_types)]= vs =allow_attributes= ban
+:PROPERTIES:
+:FILE: direct_data_storage.rs:6
+:RULE: lint-allow_attributes
+:END:
+
+*** P3-9. Missing =#[must_use]= on =run()= / =best()=
+:PROPERTIES:
+:FILE: direct_optimizer.rs:74
+:END:
+
+*** P3-10. Vec churn per iteration
+:PROPERTIES:
+:FILE: direct_optimizer.rs:194
+:RULE: mem-reuse-collections
+:END:
+
+*** P3-11. =bench.rs= naming — fixtures/tests, not a harness
+:PROPERTIES:
+:FILE: bench.rs:1
+:RULE: test-criterion-bench
+:END:
+
+*** P3-12. =run_rust_opt= diverges from =run()= — FFI reports start-position fallback and lifetime-cumulative =num_iter=
+:PROPERTIES:
+:FILE: direct_optimizer.rs:130
+:END:
+
+*** P3-13. =size()= ULP key splits → phantom size columns
+:PROPERTIES:
+:FILE: direct_data_storage.rs:75
+:RULE: num-float-compare
+:END:
+
+* How to Fix: =test+utils= in Shipped Lib
+:PROPERTIES:
+:ID:       how-to-fix-test-utils-in-shipped-lib
+:END:
+*Do not edit — do this yourself:*
+
+In =rust/direct-rs/src/lib.rs=:
+
+#+begin_src rust
+#[cfg(test)]
+mod bench;
+#[cfg(test)]
+mod test;
+#[cfg(test)]
+mod utils;
+
+#[cfg(test)]
+mod properties;
+#[cfg(test)]
+mod test_support;
+#+end_src
+
+In =rust/direct-rs/Cargo.toml=:
+
+#+begin_src toml
+[dependencies]
+cxx = { workspace = true }
+ordered-float = "5.5.0"
+# plotters removed
+
+[dev-dependencies]
+plotters = { version = "0.3.7", default-features = false, features = ["svg_backend","line_series","point_series"] }
+#+end_src
+
+Verify:
+
+#+begin_src shell
+pixi run cargo check              # no plotters in graph
+pixi run cargo test --lib         # still 46 passed / 2 ignored
+cargo tree | grep plotters        # empty on normal build
+#+end_src
+
+Optional dev-plot feature: =#[cfg(any(test, feature="dev-plot"))]= + =plotters = { optional = true }=.
+
+* Testing Gaps & Residual Risks (aggregated)
+
+** Testing gaps
+- Repeated =run()= on same instance (5/6 reviewers)
+- FFI surface (=new_rust_opt=, =run_rust_opt=, =Cost for CppCost=, =RunOutcome= semantics) uncovered
+- =Pareto= strategy untested
+- Non-finite-cost tiling invariants not exercised
+- =plots/*.svg= written during =cargo test= without RAII cleanup
+- =volume_partition_holds_for_random_runs= silently passes on =Err("pow overflow")=
+- =bench.rs= name implies harness but none
+
+** Residual risks
+- Silently-dropped =+Inf= subregions orphan domain coverage
+- =OrderedFloat(+∞)= vs =NaN= divergence seed↔children
+- =next_box_id: u64= exhaustion (theoretical)
+- Hostile =CppCost= returning mixed =NaN/±Inf= can poison hull
+- =Hyperbox::size()= ULP key splits → phantom size columns
+
+* Consolidated Prioritized Checklist (do in this order)
+:PROPERTIES:
+:ID:       consolidated-checklist
+:END:
+1. [ ] =fmt= + =println!= removal + budget cap (P1 1–3) — one =jj new=; re-enable budget property test
+2. [ ] Gate =bench/test/utils= + demote =plotters= to =dev-dependencies= (P2 #6 + #15)
+3. [ ] MSRV + =[profile.release]= (P2 #13–14)
+4. [ ] =From<[f64;6]>= for =Pose= + docs on public API (Tier1 #2–3, P2 #12)
+5. [ ] Batch FFI =evaluate_batch= (Tier1 #4 / P2 #18) — biggest wall-clock win after #1
+6. [ ] =powi= + permutation-invariant =size()= + Vec reuse buffers (Tier2 #7–8, P2 #5)
+7. [ ] Jones ε-condition experiment (Tier3 #13)
+8. [ ] Promote =correctness/suspicious= lints + =missing_docs= + =cargo fmt --check= in CI (P3)
+
+* Verdict
+:PROPERTIES:
+:ID:       verdict
+:END:
+*Ready with fixes* — land the P1 batch and the crate is clean to widen the seam. P2/P3 are follow-up =jj new= commits. Your Jones oracle + volume/lattice + affine-equivariance + prefix-of-budget suite is the right harness — keep it as you add =evaluate_batch= and ε.
+
+* Appendix: Sources
+:PROPERTIES:
+:ID:       appendix
+:END:
+- Tutoring rubric: =/home/ajj/.pi/agent/skills/rust-skills/SKILL.md= + =rules/*.md= (read per-reviewer: =obs-*=, =err-*=, =num-*=, =api-*=, =mem-*=, =opt-*=, =test-*=, =lint-*=, =proj-*=)
+- CE workflow: =052a3f67-213b-4245-8c08-6f7979b1367f=, reviewer runs: =945b7640=, =591488e8=, =fee591f6=, =a2026954=, =e7a35ede=, =9676e07b=
+- Prior fixes landed: pose/dup_diag deletion, ghost =Cost= removal, =#[cfg(test)]= cleanup, constructor dedupe, oracle alignment
+

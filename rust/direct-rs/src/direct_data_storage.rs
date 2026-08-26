@@ -1,9 +1,8 @@
-use std::{collections::BTreeMap, iter::Sum};
+use std::collections::BTreeMap;
 
 use ordered_float::OrderedFloat;
 
-
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types, reason = "matching cpp style")]
 #[derive(Clone, Copy)]
 pub enum Direction {
     X_DIR = 0,
@@ -23,7 +22,7 @@ const DIRECTIONS: [Direction; 6] = [
     Direction::ZA_DIR,
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Default)]
 pub struct Pose {
     pub x: f64,
     pub y: f64,
@@ -32,8 +31,6 @@ pub struct Pose {
     pub ya: f64,
     pub za: f64,
 }
-
-
 impl Pose {
     pub fn shift(&mut self, dir: Direction, amount: f64) {
         match dir {

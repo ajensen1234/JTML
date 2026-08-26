@@ -1,8 +1,9 @@
-use crate::{cost::Cost, direct_data_storage::Pose};
+use crate::{cost::Cost, Pose};
 
 #[cfg(test)]
 struct Sphere;
 
+#[cfg(test)]
 impl Cost for Sphere {
     fn eval(&self, poses: &[Pose]) -> Vec<f64> {
         poses
@@ -14,7 +15,8 @@ impl Cost for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::direct_data_storage::{Hyperbox, Pose};
+    use crate::direct_data_storage::Hyperbox;
+    use crate::direct_data_storage::Pose;
 
     #[test]
     fn hyperbox_size_matches_depth_formula() {

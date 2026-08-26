@@ -20,7 +20,6 @@
 #include "compute/graph_admission_policy.h"
 #include "compute/graph_key_assembler.h"
 #include "compute/pose_matrix.h"
-#include "direct-rs_bridge/lib.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
     // this->sym_trap_obj = nullptr;

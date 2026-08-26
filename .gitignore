@@ -81,4 +81,4 @@ cut0_measurement.scratch.md
 *.scratch.md
 
 
-rust/target/
+rust/target/*

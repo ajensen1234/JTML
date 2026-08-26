@@ -1,6 +1,9 @@
-use crate::direct_data_storage::{CostKey, DirectTree, Hyperbox, Pose, SizeKey, UnscoredHyperbox};
+use crate::cost::Cost;
+use crate::direct_data_storage::Pose;
+use crate::direct_data_storage::{DirectTree, Hyperbox, UnscoredHyperbox};
 use crate::ffi::{CppCost, RunOutcome};
 use ordered_float::OrderedFloat;
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::iter::zip;
 use std::time::{self, Duration};

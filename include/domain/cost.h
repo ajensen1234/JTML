@@ -23,12 +23,14 @@
 #define COST_H
 
 /*Standard*/
+#include <algorithm>
 #include <functional>
 #include <limits>
 #include <memory>
 
 /*Header for Point6D*/
 #include "domain/data_structures_6D.h"
+#include "rust/cxx.h"
 
 /*Opaque cost handle: wraps a std::function<double(const Point6D&)> so Rust can
   call it through an opaque type (UniquePtr<CppCost>) + evaluate().*/
@@ -36,7 +38,7 @@ class CppCost {
 public:
     using CostFunction = std::function<double(const Point6D&)>;
 
-    CppCost() = delete; // belt-and-suspenders: prevent unbound cost across FFI
+    CppCost() = delete;  // belt-and-suspenders: prevent unbound cost across FFI
     explicit CppCost(CostFunction fn) : fn_(std::move(fn)) {}
 
     std::unique_ptr<CppCost> new_cost();
@@ -44,11 +46,34 @@ public:
     /*The score of one pose — the sole call the Rust DIRECT loop makes. Returns
       NaN if unbound (belt-and-suspenders: IsBound() guard prevents
       std::bad_function_call from unwinding through FFI = UB).*/
-    double evaluate(const Point6D& point) const {
+    [[nodiscard]] double evaluate(const Point6D& point) const {
         if (!fn_) {
             return std::numeric_limits<double>::quiet_NaN();
         }
         return fn_(point);
+    }
+
+    [[nodiscard]] rust::Vec<double> evaluate_batch(
+        rust::Vec<double> flat_poses) const {
+        const std::size_t n = flat_poses.size() / 6;
+        rust::Vec<double> results;
+        results.reserve(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            const std::size_t base = i * 6;
+            if (!fn_) {
+                results.push_back(std::numeric_limits<double>::quiet_NaN());
+                continue;
+            }
+            const Point6D point(
+                flat_poses[base],
+                flat_poses[base + 1],
+                flat_poses[base + 2],
+                flat_poses[base + 3],
+                flat_poses[base + 4],
+                flat_poses[base + 5]);
+            results.push_back(fn_(point));
+        }
+        return results;
     }
 
     /*Whether a cost function has been bound yet (for the default ctor).*/

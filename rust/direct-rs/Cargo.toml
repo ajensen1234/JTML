@@ -6,14 +6,15 @@ edition = "2024"
 [dependencies]
 cxx.workspace = true
 ordered-float = "5.5.0"
-plotters = { version = "0.3.7", default-features = false, features = ["svg_backend",
-"line_series", "point_series"] }
+rayon = "1.12.0"
 
 [build-dependencies]
 cxx-build.workspace = true
 
 [dev-dependencies]
 proptest = "1.6"
+plotters = { version = "0.3.7", default-features = false, features = ["svg_backend",
+"line_series", "point_series"] }
 
 [lints]
 workspace = true

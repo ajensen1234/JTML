@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+pixi\PYG{+w}{ }run\PYG{+w}{ }cargo\PYG{+w}{ }check\PYG{+w}{              }\PYG{c+c1}{\PYGZsh{} no plotters in graph}
+pixi\PYG{+w}{ }run\PYG{+w}{ }cargo\PYG{+w}{ }\PYG{n+nb}{test}\PYG{+w}{ }\PYGZhy{}\PYGZhy{}lib\PYG{+w}{         }\PYG{c+c1}{\PYGZsh{} still 46 passed / 2 ignored}
+cargo\PYG{+w}{ }tree\PYG{+w}{ }\PYG{p}{|}\PYG{+w}{ }grep\PYG{+w}{ }plotters\PYG{+w}{        }\PYG{c+c1}{\PYGZsh{} empty on normal build}
+\end{MintedVerbatim}

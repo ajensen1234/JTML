@@ -12,6 +12,7 @@
 //! 3. **Both cost AND pose are asserted**, so a function that is plateau-flat
 //!    near the optimum can't hide a box that isn't refining.
 
+use crate::cost::Cost;
 use crate::direct_data_storage::Pose;
 
 /// A plain sphere: `f(x) = Σ (xᵢ - sᵢ)²`. Unimodal; verifies convergence rate
@@ -208,8 +209,8 @@ impl Cost for Rosenbrock {
         poses
             .iter()
             .map(|p| {
-                let a = [p.x, p.y, p.z, p.xa, p.ya, p.za];
-                let mut sum = 0.0;
+                let a: [f64; 6] = [p.x, p.y, p.z, p.xa, p.ya, p.za];
+                let mut sum: f64 = 0.0;
                 for i in 0..5 {
                     sum += 100.0 * (a[i + 1] - a[i] * a[i]).powi(2) + (1.0 - a[i]).powi(2);
                 }
@@ -281,12 +282,11 @@ impl Cost for Hartmann6 {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
 
     use super::*;
     use crate::direct_data_storage::Pose;
     use crate::direct_optimizer::DirectOptimizer;
-    use crate::utils::{draw_2d_graph, plot_boxes};
+    use crate::utils::plot_boxes;
 
     // ---------- fixture helpers ----------
 
@@ -403,6 +403,29 @@ mod tests {
     }
 
     #[test]
+    fn anisotropic_weights_still_reach_min() {
+        // The weighted sibling: same argmin, but steep/flat axis pairs force
+        // DIRECT to refine in normalized space, not raw units.
+        let shift = evil_shift();
+        let weights = [16.0_f64, 16.0, 16.0, 1.0, 1.0, 1.0];
+        let cost_fn = AnisotropicSphere { shift, weights };
+        let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 20_000);
+        let (best, cost) = opt.run(&cost_fn);
+        assert!(
+            (cost - AnisotropicSphere::fstar()).abs() < 1e-4,
+            "weighted cost {cost} vs f* {}",
+            AnisotropicSphere::fstar()
+        );
+        let target = cost_fn.xstar();
+        assert!(
+            dist(&best, &target) < 1e-2,
+            "best {} vs x* {}",
+            show(&best),
+            show(&target)
+        );
+    }
+
+    #[test]
     fn styblinski_reaches_distinctive_fstar() {
         // f* = -234.9959 — a non-round number that catches sign/dim errors.
         let mut opt = DirectOptimizer::new(all_ranges(5.0), zero(), 40_000);
@@ -451,14 +474,14 @@ mod tests {
         let mut opt = DirectOptimizer::new(all_ranges(5.12), zero(), 260_000);
         let (best, cost) = opt.run(&cost_fn);
         assert!(
-            cost < 5.0,
+            cost - ShiftedRastrigin::fstar() < 5.0,
             "Rastrigin cost {cost} still in a local basin (f* = 0)"
         );
         assert!(
-            dist(&best, &shift) < 1.5,
-            "best {} far from shift {}",
+            dist(&best, &cost_fn.xstar()) < 1.5,
+            "best {} far from x* {}",
             show(&best),
-            show(&shift)
+            show(&cost_fn.xstar())
         );
     }
 
@@ -474,7 +497,7 @@ mod tests {
             "Ackley cost {cost} did not enter the funnel (f* = 0)"
         );
         assert!(
-            dist(&best, &shift) < 2.0,
+            dist(&best, &cost_fn.xstar()) < 2.0,
             "best {} far from shift {}",
             show(&best),
             show(&shift)

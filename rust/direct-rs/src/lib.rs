@@ -1,7 +1,9 @@
+#[cfg(test)]
 mod bench;
-mod direct_data_storage;
-mod direct_optimizer;
+
+#[cfg(test)]
 mod test;
+#[cfg(test)]
 mod utils;
 
 #[cfg(test)]
@@ -9,14 +11,17 @@ mod properties;
 #[cfg(test)]
 mod test_support;
 
+mod cost;
+mod direct_data_storage;
+mod direct_optimizer;
+
 use crate::{
-    cost::Cost,
-    direct_optimizer::{DirectOptimizer, POHSettings},
-    ffi::CppCost,
+    cost::Cost, direct_data_storage::Pose, direct_optimizer::DirectOptimizer, ffi::CppCost,
 };
 
 #[cxx::bridge]
 pub mod ffi {
+
     pub struct RunOutcome {
         pub num_iter: u32,
         pub optimal_value: f64,
@@ -40,30 +45,31 @@ pub mod ffi {
     unsafe extern "C++" {
         include!("domain/cost.h");
         include!("domain/data_structures_6D.h");
+
         pub type CppCost;
         type Point6D;
 
         pub fn evaluate(self: &CppCost, point: &Point6D) -> f64;
-        pub fn IsBound(self: &CppCost) -> bool;
+        pub fn evaluate_batch(self: &CppCost, flat_poses: Vec<f64>) -> Vec<f64>;
 
         #[Self=Point6D]
         pub fn new_point(x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> UniquePtr<Point6D>;
-
-        pub fn to_array(self: &Point6D) -> [f64; 6];
 
     }
 }
 
 impl Cost for CppCost {
-    fn eval(&self, poses: &[direct_data_storage::Pose]) -> Vec<f64> {
-        return poses
-            .iter()
-            .map(|pose| {
-                self.evaluate(&ffi::Point6D::new_point(
-                    pose.x, pose.y, pose.z, pose.xa, pose.ya, pose.za,
-                ))
-            })
-            .collect();
+    fn eval(&self, poses: &[Pose]) -> Vec<f64> {
+        let mut flat_poses: Vec<f64> = Vec::with_capacity(poses.len() * 6);
+        for pose in poses {
+            flat_poses.push(pose.x);
+            flat_poses.push(pose.y);
+            flat_poses.push(pose.z);
+            flat_poses.push(pose.xa);
+            flat_poses.push(pose.ya);
+            flat_poses.push(pose.za);
+        }
+        self.evaluate_batch(flat_poses)
     }
 }
 
@@ -73,7 +79,7 @@ pub fn new_rust_opt(
     budget: u32,
 ) -> Box<DirectOptimizer> {
     return Box::new(DirectOptimizer::new(
-        direct_data_storage::Pose {
+        Pose {
             x: range[0],
             y: range[1],
             z: range[2],
@@ -81,7 +87,7 @@ pub fn new_rust_opt(
             ya: range[4],
             za: range[5],
         },
-        direct_data_storage::Pose {
+        Pose {
             x: starting_point[0],
             y: starting_point[1],
             z: starting_point[2],

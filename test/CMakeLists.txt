@@ -57,7 +57,7 @@ target_include_directories(jtml_test_direct_optimizer_props PRIVATE ${PROJECT_SO
 # Same two hegel link/rpath tweaks as the smoke target (kept next to the lib so
 # the rationale is co-located for both).
 target_link_libraries(jtml_test_direct_optimizer_props PRIVATE
-    Catch2::Catch2WithMain hegel dl)
+    Catch2::Catch2WithMain hegel dl direct-rs_bridge)
 target_link_options(jtml_test_direct_optimizer_props PRIVATE
     "-Wl,-rpath,${CMAKE_BINARY_DIR}/_deps/hegel-build/libhegel")
 add_test(NAME jtml.direct_optimizer_props COMMAND jtml_test_direct_optimizer_props)
@@ -93,7 +93,7 @@ add_executable(jtml_test_direct_optimizer
     ${PROJECT_SOURCE_DIR}/src/domain/direct_data_storage.cpp
 )
 target_include_directories(jtml_test_direct_optimizer PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(jtml_test_direct_optimizer PRIVATE Catch2::Catch2WithMain direct-rs_bridge)
 add_test(NAME jtml.direct_optimizer COMMAND jtml_test_direct_optimizer)
 set_tests_properties(jtml.direct_optimizer PROPERTIES LABELS "headless" TIMEOUT 300)
 
@@ -109,7 +109,7 @@ add_executable(jtml_test_direct_optimizer_batch
     ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
     ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp)
 target_include_directories(jtml_test_direct_optimizer_batch PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/compute)
-target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+target_link_libraries(jtml_test_direct_optimizer_batch PRIVATE Catch2::Catch2WithMain CUDA::cudart direct-rs_bridge)
 add_test(NAME jtml.direct_optimizer_batch COMMAND jtml_test_direct_optimizer_batch)
 set_tests_properties(jtml.direct_optimizer_batch PROPERTIES LABELS "headless" TIMEOUT 300)
 
@@ -122,7 +122,7 @@ add_executable(jtml_test_hook_feeder
     ${PROJECT_SOURCE_DIR}/src/compute/evaluation_context.cpp
     ${PROJECT_SOURCE_DIR}/src/compute/evaluation_executor.cpp)
 target_include_directories(jtml_test_hook_feeder PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/compute)
-target_link_libraries(jtml_test_hook_feeder PRIVATE Catch2::Catch2WithMain CUDA::cudart)
+target_link_libraries(jtml_test_hook_feeder PRIVATE Catch2::Catch2WithMain CUDA::cudart direct-rs_bridge)
 add_test(NAME jtml.hook_feeder COMMAND jtml_test_hook_feeder)
 set_tests_properties(jtml.hook_feeder PROPERTIES LABELS "headless" TIMEOUT 300)
 

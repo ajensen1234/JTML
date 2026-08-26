@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{[dependencies]}
+\PYG{n}{cxx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{workspace}\PYG{+w}{ }\PYG{p}{=}\PYG{+w}{ }\PYG{k+kc}{true}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{n}{ordered\PYGZhy{}float}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}5.5.0\PYGZdq{}}
+\PYG{c+c1}{\PYGZsh{} plotters removed}
+
+\PYG{k}{[dev\PYGZhy{}dependencies]}
+\PYG{n}{plotters}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{version}\PYG{+w}{ }\PYG{p}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}0.3.7\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{default\PYGZhy{}features}\PYG{+w}{ }\PYG{p}{=}\PYG{+w}{ }\PYG{k+kc}{false}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{features}\PYG{+w}{ }\PYG{p}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}svg\PYGZus{}backend\PYGZdq{}}\PYG{p}{,}\PYG{l+s+s2}{\PYGZdq{}line\PYGZus{}series\PYGZdq{}}\PYG{p}{,}\PYG{l+s+s2}{\PYGZdq{}point\PYGZus{}series\PYGZdq{}}\PYG{p}{]}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

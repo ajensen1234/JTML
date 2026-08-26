@@ -1,4 +1,4 @@
-use crate::direct_data_storage::{Hyperbox, Pose};
+use crate::direct_data_storage::Hyperbox;
 use crate::direct_optimizer::{DirectOptimizer, POHPoint};
 
 use std::error::Error;
@@ -153,7 +153,6 @@ pub fn plot_boxes(opt: &DirectOptimizer, name: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotters::prelude::*;
     #[test]
     fn draw() -> Result<(), Box<dyn std::error::Error>> {
         let root = SVGBackend::new("plotters-doc-data/0.svg", (640, 480)).into_drawing_area();
