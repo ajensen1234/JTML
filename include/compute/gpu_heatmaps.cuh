@@ -30,4 +30,4 @@ private:
     unsigned char* dev_heatmap_;
     int device_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

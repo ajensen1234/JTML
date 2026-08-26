@@ -77,8 +77,9 @@ public:
         ZaRole,
     };
 
-    explicit PoseTableModel(ExperimentalSession* session,
-                            QObject* parent = nullptr);
+    explicit PoseTableModel(
+        ExperimentalSession* session,
+        QObject* parent = nullptr);
 
     // The model row whose poses the table displays (-1 = none).
     void setModelRow(int row);
@@ -141,8 +142,8 @@ public:
     // LocationStorage::SavePose (dirty set; the scene pose refreshed when
     // the cell is on the current frame). Returns true when the value was
     // saved.
-    Q_INVOKABLE bool setPoseValue(int frame, int model, int axis,
-                                  const QString& text);
+    Q_INVOKABLE bool
+    setPoseValue(int frame, int model, int axis, const QString& text);
 
     // ---- Copy prev/next (widgets slots' exact index semantics) -----------
     // Guard via the seam's CheckSelection (the QML app has no multi-model

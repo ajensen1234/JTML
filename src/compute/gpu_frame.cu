@@ -7,7 +7,10 @@ namespace gpu_cost_function {
 /*If successful, uploads the four host images
 else, marked as not initialized correctly*/
 GPUFrame::GPUFrame(
-    int width, int height, int gpu_device, unsigned char* host_image) {
+    int width,
+    int height,
+    int gpu_device,
+    unsigned char* host_image) {
     /*Try Initializing GPU Images First*/
     gpu_image_ = new GPUImage(width, height, gpu_device, host_image);
 
@@ -65,4 +68,4 @@ bool GPUFrame::IsInitializedCorrectly() {
     return initialized_correctly_;
 };
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

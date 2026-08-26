@@ -3,9 +3,9 @@
 
 #include "view/viewer.h"
 
-#include <cmath>
-
 #include <vtkRendererCollection.h>
+
+#include <cmath>
 
 #include "services/render_pipeline_builder.h"
 
@@ -22,7 +22,7 @@ double ViewingAngleFromCalibration(int h, int fy) {
     return (180.0 / pi) * 2 * atan2(h, 2 * fy);
 }
 
-} // namespace
+}  // namespace
 
 Viewer::Viewer() {
     initialize_vtk_pointers();
@@ -51,7 +51,7 @@ void Viewer::initialize_vtk_pointers() {
     actor_text_->GetTextProperty()->SetColor(
         214.0 / 255.0,
         108.0 / 255.0,
-        35.0 / 255.0); // Earth Reda
+        35.0 / 255.0);  // Earth Reda
     render_window_interactor_ =
         vtkSmartPointer<vtkRenderWindowInteractor>::New();
 }
@@ -135,7 +135,8 @@ void Viewer::set_loaded_frames_b(std::vector<Frame>& frames) {
 }
 
 void Viewer::update_display_background_to_edge_image(
-    int frame_number, bool CameraASelected) {
+    int frame_number,
+    bool CameraASelected) {
     // if 1, do 2. Else, do 3 (ternary operator)
     (CameraASelected)
         ? update_display_background(loaded_frames_[frame_number].GetEdgeImage())
@@ -144,7 +145,8 @@ void Viewer::update_display_background_to_edge_image(
 }
 
 void Viewer::update_display_background_to_original_image(
-    int frame_number, bool CameraASelected) {
+    int frame_number,
+    bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetOriginalImage())
                       : update_display_background(
@@ -152,7 +154,8 @@ void Viewer::update_display_background_to_original_image(
 }
 
 void Viewer::update_display_background_to_dilation_image(
-    int frame_number, bool CameraASelected) {
+    int frame_number,
+    bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetDilationImage())
                       : update_display_background(
@@ -160,7 +163,8 @@ void Viewer::update_display_background_to_dilation_image(
 }
 
 void Viewer::update_display_background_to_inverted_image(
-    int frame_number, bool CameraASelected) {
+    int frame_number,
+    bool CameraASelected) {
     (CameraASelected) ? update_display_background(
                             loaded_frames_[frame_number].GetInvertedImage())
                       : update_display_background(
@@ -180,7 +184,9 @@ void Viewer::setup_camera_coronal_plane() {
 }
 
 void Viewer::place_image_actors_according_to_calibration(
-    Calibration cal, int img_w, int img_h) {
+    Calibration cal,
+    int img_w,
+    int img_h) {
     // Shared pipeline recipe (006 U4): actor at (-0.5w, -0.5h, z) with
     // parallel scale 0.5h; z = -fy*pixel_pitch is the widgets' value of
     // camera divergence (a) (the QML side passes -focalLengthPx). The old
@@ -282,42 +288,42 @@ void Viewer::change_model_opacity_to_solid(int index) {
 }
 
 void Viewer::set_model_position_at_index(
-    int index, double x, double y, double z) {
+    int index,
+    double x,
+    double y,
+    double z) {
     model_actor_list_[index]->SetPosition(x, y, z);
 }
 
 void Viewer::set_model_orientation_at_index(
-    int index, double xrot, double yrot, double zrot) {
+    int index,
+    double xrot,
+    double yrot,
+    double zrot) {
     model_actor_list_[index]->SetOrientation(xrot, yrot, zrot);
 }
 
-std::string
-Viewer::print_location_and_orientation_of_model_at_index(int index) {
+std::string Viewer::print_location_and_orientation_of_model_at_index(
+    int index) {
     std::string infoText = "Location: <";
-    infoText += std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetPosition()[0])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetPosition()[1])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetPosition()[2])) +
-                ">\nOrientation: <" +
-                std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetOrientation()[0])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetOrientation()[1])) +
-                "," +
-                std::to_string(
-                    static_cast<long double>(
-                        model_actor_list_[index]->GetOrientation()[2])) +
-                ">";
+    infoText += std::to_string(static_cast<long double>(
+                    model_actor_list_[index]->GetPosition()[0])) +
+        "," +
+        std::to_string(static_cast<long double>(
+            model_actor_list_[index]->GetPosition()[1])) +
+        "," +
+        std::to_string(static_cast<long double>(
+            model_actor_list_[index]->GetPosition()[2])) +
+        ">\nOrientation: <" +
+        std::to_string(static_cast<long double>(
+            model_actor_list_[index]->GetOrientation()[0])) +
+        "," +
+        std::to_string(static_cast<long double>(
+            model_actor_list_[index]->GetOrientation()[1])) +
+        "," +
+        std::to_string(static_cast<long double>(
+            model_actor_list_[index]->GetOrientation()[2])) +
+        ">";
 
     return infoText;
 }
@@ -434,7 +440,9 @@ vtkSmartPointer<vtkRenderWindowInteractor> Viewer::get_interactor() {
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(
-    Calibration cal, int w, int h) {
+    Calibration cal,
+    int w,
+    int h) {
     float cx = w / 2 - cal.camera_A_principal_.cx();
     float cy = h / 2 + cal.camera_A_principal_.cy();
     float fx = cal.camera_A_principal_.fx();
@@ -453,7 +461,9 @@ void Viewer::set_vtk_camera_from_calibration_and_image_size_if_jta(
 }
 
 void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
-    Calibration cal, int w, int h) {
+    Calibration cal,
+    int w,
+    int h) {
     float cx = cal.camera_A_principal_.cx();
     float cy = cal.camera_A_principal_.cy();
     float fx = cal.camera_A_principal_.fx();
@@ -467,7 +477,10 @@ void Viewer::set_vtk_camera_from_calibration_and_image_if_camera_matrix(
 }
 
 void Viewer::calculate_and_set_window_center_from_calibration(
-    const int w, const int h, const float cx, const float cy) {
+    const int w,
+    const int h,
+    const float cx,
+    const float cy) {
     this->wcx = -(2 * cx - w) / w;
     this->wcy = (2 * cy - h) / h;
 
@@ -491,7 +504,8 @@ void Viewer::update_window_center_on_resize() {
 }
 
 void Viewer::calculate_and_set_camera_aspect_from_calibration(
-    const float fx, const float fy) {
+    const float fx,
+    const float fy) {
     vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
     m->Identity();
     double aspect = fx / fy;

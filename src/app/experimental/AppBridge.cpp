@@ -16,7 +16,8 @@
 AppBridge::AppBridge(
     ExperimentalScene* scene,
     jta::SettingsService* settings_service,
-    QObject* parent) : QObject(parent) {
+    QObject* parent) :
+    QObject(parent) {
     /*U4: the hub owns the app-owned dataset (R3) + the study-load adapter.
      * The list models are created inside StudyBridge (direct-compiled).*/
     session_ = new ExperimentalSession;
@@ -29,8 +30,7 @@ AppBridge::AppBridge(
     session_state_controller_ = new SessionStateController(
         &session_->session_state,
         [this] {
-            return optimizer_bridge_ != nullptr &&
-                   optimizer_bridge_->running();
+            return optimizer_bridge_ != nullptr && optimizer_bridge_->running();
         },
         [this] {
             if (optimizer_bridge_ != nullptr) {
@@ -65,8 +65,13 @@ AppBridge::AppBridge(
      * (OptimizerBridge::setSeedPose), and graceful degradation without .pt
      * models (AE4).*/
     ml_bridge_ = new MlBridge(
-        this, session_, scene, study_bridge_, settings_bridge_,
-        optimizer_bridge_, this);
+        this,
+        session_,
+        scene,
+        study_bridge_,
+        settings_bridge_,
+        optimizer_bridge_,
+        this);
 
     /*U8: the pose-editing adapter — the pose table over the primary model's
      * LocationStorage poses (PoseTableModel), per-cell SavePose commits,
@@ -83,24 +88,29 @@ AppBridge::AppBridge(
      * contentItem on close (U1 review D-05 confirmed the stale-on-reopen
      * premise structurally), so without this the table would keep showing
      * pre-run / pre-drag values. Relay plumbing only — no policy.*/
-    connect(optimizer_bridge_, &OptimizerBridge::runStateChanged,
-            this, [this] {
+    connect(optimizer_bridge_, &OptimizerBridge::runStateChanged, this, [this] {
         const auto state = optimizer_bridge_->runState();
         if (state == OptimizerBridge::RunState::Completed ||
             state == OptimizerBridge::RunState::Error) {
             pose_bridge_->refreshTable();
         }
     });
-    connect(study_bridge_, &StudyBridge::viewerPoseApplied,
-            pose_bridge_, &PoseBridge::refreshTable);
+    connect(
+        study_bridge_,
+        &StudyBridge::viewerPoseApplied,
+        pose_bridge_,
+        &PoseBridge::refreshTable);
 
     /*Review fix (ce-code-review 2026-08-12, C7): the ML estimate writes
      * storage directly (MlBridge's save_pose -> LocationStorage::SavePose)
      * but was absent from the D3 refresh set — an open pose table showed
      * the pre-estimate value. refreshTable emits only modelReset (never
      * poseTableChanged), so this cannot clear the pending seed (D4).*/
-    connect(ml_bridge_, &MlBridge::poseEstimated,
-            pose_bridge_, &PoseBridge::refreshTable);
+    connect(
+        ml_bridge_,
+        &MlBridge::poseEstimated,
+        pose_bridge_,
+        &PoseBridge::refreshTable);
 
     /*Plan 007 U3 (D4): any manual pose write drops the pending ML seed —
      * viewer drags (viewerPoseApplied), pose-table edits / copy-prev-next
@@ -108,10 +118,16 @@ AppBridge::AppBridge(
      * Without this the next run() would silently apply the estimate over
      * the user's arrangement (I3). The selection-change stale guard stays
      * in MlBridge (plan 006). Relay plumbing only.*/
-    connect(study_bridge_, &StudyBridge::viewerPoseApplied,
-            optimizer_bridge_, &OptimizerBridge::clearSeedPose);
-    connect(pose_bridge_, &PoseBridge::poseTableChanged,
-            optimizer_bridge_, &OptimizerBridge::clearSeedPose);
+    connect(
+        study_bridge_,
+        &StudyBridge::viewerPoseApplied,
+        optimizer_bridge_,
+        &OptimizerBridge::clearSeedPose);
+    connect(
+        pose_bridge_,
+        &PoseBridge::poseTableChanged,
+        optimizer_bridge_,
+        &OptimizerBridge::clearSeedPose);
 }
 
 AppBridge::~AppBridge() {

@@ -28,7 +28,7 @@ bool readKP(const QString& path, std::vector<XYZPoint>& kp_storage) {
     kp_file.open(newpath, ios::in);
 
     if (kp_file.is_open()) {
-        std::string line; // creating string to read lines to
+        std::string line;  // creating string to read lines to
         double kp[3];
         // todo: figure out a good way to save memory here - i think it might be
         // clogging things up
@@ -45,7 +45,7 @@ bool readKP(const QString& path, std::vector<XYZPoint>& kp_storage) {
             /*Populate the Keypoint storage object*/
             kp_storage.push_back(XYZPoint(kp[0], kp[1], kp[2]));
         }
-        kp_file.close(); // close the file
+        kp_file.close();  // close the file
         return true;
     }
 }

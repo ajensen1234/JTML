@@ -21,16 +21,22 @@
 
 /*File parsers (Reads a directory for specified file types)*/
 void read_directory_for_directories(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 void read_directory_for_tif(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 void read_directory_for_jts(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 void read_directory_for_jtak(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 void read_directory_for_stl(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 void read_directory_for_txt(
-    const std::string& name, std::vector<std::string>& v);
+    const std::string& name,
+    std::vector<std::string>& v);
 
 bool alphabetic_compare(std::string a, std::string b);

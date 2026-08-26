@@ -81,4 +81,4 @@ private:
     QImage qt_host_image_;
 };
 
-#endif // DRR_TOOL_H
+#endif  // DRR_TOOL_H

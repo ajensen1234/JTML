@@ -28,10 +28,10 @@ public:
         std::string model_name,
         std::string model_type);
     Model() {};
-    std::string file_location_;                // Store File Location for Model
-    vtkSmartPointer<vtkSTLReader> cad_reader_; // Stores CAD model
-    std::vector<float> triangle_vertices_;     // Vector of Triangle Vertices
-    std::vector<float> triangle_normals_;      // Vector of Triangle Normals
+    std::string file_location_;                 // Store File Location for Model
+    vtkSmartPointer<vtkSTLReader> cad_reader_;  // Stores CAD model
+    std::vector<float> triangle_vertices_;      // Vector of Triangle Vertices
+    std::vector<float> triangle_normals_;       // Vector of Triangle Normals
     /*Model Name: taken from prefix of file name. If duplicates a (x) is added*/
     std::string model_name_;
     /*Model Type: could be femur or implant or bone or type of bone, anything

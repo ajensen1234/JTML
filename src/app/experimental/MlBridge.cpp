@@ -13,7 +13,6 @@
 // Qt-object headers FIRST (the repo's documented torch #undef slots rule:
 // torch-bearing includes come after any Qt-object header in a mixed TU).
 #include <QUrl>
-
 #include <cstdlib>
 #include <cstring>
 #include <vector>
@@ -72,15 +71,15 @@ MlBridge::MlBridge(
     StudyBridge* study_bridge,
     SettingsBridge* settings_bridge,
     OptimizerBridge* optimizer_bridge,
-    QObject* parent)
-    : QObject(parent),
-      hub_(hub),
-      session_(session),
-      scene_(scene),
-      study_bridge_(study_bridge),
-      settings_bridge_(settings_bridge),
-      optimizer_bridge_(optimizer_bridge),
-      segmentation_controller_(new jta::SegmentationController) {
+    QObject* parent) :
+    QObject(parent),
+    hub_(hub),
+    session_(session),
+    scene_(scene),
+    study_bridge_(study_bridge),
+    settings_bridge_(settings_bridge),
+    optimizer_bridge_(optimizer_bridge),
+    segmentation_controller_(new jta::SegmentationController) {
     /*Env fallback (plan 005 U7): JTML_SEG_PT (femur segmentation model) +
      * JTML_FEM_ESTIMATE_PT (pose regression) — the oracle's user-provided
      * fixture vars; a picker selection overrides. The tibia segment model
@@ -266,8 +265,7 @@ void MlBridge::estimateCurrentFrame() {
             QStringLiteral("Error!"),
             QStringLiteral("Estimate needs a segmentation model too — pick "
                            "a femur or tibia .pt first."));
-        setStatus(
-            QStringLiteral("No segmentation model (.pt) loaded."));
+        setStatus(QStringLiteral("No segmentation model (.pt) loaded."));
         return;
     }
 
@@ -387,11 +385,7 @@ void MlBridge::estimateCurrentFrame() {
         session_->model_locations.SavePose(f, m, pose);
     };
     jta::MlEstimateOutcome outcome = ml_orchestrator_.EstimateFrame(
-        frame,
-        primary,
-        frame_data.GetInvertedImage(),
-        estimate_op,
-        save_pose);
+        frame, primary, frame_data.GetInvertedImage(), estimate_op, save_pose);
 
     /*Cleanup (the estimate slots' tail: delete GPU model, free scratch).*/
     delete gpu_mod;
@@ -478,15 +472,13 @@ bool MlBridge::guardStudyReady() {
     }
     if (session_->loaded_frames.empty()) {
         emit messageRequested(
-            QStringLiteral("Error!"),
-            QStringLiteral("Load images first!"));
+            QStringLiteral("Error!"), QStringLiteral("Load images first!"));
         setStatus(QStringLiteral("No frames loaded."));
         return false;
     }
     if (study_bridge_->currentFrame() < 0) {
         emit messageRequested(
-            QStringLiteral("Error!"),
-            QStringLiteral("Select a frame first."));
+            QStringLiteral("Error!"), QStringLiteral("Select a frame first."));
         setStatus(QStringLiteral("No current frame."));
         return false;
     }
@@ -525,11 +517,7 @@ bool MlBridge::runSegmentOnCurrentFrame() {
         ->getIntParameterValue("Dilation", dilation_val);
     const auto segment_op = [this, model](const cv::Mat& original) {
         return segmentation_controller_->SegmentFrame(
-            original,
-            black_sil_used_,
-            model,
-            kInputWidth,
-            kInputHeight);
+            original, black_sil_used_, model, kInputWidth, kInputHeight);
     };
     const jta::MlSegmentStatus status = ml_orchestrator_.SegmentFrame(
         frame_data,
@@ -543,8 +531,7 @@ bool MlBridge::runSegmentOnCurrentFrame() {
         /*Degradation (AE4): a segment failure surfaces a typed message and
          * leaves the frame + viewport untouched.*/
         emit messageRequested(
-            QStringLiteral("Error!"),
-            QStringLiteral("Segmentation failed."));
+            QStringLiteral("Error!"), QStringLiteral("Segmentation failed."));
         setStatus(QStringLiteral("Segmentation failed."));
         return false;
     }

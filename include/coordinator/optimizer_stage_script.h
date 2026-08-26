@@ -7,7 +7,8 @@
  * types, the named builders (BuildStageScript / DeriveStageCostParams), and
  * the named graph registry (ListStageGraphs / StageGraphByName) mirroring
  * CostFunctionManager::listCostFunctions (src/compute/CostFunctionManager.cpp)
- * and the golden-pinned mapping pattern of jta::BuildCostFunctionRegistryEntries
+ * and the golden-pinned mapping pattern of
+ * jta::BuildCostFunctionRegistryEntries
  * (src/services/cost_function_registry.cpp). Zero production behavior change at
  * U7; since U9 (Cut B) the manager's Optimize() loop CONSUMES BuildStageScript
  * (stage_script_, built once in Initialize) — the named-graph REGISTRY below
@@ -127,7 +128,8 @@ StageCostParams DeriveStageCostParams(
  * number_branches fails fast with a clear std::invalid_argument (the engine
  * silently accepts corrupted settings; the pure builder does not).*/
 StageScript BuildStageScript(
-    const OptimizerSettings& settings, const std::string& directive);
+    const OptimizerSettings& settings,
+    const std::string& directive);
 
 /*The cumulative budget caps the run lands on, one entry per search run
  * (RunDirectStage invocation), transcribing budget_ = trunk_budget at the

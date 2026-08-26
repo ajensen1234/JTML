@@ -41,8 +41,10 @@ OptimizerRunControllerCore::GateResult OptimizerRunControllerCore::EvaluateGate(
 /*---- Progress (oracle seam, M12) ----*/
 
 std::string OptimizerRunControllerCore::StageLabel(
-    const ProgressBudgets& b, int calls) {
-    const int branch_budget = b.enable_branch ? std::max(1, b.branch_budget) : 1;
+    const ProgressBudgets& b,
+    int calls) {
+    const int branch_budget =
+        b.enable_branch ? std::max(1, b.branch_budget) : 1;
     const int branch_total =
         b.enable_branch ? b.number_branches * b.branch_budget : 0;
     if (calls < b.trunk_budget) {
@@ -50,21 +52,22 @@ std::string OptimizerRunControllerCore::StageLabel(
     }
     if (calls < b.trunk_budget + branch_total) {
         return "Branch " +
-               std::to_string((calls - b.trunk_budget) / branch_budget + 1);
+            std::to_string((calls - b.trunk_budget) / branch_budget + 1);
     }
-    if (calls < b.trunk_budget + branch_total +
-                   (b.enable_leaf ? b.leaf_budget : 0)) {
+    if (calls <
+        b.trunk_budget + branch_total + (b.enable_leaf ? b.leaf_budget : 0)) {
         return "Extra Z-Translation";
     }
     return "Finished";
 }
 
 void OptimizerRunControllerCore::refreshProgress(
-    const ProgressBudgets& b, int calls, double minimum) {
+    const ProgressBudgets& b,
+    int calls,
+    double minimum) {
     cost_calls_ = calls;
     current_minimum_ = minimum;
-    const int cumulative =
-        b.trunk_budget +
+    const int cumulative = b.trunk_budget +
         (b.enable_branch ? b.number_branches * b.branch_budget : 0) +
         (b.enable_leaf ? b.leaf_budget : 0);
     stage_text_ = StageLabel(b, calls);
@@ -75,7 +78,13 @@ void OptimizerRunControllerCore::refreshProgress(
 /*---- Seed lifecycle (M10a) ----*/
 
 void OptimizerRunControllerCore::setSeedPose(
-    double x, double y, double z, double xa, double ya, double za, int frame,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za,
+    int frame,
     int model) {
     seed_pose_ = Point6D(x, y, z, xa, ya, za);
     seed_frame_ = frame;
@@ -83,8 +92,11 @@ void OptimizerRunControllerCore::setSeedPose(
     has_seed_pose_ = true;
 }
 
-OptimizerRunControllerCore::AppliedSeed OptimizerRunControllerCore::
-    takeSeedForRun(int current_frame, int primary_model_index, int model_count) {
+OptimizerRunControllerCore::AppliedSeed
+OptimizerRunControllerCore::takeSeedForRun(
+    int current_frame,
+    int primary_model_index,
+    int model_count) {
     AppliedSeed result;
     if (!has_seed_pose_) {
         return result;

@@ -165,4 +165,4 @@ double CostFunctionManager::costFunctionDD_NEW_POLE_CONSTRAINT() {
 
     return metric_score + min_dist;
 }
-} // namespace jta_cost_function
+}  // namespace jta_cost_function

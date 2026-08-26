@@ -26,7 +26,6 @@ __global__ void BlendGrayscaleKernel(
     float alpha,
     int width,
     int height) {
-
     /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -38,14 +37,18 @@ __global__ void BlendGrayscaleKernel(
 
 /*Pasting Non Black Pixel Kernel*/
 __global__ void PasteNonBlackPixelsKernel(
-    unsigned char* dev_dest, unsigned char* dev_second, int width, int height) {
-
+    unsigned char* dev_dest,
+    unsigned char* dev_second,
+    int width,
+    int height) {
     /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
     /*If Correct Width and Height*/
     if (i < width * height) {
-        if (dev_second[i] > 0) dev_dest[i] = dev_second[i];
+        if (dev_second[i] > 0) {
+            dev_dest[i] = dev_second[i];
+        }
     }
 }
 
@@ -61,7 +64,6 @@ __global__ void GetMaxMinPixelsKernel(
     int* dev_min,
     int width,
     int height) {
-
     /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -80,14 +82,15 @@ __global__ void ScaleImageToRangeKernel(
     int upper_bound,
     int width,
     int height) {
-
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
-    if (i >= width * height) return;
+    if (i >= width * height) {
+        return;
+    }
 
     const int mn = dev_min[0];
     const int span = dev_max[0] - mn;
 
-    if (span <= 0) { // uniform image: nothing to stretch
+    if (span <= 0) {  // uniform image: nothing to stretch
         dev_image[i] = static_cast<unsigned char>(lower_bound);
         return;
     }
@@ -95,7 +98,7 @@ __global__ void ScaleImageToRangeKernel(
     const float t =
         static_cast<float>(dev_image[i] - mn) / static_cast<float>(span);
     const float v = t * static_cast<float>(upper_bound - lower_bound) +
-                    static_cast<float>(lower_bound);
+        static_cast<float>(lower_bound);
     dev_image[i] = static_cast<unsigned char>(fminf(fmaxf(v, 0.0f), 255.0f));
 }
 
@@ -107,7 +110,6 @@ __global__ void ConvolutionKernel(
     int kernel_size,
     int width,
     int height) {
-
     /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -141,7 +143,7 @@ __global__ void ConvolutionKernel(
                     /*Update Pixel*/
                     value += static_cast<float>(
                                  dev_input_image[row * width + i + col]) *
-                             dev_kernel[ker_row * kernel_size + ker_col];
+                        dev_kernel[ker_row * kernel_size + ker_col];
                 }
             }
             dev_dest_image[i] = value;
@@ -159,19 +161,18 @@ __global__ void AddUniformRandomNoiseKernel(
     int upper_bound,
     int width,
     int height) {
-
     /*Global Thread*/
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
     /*If Correct Width and Height*/
     if (i < width * height) {
-        int noisy_pixel =
-            dev_image[i] +
+        int noisy_pixel = dev_image[i] +
             dev_random_container[i] * (upper_bound - lower_bound) + lower_bound;
-        if (noisy_pixel > 255)
+        if (noisy_pixel > 255) {
             noisy_pixel = 255;
-        else if (noisy_pixel < 0)
+        } else if (noisy_pixel < 0) {
             noisy_pixel = 0;
+        }
         dev_image[i] = noisy_pixel;
     }
 }
@@ -191,9 +192,10 @@ __global__ void CompileGridKernel(
     if (i < image_width * grid_width * image_height * grid_height) {
         /*Convert i into coordinates for grid*/
         int i_row = i / (image_width * grid_width);
-        int i_col =
-            i - i_row * (image_width *
-                         grid_width); // Essentially modulo. This is faster?
+        int i_col = i -
+            i_row *
+                (image_width *
+                 grid_width);  // Essentially modulo. This is faster?
         /*Grid Row and Column Indices (Grids are matrices of images)*/
         int grid_row = i_row / image_height;
         int grid_col = i_col / image_width;
@@ -221,12 +223,15 @@ referred to as the "destination image". The parameter alpha ranges from 0 to 1
 and blends as follows: ALPHA*destination_image_pixel + (1 -
 ALPHA)*secondary_image_pixel. Bool return value indicates success.*/
 bool BlendGrayscaleImages(
-    GPUImage* destination_image, GPUImage* secondary_image, float alpha) {
+    GPUImage* destination_image,
+    GPUImage* secondary_image,
+    float alpha) {
     /*Make Sure Alpha is between 0 and 1*/
-    if (alpha < 0)
+    if (alpha < 0) {
         alpha = 0;
-    else if (alpha > 1)
+    } else if (alpha > 1) {
         alpha = 1;
+    }
 
     /*Clear Previous Errors*/
     cudaGetLastError();
@@ -235,8 +240,9 @@ bool BlendGrayscaleImages(
     int height = destination_image->GetFrameHeight();
     int width = destination_image->GetFrameWidth();
     if (height != secondary_image->GetFrameHeight() ||
-        width != secondary_image->GetFrameWidth())
+        width != secondary_image->GetFrameWidth()) {
         return false;
+    }
 
     /*Image Processing Dimension Grid*/
     auto dim_grid_image_processing_ = dim3(
@@ -262,7 +268,8 @@ bool BlendGrayscaleImages(
 /*Paste Non Zero (Black) Pixels of secondary_image on top of destination_image
 Bool return value indicates success.*/
 bool PasteNonBlackPixels(
-    GPUImage* destination_image, GPUImage* secondary_image) {
+    GPUImage* destination_image,
+    GPUImage* secondary_image) {
     /*Clear Previous Errors*/
     cudaGetLastError();
 
@@ -270,8 +277,9 @@ bool PasteNonBlackPixels(
     int height = destination_image->GetFrameHeight();
     int width = destination_image->GetFrameWidth();
     if (height != secondary_image->GetFrameHeight() ||
-        width != secondary_image->GetFrameWidth())
+        width != secondary_image->GetFrameWidth()) {
         return false;
+    }
 
     /*Image Processing Dimension Grid*/
     auto dim_grid_image_processing_ = dim3(
@@ -326,12 +334,22 @@ bool PasteNonBlackPixels(
 transformed linearly to the bounds specified in the arguments. This new image is
 returned in the original image. Bool return value indicates success.*/
 bool ScaleGrayscaleToRange(
-    GPUImage* grayscale_image, int lower_bound, int upper_bound) {
+    GPUImage* grayscale_image,
+    int lower_bound,
+    int upper_bound) {
     /*Make Sure Bounds are within 0 - 255 range*/
-    if (lower_bound < 0) lower_bound = 0;
-    if (lower_bound > 255) lower_bound = 255;
-    if (upper_bound < 0) upper_bound = 0;
-    if (upper_bound > 255) upper_bound = 255;
+    if (lower_bound < 0) {
+        lower_bound = 0;
+    }
+    if (lower_bound > 255) {
+        lower_bound = 255;
+    }
+    if (upper_bound < 0) {
+        upper_bound = 0;
+    }
+    if (upper_bound > 255) {
+        upper_bound = 255;
+    }
 
     /*Clear Previous Errors*/
     cudaGetLastError();
@@ -355,7 +373,7 @@ bool ScaleGrayscaleToRange(
     cudaMalloc((void**)&dev_max, 1 * sizeof(int));
     cudaMalloc((void**)&dev_min, 1 * sizeof(int));
     InitializeMaxMinKernel<<<1, 1>>>(
-        dev_max, dev_min); // Sets dev_max = 0, dev_min = 255
+        dev_max, dev_min);  // Sets dev_max = 0, dev_min = 255
 
     /*Kernels*/
     GetMaxMinPixelsKernel<<<dim_grid_image_processing_, threads_per_block>>>(
@@ -394,7 +412,9 @@ bool Convolve(
     float* dev_kernel,
     int kernel_size) {
     /*Make Sure Kernel is Odd*/
-    if (kernel_size % 2 == 0) return false;
+    if (kernel_size % 2 == 0) {
+        return false;
+    }
 
     /*Clear Previous Errors*/
     cudaGetLastError();
@@ -403,8 +423,9 @@ bool Convolve(
     int height = dest_image->GetFrameHeight();
     int width = dest_image->GetFrameWidth();
     if (height != input_image->GetFrameHeight() ||
-        width != input_image->GetFrameWidth())
+        width != input_image->GetFrameWidth()) {
         return false;
+    }
 
     /*Image Processing Dimension Grid*/
     auto dim_grid_image_processing_ = dim3(
@@ -439,7 +460,6 @@ bool AddUniformNoise(
     float* dev_random_container,
     int lower_bound,
     int upper_bound) {
-
     /*Clear Previous Errors*/
     cudaGetLastError();
 
@@ -512,4 +532,4 @@ bool CompileGrid(
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

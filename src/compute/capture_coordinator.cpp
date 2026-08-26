@@ -4,7 +4,10 @@
 
 namespace gpu_cost_function {
 
-void CaptureCoordinator::registerProducer(const std::string& name, ParkFn park, UnparkFn unpark) {
+void CaptureCoordinator::registerProducer(
+    const std::string& name,
+    ParkFn park,
+    UnparkFn unpark) {
     for (std::size_t i = 0; i < names_.size(); ++i) {
         if (names_[i] == name) {
             parks_[i] = std::move(park);
@@ -18,7 +21,8 @@ void CaptureCoordinator::registerProducer(const std::string& name, ParkFn park, 
     parkedFlags_.push_back(false);
 }
 
-bool CaptureCoordinator::tryAcquireExclusive(std::chrono::milliseconds timeout) {
+bool CaptureCoordinator::tryAcquireExclusive(
+    std::chrono::milliseconds timeout) {
     if (owner_ == std::this_thread::get_id()) {
         return true;
     }

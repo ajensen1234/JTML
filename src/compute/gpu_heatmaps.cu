@@ -89,4 +89,4 @@ int GPUHeatmap::GetNumKeypoints() {
 bool GPUHeatmap::IsInitializedCorrectly() {
     return initialized_correctly_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

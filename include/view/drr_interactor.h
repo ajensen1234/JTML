@@ -24,11 +24,11 @@
 #include "view/drr_tool.h"
 
 /*DRR Globals*/
-bool middleDownDRR = false;    // Is CM button down?
-bool leftDownDRR = false;      // Is LM button down?
-bool rightDownDRR = false;     // Is RM button down
-int rightDownDRRY = 0;         // Y Pixel when RM Clicked
-double rightDownDRRModelZ = 0; // Model's Z Translation when RM Clicked
+bool middleDownDRR = false;     // Is CM button down?
+bool leftDownDRR = false;       // Is LM button down?
+bool rightDownDRR = false;      // Is RM button down
+int rightDownDRRY = 0;          // Y Pixel when RM Clicked
+double rightDownDRRModelZ = 0;  // Model's Z Translation when RM Clicked
 
 class DRRInteractorStyle : public vtkInteractorStyleTrackballActor {
 public:
@@ -43,10 +43,11 @@ public:
 
     // Picked Function
     bool ActivePick() {
-        if (this->InteractionProp == NULL)
+        if (this->InteractionProp == NULL) {
             return false;
-        else
+        } else {
             return true;
+        }
     }
 
     // KeyPress Turns Off Other Char Hotkeys
@@ -165,7 +166,9 @@ public:
         // Forward Events
         vtkInteractorStyleTrackballActor::OnRightButtonDown();
 
-        if (this->InteractionProp == NULL) return;
+        if (this->InteractionProp == NULL) {
+            return;
+        }
         vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
         rightDownDRRModelZ = actor->GetPosition()[2];
     }
@@ -180,7 +183,9 @@ public:
 
     // Left Mouse Up Function
     virtual void OnLeftButtonUp() {
-        if (this->InteractionProp == NULL) return;
+        if (this->InteractionProp == NULL) {
+            return;
+        }
         vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
 
         leftDownDRR = false;
@@ -207,7 +212,9 @@ public:
 
     // Mouse Movement
     virtual void OnMouseMove() {
-        if (this->InteractionProp == NULL) return;
+        if (this->InteractionProp == NULL) {
+            return;
+        }
         if (leftDownDRR == true || rightDownDRR == true ||
             middleDownDRR == true) {
             vtkActor* actor = vtkActor::SafeDownCast(this->InteractionProp);
@@ -224,7 +231,9 @@ public:
         }
 
         // Forward Events
-        if (!rightDownDRR) vtkInteractorStyleTrackballActor::OnMouseMove();
+        if (!rightDownDRR) {
+            vtkInteractorStyleTrackballActor::OnMouseMove();
+        }
 
         /*Draw DRR*/
         drrtool_->DrawDRR();

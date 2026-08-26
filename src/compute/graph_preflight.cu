@@ -16,11 +16,11 @@
  * from a self-contained representative duplicate.
  */
 
-#include "compute/graph_preflight.h"
-
 #include <cuda_runtime.h>
 
 #include <string>
+
+#include "compute/graph_preflight.h"
 
 namespace gpu_cost_function {
 
@@ -40,8 +40,9 @@ std::string CudaErrorString(cudaError_t err) {
 }
 // Helper that does a minimal synthetic graph capture with a dummy kernel
 // and a memset node. Returns capturable=true on success.
-GraphPreflightResult
-ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
+GraphPreflightResult ProbeSyntheticInternal(
+    void* stream_ptr,
+    bool own_stream_if_null) {
     cudaStream_t stream = reinterpret_cast<cudaStream_t>(stream_ptr);
     bool ownStream = false;
     cudaGraph_t graph = nullptr;
@@ -80,7 +81,9 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
         result.reasonCode = static_cast<int>(err);
         result.failingNodeHint = "cudaMalloc pre-alloc";
         result.reasonString = CudaErrorString(err);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -91,7 +94,9 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
         result.failingNodeHint = "cudaStreamBeginCapture";
         result.reasonString = CudaErrorString(err);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -101,25 +106,35 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     if (err != cudaSuccess) {
         // End capture to get graph (which will be null on error) and clean up.
         cudaStreamEndCapture(stream, &graph);
-        if (graph) cudaGraphDestroy(graph);
-        if (exec) cudaGraphExecDestroy(exec);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
+        if (exec) {
+            cudaGraphExecDestroy(exec);
+        }
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "DummyPreflightKernel launch";
         result.reasonString = CudaErrorString(err);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
     err = cudaMemsetAsync(dev_out, 0, 256 * sizeof(int), stream);
     if (err != cudaSuccess) {
         cudaStreamEndCapture(stream, &graph);
-        if (graph) cudaGraphDestroy(graph);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "cudaMemsetAsync";
         result.reasonString = CudaErrorString(err);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -128,12 +143,16 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     err = cudaGetLastError();
     if (err != cudaSuccess) {
         cudaStreamEndCapture(stream, &graph);
-        if (graph) cudaGraphDestroy(graph);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "DummyPreflightEmptyKernel launch";
         result.reasonString = CudaErrorString(err);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -141,12 +160,16 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     if (err != cudaSuccess || graph == nullptr) {
         // Capture invalidation path — per cudaStreamIsCapturing/EndCapture
         // docs, graph is NULL on error. Must still clean up.
-        if (graph) cudaGraphDestroy(graph);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
         result.reasonCode = kGraphCaptureError;
         result.failingNodeHint = "cudaStreamEndCapture";
         result.reasonString = CudaErrorString(err);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -158,7 +181,9 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
         result.reasonString = CudaErrorString(err);
         cudaGraphDestroy(graph);
         cudaFree(dev_out);
-        if (ownStream) cudaStreamDestroy(stream);
+        if (ownStream) {
+            cudaStreamDestroy(stream);
+        }
         return result;
     }
 
@@ -166,7 +191,9 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     cudaGraphExecDestroy(exec);
     cudaGraphDestroy(graph);
     cudaFree(dev_out);
-    if (ownStream) cudaStreamDestroy(stream);
+    if (ownStream) {
+        cudaStreamDestroy(stream);
+    }
 
     result.capturable = true;
     result.reasonCode = kPreflightOk;
@@ -175,7 +202,7 @@ ProbeSyntheticInternal(void* stream_ptr, bool own_stream_if_null) {
     return result;
 }
 
-} // namespace
+}  // namespace
 
 // ---------------------------------------------------------------------------
 // Core capture probe: wraps any operation set in Global capture and reports
@@ -223,7 +250,9 @@ GraphPreflightResult ProbeCapturableOpSet(CaptureOpFn op_fn, void* context) {
 
     if (err != cudaSuccess || graph == nullptr) {
         // Capture was invalidated (e.g. cudaStreamSynchronize in Global mode).
-        if (graph) cudaGraphDestroy(graph);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
 
         // cudaErrorIllegalState (719) or cudaErrorStreamCaptureInvalidated
         // (919) both indicate the capture was invalidated by a blocking API
@@ -328,9 +357,13 @@ GraphPreflightResult ProbeOverflowCase(void* stream) {
 std::string FormatPreflightResult(const GraphPreflightResult& r) {
     std::string out = r.capturable ? "capturable=true" : "capturable=false";
     out += " reasonCode=" + std::to_string(r.reasonCode);
-    if (!r.failingNodeHint.empty()) out += " hint=" + r.failingNodeHint;
-    if (!r.reasonString.empty()) out += " reason=" + r.reasonString;
+    if (!r.failingNodeHint.empty()) {
+        out += " hint=" + r.failingNodeHint;
+    }
+    if (!r.reasonString.empty()) {
+        out += " reason=" + r.reasonString;
+    }
     return out;
 }
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

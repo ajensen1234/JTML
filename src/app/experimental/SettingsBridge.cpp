@@ -19,10 +19,11 @@ namespace {
  * SettingsControl reset, mainscreen.cpp:4836).*/
 constexpr int kBranchDilationDefault = 4;
 
-} // namespace
+}  // namespace
 
 SettingsBridge::SettingsBridge(
-    jta::SettingsService* settings_service, QObject* parent) :
+    jta::SettingsService* settings_service,
+    QObject* parent) :
     QObject(parent), settings_service_(settings_service) {
     /*Defaults (settings_constants.h via the OptimizerSettings/EdgeSettings
      * ctors) + fresh managers; the widgets first-run branch/leaf dilation
@@ -455,14 +456,15 @@ jta_cost_function::CostFunctionManager* SettingsBridge::leafManager() const {
 /*----------------------------------------------------------------------------
  * The shared registry mapping (parity contract).
  *
- * Delegates to the shared services function jta::BuildCostFunctionRegistryEntries
- * (plan 006 U1 — the widgets MainScreen calls the same function; the golden
- * fixture in experimental_settings_test.cpp pins the output): same key formats
- * (STAGE@ACTIVE_CF / STAGE@CFname@ParamName@TYPE), same entry order (ACTIVE_CF
- * first, then per available cost function the double/int/bool parameter
- * groups), same value types (double/int/bool QVariants — lossless, no
- * narrowing). This bridge method is now a thin wrapper keeping the QML call
- * site + the C++ test surface unchanged.
+ * Delegates to the shared services function
+ *jta::BuildCostFunctionRegistryEntries (plan 006 U1 — the widgets MainScreen
+ *calls the same function; the golden fixture in experimental_settings_test.cpp
+ *pins the output): same key formats (STAGE@ACTIVE_CF /
+ *STAGE@CFname@ParamName@TYPE), same entry order (ACTIVE_CF first, then per
+ *available cost function the double/int/bool parameter groups), same value
+ *types (double/int/bool QVariants — lossless, no narrowing). This bridge method
+ *is now a thin wrapper keeping the QML call site + the C++ test surface
+ *unchanged.
  *----------------------------------------------------------------------------*/
 
 std::vector<jta::RegistryEntry>
@@ -523,8 +525,8 @@ void SettingsBridge::applyCostFunctionEntries(
     }
 }
 
-jta_cost_function::CostFunctionManager*
-SettingsBridge::managerForStage(const QString& stage) const {
+jta_cost_function::CostFunctionManager* SettingsBridge::managerForStage(
+    const QString& stage) const {
     if (stage == QStringLiteral("TRUNK")) {
         return trunk_manager_.get();
     }
@@ -547,7 +549,8 @@ int SettingsBridge::costFunctionIndex(
 }
 
 void SettingsBridge::setCostFunctionIndex(
-    jta_cost_function::CostFunctionManager* manager, int index) {
+    jta_cost_function::CostFunctionManager* manager,
+    int index) {
     const QStringList names = costFunctionNames(manager);
     if (index < 0 || index >= names.size()) {
         return;
@@ -576,7 +579,8 @@ int SettingsBridge::dilation(
 }
 
 void SettingsBridge::setDilation(
-    jta_cost_function::CostFunctionManager* manager, int v) {
+    jta_cost_function::CostFunctionManager* manager,
+    int v) {
     if (!hasDilation(manager)) {
         return;
     }

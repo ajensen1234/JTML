@@ -21,9 +21,9 @@ namespace jta {
 
 StudyLoadController::StudyLoadController(
     SessionController* session_controller,
-    std::function<bool()> run_in_flight)
-    : session_controller_(session_controller),
-      run_in_flight_(std::move(run_in_flight)) {}
+    std::function<bool()> run_in_flight) :
+    session_controller_(session_controller),
+    run_in_flight_(std::move(run_in_flight)) {}
 
 StudyCalibrationLoadResult StudyLoadController::LoadCalibration(
     const QString& file_path,
@@ -46,8 +46,7 @@ StudyCalibrationLoadResult StudyLoadController::LoadCalibration(
      * button disables after a successful load). The rule derives from the
      * caller-owned calibrated flags, so a dataset replace (calibration
      * kept) keeps the rejection across studies. Silent in both views.*/
-    if (calibrated_for_monoplane_viewport ||
-        calibrated_for_biplane_viewport) {
+    if (calibrated_for_monoplane_viewport || calibrated_for_biplane_viewport) {
         result.status = StudyLoadStatus::CalibrationAlreadyLoaded;
         return result;
     }

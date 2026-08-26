@@ -43,8 +43,13 @@ public:
     // Run-state machine (values mirror the shared core; QML compares
     // runState against OptimizerBridge.Completed etc. — the type is
     // registered in main.cpp for the enum surface).
-    enum class RunState { Idle = 0, Running = 1, Stopping = 2,
-                          Completed = 3, Error = 4 };
+    enum class RunState {
+        Idle = 0,
+        Running = 1,
+        Stopping = 2,
+        Completed = 3,
+        Error = 4
+    };
     Q_ENUM(RunState)
 
     Q_PROPERTY(RunState runState READ runState NOTIFY runStateChanged)
@@ -59,8 +64,7 @@ public:
     // cost-function calls, current minimum, and calls-vs-budget progress.
     Q_PROPERTY(QString stageText READ stageText NOTIFY progressChanged)
     Q_PROPERTY(int costCalls READ costCalls NOTIFY progressChanged)
-    Q_PROPERTY(double currentMinimum READ currentMinimum NOTIFY
-                   progressChanged)
+    Q_PROPERTY(double currentMinimum READ currentMinimum NOTIFY progressChanged)
     Q_PROPERTY(double progress READ progress NOTIFY progressChanged)
 
     // The gate's failure taxonomy: the two OptimizeIntentController statuses
@@ -80,8 +84,8 @@ public:
         GateStatus status = GateStatus::SelectFrameAndModel;
         jta::OptimizeIntentController::Intent intent;
     };
-    static GateResult
-    EvaluateGate(const jta::OptimizerRunControllerCore::GateInput& in);
+    static GateResult EvaluateGate(
+        const jta::OptimizerRunControllerCore::GateInput& in);
 
     explicit OptimizerBridge(
         AppBridge* hub,
@@ -107,8 +111,8 @@ public:
     // (R8 — the estimate seeds the optimizer). The controller applies it
     // AFTER the gate passes, so the estimate wins over the SaveLastPose
     // mirror and a rejected run never consumes it.
-    Q_INVOKABLE void setSeedPose(double x, double y, double z, double xa,
-                                 double ya, double za);
+    Q_INVOKABLE void
+    setSeedPose(double x, double y, double z, double xa, double ya, double za);
     // Drop the pending seed (MlBridge clears it on a selection change — a
     // stale-frame seed must never override a different frame's pose).
     Q_INVOKABLE void clearSeedPose();
@@ -141,11 +145,16 @@ signals:
     void progressChanged();
     // Relay binds for the QML glue (main.qml forwards the pose ones to
     // viewport.updatePose — the bridge already wrote the scene pose).
-    void poseUpdated(int modelIndex);          // UpdateOptimum bind
+    void poseUpdated(int modelIndex);                     // UpdateOptimum bind
     void frameOptimized(int frameIndex, int modelIndex);  // OptimizedFrame bind
-    void dilationBackgroundRequested();        // UpdateDilationBackground bind
-    void orientationSymTrapUpdated(            // onUpdateOrientationSymTrap bind
-        double x, double y, double z, double xa, double ya, double za);
+    void dilationBackgroundRequested();  // UpdateDilationBackground bind
+    void orientationSymTrapUpdated(      // onUpdateOrientationSymTrap bind
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
     // The single QML Dialog mechanism (same channel as StudyBridge's):
     // intent-gate rejection, Initialize failure, OptimizerError. The
     // controller's severity is ignored (Dialog mapping).
@@ -155,19 +164,37 @@ private slots:
     void onControllerRunStateChanged();
     void onControllerProgressChanged();
     void onControllerMessage(
-        const QString& title, const QString& message,
+        const QString& title,
+        const QString& message,
         jta::OptimizerRunControllerCore::Severity severity);
     void onControllerPoseUpdated(
-        double x, double y, double z, double xa, double ya, double za,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
         unsigned int primary_model_index);
     void onControllerOptimizedFrame(
-        double x, double y, double z, double xa, double ya, double za,
-        bool move_next_frame, unsigned int primary_model_index,
-        bool error_occurred, const QString& optimizer_directive,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        bool move_next_frame,
+        unsigned int primary_model_index,
+        bool error_occurred,
+        const QString& optimizer_directive,
         bool model_out_of_bounds);
     void onControllerDilationBackground();
     void onControllerOrientationSymTrap(
-        double x, double y, double z, double xa, double ya, double za);
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
     void onControllerSeedApplied(int frame, int model);
     void onControllerSeedRestored(int frame, int model);
 

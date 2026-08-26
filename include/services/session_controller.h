@@ -57,7 +57,11 @@ struct CameraRadioActions {
 /*The camera-radio decision context (R10): what the radios should be after a
  * calibration load, or after the user switches camera. Pure function of the
  * calibrated viewport flags -- see DecideCameraRadios.*/
-enum class CameraRadioEvent { CalibrationLoaded, SwitchToCameraA, SwitchToCameraB };
+enum class CameraRadioEvent {
+    CalibrationLoaded,
+    SwitchToCameraA,
+    SwitchToCameraB
+};
 
 /*Calibration parse outcome (R6). ok == a valid calibration was parsed and
  * the view should proceed with the VTK setup; the error kind selects the
@@ -88,8 +92,10 @@ struct ImageLoadParams {
 
 enum class ImageLoadStatus {
     Completed,
-    SizeMismatchAborted, /* goto stop / stop_biplane: frames appended so far persist */
-    CameraCountMismatch, /* biplane A/B list length mismatch: nothing appended */
+    SizeMismatchAborted, /* goto stop / stop_biplane: frames appended so far
+                            persist */
+    CameraCountMismatch, /* biplane A/B list length mismatch: nothing appended
+                          */
 };
 
 struct ImageLoadResult {
@@ -121,20 +127,22 @@ public:
      * caller shows the error box. The dataset vectors/storage belong to the
      * view and are mutated in place; the returned frame_names are the
      * parsed display names for the view's AppendFrame calls.*/
-    ImageLoadResult ParseImages(const QStringList& paths,
-                                const ImageLoadParams& params,
-                                std::vector<Frame>& frames,
-                                LocationStorage& locations);
+    ImageLoadResult ParseImages(
+        const QStringList& paths,
+        const ImageLoadParams& params,
+        std::vector<Frame>& frames,
+        LocationStorage& locations);
     /*Biplane twin: the A/B lists must be the same length (CameraCountMismatch
      * -- nothing is appended), each A frame is checked against the A list and
      * each B frame against the B list before either is appended (goto
      * stop_biplane semantics).*/
-    ImageLoadResult ParseBiplaneImages(const QStringList& paths_a,
-                                       const QStringList& paths_b,
-                                       const ImageLoadParams& params,
-                                       std::vector<Frame>& frames_a,
-                                       std::vector<Frame>& frames_b,
-                                       LocationStorage& locations);
+    ImageLoadResult ParseBiplaneImages(
+        const QStringList& paths_a,
+        const QStringList& paths_b,
+        const ImageLoadParams& params,
+        std::vector<Frame>& frames_a,
+        std::vector<Frame>& frames_b,
+        LocationStorage& locations);
 
     /*---- Model parsing + dataset population (R6) ----*/
     static std::vector<ParsedModel> ParseModels(const QStringList& paths);
@@ -144,11 +152,12 @@ public:
      * names from the view's ModelListModel::AppendModels (R5) -- loading the
      * same file list twice behaves exactly like today (duplicate model names
      * go through the ModelListBuilder dedup).*/
-    void PopulateModels(const std::vector<ParsedModel>& parsed_models,
-                        const QStringList& unique_names,
-                        const Calibration& calibration,
-                        std::vector<Model>& models,
-                        LocationStorage& locations);
+    void PopulateModels(
+        const std::vector<ParsedModel>& parsed_models,
+        const QStringList& unique_names,
+        const Calibration& calibration,
+        std::vector<Model>& models,
+        LocationStorage& locations);
 
     /*---- Camera A/B state (R10) ----*/
     void SetActiveCamera(ActiveCamera camera);
@@ -165,9 +174,10 @@ public:
      *    applies the decision only when the guard holds).
      *  - SwitchToCameraB: -> B disabled, A enabled (unconditional, exactly
      *    like the camera-B slot today).*/
-    static CameraRadioActions DecideCameraRadios(CameraRadioEvent event,
-                                                 bool calibrated_for_monoplane_viewport,
-                                                 bool calibrated_for_biplane_viewport);
+    static CameraRadioActions DecideCameraRadios(
+        CameraRadioEvent event,
+        bool calibrated_for_monoplane_viewport,
+        bool calibrated_for_biplane_viewport);
 
     /*---- Session mirror (the load slots' SyncSessionState() tail) ----*/
     /*Dataset counts the controller refreshes at the end of each load/populate
@@ -177,8 +187,9 @@ public:
     int GetModelCount() const;
 
 private:
-    void SyncSessionState(const std::vector<Frame>& frames,
-                          LocationStorage& locations);
+    void SyncSessionState(
+        const std::vector<Frame>& frames,
+        LocationStorage& locations);
     void SyncSessionState(const std::vector<Model>& models);
 
     ActiveCamera active_camera_ = ActiveCamera::CameraA;

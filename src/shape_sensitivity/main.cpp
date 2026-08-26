@@ -4,11 +4,11 @@
 #include <opencv2/opencv.hpp>
 #include <sstream>
 
+#include "compute/gpu_model.cuh"
+#include "descriptors.h"
+#include "matrix_vector_utils.h"
 #include "services/calibration.h"
 #include "services/model.h"
-#include "descriptors.h"
-#include "compute/gpu_model.cuh"
-#include "matrix_vector_utils.h"
 int main() {
     auto mod_name = std::string("sca");
     std::ofstream iartd_file("iartd-" + mod_name + ".csv");
@@ -68,8 +68,7 @@ int main() {
     float z_step = 5;
     // Total number of instances for outputting progress bar
     int tot = (((2 * x_rot_range) / step) + 1) *
-              (((2 * y_rot_range) / step) + 1) *
-              (((2 * z_rot_range) / z_step) + 1);
+        (((2 * y_rot_range) / step) + 1) * (((2 * z_rot_range) / z_step) + 1);
 
     // vectors for holding outputs from algorithm
     std::vector<float> iartd, hu;

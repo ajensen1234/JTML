@@ -9,9 +9,10 @@
 #define MAINSCREEN_SIZE_CONSTANTS_H
 
 /*Sizes for Main Window (inline constexpr: external-linkage globals in a header
-would be an ODR duplicate-symbol landmine for the second TU that includes this)*/
-inline constexpr int MINIMUM_WIDTH = 1600; // 1900;
-inline constexpr int MINIMUM_HEIGHT = 918; // 900;
+would be an ODR duplicate-symbol landmine for the second TU that includes
+this)*/
+inline constexpr int MINIMUM_WIDTH = 1600;  // 1900;
+inline constexpr int MINIMUM_HEIGHT = 918;  // 900;
 
 /*Minimum List Widget Size*/
 const int MINIMUM_LIST_WIDGET_SIZE = 100;

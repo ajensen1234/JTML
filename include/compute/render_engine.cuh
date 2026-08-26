@@ -25,8 +25,10 @@
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 
-class CostCapacityService;  // plan 010 U10 (defined in cost_capacity_service.cuh)
-struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
+class CostCapacityService;  // plan 010 U10 (defined in
+                            // cost_capacity_service.cuh)
+struct BankState;  // non-owning compatibility view; allocation arrives in a
+                   // later U12 stage
 struct EvaluationContext;  // U1: primary executed type (evaluation_context.h)
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
@@ -129,7 +131,8 @@ public:
     JTML_DLL cudaError_t RenderPhase(BankState& bank);
     JTML_DLL cudaError_t CompleteRenderPhase(BankState& bank);
 
-    /* U1: explicit EvaluationContext overloads — primary design. Legacy BankState remains shim. */
+    /* U1: explicit EvaluationContext overloads — primary design. Legacy
+     * BankState remains shim. */
     JTML_DLL cudaError_t Render(EvaluationContext& ctx);
     // Enqueue the production U4 render chain without synchronizing. This is
     // the single enqueue path shared by serial completion and graph capture.
@@ -266,7 +269,8 @@ private:
     /*CUB Variables*/
     void* dev_cub_storage_;
     size_t cub_storage_bytes_;
-    /* U4: device-driven persistent worker counters (device int32) and overflow flag */
+    /* U4: device-driven persistent worker counters (device int32) and overflow
+     * flag */
     int* dev_nextCandidate_ = nullptr;
     int* dev_nextChunk_ = nullptr;
     int* dev_overflowFlag_ = nullptr;
@@ -291,7 +295,8 @@ private:
     dim3 dim_grid_bounding_box_;
     dim3 dim_grid_fill_;
 
-    /*Plan 010 U10: optional capacity service (owned by caller; nullptr = pre-unit).*/
+    /*Plan 010 U10: optional capacity service (owned by caller; nullptr =
+     * pre-unit).*/
     const CostCapacityService* capacity_service_ = nullptr;
 
     /* U12 Stage 2: non-owning compatibility metadata. */
@@ -330,5 +335,5 @@ private:
     int* active_bounding_box_host_ = nullptr;
     bool bank0_pointers_captured_ = false;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 #endif /* RENDER_ENGINE_H */

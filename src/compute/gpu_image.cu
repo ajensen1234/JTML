@@ -14,7 +14,7 @@ GPUImage::GPUImage(int width, int height, int gpu_device) {
     initialized_correctly_ = false;
 
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
@@ -58,12 +58,15 @@ GPUImage::GPUImage(int width, int height, int gpu_device) {
 };
 
 GPUImage::GPUImage(
-    int width, int height, int gpu_device, unsigned char* host_image) {
+    int width,
+    int height,
+    int gpu_device,
+    unsigned char* host_image) {
     /*Start out Assuming Initialized Incorrectly*/
     initialized_correctly_ = false;
 
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Initialize Pinned Memory for Slightly Faster Transfer*/
@@ -147,12 +150,11 @@ GPUImage::~GPUImage() {
 
 bool GPUImage::UploadBlankImageToGPU(int width, int height) {
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Check if Image Already on GPU*/
     if (image_on_gpu_) {
-
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
         cudaSetDevice(device_);
 
@@ -211,14 +213,15 @@ bool GPUImage::UploadBlankImageToGPU(int width, int height) {
 };
 
 bool GPUImage::UploadImageToGPU(
-    int width, int height, unsigned char* host_image) {
+    int width,
+    int height,
+    unsigned char* host_image) {
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Check if Image Already on GPU*/
     if (image_on_gpu_) {
-
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
         cudaSetDevice(device_);
 
@@ -296,12 +299,11 @@ bool GPUImage::UploadImageToGPU(
 
 bool GPUImage::RemoveImageFromGPU() {
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Check if Image Already on GPU*/
     if (image_on_gpu_) {
-
         /*Choose which GPU to run on, change this on a multi-GPU system.*/
         cudaSetDevice(device_);
 
@@ -385,4 +387,4 @@ int GPUImage::GetFrameHeight() {
 int GPUImage::GetFrameWidth() {
     return width_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

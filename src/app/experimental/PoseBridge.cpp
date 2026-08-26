@@ -13,6 +13,9 @@
 #include <QUrl>
 
 // The seams + the app-owned dataset + the selection contract.
+#include <cmath>
+#include <vector>
+
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
@@ -21,9 +24,6 @@
 #include "domain/pose_copy.h"
 #include "domain/pose_file_io.h"
 #include "services/location_storage.h"
-
-#include <cmath>
-#include <vector>
 
 namespace {
 
@@ -44,30 +44,28 @@ QString LocalPath(const QString& path) {
  * Mode to Save Pose!" — belongs to the MultiModelMode branch, which cannot
  * trigger in the QML app: v1 pose ops are primary-model-only and the app
  * has no multi-model radio.)*/
-const char* kSelectFrameAndModel =
-    "Select Frame and Model First!";
-const char* kSelectModelAndLoadFrames =
-    "Select Model and Load Frames First!";
+const char* kSelectFrameAndModel = "Select Frame and Model First!";
+const char* kSelectModelAndLoadFrames = "Select Model and Load Frames First!";
 
 /*axis (0..5 = x, y, z, xa, ya, za) -> the table model role for that
  * cell; -1 for an out-of-range axis (the caller falls back to a full-row
  * notify).*/
 int RoleForAxis(int axis) {
     switch (axis) {
-        case 0:
-            return PoseTableModel::XRole;
-        case 1:
-            return PoseTableModel::YRole;
-        case 2:
-            return PoseTableModel::ZRole;
-        case 3:
-            return PoseTableModel::XaRole;
-        case 4:
-            return PoseTableModel::YaRole;
-        case 5:
-            return PoseTableModel::ZaRole;
-        default:
-            return -1;
+    case 0:
+        return PoseTableModel::XRole;
+    case 1:
+        return PoseTableModel::YRole;
+    case 2:
+        return PoseTableModel::ZRole;
+    case 3:
+        return PoseTableModel::XaRole;
+    case 4:
+        return PoseTableModel::YaRole;
+    case 5:
+        return PoseTableModel::ZaRole;
+    default:
+        return -1;
     }
 }
 
@@ -75,8 +73,8 @@ int RoleForAxis(int axis) {
 
 /*---- PoseTableModel ----*/
 
-PoseTableModel::PoseTableModel(ExperimentalSession* session, QObject* parent)
-    : QAbstractListModel(parent), session_(session) {}
+PoseTableModel::PoseTableModel(ExperimentalSession* session, QObject* parent) :
+    QAbstractListModel(parent), session_(session) {}
 
 void PoseTableModel::setModelRow(int row) {
     if (model_row_ == row) {
@@ -94,8 +92,7 @@ int PoseTableModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant PoseTableModel::data(const QModelIndex& index, int role) const {
-    if (!index.isValid() || index.row() < 0 ||
-        index.row() >= rowCount()) {
+    if (!index.isValid() || index.row() < 0 || index.row() >= rowCount()) {
         return {};
     }
     /*GetPose is bounds-safe: an out-of-range model row falls back to the
@@ -104,22 +101,22 @@ QVariant PoseTableModel::data(const QModelIndex& index, int role) const {
     const Point6D pose =
         session_->model_locations.GetPose(index.row(), model_row_);
     switch (role) {
-        case FrameIndexRole:
-            return index.row();
-        case XRole:
-            return pose.x;
-        case YRole:
-            return pose.y;
-        case ZRole:
-            return pose.z;
-        case XaRole:
-            return pose.xa;
-        case YaRole:
-            return pose.ya;
-        case ZaRole:
-            return pose.za;
-        default:
-            return {};
+    case FrameIndexRole:
+        return index.row();
+    case XRole:
+        return pose.x;
+    case YRole:
+        return pose.y;
+    case ZRole:
+        return pose.z;
+    case XaRole:
+        return pose.xa;
+    case YaRole:
+        return pose.ya;
+    case ZaRole:
+        return pose.za;
+    default:
+        return {};
     }
 }
 
@@ -166,20 +163,26 @@ PoseBridge::PoseBridge(
     ExperimentalSession* session,
     ExperimentalScene* scene,
     StudyBridge* study_bridge,
-    QObject* parent)
-    : QObject(parent),
-      hub_(hub),
-      session_(session),
-      scene_(scene),
-      study_bridge_(study_bridge),
-      table_model_(new PoseTableModel(session, this)) {
+    QObject* parent) :
+    QObject(parent),
+    hub_(hub),
+    session_(session),
+    scene_(scene),
+    study_bridge_(study_bridge),
+    table_model_(new PoseTableModel(session, this)) {
     /*Table -> selection/dataset mirrors: the table always shows the PRIMARY
      * model's poses (v1 single-model pose ops); a dataset replace changes
      * the row count.*/
-    connect(study_bridge_, &StudyBridge::selectionChanged,
-            this, &PoseBridge::onSelectionChanged);
-    connect(study_bridge_, &StudyBridge::datasetChanged,
-            this, &PoseBridge::onDatasetChanged);
+    connect(
+        study_bridge_,
+        &StudyBridge::selectionChanged,
+        this,
+        &PoseBridge::onSelectionChanged);
+    connect(
+        study_bridge_,
+        &StudyBridge::datasetChanged,
+        this,
+        &PoseBridge::onDatasetChanged);
     onSelectionChanged();
 }
 
@@ -188,25 +191,28 @@ PoseBridge::~PoseBridge() = default;
 double PoseBridge::poseValue(int frame, int model, int axis) const {
     const Point6D pose = session_->model_locations.GetPose(frame, model);
     switch (axis) {
-        case 0:
-            return pose.x;
-        case 1:
-            return pose.y;
-        case 2:
-            return pose.z;
-        case 3:
-            return pose.xa;
-        case 4:
-            return pose.ya;
-        case 5:
-            return pose.za;
-        default:
-            return 0.0;
+    case 0:
+        return pose.x;
+    case 1:
+        return pose.y;
+    case 2:
+        return pose.z;
+    case 3:
+        return pose.xa;
+    case 4:
+        return pose.ya;
+    case 5:
+        return pose.za;
+    default:
+        return 0.0;
     }
 }
 
-bool PoseBridge::setPoseValue(int frame, int model, int axis,
-                              const QString& text) {
+bool PoseBridge::setPoseValue(
+    int frame,
+    int model,
+    int axis,
+    const QString& text) {
     /*Validation (review fix): non-numeric / NaN / infinite input is
      * rejected with an inline message and the stored state is left
      * unchanged (no SavePose). Qt's toDouble accepts "nan"/"inf" spellings,
@@ -237,24 +243,24 @@ bool PoseBridge::setPoseValue(int frame, int model, int axis,
      * write the single axis, leaving the other five untouched.*/
     Point6D pose = session_->model_locations.GetPose(frame, model);
     switch (axis) {
-        case 0:
-            pose.x = value;
-            break;
-        case 1:
-            pose.y = value;
-            break;
-        case 2:
-            pose.z = value;
-            break;
-        case 3:
-            pose.xa = value;
-            break;
-        case 4:
-            pose.ya = value;
-            break;
-        default:
-            pose.za = value;
-            break;
+    case 0:
+        pose.x = value;
+        break;
+    case 1:
+        pose.y = value;
+        break;
+    case 2:
+        pose.z = value;
+        break;
+    case 3:
+        pose.xa = value;
+        break;
+    case 4:
+        pose.ya = value;
+        break;
+    default:
+        pose.za = value;
+        break;
     }
     session_->model_locations.SavePose(frame, model, pose);
 
@@ -290,19 +296,19 @@ void PoseBridge::copyPose(bool next) {
      * The QML app is v1 single-model for pose ops, so the current row IS the
      * primary row; the seam still receives both indices and never aligns
      * them (pinned by test/unit/pose_copy_test.cpp).*/
-    const jta::pose_copy::CopyPlan plan =
-        next ? jta::pose_copy::NextPose(
-                   frame, primary, primary, study_bridge_->frameCount())
-             : jta::pose_copy::PreviousPose(
-                   frame, primary, primary, study_bridge_->frameCount());
+    const jta::pose_copy::CopyPlan plan = next
+        ? jta::pose_copy::NextPose(
+              frame, primary, primary, study_bridge_->frameCount())
+        : jta::pose_copy::PreviousPose(
+              frame, primary, primary, study_bridge_->frameCount());
 
     /*The raw-index view chain (widgets mirror, mainscreen.cpp:1251-1256 /
      * 1347-1352): GetPose at the plan's read cell, SavePose at the plan's
      * write cell — no clamping, no conversion. At frame 0 / the last frame
      * the read resolves to the no-image default pose (the model's initial
      * pose) and overwrites the boundary frame, exactly like the widgets.*/
-    const Point6D pose = session_->model_locations.GetPose(
-        plan.read_frame, plan.read_model);
+    const Point6D pose =
+        session_->model_locations.GetPose(plan.read_frame, plan.read_model);
     session_->model_locations.SavePose(
         plan.write_frame, plan.write_model, pose);
 
@@ -323,8 +329,7 @@ void PoseBridge::savePoseFile(const QString& path) {
     /*Deviations documented in the header: no SaveLastPose mirror — the QML
      * pose table is storage-authoritative (scene drift is persisted by
      * OptimizerBridge's SaveLastPose mirror at run time).*/
-    if (!jta::pose_file::WritePoseFile(
-            LocalPath(path).toStdString(), pose)) {
+    if (!jta::pose_file::WritePoseFile(LocalPath(path).toStdString(), pose)) {
         /*Review fix: a false return surfaces a message and keeps the
          * in-memory state (+ dirty flag) unchanged.*/
         emit messageRequested(
@@ -348,9 +353,8 @@ void PoseBridge::loadPoseFile(const QString& path) {
          * other parse failure is an invalid file (widgets mirror).*/
         emit messageRequested(
             QStringLiteral("Error!"),
-            res.not_optimized
-                ? QStringLiteral("No Pose Exists!")
-                : QStringLiteral("Invalid Pose File!"));
+            res.not_optimized ? QStringLiteral("No Pose Exists!")
+                              : QStringLiteral("Invalid Pose File!"));
         return;
     }
     const int frame = study_bridge_->currentFrame();
@@ -392,9 +396,8 @@ void PoseBridge::loadKinematics(const QString& path) {
         return;
     }
     std::vector<std::optional<Point6D>> loaded_poses;
-    const jta::pose_file::LoadResult res =
-        jta::pose_file::ReadKinematicsFile(
-            LocalPath(path).toStdString(), loaded_poses);
+    const jta::pose_file::LoadResult res = jta::pose_file::ReadKinematicsFile(
+        LocalPath(path).toStdString(), loaded_poses);
     if (!res.ok) {
         emit messageRequested(
             QStringLiteral("Error!"),
@@ -409,8 +412,8 @@ void PoseBridge::loadKinematics(const QString& path) {
      * row — no distinct current row in the QML selection contract).*/
     const int model = study_bridge_->primaryModelIndex();
     const int frame_count = session_->model_locations.GetFrameCount();
-    for (size_t i = 0; i < loaded_poses.size() &&
-                        static_cast<int>(i) < frame_count;
+    for (size_t i = 0;
+         i < loaded_poses.size() && static_cast<int>(i) < frame_count;
          ++i) {
         if (loaded_poses[i].has_value()) {
             session_->model_locations.SavePose(
@@ -480,11 +483,10 @@ void PoseBridge::syncScenePose(int frame, int model) {
 }
 
 bool PoseBridge::guardSelection(const QString& reject_message) {
-    const jta::pose_copy::SelectionGuard guard =
-        jta::pose_copy::CheckSelection(
-            study_bridge_->currentFrame(),
-            study_bridge_->selectedModelCount(),
-            /*multi_model_radio_checked=*/false);
+    const jta::pose_copy::SelectionGuard guard = jta::pose_copy::CheckSelection(
+        study_bridge_->currentFrame(),
+        study_bridge_->selectedModelCount(),
+        /*multi_model_radio_checked=*/false);
     if (guard == jta::pose_copy::SelectionGuard::NoFrameOrModel) {
         emit messageRequested(QStringLiteral("Error!"), reject_message);
         return false;

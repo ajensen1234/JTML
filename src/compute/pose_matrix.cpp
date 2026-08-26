@@ -35,13 +35,19 @@ bool PoseMatrix::GetModelPose(
     int frame_index,
     gpu_cost_function::Pose* pose_container) {
     /*Check if Pose Mat Empty or Frame Index Out of Bounds */
-    if (pose_matrix_.size() == 0) return false;
-    if (pose_matrix_[0].size() <= frame_index) return false;
+    if (pose_matrix_.size() == 0) {
+        return false;
+    }
+    if (pose_matrix_[0].size() <= frame_index) {
+        return false;
+    }
 
     /*Get Model Index*/
     int model_index = -1;
     for (int i = 0; i < model_names_.size(); i++) {
-        if (model_names_[i] == model_name) model_index = i;
+        if (model_names_[i] == model_name) {
+            model_index = i;
+        }
     }
 
     if (model_index == -1) {
@@ -53,10 +59,15 @@ bool PoseMatrix::GetModelPose(
 
 /*Gets Principal Model Pose*/
 bool PoseMatrix::GetModelPose(
-    int frame_index, gpu_cost_function::Pose* pose_container) {
+    int frame_index,
+    gpu_cost_function::Pose* pose_container) {
     /*Check if Pose Mat Empty or Frame Index Out of Bounds */
-    if (pose_matrix_.size() == 0) return false;
-    if (pose_matrix_[0].size() <= frame_index) return false;
+    if (pose_matrix_.size() == 0) {
+        return false;
+    }
+    if (pose_matrix_[0].size() <= frame_index) {
+        return false;
+    }
 
     /*Get Pose*/
     if (principal_model_index_ == -1) {
@@ -67,7 +78,8 @@ bool PoseMatrix::GetModelPose(
 };
 /*Update Stored Pose for Principal Model at given frame*/
 bool PoseMatrix::UpdatePrincipalModelPose(
-    int frame_index, gpu_cost_function::Pose pose_container) {
+    int frame_index,
+    gpu_cost_function::Pose pose_container) {
     pose_matrix_.at(principal_model_index_).at(frame_index) = pose_container;
     return true;
 };

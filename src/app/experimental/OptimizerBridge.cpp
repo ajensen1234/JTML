@@ -13,19 +13,17 @@
 #include "OptimizerBridge.h"
 
 #include <QAbstractItemModel>
-
 #include <algorithm>
 
 // The shared controller shell + driver seam (coordinator lib). Included
 // first: the driver header pulls CostFunctionManager.h (torch ATen headers).
-#include "coordinator/optimizer_run_controller.h"
-
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
 #include "SettingsBridge.h"
 #include "StudyBridge.h"
-#include "view/model_list_model.h" // complete type for the index() build
+#include "coordinator/optimizer_run_controller.h"
+#include "view/model_list_model.h"  // complete type for the index() build
 
 /*---- Gate (bridge policy: the shared gate + the v1 single-model rule) ----*/
 
@@ -66,44 +64,63 @@ OptimizerBridge::OptimizerBridge(
     ExperimentalScene* scene,
     StudyBridge* study_bridge,
     SettingsBridge* settings_bridge,
-    QObject* parent)
-    : QObject(parent),
-      controller_(new OptimizerRunController(jta::CreateOptimizerManagerRunDriver, this)),
-      hub_(hub),
-      session_(session),
-      scene_(scene),
-      study_bridge_(study_bridge),
-      settings_bridge_(settings_bridge) {
+    QObject* parent) :
+    QObject(parent),
+    controller_(
+        new OptimizerRunController(jta::CreateOptimizerManagerRunDriver, this)),
+    hub_(hub),
+    session_(session),
+    scene_(scene),
+    study_bridge_(study_bridge),
+    settings_bridge_(settings_bridge) {
     /*Controller relays -> the QML surface (re-emitted on this thread; the
      * controller already re-emitted the manager's worker-thread signals
      * by-value on its own thread — QTBUG-2842).*/
     connect(
-        controller_, &OptimizerRunController::runStateChanged,
-        this, &OptimizerBridge::onControllerRunStateChanged);
+        controller_,
+        &OptimizerRunController::runStateChanged,
+        this,
+        &OptimizerBridge::onControllerRunStateChanged);
     connect(
-        controller_, &OptimizerRunController::progressChanged,
-        this, &OptimizerBridge::onControllerProgressChanged);
+        controller_,
+        &OptimizerRunController::progressChanged,
+        this,
+        &OptimizerBridge::onControllerProgressChanged);
     connect(
-        controller_, &OptimizerRunController::messageRequested,
-        this, &OptimizerBridge::onControllerMessage);
+        controller_,
+        &OptimizerRunController::messageRequested,
+        this,
+        &OptimizerBridge::onControllerMessage);
     connect(
-        controller_, &OptimizerRunController::poseUpdated,
-        this, &OptimizerBridge::onControllerPoseUpdated);
+        controller_,
+        &OptimizerRunController::poseUpdated,
+        this,
+        &OptimizerBridge::onControllerPoseUpdated);
     connect(
-        controller_, &OptimizerRunController::optimizedFrameRelayed,
-        this, &OptimizerBridge::onControllerOptimizedFrame);
+        controller_,
+        &OptimizerRunController::optimizedFrameRelayed,
+        this,
+        &OptimizerBridge::onControllerOptimizedFrame);
     connect(
-        controller_, &OptimizerRunController::dilationBackgroundRequested,
-        this, &OptimizerBridge::onControllerDilationBackground);
+        controller_,
+        &OptimizerRunController::dilationBackgroundRequested,
+        this,
+        &OptimizerBridge::onControllerDilationBackground);
     connect(
-        controller_, &OptimizerRunController::orientationSymTrapUpdated,
-        this, &OptimizerBridge::onControllerOrientationSymTrap);
+        controller_,
+        &OptimizerRunController::orientationSymTrapUpdated,
+        this,
+        &OptimizerBridge::onControllerOrientationSymTrap);
     connect(
-        controller_, &OptimizerRunController::seedApplied,
-        this, &OptimizerBridge::onControllerSeedApplied);
+        controller_,
+        &OptimizerRunController::seedApplied,
+        this,
+        &OptimizerBridge::onControllerSeedApplied);
     connect(
-        controller_, &OptimizerRunController::seedRestored,
-        this, &OptimizerBridge::onControllerSeedRestored);
+        controller_,
+        &OptimizerRunController::seedRestored,
+        this,
+        &OptimizerBridge::onControllerSeedRestored);
 }
 
 OptimizerBridge::~OptimizerBridge() = default;
@@ -207,9 +224,20 @@ void OptimizerBridge::stop() {
 /*---- U7: ML-estimate starting-pose seed ----*/
 
 void OptimizerBridge::setSeedPose(
-    double x, double y, double z, double xa, double ya, double za) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     controller_->setSeedPose(
-        x, y, z, xa, ya, za, study_bridge_->currentFrame(),
+        x,
+        y,
+        z,
+        xa,
+        ya,
+        za,
+        study_bridge_->currentFrame(),
         study_bridge_->primaryModelIndex());
 }
 
@@ -223,8 +251,10 @@ bool OptimizerBridge::hasSeedPose() const {
 
 void OptimizerBridge::applySeedPose() {
     controller_->applySeedPose(
-        &session_->model_locations, study_bridge_->currentFrame(),
-        study_bridge_->primaryModelIndex(), study_bridge_->modelCount());
+        &session_->model_locations,
+        study_bridge_->currentFrame(),
+        study_bridge_->primaryModelIndex(),
+        study_bridge_->modelCount());
 }
 
 /*---- State + progress reads ----*/
@@ -294,7 +324,8 @@ void OptimizerBridge::onControllerProgressChanged() {
 }
 
 void OptimizerBridge::onControllerMessage(
-    const QString& title, const QString& message,
+    const QString& title,
+    const QString& message,
     jta::OptimizerRunControllerCore::Severity /*severity*/) {
     /*Dialog mapping: the QML app has one Dialog; the severity is ignored
      * (L14 — the widgets preserves its box-type distinctions).*/
@@ -302,7 +333,12 @@ void OptimizerBridge::onControllerMessage(
 }
 
 void OptimizerBridge::onControllerPoseUpdated(
-    double x, double y, double z, double xa, double ya, double za,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za,
     unsigned int primary_model_index) {
     /*Live pose bind (mirror of onUpdateOptimum, mainscreen.cpp:4359-4391):
      * the primary model follows the search. The scene write + poseUpdated
@@ -316,9 +352,16 @@ void OptimizerBridge::onControllerPoseUpdated(
 }
 
 void OptimizerBridge::onControllerOptimizedFrame(
-    double x, double y, double z, double xa, double ya, double za,
-    bool move_next_frame, unsigned int primary_model_index,
-    bool error_occurred, const QString& optimizer_directive,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za,
+    bool move_next_frame,
+    unsigned int primary_model_index,
+    bool error_occurred,
+    const QString& optimizer_directive,
     bool model_out_of_bounds) {
     /*v1 run scope: the current frame only (directive Single — the manager's
      * Initialize sets progress_next_frame_ false for Single, so
@@ -346,7 +389,12 @@ void OptimizerBridge::onControllerDilationBackground() {
 }
 
 void OptimizerBridge::onControllerOrientationSymTrap(
-    double x, double y, double z, double xa, double ya, double za) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     /*Sym-trap directive is not in v1 — relay anyway (plan 005 U6).*/
     emit orientationSymTrapUpdated(x, y, z, xa, ya, za);
 }
@@ -355,8 +403,10 @@ void OptimizerBridge::onControllerSeedApplied(int frame, int model) {
     /*The controller wrote the pending seed to the storage; mirror it onto
      * the scene (the run's viewport shows the estimate pose).*/
     Q_UNUSED(frame);
-    if (model >= 0 && model < static_cast<int>(session_->loaded_models.size())) {
-        scene_->setModelPose(model, session_->model_locations.GetPose(frame, model));
+    if (model >= 0 &&
+        model < static_cast<int>(session_->loaded_models.size())) {
+        scene_->setModelPose(
+            model, session_->model_locations.GetPose(frame, model));
     }
 }
 
@@ -364,8 +414,10 @@ void OptimizerBridge::onControllerSeedRestored(int frame, int model) {
     /*M10a (the enumerated QML delta): a failed Initialize restored the
      * pre-seed storage snapshot — re-sync the scene so the estimate is not
      * silently kept on screen either.*/
-    if (model >= 0 && model < static_cast<int>(session_->loaded_models.size())) {
-        scene_->setModelPose(model, session_->model_locations.GetPose(frame, model));
+    if (model >= 0 &&
+        model < static_cast<int>(session_->loaded_models.size())) {
+        scene_->setModelPose(
+            model, session_->model_locations.GetPose(frame, model));
     }
 }
 

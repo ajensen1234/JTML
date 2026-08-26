@@ -22,8 +22,8 @@ class FrameListModel : public QAbstractListModel {
 
 public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index,
-                  int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole)
+        const override;
 
     // Append one frame name (mirrors the old per-item addItem call; the load
     // slots insert inside their loop, so partial loads keep the rows appended

@@ -7,7 +7,8 @@
 #include "art.cuh"
 #include "compute/gpu_image.cuh"
 
-std::vector<float>
-calculateIARTD(img_desc* img_desc_gpu, gpu_cost_function::GPUImage* dev_image);
+std::vector<float> calculateIARTD(
+    img_desc* img_desc_gpu,
+    gpu_cost_function::GPUImage* dev_image);
 
-#endif // DESCRIPTORS_H_
+#endif  // DESCRIPTORS_H_

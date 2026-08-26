@@ -11,12 +11,14 @@
 #include <opencv2/imgproc.hpp>
 
 void extract_contour_points(
-    cv::Mat input_edge_image, std::vector<std::vector<cv::Point>>* contour) {
+    cv::Mat input_edge_image,
+    std::vector<std::vector<cv::Point>>* contour) {
     cv::findContours(
         input_edge_image, *contour, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 };
 void calculate_curvature_along_contour(
-    std::vector<cv::Point_<int>> contour, float* curvature) {
+    std::vector<cv::Point_<int>> contour,
+    float* curvature) {
     cv::Point_<int>* p1 = new cv::Point_<int>;
     cv::Point_<int>* p2 = new cv::Point_<int>;
     int dist = 18;
@@ -35,7 +37,9 @@ void calculate_curvature_along_contour(
 };
 
 float menger_curvature(
-    cv::Point_<int> p1, cv::Point_<int> ref_pt, cv::Point_<int> p2) {
+    cv::Point_<int> p1,
+    cv::Point_<int> ref_pt,
+    cv::Point_<int> p2) {
     cv::Vec<int, 2> vec1 = cv::Vec<int, 2>(p1.x - ref_pt.x, p1.y - ref_pt.y);
     cv::Vec<int, 2> vec2 = cv::Vec<int, 2>(p2.x - ref_pt.x, p2.y - ref_pt.y);
     cv::Vec<int, 2> vec3 = cv::Vec<int, 2>(p2.x - p1.x, p2.y - p1.y);
@@ -43,7 +47,7 @@ float menger_curvature(
     float norm2 = cv::norm(vec2);
     float norm3 = cv::norm(vec3);
     float inv_radius = 4 * cv::abs(vec1[0] * vec2[1] - vec1[1] * vec2[0]) /
-                       (norm1 * norm2 * norm3);
+        (norm1 * norm2 * norm3);
     return inv_radius;
 };
 
@@ -93,7 +97,7 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
     std::vector<std::vector<cv::Point_<int>>>* contour =
         new std::vector<std::vector<cv::Point_<int>>>;
     extract_contour_points(
-        binary_input_image, contour); // Use the binarized image
+        binary_input_image, contour);  // Use the binarized image
 
     // Handle case where no contours are found
     if (contour->empty() || contour->back().empty()) {
@@ -101,7 +105,7 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
                      "heatmaps."
                   << std::endl;
         delete contour;
-        return std::vector<cv::Mat>(); // Return empty vector of heatmaps
+        return std::vector<cv::Mat>();  // Return empty vector of heatmaps
     }
 
     draw_contours(contour);
@@ -111,7 +115,7 @@ std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image) {
 
     float curv_mean = calculate_mean(curvature, contour->back().size());
     float curv_std = calculate_std(curvature, contour->back().size());
-    float alpha = 1.5; // How many standard deviations we care about
+    float alpha = 1.5;  // How many standard deviations we care about
     float curv_threshold = curv_mean + alpha * curv_std;
     // bool *curv_thresh_array = new bool[contour[0].size()];
     float* smoothed_curvature = new float[N];

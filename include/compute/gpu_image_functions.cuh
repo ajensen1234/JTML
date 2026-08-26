@@ -28,12 +28,15 @@ namespace gpu_cost_function {
  and blends as follows: ALPHA*destination_image_pixel + (1 -
  ALPHA)*secondary_image_pixel. Bool return value indicates success.*/
 JTML_DLL bool BlendGrayscaleImages(
-    GPUImage* destination_image, GPUImage* secondary_image, float alpha);
+    GPUImage* destination_image,
+    GPUImage* secondary_image,
+    float alpha);
 /*Paste Non Zero (Black) Pixels of secondary_image on top of destination_image
 Bool return value indicates success. Can pass as GPU Image* or
 with height/width.*/
-JTML_DLL bool
-PasteNonBlackPixels(GPUImage* destination_image, GPUImage* secondary_image);
+JTML_DLL bool PasteNonBlackPixels(
+    GPUImage* destination_image,
+    GPUImage* secondary_image);
 JTML_DLL bool PasteNonBlackPixels(
     unsigned char* dev_destination_image,
     unsigned char* dev_secondary_image,
@@ -45,7 +48,9 @@ to the bounds specified in the arguments and in between pixels are scaled
 linearly. This new image is returned in the original image. Bool return value
 indicates success.*/
 JTML_DLL bool ScaleGrayscaleToRange(
-    GPUImage* grayscale_image, int lower_bound, int upper_bound);
+    GPUImage* grayscale_image,
+    int lower_bound,
+    int upper_bound);
 
 /*Convolution Operation. Does not use zero padding, but rather convolves on the
 subimage that is inside the regular image but would allow the kernel to fully
@@ -82,6 +87,6 @@ JTML_DLL bool CompileGrid(
     int image_height,
     int grid_width,
     int grid_height);
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
-#endif // !GPU_IMAGE_FUNCTIONS_H
+#endif  // !GPU_IMAGE_FUNCTIONS_H

@@ -32,11 +32,10 @@
 #ifndef OPTIMIZER_RUN_CONTROLLER_H
 #define OPTIMIZER_RUN_CONTROLLER_H
 
-#include <functional>
-#include <memory>
-
 #include <QObject>
 #include <QString>
+#include <functional>
+#include <memory>
 
 #include "coordinator/optimizer_run_controller_core.h"
 #include "coordinator/optimizer_run_driver.h"
@@ -116,15 +115,27 @@ public:
     void stop();
 
     /*---- State + progress reads (QML surface) -----------------------------*/
-    RunState runState() const { return core_.state(); }
-    bool running() const { return core_.running(); }
-    bool canRun() const { return core_.canStart(); }
+    RunState runState() const {
+        return core_.state();
+    }
+    bool running() const {
+        return core_.running();
+    }
+    bool canRun() const {
+        return core_.canStart();
+    }
     QString stageText() const {
         return QString::fromStdString(core_.stageText());
     }
-    int costCalls() const { return core_.costCalls(); }
-    double currentMinimum() const { return core_.currentMinimum(); }
-    double progress() const { return core_.progress(); }
+    int costCalls() const {
+        return core_.costCalls();
+    }
+    double currentMinimum() const {
+        return core_.currentMinimum();
+    }
+    double progress() const {
+        return core_.progress();
+    }
 
     /*---- Seed lifecycle (M10a) --------------------------------------------*/
     /*One-shot ML-estimate starting-pose seed, estimated for (frame, model)
@@ -133,18 +144,30 @@ public:
      * consumes it) and before Initialize; on Initialize failure the storage
      * snapshot is restored and seedRestored is emitted.*/
     void setSeedPose(
-        double x, double y, double z, double xa, double ya, double za,
-        int frame, int model) {
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        int frame,
+        int model) {
         core_.setSeedPose(x, y, z, xa, ya, za, frame, model);
     }
-    void clearSeedPose() { core_.clearSeedPose(); }
-    bool hasSeedPose() const { return core_.hasSeedPose(); }
+    void clearSeedPose() {
+        core_.clearSeedPose();
+    }
+    bool hasSeedPose() const {
+        return core_.hasSeedPose();
+    }
     /*Apply the pending seed to `storage` outside a run (the QML bridge's
      * headless-testable applySeedPose delegate): one-shot + stale guards;
      * emits seedApplied(frame, model) when applied (the view maps the scene
      * write).*/
     void applySeedPose(
-        LocationStorage* storage, int current_frame, int primary_model_index,
+        LocationStorage* storage,
+        int current_frame,
+        int primary_model_index,
         int model_count);
 
 signals:
@@ -152,13 +175,22 @@ signals:
     void progressChanged();
     /*The single severity-carrying message channel (L14).*/
     void messageRequested(
-        const QString& title, const QString& message, Severity severity);
+        const QString& title,
+        const QString& message,
+        Severity severity);
     /*Relays (by-value, re-emitted on the controller thread — QTBUG-2842).*/
     void updateDisplayRelayed(
-        double iteration_speed, int current_iteration, double current_minimum,
+        double iteration_speed,
+        int current_iteration,
+        double current_minimum,
         unsigned int primary_model_index);
     void poseUpdated(
-        double x, double y, double z, double xa, double ya, double za,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
         unsigned int primary_model_index);
     /*Terminal frame relay: raw A-coord pose + advance decision + error bit
      * + directive + the out-of-bounds status (L14 — the widgets view boxes
@@ -166,13 +198,25 @@ signals:
      * controller has already persisted the pose at its tracked current
      * frame and advanced the tracked frame exactly when the view advances.*/
     void optimizedFrameRelayed(
-        double x, double y, double z, double xa, double ya, double za,
-        bool move_next_frame, unsigned int primary_model_index,
-        bool error_occurred, const QString& optimizer_directive,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        bool move_next_frame,
+        unsigned int primary_model_index,
+        bool error_occurred,
+        const QString& optimizer_directive,
         bool model_out_of_bounds);
     void dilationBackgroundRequested();
     void orientationSymTrapUpdated(
-        double x, double y, double z, double xa, double ya, double za);
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
     /*The pending seed was applied to the storage (view maps its scene).*/
     void seedApplied(int frame, int model);
     /*An Initialize failure restored the pre-seed storage snapshot (M10a —
@@ -185,19 +229,38 @@ signals:
 
 private slots:
     void onManagerUpdateDisplay(
-        double iteration_speed, int current_iteration, double current_minimum,
+        double iteration_speed,
+        int current_iteration,
+        double current_minimum,
         unsigned int primary_model_index);
     void onManagerOptimizerError(const QString& error_message);
     void onManagerUpdateOptimum(
-        double x, double y, double z, double xa, double ya, double za,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
         unsigned int primary_model_index);
     void onManagerOptimizedFrame(
-        double x, double y, double z, double xa, double ya, double za,
-        bool move_next_frame, unsigned int primary_model_index,
-        bool error_occurred, QString optimizer_directive);
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        bool move_next_frame,
+        unsigned int primary_model_index,
+        bool error_occurred,
+        QString optimizer_directive);
     void onManagerUpdateDilationBackground();
     void onManagerOrientationSymTrap(
-        double x, double y, double z, double xa, double ya, double za);
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
     void onManagerFinished();
 
 private:
@@ -205,8 +268,8 @@ private:
     bool isCurrentRun(QObject* sender) const;
     /*The 8 binds: finished FIRST (M6), then the 7 (widgets' order, L13).*/
     void bindManager();
-    static jta::OptimizerRunControllerCore::ProgressBudgets
-    BudgetsFromSettings(const OptimizerSettings& settings);
+    static jta::OptimizerRunControllerCore::ProgressBudgets BudgetsFromSettings(
+        const OptimizerSettings& settings);
     static QString DirectiveToString(Directive directive);
 
     DriverFactory factory_;

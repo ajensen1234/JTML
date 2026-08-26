@@ -32,7 +32,7 @@
 
 /*VTK*/
 #include <vtkActor.h>
-#include <vtkAutoInit.h> // Added post migration to Banks' lab computer
+#include <vtkAutoInit.h>  // Added post migration to Banks' lab computer
 #include <vtkCamera.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageData.h>
@@ -322,7 +322,7 @@ private:
     jta_cost_function::CostFunctionManager trunk_manager_;
     jta_cost_function::CostFunctionManager branch_manager_;
     jta_cost_function::CostFunctionManager
-        leaf_manager_; // For extra Z-translation usually (esp. when monoplane)
+        leaf_manager_;  // For extra Z-translation usually (esp. when monoplane)
 
     /*Function That Saves Dilation as 0 if No Trunk Manager has a Dilation Int
     Parameter, else saves all the Dilation Images for Each Frame as the Dilation
@@ -336,8 +336,8 @@ private:
 
     void LaunchOptimizer(
         OptimizerRunController::Directive
-            directive); // Directive Says whether it is Optimize Single,
-                        // From, All, or Each (or Sym_Trap)
+            directive);  // Directive Says whether it is Optimize Single,
+                         // From, All, or Each (or Sym_Trap)
 
     /*The shared optimizer-run controller (plan 006 U5): owns the drive
      * sequence + thread lifecycle; the view maps the relays onto the
@@ -496,7 +496,13 @@ public Q_SLOTS:
     /*OPTIMIZATION SLOTS*/
     /*Update Blue Current Optimum*/
     void onUpdateOptimum(
-        double, double, double, double, double, double, unsigned int);
+        double,
+        double,
+        double,
+        double,
+        double,
+        double,
+        unsigned int);
 
     /*Finished Optimizing Frame, Send Optimum to MainScreen (the shared
      * controller's terminal-frame relay; the out-of-bounds status travels
@@ -518,7 +524,8 @@ public Q_SLOTS:
     /*The shared controller's severity-carrying message channel (L14): the
      * widgets preserves its box-type distinctions.*/
     void onControllerMessage(
-        const QString& title, const QString& message,
+        const QString& title,
+        const QString& message,
         OptimizerRunController::Severity severity);
 
     /*Update Display with Speed, Cost Function Calls, Current Minimum*/

@@ -22,8 +22,8 @@ ImageInfo::ImageInfo(
 
     /*Paths*/
     image_path_ = image_path;
-    label_img_paths_ = label_img_paths; // For each model in the image (stored
-                                        // same order as models in study)
+    label_img_paths_ = label_img_paths;  // For each model in the image (stored
+                                         // same order as models in study)
 
     /*Poses for each model in the image (stored same order as models in study)*/
     pose_img_models_ = pose_img_models;
@@ -34,7 +34,8 @@ ImageInfo::ImageInfo(
 }
 
 void ImageInfo::AppendInformation(
-    std::string text_file_path, int model_type_index) {
+    std::string text_file_path,
+    int model_type_index) {
     std::ofstream outfile;
     outfile.open(text_file_path, std::ios_base::app);
     outfile << "Image Path: " << image_path_ << endl;

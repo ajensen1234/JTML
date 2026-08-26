@@ -10,9 +10,8 @@
 
 #include "coordinator/optimizer_run_controller.h"
 
-#include <utility>
-
 #include <QThread>
+#include <utility>
 
 #include "services/save_last_pose.h"
 
@@ -41,13 +40,15 @@ bool OptimizerRunController::start(const OptimizerRunRequest& req) {
     if (core_.state() == RunState::Stopping) {
         emit messageRequested(
             QStringLiteral("Warning!"),
-            QString::fromLatin1(kStillStoppingText), Severity::Warning);
+            QString::fromLatin1(kStillStoppingText),
+            Severity::Warning);
         return false;
     }
     if (core_.state() == RunState::Running ||
         (driver_ && driver_->ThreadActive())) {
         emit messageRequested(
-            QStringLiteral("Warning!"), QString::fromLatin1(kReRunRejectedText),
+            QStringLiteral("Warning!"),
+            QString::fromLatin1(kReRunRejectedText),
             Severity::Warning);
         return false;
     }
@@ -135,8 +136,8 @@ bool OptimizerRunController::start(const OptimizerRunRequest& req) {
      * directives keep the run's current frame.*/
     current_frame_ =
         (req.directive == Directive::All || req.directive == Directive::Each)
-            ? 0
-            : req.current_frame;
+        ? 0
+        : req.current_frame;
     frame_count_ = req.frame_count;
     model_count_ = req.model_count;
     storage_ = req.storage;
@@ -202,7 +203,9 @@ void OptimizerRunController::stop() {
 }
 
 void OptimizerRunController::applySeedPose(
-    LocationStorage* storage, int current_frame, int primary_model_index,
+    LocationStorage* storage,
+    int current_frame,
+    int primary_model_index,
     int model_count) {
     if (!storage) {
         return;
@@ -218,8 +221,9 @@ void OptimizerRunController::applySeedPose(
 /*---- Lifecycle ----*/
 
 OptimizerRunController::OptimizerRunController(
-    DriverFactory factory, QObject* parent)
-    : QObject(parent), factory_(std::move(factory)) {}
+    DriverFactory factory,
+    QObject* parent) :
+    QObject(parent), factory_(std::move(factory)) {}
 
 /*---- Destructor contract (H3) ----*/
 
@@ -237,11 +241,13 @@ OptimizerRunController::~OptimizerRunController() {
 
 bool OptimizerRunController::isCurrentRun(QObject* sender) const {
     return driver_ && run_epoch_ == core_.epoch() &&
-           sender == driver_->Manager() && core_.state() != RunState::Idle;
+        sender == driver_->Manager() && core_.state() != RunState::Idle;
 }
 
 void OptimizerRunController::onManagerUpdateDisplay(
-    double iteration_speed, int current_iteration, double current_minimum,
+    double iteration_speed,
+    int current_iteration,
+    double current_minimum,
     unsigned int primary_model_index) {
     if (!isCurrentRun(sender())) {
         return;  // stale-epoch relay (H1)
@@ -249,7 +255,9 @@ void OptimizerRunController::onManagerUpdateDisplay(
     core_.refreshProgress(budgets_, current_iteration, current_minimum);
     emit progressChanged();
     emit updateDisplayRelayed(
-        iteration_speed, current_iteration, current_minimum,
+        iteration_speed,
+        current_iteration,
+        current_minimum,
         primary_model_index);
 }
 
@@ -265,7 +273,12 @@ void OptimizerRunController::onManagerOptimizerError(
 }
 
 void OptimizerRunController::onManagerUpdateOptimum(
-    double x, double y, double z, double xa, double ya, double za,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za,
     unsigned int primary_model_index) {
     if (!isCurrentRun(sender())) {
         return;  // stale-epoch relay (H1)
@@ -276,9 +289,16 @@ void OptimizerRunController::onManagerUpdateOptimum(
 }
 
 void OptimizerRunController::onManagerOptimizedFrame(
-    double x, double y, double z, double xa, double ya, double za,
-    bool move_next_frame, unsigned int primary_model_index,
-    bool error_occurred, QString optimizer_directive) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za,
+    bool move_next_frame,
+    unsigned int primary_model_index,
+    bool error_occurred,
+    QString optimizer_directive) {
     if (!isCurrentRun(sender())) {
         return;  // stale-epoch relay (H1)
     }
@@ -294,18 +314,17 @@ void OptimizerRunController::onManagerOptimizedFrame(
         static_cast<int>(primary_model_index) >= model_count_;
     if (storage_ && !model_out_of_bounds) {
         storage_->SavePose(
-            current_frame_, static_cast<int>(primary_model_index),
+            current_frame_,
+            static_cast<int>(primary_model_index),
             Point6D(x, y, z, xa, ya, za));
     }
-    const bool advance =
-        move_next_frame &&
+    const bool advance = move_next_frame &&
         (optimizer_directive == QStringLiteral("Backward")
              ? current_frame_ > 0
              : current_frame_ + 1 < frame_count_);
     if (advance) {
-        current_frame_ += optimizer_directive == QStringLiteral("Backward")
-                              ? -1
-                              : 1;
+        current_frame_ +=
+            optimizer_directive == QStringLiteral("Backward") ? -1 : 1;
     }
     /*Terminal state: Completed unless an OptimizerError already moved the
      * run to Error (pinned QML semantics); the widgets mapper unlocks on
@@ -313,8 +332,17 @@ void OptimizerRunController::onManagerOptimizedFrame(
     core_.onTerminalFrame(error_occurred);
     emit runStateChanged();
     emit optimizedFrameRelayed(
-        x, y, z, xa, ya, za, move_next_frame, primary_model_index,
-        error_occurred, optimizer_directive, model_out_of_bounds);
+        x,
+        y,
+        z,
+        xa,
+        ya,
+        za,
+        move_next_frame,
+        primary_model_index,
+        error_occurred,
+        optimizer_directive,
+        model_out_of_bounds);
 }
 
 void OptimizerRunController::onManagerUpdateDilationBackground() {
@@ -325,7 +353,12 @@ void OptimizerRunController::onManagerUpdateDilationBackground() {
 }
 
 void OptimizerRunController::onManagerOrientationSymTrap(
-    double x, double y, double z, double xa, double ya, double za) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     if (!isCurrentRun(sender())) {
         return;  // stale-epoch relay (H1)
     }
@@ -354,8 +387,7 @@ void OptimizerRunController::bindManager() {
     QObject* manager = driver_->Manager();
     /*finished FIRST (M6): a failed Initialize's ghost thread termination is
      * observed before Initialize's internal failure path can race a re-run.*/
-    connect(
-        manager, SIGNAL(finished()), this, SLOT(onManagerFinished()));
+    connect(manager, SIGNAL(finished()), this, SLOT(onManagerFinished()));
     /*The 7 binds (widgets' order, mainscreen.cpp:4230-4288): 6 relays + the
      * app->manager StopOptimizer reverse bind (DirectConnection). String
      * connects: the manager QObject is polymorphic through the driver seam
@@ -436,18 +468,18 @@ OptimizerRunController::BudgetsFromSettings(const OptimizerSettings& settings) {
 
 QString OptimizerRunController::DirectiveToString(Directive directive) {
     switch (directive) {
-        case Directive::All:
-            return QStringLiteral("All");
-        case Directive::Each:
-            return QStringLiteral("Each");
-        case Directive::From:
-            return QStringLiteral("From");
-        case Directive::Backward:
-            return QStringLiteral("Backward");
-        case Directive::SymTrap:
-            return QStringLiteral("Sym_Trap");
-        case Directive::Single:
-            break;
+    case Directive::All:
+        return QStringLiteral("All");
+    case Directive::Each:
+        return QStringLiteral("Each");
+    case Directive::From:
+        return QStringLiteral("From");
+    case Directive::Backward:
+        return QStringLiteral("Backward");
+    case Directive::SymTrap:
+        return QStringLiteral("Sym_Trap");
+    case Directive::Single:
+        break;
     }
     return QStringLiteral("Single");
 }

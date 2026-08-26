@@ -20,11 +20,7 @@ cv::Mat SegmentationController::SegmentFrame(
     unsigned int input_width,
     unsigned int input_height) {
     cv::Mat unpadded = segment_image(
-        original_image,
-        black_sil_used,
-        model,
-        input_width,
-        input_height);
+        original_image, black_sil_used, model, input_width, input_height);
     // Explicitly clear CUDA cache to free up GPU memory after processing
     // each image. This is particularly helpful for GPUs with limited VRAM,
     // like the RTX 4070, to prevent out-of-memory errors during sequential

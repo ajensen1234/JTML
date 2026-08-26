@@ -3,10 +3,11 @@
 
 /*Cost Function Manager*/
 #include "CostFunctionManager.h"
-#include "compute/graph_recipe.h"
-#include "compute/evaluation_context.h"
 
 #include <limits>
+
+#include "compute/evaluation_context.h"
+#include "compute/graph_recipe.h"
 /******************************************************************************/
 /******************************************************************************/
 /******************************** BEGIN WARNING *******************************/
@@ -53,8 +54,9 @@ CostFunctionManager::CostFunctionManager(Stage stage) {
     cfm_index (the StageScript) is the future stage source of truth; stage_ is
     constructor state kept for the getStage() accessor pin.*/
     if (stage_ != Stage::Trunk && stage_ != Stage::Branch &&
-        stage_ != Stage::Leaf)
+        stage_ != Stage::Leaf) {
         stage_ = Stage::Trunk;
+    }
 
     /*Current Frame Index (0 based)*/
     current_frame_index_ = 0;
@@ -164,7 +166,9 @@ void CostFunctionManager::setActiveCostFunction(
 
 /*Update Cost Function Values from Saved Session*/
 bool CostFunctionManager::updateCostFunctionParameterValues(
-    std::string cost_function_name, std::string parameter_name, double value) {
+    std::string cost_function_name,
+    std::string parameter_name,
+    double value) {
     /*Check Active Cost Function Name Exists*/
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
@@ -172,7 +176,7 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
             /*Check Parameter Name Exsits*/
             for (int j = 0;
                  j < available_cost_functions_[i].getDoubleParameters().size();
-                 j++)
+                 j++) {
                 if (available_cost_functions_[i]
                         .getDoubleParameters()[j]
                         .getParameterName() == parameter_name) {
@@ -181,13 +185,16 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
                         .setParameterValue(value);
                     return true;
                 }
+            }
         }
     }
     /*Unsuccessful*/
     return false;
 };
 bool CostFunctionManager::updateCostFunctionParameterValues(
-    std::string cost_function_name, std::string parameter_name, int value) {
+    std::string cost_function_name,
+    std::string parameter_name,
+    int value) {
     /*Check Active Cost Function Name Exists*/
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
@@ -195,7 +202,7 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
             /*Check Parameter Name Exsits*/
             for (int j = 0;
                  j < available_cost_functions_[i].getIntParameters().size();
-                 j++)
+                 j++) {
                 if (available_cost_functions_[i]
                         .getIntParameters()[j]
                         .getParameterName() == parameter_name) {
@@ -204,13 +211,16 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
                         .setParameterValue(value);
                     return true;
                 }
+            }
         }
     }
     /*Unsuccessful*/
     return false;
 };
 bool CostFunctionManager::updateCostFunctionParameterValues(
-    std::string cost_function_name, std::string parameter_name, bool value) {
+    std::string cost_function_name,
+    std::string parameter_name,
+    bool value) {
     /*Check Active Cost Function Name Exists*/
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
@@ -218,7 +228,7 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
             /*Check Parameter Name Exsits*/
             for (int j = 0;
                  j < available_cost_functions_[i].getBoolParameters().size();
-                 j++)
+                 j++) {
                 if (available_cost_functions_[i]
                         .getBoolParameters()[j]
                         .getParameterName() == parameter_name) {
@@ -227,6 +237,7 @@ bool CostFunctionManager::updateCostFunctionParameterValues(
                         .setParameterValue(value);
                     return true;
                 }
+            }
         }
     }
     /*Unsuccessful*/
@@ -257,8 +268,8 @@ CostFunction* CostFunctionManager::getActiveCostFunctionClass() {
 };
 
 /*Return Cost Function Class*/
-CostFunction*
-CostFunctionManager::getCostFunctionClass(std::string cost_function_name) {
+CostFunction* CostFunctionManager::getCostFunctionClass(
+    std::string cost_function_name) {
     for (int i = 0; i < available_cost_functions_.size(); i++) {
         if (available_cost_functions_[i].getCostFunctionName() ==
             cost_function_name) {
@@ -276,18 +287,28 @@ void CostFunctionManager::setCurrentFrameIndex(
     current_frame_index_ = current_frame_index;
 };
 
-unsigned int CostFunctionManager::getCurrentFrameIndex() const { return current_frame_index_; }
+unsigned int CostFunctionManager::getCurrentFrameIndex() const {
+    return current_frame_index_;
+}
 
-void CostFunctionManager::BumpUploadEpoch() { ++upload_epoch_; }
+void CostFunctionManager::BumpUploadEpoch() {
+    ++upload_epoch_;
+}
 
-std::uint64_t CostFunctionManager::getUploadEpoch() const { return upload_epoch_; }
+std::uint64_t CostFunctionManager::getUploadEpoch() const {
+    return upload_epoch_;
+}
 
 bool CostFunctionManager::GetGraphRecipeCaptureInputs(
     gpu_cost_function::GraphRecipeCaptureInputs& out) const {
     out.context = nullptr;
-    out.render = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryRenderEngine() : nullptr;
+    out.render = gpu_principal_model_
+        ? gpu_principal_model_->GetPrimaryRenderEngine()
+        : nullptr;
     out.metrics = gpu_metrics_;
-    out.rendered_image = gpu_principal_model_ ? gpu_principal_model_->GetPrimaryCameraRenderedImage() : nullptr;
+    out.rendered_image = gpu_principal_model_
+        ? gpu_principal_model_->GetPrimaryCameraRenderedImage()
+        : nullptr;
     if (gpu_dilated_frames_A_ && !gpu_dilated_frames_A_->empty() &&
         current_frame_index_ < gpu_dilated_frames_A_->size()) {
         out.comparison_frame = gpu_dilated_frames_A_->at(current_frame_index_);
@@ -301,11 +322,14 @@ bool CostFunctionManager::GetGraphRecipeCaptureInputs(
         out.distance_map = nullptr;
     }
     out.dilation = 6;
-    // Read live dilation without leaking on miss: scan available_cost_functions_ directly
-    for (auto& cf : const_cast<std::vector<CostFunction>&>(available_cost_functions_)) {
+    // Read live dilation without leaking on miss: scan
+    // available_cost_functions_ directly
+    for (auto& cf :
+         const_cast<std::vector<CostFunction>&>(available_cost_functions_)) {
         if (cf.getCostFunctionName() == active_cost_function_) {
             int v = 6;
-            // getIntParameterValue returns bool; use const_cast to call non-const method
+            // getIntParameterValue returns bool; use const_cast to call
+            // non-const method
             auto& mcf = const_cast<CostFunction&>(cf);
             if (mcf.getIntParameterValue("Dilation", v)) {
                 out.dilation = v;
@@ -313,8 +337,9 @@ bool CostFunctionManager::GetGraphRecipeCaptureInputs(
             break;
         }
     }
-    return out.render != nullptr && out.metrics != nullptr && out.rendered_image != nullptr &&
-           out.comparison_frame != nullptr && out.distance_map != nullptr;
+    return out.render != nullptr && out.metrics != nullptr &&
+        out.rendered_image != nullptr && out.comparison_frame != nullptr &&
+        out.distance_map != nullptr;
 }
 
 /******************************** WARNING *************************************/
@@ -323,8 +348,7 @@ bool CostFunctionManager::GetGraphRecipeCaptureInputs(
 /******************************************************************************/
 /*FUNCTIONS THAT INTERACT WITH WIZARD*/
 
-bool CostFunctionManager::TrySetActiveBank(
-    gpu_cost_function::BankState* bank) {
+bool CostFunctionManager::TrySetActiveBank(gpu_cost_function::BankState* bank) {
     if (gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr) {
         return false;
     }
@@ -360,7 +384,9 @@ double CostFunctionManager::EvaluateDirectDilationOnBank(
         TrySetActiveBank(nullptr);
         return std::numeric_limits<double>::quiet_NaN();
     };
-    if (!gpu_principal_model_->RenderPrimaryCamera(bank)) return fail();
+    if (!gpu_principal_model_->RenderPrimaryCamera(bank)) {
+        return fail();
+    }
 
     const auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
     double score =
@@ -368,16 +394,19 @@ double CostFunctionManager::EvaluateDirectDilationOnBank(
         gpu_metrics_->FastImplantDilationMetric(
             gpu_principal_model_->GetPrimaryCameraRenderedImage(),
             gpu_dilated_frames_A_->at(current_frame_index_),
-            DIRECT_DILATION_current_dilation_parameter, stream);
+            DIRECT_DILATION_current_dilation_parameter,
+            stream);
     score += gpu_metrics_->DistanceMapMetric(
         gpu_principal_model_->GetPrimaryCameraRenderedImage(),
         gpu_distance_maps_->at(current_frame_index_),
-        DIRECT_DILATION_current_dilation_parameter, stream);
-    if (!std::isfinite(score)) return fail();
+        DIRECT_DILATION_current_dilation_parameter,
+        stream);
+    if (!std::isfinite(score)) {
+        return fail();
+    }
     TrySetActiveBank(nullptr);
     return score;
 }
-
 
 cudaError_t CostFunctionManager::EnqueueDirectDilationOnBank(
     gpu_cost_function::BankState& bank) {
@@ -429,7 +458,9 @@ double CostFunctionManager::CompleteDirectDilationOnBank(
 // TrySetActiveBank and uses EvaluationContext directly.
 bool CostFunctionManager::TrySetActiveEvaluationContext(
     gpu_cost_function::EvaluationContext* ctx) {
-    if (gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr) return false;
+    if (gpu_principal_model_ == nullptr || gpu_metrics_ == nullptr) {
+        return false;
+    }
     if (ctx == nullptr) {
         gpu_principal_model_->TrySetActiveBank(nullptr);
         gpu_metrics_->TrySetActiveBank(nullptr);
@@ -624,7 +655,7 @@ void CostFunctionManager::listCostFunctions() {
 /******************************************************************************/
 /*************************DO NOT EDIT FUNCTIONS ABOVE *************************/
 /******************************************************************************/
-} // namespace jta_cost_function
+}  // namespace jta_cost_function
 
 /******************************************************************************/
 /******************************************************************************/

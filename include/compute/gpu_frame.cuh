@@ -2,9 +2,10 @@
 #define GPU_FRAME_H
 
 /*GPU Image Class*/
-#include "domain/preprocessor-defs.h"
-#include "compute/gpu_image.cuh"
 #include <string>
+
+#include "compute/gpu_image.cuh"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -61,6 +62,6 @@ private:
     /*Model Initialized Correctly?*/
     bool initialized_correctly_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_FRAME_H */

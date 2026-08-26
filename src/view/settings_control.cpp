@@ -27,8 +27,7 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
     /*Adjust for Title Height*/
     this->setStyleSheet(
         this->styleSheet() += "QGroupBox { margin-top: " +
-                              QString::number(font_metrics.height() / 2) +
-                              "px; }");
+            QString::number(font_metrics.height() / 2) + "px; }");
     int group_box_to_top_button_y = font_metrics.height() / 2;
 
     /*Make Sure Trunk is checked and by default so is stage enabled*/
@@ -46,19 +45,18 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
 
     /*Set Up Stage Select Group Box Size */
     /*Get Size of Radio Button Widths*/
-    int stage_radio_button_widths =
-        INSIDE_RADIO_BUTTON_PADDING_X +
-        std::max(
-            std::max(
-                font_metrics.horizontalAdvance("Trunk"),
-                font_metrics.horizontalAdvance("Branch")),
-            font_metrics.horizontalAdvance("Leaf"));
+    int stage_radio_button_widths = INSIDE_RADIO_BUTTON_PADDING_X +
+        std::max(std::max(
+                     font_metrics.horizontalAdvance("Trunk"),
+                     font_metrics.horizontalAdvance("Branch")),
+                 font_metrics.horizontalAdvance("Leaf"));
     /*Check if Horizontal Spacing is Big Enough for Title*/
     int safety_padding_x = 0;
     if (3 * stage_radio_button_widths + 2 * GROUP_BOX_TO_RADIO_BUTTON_X +
             2 * BUTTON_TO_BUTTON_PADDING_X >
-        1.25 * font_metrics.horizontalAdvance(
-                   ui.optimization_search_stage_groupBox->title())) {
+        1.25 *
+            font_metrics.horizontalAdvance(
+                ui.optimization_search_stage_groupBox->title())) {
         ui.trunk_radioButton->setGeometry(QRect(
             GROUP_BOX_TO_RADIO_BUTTON_X,
             GROUP_BOX_TO_RADIO_BUTTON_PADDING_Y + (font_metrics.height() / 2),
@@ -78,8 +76,9 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
             font_metrics.height() + INSIDE_RADIO_BUTTON_PADDING_Y));
     } else {
         safety_padding_x =
-            (1.25 * font_metrics.horizontalAdvance(
-                        ui.optimization_search_stage_groupBox->title()) -
+            (1.25 *
+                 font_metrics.horizontalAdvance(
+                     ui.optimization_search_stage_groupBox->title()) -
              (3 * stage_radio_button_widths + 2 * GROUP_BOX_TO_RADIO_BUTTON_X +
               2 * BUTTON_TO_BUTTON_PADDING_X)) /
             2;
@@ -139,7 +138,8 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
     ui.z_translation_label->setGeometry(QRect(
         SMALL_GROUP_BOX_PADDING_X,
         group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
-            2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
+            2 *
+                (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                  SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
         font_metrics.horizontalAdvance(ui.z_translation_label->text()),
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
@@ -167,7 +167,8 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
             font_metrics.horizontalAdvance("XXX") +
             LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
         group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
-            2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
+            2 *
+                (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                  SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
         font_metrics.horizontalAdvance(ui.z_rotation_label->text()),
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
@@ -189,7 +190,8 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
         font_metrics.horizontalAdvance(ui.x_translation_label->text()) +
             LABEL_TO_SPIN_BOX_PADDING_X + SMALL_GROUP_BOX_PADDING_X,
         group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
-            2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
+            2 *
+                (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                  SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
         font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
@@ -223,7 +225,8 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
             font_metrics.horizontalAdvance("XXX") +
             SPIN_BOX_TO_LABEL_PADDING_X + LABEL_TO_SPIN_BOX_PADDING_X,
         group_box_to_top_button_y + SMALL_GROUP_BOX_PADDING_Y +
-            2 * (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
+            2 *
+                (font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y +
                  SPIN_BOX_TO_SPIN_BOX_PADDING_Y),
         font_metrics.horizontalAdvance("XXX") + INSIDE_SPIN_BOX_PADDING_X,
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
@@ -331,13 +334,11 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
             INSIDE_SPIN_BOX_PADDING_X,
         font_metrics.height() + INSIDE_SPIN_BOX_PADDING_Y));
     /*T/F Radio Button width*/
-    int true_false_radiobutton_width =
-        INSIDE_RADIO_BUTTON_PADDING_X +
-        std::max(
-            font_metrics.horizontalAdvance(
-                ui.bool_parameter_true_radioButton->text()),
-            font_metrics.horizontalAdvance(
-                ui.bool_parameter_false_radioButton->text()));
+    int true_false_radiobutton_width = INSIDE_RADIO_BUTTON_PADDING_X +
+        std::max(font_metrics.horizontalAdvance(
+                     ui.bool_parameter_true_radioButton->text()),
+                 font_metrics.horizontalAdvance(
+                     ui.bool_parameter_false_radioButton->text()));
     ui.bool_parameter_true_radioButton->setGeometry(QRect(
         (ui.cost_function_groupBox->geometry().width() -
          (2 * true_false_radiobutton_width + BUTTON_TO_BUTTON_PADDING_X)) /
@@ -396,15 +397,14 @@ SettingsControl::SettingsControl(QWidget* parent, Qt::WindowFlags flags) :
             GROUP_BOX_TO_GROUP_BOX_Y));
 
     /*Set Geometry of Bottom Three Buttons*/
-    int opt_settings_button_width =
-        INSIDE_BUTTON_PADDING_X +
-        std::max(
-            std::max(
-                font_metrics.horizontalAdvance(ui.save_button->text()),
-                font_metrics.horizontalAdvance(ui.reset_button->text())),
-            font_metrics.horizontalAdvance(ui.cancel_button->text()));
+    int opt_settings_button_width = INSIDE_BUTTON_PADDING_X +
+        std::max(std::max(
+                     font_metrics.horizontalAdvance(ui.save_button->text()),
+                     font_metrics.horizontalAdvance(ui.reset_button->text())),
+                 font_metrics.horizontalAdvance(ui.cancel_button->text()));
     ui.save_button->setGeometry(QRect(
-        1 + ((ui.general_options_groupBox->geometry().right() +
+        1 +
+            ((ui.general_options_groupBox->geometry().right() +
               APPLICATION_BORDER_TO_GROUP_BOX_PADDING_X) -
              (3 * opt_settings_button_width + 2 * BUTTON_TO_BUTTON_PADDING_X)) /
                 2,
@@ -462,10 +462,10 @@ void SettingsControl::LoadSettings(
     /*Populate Available List Widget and Select the Current One*/
     std::vector<jta_cost_function::CostFunction> available_cost_functions =
         sc_trunk_manager_.getAvailableCostFunctions();
-    ui.trunk_radioButton->setChecked(true); // Always load to trunk
+    ui.trunk_radioButton->setChecked(true);  // Always load to trunk
     if (ui.trunk_radioButton->isChecked()) {
         /*Load Optimizer Settings (non-cost function)*/
-        ui.stage_enabled_checkBox->setChecked(true); // ALWAYS TRUE FOR TRUNK
+        ui.stage_enabled_checkBox->setChecked(true);  // ALWAYS TRUE FOR TRUNK
         ui.budget_spinBox->setValue(opt_settings_.trunk_budget);
         ui.x_translation_spinBox->setValue(opt_settings_.trunk_range.x);
         ui.y_translation_spinBox->setValue(opt_settings_.trunk_range.y);
@@ -488,17 +488,19 @@ void SettingsControl::LoadSettings(
                 ui.cost_function_listWidget->setCurrentRow(i);
                 break;
             }
-            if (i == (ui.cost_function_listWidget->count() - 1))
+            if (i == (ui.cost_function_listWidget->count() - 1)) {
                 QMessageBox::critical(
                     this,
                     "Error!",
                     "Active cost function not found!",
                     QMessageBox::Ok);
+            }
         }
     }
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 }
 
 /*On List Widgets Changed*/
@@ -600,8 +602,9 @@ void SettingsControl::on_cost_function_listWidget_itemSelectionChanged() {
     }
 
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 };
 
 void SettingsControl::
@@ -780,7 +783,7 @@ void SettingsControl::on_trunk_radioButton_clicked() {
         sc_trunk_manager_.getAvailableCostFunctions();
 
     /*Load Optimizer Settings (non-cost function)*/
-    ui.stage_enabled_checkBox->setChecked(true); // ALWAYS TRUE FOR TRUNK
+    ui.stage_enabled_checkBox->setChecked(true);  // ALWAYS TRUE FOR TRUNK
     ui.budget_spinBox->setValue(opt_settings_.trunk_budget);
     ui.x_translation_spinBox->setValue(opt_settings_.trunk_range.x);
     ui.y_translation_spinBox->setValue(opt_settings_.trunk_range.y);
@@ -800,17 +803,19 @@ void SettingsControl::on_trunk_radioButton_clicked() {
             ui.cost_function_listWidget->setCurrentRow(i);
             break;
         }
-        if (i == (ui.cost_function_listWidget->count() - 1))
+        if (i == (ui.cost_function_listWidget->count() - 1)) {
             QMessageBox::critical(
                 this,
                 "Error!",
                 "Active cost function not found!",
                 QMessageBox::Ok);
+        }
     }
 
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 };
 
 void SettingsControl::on_branch_radioButton_clicked() {
@@ -851,17 +856,19 @@ void SettingsControl::on_branch_radioButton_clicked() {
             ui.cost_function_listWidget->setCurrentRow(i);
             break;
         }
-        if (i == (ui.cost_function_listWidget->count() - 1))
+        if (i == (ui.cost_function_listWidget->count() - 1)) {
             QMessageBox::critical(
                 this,
                 "Error!",
                 "Active cost function not found!",
                 QMessageBox::Ok);
+        }
     }
 
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 };
 
 void SettingsControl::on_leaf_radioButton_clicked() {
@@ -901,17 +908,19 @@ void SettingsControl::on_leaf_radioButton_clicked() {
             ui.cost_function_listWidget->setCurrentRow(i);
             break;
         }
-        if (i == (ui.cost_function_listWidget->count() - 1))
+        if (i == (ui.cost_function_listWidget->count() - 1)) {
             QMessageBox::critical(
                 this,
                 "Error!",
                 "Active cost function not found!",
                 QMessageBox::Ok);
+        }
     }
 
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 };
 
 /*Optimizer Settings Buttons Toggled*/
@@ -1221,10 +1230,10 @@ void SettingsControl::on_reset_button_clicked() {
     /*Populate Available List Widget and Select the Current One*/
     std::vector<jta_cost_function::CostFunction> available_cost_functions =
         sc_trunk_manager_.getAvailableCostFunctions();
-    ui.trunk_radioButton->setChecked(true); // Always load to trunk
+    ui.trunk_radioButton->setChecked(true);  // Always load to trunk
     if (ui.trunk_radioButton->isChecked()) {
         /*Load Optimizer Settings (non-cost function)*/
-        ui.stage_enabled_checkBox->setChecked(true); // ALWAYS TRUE FOR TRUNK
+        ui.stage_enabled_checkBox->setChecked(true);  // ALWAYS TRUE FOR TRUNK
         ui.budget_spinBox->setValue(opt_settings_.trunk_budget);
         ui.x_translation_spinBox->setValue(opt_settings_.trunk_range.x);
         ui.y_translation_spinBox->setValue(opt_settings_.trunk_range.y);
@@ -1249,8 +1258,9 @@ void SettingsControl::on_reset_button_clicked() {
         }
     }
     /*Select the first Parameter if There are any Parameters*/
-    if (ui.cost_function_parameters_listWidget->count() > 0)
+    if (ui.cost_function_parameters_listWidget->count() > 0) {
         ui.cost_function_parameters_listWidget->setCurrentRow(0);
+    }
 }
 
 /*Cancel Button*/

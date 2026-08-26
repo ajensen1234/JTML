@@ -154,19 +154,21 @@ public:
      * caller-owned frames + locations (goto stop partial-load semantics —
      * the frames appended so far persist on a size mismatch; the returned
      * names are exactly the appended frames' display names).*/
-    StudyImageLoadResult LoadImages(const QStringList& paths,
-                                    const ImageLoadParams& params,
-                                    std::vector<Frame>& frames,
-                                    LocationStorage& locations);
+    StudyImageLoadResult LoadImages(
+        const QStringList& paths,
+        const ImageLoadParams& params,
+        std::vector<Frame>& frames,
+        LocationStorage& locations);
 
     /*Biplane twin: ParseBiplaneImages (same-count gate, per-list size
      * checks, goto stop_biplane semantics).*/
-    StudyImageLoadResult LoadBiplaneImages(const QStringList& paths_a,
-                                           const QStringList& paths_b,
-                                           const ImageLoadParams& params,
-                                           std::vector<Frame>& frames_a,
-                                           std::vector<Frame>& frames_b,
-                                           LocationStorage& locations);
+    StudyImageLoadResult LoadBiplaneImages(
+        const QStringList& paths_a,
+        const QStringList& paths_b,
+        const ImageLoadParams& params,
+        std::vector<Frame>& frames_a,
+        std::vector<Frame>& frames_b,
+        LocationStorage& locations);
 
     /*Model load: ParseModels -> two-pass dedup through the injected
      * append_names seam -> PopulateModels into the caller-owned models +

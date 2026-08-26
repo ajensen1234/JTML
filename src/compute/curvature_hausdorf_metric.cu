@@ -1,7 +1,7 @@
-#include "compute/gpu_metrics.cuh"
-
 #include <cuda.h>
 #include <cuda_runtime.h>
+
+#include "compute/gpu_metrics.cuh"
 
 /*Grayscale Colors*/
 #include "compute/pixel_grayscale_colors.h"
@@ -39,7 +39,8 @@ __global__ void Reset_CurvatureHausdorfScore_Kernel(int* dev_curv_haus_score) {
 
 namespace gpu_cost_function {
 double GPUMetrics::CurvatureHeatmapMetric(
-    GPUImage* projected_image, GPUHeatmap* gpu_heatmap) {
+    GPUImage* projected_image,
+    GPUHeatmap* gpu_heatmap) {
     int height = projected_image->GetFrameHeight();
     int width = projected_image->GetFrameWidth();
     int num_kp = gpu_heatmap->GetNumKeypoints();
@@ -70,4 +71,4 @@ double GPUMetrics::CurvatureHeatmapMetric(
     double test = 0;
     return test;
 };
-}; // namespace gpu_cost_function
+};  // namespace gpu_cost_function

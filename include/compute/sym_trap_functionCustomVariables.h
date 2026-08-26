@@ -24,9 +24,11 @@
 void invert_transformation(float result[4][4], float tran[4][4]) {
     int i, j;
     /* Upper left 3x3 of result is transpose of upper left 3x3 of tran. */
-    for (i = 0; i < 3; ++i)
-        for (j = 0; j < 3; ++j)
+    for (i = 0; i < 3; ++i) {
+        for (j = 0; j < 3; ++j) {
             result[i][j] = tran[j][i];
+        }
+    }
     /* Set the values for the last column of the result */
     result[3][0] = result[3][1] = result[3][2] = 0.0;
     result[3][3] = 1.0;
@@ -41,13 +43,18 @@ void invert_transformation(float result[4][4], float tran[4][4]) {
 
 void matmult(float ans[4][4], float matrix1[4][4], float matrix2[4][4]) {
     int i, j, k;
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 4; j++)
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
             ans[i][j] = 0.0;
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 4; j++)
-            for (k = 0; k < 4; k++)
+        }
+    }
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            for (k = 0; k < 4; k++) {
                 ans[i][j] += matrix1[i][k] * matrix2[k][j];
+            }
+        }
+    }
 }
 
 void create_312_transform(

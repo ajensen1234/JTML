@@ -12,8 +12,8 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void
-L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel(int* dev_pixel_score) {
+__global__ void L_1_1_MatrixDifferenceNorm__ResetPixelScoreKernel(
+    int* dev_pixel_score) {
     dev_pixel_score[0] = 0;
 }
 
@@ -37,17 +37,18 @@ __global__ void L_1_1_MatrixDifferenceNorm_DifferenceKernel(
     /*If Correct Width and Height*/
     if (i < width * height) {
         int diff_image = dev_A[i] - dev_B[i];
-        if (diff_image >= 0)
+        if (diff_image >= 0) {
             atomicAdd(&result[0], diff_image);
-        else
+        } else {
             atomicSub(&result[0], diff_image);
+        }
     }
 }
 
 namespace gpu_cost_function {
-double
-GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
-
+double GPUMetrics::L_1_1_MatrixDifferenceNorm(
+    GPUImage* image_A,
+    GPUImage* image_B) {
     /*Extract Bounding Boxes*/
     int* bounding_box_A = image_A->GetBoundingBox();
     int* bounding_box_B = image_B->GetBoundingBox();
@@ -101,4 +102,4 @@ GPUMetrics::L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B) {
         pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
     return pixel_score_[0];
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

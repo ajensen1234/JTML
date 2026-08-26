@@ -2,8 +2,8 @@
 #define GPU_DILATED_FRAME_H
 
 /*GPU Frame Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/gpu_frame.cuh"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -27,6 +27,6 @@ private:
     /*Dilation*/
     int dilation_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_DILATED_FRAME_H */

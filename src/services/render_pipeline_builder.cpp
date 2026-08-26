@@ -58,8 +58,10 @@ void RefreshBackgroundImport(vtkImageImport* importer, const cv::Mat& mat) {
         return;
     }
     const ImageImportParams params = DeriveImageImportParams(mat);
-    importer->SetDataSpacing(params.spacing[0], params.spacing[1], params.spacing[2]);
-    importer->SetDataOrigin(params.origin[0], params.origin[1], params.origin[2]);
+    importer->SetDataSpacing(
+        params.spacing[0], params.spacing[1], params.spacing[2]);
+    importer->SetDataOrigin(
+        params.origin[0], params.origin[1], params.origin[2]);
     importer->SetWholeExtent(
         params.extentMinX,
         params.extentMaxX,
@@ -88,7 +90,9 @@ void SetupLayeredRenderers(
     renderWindow->AddRenderer(sceneRenderer);
 }
 
-void SetupBackgroundCamera(vtkRenderer* backgroundRenderer, double focalLengthPx) {
+void SetupBackgroundCamera(
+    vtkRenderer* backgroundRenderer,
+    double focalLengthPx) {
     vtkCamera* camera = backgroundRenderer->GetActiveCamera();
     camera->SetFocalPoint(0, 0, -1);
     camera->SetPosition(0, 0, 0);

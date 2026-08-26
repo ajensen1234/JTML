@@ -50,4 +50,4 @@ struct RotationMatrixZXY {
     double rotation_21_;
     double rotation_22_;
 };
-} // namespace basic_la
+}  // namespace basic_la

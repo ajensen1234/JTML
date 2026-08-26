@@ -121,4 +121,4 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_POLE_CONSTRAINT() {
 
     return metric_score + pole_weight * shortest_distance;
 }
-} // namespace jta_cost_function
+}  // namespace jta_cost_function

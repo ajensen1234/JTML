@@ -2,20 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*Frame Header*/
-#include "compute/frame.h"
-
 #include <opencv2/core/hal/interface.h>
 #include <thrust/host_vector.h>
 #include <torch/types.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
+#include <opencv2/geometry/2d.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include "compute/curvature_utilities.h"
-
-#include <opencv2/geometry/2d.hpp>
+#include "compute/frame.h"
 
 /*Constructor*/
 Frame::Frame(
@@ -52,24 +50,28 @@ Frame::Frame(
 };
 /*Recalculate Edge Detected Image*/
 void Frame::SetEdgeImage(
-    int aperture, int low_threshold, int high_threshold, bool use_reverse) {
+    int aperture,
+    int low_threshold,
+    int high_threshold,
+    bool use_reverse) {
     aperture_ = aperture;
     low_threshold_ = low_threshold;
     high_threshold_ = high_threshold;
-    if (!use_reverse)
+    if (!use_reverse) {
         Canny(
             original_image_,
             edge_image_,
             low_threshold,
             high_threshold,
             aperture);
-    else
+    } else {
         Canny(
             inverted_image_,
             edge_image_,
             low_threshold,
             high_threshold,
             aperture);
+    }
 }
 /*Recalculate Dilated Image*/
 void Frame::SetDilatedImage(int dilation) {
@@ -155,18 +157,17 @@ void Frame::setCurvatureHeatmaps() {
     num_curvature_keypoints_ = curvature_heatmaps_.size();
     std::vector<std::vector<uchar>> vector_heatmap_char_tmp;
     for (int i = 0; i < num_curvature_keypoints_; i++) {
-        vector_heatmap_char_tmp.push_back(
-            std::vector<uchar>(
-                curvature_heatmaps_[i].data,
-                curvature_heatmaps_[i].data +
-                    curvature_heatmaps_[i].total() *
-                        curvature_heatmaps_[i].elemSize()));
+        vector_heatmap_char_tmp.push_back(std::vector<uchar>(
+            curvature_heatmaps_[i].data,
+            curvature_heatmaps_[i].data +
+                curvature_heatmaps_[i].total() *
+                    curvature_heatmaps_[i].elemSize()));
     }
     curvature_heatmap_chars_ = Frame::flattenVector(vector_heatmap_char_tmp);
 };
 
-std::vector<uchar>
-Frame::flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs) {
+std::vector<uchar> Frame::flattenVector(
+    const std::vector<std::vector<uchar>>& vecOfVecs) {
     std::vector<uchar> flattened;
     for (const auto& innerVec : vecOfVecs) {
         flattened.insert(flattened.end(), innerVec.begin(), innerVec.end());

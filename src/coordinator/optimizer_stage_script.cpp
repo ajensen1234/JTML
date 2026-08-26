@@ -31,7 +31,9 @@ namespace {
  * engine never validates). The message keeps the per-field requirement text,
  * so the errors stay byte-identical to the pre-helper throws.*/
 void ThrowIfNegative(
-    const std::string& field_name, int value, const std::string& requirement) {
+    const std::string& field_name,
+    int value,
+    const std::string& requirement) {
     if (value < 0) {
         throw std::invalid_argument(
             "BuildStageScript: negative " + field_name + " (" +
@@ -59,7 +61,7 @@ void ValidateSettings(const OptimizerSettings& settings) {
  * neutral (the shape is identical across them; only img_indices_ differs).*/
 bool IsNormalDirective(const std::string& directive) {
     return directive == "Single" || directive == "All" || directive == "Each" ||
-           directive == "From" || directive == "Backward";
+        directive == "From" || directive == "Backward";
 }
 
 /*The v1 graph — jtml-production — the run shape today's Optimize() executes:
@@ -90,10 +92,11 @@ StageGraph JtmlProductionGraph() {
              .cfm_index = 2u}}};
 }
 
-} // namespace
+}  // namespace
 
 StageScript BuildStageScript(
-    const OptimizerSettings& settings, const std::string& directive) {
+    const OptimizerSettings& settings,
+    const std::string& directive) {
     ValidateSettings(settings);
 
     if (directive == "Sym_Trap") {
@@ -109,13 +112,12 @@ StageScript BuildStageScript(
          * enable_leaf_ = true).*/
         StageScript script;
         if (settings.enable_leaf_) {
-            script.push_back(
-                StageSpec{
-                    StageKind::Leaf,
-                    settings.leaf_range,
-                    static_cast<unsigned int>(settings.leaf_budget),
-                    /*repeat=*/0u,
-                    /*cfm_index=*/2u});
+            script.push_back(StageSpec{
+                StageKind::Leaf,
+                settings.leaf_range,
+                static_cast<unsigned int>(settings.leaf_budget),
+                /*repeat=*/0u,
+                /*cfm_index=*/2u});
         }
         return script;
     }
@@ -135,30 +137,27 @@ StageScript BuildStageScript(
      * frame selection (img_indices_), never in stage shape — one script for
      * all of them.*/
     StageScript script;
-    script.push_back(
-        StageSpec{
-            StageKind::Trunk,
-            settings.trunk_range,
-            static_cast<unsigned int>(settings.trunk_budget),
-            /*repeat=*/1u,
-            /*cfm_index=*/0u});
+    script.push_back(StageSpec{
+        StageKind::Trunk,
+        settings.trunk_range,
+        static_cast<unsigned int>(settings.trunk_budget),
+        /*repeat=*/1u,
+        /*cfm_index=*/0u});
     if (settings.enable_branch_ && settings.number_branches > 0) {
-        script.push_back(
-            StageSpec{
-                StageKind::Branch,
-                settings.branch_range,
-                static_cast<unsigned int>(settings.branch_budget),
-                static_cast<unsigned int>(settings.number_branches),
-                /*cfm_index=*/1u});
+        script.push_back(StageSpec{
+            StageKind::Branch,
+            settings.branch_range,
+            static_cast<unsigned int>(settings.branch_budget),
+            static_cast<unsigned int>(settings.number_branches),
+            /*cfm_index=*/1u});
     }
     if (settings.enable_leaf_) {
-        script.push_back(
-            StageSpec{
-                StageKind::Leaf,
-                settings.leaf_range,
-                static_cast<unsigned int>(settings.leaf_budget),
-                /*repeat=*/1u,
-                /*cfm_index=*/2u});
+        script.push_back(StageSpec{
+            StageKind::Leaf,
+            settings.leaf_range,
+            static_cast<unsigned int>(settings.leaf_budget),
+            /*repeat=*/1u,
+            /*cfm_index=*/2u});
     }
     return script;
 }
@@ -257,4 +256,4 @@ const StageGraph& StageGraphByName(const std::string& name) {
         "StageGraphByName: unknown stage graph: '" + name + "'");
 }
 
-} // namespace jta
+}  // namespace jta

@@ -31,8 +31,8 @@ public:
 
     // True iff every loaded edge-image size in sizes matches (w,h). Used by
     // the image-load size-consistency gate (monoplane + biplane).
-    static bool AllSameSize(int w, int h,
-                            const std::vector<std::pair<int, int>>& sizes);
+    static bool
+    AllSameSize(int w, int h, const std::vector<std::pair<int, int>>& sizes);
 };
 
 }  // namespace jta

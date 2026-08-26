@@ -17,7 +17,9 @@ XYZPoint::XYZPoint(double X, double Y, double Z) {
 }
 
 RotationMatrixZXY::RotationMatrixZXY(
-    double Z_angle, double X_angle, double Y_angle) {
+    double Z_angle,
+    double X_angle,
+    double Y_angle) {
     float cz = cos(Z_angle * 3.14159265358979323846 / 180.0);
     float sz = sin(Z_angle * 3.14159265358979323846 / 180.0);
     float cx = cos(X_angle * 3.14159265358979323846 / 180.0);
@@ -39,12 +41,12 @@ RotationMatrixZXY::RotationMatrixZXY(
 
 XYZPoint RotationMatrixZXY::RotatePoint(XYZPoint point) {
     double rX = rotation_00_ * point.X_ + rotation_01_ * point.Y_ +
-                rotation_02_ * point.Z_;
+        rotation_02_ * point.Z_;
     double rY = rotation_10_ * point.X_ + rotation_11_ * point.Y_ +
-                rotation_12_ * point.Z_;
+        rotation_12_ * point.Z_;
     double rZ = rotation_20_ * point.X_ + rotation_21_ * point.Y_ +
-                rotation_22_ * point.Z_;
+        rotation_22_ * point.Z_;
 
     return XYZPoint(rX, rY, rZ);
 }
-} // namespace basic_la
+}  // namespace basic_la

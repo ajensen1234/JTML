@@ -23,23 +23,24 @@
 //    replace) and main.qml binds studyBridge.frameListModel /
 //    modelListModel.
 
+#include <QQuickVTKItem.h>
+#include <QVTKOpenGLNativeWidget.h>
+
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQuickVTKItem.h>
 #include <QSurfaceFormat>
 #include <QUrl>
-#include <QVTKOpenGLNativeWidget.h>
 
 #include "AppBridge.h"
 #include "ExperimentalScene.h"
 #include "FileDialogBridge.h"
-#include "MlBridge.h" // complete type: the setContextProperty QObject* overload needs it
+#include "MlBridge.h"  // complete type: the setContextProperty QObject* overload needs it
 #include "OptimizerBridge.h"
-#include "PoseBridge.h" // complete type: the setContextProperty QObject* overload needs it
+#include "PoseBridge.h"  // complete type: the setContextProperty QObject* overload needs it
 #include "QmlVtkRenderer.h"
-#include "SettingsBridge.h" // complete type: the setContextProperty QObject* overload needs it
-#include "StudyBridge.h" // complete type: the setContextProperty QObject* overload needs it
+#include "SettingsBridge.h"  // complete type: the setContextProperty QObject* overload needs it
+#include "StudyBridge.h"  // complete type: the setContextProperty QObject* overload needs it
 
 int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
@@ -53,7 +54,10 @@ int main(int argc, char* argv[]) {
     /*U6: registered (uncreatable — the hub owns the instance) so QML can
      * reference the run-state enum values (OptimizerBridge.Completed etc.).*/
     qmlRegisterUncreatableType<OptimizerBridge>(
-        "jtml.experimental", 1, 0, "OptimizerBridge",
+        "jtml.experimental",
+        1,
+        0,
+        "OptimizerBridge",
         "OptimizerBridge is created by AppBridge");
 
     // App-owned scene (R7/R11): outlives the engine; the QML-created
@@ -80,8 +84,7 @@ int main(int argc, char* argv[]) {
         "settingsBridge", app_bridge.settingsBridge());
     engine.rootContext()->setContextProperty(
         "optimizerBridge", app_bridge.optimizerBridge());
-    engine.rootContext()->setContextProperty(
-        "mlBridge", app_bridge.mlBridge());
+    engine.rootContext()->setContextProperty("mlBridge", app_bridge.mlBridge());
     engine.rootContext()->setContextProperty(
         "poseBridge", app_bridge.poseBridge());
 

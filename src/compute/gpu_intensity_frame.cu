@@ -56,4 +56,4 @@ bool GPUIntensityFrame::IsSilhouetteDark() {
 void GPUIntensityFrame::SetSilhouetteDark(bool dark_silhouette) {
     dark_silhouette_ = dark_silhouette;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

@@ -32,9 +32,8 @@ CalibrationParseResult SessionController::ParseCalibration(
     QFile inputFile(file_path);
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
-        QStringList InputList =
-            in.readAll().split(QRegularExpression("[\\r\\n]|,|\\t| "),
-                               Qt::SkipEmptyParts);
+        QStringList InputList = in.readAll().split(
+            QRegularExpression("[\\r\\n]|,|\\t| "), Qt::SkipEmptyParts);
 
         /*Valid Code for Monoplane*/
         if (InputList[0] == "JT_INTCALIB" || InputList[0] == "JTA_INTCALIB") {
@@ -109,9 +108,9 @@ CalibrationParseResult SessionController::ParseCalibration(
                 orthogonal_axes_B);
             result.kind = CalibrationParseResult::Kind::Biplane;
             result.ok = true;
-        } else if (InputList[0] == "image") { // Would need a way to distinguish
-                                              // Denver single plane from
-                                              // biplane
+        } else if (InputList[0] == "image") {  // Would need a way to
+                                               // distinguish Denver single
+                                               // plane from biplane
             CameraCalibration denver_calibration_A(
                 InputList[6].toDouble(),
                 InputList[7].toDouble(),
@@ -142,10 +141,11 @@ CalibrationParseResult SessionController::ParseCalibration(
 
 /*---- Image parsing + dataset population (R6) -----------------------------*/
 
-ImageLoadResult SessionController::ParseImages(const QStringList& paths,
-                                               const ImageLoadParams& params,
-                                               std::vector<Frame>& frames,
-                                               LocationStorage& locations) {
+ImageLoadResult SessionController::ParseImages(
+    const QStringList& paths,
+    const ImageLoadParams& params,
+    std::vector<Frame>& frames,
+    LocationStorage& locations) {
     ImageLoadResult result;
     for (int i = 0; i < paths.size(); i++) {
         auto new_frame = Frame(
@@ -160,8 +160,8 @@ ImageLoadResult SessionController::ParseImages(const QStringList& paths,
         std::vector<std::pair<int, int>> loaded_sizes;
         loaded_sizes.reserve(frames.size());
         for (auto& f : frames) {
-            loaded_sizes.emplace_back(f.GetEdgeImage().cols,
-                                      f.GetEdgeImage().rows);
+            loaded_sizes.emplace_back(
+                f.GetEdgeImage().cols, f.GetEdgeImage().rows);
         }
         if (!jta::ModelListBuilder::AllSameSize(width, height, loaded_sizes)) {
             /*goto stop: abort mid-list; the frames appended so far persist
@@ -218,8 +218,7 @@ ImageLoadResult SessionController::ParseBiplaneImages(
         std::vector<std::pair<int, int>> sizesA;
         sizesA.reserve(frames_a.size());
         for (auto& f : frames_a) {
-            sizesA.emplace_back(f.GetEdgeImage().cols,
-                                f.GetEdgeImage().rows);
+            sizesA.emplace_back(f.GetEdgeImage().cols, f.GetEdgeImage().rows);
         }
         if (!jta::ModelListBuilder::AllSameSize(widthA, heightA, sizesA)) {
             /*goto stop_biplane: abort mid-list; the frames appended so far
@@ -233,8 +232,7 @@ ImageLoadResult SessionController::ParseBiplaneImages(
         std::vector<std::pair<int, int>> sizesB;
         sizesB.reserve(frames_b.size());
         for (auto& f : frames_b) {
-            sizesB.emplace_back(f.GetEdgeImage().cols,
-                                f.GetEdgeImage().rows);
+            sizesB.emplace_back(f.GetEdgeImage().cols, f.GetEdgeImage().rows);
         }
         if (!jta::ModelListBuilder::AllSameSize(widthB, heightB, sizesB)) {
             result.status = ImageLoadStatus::SizeMismatchAborted;
@@ -341,8 +339,9 @@ CameraRadioActions SessionController::DecideCameraRadios(
 
 /*---- Session mirror (the load slots' SyncSessionState() tail) ------------*/
 
-void SessionController::SyncSessionState(const std::vector<Frame>& frames,
-                                         LocationStorage& locations) {
+void SessionController::SyncSessionState(
+    const std::vector<Frame>& frames,
+    LocationStorage& locations) {
     frame_count_ = static_cast<int>(frames.size());
     model_count_ = locations.GetModelCount();
 }

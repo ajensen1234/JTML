@@ -11,39 +11,52 @@ namespace gpu_cost_function {
 
 /*Constructor and Destructor for GPU Metrics Class*/
 GPUMetrics::GPUMetrics() {
-
     /*Initialized Correctly?*/
     initialized_correctly_ = true;
 
     /*Initialize Pinned Memory for Slightly Faster Transfer if Using Mismatched
      * Pixel Count*/
     cudaHostAlloc((void**)&pixel_score_, sizeof(int), cudaHostAllocDefault);
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Initialize Pinned Memory for IOU Intermediary */
     cudaHostAlloc(
         (void**)&intersection_score_, sizeof(int), cudaHostAllocDefault);
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Initialize Pinned Memory for IOU Intermediary */
     cudaHostAlloc((void**)&union_score_, sizeof(int), cudaHostAllocDefault);
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Allocate GPU buffers for pixel score.*/
     cudaMalloc((void**)&dev_pixel_score_, sizeof(int));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Allocate GPU buffers for IOU Intermediary*/
     cudaMalloc((void**)&dev_intersection_score_, sizeof(int));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Allocate GPU buffers for IOU Intermediary*/
     cudaMalloc((void**)&dev_union_score_, sizeof(int));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Allocate GPU buffers for comparison white pixel count.*/
     cudaMalloc((void**)&dev_white_pix_count_, sizeof(int));
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     /*Upload (Reset) white pixel count for comparison image from Host to
      * Device.*/
@@ -53,11 +66,15 @@ GPUMetrics::GPUMetrics() {
         &white_pix_count_,
         sizeof(int),
         cudaMemcpyHostToDevice);
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
 
     cudaHostAlloc(
         (void**)&distance_map_score_, sizeof(int), cudaHostAllocDefault);
-    if (cudaGetLastError() != cudaSuccess) initialized_correctly_ = false;
+    if (cudaGetLastError() != cudaSuccess) {
+        initialized_correctly_ = false;
+    }
     // Allocate some memory for the dev dm score
     cudaMalloc((void**)&dev_distance_map_score_, sizeof(int));
     if (cudaGetLastError() != cudaSuccess) {
@@ -123,8 +140,8 @@ void GPUMetrics::AllocateCurvatureHausdorfScore(int num_keypoints) {
 };
 
 /*Reset White Pixel Count*/
-__global__ void
-ComputeSumWhitePixels__ResetWhitePixelScoreKernel(int* dev_white_pix_count_) {
+__global__ void ComputeSumWhitePixels__ResetWhitePixelScoreKernel(
+    int* dev_white_pix_count_) {
     dev_white_pix_count_[0] = 0;
 }
 
@@ -137,14 +154,14 @@ __global__ void WhitePixelSum(
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
     if (i < width * height) {
-        if (dev_dilation_comparison_image[i] == WHITE_PIXEL)
+        if (dev_dilation_comparison_image[i] == WHITE_PIXEL) {
             atomicAdd(&dev_comparison_white_pix_count[0], 1);
+        }
     }
 };
 
 /*Computes Sum of White Pixels in Image*/
 int GPUMetrics::ComputeSumWhitePixels(GPUImage* image, cudaError* error) {
-
     /*Reset Errors*/
     cudaGetLastError();
 
@@ -202,7 +219,9 @@ void GPUMetrics::CaptureBank0Metrics() {
 }
 
 void GPUMetrics::RestoreBank0Metrics() {
-    if (!bank0_metrics_captured_) return;
+    if (!bank0_metrics_captured_) {
+        return;
+    }
     pixel_score_ = static_cast<int*>(bank0_metrics_.host_pixel_score);
     dev_pixel_score_ = static_cast<int*>(bank0_metrics_.dev_pixel_score);
     intersection_score_ = static_cast<int*>(bank0_metrics_.host_intersection);
@@ -256,7 +275,9 @@ bool GPUMetrics::TrySetActiveBank(BankState* bank) {
         RestoreBank0Metrics();
         return true;
     }
-    if (!bank0_metrics_captured_) CaptureBank0Metrics();
+    if (!bank0_metrics_captured_) {
+        CaptureBank0Metrics();
+    }
     if (!BindMetricBank(*bank)) {
         RestoreBank0Metrics();
         return false;
@@ -280,7 +301,7 @@ cudaStream_t GPUMetrics::GetExecutionStream() const {
     return execution_stream_;
 }
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 // ── U4: EvaluationContext metric overloads — graph-capturable paths ────
 //
@@ -301,9 +322,10 @@ cudaStream_t GPUMetrics::GetExecutionStream() const {
 // Completion happens later after one stream/event completion.
 // Legacy BankState host-scalar overloads are untouched.
 
+#include <algorithm>
+
 #include "compute/evaluation_context.h"
 #include "compute/fast_implant_dilation_metric.cuh"
-#include <algorithm>
 
 namespace gpu_cost_function {
 
@@ -314,7 +336,7 @@ namespace {
 // launch parameters are capturable in a CUDA graph.
 constexpr int kMaxMetricDim = 2048;
 
-} // anonymous namespace
+}  // anonymous namespace
 
 cudaError_t GPUMetrics::EnqueueFastImplantDilationMetric(
     GPUImage* rendered_image,
@@ -325,35 +347,40 @@ cudaError_t GPUMetrics::EnqueueFastImplantDilationMetric(
         ctx.completion_event == nullptr) {
         return cudaErrorInvalidResourceHandle;
     }
-    if (!cf) return cudaErrorInvalidValue;
+    if (!cf) {
+        return cudaErrorInvalidValue;
+    }
     auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
 
     // Resolve frame dims from context (set once at pool init).
-    const int height =
-        ctx.height > 0
-            ? ctx.height
-            : (rendered_image ? rendered_image->GetFrameHeight() : 0);
-    const int width =
-        ctx.width > 0 ? ctx.width
-                      : (rendered_image ? rendered_image->GetFrameWidth() : 0);
-    unsigned char* image =
-        ctx.primary.output != nullptr
-            ? static_cast<unsigned char*>(ctx.primary.output)
-            : (rendered_image ? rendered_image->GetDeviceImagePointer()
-                              : nullptr);
-    if (!image || width == 0 || height == 0) return cudaErrorInvalidValue;
+    const int height = ctx.height > 0
+        ? ctx.height
+        : (rendered_image ? rendered_image->GetFrameHeight() : 0);
+    const int width = ctx.width > 0
+        ? ctx.width
+        : (rendered_image ? rendered_image->GetFrameWidth() : 0);
+    unsigned char* image = ctx.primary.output != nullptr
+        ? static_cast<unsigned char*>(ctx.primary.output)
+        : (rendered_image ? rendered_image->GetDeviceImagePointer() : nullptr);
+    if (!image || width == 0 || height == 0) {
+        return cudaErrorInvalidValue;
+    }
 
     // Device pointers for crop derivation and metric score reduction.
     auto* dev_bb = static_cast<const int*>(ctx.primary.dev_bounding_box);
     auto* dev_crop =
         static_cast<MetricCropParams*>(ctx.primary.dev_metric_crop);
-    if (!dev_bb || !dev_crop) return cudaErrorInvalidValue;
+    if (!dev_bb || !dev_crop) {
+        return cudaErrorInvalidValue;
+    }
 
     // Bind ctx.metrics into GPUMetrics member aliases, saving bank-0.
     BankState temp_bank{};
     temp_bank.metrics = ctx.metrics;
     temp_bank.stream = ctx.stream;
-    if (!TrySetActiveBank(&temp_bank)) return cudaErrorInvalidValue;
+    if (!TrySetActiveBank(&temp_bank)) {
+        return cudaErrorInvalidValue;
+    }
     // On return, dev_pixel_score_ / pixel_score_ etc. alias ctx.metrics.
 
     // 1. ComputeMetricCropKernel — single-thread, writes dev_crop on device.
@@ -433,36 +460,41 @@ cudaError_t GPUMetrics::EnqueueDistanceMapMetric(
         ctx.completion_event == nullptr) {
         return cudaErrorInvalidResourceHandle;
     }
-    if (!dm) return cudaErrorInvalidValue;
+    if (!dm) {
+        return cudaErrorInvalidValue;
+    }
     auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
 
     // Resolve frame dims from context (set once at pool init).
-    const int height =
-        ctx.height > 0
-            ? ctx.height
-            : (projected_image ? projected_image->GetFrameHeight() : 0);
-    const int width =
-        ctx.width > 0
-            ? ctx.width
-            : (projected_image ? projected_image->GetFrameWidth() : 0);
-    unsigned char* image =
-        ctx.primary.output != nullptr
-            ? static_cast<unsigned char*>(ctx.primary.output)
-            : (projected_image ? projected_image->GetDeviceImagePointer()
-                               : nullptr);
-    if (!image || width == 0 || height == 0) return cudaErrorInvalidValue;
+    const int height = ctx.height > 0
+        ? ctx.height
+        : (projected_image ? projected_image->GetFrameHeight() : 0);
+    const int width = ctx.width > 0
+        ? ctx.width
+        : (projected_image ? projected_image->GetFrameWidth() : 0);
+    unsigned char* image = ctx.primary.output != nullptr
+        ? static_cast<unsigned char*>(ctx.primary.output)
+        : (projected_image ? projected_image->GetDeviceImagePointer()
+                           : nullptr);
+    if (!image || width == 0 || height == 0) {
+        return cudaErrorInvalidValue;
+    }
 
     // Device pointers for crop derivation and metric score reduction.
     auto* dev_bb = static_cast<const int*>(ctx.primary.dev_bounding_box);
     auto* dev_crop =
         static_cast<MetricCropParams*>(ctx.primary.dev_metric_crop);
-    if (!dev_bb || !dev_crop) return cudaErrorInvalidValue;
+    if (!dev_bb || !dev_crop) {
+        return cudaErrorInvalidValue;
+    }
 
     // Bind ctx.metrics into GPUMetrics member aliases, saving bank-0.
     BankState temp_bank{};
     temp_bank.metrics = ctx.metrics;
     temp_bank.stream = ctx.stream;
-    if (!TrySetActiveBank(&temp_bank)) return cudaErrorInvalidValue;
+    if (!TrySetActiveBank(&temp_bank)) {
+        return cudaErrorInvalidValue;
+    }
     // On return, dev_distance_map_score_ / distance_map_score_ etc. alias
     // ctx.metrics.
 
@@ -518,4 +550,4 @@ cudaError_t GPUMetrics::EnqueueDistanceMapMetric(
     return err != cudaSuccess ? err : cudaGetLastError();
 }
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

@@ -11,7 +11,8 @@ GPUEdgeFrame::GPUEdgeFrame(
     unsigned char* host_edge_image,
     int high_threshold,
     int low_threshold,
-    int aperture) : GPUFrame(width, height, gpu_device, host_edge_image) {
+    int aperture) :
+    GPUFrame(width, height, gpu_device, host_edge_image) {
     /*If Initialized Correctly*/
     if (this->IsInitializedCorrectly()) {
         low_threshold_ = low_threshold;
@@ -45,4 +46,4 @@ int GPUEdgeFrame::GetCannyAperture() {
     return aperture_;
 };
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

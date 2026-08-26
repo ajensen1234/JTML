@@ -2,8 +2,8 @@
 #define GPU_EDGE_FRAME_H
 
 /*GPU Frame Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/gpu_frame.cuh"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -33,6 +33,6 @@ private:
     int low_threshold_;
     int aperture_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_EDGE_FRAME_H */

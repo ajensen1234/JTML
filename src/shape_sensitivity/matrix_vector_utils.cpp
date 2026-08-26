@@ -72,40 +72,32 @@ RotationMatrix rotation_nudge(Pose input_pose, float theta, std::string axis) {
 RotationMatrix matmul(RotationMatrix A, RotationMatrix B) {
     RotationMatrix result;
     result.rotation_00_ = A.rotation_00_ * B.rotation_00_ +
-                          A.rotation_01_ * B.rotation_10_ +
-                          A.rotation_02_ * B.rotation_20_;
+        A.rotation_01_ * B.rotation_10_ + A.rotation_02_ * B.rotation_20_;
     result.rotation_01_ = A.rotation_00_ * B.rotation_01_ +
-                          A.rotation_01_ * B.rotation_11_ +
-                          A.rotation_02_ * B.rotation_21_;
+        A.rotation_01_ * B.rotation_11_ + A.rotation_02_ * B.rotation_21_;
     result.rotation_02_ = A.rotation_00_ * B.rotation_02_ +
-                          A.rotation_01_ * B.rotation_12_ +
-                          A.rotation_02_ * B.rotation_22_;
+        A.rotation_01_ * B.rotation_12_ + A.rotation_02_ * B.rotation_22_;
 
     result.rotation_10_ = A.rotation_10_ * B.rotation_00_ +
-                          A.rotation_11_ * B.rotation_10_ +
-                          A.rotation_12_ * B.rotation_20_;
+        A.rotation_11_ * B.rotation_10_ + A.rotation_12_ * B.rotation_20_;
     result.rotation_11_ = A.rotation_10_ * B.rotation_01_ +
-                          A.rotation_11_ * B.rotation_11_ +
-                          A.rotation_12_ * B.rotation_21_;
+        A.rotation_11_ * B.rotation_11_ + A.rotation_12_ * B.rotation_21_;
     result.rotation_12_ = A.rotation_10_ * B.rotation_02_ +
-                          A.rotation_11_ * B.rotation_12_ +
-                          A.rotation_12_ * B.rotation_22_;
+        A.rotation_11_ * B.rotation_12_ + A.rotation_12_ * B.rotation_22_;
 
     result.rotation_20_ = A.rotation_20_ * B.rotation_00_ +
-                          A.rotation_21_ * B.rotation_10_ +
-                          A.rotation_22_ * B.rotation_20_;
+        A.rotation_21_ * B.rotation_10_ + A.rotation_22_ * B.rotation_20_;
     result.rotation_21_ = A.rotation_20_ * B.rotation_01_ +
-                          A.rotation_21_ * B.rotation_11_ +
-                          A.rotation_22_ * B.rotation_21_;
+        A.rotation_21_ * B.rotation_11_ + A.rotation_22_ * B.rotation_21_;
     result.rotation_22_ = A.rotation_20_ * B.rotation_02_ +
-                          A.rotation_21_ * B.rotation_12_ +
-                          A.rotation_22_ * B.rotation_22_;
+        A.rotation_21_ * B.rotation_12_ + A.rotation_22_ * B.rotation_22_;
 
     return result;
 }
 
-std::vector<float>
-vector_differece(std::vector<float> vec1, std::vector<float> vec2) {
+std::vector<float> vector_differece(
+    std::vector<float> vec1,
+    std::vector<float> vec2) {
     // Check to make sure that the vectors are the same size
     if (vec1.size() != vec2.size()) {
         throw std::invalid_argument(

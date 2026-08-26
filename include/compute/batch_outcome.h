@@ -44,7 +44,9 @@ struct BatchOutcome {
         return o;
     }
 
-    bool isOrderedScores() const { return kind == Kind::OrderedScores; }
+    bool isOrderedScores() const {
+        return kind == Kind::OrderedScores;
+    }
     bool isAbort() const {
         return kind == Kind::PostLaunchAbort || kind == Kind::WatchdogPoisoned;
     }
@@ -52,19 +54,26 @@ struct BatchOutcome {
 
 class CoordinatorBatchAbort : public std::runtime_error {
 public:
-    explicit CoordinatorBatchAbort(BatchOutcome::Kind kind, std::string reason)
-        : std::runtime_error(reason.empty() ? "CoordinatorBatchAbort" : reason),
-          kind_(kind),
-          reason_(std::move(reason)) {}
-    BatchOutcome::Kind kind() const noexcept { return kind_; }
-    const std::string& reason() const noexcept { return reason_; }
+    explicit CoordinatorBatchAbort(
+        BatchOutcome::Kind kind,
+        std::string reason) :
+        std::runtime_error(reason.empty() ? "CoordinatorBatchAbort" : reason),
+        kind_(kind),
+        reason_(std::move(reason)) {}
+    BatchOutcome::Kind kind() const noexcept {
+        return kind_;
+    }
+    const std::string& reason() const noexcept {
+        return reason_;
+    }
 
 private:
     BatchOutcome::Kind kind_;
     std::string reason_;
 };
 
-inline std::vector<double> MaterializeOrderedScores(const BatchOutcome& outcome) {
+inline std::vector<double> MaterializeOrderedScores(
+    const BatchOutcome& outcome) {
     if (outcome.kind == BatchOutcome::Kind::OrderedScores) {
         return outcome.scores;
     }

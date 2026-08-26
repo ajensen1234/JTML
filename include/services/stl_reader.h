@@ -29,4 +29,4 @@ STL_STATUS readAnySTL(
     const QString& path,
     std::vector<float>& triangleVertices,
     std::vector<float>& triangleNormals);
-} // namespace stl_reader
+}  // namespace stl_reader

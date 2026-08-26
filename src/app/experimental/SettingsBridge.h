@@ -42,7 +42,6 @@
 
 #include <QObject>
 #include <QStringList>
-
 #include <memory>
 #include <vector>
 
@@ -143,16 +142,17 @@ public:
      * instance; tests pass an ini-backed one — the real registry is never
      * touched by tests). Not owned by the bridge.*/
     explicit SettingsBridge(
-        jta::SettingsService* settings_service, QObject* parent = nullptr);
+        jta::SettingsService* settings_service,
+        QObject* parent = nullptr);
     ~SettingsBridge() override;
 
     // ---- Session actions (QML buttons) -----------------------------------
-    Q_INVOKABLE void save();  // explicit save: registry write, clears dirty
-    Q_INVOKABLE void load();  // restore persisted state (startup); defaults
-                              // on first run; never writes
-    Q_INVOKABLE void reset(); // settings_constants.h defaults + fresh
-                              // managers (widgets SettingsControl parity);
-                              // marks dirty (a session edit until Save)
+    Q_INVOKABLE void save();   // explicit save: registry write, clears dirty
+    Q_INVOKABLE void load();   // restore persisted state (startup); defaults
+                               // on first run; never writes
+    Q_INVOKABLE void reset();  // settings_constants.h defaults + fresh
+                               // managers (widgets SettingsControl parity);
+                               // marks dirty (a session edit until Save)
 
     // ---- Range/budget/number/enable accessors ----------------------------
     double trunkRangeX() const;
@@ -249,16 +249,17 @@ signals:
 
 private:
     void markDirty();
-    void
-    applyCostFunctionEntries(const std::vector<jta::RegistryEntry>& entries);
-    jta_cost_function::CostFunctionManager*
-    managerForStage(const QString& stage) const;
-    int
-    costFunctionIndex(jta_cost_function::CostFunctionManager* manager) const;
+    void applyCostFunctionEntries(
+        const std::vector<jta::RegistryEntry>& entries);
+    jta_cost_function::CostFunctionManager* managerForStage(
+        const QString& stage) const;
+    int costFunctionIndex(
+        jta_cost_function::CostFunctionManager* manager) const;
     void setCostFunctionIndex(
-        jta_cost_function::CostFunctionManager* manager, int index);
-    QStringList
-    costFunctionNames(jta_cost_function::CostFunctionManager* manager) const;
+        jta_cost_function::CostFunctionManager* manager,
+        int index);
+    QStringList costFunctionNames(
+        jta_cost_function::CostFunctionManager* manager) const;
     int dilation(
         jta_cost_function::CostFunctionManager* manager,
         int fallback_default) const;

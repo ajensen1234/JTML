@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 /* Plan 010 U12 Stage 1: bank-state ownership contract.
- * U1 Note: BankState remains as Stage-1 math/alias compatibility; EvaluationContext
- * (evaluation_context.h) is the primary executed type for the graph-backed greedy executor.
+ * U1 Note: BankState remains as Stage-1 math/alias compatibility;
+ * EvaluationContext (evaluation_context.h) is the primary executed type for the
+ * graph-backed greedy executor.
  *
  * This is deliberately allocation-free and CUDA-header-free.  It describes the
  * complete per-evaluation write set and provides checked footprint/admission
@@ -82,7 +83,8 @@ struct MetricBuffers {
 };
 
 /* A future bank view.  Stage 1 intentionally has no cudaStream_t: stream and
- * lease ownership are introduced only after this write-set contract is locked. */
+ * lease ownership are introduced only after this write-set contract is locked.
+ */
 struct BankState {
     std::size_t index = 0;
     int width = 0;
@@ -91,7 +93,8 @@ struct BankState {
     RenderBuffers secondary;  // empty for monoplane
     MetricBuffers metrics;
     // Opaque handles keep this contract CUDA-header-free. U12's CUDA pool casts
-    // them to cudaStream_t/cudaEvent_t; bank 0 remains nullptr for compatibility.
+    // them to cudaStream_t/cudaEvent_t; bank 0 remains nullptr for
+    // compatibility.
     void* stream = nullptr;
     void* completion_event = nullptr;
     bool in_flight = false;
@@ -101,7 +104,8 @@ struct BankState {
  * its GPU oracle supplies the real event readiness. */
 class BankCheckoutTracker {
 public:
-    explicit BankCheckoutTracker(std::size_t count) : checked_out_(count, false) {}
+    explicit BankCheckoutTracker(std::size_t count) :
+        checked_out_(count, false) {}
 
     int checkout() {
         for (std::size_t i = 0; i < checked_out_.size(); ++i) {
@@ -114,7 +118,9 @@ public:
     }
 
     bool recycle(std::size_t index, bool ready) {
-        if (index >= checked_out_.size() || !checked_out_[index] || !ready) return false;
+        if (index >= checked_out_.size() || !checked_out_[index] || !ready) {
+            return false;
+        }
         checked_out_[index] = false;
         return true;
     }
@@ -123,7 +129,9 @@ public:
         return index < checked_out_.size() && checked_out_[index];
     }
 
-    std::size_t size() const { return checked_out_.size(); }
+    std::size_t size() const {
+        return checked_out_.size();
+    }
 
 private:
     std::vector<bool> checked_out_;
@@ -136,7 +144,8 @@ struct BankFootprintInput {
     std::uint64_t maximum_stride_size = 0;
     std::uint64_t cub_storage_bytes = 0;
     std::uint64_t curvature_capacity = 0;
-    std::uint64_t graph_overhead_bytes = 0; // U1: per-context cudaGraphExec + events + counters
+    std::uint64_t graph_overhead_bytes =
+        0;  // U1: per-context cudaGraphExec + events + counters
     bool biplane = false;
 };
 
@@ -159,28 +168,36 @@ namespace bank_state_math {
 
 inline bool add(std::uint64_t a, std::uint64_t b, std::uint64_t& out) {
     constexpr auto max = std::numeric_limits<std::uint64_t>::max();
-    if (b > max - a) return false;
+    if (b > max - a) {
+        return false;
+    }
     out = a + b;
     return true;
 }
 
 inline bool multiply(std::uint64_t a, std::uint64_t b, std::uint64_t& out) {
     constexpr auto max = std::numeric_limits<std::uint64_t>::max();
-    if (a != 0 && b > max / a) return false;
+    if (a != 0 && b > max / a) {
+        return false;
+    }
     out = a * b;
     return true;
 }
 
-inline bool addProduct(std::uint64_t base, std::uint64_t a, std::uint64_t b,
-                       std::uint64_t& out) {
+inline bool addProduct(
+    std::uint64_t base,
+    std::uint64_t a,
+    std::uint64_t b,
+    std::uint64_t& out) {
     std::uint64_t product = 0;
     return multiply(a, b, product) && add(base, product, out);
 }
 
 /* Bytes written by one camera's render pipeline.  The fields mirror the
  * RenderBuffers names above and the audited CUDA allocations exactly. */
-inline std::uint64_t renderBytesPerCamera(const BankFootprintInput& in,
-                                          bool& valid) {
+inline std::uint64_t renderBytesPerCamera(
+    const BankFootprintInput& in,
+    bool& valid) {
     valid = true;
     std::uint64_t bytes = 0;
     const auto add = [&](std::uint64_t count, std::uint64_t element_bytes) {
@@ -190,7 +207,8 @@ inline std::uint64_t renderBytesPerCamera(const BankFootprintInput& in,
             valid = false;
         }
     };
-    const auto addScaled = [&](std::uint64_t count, std::uint64_t groups,
+    const auto addScaled = [&](std::uint64_t count,
+                               std::uint64_t groups,
                                std::uint64_t element_bytes) {
         std::uint64_t elements = 0;
         if (!multiply(count, element_bytes, elements) ||
@@ -199,30 +217,33 @@ inline std::uint64_t renderBytesPerCamera(const BankFootprintInput& in,
         }
     };
     std::uint64_t pixels = 0;
-    if (!multiply(in.width, in.height, pixels)) valid = false;
+    if (!multiply(in.width, in.height, pixels)) {
+        valid = false;
+    }
 
-    add(pixels, sizeof(std::uint8_t));                    // output image
-    add(4, sizeof(std::int32_t));                         // device bbox
-    add(4, sizeof(std::int32_t));                         // pinned host bbox
-    add(in.triangle_count, sizeof(std::uint8_t));         // backface
-    addScaled(in.triangle_count, 3, sizeof(float));       // transformed vertex z
-    addScaled(in.triangle_count, 3, sizeof(std::uint8_t)); // tangent triangle
-    addScaled(in.triangle_count, 6, sizeof(float));      // projected triangles
-    addScaled(in.triangle_count, 6, sizeof(std::int32_t)); // snapped triangles
-    addScaled(in.triangle_count, 4, sizeof(std::int32_t)); // triangle bboxes
-    add(in.triangle_count, sizeof(std::int32_t));         // bbox sizes
-    add(in.triangle_count, sizeof(std::int32_t));         // bbox prefix
-    add(1, sizeof(std::int32_t));                         // fragment fill device
-    add(1, sizeof(std::int32_t));                         // fragment fill host
-    add(in.maximum_stride_size, sizeof(std::int32_t));   // stride prefixes
-    addScaled(in.width, in.height, sizeof(float));        // z-line values
-    add(in.cub_storage_bytes, 1);                         // CUB scratch
-    add(1, sizeof(MetricCropParams));                     // U4: metric crop device
+    add(pixels, sizeof(std::uint8_t));               // output image
+    add(4, sizeof(std::int32_t));                    // device bbox
+    add(4, sizeof(std::int32_t));                    // pinned host bbox
+    add(in.triangle_count, sizeof(std::uint8_t));    // backface
+    addScaled(in.triangle_count, 3, sizeof(float));  // transformed vertex z
+    addScaled(in.triangle_count, 3, sizeof(std::uint8_t));  // tangent triangle
+    addScaled(in.triangle_count, 6, sizeof(float));  // projected triangles
+    addScaled(in.triangle_count, 6, sizeof(std::int32_t));  // snapped triangles
+    addScaled(in.triangle_count, 4, sizeof(std::int32_t));  // triangle bboxes
+    add(in.triangle_count, sizeof(std::int32_t));           // bbox sizes
+    add(in.triangle_count, sizeof(std::int32_t));           // bbox prefix
+    add(1, sizeof(std::int32_t));                       // fragment fill device
+    add(1, sizeof(std::int32_t));                       // fragment fill host
+    add(in.maximum_stride_size, sizeof(std::int32_t));  // stride prefixes
+    addScaled(in.width, in.height, sizeof(float));      // z-line values
+    add(in.cub_storage_bytes, 1);                       // CUB scratch
+    add(1, sizeof(MetricCropParams));  // U4: metric crop device
     return bytes;
 }
 
 /* Bytes written by the metrics path, including every reduction target and its
- * pinned host twin.  The metric state is shared by the two camera render sets. */
+ * pinned host twin.  The metric state is shared by the two camera render sets.
+ */
 inline std::uint64_t metricBytes(const BankFootprintInput& in, bool& valid) {
     valid = true;
     std::uint64_t bytes = 0;
@@ -250,10 +271,13 @@ inline BankFootprint footprint(const BankFootprintInput& in) {
     result.render_bytes_per_camera = renderBytesPerCamera(in, render_valid);
     result.metric_bytes = metricBytes(in, metric_valid);
     result.valid = render_valid && metric_valid;
-    if (!result.valid) return result;
+    if (!result.valid) {
+        return result;
+    }
 
     const std::uint64_t cameras = in.biplane ? 2 : 1;
-    if (!multiply(result.render_bytes_per_camera, cameras, result.render_bytes)) {
+    if (!multiply(
+            result.render_bytes_per_camera, cameras, result.render_bytes)) {
         result.valid = false;
         return result;
     }
@@ -261,12 +285,25 @@ inline BankFootprint footprint(const BankFootprintInput& in) {
         result.valid = false;
         return result;
     }
-    // U1: per-context device counters (nextCandidate/nextChunk/overflowFlag) + graph overhead
+    // U1: per-context device counters (nextCandidate/nextChunk/overflowFlag) +
+    // graph overhead
     std::uint64_t extra = 0;
-    if (!add(extra, 3 * sizeof(std::int32_t), extra)) { result.valid = false; return result; } // device counters
-    if (!add(extra, 1 * sizeof(std::int32_t), extra)) { result.valid = false; return result; } // host overflow pinned
-    if (!add(extra, in.graph_overhead_bytes, extra)) { result.valid = false; return result; }
-    if (!add(result.total_bytes, extra, result.total_bytes)) { result.valid = false; return result; }
+    if (!add(extra, 3 * sizeof(std::int32_t), extra)) {
+        result.valid = false;
+        return result;
+    }  // device counters
+    if (!add(extra, 1 * sizeof(std::int32_t), extra)) {
+        result.valid = false;
+        return result;
+    }  // host overflow pinned
+    if (!add(extra, in.graph_overhead_bytes, extra)) {
+        result.valid = false;
+        return result;
+    }
+    if (!add(result.total_bytes, extra, result.total_bytes)) {
+        result.valid = false;
+        return result;
+    }
     return result;
 }
 
@@ -274,9 +311,10 @@ inline BankFootprint footprint(const BankFootprintInput& in) {
  * memory may be committed to extra banks.  If the measurement or footprint is
  * unavailable, or even one bank cannot fit in that budget, return bank_count=1
  * and admitted=false so the compatibility bank remains the only usable bank. */
-inline BankAdmission admit(std::uint64_t free_bytes,
-                           const BankFootprint& footprint_value,
-                           std::uint64_t n_max) {
+inline BankAdmission admit(
+    std::uint64_t free_bytes,
+    const BankFootprint& footprint_value,
+    std::uint64_t n_max) {
     BankAdmission result;
     result.budget_bytes = free_bytes / 2;
     if (free_bytes == 0 || !footprint_value.valid ||
@@ -285,9 +323,14 @@ inline BankAdmission admit(std::uint64_t free_bytes,
         return result;
     }
     result.fitting_banks = result.budget_bytes / footprint_value.total_bytes;
-    if (result.fitting_banks == 0) return result;
-    result.bank_count = result.fitting_banks < n_max ? result.fitting_banks : n_max;
-    if (result.bank_count == 0) result.bank_count = 1;
+    if (result.fitting_banks == 0) {
+        return result;
+    }
+    result.bank_count =
+        result.fitting_banks < n_max ? result.fitting_banks : n_max;
+    if (result.bank_count == 0) {
+        result.bank_count = 1;
+    }
     result.admitted = result.bank_count > 1;
     return result;
 }

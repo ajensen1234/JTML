@@ -78,4 +78,4 @@ GraphPreflightResult ProbeOverflowCase(void* stream = nullptr);
 // Helper to format a GraphPreflightResult for logging.
 std::string FormatPreflightResult(const GraphPreflightResult& r);
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

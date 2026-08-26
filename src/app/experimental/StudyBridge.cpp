@@ -15,21 +15,20 @@
 #include <opencv2/core.hpp>
 
 // The seams + the app-owned dataset + the direct-compiled list models.
+#include <cmath>
+#include <vector>
+
 #include "AppBridge.h"
 #include "DelegateSelection.h"
 #include "ExperimentalScene.h"
 #include "ExperimentalSession.h"
 #include "compute/frame.h"
+#include "coordinator/session_state_controller.h"
 #include "domain/data_structures_6D.h"
 #include "services/model.h"
 #include "services/session_controller.h"
 #include "view/frame_list_model.h"
 #include "view/model_list_model.h"
-
-#include "coordinator/session_state_controller.h"
-
-#include <cmath>
-#include <vector>
 
 namespace {
 
@@ -60,34 +59,36 @@ double ViewingAngleForFrame(const Calibration& cal, int width, int height) {
     Q_UNUSED(width);
     static constexpr double kPi = 3.14159265358979323846;
     const double y = height * cal.camera_A_principal_.pixel_pitch_ / 2.0 +
-                     std::abs(cal.camera_A_principal_.principal_y_);
+        std::abs(cal.camera_A_principal_.principal_y_);
     return 180.0 / kPi * 2.0 *
-           std::atan2(y, cal.camera_A_principal_.principal_distance_);
+        std::atan2(y, cal.camera_A_principal_.principal_distance_);
 }
 
 }  // namespace
 
-StudyBridge::StudyBridge(AppBridge* hub, ExperimentalSession* session,
-                         ExperimentalScene* scene,
-                         SessionStateController* session_state_controller,
-                         QObject* parent)
-    : QObject(parent),
-      hub_(hub),
-      session_(session),
-      scene_(scene),
-      controller_(new jta::SessionController),
-      /*Plan 006 U7: the shared study-load controller wraps controller_ and
-       * consults the session-state controller's M7 run-in-flight probe at
-       * each load (L17 — the QML app has no load-time guard today; the
-       * shared check is defense-in-depth, rejection is silent). The lambda
-       * is invoked only at load time, never during construction.*/
-      study_load_controller_(
-          controller_,
-          [this] { return session_state_controller_->runInFlight(); }),
-      session_state_controller_(session_state_controller),
-      selection_(new DelegateSelection),
-      frame_list_model_(new FrameListModel),
-      model_list_model_(new ModelListModel) {}
+StudyBridge::StudyBridge(
+    AppBridge* hub,
+    ExperimentalSession* session,
+    ExperimentalScene* scene,
+    SessionStateController* session_state_controller,
+    QObject* parent) :
+    QObject(parent),
+    hub_(hub),
+    session_(session),
+    scene_(scene),
+    controller_(new jta::SessionController),
+    /*Plan 006 U7: the shared study-load controller wraps controller_ and
+     * consults the session-state controller's M7 run-in-flight probe at
+     * each load (L17 — the QML app has no load-time guard today; the
+     * shared check is defense-in-depth, rejection is silent). The lambda
+     * is invoked only at load time, never during construction.*/
+    study_load_controller_(
+        controller_,
+        [this] { return session_state_controller_->runInFlight(); }),
+    session_state_controller_(session_state_controller),
+    selection_(new DelegateSelection),
+    frame_list_model_(new FrameListModel),
+    model_list_model_(new ModelListModel) {}
 
 StudyBridge::~StudyBridge() {
     /*The engine (and with it the QML bindings) is destroyed before the hub
@@ -121,7 +122,8 @@ void StudyBridge::loadCalibration(const QString& file_path) {
     }
     /*Typed error mapping (widgets precedent): PixelSizeZero / InvalidCode
      * show the box; FileOpenFailed is silent and changes nothing.*/
-    if (result.parse.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
+    if (result.parse.error ==
+        jta::CalibrationParseResult::Error::PixelSizeZero) {
         emit messageRequested(
             QStringLiteral("Error!"),
             QStringLiteral("Pixel size (the last number in the calibration "
@@ -129,8 +131,9 @@ void StudyBridge::loadCalibration(const QString& file_path) {
         return;
     }
     if (result.parse.error == jta::CalibrationParseResult::Error::InvalidCode) {
-        emit messageRequested(QStringLiteral("Error!"),
-                              QStringLiteral("Invalid Configuration File!"));
+        emit messageRequested(
+            QStringLiteral("Error!"),
+            QStringLiteral("Invalid Configuration File!"));
         return;
     }
     if (!result.parse.ok) {
@@ -139,7 +142,8 @@ void StudyBridge::loadCalibration(const QString& file_path) {
     /*The controller wrote the calibration + flags + the active-camera
      * mirror; the scene focal is a view mapping (the widgets sets it inside
      * Viewer::setup_camera_calibration).*/
-    scene_->setFocalLengthPx(result.parse.calibration.camera_A_principal_.principal_distance_);
+    scene_->setFocalLengthPx(
+        result.parse.calibration.camera_A_principal_.principal_distance_);
     syncSessionState();
     emit datasetChanged();
     emit sceneCameraChanged();
@@ -148,8 +152,9 @@ void StudyBridge::loadCalibration(const QString& file_path) {
 void StudyBridge::loadImages(const QStringList& paths) {
     /*Calibration-required guard (widgets "Load Calibration First!" box).*/
     if (!hasCalibration()) {
-        emit messageRequested(QStringLiteral("Error!"),
-                              QStringLiteral("Load Calibration First!"));
+        emit messageRequested(
+            QStringLiteral("Error!"),
+            QStringLiteral("Load Calibration First!"));
         return;
     }
     /*Edge params: the widgets reads its live controls; the QML app has no
@@ -161,8 +166,10 @@ void StudyBridge::loadImages(const QStringList& paths) {
      * rejection is silent (defense-in-depth — the shared check lands
      * without new user-visible behavior).*/
     const jta::StudyImageLoadResult result = study_load_controller_.LoadImages(
-        LocalPaths(paths), jta::ImageLoadParams{3, 40, 120, 0},
-        session_->loaded_frames, session_->model_locations);
+        LocalPaths(paths),
+        jta::ImageLoadParams{3, 40, 120, 0},
+        session_->loaded_frames,
+        session_->model_locations);
     if (result.status == jta::StudyLoadStatus::RunInFlight) {
         return;
     }
@@ -195,8 +202,9 @@ void StudyBridge::loadModels(const QStringList& paths) {
     /*Models-before-calibration guard (review fix): PopulateModels needs a
      * calibration — defer + prompt (widgets "Load Calibration First!" box).*/
     if (!hasCalibration()) {
-        emit messageRequested(QStringLiteral("Error!"),
-                              QStringLiteral("Load Calibration First!"));
+        emit messageRequested(
+            QStringLiteral("Error!"),
+            QStringLiteral("Load Calibration First!"));
         return;
     }
     /*One shared load path (plan 006 U7 / R11): parse -> dedup -> populate ->
@@ -206,8 +214,10 @@ void StudyBridge::loadModels(const QStringList& paths) {
      * unique names drive the Model names AND the renderer binding). The
      * run-in-flight rejection is silent (defense-in-depth).*/
     const jta::StudyModelLoadResult result = study_load_controller_.LoadModels(
-        LocalPaths(paths), session_->calibration_file,
-        session_->loaded_models, session_->model_locations,
+        LocalPaths(paths),
+        session_->calibration_file,
+        session_->loaded_models,
+        session_->model_locations,
         [this](const QVector<QString>& base_names) {
             return model_list_model_->AppendModels(base_names);
         });
@@ -286,8 +296,14 @@ bool StudyBridge::isModelSelected(int row) const {
     return selection_->IsModelSelected(row);
 }
 
-void StudyBridge::applyViewerPose(int sceneModelIndex, double x, double y,
-                                  double z, double xa, double ya, double za) {
+void StudyBridge::applyViewerPose(
+    int sceneModelIndex,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     // Plan-005 feedback #2: the model-centric drag ended — sync the visually
     // arranged pose into LocationStorage (the optimizer's starting point:
     // OptimizerBridge::run passes the storage by value into Initialize) and
@@ -307,7 +323,8 @@ void StudyBridge::applyViewerPose(int sceneModelIndex, double x, double y,
     // same parse in order; the match is defensive) — the primary may not be
     // scene index 0 once multi-model selection lands.
     int model_index = sceneModelIndex;
-    const std::string& scene_name = scene_models[static_cast<size_t>(sceneModelIndex)].name;
+    const std::string& scene_name =
+        scene_models[static_cast<size_t>(sceneModelIndex)].name;
     for (int i = 0; i < static_cast<int>(session_->loaded_models.size()); ++i) {
         if (session_->loaded_models[static_cast<size_t>(i)].model_name_ ==
             scene_name) {
@@ -325,7 +342,7 @@ void StudyBridge::applyViewerPose(int sceneModelIndex, double x, double y,
 
 bool StudyBridge::hasCalibration() const {
     return session_->calibrated_for_monoplane_viewport ||
-           session_->calibrated_for_biplane_viewport;
+        session_->calibrated_for_biplane_viewport;
 }
 
 bool StudyBridge::calibratedForMonoplane() const {
@@ -426,7 +443,8 @@ void StudyBridge::updateSceneModels() {
     for (size_t i = 0; i < session_->loaded_models.size(); ++i) {
         const Model& model = session_->loaded_models[i];
         scene_models.push_back(SceneModel{
-            model.file_location_, model.model_name_,
+            model.file_location_,
+            model.model_name_,
             session_->model_locations.GetPose(frame, static_cast<int>(i))});
     }
     scene_->setModels(scene_models);

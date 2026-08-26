@@ -107,4 +107,4 @@ double CostFunctionManager::costFunctionDIRECT_DILATION_T1() {
 
     return metric_score;
 }
-} // namespace jta_cost_function
+}  // namespace jta_cost_function

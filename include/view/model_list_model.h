@@ -18,8 +18,8 @@ class ModelListModel : public QAbstractListModel {
 
 public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index,
-                  int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole)
+        const override;
 
     // Uniquify new_names against the already-loaded names and append them.
     // Returns the unique display names (one per input, same order) so the

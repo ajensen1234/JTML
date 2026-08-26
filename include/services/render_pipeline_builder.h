@@ -126,7 +126,9 @@ void SetupLayeredRenderers(
 /*③ Camera setup — background renderer (widgets setup_camera_calibration /
  * QML ApplyCameraParams): focal (0,0,-1), position (0,0,0), clipping
  * (0.1, 2.0 * focalLengthPx).*/
-void SetupBackgroundCamera(vtkRenderer* backgroundRenderer, double focalLengthPx);
+void SetupBackgroundCamera(
+    vtkRenderer* backgroundRenderer,
+    double focalLengthPx);
 
 /*③ Camera setup — background image placement (widgets
  * place_image_actors_according_to_calibration / QML ApplyCameraPlacement):

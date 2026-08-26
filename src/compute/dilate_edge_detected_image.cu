@@ -41,8 +41,9 @@ __global__ void DilateEdgeDetectedImage_DilateKernel(
                 for (int k = 1; k <= dilation; k++) {
                     location = i + l * j * width + r * k;
                     pixel = dev_image[location];
-                    if (pixel != WHITE_PIXEL)
+                    if (pixel != WHITE_PIXEL) {
                         dev_image[location] = DILATED_PIXEL;
+                    }
                 }
             }
         }
@@ -78,9 +79,12 @@ __global__ void DilateEdgeDetectedImage_GrayDilatedEdgeToWhitePassKernel(
 
 namespace gpu_cost_function {
 bool GPUMetrics::DilateEdgeDetectedImage(
-    GPUImage* edge_detected_image, int dilation) {
+    GPUImage* edge_detected_image,
+    int dilation) {
     /*Check Dilation is Sufficient*/
-    if (dilation < 1) return true;
+    if (dilation < 1) {
+        return true;
+    }
 
     /*Clear Previous Errors*/
     cudaGetLastError();
@@ -150,4 +154,4 @@ bool GPUMetrics::DilateEdgeDetectedImage(
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

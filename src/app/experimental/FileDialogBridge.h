@@ -41,11 +41,11 @@ public:
     // list on cancel). `startDir` non-empty overrides the remembered
     // directory; `purpose` keys the remembered directory + sidebar MRU
     // (e.g. "images", "models" — anything stable).
-    Q_INVOKABLE QStringList getOpenFileNames(const QString& title,
-                                             const QString& filter,
-                                             const QString& startDir,
-                                             const QString& purpose =
-                                                 QStringLiteral("general"));
+    Q_INVOKABLE QStringList getOpenFileNames(
+        const QString& title,
+        const QString& filter,
+        const QString& startDir,
+        const QString& purpose = QStringLiteral("general"));
 
     // Directory-memory surface (public so the headless suite can pin the
     // QSettings round-trip without exec'ing a dialog — review fix

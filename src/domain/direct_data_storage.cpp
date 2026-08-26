@@ -207,8 +207,12 @@ void DirectDataStorage::PrintSize() {
     int average = 0;
     for (int i = 0; i < storage_matrix_.size(); i++) {
         int current_size = (*storage_matrix_[i]).size();
-        if (current_size <= minimum) minimum = current_size;
-        if (current_size >= maximum) maximum = current_size;
+        if (current_size <= minimum) {
+            minimum = current_size;
+        }
+        if (current_size >= maximum) {
+            maximum = current_size;
+        }
         average += current_size;
     }
 
@@ -217,7 +221,7 @@ void DirectDataStorage::PrintSize() {
     std::cout << "\nColumn Length Maximum: " << maximum;
     std::cout << "\nColumn Length Average: "
               << static_cast<double>(average) /
-                     static_cast<double>(storage_matrix_.size())
+            static_cast<double>(storage_matrix_.size())
               << std::endl;
 }
 
@@ -231,8 +235,9 @@ void DirectDataStorage::PrintContents() {
     std::cout << "\nColumn Length:";
     for (int i = 0; i < storage_matrix_.size(); i++) {
         std::cout << "\t" << (*storage_matrix_[i]).size();
-        if ((*storage_matrix_[i]).size() >= maximum)
+        if ((*storage_matrix_[i]).size() >= maximum) {
             maximum = (*storage_matrix_[i]).size();
+        }
     }
     std::cout << "\nMinimum Value:";
     for (int i = 0; i < minimum_value_columns_.size(); i++) {
@@ -252,8 +257,9 @@ void DirectDataStorage::PrintContents() {
         std::cout << "\n\t";
         for (int i = 0; i < storage_matrix_.size(); i++) {
             std::cout << "\t";
-            if (j < (*storage_matrix_[i]).size())
+            if (j < (*storage_matrix_[i]).size()) {
                 std::cout << (*storage_matrix_[i])[j]->value_;
+            }
         }
     }
 }

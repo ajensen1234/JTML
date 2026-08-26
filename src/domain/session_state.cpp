@@ -13,20 +13,27 @@ void SessionState::SetModelCount(int count) {
     if (!selected_models_.empty() &&
         static_cast<int>(selected_models_.back()) >= model_count_) {
         std::vector<int> kept;
-        for (int r : selected_models_)
-            if (r < model_count_) kept.push_back(r);
+        for (int r : selected_models_) {
+            if (r < model_count_) {
+                kept.push_back(r);
+            }
+        }
         selected_models_.swap(kept);
     }
 }
 
-int SessionState::GetModelCount() const { return model_count_; }
+int SessionState::GetModelCount() const {
+    return model_count_;
+}
 
 void SessionState::SetSelectedModels(const std::vector<int>& rows) {
     selected_models_ = rows;
     // Keep rows valid (>= 0, < model_count_) and sorted; primary = first.
     std::vector<int> kept;
     for (int r : rows) {
-        if (r >= 0 && r < model_count_) kept.push_back(r);
+        if (r >= 0 && r < model_count_) {
+            kept.push_back(r);
+        }
     }
     std::sort(kept.begin(), kept.end());
     selected_models_.swap(kept);
@@ -50,15 +57,20 @@ void SessionState::SetCurrentFrame(int frame) {
     current_frame_ = (frame >= 0 && frame < frame_count_) ? frame : -1;
 }
 
-int SessionState::GetCurrentFrame() const { return current_frame_; }
+int SessionState::GetCurrentFrame() const {
+    return current_frame_;
+}
 
 void SessionState::SetFrameCount(int count) {
     frame_count_ = count < 0 ? 0 : count;
-    if (current_frame_ != -1 && current_frame_ >= frame_count_)
+    if (current_frame_ != -1 && current_frame_ >= frame_count_) {
         current_frame_ = -1;
+    }
 }
 
-int SessionState::GetFrameCount() const { return frame_count_; }
+int SessionState::GetFrameCount() const {
+    return frame_count_;
+}
 
 void SessionState::SetPreviousFrame(int frame) {
     // Mirror of the last-selected frame. Negative resolves to -1 (none), like
@@ -68,14 +80,18 @@ void SessionState::SetPreviousFrame(int frame) {
     previous_frame_ = frame >= 0 ? frame : -1;
 }
 
-int SessionState::GetPreviousFrame() const { return previous_frame_; }
+int SessionState::GetPreviousFrame() const {
+    return previous_frame_;
+}
 
 void SessionState::SetPreviousModelRows(const std::vector<int>& rows) {
     // Same rule as SetSelectedModels: keep rows valid (>= 0, < model_count_)
     // and sorted; pass an empty vector to clear.
     std::vector<int> kept;
     for (int r : rows) {
-        if (r >= 0 && r < model_count_) kept.push_back(r);
+        if (r >= 0 && r < model_count_) {
+            kept.push_back(r);
+        }
     }
     std::sort(kept.begin(), kept.end());
     previous_model_rows_.swap(kept);

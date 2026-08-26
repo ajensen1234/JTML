@@ -24,13 +24,15 @@ public:
     // Failure taxonomy mirrors the exact guards in LaunchOptimizer.
     enum class Status {
         Ok = 0,
-        SelectFrameAndModel,      // no selected model, or no current frame
-        PoseMatrixDimensionMismatch,  // pose matrix size != frames/models loaded
+        SelectFrameAndModel,          // no selected model, or no current frame
+        PoseMatrixDimensionMismatch,  // pose matrix size != frames/models
+                                      // loaded
     };
 
     // Everything the entry gate compares. Plain values, no widgets.
     struct Input {
-        std::vector<int> selected_model_rows;  // selected model rows (any order)
+        std::vector<int>
+            selected_model_rows;        // selected model rows (any order)
         int previous_frame_index = -1;  // last-viewed frame index
         int current_frame = -1;         // current frame row
         int frame_count = 0;            // loaded_frames.size()

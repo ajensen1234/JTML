@@ -25,7 +25,7 @@
 //		if (height_ < 1) height_ = 1;
 //		intialized_cuda_ = false;
 //		metric_score_ = -1; /*Could never really be negative so this is
-//a good error check*/ 		dilation_comparison_white_pix_count_ = 0;
+// a good error check*/ 		dilation_comparison_white_pix_count_ = 0;
 //		dilation_comparison_pixel_sum_ = 0;
 //
 //		/*Initialize Device Variables to NULL*/
@@ -58,8 +58,8 @@
 //
 //	__global__ void ComparisonWhitePixel(unsigned char
 //*dev_dilation_comparison_image, int *dev_comparison_white_pix_count, int
-//width, int height) { 		int i = (blockIdx.y * gridDim.x + blockIdx.x) *
-//blockDim.x + threadIdx.x;
+// width, int height) { 		int i = (blockIdx.y * gridDim.x + blockIdx.x) *
+// blockDim.x + threadIdx.x;
 //
 //		if (i < width*height) {
 //			if (dev_dilation_comparison_image[i] == WHITE_PIXEL)
@@ -70,26 +70,26 @@
 //
 //	__global__ void ComparisonPixelSum(unsigned char
 //*dev_dilation_comparison_image, int *dev_comparison_pixel_sum, int width, int
-//height) { 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x +
-//threadIdx.x;
+// height) { 		int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x +
+// threadIdx.x;
 //
 //		if (i < width*height) {
 //			if (dev_dilation_comparison_image[i] != BLACK_PIXEL)
 //				atomicAdd((int *)&dev_comparison_pixel_sum[0],
-//dev_dilation_comparison_image[i]);
+// dev_dilation_comparison_image[i]);
 //		}
 //	}
 //
 //	cudaError_t RegistrationMetric::InitializeCUDA(unsigned char* dev_image,
-//unsigned char* edge_comparison_image, unsigned char*
-//dilation_comparison_image, unsigned char* intensity_comparison_image, int
-//device) {
+// unsigned char* edge_comparison_image, unsigned char*
+// dilation_comparison_image, unsigned char* intensity_comparison_image, int
+// device) {
 //		/*CUDA Error Status*/
 //		cudaGetLastError();  //Resets Errors
 //		cudaError_t cudaStatus;
 //
 //		/*Choose which GPU to run on, change this on a multi-GPU
-//system.*/ 		cudaSetDevice(device);
+// system.*/ 		cudaSetDevice(device);
 //
 //		/*Check for Errors*/
 //		cudaStatus = cudaGetLastError();
@@ -101,22 +101,22 @@
 //		}
 //
 //		/*Initialize device image pointer which was already allocated by
-//render engine*/ 		dev_image_ = dev_image;
+// render engine*/ 		dev_image_ = dev_image;
 //
 //		/*Initialize Pinned Memory for Slightly Faster Transfer if Using
-//Mismatched Pixel Count*/ 		cudaHostAlloc((void**)&pixel_score_, sizeof(int),
-//cudaHostAllocDefault);
+// Mismatched Pixel Count*/ 		cudaHostAlloc((void**)&pixel_score_,
+// sizeof(int), cudaHostAllocDefault);
 //
 //		/*Allocate GPU buffers for pixel score.*/
 //		cudaMalloc((void**)&dev_pixel_score_, sizeof(int));
 //
 //		/*Allocate GPU buffers for comparison white pixel count.*/
 //		cudaMalloc((void**)&dev_dilation_comparison_white_pix_count_,
-//sizeof(int));
+// sizeof(int));
 //
 //		/*Allocate GPU buffers for comparison pixel sum.*/
 //		cudaMalloc((void**)&dev_dilation_comparison_pixel_sum_,
-//sizeof(int));
+// sizeof(int));
 //
 //		/*Allocate GPU buffers for edge comparison image.*/
 //		cudaMalloc((void**)&dev_edge_comparison_image_, width_ * height_
@@ -124,11 +124,11 @@
 //
 //		/*Allocate GPU buffers for dilation comparison image.*/
 //		cudaMalloc((void**)&dev_dilation_comparison_image_, width_ *
-//height_ * sizeof(unsigned char));
+// height_ * sizeof(unsigned char));
 //
 //		/*Allocate GPU buffers for intensity comparison image.*/
 //		cudaMalloc((void**)&dev_intensity_comparison_image_, width_ *
-//height_ * sizeof(unsigned char));
+// height_ * sizeof(unsigned char));
 //
 //		/*Check for Errors*/
 //		cudaStatus = cudaGetLastError();
@@ -141,26 +141,26 @@
 //
 //		/*Upload Edge Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_edge_comparison_image_,
-//dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
-//cudaMemcpyHostToDevice);
+// dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
+// cudaMemcpyHostToDevice);
 //
 //		/*Upload Dilation Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_dilation_comparison_image_,
-//dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
-//cudaMemcpyHostToDevice);
+// dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
+// cudaMemcpyHostToDevice);
 //
 //		/*Upload Intensity Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_intensity_comparison_image_,
-//intensity_comparison_image, width_ * height_ * sizeof(unsigned char),
-//cudaMemcpyHostToDevice);
+// intensity_comparison_image, width_ * height_ * sizeof(unsigned char),
+// cudaMemcpyHostToDevice);
 //
 //		/*Upload (Reset) white pixel count for comparison image from
-//Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
+// Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
 //		cudaMemcpy(dev_dilation_comparison_white_pix_count_,
 //&dilation_comparison_white_pix_count_, sizeof(int), cudaMemcpyHostToDevice);
 //
 //		/*Upload (Reset) pixel sum for comparison image from Host to
-//Device.*/ 		dilation_comparison_pixel_sum_ = 0;
+// Device.*/ 		dilation_comparison_pixel_sum_ = 0;
 //		cudaMemcpy(dev_dilation_comparison_pixel_sum_,
 //&dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyHostToDevice);
 //
@@ -174,18 +174,19 @@
 //		}
 //
 //		/*Get Sum of White Pixels in Dilation Comparison Image and Total
-//Pixel Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( 			ceil(sqrt(
+// Pixel Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( ceil(sqrt(
 //			(double)(width_*height_) / (double)256)),
 //			ceil(sqrt(
 //			(double)(width_*height_) / (double)256)));
 //		ComparisonWhitePixel << <dim_grid_comparison_white_pix, 256 >>
 //>(dev_dilation_comparison_image_, dev_dilation_comparison_white_pix_count_,
-//width_, height_); 		cudaMemcpy(&dilation_comparison_white_pix_count_,
-//dev_dilation_comparison_white_pix_count_, sizeof(int),
-//cudaMemcpyDeviceToHost); 		ComparisonPixelSum << <dim_grid_comparison_white_pix,
-//256 >> >(dev_dilation_comparison_image_, dev_dilation_comparison_pixel_sum_,
-//width_, height_); 		cudaMemcpy(&dilation_comparison_pixel_sum_,
-//dev_dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyDeviceToHost);
+// width_, height_); 		cudaMemcpy(&dilation_comparison_white_pix_count_,
+// dev_dilation_comparison_white_pix_count_, sizeof(int),
+// cudaMemcpyDeviceToHost); 		ComparisonPixelSum <<
+// <dim_grid_comparison_white_pix, 256 >> >(dev_dilation_comparison_image_,
+// dev_dilation_comparison_pixel_sum_, width_, height_);
+// cudaMemcpy(&dilation_comparison_pixel_sum_,
+// dev_dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyDeviceToHost);
 //
 //		/*Check for Errors*/
 //		cudaStatus = cudaGetLastError();
@@ -200,12 +201,12 @@
 //
 //	/*Reset Comparison Image Pointer*/
 //	cudaError_t RegistrationMetric::SetEdgeComparisonImage(unsigned char*
-//edge_comparison_image) {
+// edge_comparison_image) {
 //		/*Check Initialized First*/
 //		if (!intialized_cuda_) {
 //			std::cout << "\nCUDA not Initialized for Registration
-//Metric - Cannot Set Another Comparison Image!"; 			return
-//cudaErrorMemoryAllocation;
+// Metric - Cannot Set Another Comparison Image!"; 			return
+// cudaErrorMemoryAllocation;
 //		}
 //
 //		/*CUDA Error Status*/
@@ -215,7 +216,7 @@
 //		/*Assuming that Comparison Image is same size as previous*/
 //		/*Upload Edge Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_edge_comparison_image_, edge_comparison_image,
-//width_ * height_ * sizeof(unsigned char), cudaMemcpyHostToDevice);
+// width_ * height_ * sizeof(unsigned char), cudaMemcpyHostToDevice);
 //
 //
 //		/*Check for Errors*/
@@ -231,12 +232,12 @@
 //
 //	/*Reset Comparison Image Pointer*/
 //	cudaError_t RegistrationMetric::SetDilationComparisonImage(unsigned
-//char* dilation_comparison_image) {
+// char* dilation_comparison_image) {
 //		/*Check Initialized First*/
 //		if (!intialized_cuda_) {
 //			std::cout << "\nCUDA not Initialized for Registration
-//Metric - Cannot Set Another Comparison Image!"; 			return
-//cudaErrorMemoryAllocation;
+// Metric - Cannot Set Another Comparison Image!"; 			return
+// cudaErrorMemoryAllocation;
 //		}
 //
 //		/*CUDA Error Status*/
@@ -246,16 +247,16 @@
 //		/*Assuming that Comparison Image is same size as previous*/
 //		/*Upload Dilation Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_dilation_comparison_image_,
-//dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
-//cudaMemcpyHostToDevice);
+// dilation_comparison_image, width_ * height_ * sizeof(unsigned char),
+// cudaMemcpyHostToDevice);
 //
 //		/*Upload (Reset) white pixel count for comparison image from
-//Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
+// Host to Device.*/ 		dilation_comparison_white_pix_count_ = 0;
 //		cudaMemcpy(dev_dilation_comparison_white_pix_count_,
 //&dilation_comparison_white_pix_count_, sizeof(int), cudaMemcpyHostToDevice);
 //
 //		/*Upload (Reset) pixel sum for comparison image from Host to
-//Device.*/ 		dilation_comparison_pixel_sum_ = 0;
+// Device.*/ 		dilation_comparison_pixel_sum_ = 0;
 //		cudaMemcpy(dev_dilation_comparison_pixel_sum_,
 //&dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyHostToDevice);
 //
@@ -265,18 +266,19 @@
 //			return cudaStatus;
 //
 //		/*Get Sum of White Pixels in Comparison Image and Total Pixel
-//Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( 			ceil(sqrt(
+// Sum*/ 		dim3 dim_grid_comparison_white_pix = dim3( 			ceil(sqrt(
 //			(double)(width_*height_) / (double)256)),
 //			ceil(sqrt(
 //			(double)(width_*height_) / (double)256)));
 //		ComparisonWhitePixel << <dim_grid_comparison_white_pix, 256 >>
 //>(dev_dilation_comparison_image_, dev_dilation_comparison_white_pix_count_,
-//width_, height_); 		cudaMemcpy(&dilation_comparison_white_pix_count_,
-//dev_dilation_comparison_white_pix_count_, sizeof(int),
-//cudaMemcpyDeviceToHost); 		ComparisonPixelSum << <dim_grid_comparison_white_pix,
-//256 >> >(dev_dilation_comparison_image_, dev_dilation_comparison_pixel_sum_,
-//width_, height_); 		cudaMemcpy(&dilation_comparison_pixel_sum_,
-//dev_dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyDeviceToHost);
+// width_, height_); 		cudaMemcpy(&dilation_comparison_white_pix_count_,
+// dev_dilation_comparison_white_pix_count_, sizeof(int),
+// cudaMemcpyDeviceToHost); 		ComparisonPixelSum <<
+// <dim_grid_comparison_white_pix, 256 >> >(dev_dilation_comparison_image_,
+// dev_dilation_comparison_pixel_sum_, width_, height_);
+// cudaMemcpy(&dilation_comparison_pixel_sum_,
+// dev_dilation_comparison_pixel_sum_, sizeof(int), cudaMemcpyDeviceToHost);
 //
 //		/*Check for Errors*/
 //		cudaStatus = cudaGetLastError();
@@ -285,12 +287,12 @@
 //
 //	/*Reset Comparison Image Pointer*/
 //	cudaError_t RegistrationMetric::SetIntensityComparisonImage(unsigned
-//char* intensity_comparison_image) {
+// char* intensity_comparison_image) {
 //		/*Check Initialized First*/
 //		if (!intialized_cuda_) {
 //			std::cout << "\nCUDA not Initialized for Registration
-//Metric - Cannot Set Another Comparison Image!"; 			return
-//cudaErrorMemoryAllocation;
+// Metric - Cannot Set Another Comparison Image!"; 			return
+// cudaErrorMemoryAllocation;
 //		}
 //
 //		/*CUDA Error Status*/
@@ -300,8 +302,8 @@
 //		/*Assuming that Comparison Image is same size as previous*/
 //		/*Upload Comparison Image from Host to Device*/
 //		cudaMemcpy(dev_intensity_comparison_image_,
-//intensity_comparison_image, width_ * height_ * sizeof(unsigned char),
-//cudaMemcpyHostToDevice);
+// intensity_comparison_image, width_ * height_ * sizeof(unsigned char),
+// cudaMemcpyHostToDevice);
 //
 //
 //		/*Check for Errors*/
@@ -318,19 +320,20 @@
 //		/*Check Initialized First*/
 //		if (!intialized_cuda_) {
 //			std::cout << "\nCUDA not Initialized for Registration
-//Metric - Cannot Write!"; 			return;
+// Metric - Cannot Write!"; 			return;
 //		}
 //
 //		/*Array for Storing Device Image on Host*/
 //		unsigned char* host_image = (unsigned
-//char*)malloc(width_*height_ * sizeof(unsigned char)); 		cudaMemcpy(host_image,
-//dev_image_, width_*height_ * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+// char*)malloc(width_*height_ * sizeof(unsigned char));
+// cudaMemcpy(host_image, dev_image_, width_*height_ * sizeof(unsigned char),
+// cudaMemcpyDeviceToHost);
 //
 //		/*OpenCV Image Container/Write Function*/
 //		cv::Mat projection_mat = cv::Mat(height_, width_, CV_8UC1,
-//host_image); /*Reverse before flip*/ 		cv::Mat output_mat = cv::Mat(width_,
-//height_, CV_8UC1); 		cv::flip(projection_mat, output_mat, 0);
-//		cv::imwrite(file_location, output_mat);
+// host_image); /*Reverse before flip*/ 		cv::Mat output_mat =
+// cv::Mat(width_, height_, CV_8UC1); 		cv::flip(projection_mat, output_mat,
+// 0); 		cv::imwrite(file_location, output_mat);
 //
 //		/*Free Array*/
 //		free(host_image);

@@ -32,12 +32,14 @@ struct EvaluationContext {
     RenderBuffers secondary{};  // empty for monoplane
     MetricBuffers metrics{};
 
-    // Opaque CUDA handles — CUDA pool casts to cudaStream_t/cudaEvent_t/cudaGraphExec_t
+    // Opaque CUDA handles — CUDA pool casts to
+    // cudaStream_t/cudaEvent_t/cudaGraphExec_t
     void* stream = nullptr;
     void* completion_event = nullptr;
     void* graph_exec = nullptr;
 
-    // Device-driven persistent worker counters (device int32, host pinned twins)
+    // Device-driven persistent worker counters (device int32, host pinned
+    // twins)
     void* dev_nextCandidate = nullptr;
     void* dev_nextChunk = nullptr;
     void* dev_overflowFlag = nullptr;
@@ -74,21 +76,24 @@ public:
     EvaluationContextPool(const EvaluationContextPool&) = delete;
     EvaluationContextPool& operator=(const EvaluationContextPool&) = delete;
 
-    bool Initialize(const BankFootprintInput& layout,
-                    std::uint64_t free_device_bytes,
-                    std::size_t n_max);
+    bool Initialize(
+        const BankFootprintInput& layout,
+        std::uint64_t free_device_bytes,
+        std::size_t n_max);
     void Shutdown();
 
     std::size_t size() const;
     EvaluationContext* context(std::size_t idx);
     const EvaluationContext* context(std::size_t idx) const;
 
-    // Checkout/Recycle mirror BankCheckoutTracker but operate on EvaluationContext
+    // Checkout/Recycle mirror BankCheckoutTracker but operate on
+    // EvaluationContext
     int Checkout();
     bool Recycle(std::size_t idx, bool completion_ready);
     bool IsInFlight(std::size_t idx) const;
 
-    // Plan 012 U3 C4/C8: preparation leases + poisoned handling (headless testable)
+    // Plan 012 U3 C4/C8: preparation leases + poisoned handling (headless
+    // testable)
     void InitForTest(std::size_t count);
     bool ForceRelease(std::size_t idx);
     bool LeavePoisoned(std::size_t idx);

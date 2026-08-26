@@ -27,4 +27,4 @@ Populates a vector of two vector<floats>, one contains the traingle vertices,
 the other contains the triangle normals  */
 STL_STATUS
 readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage);
-} // namespace stl_reader_BIG
+}  // namespace stl_reader_BIG

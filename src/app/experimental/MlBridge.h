@@ -78,15 +78,16 @@ class MlBridge : public QObject {
                    NOTIFY mlModelsChanged)
     Q_PROPERTY(QString segmentTibPt READ segmentTibPt WRITE setSegmentTibPt
                    NOTIFY mlModelsChanged)
-    Q_PROPERTY(QString estimatePt READ estimatePt WRITE setEstimatePt
-                   NOTIFY mlModelsChanged)
+    Q_PROPERTY(QString estimatePt READ estimatePt WRITE setEstimatePt NOTIFY
+                   mlModelsChanged)
 
     // ---- Availability flags (the AE4 degradation surface) ---------------
     // At least one segment .pt is set (Segment button enablement + the
     // bridge's guard before any torch work).
     Q_PROPERTY(bool hasSegmentModel READ hasSegmentModel NOTIFY mlModelsChanged)
     // The estimate .pt is set (Estimate button enablement + guard).
-    Q_PROPERTY(bool hasEstimateModel READ hasEstimateModel NOTIFY mlModelsChanged)
+    Q_PROPERTY(
+        bool hasEstimateModel READ hasEstimateModel NOTIFY mlModelsChanged)
 
     // ---- Segment/estimate knobs -----------------------------------------
     // Implant kind: picks the segment .pt (kind-preferred) + the estimate's

@@ -68,13 +68,14 @@ public:
      * LaunchOptimizer reads at the gate (no widgets, no mirrors: previous
      * is derived, H2).*/
     struct GateInput {
-        std::vector<int> selected_model_rows;  // selected model rows (any order)
-        int current_frame = -1;                // current frame row
-        int frame_count = 0;                   // loaded_frames.size()
-        int model_current_index = -1;          // ui.model_list current row
-        int model_count = 0;                   // loaded_models.size()
-        int pose_frame_count = 0;              // model_locations_.GetFrameCount()
-        int pose_model_count = 0;              // model_locations_.GetModelCount()
+        std::vector<int>
+            selected_model_rows;       // selected model rows (any order)
+        int current_frame = -1;        // current frame row
+        int frame_count = 0;           // loaded_frames.size()
+        int model_current_index = -1;  // ui.model_list current row
+        int model_count = 0;           // loaded_models.size()
+        int pose_frame_count = 0;      // model_locations_.GetFrameCount()
+        int pose_model_count = 0;      // model_locations_.GetModelCount()
     };
 
     struct GateResult {
@@ -115,7 +116,9 @@ public:
     static GateResult EvaluateGate(const GateInput& in);
 
     /*---- Run-state machine (M8) ------------------------------------------*/
-    RunState state() const { return state_; }
+    RunState state() const {
+        return state_;
+    }
     /*True while a run is in flight (running or stopping).*/
     bool running() const {
         return state_ == RunState::Running || state_ == RunState::Stopping;
@@ -124,7 +127,7 @@ public:
      * shell's Start gate adds the !threadActive condition (H1/M6).*/
     bool canStart() const {
         return state_ == RunState::Idle || state_ == RunState::Completed ||
-               state_ == RunState::Error;
+            state_ == RunState::Error;
     }
     /*Run accepted: Running + a fresh epoch (stale relays are dropped by the
      * shell via the epoch + sender guard).*/
@@ -137,8 +140,12 @@ public:
             state_ = RunState::Stopping;
         }
     }
-    void onInitializeFailed() { state_ = RunState::Error; }
-    void onOptimizerError() { state_ = RunState::Error; }
+    void onInitializeFailed() {
+        state_ = RunState::Error;
+    }
+    void onOptimizerError() {
+        state_ = RunState::Error;
+    }
     /*Terminal OptimizedFrame: Completed unless an OptimizerError already
      * moved the run to Error (pinned QML semantics — applyOptimizedFrame
      * keeps Error; the widgets mapper unlocks on the relay regardless, M8).*/
@@ -149,7 +156,9 @@ public:
     }
 
     /*---- Epoch (H1) ------------------------------------------------------*/
-    int epoch() const { return epoch_; }
+    int epoch() const {
+        return epoch_;
+    }
 
     /*---- Progress (oracle seam, M12) --------------------------------------*/
     /*Widgets onUpdateDisplay level classification (mainscreen.cpp:4526-4548)
@@ -158,11 +167,19 @@ public:
      * divide-by-zero on a disabled/zero branch config).*/
     static std::string StageLabel(const ProgressBudgets& b, int calls);
     void refreshProgress(const ProgressBudgets& b, int calls, double minimum);
-    std::string stageText() const { return stage_text_; }
-    int costCalls() const { return cost_calls_; }
-    double currentMinimum() const { return current_minimum_; }
+    std::string stageText() const {
+        return stage_text_;
+    }
+    int costCalls() const {
+        return cost_calls_;
+    }
+    double currentMinimum() const {
+        return current_minimum_;
+    }
     /*0..1 progress from calls vs the cumulative budget.*/
-    double progress() const { return progress_; }
+    double progress() const {
+        return progress_;
+    }
 
     /*---- Seed lifecycle (M10a) --------------------------------------------*/
     /*One-shot starting-pose seed (R8 — the ML estimate seeds the optimizer).
@@ -170,18 +187,28 @@ public:
      * gate so a rejected run never consumes it (the shell applies it before
      * Initialize so the estimate wins over the SaveLastPose mirror).*/
     void setSeedPose(
-        double x, double y, double z, double xa, double ya, double za,
-        int frame, int model);
-    void clearSeedPose() { has_seed_pose_ = false; }
-    bool hasSeedPose() const { return has_seed_pose_; }
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za,
+        int frame,
+        int model);
+    void clearSeedPose() {
+        has_seed_pose_ = false;
+    }
+    bool hasSeedPose() const {
+        return has_seed_pose_;
+    }
     /*Pop the pending seed for a run at (current_frame, primary_model_index)
      * with model_count models. Stale guards preserved (OptimizerBridge.cpp:
      * 276-291): the seed applies only when the run's frame is still the
      * seeded frame and the seeded model is still the primary selection;
      * otherwise it is dropped silently — a stale-frame estimate must never
      * override a different frame's pose.*/
-    AppliedSeed takeSeedForRun(
-        int current_frame, int primary_model_index, int model_count);
+    AppliedSeed
+    takeSeedForRun(int current_frame, int primary_model_index, int model_count);
 
 private:
     RunState state_ = RunState::Idle;

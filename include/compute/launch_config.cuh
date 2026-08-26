@@ -1,7 +1,8 @@
 #pragma once
-#include <cstdio>
 #include <cuda_runtime.h>
 #include <math.h>
+
+#include <cstdio>
 #include <optional>
 
 namespace gpu_cost_function {
@@ -16,8 +17,9 @@ struct LaunchConfiguration {
 class LaunchConfigBuilder {
 public:
     static std::optional<LaunchConfiguration> buildTriangleConfig(
-        int triangle_count, int gpu_device, bool verbose = false) {
-
+        int triangle_count,
+        int gpu_device,
+        bool verbose = false) {
         cudaDeviceProp props;
         cudaGetDeviceProperties(&props, gpu_device);
 
@@ -43,8 +45,7 @@ public:
             (props.maxThreadsPerMultiProcessor + TARGET_THREADS - 1) /
             TARGET_THREADS;
 
-        config.occupancy =
-            static_cast<float>(TARGET_THREADS * blocks_per_sm) /
+        config.occupancy = static_cast<float>(TARGET_THREADS * blocks_per_sm) /
             static_cast<float>(props.maxThreadsPerMultiProcessor);
 
         if (verbose) {
@@ -59,8 +60,9 @@ public:
     }
 
     static std::optional<LaunchConfiguration> buildVertexConfig(
-        int triangle_count, int gpu_device, bool verbose = false) {
-
+        int triangle_count,
+        int gpu_device,
+        bool verbose = false) {
         auto config =
             buildTriangleConfig(triangle_count * 3, gpu_device, false);
 
@@ -81,8 +83,9 @@ public:
     }
 
     static std::optional<LaunchConfiguration> buildBoundingBoxConfig(
-        int triangle_count, int gpu_device, bool verbose = false) {
-
+        int triangle_count,
+        int gpu_device,
+        bool verbose = false) {
         auto config =
             buildTriangleConfig(triangle_count * 4, gpu_device, false);
 
@@ -103,4 +106,4 @@ public:
     }
 };
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

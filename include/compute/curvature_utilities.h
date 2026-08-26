@@ -18,13 +18,17 @@
 #include "opencv2/imgproc.hpp"
 
 void extract_contour_points(
-    cv::Mat input_edge_image, std::vector<std::vector<cv::Point>>* contour);
+    cv::Mat input_edge_image,
+    std::vector<std::vector<cv::Point>>* contour);
 void calculate_curvature_along_contour(
-    std::vector<cv::Point_<int>> contour, float* curvature);
+    std::vector<cv::Point_<int>> contour,
+    float* curvature);
 std::vector<cv::Mat> generate_curvature_heatmaps(cv::Mat input_image);
 
 float menger_curvature(
-    cv::Point_<int> p1, cv::Point_<int> ref_pt, cv::Point_<int> p2);
+    cv::Point_<int> p1,
+    cv::Point_<int> ref_pt,
+    cv::Point_<int> p2);
 
 void pick_three_points(
     std::vector<cv::Point_<int>> contour_points,

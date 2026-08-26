@@ -12,15 +12,17 @@ namespace {
 constexpr int kMaxMruDirs = 5;
 }  // namespace
 
-FileDialogBridge::FileDialogBridge(QObject* parent)
-    : QObject(parent),
-      settings_(QStringLiteral("JointTrackAutoGPU"),
-                QStringLiteral("jtml_experimental")) {}
+FileDialogBridge::FileDialogBridge(QObject* parent) :
+    QObject(parent),
+    settings_(
+        QStringLiteral("JointTrackAutoGPU"),
+        QStringLiteral("jtml_experimental")) {}
 
-QStringList FileDialogBridge::getOpenFileNames(const QString& title,
-                                               const QString& filter,
-                                               const QString& startDir,
-                                               const QString& purpose) {
+QStringList FileDialogBridge::getOpenFileNames(
+    const QString& title,
+    const QString& filter,
+    const QString& startDir,
+    const QString& purpose) {
     QString dir = startDir;
     if (dir.isEmpty()) {
         dir = lastDir(purpose);
@@ -53,9 +55,8 @@ void FileDialogBridge::rememberDir(const QString& dir, const QString& purpose) {
     }
     settings_.setValue(QStringLiteral("dialogs/lastDir/") + purpose, dir);
 
-    QStringList mru =
-        settings_.value(QStringLiteral("dialogs/mru/") + purpose)
-            .toStringList();
+    QStringList mru = settings_.value(QStringLiteral("dialogs/mru/") + purpose)
+                          .toStringList();
     mru.removeAll(dir);
     mru.prepend(dir);
     while (mru.size() > kMaxMruDirs) {

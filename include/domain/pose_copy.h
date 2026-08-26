@@ -38,8 +38,10 @@ enum class SelectionGuard {
     MultiModelMode,  // the multiple-model radio is checked
 };
 
-SelectionGuard CheckSelection(int current_frame_row, int selected_model_count,
-                              bool multi_model_radio_checked);
+SelectionGuard CheckSelection(
+    int current_frame_row,
+    int selected_model_count,
+    bool multi_model_radio_checked);
 
 // Copy plan for the Copy_Previous / Copy_Next slots: READ at
 // (read_frame, read_model), WRITE at (write_frame, write_model).
@@ -52,12 +54,18 @@ struct CopyPlan {
 };
 
 // Copy-previous plan: read_frame = current_frame_row - 1.
-CopyPlan PreviousPose(int current_frame_row, int current_model_row,
-                      int primary_model_row, int frame_count);
+CopyPlan PreviousPose(
+    int current_frame_row,
+    int current_model_row,
+    int primary_model_row,
+    int frame_count);
 
 // Copy-next plan: read_frame = current_frame_row + 1.
-CopyPlan NextPose(int current_frame_row, int current_model_row,
-                  int primary_model_row, int frame_count);
+CopyPlan NextPose(
+    int current_frame_row,
+    int current_model_row,
+    int primary_model_row,
+    int frame_count);
 
 }  // namespace pose_copy
 }  // namespace jta

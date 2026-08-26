@@ -16,10 +16,12 @@
 namespace jta {
 
 SettingsService::SettingsService(
-    const QString& settings_path, QSettings::Format format)
-    : settings_(settings_path.isEmpty()
-                    ? QSettings(OrganizationName(), ApplicationName())
-                    : QSettings(settings_path, format)) {}
+    const QString& settings_path,
+    QSettings::Format format) :
+    settings_(
+        settings_path.isEmpty()
+            ? QSettings(OrganizationName(), ApplicationName())
+            : QSettings(settings_path, format)) {}
 
 QString SettingsService::OrganizationName() {
     return QStringLiteral("JointTrackAutoGPU");
@@ -27,7 +29,7 @@ QString SettingsService::OrganizationName() {
 
 QString SettingsService::ApplicationName() {
     return QStringLiteral("Version") + QString::number(VER_FIRST_NUM) +
-           QString::number(VER_MIDDLE_NUM) + QString::number(VER_LAST_NUM);
+        QString::number(VER_MIDDLE_NUM) + QString::number(VER_LAST_NUM);
 }
 
 bool SettingsService::IsFirstTime() const {
@@ -69,8 +71,7 @@ SettingsService::LoadResult SettingsService::LoadSettings() {
         settings_.value("TRUNK@RANGE_XA").toDouble(),
         settings_.value("TRUNK@RANGE_YA").toDouble(),
         settings_.value("TRUNK@RANGE_ZA").toDouble());
-    result.optimizer.trunk_budget =
-        settings_.value("TRUNK@BUDGET").toInt();
+    result.optimizer.trunk_budget = settings_.value("TRUNK@BUDGET").toInt();
 
     /*Branch*/
     result.optimizer.branch_range = Point6D(
@@ -82,10 +83,8 @@ SettingsService::LoadResult SettingsService::LoadSettings() {
         settings_.value("BRANCH@RANGE_ZA").toDouble());
     result.optimizer.number_branches =
         settings_.value("BRANCH@NUMBER_BRANCHES").toInt();
-    result.optimizer.enable_branch_ =
-        settings_.value("BRANCH@ENABLE").toBool();
-    result.optimizer.branch_budget =
-        settings_.value("BRANCH@BUDGET").toInt();
+    result.optimizer.enable_branch_ = settings_.value("BRANCH@ENABLE").toBool();
+    result.optimizer.branch_budget = settings_.value("BRANCH@BUDGET").toInt();
 
     /*Leaf*/
     result.optimizer.leaf_range = Point6D(
@@ -95,8 +94,7 @@ SettingsService::LoadResult SettingsService::LoadSettings() {
         settings_.value("LEAF@RANGE_XA").toDouble(),
         settings_.value("LEAF@RANGE_YA").toDouble(),
         settings_.value("LEAF@RANGE_ZA").toDouble());
-    result.optimizer.enable_leaf_ =
-        settings_.value("LEAF@ENABLE").toBool();
+    result.optimizer.enable_leaf_ = settings_.value("LEAF@ENABLE").toBool();
     result.optimizer.leaf_budget = settings_.value("LEAF@BUDGET").toInt();
     settings_.endGroup();
 
@@ -125,8 +123,7 @@ void SettingsService::SaveCostFunctionSettings(
     settings_.endGroup();
 }
 
-void SettingsService::SaveOptimizerSettings(
-    const OptimizerSettings& settings) {
+void SettingsService::SaveOptimizerSettings(const OptimizerSettings& settings) {
     settings_.beginGroup("OptimizerSettings");
     /*Variables*/
     /*Trunk*/
@@ -145,8 +142,7 @@ void SettingsService::SaveOptimizerSettings(
     settings_.setValue("BRANCH@RANGE_XA", settings.branch_range.xa);
     settings_.setValue("BRANCH@RANGE_YA", settings.branch_range.ya);
     settings_.setValue("BRANCH@RANGE_ZA", settings.branch_range.za);
-    settings_.setValue(
-        "BRANCH@NUMBER_BRANCHES", settings.number_branches);
+    settings_.setValue("BRANCH@NUMBER_BRANCHES", settings.number_branches);
     settings_.setValue("BRANCH@ENABLE", settings.enable_branch_);
     settings_.setValue("BRANCH@BUDGET", settings.branch_budget);
 
@@ -163,7 +159,9 @@ void SettingsService::SaveOptimizerSettings(
 }
 
 void SettingsService::SaveEdgeSettings(
-    int aperture, int low_thresh, int high_thresh) {
+    int aperture,
+    int low_thresh,
+    int high_thresh) {
     settings_.beginGroup("EdgeDetectionSettings");
     settings_.setValue("APERTURE", aperture);
     settings_.setValue("LOW_THRESH", low_thresh);

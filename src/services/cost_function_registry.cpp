@@ -40,9 +40,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < trunk_parameters_double.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_double[j].getParameterName() + "@" +
+                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
+                    "@" + trunk_parameters_double[j].getParameterName() + "@" +
                     trunk_parameters_double[j].getParameterType()),
                 trunk_parameters_double[j].getParameterValue()});
         }
@@ -51,9 +50,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < trunk_parameters_int.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_int[j].getParameterName() + "@" +
+                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
+                    "@" + trunk_parameters_int[j].getParameterName() + "@" +
                     trunk_parameters_int[j].getParameterType()),
                 trunk_parameters_int[j].getParameterValue()});
         }
@@ -62,9 +60,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < trunk_parameters_bool.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "TRUNK@" +
-                    trunk_cost_functions[i].getCostFunctionName() + "@" +
-                    trunk_parameters_bool[j].getParameterName() + "@" +
+                    "TRUNK@" + trunk_cost_functions[i].getCostFunctionName() +
+                    "@" + trunk_parameters_bool[j].getParameterName() + "@" +
                     trunk_parameters_bool[j].getParameterType()),
                 trunk_parameters_bool[j].getParameterValue()});
         }
@@ -83,9 +80,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < branch_parameters_double.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_double[j].getParameterName() + "@" +
+                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
+                    "@" + branch_parameters_double[j].getParameterName() + "@" +
                     branch_parameters_double[j].getParameterType()),
                 branch_parameters_double[j].getParameterValue()});
         }
@@ -94,9 +90,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < branch_parameters_int.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_int[j].getParameterName() + "@" +
+                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
+                    "@" + branch_parameters_int[j].getParameterName() + "@" +
                     branch_parameters_int[j].getParameterType()),
                 branch_parameters_int[j].getParameterValue()});
         }
@@ -105,9 +100,8 @@ std::vector<RegistryEntry> BuildCostFunctionRegistryEntries(
         for (int j = 0; j < branch_parameters_bool.size(); j++) {
             entries.push_back(jta::RegistryEntry{
                 QString::fromStdString(
-                    "BRANCH@" +
-                    branch_cost_functions[i].getCostFunctionName() + "@" +
-                    branch_parameters_bool[j].getParameterName() + "@" +
+                    "BRANCH@" + branch_cost_functions[i].getCostFunctionName() +
+                    "@" + branch_parameters_bool[j].getParameterName() + "@" +
                     branch_parameters_bool[j].getParameterType()),
                 branch_parameters_bool[j].getParameterValue()});
         }

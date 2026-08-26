@@ -22,10 +22,10 @@
 
 #include <QObject>
 
-#include "OptimizerBridge.h" // Q_PROPERTY pointer type must be complete for moc
-#include "SettingsBridge.h" // Q_PROPERTY pointer type must be complete for moc
-#include "MlBridge.h" // Q_PROPERTY pointer type must be complete for moc
-#include "PoseBridge.h" // Q_PROPERTY pointer type must be complete for moc
+#include "MlBridge.h"  // Q_PROPERTY pointer type must be complete for moc
+#include "OptimizerBridge.h"  // Q_PROPERTY pointer type must be complete for moc
+#include "PoseBridge.h"      // Q_PROPERTY pointer type must be complete for moc
+#include "SettingsBridge.h"  // Q_PROPERTY pointer type must be complete for moc
 
 class ExperimentalScene;
 class StudyBridge;

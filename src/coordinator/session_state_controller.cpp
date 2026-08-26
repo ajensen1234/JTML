@@ -17,8 +17,7 @@ int NormalizeFrame(int frame, int frame_count) {
     return (frame >= 0 && frame < frame_count) ? frame : -1;
 }
 
-std::vector<int> NormalizeRows(
-    const std::vector<int>& rows, int model_count) {
+std::vector<int> NormalizeRows(const std::vector<int>& rows, int model_count) {
     std::vector<int> kept;
     kept.reserve(rows.size());
     for (int r : rows) {
@@ -33,22 +32,25 @@ std::vector<int> NormalizeRows(
 }  // namespace
 
 SessionStateController::SessionStateController(
-    jta::SessionState* state, std::function<bool()> run_in_flight,
-    std::function<void()> clear_seed, QObject* parent)
-    : QObject(parent),
-      state_(state),
-      run_in_flight_(std::move(run_in_flight)),
-      clear_seed_(std::move(clear_seed)) {}
+    jta::SessionState* state,
+    std::function<bool()> run_in_flight,
+    std::function<void()> clear_seed,
+    QObject* parent) :
+    QObject(parent),
+    state_(state),
+    run_in_flight_(std::move(run_in_flight)),
+    clear_seed_(std::move(clear_seed)) {}
 
 void SessionStateController::UpdateSession(
-    int frame_count, int model_count, int current_frame,
+    int frame_count,
+    int model_count,
+    int current_frame,
     const std::vector<int>& selected_rows) {
     const int normalized_frame = NormalizeFrame(current_frame, frame_count);
     const std::vector<int> normalized_rows =
         NormalizeRows(selected_rows, model_count);
 
-    const bool counts_changed =
-        state_->GetFrameCount() != frame_count ||
+    const bool counts_changed = state_->GetFrameCount() != frame_count ||
         state_->GetModelCount() != model_count;
     const bool selection_changed =
         state_->GetCurrentFrame() != normalized_frame ||

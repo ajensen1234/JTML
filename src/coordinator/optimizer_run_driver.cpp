@@ -49,7 +49,9 @@ public:
          * runs. Nothing to delete here — the chain owns them.*/
     }
 
-    QObject* Manager() override { return manager_; }
+    QObject* Manager() override {
+        return manager_;
+    }
 
     bool ThreadActive() const override {
         return thread_ && thread_->isRunning();
@@ -100,7 +102,8 @@ public:
         if (!thread_->wait(kRunWaitTimeoutMs)) {
             qWarning().noquote()
                 << "OptimizerManagerRunDriver: run thread did not finish"
-                   " within" << kRunWaitTimeoutMs
+                   " within"
+                << kRunWaitTimeoutMs
                 << "ms; keeping wait (never delete a running thread)";
             thread_->wait();
         }

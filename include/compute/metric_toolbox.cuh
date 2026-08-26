@@ -15,9 +15,9 @@
 // namespace gpu_cost_function {
 //
 //	/*Collection of the standard metrics available in JTA. The dilation
-//metric from direct-jta is the standard algorithm 	Also included are a L1
-//intensity metric,  and the Mahfouz metric*/ 	class MetricToolbox : public
-//RegistrationMetric { 	public:
+// metric from direct-jta is the standard algorithm 	Also included are a L1
+// intensity metric,  and the Mahfouz metric*/ 	class MetricToolbox : public
+// RegistrationMetric { 	public:
 //		/*Constructor & Destructor*/
 //		JTML_DLL MetricToolbox(int width, int height);
 //		JTML_DLL MetricToolbox();

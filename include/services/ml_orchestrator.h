@@ -109,8 +109,8 @@ public:
     /*Per-frame pose save: both views write their own LocationStorage
      * (model_locations_.SavePose(frame, model, pose)). Injected so the
      * headless tests can record calls against a fake storage.*/
-    using SavePoseFn = std::function<void(int frame, int model,
-                                          const Point6D& pose)>;
+    using SavePoseFn =
+        std::function<void(int frame, int model, const Point6D& pose)>;
 
     /*Segment one frame (the segmentHelperFunction / runSegmentOnCurrentFrame
      * per-frame body): run the op, copy the segmented result into the

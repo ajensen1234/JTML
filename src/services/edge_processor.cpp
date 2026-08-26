@@ -13,7 +13,8 @@
 namespace jta {
 
 int EdgeProcessor::ResolveDilation(
-    int raw_dilation, const std::string& cost_function_name) {
+    int raw_dilation,
+    const std::string& cost_function_name) {
     int dilation_val = raw_dilation;
     if (dilation_val < 0) {
         dilation_val = 0;
@@ -26,14 +27,17 @@ int EdgeProcessor::ResolveDilation(
 }
 
 void EdgeProcessor::ApplyToFrameInternal(
-    const EdgeProcessingParams& params, int dilation, Frame& frame) {
+    const EdgeProcessingParams& params,
+    int dilation,
+    Frame& frame) {
     frame.SetEdgeImage(
         params.aperture, params.low_threshold, params.high_threshold);
     frame.SetDilatedImage(dilation);
 }
 
 void EdgeProcessor::ApplyToFrame(
-    const EdgeProcessingParams& params, Frame& frame) {
+    const EdgeProcessingParams& params,
+    Frame& frame) {
     ApplyToFrameInternal(
         params,
         ResolveDilation(params.dilation, params.cost_function_name),
@@ -41,7 +45,8 @@ void EdgeProcessor::ApplyToFrame(
 }
 
 void EdgeProcessor::ApplyToFrames(
-    const EdgeProcessingParams& params, std::vector<Frame>& frames) {
+    const EdgeProcessingParams& params,
+    std::vector<Frame>& frames) {
     const int dilation =
         ResolveDilation(params.dilation, params.cost_function_name);
     for (Frame& frame : frames) {

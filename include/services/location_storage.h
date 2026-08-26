@@ -12,8 +12,8 @@
 #include <vector>
 
 /*Direct Library*/
-#include "services/calibration.h"
 #include "domain/data_structures_6D.h"
+#include "services/calibration.h"
 
 class LocationStorage {
 public:

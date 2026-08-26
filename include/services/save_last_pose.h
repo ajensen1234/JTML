@@ -76,6 +76,6 @@ int SaveLastPoseToStorage(
     Calibration& calibration,
     LocationStorage& storage);
 
-} // namespace jta
+}  // namespace jta
 
 #endif /* SAVE_LAST_POSE_H */

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*STLReader header*/
-#include "STLReader.h"    // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
+#include "STLReader.h"  // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
 
 /*Standard Library*/
 #include <bitset>
@@ -128,8 +128,9 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
             std::stringstream ss(str);
 
             std::vector<std::string> tokens;
-            while (ss >> buf)
+            while (ss >> buf) {
                 tokens.push_back(buf);
+            }
 
             if (tokens.size() == 4) {
                 if (tokens[0] == "vertex") {
@@ -165,7 +166,7 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
         char header_info[80];
         char n_triangles[4];
         stl_file.read(header_info,
-                      80); // We do nothing with this information
+                      80);  // We do nothing with this information
         stl_file.read(n_triangles, 4);
 
         /*Storage (should someday update this)*/
@@ -190,7 +191,7 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
                 triangleVertices.push_back(value);
             }
             char temp[2];
-            stl_file.read(temp, 2); // Do nothing with this
+            stl_file.read(temp, 2);  // Do nothing with this
         }
         stl_storage.clear();
         stl_storage.push_back(triangleVertices);
@@ -200,4 +201,4 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
     }
     }
 }
-} // namespace stl_reader
+}  // namespace stl_reader

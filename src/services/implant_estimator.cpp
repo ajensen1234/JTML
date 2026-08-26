@@ -53,7 +53,7 @@ Point6D ImplantEstimator::EstimateImplantPose(
         cudaMemcpyHostToDevice);
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(ctx.gpu_byte_placeholder.to(dtype(torch::kFloat))
-                         .flip({2})); // Must flip first
+                         .flip({2}));  // Must flip first
     cudaMemcpy(
         ctx.orientation,
         ctx.model->forward(inputs)
@@ -112,8 +112,8 @@ Point6D ImplantEstimator::EstimateImplantPose(
 
     /*Reproject*/
     /*Render*/
-    ctx.gpu_mod->RenderPrimaryCamera(
-        gpu_cost_function::Pose(0, 0, z, ctx.orientation[1], ctx.orientation[2], ctx.orientation[0]));
+    ctx.gpu_mod->RenderPrimaryCamera(gpu_cost_function::Pose(
+        0, 0, z, ctx.orientation[1], ctx.orientation[2], ctx.orientation[0]));
     cudaMemcpy(
         ctx.host_image,
         ctx.gpu_mod->GetPrimaryCameraRenderedImagePointer(),
@@ -133,8 +133,7 @@ Point6D ImplantEstimator::EstimateImplantPose(
     output_mat.convertTo(proj64, CV_64FC1);
     cv::Mat seg64;
     output_mat_seg.convertTo(seg64, CV_64FC1);
-    cv::Point2d x_y_point =
-        phaseCorrelate(proj64, seg64) *
+    cv::Point2d x_y_point = phaseCorrelate(proj64, seg64) *
         (ctx.calibration.camera_A_principal_.pixel_pitch_ * z * -1) /
         ctx.calibration.camera_A_principal_.principal_distance_;
     double x = x_y_point.x;
@@ -170,25 +169,9 @@ Point6D ImplantEstimator::EstimateImplantPose(
     float theta_x = std::atan(-1.0 * y / z);
     float theta_y = std::asin(-1.0 * x / std::sqrt(x * x + y * y + z * z));
     Matrix_3_3 R_x(
-        1,
-        0,
-        0,
-        0,
-        cos(theta_x),
-        -sin(theta_x),
-        0,
-        sin(theta_x),
-        cos(theta_x));
+        1, 0, 0, 0, cos(theta_x), -sin(theta_x), 0, sin(theta_x), cos(theta_x));
     Matrix_3_3 R_y(
-        cos(theta_y),
-        0,
-        sin(theta_y),
-        0,
-        1,
-        0,
-        -sin(theta_y),
-        0,
-        cos(theta_y));
+        cos(theta_y), 0, sin(theta_y), 0, 1, 0, -sin(theta_y), 0, cos(theta_y));
     Matrix_3_3 R_orig = ctx.calibration.multiplication_mat_mat(
         R_y, ctx.calibration.multiplication_mat_mat(R_x, R_g));
     /*Rot Mat To Eul ZXY*/

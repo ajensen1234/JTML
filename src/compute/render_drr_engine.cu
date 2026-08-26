@@ -49,14 +49,14 @@ __global__ void DRR_WorldToPixelKernel(
 
         /*Transform (Rotate then Translate) Vertices*/
         float tX = model_rotation_mat.rotation_00_ * vX +
-                   model_rotation_mat.rotation_01_ * vY +
-                   model_rotation_mat.rotation_02_ * vZ + x_location;
+            model_rotation_mat.rotation_01_ * vY +
+            model_rotation_mat.rotation_02_ * vZ + x_location;
         float tY = model_rotation_mat.rotation_10_ * vX +
-                   model_rotation_mat.rotation_11_ * vY +
-                   model_rotation_mat.rotation_12_ * vZ + y_location;
+            model_rotation_mat.rotation_11_ * vY +
+            model_rotation_mat.rotation_12_ * vZ + y_location;
         float tZ = model_rotation_mat.rotation_20_ * vX +
-                   model_rotation_mat.rotation_21_ * vY +
-                   model_rotation_mat.rotation_22_ * vZ + z_location;
+            model_rotation_mat.rotation_21_ * vY +
+            model_rotation_mat.rotation_22_ * vZ + z_location;
 
         /*Store for DRR Computations*/
         dev_transf_vertex_zs[i] = tZ;
@@ -70,15 +70,15 @@ __global__ void DRR_WorldToPixelKernel(
             float dotProduct = (model_rotation_mat.rotation_00_ * nX +
                                 model_rotation_mat.rotation_01_ * nY +
                                 model_rotation_mat.rotation_02_ * nZ) *
-                                   tX +
-                               (model_rotation_mat.rotation_10_ * nX +
-                                model_rotation_mat.rotation_11_ * nY +
-                                model_rotation_mat.rotation_12_ * nZ) *
-                                   tY +
-                               (model_rotation_mat.rotation_20_ * nX +
-                                model_rotation_mat.rotation_21_ * nY +
-                                model_rotation_mat.rotation_22_ * nZ) *
-                                   tZ;
+                    tX +
+                (model_rotation_mat.rotation_10_ * nX +
+                 model_rotation_mat.rotation_11_ * nY +
+                 model_rotation_mat.rotation_12_ * nZ) *
+                    tY +
+                (model_rotation_mat.rotation_20_ * nX +
+                 model_rotation_mat.rotation_21_ * nY +
+                 model_rotation_mat.rotation_22_ * nZ) *
+                    tZ;
             if (dotProduct >= 0) {
                 dev_backface[i / 3] = true;
             } else {
@@ -95,9 +95,10 @@ __global__ void DRR_WorldToPixelKernel(
             }
         }
 
-        if (tZ >= 0)
+        if (tZ >= 0) {
             tZ = -.000001; /*Can't be above or at zero, so make very
                               small..should never happen*/
+        }
 
         float sX = (tX / tZ) * dist_over_pix_pitch + pix_conversion_x;
         float sY = (tY / tZ) * dist_over_pix_pitch + pix_conversion_y;
@@ -217,7 +218,7 @@ __global__ void DRR_StridePrefixKernel(
     int j = i * stride;
 
     if (j < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
-                dev_bounding_box_triangles_sizes[triangle_count - 1]) {
+            dev_bounding_box_triangles_sizes[triangle_count - 1]) {
         /*Get the index for the stride elements*/
         int low = 0;
         int high = triangle_count;
@@ -256,7 +257,7 @@ __global__ void DRR_FillTriangleKernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
-                dev_bounding_box_triangles_sizes[triangle_count - 1]) {
+            dev_bounding_box_triangles_sizes[triangle_count - 1]) {
         /*Index of Triangle for the given stride (stride is of size 256 and the
          * stride group is blockIdx.x)*/
         int stridedIndex = dev_stride_prefixes[blockIdx.x];
@@ -264,10 +265,11 @@ __global__ void DRR_FillTriangleKernel(
         /*Load [stridedIndex, stridedIndex + 255] at most (256) elements to
          * another shared memory (could hit upper bound)*/
         __shared__ int reducedBoundingBoxTrianglesSizePrefix[threads_per_block];
-        if (threadIdx.x + stridedIndex < triangle_count)
+        if (threadIdx.x + stridedIndex < triangle_count) {
             reducedBoundingBoxTrianglesSizePrefix[threadIdx.x] =
                 dev_bounding_box_triangles_sizes_prefix
                     [threadIdx.x + stridedIndex];
+        }
         __syncthreads();
 
         /*Binary Search Loop Variables*/
@@ -327,20 +329,21 @@ __global__ void DRR_FillTriangleKernel(
                     float c = denominator - a - b;
                     if (0 <= c && c <= denominator) {
                         if (dev_tangent_triangle[triangleIndex] == false) {
-                            if (dev_backface[triangleIndex] == false)
+                            if (dev_backface[triangleIndex] == false) {
                                 atomicAdd(
                                     &dev_z_line_values
                                         [pyPixel * width + pxPixel],
                                     (tvz1 * tvz2 * tvz3 * denominator) /
                                         (a * tvz2 * tvz3 + b * tvz1 * tvz3 +
                                          c * tvz1 * tvz2));
-                            else
+                            } else {
                                 atomicAdd(
                                     &dev_z_line_values
                                         [pyPixel * width + pxPixel],
                                     -1 * (tvz1 * tvz2 * tvz3 * denominator) /
                                         (a * tvz2 * tvz3 + b * tvz1 * tvz3 +
                                          c * tvz1 * tvz2));
+                            }
                         }
                     }
                 }
@@ -352,20 +355,21 @@ __global__ void DRR_FillTriangleKernel(
                     float c = denominator - a - b;
                     if (0 >= c && c >= denominator) {
                         if (dev_tangent_triangle[triangleIndex] == false) {
-                            if (dev_backface[triangleIndex] == false)
+                            if (dev_backface[triangleIndex] == false) {
                                 atomicAdd(
                                     &dev_z_line_values
                                         [pyPixel * width + pxPixel],
                                     (tvz1 * tvz2 * tvz3 * denominator) /
                                         (a * tvz2 * tvz3 + b * tvz1 * tvz3 +
                                          c * tvz1 * tvz2));
-                            else
+                            } else {
                                 atomicAdd(
                                     &dev_z_line_values
                                         [pyPixel * width + pxPixel],
                                     -1 * (tvz1 * tvz2 * tvz3 * denominator) /
                                         (a * tvz2 * tvz3 + b * tvz1 * tvz3 +
                                          c * tvz1 * tvz2));
+                            }
                         }
                     }
                 }
@@ -407,17 +411,18 @@ __global__ void ZToLineIntegralToDRRConversionKernel(
             float ty = ((i / width) + 0.5 - pix_conversion_y) * pixel_pitch;
             float z_integral_ = dev_z_line_values[i];
             float line_integral = (z_integral_ / principal_distance) *
-                                  sqrt(
-                                      tx * tx + ty * ty +
-                                      principal_distance * principal_distance);
+                sqrt(tx * tx + ty * ty +
+                     principal_distance * principal_distance);
             /*Convert Line Integral to DRR (Uchar)*/
-            if (line_integral >= upper_bound)
+            if (line_integral >= upper_bound) {
                 dev_image[i] = 255;
-            else if (line_integral <= lower_bound)
+            } else if (line_integral <= lower_bound) {
                 dev_image[i] = 0;
-            else
-                dev_image[i] = 255 * ((line_integral - lower_bound) /
-                                      (upper_bound - lower_bound));
+            } else {
+                dev_image[i] = 255 *
+                    ((line_integral - lower_bound) /
+                     (upper_bound - lower_bound));
+            }
         }
     }
 }
@@ -425,7 +430,7 @@ __global__ void ZToLineIntegralToDRRConversionKernel(
 /*Render Engine for DRRs*/
 cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
     /*Create Error Status*/
-    cudaGetLastError(); // Resets Errors (MAYBE DELETE TO SAVE TIME?)
+    cudaGetLastError();  // Resets Errors (MAYBE DELETE TO SAVE TIME?)
 
     /*Clear Image*/
     cudaMemset(
@@ -593,4 +598,4 @@ cudaError_t RenderEngine::RenderDRR(float lower_bound, float upper_bound) {
     /*Check for Errors*/
     return cudaGetLastError();
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

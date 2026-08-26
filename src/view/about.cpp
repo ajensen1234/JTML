@@ -15,13 +15,16 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
     int gpu_device_count = 0, device_count;
     struct cudaDeviceProp properties;
     cudaError_t cudaResultCode = cudaGetDeviceCount(&device_count);
-    if (cudaResultCode != cudaSuccess) device_count = 0;
+    if (cudaResultCode != cudaSuccess) {
+        device_count = 0;
+    }
     /* Machines with no GPUs can still report one emulation device */
     for (int device = 0; device < device_count; ++device) {
         cudaGetDeviceProperties(&properties, device);
         if (properties.major != 9999 &&
-            properties.major >= 5) /* 9999 means emulation only */
+            properties.major >= 5) { /* 9999 means emulation only */
             ++gpu_device_count;
+        }
     }
     /*If no Cuda Compatitble Devices*/
     if (device_count == 0) {
@@ -51,9 +54,8 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
 
     /*Adjust for Title Height*/
     ui.detected_group_box->setStyleSheet(
-        ui.detected_group_box->styleSheet() +=
-        "QGroupBox { margin-top: " + QString::number(text_metric.height() / 2) +
-        "px; }");
+        ui.detected_group_box->styleSheet() += "QGroupBox { margin-top: " +
+            QString::number(text_metric.height() / 2) + "px; }");
 
     /*Constants for Sizing Adjustments*/
     int GROUP_BOX_TO_LABEL_X = 50;
@@ -66,41 +68,43 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
     int INSIDE_BUTTON_PADDING_Y = 30;
 
     /*Get Max Width*/
-    int max_width =
-        GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
+    int max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
         text_metric.horizontalAdvance(ui.gpu_description_label->text()) +
         text_metric.horizontalAdvance(ui.gpu_label->text());
-    if (max_width <
-        GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
+    if (max_width < GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
             text_metric.horizontalAdvance(ui.cc_description_label->text()) +
-            text_metric.horizontalAdvance(ui.cc_label->text()))
-        max_width =
-            GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
+            text_metric.horizontalAdvance(ui.cc_label->text())) {
+        max_width = GROUP_BOX_TO_LABEL_X * 2 + LABEL_TO_LABEL_X +
             text_metric.horizontalAdvance(ui.cc_description_label->text()) +
             text_metric.horizontalAdvance(ui.cc_label->text());
+    }
     int group_box_width = max_width;
-    if (max_width < title_metric.horizontalAdvance(ui.title_label->text()))
+    if (max_width < title_metric.horizontalAdvance(ui.title_label->text())) {
         max_width = title_metric.horizontalAdvance(ui.title_label->text());
+    }
 
     /*Set Positions*/
     ui.title_label->setGeometry(QRect(
-        306 + (max_width -
-               title_metric.horizontalAdvance(ui.title_label->text())) /
-                  2,
+        306 +
+            (max_width -
+             title_metric.horizontalAdvance(ui.title_label->text())) /
+                2,
         25,
         title_metric.horizontalAdvance(ui.title_label->text()),
         title_metric.height()));
     ui.copyright_label->setGeometry(QRect(
-        306 + (max_width -
-               text_metric.horizontalAdvance(ui.copyright_label->text())) /
-                  2,
+        306 +
+            (max_width -
+             text_metric.horizontalAdvance(ui.copyright_label->text())) /
+                2,
         LABEL_TO_LABEL_Y + ui.title_label->geometry().bottom(),
         text_metric.horizontalAdvance(ui.copyright_label->text()),
         text_metric.height()));
     ui.version_label->setGeometry(QRect(
-        306 + (max_width -
-               text_metric.horizontalAdvance(ui.version_label->text())) /
-                  2,
+        306 +
+            (max_width -
+             text_metric.horizontalAdvance(ui.version_label->text())) /
+                2,
         LABEL_TO_LABEL_Y + ui.copyright_label->geometry().bottom(),
         text_metric.horizontalAdvance(ui.version_label->text()),
         text_metric.height()));
@@ -133,10 +137,11 @@ About::About(QWidget* parent, Qt::WindowFlags flags) : QDialog(parent, flags) {
         text_metric.horizontalAdvance(ui.cc_label->text()),
         text_metric.height()));
     ui.close_button->setGeometry(QRect(
-        306 + (max_width -
-               (text_metric.horizontalAdvance(ui.close_button->text()) +
-                INSIDE_BUTTON_PADDING_X)) /
-                  2,
+        306 +
+            (max_width -
+             (text_metric.horizontalAdvance(ui.close_button->text()) +
+              INSIDE_BUTTON_PADDING_X)) /
+                2,
         ui.detected_group_box->geometry().bottom() + GROUP_BOX_TO_LABEL_Y,
         text_metric.horizontalAdvance(ui.close_button->text()) +
             INSIDE_BUTTON_PADDING_X,

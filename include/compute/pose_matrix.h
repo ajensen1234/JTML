@@ -6,8 +6,8 @@
 #pragma once
 
 /*Render Engine Header for Pose Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/render_engine.cuh"
+#include "domain/preprocessor-defs.h"
 /*Standard Library*/
 #include <string>
 #include <vector>
@@ -32,11 +32,13 @@ public:
         int frame_index,
         gpu_cost_function::Pose* pose_container);
     /*Get Principal Model Pose*/
-    JTML_DLL bool
-    GetModelPose(int frame_index, gpu_cost_function::Pose* pose_container);
+    JTML_DLL bool GetModelPose(
+        int frame_index,
+        gpu_cost_function::Pose* pose_container);
     /*Update Stored Pose for Principal Model at given frame*/
     JTML_DLL bool UpdatePrincipalModelPose(
-        int frame_index, gpu_cost_function::Pose pose_container);
+        int frame_index,
+        gpu_cost_function::Pose pose_container);
 
 private:
     /*Principal Model Name*/

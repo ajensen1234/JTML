@@ -22,7 +22,8 @@ class SettingsControl : public QDialog {
 
 public:
     SettingsControl(
-        QWidget* parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
+        QWidget* parent = 0,
+        Qt::WindowFlags flags = Qt::WindowFlags());
     ~SettingsControl() override;
 
     /*Load Optimizer Settings from Main Window*/
@@ -39,8 +40,8 @@ private:
     jta_cost_function::CostFunctionManager sc_trunk_manager_;
     jta_cost_function::CostFunctionManager sc_branch_manager_;
     jta_cost_function::CostFunctionManager
-        sc_leaf_manager_; // For extra Z-translation usually (esp. when
-                          // monoplane)
+        sc_leaf_manager_;  // For extra Z-translation usually (esp. when
+                           // monoplane)
 
     /*Optimizer Settings for Everything but the Cost Function Stuff*/
     OptimizerSettings opt_settings_;
@@ -88,9 +89,9 @@ signals:
         OptimizerSettings,
         jta_cost_function::CostFunctionManager,
         jta_cost_function::CostFunctionManager,
-        jta_cost_function::CostFunctionManager); //
+        jta_cost_function::CostFunctionManager);  //
     /*Close Window*/
-    void Done(); //
+    void Done();  //
 };
 
 #endif /* SETTINGS_CONTROL_H */

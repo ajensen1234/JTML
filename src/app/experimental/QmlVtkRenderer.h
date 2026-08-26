@@ -72,7 +72,8 @@ public:
 
     // --- Render-thread contract (see file comment) ----------------------
     vtkUserData initializeVTK(vtkRenderWindow* renderWindow) override;
-    void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
+    void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData)
+        override;
 
     // --- App-thread (GUI) entry points ----------------------------------
     // Binds the app-owned scene. Non-owning: the scene must outlive this
@@ -86,7 +87,8 @@ public:
     // by-value lambda to the Qt Quick render thread. Safe to call at any
     // time; a dispatch queued when the item is destroyed is dropped with
     // the item (its captures are app-thread-owned values).
-    Q_INVOKABLE void applyScene();  // full resync (background + models + camera)
+    Q_INVOKABLE void
+    applyScene();  // full resync (background + models + camera)
     Q_INVOKABLE void updateBackground();  // frame image + display mode
     Q_INVOKABLE void updatePose(int modelIndex);
     Q_INVOKABLE void updateModels();
@@ -111,8 +113,14 @@ public:
     // emitted with by-value data (AutoConnection queues delivery to
     // GUI-thread receivers — the app writes the pose into LocationStorage +
     // the scene, so the optimizer starts from the visually arranged pose).
-    void reportModelPoseAdjusted(int sceneModelIndex, double x, double y,
-                                 double z, double xa, double ya, double za);
+    void reportModelPoseAdjusted(
+        int sceneModelIndex,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
 
     QString poseReadout() const;
 
@@ -121,8 +129,14 @@ signals:
     void interactionModeChanged();
     // (sceneModelIndex, x, y, z, xa, ya, za) — emitted on the GUI thread
     // after a model-centric drag ends.
-    void modelPoseAdjusted(int sceneModelIndex, double x, double y, double z,
-                           double xa, double ya, double za);
+    void modelPoseAdjusted(
+        int sceneModelIndex,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
 
 private:
     void copySceneMirror();

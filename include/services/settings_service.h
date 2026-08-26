@@ -4,9 +4,10 @@
  */
 
 /*SettingsService (plan 004 U3 / R9): widget-free QSettings persistence for the
- * settings previously written inline in MainScreen (LoadSettingsBetweenSessions,
- * onSaveSettings, the four edge-slot writes). QtCore-only: takes/returns values,
- * never reads ui.* widgets, never shows dialogs.
+ * settings previously written inline in MainScreen
+ * (LoadSettingsBetweenSessions, onSaveSettings, the four edge-slot writes).
+ * QtCore-only: takes/returns values, never reads ui.* widgets, never shows
+ * dialogs.
  *
  * Registry parity is a hard contract (plan C4): org "JointTrackAutoGPU", app
  * "Version" + VER_FIRST_NUM+VER_MIDDLE_NUM+VER_LAST_NUM ("Version340"), groups

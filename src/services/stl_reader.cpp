@@ -167,7 +167,7 @@ STL_STATUS readAnySTL(
         char header_info[80];
         char n_triangles[4];
         stl_file.read(header_info,
-                      80); // We do nothing with this information
+                      80);  // We do nothing with this information
         stl_file.read(n_triangles, 4);
 
         /*Storage (should someday update this)*/
@@ -192,11 +192,11 @@ STL_STATUS readAnySTL(
                 triangleVertices.push_back(value);
             }
             char temp[2];
-            stl_file.read(temp, 2); // Do nothing with this
+            stl_file.read(temp, 2);  // Do nothing with this
         }
         return STL_BINARY;
         break;
     }
     }
 }
-} // namespace stl_reader
+}  // namespace stl_reader

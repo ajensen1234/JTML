@@ -62,8 +62,12 @@ public:
         primary_actor_ = actor;
         primary_actor_index_ = sceneIndex;
     }
-    vtkActor* primaryActor() const { return primary_actor_; }
-    int primaryActorIndex() const { return primary_actor_index_; }
+    vtkActor* primaryActor() const {
+        return primary_actor_;
+    }
+    int primaryActorIndex() const {
+        return primary_actor_index_;
+    }
 
 protected:
     void OnLeftButtonDown() override {
@@ -107,7 +111,10 @@ vtkStandardNewMacro(PrimaryModelStyle);
 // docs/solutions/ui-bugs/jtml-qml-model-pose-sync-queued-functor-never-delivered-2026-08-11.md)
 // — do NOT reintroduce it. Never touches app state here.
 void OnModelStyleEndInteraction(
-    vtkObject* caller, unsigned long, void* clientData, void*) {
+    vtkObject* caller,
+    unsigned long,
+    void* clientData,
+    void*) {
     auto* style = static_cast<PrimaryModelStyle*>(caller);
     auto* renderer = static_cast<QmlVtkRenderer*>(clientData);
     vtkActor* actor = style->primaryActor();
@@ -121,8 +128,13 @@ void OnModelStyleEndInteraction(
     // Emit from whichever thread the observer runs on: the connections have
     // GUI-thread affinity, so AutoConnection queues the delivery.
     renderer->reportModelPoseAdjusted(
-        style->primaryActorIndex(), pos[0], pos[1], pos[2], orient[0],
-        orient[1], orient[2]);
+        style->primaryActorIndex(),
+        pos[0],
+        pos[1],
+        pos[2],
+        orient[0],
+        orient[1],
+        orient[2]);
 }
 
 // The vtkUserData returned by initializeVTK: owns every VTK object in the
@@ -197,7 +209,9 @@ int ClampedActiveIndex(const QmlVtkData* data, int size) {
 // load-bearing HERE: with no frame it must keep the PREVIOUS background
 // (buffer + importer untouched), not swap in an empty Mat.
 void ApplyBackground(
-    QmlVtkData* data, const cv::Mat& src, BackgroundMode mode) {
+    QmlVtkData* data,
+    const cv::Mat& src,
+    BackgroundMode mode) {
     if (src.empty()) {
         return;  // no frame yet: keep the current background
     }
@@ -219,12 +233,17 @@ void ApplyBackground(
 // rather than at the camera origin (near-plane clipped). Parallel scale =
 // half the image height so the image fills the viewport height.
 void ApplyCameraPlacement(
-    QmlVtkData* data, const cv::Mat& src, double focalLengthPx) {
+    QmlVtkData* data,
+    const cv::Mat& src,
+    double focalLengthPx) {
     if (src.empty()) {
         return;
     }
     jta::render_pipeline::PlaceBackgroundImage(
-        data->imageActor, data->backgroundRenderer, src.cols, src.rows,
+        data->imageActor,
+        data->backgroundRenderer,
+        src.cols,
+        src.rows,
         -focalLengthPx);
 }
 
@@ -236,7 +255,9 @@ void ApplyCameraPlacement(
 // U4" expectation is STALE by design (camera divergence (c) stays
 // view-side).
 void ApplyCameraParams(
-    QmlVtkData* data, double viewAngleDeg, double focalLengthPx) {
+    QmlVtkData* data,
+    double viewAngleDeg,
+    double focalLengthPx) {
     jta::render_pipeline::SetupBackgroundCamera(
         data->backgroundRenderer, focalLengthPx);
     jta::render_pipeline::SetupSceneCameraFocal(data->sceneRenderer, -1.0);
@@ -253,10 +274,11 @@ void ApplyCameraFocus(QmlVtkData* data, const std::vector<SceneModel>& models) {
     /*The camera pivot follows the ACTIVE model (owner feedback 2026-08-11):
      * with several models loaded, rotating the view around the model you
      * selected beats always orbiting model 0.*/
-    const int active = ClampedActiveIndex(data, static_cast<int>(models.size()));
+    const int active =
+        ClampedActiveIndex(data, static_cast<int>(models.size()));
     const double z = (models.empty() || active < 0)
-                         ? -1.0
-                         : models[static_cast<size_t>(active)].pose.z;
+        ? -1.0
+        : models[static_cast<size_t>(active)].pose.z;
     jta::render_pipeline::SetupSceneCameraFocal(data->sceneRenderer, z);
 }
 
@@ -282,7 +304,9 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
         ma.mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
         ma.actor = vtkSmartPointer<vtkActor>::New();
         jta::render_pipeline::BuildModelActor(
-            ma.mapper, ma.actor, ma.reader->GetOutputPort(),
+            ma.mapper,
+            ma.actor,
+            ma.reader->GetOutputPort(),
             data->sceneRenderer);
         ma.actor->GetProperty()->SetColor(0.93, 0.86, 0.67);  // Bisque
         jta::render_pipeline::ApplyActorPose(ma.actor, scene_model.pose);
@@ -311,8 +335,7 @@ void RebuildModels(QmlVtkData* data, const std::vector<SceneModel>& models) {
 
 }  // namespace
 
-QmlVtkRenderer::QmlVtkRenderer(QQuickItem* parent)
-    : QQuickVTKItem(parent) {}
+QmlVtkRenderer::QmlVtkRenderer(QQuickItem* parent) : QQuickVTKItem(parent) {}
 
 QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     vtkRenderWindow* renderWindow) {
@@ -321,8 +344,11 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     // Background chain via the shared builder (widgets
     // initialize_vtk_mappers).
     jta::render_pipeline::ConfigureBackgroundChain(
-        data->importer, data->background, data->imageMapper,
-        data->imageActor, data->backgroundRenderer);
+        data->importer,
+        data->background,
+        data->imageMapper,
+        data->imageActor,
+        data->backgroundRenderer);
 
     // Layered renderers via the shared builder (widgets
     // load_renderers_into_render_window): layer 0 = background (interactive
@@ -358,8 +384,7 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
     if (iren) {
         iren->SetInteractorStyle(
             interaction_mode_ == ModelMode
-                ? static_cast<vtkInteractorStyle*>(
-                      data->modelStyle.Get())
+                ? static_cast<vtkInteractorStyle*>(data->modelStyle.Get())
                 : static_cast<vtkInteractorStyle*>(data->cameraStyle.Get()));
     }
 
@@ -367,7 +392,8 @@ QQuickVTKItem::vtkUserData QmlVtkRenderer::initializeVTK(
 }
 
 void QmlVtkRenderer::destroyingVTK(
-    vtkRenderWindow* renderWindow, vtkUserData userData) {
+    vtkRenderWindow* renderWindow,
+    vtkUserData userData) {
     Q_UNUSED(renderWindow);
     auto* data = QmlVtkData::SafeDownCast(userData);
     if (!data) {
@@ -401,20 +427,19 @@ void QmlVtkRenderer::applyScene() {
     const std::vector<SceneModel> models = scene_mirror_.models();
     const double viewAngle = scene_mirror_.cameraViewAngle();
     const double focal = scene_mirror_.focalLengthPx();
-    dispatch_async(
-        [bg, mode, models, viewAngle, focal](
-            vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data) {
-                return;
-            }
-            ApplyBackground(data, bg, mode);
-            ApplyCameraPlacement(data, bg, focal);
-            ApplyCameraParams(data, viewAngle, focal);
-            RebuildModels(data, models);
-            ApplyCameraFocus(data, models);
-            renderWindow->Render();
-        });
+    dispatch_async([bg, mode, models, viewAngle, focal](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data) {
+            return;
+        }
+        ApplyBackground(data, bg, mode);
+        ApplyCameraPlacement(data, bg, focal);
+        ApplyCameraParams(data, viewAngle, focal);
+        RebuildModels(data, models);
+        ApplyCameraFocus(data, models);
+        renderWindow->Render();
+    });
 }
 
 void QmlVtkRenderer::updateBackground() {
@@ -425,17 +450,16 @@ void QmlVtkRenderer::updateBackground() {
     const cv::Mat bg = scene_mirror_.backgroundImage();
     const BackgroundMode mode = scene_mirror_.backgroundMode();
     const double scene_mirror_focal = scene_mirror_.focalLengthPx();
-    dispatch_async(
-        [bg, mode, scene_mirror_focal](
-            vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data) {
-                return;
-            }
-            ApplyBackground(data, bg, mode);
-            ApplyCameraPlacement(data, bg, scene_mirror_focal);
-            renderWindow->Render();
-        });
+    dispatch_async([bg, mode, scene_mirror_focal](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data) {
+            return;
+        }
+        ApplyBackground(data, bg, mode);
+        ApplyCameraPlacement(data, bg, scene_mirror_focal);
+        renderWindow->Render();
+    });
 }
 
 void QmlVtkRenderer::updatePose(int modelIndex) {
@@ -449,22 +473,22 @@ void QmlVtkRenderer::updatePose(int modelIndex) {
     }
     const Point6D pose = models[static_cast<size_t>(modelIndex)].pose;
     refreshPoseReadout();
-    dispatch_async(
-        [modelIndex, pose](vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data || modelIndex < 0 ||
-                modelIndex >= static_cast<int>(data->models.size())) {
-                return;
-            }
-            vtkActor* actor = data->models[static_cast<size_t>(modelIndex)].actor;
-            jta::render_pipeline::ApplyActorPose(actor, pose);
-            // The rotation pivot follows the ACTIVE model (camera mode).
-            if (modelIndex == data->activeModelIndex) {
-                jta::render_pipeline::SetupSceneCameraFocal(
-                    data->sceneRenderer, pose.z);
-            }
-            renderWindow->Render();
-        });
+    dispatch_async([modelIndex, pose](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data || modelIndex < 0 ||
+            modelIndex >= static_cast<int>(data->models.size())) {
+            return;
+        }
+        vtkActor* actor = data->models[static_cast<size_t>(modelIndex)].actor;
+        jta::render_pipeline::ApplyActorPose(actor, pose);
+        // The rotation pivot follows the ACTIVE model (camera mode).
+        if (modelIndex == data->activeModelIndex) {
+            jta::render_pipeline::SetupSceneCameraFocal(
+                data->sceneRenderer, pose.z);
+        }
+        renderWindow->Render();
+    });
 }
 
 void QmlVtkRenderer::setActiveModel(int sceneIndex) {
@@ -476,26 +500,26 @@ void QmlVtkRenderer::setActiveModel(int sceneIndex) {
      * the shared clamp helper (review fix P2-5) and is written back so the
      * stored index satisfies the invariant (the pick then always matches
      * the stored index).*/
-    dispatch_async(
-        [sceneIndex](vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data || !data->modelStyle) {
-                return;
+    dispatch_async([sceneIndex](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data || !data->modelStyle) {
+            return;
+        }
+        data->activeModelIndex = sceneIndex;
+        vtkActor* actor = nullptr;
+        int active = -1;  // cleared pick: no movable model
+        if (sceneIndex >= 0) {
+            active =
+                ClampedActiveIndex(data, static_cast<int>(data->models.size()));
+            data->activeModelIndex = active;  // pin the invariant
+            if (!data->models.empty()) {
+                actor = data->models[static_cast<size_t>(active)].actor;
             }
-            data->activeModelIndex = sceneIndex;
-            vtkActor* actor = nullptr;
-            int active = -1;  // cleared pick: no movable model
-            if (sceneIndex >= 0) {
-                active = ClampedActiveIndex(
-                    data, static_cast<int>(data->models.size()));
-                data->activeModelIndex = active;  // pin the invariant
-                if (!data->models.empty()) {
-                    actor = data->models[static_cast<size_t>(active)].actor;
-                }
-            }
-            data->modelStyle->SetPrimaryActor(actor, active);
-            (void)renderWindow;
-        });
+        }
+        data->modelStyle->SetPrimaryActor(actor, active);
+        (void)renderWindow;
+    });
 }
 
 void QmlVtkRenderer::updateModels() {
@@ -518,40 +542,42 @@ void QmlVtkRenderer::updateModels() {
 }
 
 void QmlVtkRenderer::setInteractionMode(int mode) {
-    const int clamped =
-        (mode == ModelMode) ? ModelMode : CameraMode;
+    const int clamped = (mode == ModelMode) ? ModelMode : CameraMode;
     if (clamped == interaction_mode_) {
         return;
     }
     interaction_mode_ = clamped;
     emit interactionModeChanged();
-    dispatch_async(
-        [clamped](vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data) {
-                return;
-            }
-            vtkRenderWindowInteractor* iren = renderWindow->GetInteractor();
-            if (!iren) {
-                return;
-            }
-            iren->SetInteractorStyle(
-                clamped == ModelMode
-                    ? static_cast<vtkInteractorStyle*>(
-                          data->modelStyle.Get())
-                    : static_cast<vtkInteractorStyle*>(
-                          data->cameraStyle.Get()));
-            renderWindow->Render();
-        });
+    dispatch_async([clamped](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data) {
+            return;
+        }
+        vtkRenderWindowInteractor* iren = renderWindow->GetInteractor();
+        if (!iren) {
+            return;
+        }
+        iren->SetInteractorStyle(
+            clamped == ModelMode
+                ? static_cast<vtkInteractorStyle*>(data->modelStyle.Get())
+                : static_cast<vtkInteractorStyle*>(data->cameraStyle.Get()));
+        renderWindow->Render();
+    });
 }
 
 int QmlVtkRenderer::interactionMode() const {
     return interaction_mode_;
 }
 
-void QmlVtkRenderer::reportModelPoseAdjusted(int sceneModelIndex, double x,
-                                              double y, double z, double xa,
-                                              double ya, double za) {
+void QmlVtkRenderer::reportModelPoseAdjusted(
+    int sceneModelIndex,
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     // May be called from the render thread (the style's EndInteraction
     // observer): emit with by-value data; receivers with GUI-thread affinity
     // get queued delivery via AutoConnection. No VTK state is touched.
@@ -565,15 +591,15 @@ void QmlVtkRenderer::updateCamera() {
     copySceneMirror();
     const double viewAngle = scene_mirror_.cameraViewAngle();
     const double focal = scene_mirror_.focalLengthPx();
-    dispatch_async(
-        [viewAngle, focal](vtkRenderWindow* renderWindow, vtkUserData userData) {
-            auto* data = QmlVtkData::SafeDownCast(userData);
-            if (!data) {
-                return;
-            }
-            ApplyCameraParams(data, viewAngle, focal);
-            renderWindow->Render();
-        });
+    dispatch_async([viewAngle, focal](
+                       vtkRenderWindow* renderWindow, vtkUserData userData) {
+        auto* data = QmlVtkData::SafeDownCast(userData);
+        if (!data) {
+            return;
+        }
+        ApplyCameraParams(data, viewAngle, focal);
+        renderWindow->Render();
+    });
 }
 
 QString QmlVtkRenderer::poseReadout() const {

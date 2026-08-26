@@ -1,5 +1,5 @@
 /*Render Engine Header*/
-#include "compute/cost_capacity_service.cuh" // plan 010 U10
+#include "compute/cost_capacity_service.cuh"  // plan 010 U10
 #include "compute/evaluation_context.h"
 #include "compute/render_engine.cuh"
 
@@ -121,14 +121,12 @@ RenderEngine::RenderEngine(
     camera_calibration_ = camera_calibration;
     if (camera_calibration_.type_ == "UF") {
         fx_ = -1.0f * camera_calibration_.principal_distance_ /
-              camera_calibration_.pixel_pitch_;
+            camera_calibration_.pixel_pitch_;
         fy_ = -1.0f * camera_calibration_.principal_distance_ /
-              camera_calibration_.pixel_pitch_;
-        cx_ =
-            static_cast<float>(width_) / 2.0f -
+            camera_calibration_.pixel_pitch_;
+        cx_ = static_cast<float>(width_) / 2.0f -
             camera_calibration_.principal_x_ / camera_calibration_.pixel_pitch_;
-        cy_ =
-            static_cast<float>(height) / 2.0f -
+        cy_ = static_cast<float>(height) / 2.0f -
             camera_calibration_.principal_y_ / camera_calibration_.pixel_pitch_;
     } else if (camera_calibration_.type_ == "Denver") {
         fx_ = camera_calibration_.fx();
@@ -136,14 +134,12 @@ RenderEngine::RenderEngine(
         cx_ = camera_calibration_.cx();
         cy_ = height - camera_calibration_.cy();
     }
-    pix_conversion_x_ =
-        static_cast<float>(width_) / 2.0f -
+    pix_conversion_x_ = static_cast<float>(width_) / 2.0f -
         camera_calibration_.principal_x_ / camera_calibration_.pixel_pitch_;
-    pix_conversion_y_ =
-        static_cast<float>(height_) / 2.0f -
+    pix_conversion_y_ = static_cast<float>(height_) / 2.0f -
         camera_calibration_.principal_y_ / camera_calibration_.pixel_pitch_;
     dist_over_pix_pitch_ = -1.0f * camera_calibration_.principal_distance_ /
-                           camera_calibration_.pixel_pitch_;
+        camera_calibration_.pixel_pitch_;
 
     /*Initialize Kernel Launch Sizes*/
     dim_grid_triangles_ = dim3(
@@ -268,7 +264,7 @@ void RenderEngine::FreeCuda() {
 cudaError_t
 RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
     /*CUDA Error Status*/
-    cudaGetLastError(); // Resets Errors
+    cudaGetLastError();  // Resets Errors
     cudaError_t cudaStatus;
 
     /*Choose which GPU to run on, change this on a multi-GPU system.*/
@@ -447,8 +443,9 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
 
 bool RenderEngine::CaptureBank0Pointers() {
     if (renderer_output_ == nullptr || dev_triangles_ == nullptr ||
-        dev_normals_ == nullptr || fragment_fill_ == nullptr)
+        dev_normals_ == nullptr || fragment_fill_ == nullptr) {
         return false;
+    }
     bank0_pointers_.z_line_values = dev_z_line_values_;
     bank0_pointers_.transformed_vertex_zs = dev_transf_vertex_zs_;
     bank0_pointers_.tangent_triangle = dev_tangent_triangle_;
@@ -478,7 +475,9 @@ bool RenderEngine::CaptureBank0Pointers() {
 }
 
 bool RenderEngine::BindBankPointers(BankState* bank) {
-    if (!bank0_pointers_captured_) return false;
+    if (!bank0_pointers_captured_) {
+        return false;
+    }
     if (bank == nullptr) {
         RestoreBank0Pointers();
         return true;
@@ -493,8 +492,9 @@ bool RenderEngine::BindBankPointers(BankState* bank) {
         r.dev_bounding_box_triangles_sizes_prefix == nullptr ||
         r.dev_bounding_box == nullptr || r.dev_fragment_fill == nullptr ||
         r.host_fragment_fill == nullptr || r.dev_stride_prefixes == nullptr ||
-        r.dev_cub_storage == nullptr)
+        r.dev_cub_storage == nullptr) {
         return false;
+    }
     dev_z_line_values_ = nullptr;
     dev_transf_vertex_zs_ = static_cast<float*>(r.dev_transformed_vertex_zs);
     dev_tangent_triangle_ = static_cast<bool*>(r.dev_tangent_triangle);
@@ -518,13 +518,15 @@ bool RenderEngine::BindBankPointers(BankState* bank) {
     active_bounding_box_host_ = static_cast<int*>(r.host_bounding_box);
     active_bank_ = bank;
     execution_stream_ = bank->stream == nullptr
-                            ? nullptr
-                            : reinterpret_cast<cudaStream_t>(bank->stream);
+        ? nullptr
+        : reinterpret_cast<cudaStream_t>(bank->stream);
     return true;
 }
 
 void RenderEngine::RestoreBank0Pointers() {
-    if (!bank0_pointers_captured_) return;
+    if (!bank0_pointers_captured_) {
+        return;
+    }
     dev_z_line_values_ = bank0_pointers_.z_line_values;
     dev_transf_vertex_zs_ = bank0_pointers_.transformed_vertex_zs;
     dev_tangent_triangle_ = bank0_pointers_.tangent_triangle;
@@ -621,14 +623,14 @@ __global__ void WorldToPixelKernel(
 
         /*Transform (Rotate then Translate) Vertices*/
         float tX = model_rotation_mat.rotation_00_ * vX +
-                   model_rotation_mat.rotation_01_ * vY +
-                   model_rotation_mat.rotation_02_ * vZ + x_location;
+            model_rotation_mat.rotation_01_ * vY +
+            model_rotation_mat.rotation_02_ * vZ + x_location;
         float tY = model_rotation_mat.rotation_10_ * vX +
-                   model_rotation_mat.rotation_11_ * vY +
-                   model_rotation_mat.rotation_12_ * vZ + y_location;
+            model_rotation_mat.rotation_11_ * vY +
+            model_rotation_mat.rotation_12_ * vZ + y_location;
         float tZ = model_rotation_mat.rotation_20_ * vX +
-                   model_rotation_mat.rotation_21_ * vY +
-                   model_rotation_mat.rotation_22_ * vZ + z_location;
+            model_rotation_mat.rotation_21_ * vY +
+            model_rotation_mat.rotation_22_ * vZ + z_location;
 
         /*Transform normal and compute dot product with vertex. Backface if >=
          * 0. Only do on first vertex.*/
@@ -639,26 +641,30 @@ __global__ void WorldToPixelKernel(
             float dotProduct = (model_rotation_mat.rotation_00_ * nX +
                                 model_rotation_mat.rotation_01_ * nY +
                                 model_rotation_mat.rotation_02_ * nZ) *
-                                   tX +
-                               (model_rotation_mat.rotation_10_ * nX +
-                                model_rotation_mat.rotation_11_ * nY +
-                                model_rotation_mat.rotation_12_ * nZ) *
-                                   tY +
-                               (model_rotation_mat.rotation_20_ * nX +
-                                model_rotation_mat.rotation_21_ * nY +
-                                model_rotation_mat.rotation_22_ * nZ) *
-                                   tZ;
-            if (dotProduct >= 0)
+                    tX +
+                (model_rotation_mat.rotation_10_ * nX +
+                 model_rotation_mat.rotation_11_ * nY +
+                 model_rotation_mat.rotation_12_ * nZ) *
+                    tY +
+                (model_rotation_mat.rotation_20_ * nX +
+                 model_rotation_mat.rotation_21_ * nY +
+                 model_rotation_mat.rotation_22_ * nZ) *
+                    tZ;
+            if (dotProduct >= 0) {
                 dev_backface[i / 3] = true;
-            else
+            } else {
                 dev_backface[i / 3] = false;
-            if (!use_backface_culling) dev_backface[i / 3] = false;
+            }
+            if (!use_backface_culling) {
+                dev_backface[i / 3] = false;
+            }
         }
         // Need to change this condition - it definitely can be higher than zero
         // if you are using a different calibration setup.
-        if (tZ == 0)
+        if (tZ == 0) {
             tZ = -.000001; /*Can't be above or at zero, so make very
                               small..should never happen*/
+        }
 
         // float sX = (tX / tZ) * dist_over_pix_pitch + pix_conversion_x;
         // float sY = (tY / tZ) * dist_over_pix_pitch + pix_conversion_y;
@@ -788,7 +794,7 @@ __global__ void StridePrefixKernel(
     int j = i * stride;
 
     if (j < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
-                dev_bounding_box_triangles_sizes[triangle_count - 1]) {
+            dev_bounding_box_triangles_sizes[triangle_count - 1]) {
         /*Get the index for the stride elements*/
         int low = 0;
         int high = triangle_count;
@@ -824,7 +830,7 @@ __global__ void FillTriangleKernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
-                dev_bounding_box_triangles_sizes[triangle_count - 1]) {
+            dev_bounding_box_triangles_sizes[triangle_count - 1]) {
         /*Index of Triangle for the given stride (stride is of size 256 and the
          * stride group is blockIdx.x)*/
         int stridedIndex = dev_stride_prefixes[blockIdx.x];
@@ -832,10 +838,11 @@ __global__ void FillTriangleKernel(
         /*Load [stridedIndex, stridedIndex + 255] at most (256) elements to
          * another shared memory (could hit upper bound)*/
         __shared__ int reducedBoundingBoxTrianglesSizePrefix[threads_per_block];
-        if (threadIdx.x + stridedIndex < triangle_count)
+        if (threadIdx.x + stridedIndex < triangle_count) {
             reducedBoundingBoxTrianglesSizePrefix[threadIdx.x] =
                 dev_bounding_box_triangles_sizes_prefix
                     [threadIdx.x + stridedIndex];
+        }
         __syncthreads();
 
         /*Binary Search Loop Variables*/
@@ -909,7 +916,9 @@ __global__ void FillTriangleKernel(
 /* U4: device-driven persistent worker kernels (fixed grid, chunk claiming via
  * atomicAdd) */
 __global__ void OverflowCheckKernel(
-    int* dev_fragment_fill, int* dev_overflowFlag, long long maxFragments) {
+    int* dev_fragment_fill,
+    int* dev_overflowFlag,
+    long long maxFragments) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // Treat any signed overflow (negative fragment_fill) OR exceeding the
         // safe fragment budget as overflow.  maxFragments is long long to avoid
@@ -931,28 +940,36 @@ __global__ void StridePrefixPersistentKernel(
     int triangle_count,
     int stride) {
     int total = dev_fragment_fill[0];
-    if (*dev_overflowFlag) return;
+    if (*dev_overflowFlag) {
+        return;
+    }
     while (true) {
         int chunkStart = atomicAdd(dev_nextChunk, chunkSize);
         int jStart = chunkStart * stride;
-        if (jStart >= total) break;
+        if (jStart >= total) {
+            break;
+        }
         int jEnd = min((chunkStart + chunkSize) * stride, total);
         // Process stride elements chunkStart .. chunkStart+chunkSize-1 but only
         // those with j < total
         for (int idx = chunkStart; idx < chunkStart + chunkSize; ++idx) {
             int j = idx * stride;
-            if (j >= total) break;
+            if (j >= total) {
+                break;
+            }
             int low = 0, high = triangle_count, mid = 0;
             while (low != high) {
                 mid = (low + high) / 2;
-                if (dev_prefix[mid] <= j)
+                if (dev_prefix[mid] <= j) {
                     low = mid + 1;
-                else
+                } else {
                     high = mid;
+                }
             }
             int strideIndex = high - 1;
-            if (idx < maximum_stride_size)
+            if (idx < maximum_stride_size) {
                 dev_stride_prefixes[idx] = strideIndex;
+            }
         }
         // Also need to handle jEnd unused
         (void)jEnd;
@@ -974,25 +991,34 @@ __global__ void FillTrianglePersistentKernel(
     float* dev_projected_triangles,
     int* dev_stride_prefixes) {
     int total = dev_fragment_fill[0];
-    if (*dev_overflowFlag) return;
+    if (*dev_overflowFlag) {
+        return;
+    }
     while (true) {
         int start = atomicAdd(dev_nextCandidate, chunkSize);
-        if (start >= total) break;
+        if (start >= total) {
+            break;
+        }
         int end = start + chunkSize;
-        if (end > total) end = total;
+        if (end > total) {
+            end = total;
+        }
         for (int i = start; i < end; ++i) {
             // Find triangle index via global binary search on prefix
             // (device-driven, no shared memory)
             int low = 0, high = triangle_count, mid = 0;
             while (low != high) {
                 mid = (low + high) / 2;
-                if (dev_prefix[mid] <= i)
+                if (dev_prefix[mid] <= i) {
                     low = mid + 1;
-                else
+                } else {
                     high = mid;
+                }
             }
             int triangleIndex = high - 1;
-            if (triangleIndex < 0 || triangleIndex >= triangle_count) continue;
+            if (triangleIndex < 0 || triangleIndex >= triangle_count) {
+                continue;
+            }
             int triangleIndex4 = 4 * triangleIndex;
             int Lx = dev_bbox_triangles[triangleIndex4];
             int By = dev_bbox_triangles[triangleIndex4 + 1];
@@ -1000,12 +1026,15 @@ __global__ void FillTrianglePersistentKernel(
             // Use stored sizes/prefix to compute insideIndex as original did
             int insideIndex = i - dev_prefix[triangleIndex];
             int denomX = Rx - Lx + 1;
-            if (denomX <= 0) continue;
+            if (denomX <= 0) {
+                continue;
+            }
             int pxPixel = Lx + insideIndex % denomX;
             int pyPixel = By + insideIndex / denomX;
             if (pxPixel < 0 || pxPixel >= width || pyPixel < 0 ||
-                pyPixel >= height)
+                pyPixel >= height) {
                 continue;
+            }
             float px = pxPixel + 0.5f;
             float py = pyPixel + 0.5f;
             int triangleIndex6 = 6 * triangleIndex;
@@ -1022,8 +1051,9 @@ __global__ void FillTrianglePersistentKernel(
                     float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
                     if (0 <= b && b <= denominator) {
                         float c = denominator - a - b;
-                        if (0 <= c && c <= denominator)
+                        if (0 <= c && c <= denominator) {
                             dev_image[pyPixel * width + pxPixel] = 255;
+                        }
                     }
                 }
             } else {
@@ -1031,8 +1061,9 @@ __global__ void FillTrianglePersistentKernel(
                     float b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3));
                     if (0 >= b && b >= denominator) {
                         float c = denominator - a - b;
-                        if (0 >= c && c >= denominator)
+                        if (0 >= c && c >= denominator) {
                             dev_image[pyPixel * width + pxPixel] = 255;
+                        }
                     }
                 }
             }
@@ -1045,7 +1076,7 @@ __global__ void FillTrianglePersistentKernel(
 
 cudaError_t RenderEngine::Render() {
     /*Create Error Status*/
-    cudaGetLastError(); // Resets Errors (MAYBE DELETE TO SAVE TIME?)
+    cudaGetLastError();  // Resets Errors (MAYBE DELETE TO SAVE TIME?)
 
     /*Clear Image*/
     cudaMemset(
@@ -1352,7 +1383,9 @@ cudaError_t RenderEngine::RenderPhase(BankState& bank) {
         width_,
         height_);
     err = cudaGetLastError();
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     BoundingBoxSizesKernel<<<
         dim_grid_triangles_,
         threads_per_block,
@@ -1364,7 +1397,9 @@ cudaError_t RenderEngine::RenderPhase(BankState& bank) {
         static_cast<int*>(r.dev_bounding_box),
         static_cast<bool*>(r.dev_backface));
     err = cudaGetLastError();
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     err = cub::DeviceScan::ExclusiveSum(
         r.dev_cub_storage,
         r.cub_storage_bytes,
@@ -1372,28 +1407,36 @@ cudaError_t RenderEngine::RenderPhase(BankState& bank) {
         static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
         triangle_count_,
         stream);
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     PrepareLaunchPacketKernel<<<1, 1, 0, stream>>>(
         static_cast<int*>(r.dev_fragment_fill),
         static_cast<int*>(r.dev_bounding_box_triangles_sizes),
         static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
         triangle_count_);
     err = cudaGetLastError();
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     err = cudaMemcpyAsync(
         bbox_host,
         r.dev_bounding_box,
         4 * sizeof(int),
         cudaMemcpyDeviceToHost,
         stream);
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     err = cudaMemcpyAsync(
         fragment_host,
         r.dev_fragment_fill,
         sizeof(int),
         cudaMemcpyDeviceToHost,
         stream);
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     return cudaStreamSynchronize(stream);
 }
 
@@ -1401,11 +1444,15 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
     if (bank.stream == nullptr || bank.primary.host_fragment_fill == nullptr) {
         return cudaErrorInvalidResourceHandle;
     }
-    if (!BindBankPointers(&bank)) return cudaErrorInvalidValue;
+    if (!BindBankPointers(&bank)) {
+        return cudaErrorInvalidValue;
+    }
     auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
     auto& r = bank.primary;
     auto output = active_output_device_;
-    if (output == nullptr) return cudaErrorInvalidValue;
+    if (output == nullptr) {
+        return cudaErrorInvalidValue;
+    }
     const int fragment_fill = *static_cast<int*>(r.host_fragment_fill);
     if (static_cast<double>(fragment_fill) >
         static_cast<double>(maximum_stride_size) *
@@ -1419,7 +1466,9 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
     if (capacity_service_ && capacity_service_->available()) {
         const CapacityGrid grid =
             capacity_service_->gridFor(fragment_fill, threads_per_block);
-        if (grid.capacity_applicable) fill_grid = grid.grid_blocks;
+        if (grid.capacity_applicable) {
+            fill_grid = grid.grid_blocks;
+        }
     }
     StridePrefixKernel<<<
         ceil(
@@ -1434,7 +1483,9 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
         static_cast<int*>(r.dev_stride_prefixes),
         triangle_count_);
     cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     FillTriangleKernel<<<fill_grid, threads_per_block, 0, stream>>>(
         static_cast<int*>(r.dev_bounding_box_triangles_sizes),
         static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
@@ -1447,7 +1498,7 @@ cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
         static_cast<int*>(r.dev_stride_prefixes));
     return cudaGetLastError();
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 // ── U4: EvaluationContext overloads — real kernel launches, no host barrier ──
 //
@@ -1468,7 +1519,9 @@ namespace gpu_cost_function {
 
 cudaError_t RenderEngine::Render(EvaluationContext& ctx) {
     cudaError_t err = EnqueueRenderPhase(ctx);
-    if (err != cudaSuccess) return err;
+    if (err != cudaSuccess) {
+        return err;
+    }
     return CompleteRenderPhase(ctx);
 }
 
@@ -1492,7 +1545,9 @@ cudaError_t RenderEngine::EnqueueRenderPhase(EvaluationContext& ctx) {
     view.completion_event = ctx.completion_event;
     view.in_flight = ctx.in_flight;
 
-    if (!BindBankPointers(&view)) return cudaErrorInvalidValue;
+    if (!BindBankPointers(&view)) {
+        return cudaErrorInvalidValue;
+    }
     auto& r = view.primary;
     auto output = active_output_device_;
     if (output == nullptr) {
@@ -1749,4 +1804,4 @@ cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext& ctx) {
     return cudaSuccess;
 }
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

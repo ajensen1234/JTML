@@ -42,10 +42,9 @@
 #ifndef SESSION_STATE_CONTROLLER_H
 #define SESSION_STATE_CONTROLLER_H
 
+#include <QObject>
 #include <functional>
 #include <vector>
-
-#include <QObject>
 
 #include "domain/session_state.h"
 
@@ -76,7 +75,9 @@ public:
      * deliberately NOT touched here — the view's save-last-pose reads them
      * as the pre-change selection. No change -> no writes, no emissions.*/
     void UpdateSession(
-        int frame_count, int model_count, int current_frame,
+        int frame_count,
+        int model_count,
+        int current_frame,
         const std::vector<int>& selected_rows);
 
     /*Mirror advance + deferred emission (call AFTER the view's
@@ -102,7 +103,9 @@ public:
     bool runInFlight() const;
 
     /*---- Reads (thin pass-through to the wrapped state) ------------------*/
-    const jta::SessionState& sessionState() const { return *state_; }
+    const jta::SessionState& sessionState() const {
+        return *state_;
+    }
 
 signals:
     /*Emitted when the frame/model counts changed (dataset facts). Also

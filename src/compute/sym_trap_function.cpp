@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 /*sym_trap_function Source*/
+#include <numbers>
+
 #include "compute/CostFunctionManager.h"
 #include "sym_trap_functionCustomVariables.h"
-#include <numbers>
 namespace jta_cost_function {
 bool CostFunctionManager::initializesym_trap_function(
     std::string& error_message) {
@@ -68,10 +69,10 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     One must return this value as a double.*/
     gpu_cost_function::Pose p =
         gpu_principal_model_
-            ->GetCurrentPrimaryCameraPose(); // this is the pose to the tibia
+            ->GetCurrentPrimaryCameraPose();  // this is the pose to the tibia
     gpu_cost_function::Pose np =
         (*gpu_non_principal_models_)[0]
-            ->GetCurrentPrimaryCameraPose(); // this is the pose to the femur
+            ->GetCurrentPrimaryCameraPose();  // this is the pose to the femur
 
     /*Create shorthand variables for trig vals*/
     float czp = cos(p.z_angle_ * std::numbers::pi_v<float> / 180.0f);
@@ -175,7 +176,7 @@ double CostFunctionManager::costFunctionsym_trap_function() {
     /*Direct Dilation begin */
     /*Render*/
     gpu_principal_model_->RenderPrimaryCamera(
-        p); // direct dilation of the tibia
+        p);  // direct dilation of the tibia
 
     /*(DIFFERENT FROM JTA PAPER) Dilate rendered image to same dilation as
      * comparison image*/
@@ -187,6 +188,6 @@ double CostFunctionManager::costFunctionsym_trap_function() {
              DIRECT_DILATION_current_dilation_parameter));
 
     return metric_score + (pole_weight * shortest_distance) +
-           (vv_weight * vv_cost);
+        (vv_weight * vv_cost);
 }
-} // namespace jta_cost_function
+}  // namespace jta_cost_function

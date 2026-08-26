@@ -25,14 +25,14 @@
 namespace jta::pose_file {
 
 enum class FileKind {
-    None,       // not a recognized pose/kinematics file
-    Pose,       // single-pose file (JTA_EULER_POSE, or a raw single row)
-    Kinematics, // multi-frame file (JTA_EULER_KINEMATICS, JT_EULER_312)
+    None,        // not a recognized pose/kinematics file
+    Pose,        // single-pose file (JTA_EULER_POSE, or a raw single row)
+    Kinematics,  // multi-frame file (JTA_EULER_KINEMATICS, JT_EULER_312)
 };
 
 struct LoadResult {
     bool ok = false;
-    bool not_optimized = false; // a row carried NOT_OPTIMIZED and was skipped
+    bool not_optimized = false;  // a row carried NOT_OPTIMIZED and was skipped
     FileKind kind = FileKind::None;
 };
 
@@ -52,15 +52,18 @@ bool WriteKinematics(std::ostream& out, const std::vector<Point6D>& poses);
 // data line), and NOT_OPTIMIZED / malformed rows yield std::nullopt for that
 // frame so subsequent frames stay aligned (the original loader keyed frames by
 // line index, not by a compacted count).
-LoadResult
-ReadKinematics(std::istream& in, std::vector<std::optional<Point6D>>& out);
+LoadResult ReadKinematics(
+    std::istream& in,
+    std::vector<std::optional<Point6D>>& out);
 
 // File-path convenience wrappers.
 bool WritePoseFile(const std::string& path, const Point6D& pose);
 LoadResult ReadPoseFile(const std::string& path, Point6D& out);
 bool WriteKinematicsFile(
-    const std::string& path, const std::vector<Point6D>& poses);
+    const std::string& path,
+    const std::vector<Point6D>& poses);
 LoadResult ReadKinematicsFile(
-    const std::string& path, std::vector<std::optional<Point6D>>& out);
+    const std::string& path,
+    std::vector<std::optional<Point6D>>& out);
 
-} // namespace jta::pose_file
+}  // namespace jta::pose_file

@@ -44,8 +44,8 @@ QVector<QString> ModelListModel::AppendModels(
     display.reserve(static_cast<int>(unique.size()));
     const int first = static_cast<int>(names_.size());
     if (!unique.empty()) {
-        beginInsertRows(QModelIndex(), first,
-                        first + static_cast<int>(unique.size()) - 1);
+        beginInsertRows(
+            QModelIndex(), first, first + static_cast<int>(unique.size()) - 1);
         for (const auto& n : unique) {
             names_.push_back(QString::fromStdString(n));
             display.push_back(QString::fromStdString(n));

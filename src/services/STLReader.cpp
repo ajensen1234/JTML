@@ -168,7 +168,7 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
         char header_info[80];
         char n_triangles[4];
         stl_file.read(header_info,
-                      80); // We do nothing with this information
+                      80);  // We do nothing with this information
         stl_file.read(n_triangles, 4);
 
         /*Storage (should someday update this)*/
@@ -193,7 +193,7 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
                 triangleVertices.push_back(value);
             }
             char temp[2];
-            stl_file.read(temp, 2); // Do nothing with this
+            stl_file.read(temp, 2);  // Do nothing with this
         }
         stl_storage.clear();
         stl_storage.push_back(triangleVertices);
@@ -203,4 +203,4 @@ readAnySTL(const QString& path, std::vector<std::vector<float>>& stl_storage) {
     }
     }
 }
-} // namespace stl_reader_BIG
+}  // namespace stl_reader_BIG

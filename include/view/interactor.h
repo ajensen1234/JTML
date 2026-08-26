@@ -30,12 +30,12 @@ Calibration interactor_calibration;
 // Speed of Movement
 double speed = 1;
 bool information = true;
-bool interactor_camera_B = false; // Are we in Camera B?
-bool middleDown = false;          // Is CM button down?
-bool leftDown = false;            // Is LM button down?
-bool rightDown = false;           // Is RM button down
-int rightDownY = 0;               // Y Pixel when RM Clicked
-double rightDownModelZ = 0;       // Model's Z Translation when RM Clicked
+bool interactor_camera_B = false;  // Are we in Camera B?
+bool middleDown = false;           // Is CM button down?
+bool leftDown = false;             // Is LM button down?
+bool rightDown = false;            // Is RM button down
+int rightDownY = 0;                // Y Pixel when RM Clicked
+double rightDownModelZ = 0;        // Model's Z Translation when RM Clicked
 
 class KeyPressInteractorStyle : public vtkInteractorStyleTrackballActor {
 public:
@@ -73,7 +73,9 @@ public:
     }
     void update_info_text(vtkActor* actor) {
         vtkTextActor* text = viewer_ ? viewer_->get_actor_text() : nullptr;
-        if (!text || !actor) return;
+        if (!text || !actor) {
+            return;
+        }
 
         if (!information) {
             text->GetTextProperty()->SetOpacity(0.0);
@@ -87,8 +89,9 @@ public:
             actor->GetOrientation()[0],
             actor->GetOrientation()[1],
             actor->GetOrientation()[2]);
-        if (interactor_camera_B)
+        if (interactor_camera_B) {
             pose = interactor_calibration.convert_Pose_B_to_Pose_A(pose);
+        }
 
         text->SetInput(format_pose(pose, speed).c_str());
         text->GetTextProperty()->SetOpacity(1.0);
@@ -98,8 +101,7 @@ public:
     void OnKeyPress() override {
         // Get the keypress
         vtkRenderWindowInteractor* rwi = this->Interactor;
-        if (rwi == viewer_->get_interactor()) {
-        }
+        if (rwi == viewer_->get_interactor()) {}
         if (this->InteractionProp == NULL) {
             std::string key = rwi->GetKeySym();
             // Handle information toggle
@@ -362,8 +364,8 @@ private:
     static std::string format_pose(const Point6D& p, double spd) {
         auto n = [](double v) { return std::to_string(v); };
         return "Location: <" + n(p.x) + "," + n(p.y) + "," + n(p.z) +
-               ">\nOrientation: <" + n(p.xa) + "," + n(p.ya) + "," + n(p.za) +
-               ">\nKeyboard Speed: " + n(spd);
+            ">\nOrientation: <" + n(p.xa) + "," + n(p.ya) + "," + n(p.za) +
+            ">\nKeyboard Speed: " + n(spd);
     }
 };
 

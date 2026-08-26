@@ -39,8 +39,7 @@ __global__ void art_np_kernel(
             // angular invariance (Eq 7)
             float R = (n == 0) ? 1.0 : 2.0 * cosf(3.1415928 * n * rho);
             // This is defining A, which gives rotation invariance (Eq 6)
-            thrust::complex<float> A =
-                (1 / (2 * 3.1415928)) *
+            thrust::complex<float> A = (1 / (2 * 3.1415928)) *
                 exp(thrust::complex<float>(0.0, p * theta));
             // This is defining the integration over the whole image, and
             // constructiong the full value of F_np (Eq 4)
@@ -228,8 +227,8 @@ int img_desc::width() {
     return width_;
 };
 
-std::vector<float>
-img_desc::hu_moments(gpu_cost_function::GPUImage* dev_image) {
+std::vector<float> img_desc::hu_moments(
+    gpu_cost_function::GPUImage* dev_image) {
     const int threads_per_block = 256;
     int* bounding_box = dev_image->GetBoundingBox();
     int left_x = max(bounding_box[0], 0);
@@ -319,25 +318,22 @@ img_desc::hu_moments(gpu_cost_function::GPUImage* dev_image) {
 
     hu[3] = pow(eta[3][0] + eta[1][2], 2) + pow(eta[2][1] + eta[0][3], 2);
 
-    hu[4] =
-        (eta[3][0] - 3 * eta[1][2]) * (eta[3][0] + eta[1][2]) *
+    hu[4] = (eta[3][0] - 3 * eta[1][2]) * (eta[3][0] + eta[1][2]) *
             (pow(eta[3][0] + eta[1][2], 2) -
              3 * pow(eta[2][1] + eta[0][3], 2)) +
         (3 * eta[2][1] - eta[0][3]) * (eta[2][1] + eta[0][3]) *
             (3 * pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2));
 
-    hu[5] =
-        (eta[1][2] - eta[0][3]) *
+    hu[5] = (eta[1][2] - eta[0][3]) *
             (pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2)) +
         (eta[2][1] + eta[0][3]) *
             (3 * pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2));
 
-    hu[6] = (eta[2][0] - eta[0][2]) * (pow(eta[3][0] + eta[1][2], 2) -
-                                       pow(eta[2][1] + eta[0][3], 2)) +
-            4 * eta[1][1] * (eta[3][0] + eta[1][2]) * (eta[2][1] + eta[0][3]);
+    hu[6] = (eta[2][0] - eta[0][2]) *
+            (pow(eta[3][0] + eta[1][2], 2) - pow(eta[2][1] + eta[0][3], 2)) +
+        4 * eta[1][1] * (eta[3][0] + eta[1][2]) * (eta[2][1] + eta[0][3]);
 
-    hu[7] =
-        (3 * eta[2][1] - eta[0][3]) * (eta[3][0] + eta[1][2]) *
+    hu[7] = (3 * eta[2][1] - eta[0][3]) * (eta[3][0] + eta[1][2]) *
             (pow(eta[3][0] + eta[1][2], 2) -
              3 * pow(eta[2][1] + eta[0][3], 2)) -
         (eta[3][0] - 3 * eta[1][2]) * (eta[2][1] + eta[0][3]) *

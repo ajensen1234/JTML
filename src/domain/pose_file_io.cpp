@@ -16,8 +16,15 @@ namespace {
 
 constexpr int kFieldCount = 6;
 
-void WriteRow(std::ostream& out, double x, double y, double z, double z_rot,
-              double x_rot, double y_rot, bool last_newline) {
+void WriteRow(
+    std::ostream& out,
+    double x,
+    double y,
+    double z,
+    double z_rot,
+    double x_rot,
+    double y_rot,
+    bool last_newline) {
     // Column order is X, Y, Z, Z_ROT, X_ROT, Y_ROT (matches the GUI and the
     // JTA/JT headers). Values are comma-separated; the value/length-dependent
     // tab padding of the original inspector output is cosmetic and the reader
@@ -32,16 +39,19 @@ void WriteRow(std::ostream& out, double x, double y, double z, double z_rot,
     emit(z_rot);
     emit(x_rot);
     out << std::setprecision(10) << y_rot << ",";
-    if (last_newline)
+    if (last_newline) {
         out << "\n";
-    else
+    } else {
         out << "\t";
+    }
 }
 
 // Tokenize one data line into up to 6 numeric strings. Accepts comma- or
 // whitespace-separated columns (comma-first for the GUI's native files, then
 // whitespace for JT_EULER_312). Returns false if fewer than 6 are found.
-bool TokenizeLine(const std::string& line, std::array<std::string, kFieldCount>& tokens) {
+bool TokenizeLine(
+    const std::string& line,
+    std::array<std::string, kFieldCount>& tokens) {
     std::vector<std::string> fields;
     // Split on commas first.
     std::string cur;
@@ -59,16 +69,28 @@ bool TokenizeLine(const std::string& line, std::array<std::string, kFieldCount>&
     } else {
         std::istringstream iss(line);
         std::string tok;
-        while (iss >> tok) fields.push_back(tok);
+        while (iss >> tok) {
+            fields.push_back(tok);
+        }
     }
     // The first token may be padded with leading spaces (e.g. the first
     // column of a JT header line); trim each field.
     for (auto& f : fields) {
-        while (!f.empty() && std::isspace(static_cast<unsigned char>(f.front()))) f.erase(f.begin());
-        while (!f.empty() && std::isspace(static_cast<unsigned char>(f.back()))) f.pop_back();
+        while (!f.empty() &&
+               std::isspace(static_cast<unsigned char>(f.front()))) {
+            f.erase(f.begin());
+        }
+        while (!f.empty() &&
+               std::isspace(static_cast<unsigned char>(f.back()))) {
+            f.pop_back();
+        }
     }
-    if (fields.size() < kFieldCount) return false;
-    for (int i = 0; i < kFieldCount; ++i) tokens[i] = fields[i];
+    if (fields.size() < kFieldCount) {
+        return false;
+    }
+    for (int i = 0; i < kFieldCount; ++i) {
+        tokens[i] = fields[i];
+    }
     return true;
 }
 
@@ -97,7 +119,9 @@ std::vector<std::string> ReadLines(std::istream& in) {
                 break;
             }
         }
-        if (whitespace_only) continue;
+        if (whitespace_only) {
+            continue;
+        }
         lines.push_back(line);
     }
     return lines;
@@ -106,36 +130,55 @@ std::vector<std::string> ReadLines(std::istream& in) {
 }  // namespace
 
 bool WritePose(std::ostream& out, const Point6D& pose) {
-    if (!out) return false;
+    if (!out) {
+        return false;
+    }
     out << "JTA_EULER_POSE\n"
         << "X_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_ROT\t\tX_ROT\t\tY_ROT\n";
-    WriteRow(out, pose.x, pose.y, pose.z, pose.za, pose.xa, pose.ya,
-             /*last_newline=*/true);
+    WriteRow(
+        out,
+        pose.x,
+        pose.y,
+        pose.z,
+        pose.za,
+        pose.xa,
+        pose.ya,
+        /*last_newline=*/true);
     return static_cast<bool>(out);
 }
 
 LoadResult ReadPose(std::istream& in, Point6D& out) {
     LoadResult res;
     auto lines = ReadLines(in);
-    if (lines.empty()) return res;
+    if (lines.empty()) {
+        return res;
+    }
     // The pose is either the third line of a JTA_EULER_POSE file (index 2) or,
     // for a raw single-row (.jtp-style) file, is the file's first line.
     const std::string* data_line = nullptr;
     if (!lines[0].empty() && lines[0] == "JTA_EULER_POSE") {
         res.kind = FileKind::Pose;
-        if (lines.size() >= 3) data_line = &lines[2];
+        if (lines.size() >= 3) {
+            data_line = &lines[2];
+        }
     } else {
         // Raw single-row file: the pose is line 0 itself (as the GUI's .jtp
         // loader reads InputList[0]). Only try line 0 so an unrelated header
         // is not mistaken for a pose.
         res.kind = FileKind::Pose;
         std::array<std::string, kFieldCount> probe;
-        if (TokenizeLine(lines[0], probe)) data_line = &lines[0];
+        if (TokenizeLine(lines[0], probe)) {
+            data_line = &lines[0];
+        }
     }
-    if (!data_line) return res;
+    if (!data_line) {
+        return res;
+    }
 
     std::array<std::string, kFieldCount> tokens;
-    if (!TokenizeLine(*data_line, tokens)) return res;
+    if (!TokenizeLine(*data_line, tokens)) {
+        return res;
+    }
     if (tokens[0] == "NOT_OPTIMIZED") {
         res.not_optimized = true;
         return res;
@@ -150,7 +193,9 @@ LoadResult ReadPose(std::istream& in, Point6D& out) {
 }
 
 bool WriteKinematics(std::ostream& out, const std::vector<Point6D>& poses) {
-    if (!out) return false;
+    if (!out) {
+        return false;
+    }
     out << "JTA_EULER_KINEMATICS\n"
         << "X_TRAN\t\tY_TRAN\t\tZ_TRAN\t\tZ_ROT\t\tX_ROT\t\tY_ROT\n";
     for (const auto& p : poses) {
@@ -159,13 +204,17 @@ bool WriteKinematics(std::ostream& out, const std::vector<Point6D>& poses) {
     return static_cast<bool>(out);
 }
 
-LoadResult ReadKinematics(std::istream& in,
-                           std::vector<std::optional<Point6D>>& out) {
+LoadResult ReadKinematics(
+    std::istream& in,
+    std::vector<std::optional<Point6D>>& out) {
     LoadResult res;
     auto lines = ReadLines(in);
-    if (lines.empty()) return res;
-    if (lines[0] != "JTA_EULER_KINEMATICS" && lines[0] != "JT_EULER_312")
+    if (lines.empty()) {
         return res;
+    }
+    if (lines[0] != "JTA_EULER_KINEMATICS" && lines[0] != "JT_EULER_312") {
+        return res;
+    }
     res.kind = FileKind::Kinematics;
     // Data rows start after the header (line 0) + column title (line 1).
     // out is POSITION-PRESERVING: out[j] is the pose for frame j; a skipped
@@ -189,8 +238,10 @@ LoadResult ReadKinematics(std::istream& in,
             out.push_back(std::nullopt);  // malformed row -> that frame unset
         }
     }
-    res.ok = std::any_of(out.begin(), out.end(),
-                         [](const std::optional<Point6D>& p) { return p.has_value(); });
+    res.ok = std::any_of(
+        out.begin(), out.end(), [](const std::optional<Point6D>& p) {
+            return p.has_value();
+        });
     return res;
 }
 
@@ -201,20 +252,26 @@ bool WritePoseFile(const std::string& path, const Point6D& pose) {
 
 LoadResult ReadPoseFile(const std::string& path, Point6D& out) {
     std::ifstream f(path);
-    if (!f) return LoadResult{};
+    if (!f) {
+        return LoadResult{};
+    }
     return ReadPose(f, out);
 }
 
-bool WriteKinematicsFile(const std::string& path,
-                         const std::vector<Point6D>& poses) {
+bool WriteKinematicsFile(
+    const std::string& path,
+    const std::vector<Point6D>& poses) {
     std::ofstream f(path);
     return WriteKinematics(f, poses);
 }
 
-LoadResult ReadKinematicsFile(const std::string& path,
-                              std::vector<std::optional<Point6D>>& out) {
+LoadResult ReadKinematicsFile(
+    const std::string& path,
+    std::vector<std::optional<Point6D>>& out) {
     std::ifstream f(path);
-    if (!f) return LoadResult{};
+    if (!f) {
+        return LoadResult{};
+    }
     return ReadKinematics(f, out);
 }
 

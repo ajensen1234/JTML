@@ -19,9 +19,9 @@
 #include <vector>
 
 #include "compute/bank_state.cuh"
+#include "compute/batch_outcome.h"
 #include "compute/evaluation_context.h"
 #include "compute/graph_recipe.h"
-#include "compute/batch_outcome.h"
 #include "domain/data_structures_6D.h"
 
 namespace gpu_cost_function {
@@ -38,17 +38,26 @@ public:
 
     // Initialize pool for given layout. free_device_bytes and n_max follow
     // bank_state_math::admit half-memory; graphOverhead is included in layout.
-    bool Initialize(const BankFootprintInput& layout,
-                    std::uint64_t free_device_bytes,
-                    std::size_t n_max);
+    bool Initialize(
+        const BankFootprintInput& layout,
+        std::uint64_t free_device_bytes,
+        std::size_t n_max);
     void Shutdown();
 
     std::size_t poolSize() const;
-    EvaluationContextPool& pool() { return pool_; }
-    const EvaluationContextPool& pool() const { return pool_; }
+    EvaluationContextPool& pool() {
+        return pool_;
+    }
+    const EvaluationContextPool& pool() const {
+        return pool_;
+    }
 
-    GraphRecipeRegistry& registry() { return registry_; }
-    const GraphRecipeRegistry& registry() const { return registry_; }
+    GraphRecipeRegistry& registry() {
+        return registry_;
+    }
+    const GraphRecipeRegistry& registry() const {
+        return registry_;
+    }
 
     // Domain-facing greedy batch. Serial cost is the BuildGpuCostAdapter
     // closure (Point6D -> double). Returns typed BatchOutcome (plan 012 U1):
@@ -56,32 +65,46 @@ public:
     // pre-submission failure, PostLaunchAbort/WatchdogPoisoned for R7 after
     // firstSubmission. Throws std::invalid_argument only for true wrong-size
     // contract violation from an injected cost (never as abort sentinel).
-    BatchOutcome RunBatch(const std::vector<Point6D>& poses,
-                          const std::function<double(const Point6D&)>& serialCost);
+    BatchOutcome RunBatch(
+        const std::vector<Point6D>& poses,
+        const std::function<double(const Point6D&)>& serialCost);
 
     // Overload for testing: inject per-pose cost with index, to simulate
     // out-of-order completions while still preserving ordered store.
     BatchOutcome RunBatchWithCost(
         const std::vector<Point6D>& poses,
-        const std::function<double(const Point6D&, std::size_t)>& costWithIndex);
+        const std::function<double(const Point6D&, std::size_t)>&
+            costWithIndex);
 
     // Watchdog timeout for EventQuery polling. Default 5s.
-    void setWatchdogTimeout(std::chrono::milliseconds t) { watchdogTimeout_ = t; }
-    std::chrono::milliseconds watchdogTimeout() const { return watchdogTimeout_; }
+    void setWatchdogTimeout(std::chrono::milliseconds t) {
+        watchdogTimeout_ = t;
+    }
+    std::chrono::milliseconds watchdogTimeout() const {
+        return watchdogTimeout_;
+    }
 
     // For testing: force firstSubmission state.
-    bool firstSubmission() const { return firstSubmission_.load(); }
-    void resetFirstSubmission() { firstSubmission_.store(false); }
+    bool firstSubmission() const {
+        return firstSubmission_.load();
+    }
+    void resetFirstSubmission() {
+        firstSubmission_.store(false);
+    }
 
     // Plan 012 U5 (C8): terminal hang latch. Once set, Prepare/RunBatch refuse.
-    bool isPoisoned() const { return poisoned_.load(); }
+    bool isPoisoned() const {
+        return poisoned_.load();
+    }
 
     // Plan 012 U3 C2/C5: executor-owned wrappers + CUDA-free hook seam
-    using PrepareHookFn = std::function<void*(std::size_t idx, const GraphRecipeKey& key)>;
+    using PrepareHookFn =
+        std::function<void*(std::size_t idx, const GraphRecipeKey& key)>;
     using DestroyHookFn = std::function<void(std::size_t idx)>;
     // Plan 012 U4 (C5/C6): hook-driven greedy feeder + no-sync completion.
     // Header stays CUDA-free (no cuda_runtime.h). .cu installs real CUDA hooks.
-    using EnqueueHookFn = std::function<bool(std::size_t ctxIdx, std::size_t inputPos, const Point6D& pose)>;
+    using EnqueueHookFn = std::function<
+        bool(std::size_t ctxIdx, std::size_t inputPos, const Point6D& pose)>;
     using PollHookFn = std::function<PollResult(std::size_t ctxIdx)>;
     using CompleteFromPinsHookFn = std::function<double(std::size_t ctxIdx)>;
     using TeardownHookFn = std::function<void()>;
@@ -104,7 +127,9 @@ public:
     // Plan 013 U2: true when a custom pacing hook was installed (CUDA feeder
     // installs bounded sleep; unit tests install spies). Distinguishes an
     // explicit install from the default yield lambda.
-    bool pacingHookInstalled() const { return pacingInstalled_; }
+    bool pacingHookInstalled() const {
+        return pacingInstalled_;
+    }
 
 private:
     struct Lease {
@@ -114,9 +139,11 @@ private:
 
     // Polls for completion of one lease. Returns true on success (recycles),
     // false on real error or timeout (caller should abort batch).
-    bool pollOneLease(const Lease& lease, std::vector<double>& result,
-                      const std::function<double(const Point6D&, std::size_t)>& costWithIndex,
-                      const std::vector<Point6D>& poses);
+    bool pollOneLease(
+        const Lease& lease,
+        std::vector<double>& result,
+        const std::function<double(const Point6D&, std::size_t)>& costWithIndex,
+        const std::vector<Point6D>& poses);
 
     EvaluationContextPool pool_{};
     GraphRecipeRegistry registry_{};
@@ -133,7 +160,6 @@ private:
     PacingHookFn pacingHook_{[]() { std::this_thread::yield(); }};
     bool pacingInstalled_ = false;
 };
-
 
 // Plan 012 U4 (C5): CUDA feeder hooks installer defined in .cu.
 // Headless tests link without .cu, so this symbol is only required

@@ -65,8 +65,9 @@ __global__ void EdgeDetectRenderedImplantModel_EdgeKernel(
                  sharedSilhouette[bottom - 1] == BLACK_PIXEL ||
                  sharedSilhouette[bottom + 1] == BLACK_PIXEL ||
                  sharedSilhouette[top - 1] == BLACK_PIXEL ||
-                 sharedSilhouette[top + 1] == BLACK_PIXEL))
+                 sharedSilhouette[top + 1] == BLACK_PIXEL)) {
                 dev_image[projectionId] = EDGE_PIXEL;
+            }
         }
     }
 }
@@ -108,7 +109,6 @@ Model Can technically use on any image, just know it only marks the border
 between white pixels and black pixels*/
 bool GPUMetrics::EdgeDetectRenderedImplantModel(
     GPUImage* rendered_model_image) {
-
     /*Clear Previous Errors*/
     cudaGetLastError();
 
@@ -171,4 +171,4 @@ bool GPUMetrics::EdgeDetectRenderedImplantModel(
     /*CUDA Get Last Error*/
     return (cudaSuccess == cudaGetLastError());
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

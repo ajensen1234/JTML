@@ -24,8 +24,8 @@ std::vector<std::string> ModelListBuilder::UniquifyModelNames(
             if (result[j] == temp_name && j != i) {
                 j = -1;  // restart scan against the mutated name
                 already_exists++;
-                temp_name = new_names[i] + "(" + std::to_string(already_exists) +
-                            ")";
+                temp_name =
+                    new_names[i] + "(" + std::to_string(already_exists) + ")";
             }
         }
         result[i] = temp_name;
@@ -39,8 +39,8 @@ std::vector<std::string> ModelListBuilder::UniquifyModelNames(
             if (existing_names[j] == temp_name) {
                 j = -1;  // restart scan against the mutated name
                 already_exists++;
-                temp_name = result[i] + "(" + std::to_string(already_exists) +
-                            ")";
+                temp_name =
+                    result[i] + "(" + std::to_string(already_exists) + ")";
             }
         }
         result[i] = temp_name;
@@ -50,7 +50,9 @@ std::vector<std::string> ModelListBuilder::UniquifyModelNames(
 }
 
 bool ModelListBuilder::AllSameSize(
-    int w, int h, const std::vector<std::pair<int, int>>& sizes) {
+    int w,
+    int h,
+    const std::vector<std::pair<int, int>>& sizes) {
     for (const auto& s : sizes) {
         if (s.first != w || s.second != h) {
             return false;

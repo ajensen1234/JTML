@@ -23,7 +23,8 @@ for the cost function along with a parameter type and parameter name.*/
 /*Custom Namespace for JTA Cost Function Library (Compiling as DLL)*/
 namespace jta_cost_function {
 
-template <typename Parameter_Type> class Parameter {
+template <typename Parameter_Type>
+class Parameter {
     static_assert(
         (std::is_same<double, Parameter_Type>::value ||
          std::is_same<int, Parameter_Type>::value ||
@@ -31,7 +32,8 @@ template <typename Parameter_Type> class Parameter {
         "Parameter type must be double, int, or bool!");
 };
 
-template <> class Parameter<double> {
+template <>
+class Parameter<double> {
 public:
     /*Constructors*/
     JTML_DLL Parameter() {
@@ -70,15 +72,17 @@ private:
     std::string parameter_name_;
 
     /*Parameter Value*/
-    double parameter_value_;  // 003 review: was `int`, silently truncating every
-                              // double parameter (15.5 -> 15.0) - caught by the
-                              // cost_function hegel PBT round-trip invariant.
+    double
+        parameter_value_;  // 003 review: was `int`, silently truncating every
+                           // double parameter (15.5 -> 15.0) - caught by the
+                           // cost_function hegel PBT round-trip invariant.
 
     /*Class Type*/
     std::string parameter_type_;
 };
 
-template <> class Parameter<int> {
+template <>
+class Parameter<int> {
 public:
     /*Constructors*/
     JTML_DLL Parameter() {
@@ -123,7 +127,8 @@ private:
     std::string parameter_type_;
 };
 
-template <> class Parameter<bool> {
+template <>
+class Parameter<bool> {
 public:
     /*Constructors*/
     JTML_DLL Parameter() {
@@ -167,6 +172,6 @@ private:
     /*Class Type*/
     std::string parameter_type_;
 };
-} // namespace jta_cost_function
+}  // namespace jta_cost_function
 
-#endif // PARAMETER_H
+#endif  // PARAMETER_H

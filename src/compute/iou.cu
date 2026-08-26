@@ -12,8 +12,9 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void
-IOU__ResetIOUScoresKernel(int* dev_intersection_score, int* dev_union_score) {
+__global__ void IOU__ResetIOUScoresKernel(
+    int* dev_intersection_score,
+    int* dev_union_score) {
     dev_intersection_score[0] = 0;
     dev_union_score[0] = 0;
 }
@@ -52,7 +53,6 @@ __global__ void IOUKernel(
 
 namespace gpu_cost_function {
 double GPUMetrics::IOU(GPUImage* image_A, GPUImage* image_B) {
-
     /*Extract Bounding Boxes*/
     int* bounding_box_A = image_A->GetBoundingBox();
     int* bounding_box_B = image_B->GetBoundingBox();
@@ -108,6 +108,6 @@ double GPUMetrics::IOU(GPUImage* image_A, GPUImage* image_B) {
     cudaMemcpy(
         union_score_, dev_union_score_, sizeof(int), cudaMemcpyDeviceToHost);
     return static_cast<double>(intersection_score_[0]) /
-           static_cast<double>(union_score_[0]);
+        static_cast<double>(union_score_[0]);
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

@@ -9,10 +9,10 @@
 #include "compute/pixel_grayscale_colors.h"
 
 /*Launch Parameters*/
-#include "cuda_launch_parameters.h"
-
 #include "compute/fast_implant_dilation_metric.cuh"
-/* U4: device-driven metric crop — fixed-max grid with early exit derived from device AABB (no host bounding_box read in graph path). */
+#include "cuda_launch_parameters.h"
+/* U4: device-driven metric crop — fixed-max grid with early exit derived from
+ * device AABB (no host bounding_box read in graph path). */
 
 __global__ void DistanceMapMetric_Kernel(
     unsigned char* projected_image,
@@ -64,7 +64,9 @@ __global__ void DistanceMapMetric_ResetPixelScoreKernel(int* dev_pixel_score_) {
 namespace gpu_cost_function {
 
 double GPUMetrics::DistanceMapMetric(
-    GPUImage* projected_image, GPUFrame* distance_map, int dilation) {
+    GPUImage* projected_image,
+    GPUFrame* distance_map,
+    int dilation) {
     /*
     This is the distance map metric with the hopes to "convexify" the
     search space a little bit more.
@@ -131,52 +133,84 @@ double GPUMetrics::DistanceMapMetric(
     // << std::endl; std::cout << "Distance Metric Score :" << score <<
     // std::endl; std::cout << "==============================" << std::endl;
     return distance_map_score_[0] /
-           (edge_pixels_count_[0] + 0.1); // adding a 0.1 to avoid singularities
+        (edge_pixels_count_[0] + 0.1);  // adding a 0.1 to avoid singularities
 }
 
 cudaError_t GPUMetrics::EnqueueDistanceMapMetric(
-    GPUImage* projected_image, GPUFrame* distance_map, int dilation,
+    GPUImage* projected_image,
+    GPUFrame* distance_map,
+    int dilation,
     cudaStream_t stream) {
     if (!stream || !active_bank_) {
         return cudaErrorInvalidResourceHandle;
     }
-    const int height = active_bank_->height > 0 ? active_bank_->height : projected_image->GetFrameHeight();
-    const int width = active_bank_->width > 0 ? active_bank_->width : projected_image->GetFrameWidth();
+    const int height = active_bank_->height > 0
+        ? active_bank_->height
+        : projected_image->GetFrameHeight();
+    const int width = active_bank_->width > 0
+        ? active_bank_->width
+        : projected_image->GetFrameWidth();
     int* bounding_box = active_bank_->primary.host_bounding_box != nullptr
-                            ? static_cast<int*>(active_bank_->primary.host_bounding_box)
-                            : projected_image->GetBoundingBox();
+        ? static_cast<int*>(active_bank_->primary.host_bounding_box)
+        : projected_image->GetBoundingBox();
     unsigned char* image = active_bank_->primary.output != nullptr
-                               ? static_cast<unsigned char*>(active_bank_->primary.output)
-                               : projected_image->GetDeviceImagePointer();
-    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_distance_map_score_);
-    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(dev_edge_pixels_count_);
+        ? static_cast<unsigned char*>(active_bank_->primary.output)
+        : projected_image->GetDeviceImagePointer();
+    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(
+        dev_distance_map_score_);
+    DistanceMapMetric_ResetPixelScoreKernel<<<1, 1, 0, stream>>>(
+        dev_edge_pixels_count_);
     int left = max(bounding_box[0] - dilation, dilation);
     int bottom = max(bounding_box[1] - dilation, dilation);
     int right = min(bounding_box[2] + dilation, width - dilation - 1);
     int top = min(bounding_box[3] + dilation, height - dilation - 1);
     int crop_width = right - left + 1;
     int crop_height = top - bottom + 1;
-    dim3 grid(static_cast<unsigned>(ceil(static_cast<double>(crop_width) /
-                                         sqrt(static_cast<double>(threads_per_block)))),
-              static_cast<unsigned>(ceil(static_cast<double>(crop_height) /
-                                         sqrt(static_cast<double>(threads_per_block)))));
+    dim3 grid(
+        static_cast<unsigned>(ceil(
+            static_cast<double>(crop_width) /
+            sqrt(static_cast<double>(threads_per_block)))),
+        static_cast<unsigned>(ceil(
+            static_cast<double>(crop_height) /
+            sqrt(static_cast<double>(threads_per_block)))));
     DistanceMapMetric_Kernel<<<grid, threads_per_block, 0, stream>>>(
-        image, distance_map->GetDeviceImagePointer(),
-        dev_distance_map_score_, dev_edge_pixels_count_, width, height,
-        left, bottom, crop_width);
-    cudaError_t err = cudaMemcpyAsync(distance_map_score_, dev_distance_map_score_,
-                                      sizeof(int), cudaMemcpyDeviceToHost, stream);
-    if (err != cudaSuccess) return err;
-    err = cudaMemcpyAsync(edge_pixels_count_, dev_edge_pixels_count_, sizeof(int),
-                          cudaMemcpyDeviceToHost, stream);
-    if (err != cudaSuccess) return err;
+        image,
+        distance_map->GetDeviceImagePointer(),
+        dev_distance_map_score_,
+        dev_edge_pixels_count_,
+        width,
+        height,
+        left,
+        bottom,
+        crop_width);
+    cudaError_t err = cudaMemcpyAsync(
+        distance_map_score_,
+        dev_distance_map_score_,
+        sizeof(int),
+        cudaMemcpyDeviceToHost,
+        stream);
+    if (err != cudaSuccess) {
+        return err;
+    }
+    err = cudaMemcpyAsync(
+        edge_pixels_count_,
+        dev_edge_pixels_count_,
+        sizeof(int),
+        cudaMemcpyDeviceToHost,
+        stream);
+    if (err != cudaSuccess) {
+        return err;
+    }
     return cudaGetLastError();
 }
 
-
 double GPUMetrics::CompleteDistanceMapMetric(cudaStream_t stream) {
-    if (!stream || !active_bank_) return 0.0;
-    if (cudaStreamSynchronize(stream) != cudaSuccess) return 0.0;
+    if (!stream || !active_bank_) {
+        return 0.0;
+    }
+    if (cudaStreamSynchronize(stream) != cudaSuccess) {
+        return 0.0;
+    }
     return distance_map_score_[0] / (edge_pixels_count_[0] + 0.1);
 }
 

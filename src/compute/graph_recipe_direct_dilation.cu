@@ -8,16 +8,6 @@
  * kernel in this translation unit: RenderEngine and GPUMetrics own the
  * operation set, and this recipe only owns graph lifetime and node updates.
  */
-#include "compute/evaluation_context.h"
-#include "compute/fast_implant_dilation_metric.cuh"
-#include "compute/gpu_dilated_frame.cuh"
-#include "compute/gpu_frame.cuh"
-#include "compute/gpu_image.cuh"
-#include "compute/gpu_metrics.cuh"
-#include "compute/graph_preflight.h"
-#include "compute/graph_recipe_direct_dilation.h"
-#include "compute/render_engine.cuh"
-
 #include <cuda_runtime.h>
 
 #include <array>
@@ -28,6 +18,16 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "compute/evaluation_context.h"
+#include "compute/fast_implant_dilation_metric.cuh"
+#include "compute/gpu_dilated_frame.cuh"
+#include "compute/gpu_frame.cuh"
+#include "compute/gpu_image.cuh"
+#include "compute/gpu_metrics.cuh"
+#include "compute/graph_preflight.h"
+#include "compute/graph_recipe_direct_dilation.h"
+#include "compute/render_engine.cuh"
 
 namespace gpu_cost_function {
 
@@ -154,7 +154,9 @@ RotationMatrix RotationFor(const EvaluationContext& ctx) {
 
 bool CaptureWorldNode(cudaGraph_t graph, GraphExecWrapper& wrapper) {
     std::size_t count = 0;
-    if (cudaGraphGetNodes(graph, nullptr, &count) != cudaSuccess) return false;
+    if (cudaGraphGetNodes(graph, nullptr, &count) != cudaSuccess) {
+        return false;
+    }
     std::vector<cudaGraphNode_t> nodes(count);
     if (count != 0 &&
         cudaGraphGetNodes(graph, nodes.data(), &count) != cudaSuccess) {
@@ -211,24 +213,25 @@ void RebuildWorldArgs(WorldNodeState& world, const EvaluationContext& ctx) {
     world.z = ctx.z_location;
     world.rotation = RotationFor(ctx);
 
-    world.args = {&world.triangles,
-                  &world.projected,
-                  &world.snapped,
-                  &world.vertex_count,
-                  &world.dist_over_pix_pitch,
-                  &world.pix_conversion_x,
-                  &world.pix_conversion_y,
-                  &world.x,
-                  &world.y,
-                  &world.z,
-                  &world.rotation,
-                  &world.normals,
-                  &world.backface,
-                  &world.use_backface_culling,
-                  &world.fx,
-                  &world.fy,
-                  &world.cx,
-                  &world.cy};
+    world.args = {
+        &world.triangles,
+        &world.projected,
+        &world.snapped,
+        &world.vertex_count,
+        &world.dist_over_pix_pitch,
+        &world.pix_conversion_x,
+        &world.pix_conversion_y,
+        &world.x,
+        &world.y,
+        &world.z,
+        &world.rotation,
+        &world.normals,
+        &world.backface,
+        &world.use_backface_culling,
+        &world.fx,
+        &world.fy,
+        &world.cx,
+        &world.cy};
 }
 
 GraphPreflightResult FootprintPreflight(const GraphRecipeKey& key) {
@@ -244,7 +247,10 @@ GraphPreflightResult FootprintPreflight(const GraphRecipeKey& key) {
     const BankFootprint value = bank_state_math::footprint(input);
     if (!value.valid || value.total_bytes == 0) {
         return GraphPreflightResult{
-            false, kOverflow, "BankFootprint", "invalid graph write-set footprint"};
+            false,
+            kOverflow,
+            "BankFootprint",
+            "invalid graph write-set footprint"};
     }
 
     // Run the same admission arithmetic used by the real pool.  A graph recipe
@@ -254,19 +260,23 @@ GraphPreflightResult FootprintPreflight(const GraphRecipeKey& key) {
         std::numeric_limits<std::uint64_t>::max(), value, 1);
     if (admission.fitting_banks == 0) {
         return GraphPreflightResult{
-            false, kOverflow, "BankAdmission", "graph write set exceeds budget"};
+            false,
+            kOverflow,
+            "BankAdmission",
+            "graph write set exceeds budget"};
     }
     return GraphPreflightResult{true, kPreflightOk, "", "footprint admitted"};
 }
 
-} // namespace
+}  // namespace
 
 std::string DirectDilationMonoplaneRecipe::recipeId() const {
     return "direct_dilation_monoplane";
 }
 
 bool DirectDilationMonoplaneRecipe::isEligible(
-    const std::string& costName, bool biplane) const {
+    const std::string& costName,
+    bool biplane) const {
     return costName == "DIRECT_DILATION" && !biplane;
 }
 
@@ -292,7 +302,9 @@ GraphPreflightResult DirectDilationMonoplaneRecipe::preflight(
     const GraphRecipeKey& key,
     const GraphRecipeCaptureInputs& inputs) const {
     const auto basic = preflight(key);
-    if (!basic.capturable) return basic;
+    if (!basic.capturable) {
+        return basic;
+    }
     if (inputs.context == nullptr || inputs.render == nullptr ||
         inputs.metrics == nullptr || inputs.comparison_frame == nullptr ||
         inputs.distance_map == nullptr) {
@@ -302,15 +314,21 @@ GraphPreflightResult DirectDilationMonoplaneRecipe::preflight(
             "production capture inputs",
             "render, metrics, context and comparison frames are required"};
     }
-    if (!inputs.context->initialized_correctly ||
-        !inputs.context->in_flight || inputs.context->stream == nullptr) {
+    if (!inputs.context->initialized_correctly || !inputs.context->in_flight ||
+        inputs.context->stream == nullptr) {
         return GraphPreflightResult{
-            false, kGraphCaptureError, "EvaluationContext", "context is not checked out"};
+            false,
+            kGraphCaptureError,
+            "EvaluationContext",
+            "context is not checked out"};
     }
     if (inputs.context->width != key.width ||
         inputs.context->height != key.height) {
         return GraphPreflightResult{
-            false, kGraphCaptureError, "frame dimensions", "key/context mismatch"};
+            false,
+            kGraphCaptureError,
+            "frame dimensions",
+            "key/context mismatch"};
     }
 
     ProbeState state{&inputs};
@@ -331,7 +349,9 @@ bool DirectDilationMonoplaneRecipe::createGraph(
     void* stream,
     const GraphRecipeCaptureInputs& inputs,
     void** out_graphExec) const {
-    if (out_graphExec == nullptr) return false;
+    if (out_graphExec == nullptr) {
+        return false;
+    }
     *out_graphExec = nullptr;
     if (!inputs.context || !inputs.render || !inputs.metrics ||
         !inputs.comparison_frame || !inputs.distance_map || !stream ||
@@ -340,7 +360,9 @@ bool DirectDilationMonoplaneRecipe::createGraph(
         return false;
     }
     const auto preflight_result = preflight(key, inputs);
-    if (!preflight_result.capturable) return false;
+    if (!preflight_result.capturable) {
+        return false;
+    }
 
     auto wrapper = std::make_unique<GraphExecWrapper>();
     wrapper->captured_context = inputs.context;
@@ -349,7 +371,9 @@ bool DirectDilationMonoplaneRecipe::createGraph(
 
     cudaError_t err =
         cudaStreamBeginCapture(capture_stream, cudaStreamCaptureModeGlobal);
-    if (err != cudaSuccess) return false;
+    if (err != cudaSuccess) {
+        return false;
+    }
 
     err = inputs.render->EnqueueRenderPhase(*inputs.context);
     if (err == cudaSuccess) {
@@ -370,7 +394,9 @@ bool DirectDilationMonoplaneRecipe::createGraph(
     cudaGraph_t graph = nullptr;
     const cudaError_t end_err = cudaStreamEndCapture(capture_stream, &graph);
     if (err != cudaSuccess || end_err != cudaSuccess || graph == nullptr) {
-        if (graph) cudaGraphDestroy(graph);
+        if (graph) {
+            cudaGraphDestroy(graph);
+        }
         cudaGetLastError();
         return false;
     }
@@ -390,8 +416,7 @@ bool DirectDilationMonoplaneRecipe::createGraph(
     // a one-time host event, so computing it here (and caching on the
     // context) keeps complete() free of the per-frame constant without adding
     // a per-relaunch sync.  Guaranteed non-null by preflight().
-    if (inputs.metrics != nullptr &&
-        inputs.comparison_frame != nullptr &&
+    if (inputs.metrics != nullptr && inputs.comparison_frame != nullptr &&
         inputs.comparison_frame->GetGPUImage() != nullptr) {
         cudaError_t ws_err = cudaSuccess;
         const int white_sum = inputs.metrics->ComputeSumWhitePixels(
@@ -417,7 +442,8 @@ bool DirectDilationMonoplaneRecipe::createGraph(
 }
 
 bool DirectDilationMonoplaneRecipe::updateParams(
-    void* graphExec, EvaluationContext& ctx) const {
+    void* graphExec,
+    EvaluationContext& ctx) const {
     if (!graphExec || !ctx.initialized_correctly || !ctx.in_flight ||
         ctx.stream == nullptr) {
         return false;
@@ -440,19 +466,25 @@ bool DirectDilationMonoplaneRecipe::updateParams(
                wrapper->exec, wrapper->world.node, &params) == cudaSuccess;
 }
 
-bool DirectDilationMonoplaneRecipe::launch(
-    void* graphExec, void* stream) const {
-    if (!graphExec || !stream) return false;
+bool DirectDilationMonoplaneRecipe::launch(void* graphExec, void* stream)
+    const {
+    if (!graphExec || !stream) {
+        return false;
+    }
     auto* wrapper = static_cast<GraphExecWrapper*>(graphExec);
-    if (!wrapper->exec || wrapper->captured_context == nullptr) return false;
+    if (!wrapper->exec || wrapper->captured_context == nullptr) {
+        return false;
+    }
     // complete() synchronizes the captured context's stream, so every launch
     // must go to that same stream; launching on a different stream would make
     // complete() read host pins before the graph finished (read-after-launch
     // race).  Reject a mismatched stream instead of racing.
-    if (wrapper->captured_context->stream != stream) return false;
+    if (wrapper->captured_context->stream != stream) {
+        return false;
+    }
     return cudaGraphLaunch(
                wrapper->exec, reinterpret_cast<cudaStream_t>(stream)) ==
-           cudaSuccess;
+        cudaSuccess;
 }
 
 double DirectDilationMonoplaneRecipe::complete(EvaluationContext& ctx) const {
@@ -470,8 +502,10 @@ double DirectDilationMonoplaneRecipe::complete(EvaluationContext& ctx) const {
     return completeFromPins(ctx);
 }
 
-double DirectDilationMonoplaneRecipe::completeFromPins(EvaluationContext& ctx) const {
-    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.host_overflowFlag == nullptr) {
+double DirectDilationMonoplaneRecipe::completeFromPins(
+    EvaluationContext& ctx) const {
+    if (!ctx.initialized_correctly || !ctx.in_flight ||
+        ctx.host_overflowFlag == nullptr) {
         ctx.status = EvaluationStatus::Failed;
         return std::numeric_limits<double>::quiet_NaN();
     }
@@ -499,10 +533,16 @@ double DirectDilationMonoplaneRecipe::completeFromPins(EvaluationContext& ctx) c
 }
 
 void DirectDilationMonoplaneRecipe::destroyGraph(void* graphExec) const {
-    if (!graphExec) return;
+    if (!graphExec) {
+        return;
+    }
     auto* wrapper = static_cast<GraphExecWrapper*>(graphExec);
-    if (wrapper->exec) cudaGraphExecDestroy(wrapper->exec);
-    if (wrapper->graph) cudaGraphDestroy(wrapper->graph);
+    if (wrapper->exec) {
+        cudaGraphExecDestroy(wrapper->exec);
+    }
+    if (wrapper->graph) {
+        cudaGraphDestroy(wrapper->graph);
+    }
     delete wrapper;
 }
 
@@ -510,4 +550,4 @@ std::unique_ptr<GraphRecipe> CreateDirectDilationMonoplaneRecipe() {
     return std::make_unique<DirectDilationMonoplaneRecipe>();
 }
 
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

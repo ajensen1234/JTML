@@ -933,14 +933,13 @@ void OptimizerManager::Optimize() {
                     gpu_non_principal_models_[non_prin_model_ind]
                         ->SetCurrentPrimaryCameraPose(temp_primary_pose);
                 } else {
-                    emit OptimizerError(
-                        QString::fromStdString(
-                            "Could not retrieve pose for non-principal model "
-                            "\"" +
-                            gpu_non_principal_models_[non_prin_model_ind]
-                                ->GetModelName() +
-                            "\" at frame " +
-                            QString::number(frame_index).toStdString() + "!"));
+                    emit OptimizerError(QString::fromStdString(
+                        "Could not retrieve pose for non-principal model "
+                        "\"" +
+                        gpu_non_principal_models_[non_prin_model_ind]
+                            ->GetModelName() +
+                        "\" at frame " +
+                        QString::number(frame_index).toStdString() + "!"));
                     error_occurrred_ = true;
                     break;
                 }
@@ -1034,11 +1033,10 @@ void OptimizerManager::Optimize() {
                 stage_manager = &leaf_manager_;
                 break;
             default:
-                emit OptimizerError(
-                    QString::fromStdString(
-                        "OptimizerManager: stage cfm_index " +
-                        std::to_string(spec.cfm_index) +
-                        " out of range (valid 0..2); run aborted"));
+                emit OptimizerError(QString::fromStdString(
+                    "OptimizerManager: stage cfm_index " +
+                    std::to_string(spec.cfm_index) +
+                    " out of range (valid 0..2); run aborted"));
                 error_occurrred_ = true;
                 break;
             }

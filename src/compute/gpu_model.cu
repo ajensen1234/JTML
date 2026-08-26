@@ -33,7 +33,8 @@ GPUModel::GPUModel(
         normals,
         triangle_count,
         camera_calibration_primary_cam);
-    /*plan 010 U10: forward the optional capacity service (nullptr = pre-unit).*/
+    /*plan 010 U10: forward the optional capacity service (nullptr =
+     * pre-unit).*/
     primary_cam_render_engine_->SetCapacityService(capacity_service);
     secondary_cam_render_engine_ = 0;
 
@@ -137,7 +138,8 @@ bool GPUModel::RenderPrimaryCamera_RotationMatrix(
     return false;
 }
 void GPUModel::RenderPrimaryCameraAndWriteImage(
-    Pose model_pose, std::string img_name) {
+    Pose model_pose,
+    std::string img_name) {
     RenderPrimaryCamera(model_pose);
     primary_cam_render_engine_->WriteImage(img_name);
 };
@@ -156,7 +158,9 @@ bool GPUModel::RenderSecondaryCamera(Pose model_pose) {
 /*Render DRR to cache function (returns true if worked correctly)
 Primary is used in monoplane and biplane, Secondary only used in biplane*/
 bool GPUModel::RenderDRRPrimaryCamera(
-    Pose model_pose, float lower_bound, float upper_bound) {
+    Pose model_pose,
+    float lower_bound,
+    float upper_bound) {
     if (initialized_correctly_) {
         primary_cam_render_engine_->SetPose(model_pose);
         if (cudaSuccess ==
@@ -169,7 +173,9 @@ bool GPUModel::RenderDRRPrimaryCamera(
 };
 
 bool GPUModel::RenderDRRSecondaryCamera(
-    Pose model_pose, float lower_bound, float upper_bound) {
+    Pose model_pose,
+    float lower_bound,
+    float upper_bound) {
     if (initialized_correctly_ && biplane_mode_) {
         secondary_cam_render_engine_->SetPose(model_pose);
         if (cudaSuccess ==
@@ -292,13 +298,15 @@ bool GPUModel::TrySetActiveBank(BankState* bank) {
         return false;
     }
     primary_cam_render_engine_->SetActiveBank(bank);
-    if (bank != nullptr && primary_cam_render_engine_->GetActiveBank() != bank) {
+    if (bank != nullptr &&
+        primary_cam_render_engine_->GetActiveBank() != bank) {
         primary_cam_render_engine_->SetActiveBank(nullptr);
         return false;
     }
     if (biplane_mode_ && secondary_cam_render_engine_ != nullptr) {
         secondary_cam_render_engine_->SetActiveBank(bank);
-        if (bank != nullptr && secondary_cam_render_engine_->GetActiveBank() != bank) {
+        if (bank != nullptr &&
+            secondary_cam_render_engine_->GetActiveBank() != bank) {
             primary_cam_render_engine_->SetActiveBank(nullptr);
             secondary_cam_render_engine_->SetActiveBank(nullptr);
             return false;
@@ -327,6 +335,6 @@ bool GPUModel::CompleteRenderPrimaryCamera(BankState& bank) {
 
 bool GPUModel::RenderPrimaryCamera(BankState& bank) {
     return EnqueueRenderPrimaryCamera(bank) &&
-           CompleteRenderPrimaryCamera(bank);
+        CompleteRenderPrimaryCamera(bank);
 }
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

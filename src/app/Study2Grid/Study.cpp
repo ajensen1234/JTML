@@ -67,7 +67,7 @@ Study::Study(string fluoro_study_dir, bool key_points) {
                 (stl_types_[stl_file_ind] == stl_types_[stl_file_ind2])) {
                 cout << "\nError with " + study_dir_ << endl
                      << "\t There are multiple stl files of type " +
-                            stl_types_[stl_file_ind] + ".";
+                        stl_types_[stl_file_ind] + ".";
                 passed_check_ = false;
                 return;
             }
@@ -103,10 +103,12 @@ Study::Study(string fluoro_study_dir, bool key_points) {
     read_directory_for_jts(study_dir_, jts_files);
     /*Combine into one list*/
     vector<string> combined_jtak_jts_files_list;
-    for (int jtak_ind = 0; jtak_ind < jtak_files.size(); jtak_ind++)
+    for (int jtak_ind = 0; jtak_ind < jtak_files.size(); jtak_ind++) {
         combined_jtak_jts_files_list.push_back(jtak_files[jtak_ind]);
-    for (int jts_ind = 0; jts_ind < jts_files.size(); jts_ind++)
+    }
+    for (int jts_ind = 0; jts_ind < jts_files.size(); jts_ind++) {
         combined_jtak_jts_files_list.push_back(jts_files[jts_ind]);
+    }
     /*Ensure that each of the unique stl file types has a corresponding
     kinematics file and that there are no leftovers. The name of the kinematics
     file should be the model type.*/
@@ -129,7 +131,7 @@ Study::Study(string fluoro_study_dir, bool key_points) {
         if (!found_corresponding_kin) {
             cout << "\nError with " + study_dir_ << endl
                  << "\t Failed to find kinematics file for model type " +
-                        stl_types_[stl_file_ind] + ".";
+                    stl_types_[stl_file_ind] + ".";
             passed_check_ = false;
             return;
         }
@@ -200,17 +202,17 @@ Study::Study(string fluoro_study_dir, bool key_points) {
     }
 
     QStringList movement_list =
-        study_info_list[study_info_list.size() - 1].split("_"); // Movement
+        study_info_list[study_info_list.size() - 1].split("_");  // Movement
     mov_name_ = movement_list[0].toStdString();
     mov_num_ = movement_list[1].toInt();
     QStringList session_list =
-        study_info_list[study_info_list.size() - 2].split("_"); // Session
+        study_info_list[study_info_list.size() - 2].split("_");  // Session
     sess_num_ = session_list[1].toInt();
     patient_name_ = study_info_list[study_info_list.size() - 3]
-                        .toStdString(); // Patient Name
+                        .toStdString();  // Patient Name
     study_name_ = study_info_list[study_info_list.size() - 4]
-                      .toStdString(); // Overall Study Name (File Usually
-                                      // Called Something a Bit Modified)
+                      .toStdString();  // Overall Study Name (File Usually
+                                       // Called Something a Bit Modified)
 
     /*Get Info about Images*/
     /*Initialize Image Sizes*/
@@ -243,7 +245,7 @@ Study::Study(string fluoro_study_dir, bool key_points) {
             See: https://en.cppreference.com/w/cpp/experimental/fs/remove */
             cout << "\nError with " + study_dir_ << endl
                  << "\t Could not delete existing subdirectories.\n\t " +
-                        errorCode.message();
+                    errorCode.message();
             passed_check_ = false;
             return;
         }
@@ -266,7 +268,7 @@ Study::Study(string fluoro_study_dir, bool key_points) {
                 errorCode)) {
             cout << "\nError with " + study_dir_ << endl
                  << "\t Could not create " + stl_types_[mod_type_ind] +
-                        " subdirectories in Labels directory.\n\t "
+                    " subdirectories in Labels directory.\n\t "
                  << errorCode.message();
             passed_check_ = false;
             return;
@@ -293,7 +295,7 @@ Study::Study(string fluoro_study_dir, bool key_points) {
                         errorCode)) {
                     cout << "\nError with " + study_dir_ << endl
                          << "\t Could not create " + stl_types_[mod_type_ind] +
-                                " subdirectories in Key Points directory.\n\t "
+                            " subdirectories in Key Points directory.\n\t "
                          << errorCode.message();
                     passed_check_ = false;
                     return;

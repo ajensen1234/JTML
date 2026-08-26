@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 #include "compute/machine_learning_tools.h"
-#include <iostream> // For std::cerr
+
+#include <iostream>  // For std::cerr
 
 cv::Mat segment_image(
     const cv::Mat& orig_image,
@@ -11,10 +12,9 @@ cv::Mat segment_image(
     unsigned int input_width,
     unsigned int input_height) {
     /*Create a GPU byte placeholder for memory purposes*/
-    torch::Tensor gpu_byte_placeholder(
-        torch::zeros(
-            {1, 1, input_height, input_width},
-            torch::device(torch::kCUDA).dtype(torch::kByte)));
+    torch::Tensor gpu_byte_placeholder(torch::zeros(
+        {1, 1, input_height, input_width},
+        torch::device(torch::kCUDA).dtype(torch::kByte)));
     /*Get the correct inversion for the image*/
     cv::Mat correct_inversion =
         (255 * black_sil_used) + ((1 - 2 * black_sil_used) * orig_image);

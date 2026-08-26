@@ -8,8 +8,6 @@
  * lifecycle. Bank 0 remains owned by the existing RenderEngine/GPUMetrics
  * compatibility path; this pool owns only banks 1..N-1.
  */
-#include "compute/cost_capacity_service.cuh"
-
 #include <cuda_runtime.h>
 
 #include <algorithm>
@@ -19,6 +17,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "compute/cost_capacity_service.cuh"
 
 namespace gpu_cost_function {
 
@@ -39,11 +39,15 @@ bool HostAlloc(void** pointer, std::size_t bytes) {
 }
 
 void FreeDevice(void* pointer) {
-    if (pointer != nullptr) cudaFree(pointer);
+    if (pointer != nullptr) {
+        cudaFree(pointer);
+    }
 }
 
 void FreeHost(void* pointer) {
-    if (pointer != nullptr) cudaFreeHost(pointer);
+    if (pointer != nullptr) {
+        cudaFreeHost(pointer);
+    }
 }
 
 struct BankAllocation {
@@ -55,7 +59,8 @@ struct BankAllocation {
             cudaStreamSynchronize(stream);
         }
         if (view.completion_event != nullptr) {
-            cudaEventDestroy(reinterpret_cast<cudaEvent_t>(view.completion_event));
+            cudaEventDestroy(
+                reinterpret_cast<cudaEvent_t>(view.completion_event));
         }
         if (view.stream != nullptr) {
             cudaStreamDestroy(reinterpret_cast<cudaStream_t>(view.stream));
@@ -100,33 +105,42 @@ struct BankAllocation {
         FreeDevice(metrics.dev_curvature);
     }
 
-    static bool AllocateRender(RenderBuffers& render,
-                               const BankFootprintInput& in) {
+    static bool AllocateRender(
+        RenderBuffers& render,
+        const BankFootprintInput& in) {
         const std::size_t pixels = in.width * in.height;
         const std::size_t triangles = in.triangle_count;
         const std::size_t stride = in.maximum_stride_size;
         if (!DeviceAlloc(&render.output, pixels * sizeof(std::uint8_t)) ||
             !HostAlloc(&render.host_bounding_box, 4 * sizeof(std::int32_t)) ||
-            !DeviceAlloc(&render.dev_backface, triangles * sizeof(std::uint8_t)) ||
-            !DeviceAlloc(&render.dev_transformed_vertex_zs,
-                         3 * triangles * sizeof(float)) ||
-            !DeviceAlloc(&render.dev_tangent_triangle,
-                         3 * triangles * sizeof(std::uint8_t)) ||
-            !DeviceAlloc(&render.dev_projected_triangles,
-                         6 * triangles * sizeof(float)) ||
-            !DeviceAlloc(&render.dev_projected_triangles_snapped,
-                         6 * triangles * sizeof(std::int32_t)) ||
-            !DeviceAlloc(&render.dev_bounding_box_triangles,
-                         4 * triangles * sizeof(std::int32_t)) ||
-            !DeviceAlloc(&render.dev_bounding_box_triangles_sizes,
-                         triangles * sizeof(std::int32_t)) ||
-            !DeviceAlloc(&render.dev_bounding_box_triangles_sizes_prefix,
-                         triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(
+                &render.dev_backface, triangles * sizeof(std::uint8_t)) ||
+            !DeviceAlloc(
+                &render.dev_transformed_vertex_zs,
+                3 * triangles * sizeof(float)) ||
+            !DeviceAlloc(
+                &render.dev_tangent_triangle,
+                3 * triangles * sizeof(std::uint8_t)) ||
+            !DeviceAlloc(
+                &render.dev_projected_triangles,
+                6 * triangles * sizeof(float)) ||
+            !DeviceAlloc(
+                &render.dev_projected_triangles_snapped,
+                6 * triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(
+                &render.dev_bounding_box_triangles,
+                4 * triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(
+                &render.dev_bounding_box_triangles_sizes,
+                triangles * sizeof(std::int32_t)) ||
+            !DeviceAlloc(
+                &render.dev_bounding_box_triangles_sizes_prefix,
+                triangles * sizeof(std::int32_t)) ||
             !DeviceAlloc(&render.dev_bounding_box, 4 * sizeof(std::int32_t)) ||
             !DeviceAlloc(&render.dev_fragment_fill, sizeof(std::int32_t)) ||
             !HostAlloc(&render.host_fragment_fill, sizeof(std::int32_t)) ||
-            !DeviceAlloc(&render.dev_stride_prefixes,
-                         stride * sizeof(std::int32_t))) {
+            !DeviceAlloc(
+                &render.dev_stride_prefixes, stride * sizeof(std::int32_t))) {
             return false;
         }
 
@@ -144,29 +158,31 @@ struct BankAllocation {
         return DeviceAlloc(&render.dev_cub_storage, cub_bytes);
     }
 
-    static bool AllocateMetrics(MetricBuffers& metrics,
-                                const BankFootprintInput& in) {
+    static bool AllocateMetrics(
+        MetricBuffers& metrics,
+        const BankFootprintInput& in) {
         const std::size_t curvature = in.curvature_capacity;
         return HostAlloc(&metrics.host_pixel_score, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_pixel_score, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_intersection, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_union, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_intersection, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_union, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_white_count, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_white_count, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_distance_score, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_distance_score, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_edge_count, sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_edge_count, sizeof(std::int32_t)) &&
-               HostAlloc(&metrics.host_curvature,
-                         curvature * sizeof(std::int32_t)) &&
-               DeviceAlloc(&metrics.dev_curvature,
-                           curvature * sizeof(std::int32_t));
+            DeviceAlloc(&metrics.dev_pixel_score, sizeof(std::int32_t)) &&
+            HostAlloc(&metrics.host_intersection, sizeof(std::int32_t)) &&
+            HostAlloc(&metrics.host_union, sizeof(std::int32_t)) &&
+            DeviceAlloc(&metrics.dev_intersection, sizeof(std::int32_t)) &&
+            DeviceAlloc(&metrics.dev_union, sizeof(std::int32_t)) &&
+            HostAlloc(&metrics.host_white_count, sizeof(std::int32_t)) &&
+            DeviceAlloc(&metrics.dev_white_count, sizeof(std::int32_t)) &&
+            HostAlloc(&metrics.host_distance_score, sizeof(std::int32_t)) &&
+            DeviceAlloc(&metrics.dev_distance_score, sizeof(std::int32_t)) &&
+            HostAlloc(&metrics.host_edge_count, sizeof(std::int32_t)) &&
+            DeviceAlloc(&metrics.dev_edge_count, sizeof(std::int32_t)) &&
+            HostAlloc(
+                   &metrics.host_curvature, curvature * sizeof(std::int32_t)) &&
+            DeviceAlloc(
+                   &metrics.dev_curvature, curvature * sizeof(std::int32_t));
     }
 
     static std::unique_ptr<BankAllocation> Create(
-        std::size_t index, const BankFootprintInput& in) {
+        std::size_t index,
+        const BankFootprintInput& in) {
         auto bank = std::make_unique<BankAllocation>();
         bank->view.index = index;
         bank->view.width = static_cast<int>(in.width);
@@ -179,10 +195,16 @@ struct BankAllocation {
         }
         cudaStream_t stream = nullptr;
         cudaEvent_t event = nullptr;
-        if (cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) != cudaSuccess ||
-            cudaEventCreateWithFlags(&event, cudaEventDisableTiming) != cudaSuccess) {
-            if (event != nullptr) cudaEventDestroy(event);
-            if (stream != nullptr) cudaStreamDestroy(stream);
+        if (cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) !=
+                cudaSuccess ||
+            cudaEventCreateWithFlags(&event, cudaEventDisableTiming) !=
+                cudaSuccess) {
+            if (event != nullptr) {
+                cudaEventDestroy(event);
+            }
+            if (stream != nullptr) {
+                cudaStreamDestroy(stream);
+            }
             return nullptr;
         }
         bank->view.stream = reinterpret_cast<void*>(stream);
@@ -201,7 +223,9 @@ public:
         return count >= 1;
     }
 
-    std::size_t Size() const { return capacity_; }
+    std::size_t Size() const {
+        return capacity_;
+    }
 
     int Checkout() {
         for (std::size_t offset = 0; offset < banks_.size(); ++offset) {
@@ -225,7 +249,9 @@ public:
 
     bool Recycle(std::size_t index, bool completion_ready) {
         BankState* state = Find(index);
-        if (state == nullptr || !state->in_flight || !completion_ready) return false;
+        if (state == nullptr || !state->in_flight || !completion_ready) {
+            return false;
+        }
         state->in_flight = false;
         return true;
     }
@@ -235,17 +261,27 @@ public:
         return state != nullptr && state->in_flight;
     }
 
-    BankState* State(std::size_t index) { return Find(index); }
-    const BankState* State(std::size_t index) const { return Find(index); }
+    BankState* State(std::size_t index) {
+        return Find(index);
+    }
+    const BankState* State(std::size_t index) const {
+        return Find(index);
+    }
 
 private:
     BankState* Find(std::size_t index) {
-        if (index == 0 || index > banks_.size() || banks_[index - 1] == nullptr) return nullptr;
+        if (index == 0 || index > banks_.size() ||
+            banks_[index - 1] == nullptr) {
+            return nullptr;
+        }
         return &banks_[index - 1]->view;
     }
 
     const BankState* Find(std::size_t index) const {
-        if (index == 0 || index > banks_.size() || banks_[index - 1] == nullptr) return nullptr;
+        if (index == 0 || index > banks_.size() ||
+            banks_[index - 1] == nullptr) {
+            return nullptr;
+        }
         return &banks_[index - 1]->view;
     }
 
@@ -258,22 +294,26 @@ CostCapacityService::CostCapacityService() = default;
 
 CostCapacityService::~CostCapacityService() = default;
 
-bool CostCapacityService::ConfigurePool(const BankFootprintInput& layout,
-                                        std::size_t n_max) {
+bool CostCapacityService::ConfigurePool(
+    const BankFootprintInput& layout,
+    std::size_t n_max) {
     const BankFootprint measured = bank_state_math::footprint(layout);
-    const BankAdmission admission =
-        bank_state_math::admit(static_cast<std::uint64_t>(snap_.free_device_bytes),
-                               measured, n_max);
+    const BankAdmission admission = bank_state_math::admit(
+        static_cast<std::uint64_t>(snap_.free_device_bytes), measured, n_max);
     snap_.per_bank_footprint_bytes =
         measured.valid ? static_cast<std::int64_t>(measured.total_bytes) : 0;
     snap_.n_max = n_max > static_cast<std::size_t>(INT_MAX)
-                      ? INT_MAX
-                      : static_cast<int>(n_max);
+        ? INT_MAX
+        : static_cast<int>(n_max);
     pool_.reset();
-    if (!admission.admitted) return false;
+    if (!admission.admitted) {
+        return false;
+    }
 
     auto candidate = std::make_unique<BankStatePool>();
-    if (!candidate->Configure(admission.bank_count, layout)) return false;
+    if (!candidate->Configure(admission.bank_count, layout)) {
+        return false;
+    }
     pool_ = std::move(candidate);
     return true;
 }
@@ -286,7 +326,9 @@ int CostCapacityService::CheckoutBank() {
     return pool_ == nullptr ? -1 : pool_->Checkout();
 }
 
-bool CostCapacityService::RecycleBank(std::size_t index, bool completion_ready) {
+bool CostCapacityService::RecycleBank(
+    std::size_t index,
+    bool completion_ready) {
     return pool_ != nullptr && pool_->Recycle(index, completion_ready);
 }
 
@@ -306,11 +348,15 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
     const std::vector<Point6D>& poses,
     const SerialCost& serial_cost,
     const BankCost& bank_cost) {
-    if (!serial_cost) return {};
+    if (!serial_cost) {
+        return {};
+    }
     if (poses.size() <= 1 || poolSize() <= 1 || !bank_cost) {
         std::vector<double> result;
         result.reserve(poses.size());
-        for (const auto& pose : poses) result.push_back(serial_cost(pose));
+        for (const auto& pose : poses) {
+            result.push_back(serial_cost(pose));
+        }
         return result;
     }
 
@@ -327,16 +373,22 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
         int bank_index = CheckoutBank();
         if (bank_index < 0) {
             // No free bank: finish/recycle the oldest lease before continuing.
-            if (leases.empty()) return {};
+            if (leases.empty()) {
+                return {};
+            }
             const auto [old_index, old_input] = leases.front();
             leases.erase(leases.begin());
             RecycleBank(old_index, true);
             completed[old_input] = true;
             bank_index = CheckoutBank();
-            if (bank_index < 0) return {};
+            if (bank_index < 0) {
+                return {};
+            }
         }
         BankState* state = bankState(static_cast<std::size_t>(bank_index));
-        if (state == nullptr) return {};
+        if (state == nullptr) {
+            return {};
+        }
         result[input] = bank_cost(poses[input], *state);
         leases.emplace_back(static_cast<std::size_t>(bank_index), input);
     }
@@ -346,26 +398,33 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
     // future enqueue-only callbacks may replace this with event polling without
     // changing the input-indexed contract.
     for (const auto [bank_index, input] : leases) {
-        if (!RecycleBank(bank_index, true)) return {};
+        if (!RecycleBank(bank_index, true)) {
+            return {};
+        }
         completed[input] = true;
     }
     for (bool is_complete : completed) {
-        if (!is_complete) return {};
+        if (!is_complete) {
+            return {};
+        }
     }
     return result;
 }
-
 
 std::vector<double> CostCapacityService::RunCostBatchGreedy(
     const std::vector<Point6D>& poses,
     const SerialCost& serial_cost,
     const BankEnqueue& enqueue,
     const BankComplete& complete) {
-    if (!serial_cost) return {};
+    if (!serial_cost) {
+        return {};
+    }
     if (poses.size() <= 1 || poolSize() <= 1 || !enqueue || !complete) {
         std::vector<double> result;
         result.reserve(poses.size());
-        for (const auto& pose : poses) result.push_back(serial_cost(pose));
+        for (const auto& pose : poses) {
+            result.push_back(serial_cost(pose));
+        }
         return result;
     }
 
@@ -379,10 +438,15 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
 
     auto finish = [&](const Lease& lease) -> bool {
         BankState* state = bankState(lease.bank);
-        if (state == nullptr || state->completion_event == nullptr) return false;
-        const auto event = reinterpret_cast<cudaEvent_t>(state->completion_event);
+        if (state == nullptr || state->completion_event == nullptr) {
+            return false;
+        }
+        const auto event =
+            reinterpret_cast<cudaEvent_t>(state->completion_event);
         const cudaError_t event_error = cudaEventSynchronize(event);
-        if (event_error != cudaSuccess) return false;
+        if (event_error != cudaSuccess) {
+            return false;
+        }
         result[lease.input] = complete(*state);
         return RecycleBank(lease.bank, true);
     };
@@ -390,25 +454,35 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
     for (std::size_t input = 0; input < poses.size(); ++input) {
         int bank_index = CheckoutBank();
         if (bank_index < 0) {
-            if (leases.empty() || !finish(leases.front())) return {};
+            if (leases.empty() || !finish(leases.front())) {
+                return {};
+            }
             leases.erase(leases.begin());
             bank_index = CheckoutBank();
-            if (bank_index < 0) return {};
+            if (bank_index < 0) {
+                return {};
+            }
         }
         BankState* state = bankState(static_cast<std::size_t>(bank_index));
         if (state == nullptr || state->stream == nullptr ||
-            state->completion_event == nullptr) return {};
+            state->completion_event == nullptr) {
+            return {};
+        }
         const auto stream = reinterpret_cast<cudaStream_t>(state->stream);
         const int enqueue_error = enqueue(poses[input], *state);
         if (enqueue_error != cudaSuccess) {
-            for (const auto& lease : leases) finish(lease);
+            for (const auto& lease : leases) {
+                finish(lease);
+            }
             RecycleBank(static_cast<std::size_t>(bank_index), true);
             return {};
         }
         const cudaError_t record_error = cudaEventRecord(
             reinterpret_cast<cudaEvent_t>(state->completion_event), stream);
         if (record_error != cudaSuccess) {
-            for (const auto& lease : leases) finish(lease);
+            for (const auto& lease : leases) {
+                finish(lease);
+            }
             RecycleBank(static_cast<std::size_t>(bank_index), true);
             return {};
         }
@@ -416,7 +490,9 @@ std::vector<double> CostCapacityService::RunCostBatchGreedy(
     }
 
     for (const auto& lease : leases) {
-        if (!finish(lease)) return {};
+        if (!finish(lease)) {
+            return {};
+        }
     }
     return result;
 }
@@ -441,17 +517,19 @@ bool CostCapacityService::refreshDeviceSnapshot(int device) {
     snap_.grid_dim_limit = props.maxGridSize[0];
     snap_.free_device_bytes = static_cast<std::int64_t>(free_bytes);
     snap_.safe_cap = static_cast<std::int64_t>(maximum_stride_size) *
-                     (threads_per_block - 1);
+        (threads_per_block - 1);
     snap_.n_max = 0;
     return isCapacityAvailable(snap_);
 }
 
 int CostCapacityService::occupancyOptimalBlockSize(const void* kernel_func) {
-    if (kernel_func == nullptr) return threads_per_block;
+    if (kernel_func == nullptr) {
+        return threads_per_block;
+    }
     int min_grid = 0;
     int block = 0;
-    cudaError_t err =
-        cudaOccupancyMaxPotentialBlockSize(&min_grid, &block, kernel_func, 0, 0);
+    cudaError_t err = cudaOccupancyMaxPotentialBlockSize(
+        &min_grid, &block, kernel_func, 0, 0);
     return err == cudaSuccess && block > 0 ? block : threads_per_block;
 }
 

@@ -6,20 +6,21 @@
 #include "device_launch_parameters.h"
 
 /*GPU Frame/Model*/
+#include "compute/bank_state.cuh"
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_edge_frame.cuh"
 #include "compute/gpu_frame.cuh"
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_intensity_frame.cuh"
 #include "compute/gpu_model.cuh"
-#include "compute/bank_state.cuh"
 /*Pose Matrix Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/pose_matrix.h"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
-struct BankState;  // non-owning compatibility view; allocation arrives in a later U12 stage
+struct BankState;  // non-owning compatibility view; allocation arrives in a
+                   // later U12 stage
 struct EvaluationContext;  // U1: primary executed type
 
 /*Class of GPU Metrics*/
@@ -73,13 +74,14 @@ public:
     if no error) Edge detected version is spit back out to the GPU Image on the
     Implant Model Can technically use on any image, just know it only marks the
     border between white pixels and black pixels*/
-    JTML_DLL bool
-    EdgeDetectRenderedImplantModel(GPUImage* rendered_model_image);
+    JTML_DLL bool EdgeDetectRenderedImplantModel(
+        GPUImage* rendered_model_image);
 
     /*Takes Black and White Edge Detected Image and Dilates
     Note like Edge Detection this is done in place. (Returns true if no error)*/
-    JTML_DLL bool
-    DilateEdgeDetectedImage(GPUImage* edge_detected_image, int dilation);
+    JTML_DLL bool DilateEdgeDetectedImage(
+        GPUImage* edge_detected_image,
+        int dilation);
 
     /*Takes L_{1,1} norm of the difference of images (matrices) A and B.
     Note L_{1,1} norm is simply the sum of the absolute value of the difference
@@ -87,8 +89,9 @@ public:
     + |A_{1,2} - B_{1,2}| + |A_{2,1} - B_{2,1}| + |A_{2,2} - B_{2,2}| THIS
     FUNCTION DOES NOT HAVE AN ERROR CHECK WARNING: ASSUMES IMAGES HAVE SAME
     DIMENSIONS!!!!*/
-    JTML_DLL double
-    L_1_1_MatrixDifferenceNorm(GPUImage* image_A, GPUImage* image_B);
+    JTML_DLL double L_1_1_MatrixDifferenceNorm(
+        GPUImage* image_A,
+        GPUImage* image_B);
 
     /*IOU (Jaccard Index) is the sum of the interesection of the white spaces
     (non-zero elements) in the two images (matrices) A and B divided by the
@@ -98,7 +101,9 @@ public:
     JTML_DLL double IOU(GPUImage* image_A, GPUImage* image_B);
 
     JTML_DLL double DistanceMapMetric(
-        GPUImage* projected_image, GPUFrame* distance_map, int dilation);
+        GPUImage* projected_image,
+        GPUFrame* distance_map,
+        int dilation);
     /* U12 enqueue/complete path. */
     JTML_DLL cudaError_t EnqueueDistanceMapMetric(
         GPUImage* projected_image,
@@ -114,11 +119,20 @@ public:
         cudaStream_t stream);
 
     /* U1: explicit EvaluationContext overloads — primary design. */
-    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(GPUImage* rendered_image, GPUDilatedFrame* cf, int dilation, EvaluationContext& ctx);
-    JTML_DLL cudaError_t EnqueueDistanceMapMetric(GPUImage* projected_image, GPUFrame* dm, int dilation, EvaluationContext& ctx);
+    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(
+        GPUImage* rendered_image,
+        GPUDilatedFrame* cf,
+        int dilation,
+        EvaluationContext& ctx);
+    JTML_DLL cudaError_t EnqueueDistanceMapMetric(
+        GPUImage* projected_image,
+        GPUFrame* dm,
+        int dilation,
+        EvaluationContext& ctx);
 
-    JTML_DLL double
-    CurvatureHeatmapMetric(GPUImage* projected_image, GPUHeatmap* gpu_heatmap);
+    JTML_DLL double CurvatureHeatmapMetric(
+        GPUImage* projected_image,
+        GPUHeatmap* gpu_heatmap);
 
     JTML_DLL void AllocateCurvatureHausdorfScore(int num_keypoints);
 
@@ -186,5 +200,5 @@ private:
     void RestoreBank0Metrics();
     bool BindMetricBank(const BankState& bank);
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

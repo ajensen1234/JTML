@@ -20,11 +20,10 @@
 #ifndef OPTIMIZER_RUN_DRIVER_H
 #define OPTIMIZER_RUN_DRIVER_H
 
-#include <memory>
-
 #include <QModelIndexList>
 #include <QObject>
 #include <QString>
+#include <memory>
 
 /*The full Initialize surface (Calibration, Frame/Model containers,
  * LocationStorage, OptimizerSettings, the three CostFunctionManagers, the
@@ -53,7 +52,8 @@ struct OptimizerRunLaunch {
      * to the classic-DIRECT search (bit-identical); the production adapter
      * forwards it verbatim into OptimizerManager::Initialize ->
      * RunDirectStage's DirectOptimizer ctor. Non-default fields are plan-008
-     * fail-fast stubs (std::invalid_argument at DirectOptimizer construction).*/
+     * fail-fast stubs (std::invalid_argument at DirectOptimizer
+     * construction).*/
     DirectOptimizer::Options direct_options;
     jta_cost_function::CostFunctionManager trunk_manager;
     jta_cost_function::CostFunctionManager branch_manager;
@@ -83,7 +83,8 @@ public:
     /*Mirrors OptimizerManager::Initialize's surface (by-value containers +
      * plain rows); the adapter forwards untouched.*/
     virtual bool Initialize(
-        const OptimizerRunLaunch& launch, QString& error_message) = 0;
+        const OptimizerRunLaunch& launch,
+        QString& error_message) = 0;
 
     /*Thread start (the quirk path starts the thread even when Initialize
      * failed — the ghost, preserved verbatim).*/

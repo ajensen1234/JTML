@@ -9,7 +9,8 @@ GPUDilatedFrame::GPUDilatedFrame(
     int height,
     int gpu_device,
     unsigned char* host_dilated_image,
-    int dilation) : GPUFrame(width, height, gpu_device, host_dilated_image) {
+    int dilation) :
+    GPUFrame(width, height, gpu_device, host_dilated_image) {
     /*If Initialized Correctly*/
     if (this->IsInitializedCorrectly()) {
         dilation_ = dilation;
@@ -28,4 +29,4 @@ GPUDilatedFrame::~GPUDilatedFrame() {};
 int GPUDilatedFrame::GetDilation() {
     return dilation_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

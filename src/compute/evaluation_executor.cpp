@@ -13,9 +13,9 @@
 
 #include "compute/evaluation_executor.h"
 
+#include <chrono>
 #include <cmath>
 #include <stdexcept>
-#include <chrono>
 #include <thread>
 
 namespace gpu_cost_function {
@@ -24,17 +24,19 @@ EvaluationExecutor::~EvaluationExecutor() {
     Shutdown();
 }
 
-bool EvaluationExecutor::Initialize(const BankFootprintInput& layout,
-                                    std::uint64_t free_device_bytes,
-                                    std::size_t n_max) {
+bool EvaluationExecutor::Initialize(
+    const BankFootprintInput& layout,
+    std::uint64_t free_device_bytes,
+    std::size_t n_max) {
     return pool_.Initialize(layout, free_device_bytes, n_max);
 }
 
 void EvaluationExecutor::Shutdown() {
-    // Destroy executor-owned wrappers via destroy hook before pool teardown (C2),
-    // EXCEPT poisoned contexts (U5/C8): their graph may be hung, so destroying
-    // would block. Leak poisoned wrappers until process exit — pool_.Shutdown()
-    // also skips their buffers. The DestroyHook for a poisoned idx is never run.
+    // Destroy executor-owned wrappers via destroy hook before pool teardown
+    // (C2), EXCEPT poisoned contexts (U5/C8): their graph may be hung, so
+    // destroying would block. Leak poisoned wrappers until process exit —
+    // pool_.Shutdown() also skips their buffers. The DestroyHook for a poisoned
+    // idx is never run.
     for (std::size_t i = 0; i < graphExecs_.size(); ++i) {
         if (graphExecs_[i] != nullptr) {
             if (destroyHook_ && !pool_.IsPoisoned(i)) {
@@ -68,7 +70,8 @@ void EvaluationExecutor::InstallPollHook(PollHookFn hook) {
     pollHook_ = std::move(hook);
 }
 
-void EvaluationExecutor::InstallCompleteFromPinsHook(CompleteFromPinsHookFn hook) {
+void EvaluationExecutor::InstallCompleteFromPinsHook(
+    CompleteFromPinsHookFn hook) {
     completeFromPinsHook_ = std::move(hook);
 }
 
@@ -86,16 +89,24 @@ std::size_t EvaluationExecutor::graphExecsSize() const {
 }
 
 void* EvaluationExecutor::graphExecAt(std::size_t idx) const {
-    if (idx >= graphExecs_.size()) return nullptr;
+    if (idx >= graphExecs_.size()) {
+        return nullptr;
+    }
     return graphExecs_[idx];
 }
 std::size_t EvaluationExecutor::preparedContextCount() const {
     std::size_t c = 0;
-    for (auto* p : graphExecs_) if (p != nullptr) ++c;
+    for (auto* p : graphExecs_) {
+        if (p != nullptr) {
+            ++c;
+        }
+    }
     return c;
 }
 
-BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t count) {
+BatchOutcome EvaluationExecutor::Prepare(
+    const GraphRecipeKey& key,
+    std::size_t count) {
     if (poisoned_.load()) {
         return BatchOutcome::WatchdogPoisoned("executor poisoned");
     }
@@ -116,7 +127,9 @@ BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t 
         if (idx < 0) {
             for (auto sIdx : successIdxs) {
                 if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
-                    if (destroyHook_) destroyHook_(sIdx);
+                    if (destroyHook_) {
+                        destroyHook_(sIdx);
+                    }
                     graphExecs_[sIdx] = nullptr;
                 }
             }
@@ -129,7 +142,9 @@ BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t 
         if (!prepareHook_) {
             for (auto sIdx : successIdxs) {
                 if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
-                    if (destroyHook_) destroyHook_(sIdx);
+                    if (destroyHook_) {
+                        destroyHook_(sIdx);
+                    }
                     graphExecs_[sIdx] = nullptr;
                 }
             }
@@ -142,7 +157,9 @@ BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t 
         if (!w) {
             for (auto sIdx : successIdxs) {
                 if (sIdx < graphExecs_.size() && graphExecs_[sIdx] != nullptr) {
-                    if (destroyHook_) destroyHook_(sIdx);
+                    if (destroyHook_) {
+                        destroyHook_(sIdx);
+                    }
                     graphExecs_[sIdx] = nullptr;
                 }
             }
@@ -154,17 +171,20 @@ BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t 
         if (static_cast<std::size_t>(idx) >= graphExecs_.size()) {
             graphExecs_.resize(static_cast<std::size_t>(idx) + 1, nullptr);
         }
-        // C2/C4 re-prepare safety: if a wrapper from an earlier Prepare lives at
-        // this index (e.g. a generation change or a second Prepare), destroy the
-        // stale one BEFORE overwriting — never leak a graph exec.
+        // C2/C4 re-prepare safety: if a wrapper from an earlier Prepare lives
+        // at this index (e.g. a generation change or a second Prepare), destroy
+        // the stale one BEFORE overwriting — never leak a graph exec.
         if (graphExecs_[static_cast<std::size_t>(idx)] != nullptr) {
-            if (destroyHook_) destroyHook_(static_cast<std::size_t>(idx));
+            if (destroyHook_) {
+                destroyHook_(static_cast<std::size_t>(idx));
+            }
             graphExecs_[static_cast<std::size_t>(idx)] = nullptr;
         }
         graphExecs_[static_cast<std::size_t>(idx)] = w;
         successIdxs.push_back(static_cast<std::size_t>(idx));
     }
-    // All count contexts prepared successfully — recycle so contexts are idle-but-graph-ready (C4)
+    // All count contexts prepared successfully — recycle so contexts are
+    // idle-but-graph-ready (C4)
     for (int cIdx : checkedOutIndices) {
         pool_.Recycle(static_cast<std::size_t>(cIdx), true);
     }
@@ -172,10 +192,11 @@ BatchOutcome EvaluationExecutor::Prepare(const GraphRecipeKey& key, std::size_t 
     return BatchOutcome::Ordered({});
 }
 
-bool EvaluationExecutor::pollOneLease(const Lease& lease,
-                                      std::vector<double>& result,
-                                      const std::function<double(const Point6D&, std::size_t)>& costWithIndex,
-                                      const std::vector<Point6D>& poses) {
+bool EvaluationExecutor::pollOneLease(
+    const Lease& lease,
+    std::vector<double>& result,
+    const std::function<double(const Point6D&, std::size_t)>& costWithIndex,
+    const std::vector<Point6D>& poses) {
     // Headless path: immediate success, no CUDA. In GPU build this would do
     // cudaEventQuery / cudaStreamQuery and discriminate NotReady vs real error,
     // with watchdog. We simulate success and ordered store.
@@ -220,10 +241,13 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
     if (poses.empty()) {
         return BatchOutcome::Ordered({});
     }
-    // Degenerate N<=1: serial fallback ONLY when no hooks installed (headless stub).
-    // When hooks are installed (real graph), even N=1 must go through the hook-driven
-    // greedy path to actually launch graphs (U7 N=1 overhead arm).
-    const bool useHooksEarly = static_cast<bool>(enqueueHook_) && static_cast<bool>(pollHook_) && static_cast<bool>(completeFromPinsHook_);
+    // Degenerate N<=1: serial fallback ONLY when no hooks installed (headless
+    // stub). When hooks are installed (real graph), even N=1 must go through
+    // the hook-driven greedy path to actually launch graphs (U7 N=1 overhead
+    // arm).
+    const bool useHooksEarly = static_cast<bool>(enqueueHook_) &&
+        static_cast<bool>(pollHook_) &&
+        static_cast<bool>(completeFromPinsHook_);
     if (poolSize() <= 1 && !useHooksEarly) {
         std::vector<double> out;
         out.reserve(poses.size());
@@ -236,7 +260,8 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             out.push_back(v);
         }
         if (out.size() != poses.size()) {
-            throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
+            throw std::invalid_argument(
+                "BatchCostFunction returned wrong-sized vector");
         }
         return BatchOutcome::Ordered(std::move(out));
     }
@@ -253,44 +278,67 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
         while (nextPos < poses.size() || !inFlight.empty()) {
             while (nextPos < poses.size()) {
                 int idx = pool_.Checkout();
-                if (idx < 0) break;
-                EvaluationContext* ctx = pool_.context(static_cast<std::size_t>(idx));
+                if (idx < 0) {
+                    break;
+                }
+                EvaluationContext* ctx =
+                    pool_.context(static_cast<std::size_t>(idx));
                 if (!ctx) {
                     if (firstSubmission_.load()) {
                         result.clear();
-                        if (teardownHook_) teardownHook_();
-                        for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                        if (teardownHook_) {
+                            teardownHook_();
+                        }
+                        for (auto& l : inFlight) {
+                            pool_.ForceRelease(l.ctxIdx);
+                        }
                         pool_.ForceRelease(static_cast<std::size_t>(idx));
-                        return BatchOutcome::PostLaunchAbort("null context after checkout");
+                        return BatchOutcome::PostLaunchAbort(
+                            "null context after checkout");
                     }
                     pool_.ForceRelease(static_cast<std::size_t>(idx));
-                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
-                    return BatchOutcome::NotSubmitted("null context before submission");
+                    for (auto& l : inFlight) {
+                        pool_.ForceRelease(l.ctxIdx);
+                    }
+                    return BatchOutcome::NotSubmitted(
+                        "null context before submission");
                 }
                 ctx->input_index = static_cast<int>(nextPos);
                 ctx->status = EvaluationStatus::InFlight;
                 ctx->in_flight = true;
-                bool enqOk = enqueueHook_(static_cast<std::size_t>(idx), nextPos, poses[nextPos]);
+                bool enqOk = enqueueHook_(
+                    static_cast<std::size_t>(idx), nextPos, poses[nextPos]);
                 if (!enqOk) {
                     result.clear();
-                    if (teardownHook_) teardownHook_();
-                    for (auto &l : inFlight) pool_.ForceRelease(l.ctxIdx);
+                    if (teardownHook_) {
+                        teardownHook_();
+                    }
+                    for (auto& l : inFlight) {
+                        pool_.ForceRelease(l.ctxIdx);
+                    }
                     pool_.ForceRelease(static_cast<std::size_t>(idx));
                     if (firstSubmission_.load()) {
-                        return BatchOutcome::PostLaunchAbort("enqueue/launch failed");
+                        return BatchOutcome::PostLaunchAbort(
+                            "enqueue/launch failed");
                     }
-                    return BatchOutcome::NotSubmitted("enqueue failed before first submission");
+                    return BatchOutcome::NotSubmitted(
+                        "enqueue failed before first submission");
                 }
                 firstSubmission_.store(true);
-                inFlight.push_back(Lease{static_cast<std::size_t>(idx), nextPos});
+                inFlight.push_back(
+                    Lease{static_cast<std::size_t>(idx), nextPos});
                 ++nextPos;
-                if (inFlight.size() >= pool_.size()) break;
+                if (inFlight.size() >= pool_.size()) {
+                    break;
+                }
             }
             if (inFlight.empty()) {
-                if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+                if (std::chrono::steady_clock::now() - watchdogStart >
+                    watchdogTimeout_) {
                     result.clear();
                     poisoned_.store(true);
-                    return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
+                    return BatchOutcome::WatchdogPoisoned(
+                        "watchdog expiry (no work in flight)");
                 }
                 std::this_thread::yield();
                 continue;
@@ -300,14 +348,16 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             survivors.reserve(inFlight.size());
             bool anyDone = false;
             bool abort = false;
-            BatchOutcome abortOutcome = BatchOutcome::PostLaunchAbort("poll error");
+            BatchOutcome abortOutcome =
+                BatchOutcome::PostLaunchAbort("poll error");
             for (auto cur : inFlight) {
                 PollResult pr = pollHook_(cur.ctxIdx);
                 if (pr == PollResult::Done) {
                     double s = completeFromPinsHook_(cur.ctxIdx);
                     if (!std::isfinite(s)) {
                         abort = true;
-                        abortOutcome = BatchOutcome::PostLaunchAbort("overflow/non-finite");
+                        abortOutcome = BatchOutcome::PostLaunchAbort(
+                            "overflow/non-finite");
                         // fall through to abort handling after polling all
                     } else {
                         result[cur.inputPos] = s;
@@ -325,26 +375,35 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             }
             if (abort) {
                 result.clear();
-                if (teardownHook_) teardownHook_();
-                for (auto &l : inFlight) {
+                if (teardownHook_) {
+                    teardownHook_();
+                }
+                for (auto& l : inFlight) {
                     pool_.ForceRelease(l.ctxIdx);
                 }
                 return abortOutcome;
             }
             inFlight = std::move(survivors);
             if (!anyDone) {
-                if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+                if (std::chrono::steady_clock::now() - watchdogStart >
+                    watchdogTimeout_) {
                     result.clear();
-                    if (teardownHook_) teardownHook_();
-                    for (auto &l : inFlight) pool_.LeavePoisoned(l.ctxIdx);
+                    if (teardownHook_) {
+                        teardownHook_();
+                    }
+                    for (auto& l : inFlight) {
+                        pool_.LeavePoisoned(l.ctxIdx);
+                    }
                     poisoned_.store(true);
                     return BatchOutcome::WatchdogPoisoned("watchdog expiry");
                 }
-                pacingHook_();   // Plan 013 U1: injectable bounded pacing (default yield, CUDA adaptive)
+                pacingHook_();  // Plan 013 U1: injectable bounded pacing
+                                // (default yield, CUDA adaptive)
             }
         }
         if (result.size() != poses.size()) {
-            throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
+            throw std::invalid_argument(
+                "BatchCostFunction returned wrong-sized vector");
         }
         return BatchOutcome::Ordered(std::move(result));
     }
@@ -357,16 +416,23 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
     while (nextPos < poses.size() || !inFlight.empty()) {
         while (nextPos < poses.size()) {
             int idx = pool_.Checkout();
-            if (idx < 0) break;
-            EvaluationContext* ctx = pool_.context(static_cast<std::size_t>(idx));
+            if (idx < 0) {
+                break;
+            }
+            EvaluationContext* ctx =
+                pool_.context(static_cast<std::size_t>(idx));
             if (!ctx) {
                 pool_.Recycle(static_cast<std::size_t>(idx), false);
                 if (firstSubmission_.load()) {
                     result.clear();
-                    for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
-                    return BatchOutcome::PostLaunchAbort("null context after checkout");
+                    for (auto& l : inFlight) {
+                        pool_.Recycle(l.ctxIdx, false);
+                    }
+                    return BatchOutcome::PostLaunchAbort(
+                        "null context after checkout");
                 }
-                return BatchOutcome::NotSubmitted("null context before submission");
+                return BatchOutcome::NotSubmitted(
+                    "null context before submission");
             }
             ctx->input_index = static_cast<int>(nextPos);
             ctx->status = EvaluationStatus::InFlight;
@@ -374,12 +440,16 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
             firstSubmission_.store(true);
             inFlight.push_back(Lease{static_cast<std::size_t>(idx), nextPos});
             ++nextPos;
-            if (inFlight.size() >= pool_.size()) break;
+            if (inFlight.size() >= pool_.size()) {
+                break;
+            }
         }
         if (inFlight.empty()) {
-            if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+            if (std::chrono::steady_clock::now() - watchdogStart >
+                watchdogTimeout_) {
                 result.clear();
-                return BatchOutcome::WatchdogPoisoned("watchdog expiry (no work in flight)");
+                return BatchOutcome::WatchdogPoisoned(
+                    "watchdog expiry (no work in flight)");
             }
             std::this_thread::yield();
             continue;
@@ -388,24 +458,29 @@ BatchOutcome EvaluationExecutor::RunBatchWithCost(
         bool ok = pollOneLease(cur, result, costWithIndex, poses);
         if (!ok) {
             result.clear();
-            for (auto &l : inFlight) {
-                if (l.ctxIdx != cur.ctxIdx) pool_.Recycle(l.ctxIdx, false);
+            for (auto& l : inFlight) {
+                if (l.ctxIdx != cur.ctxIdx) {
+                    pool_.Recycle(l.ctxIdx, false);
+                }
             }
             return BatchOutcome::PostLaunchAbort("pollOneLease failed");
         }
         inFlight.erase(inFlight.begin());
         watchdogStart = std::chrono::steady_clock::now();
-        if (std::chrono::steady_clock::now() - watchdogStart > watchdogTimeout_) {
+        if (std::chrono::steady_clock::now() - watchdogStart >
+            watchdogTimeout_) {
             result.clear();
-            for (auto &l : inFlight) pool_.Recycle(l.ctxIdx, false);
+            for (auto& l : inFlight) {
+                pool_.Recycle(l.ctxIdx, false);
+            }
             return BatchOutcome::WatchdogPoisoned("watchdog expiry");
         }
     }
     if (result.size() != poses.size()) {
-        throw std::invalid_argument("BatchCostFunction returned wrong-sized vector");
+        throw std::invalid_argument(
+            "BatchCostFunction returned wrong-sized vector");
     }
     return BatchOutcome::Ordered(std::move(result));
-
 }
 
 }  // namespace gpu_cost_function

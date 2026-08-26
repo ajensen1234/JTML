@@ -7,7 +7,8 @@
 /*Add New Model to JTA-GPU So Initialize ALl Loaded Frames with
 Default Pose (0,0,-.25*principal_distance / pixel_pitch,0,0,0)*/
 void LocationStorage::LoadNewModel(
-    double principal_distance, double pixel_pitch) {
+    double principal_distance,
+    double pixel_pitch) {
     for (int i = 0; i < location_storage_matrix_.size(); i++) {
         location_storage_matrix_[i].push_back(
             Point6D(0, 0, -.25 * principal_distance / pixel_pitch, 0, 0, 0));
@@ -21,7 +22,7 @@ void LocationStorage::LoadNewModel(Calibration calibration) {
         z_pos = 0.25 * calibration.camera_A_principal_.fx();
     } else if (calibration.type_ == "UF") {
         z_pos = -0.25 * calibration.camera_A_principal_.principal_distance_ /
-                calibration.camera_A_principal_.pixel_pitch_;
+            calibration.camera_A_principal_.pixel_pitch_;
     }
     for (int i = 0; i < location_storage_matrix_.size(); i++) {
         location_storage_matrix_[i].push_back(Point6D(0, 0, z_pos, 0, 0, 0));
@@ -54,7 +55,9 @@ Point6D LocationStorage::GetPose(int frame_index, int model_index) {
 
 /*Store a Pose to Matrix*/
 void LocationStorage::SavePose(
-    int frame_index, int model_index, Point6D model_pose) {
+    int frame_index,
+    int model_index,
+    Point6D model_pose) {
     /*check in range*/
     if (frame_index >= 0 && frame_index < location_storage_matrix_.size()) {
         if (model_index >= 0 &&
@@ -72,10 +75,13 @@ int LocationStorage::GetFrameCount() {
 /*Get Model Storage Size (-1 if Inconsistent Sizes)*/
 int LocationStorage::GetModelCount() {
     int size = 0;
-    if (location_storage_matrix_.size() > 0)
+    if (location_storage_matrix_.size() > 0) {
         size = location_storage_matrix_[0].size();
+    }
     for (int i = 0; i < location_storage_matrix_.size(); i++) {
-        if (location_storage_matrix_[i].size() != size) return -1;
+        if (location_storage_matrix_[i].size() != size) {
+            return -1;
+        }
     }
     return size;
 };

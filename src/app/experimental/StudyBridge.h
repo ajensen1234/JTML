@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 
 // 005 U4: StudyBridge — the thin study-load adapter (R3, R17). Pass-through
-// orchestration only: QML FileDialogs pick paths → the shared StudyLoadController
-// (plan 006 U7 / R11 — the ONE load path both front-ends call: calibration
-// one-use + dataset-replace policy, parse → populate → dedup → counts) over
-// the app-owned dataset (ExperimentalSession) + the direct-compiled
-// FrameListModel/ModelListModel + the app-owned ExperimentalScene. No behavior
-// lives here beyond the orchestration order; every semantic (partial loads,
-// dedup, calibration formats, camera decisions) comes from the seams it
-// delegates to.
+// orchestration only: QML FileDialogs pick paths → the shared
+// StudyLoadController (plan 006 U7 / R11 — the ONE load path both front-ends
+// call: calibration one-use + dataset-replace policy, parse → populate → dedup
+// → counts) over the app-owned dataset (ExperimentalSession) + the
+// direct-compiled FrameListModel/ModelListModel + the app-owned
+// ExperimentalScene. No behavior lives here beyond the orchestration order;
+// every semantic (partial loads, dedup, calibration formats, camera decisions)
+// comes from the seams it delegates to.
 //
 // Ownership (plan 005 bridge decomposition): AppBridge (the hub) owns the
 // ExperimentalSession and creates this adapter; the list models are created
@@ -72,27 +72,36 @@ class StudyBridge : public QObject {
 
     // Study surface: load-action enablement + pre-load shell states (R17).
     Q_PROPERTY(bool hasCalibration READ hasCalibration NOTIFY datasetChanged)
-    Q_PROPERTY(bool calibratedForMonoplane READ calibratedForMonoplane NOTIFY datasetChanged)
-    Q_PROPERTY(bool calibratedForBiplane READ calibratedForBiplane NOTIFY datasetChanged)
+    Q_PROPERTY(bool calibratedForMonoplane READ calibratedForMonoplane NOTIFY
+                   datasetChanged)
+    Q_PROPERTY(bool calibratedForBiplane READ calibratedForBiplane NOTIFY
+                   datasetChanged)
     Q_PROPERTY(bool hasDataset READ hasDataset NOTIFY datasetChanged)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY datasetChanged)
     Q_PROPERTY(int modelCount READ modelCount NOTIFY datasetChanged)
 
     // Direct-compiled list models (fresh instances on dataset replace).
-    Q_PROPERTY(QObject* frameListModel READ frameListModel NOTIFY datasetChanged)
-    Q_PROPERTY(QObject* modelListModel READ modelListModel NOTIFY datasetChanged)
+    Q_PROPERTY(
+        QObject* frameListModel READ frameListModel NOTIFY datasetChanged)
+    Q_PROPERTY(
+        QObject* modelListModel READ modelListModel NOTIFY datasetChanged)
 
     // Delegate selection contract (no QItemSelectionModel).
     Q_PROPERTY(int currentFrame READ currentFrame NOTIFY selectionChanged)
-    Q_PROPERTY(int primaryModelIndex READ primaryModelIndex NOTIFY selectionChanged)
-    Q_PROPERTY(int selectedModelCount READ selectedModelCount NOTIFY selectionChanged)
-    Q_PROPERTY(QVariantList selectedModels READ selectedModels NOTIFY selectionChanged)
+    Q_PROPERTY(
+        int primaryModelIndex READ primaryModelIndex NOTIFY selectionChanged)
+    Q_PROPERTY(
+        int selectedModelCount READ selectedModelCount NOTIFY selectionChanged)
+    Q_PROPERTY(
+        QVariantList selectedModels READ selectedModels NOTIFY selectionChanged)
 
 public:
-    explicit StudyBridge(AppBridge* hub, ExperimentalSession* session,
-                         ExperimentalScene* scene,
-                         SessionStateController* session_state_controller,
-                         QObject* parent = nullptr);
+    explicit StudyBridge(
+        AppBridge* hub,
+        ExperimentalSession* session,
+        ExperimentalScene* scene,
+        SessionStateController* session_state_controller,
+        QObject* parent = nullptr);
     ~StudyBridge() override;
 
     // ---- Load actions (paths come from the QML FileDialogs) -------------
@@ -105,7 +114,7 @@ public:
     Q_INVOKABLE void clearDataset();
 
     // ---- Delegate selection contract ------------------------------------
-    Q_INVOKABLE void setCurrentFrame(int index);  // -1 = none
+    Q_INVOKABLE void setCurrentFrame(int index);    // -1 = none
     Q_INVOKABLE void toggleModelSelected(int row);  // out-of-range rows ignored
     Q_INVOKABLE void clearModelSelection();
     Q_INVOKABLE bool isModelSelected(int row) const;
@@ -116,8 +125,14 @@ public:
     // from it) + the scene, then emits viewerPoseApplied for the viewport
     // readout refresh. The scene model index is name-matched to loaded_models
     // (fallback: index).
-    Q_INVOKABLE void applyViewerPose(int sceneModelIndex, double x, double y,
-                                     double z, double xa, double ya, double za);
+    Q_INVOKABLE void applyViewerPose(
+        int sceneModelIndex,
+        double x,
+        double y,
+        double z,
+        double xa,
+        double ya,
+        double za);
 
     // ---- Reads ----------------------------------------------------------
     bool hasCalibration() const;

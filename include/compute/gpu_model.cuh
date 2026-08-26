@@ -85,19 +85,24 @@ public:
     JTML_DLL bool EnqueueRenderPrimaryCamera(BankState& bank);
     JTML_DLL bool CompleteRenderPrimaryCamera(BankState& bank);
     JTML_DLL bool TrySetActiveBank(BankState* bank);
-    JTML_DLL bool
-    RenderPrimaryCamera_RotationMatrix(RotationMatrix model_pose_matrix);
+    JTML_DLL bool RenderPrimaryCamera_RotationMatrix(
+        RotationMatrix model_pose_matrix);
     JTML_DLL bool RenderSecondaryCamera(Pose model_pose);
 
-    JTML_DLL void
-    RenderPrimaryCameraAndWriteImage(Pose model_pose, std::string img_name);
+    JTML_DLL void RenderPrimaryCameraAndWriteImage(
+        Pose model_pose,
+        std::string img_name);
 
     /*Render DRR to cache function (returns true if worked correctly)
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL bool RenderDRRPrimaryCamera(
-        Pose model_pose, float lower_bound, float upper_bound);
+        Pose model_pose,
+        float lower_bound,
+        float upper_bound);
     JTML_DLL bool RenderDRRSecondaryCamera(
-        Pose model_pose, float lower_bound, float upper_bound);
+        Pose model_pose,
+        float lower_bound,
+        float upper_bound);
 
     /*Get pointer to rendered image on GPU
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
@@ -108,7 +113,9 @@ public:
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL GPUImage* GetPrimaryCameraRenderedImage();
     JTML_DLL GPUImage* GetSecondaryCameraRenderedImage();
-    JTML_DLL RenderEngine* GetPrimaryRenderEngine() { return primary_cam_render_engine_; }
+    JTML_DLL RenderEngine* GetPrimaryRenderEngine() {
+        return primary_cam_render_engine_;
+    }
     JTML_DLL std::size_t GetPrimaryCubStorageBytes() const;
     JTML_DLL int GetPrimaryWidth() const;
     JTML_DLL int GetPrimaryHeight() const;
@@ -176,6 +183,6 @@ private:
     Pose current_pose_A_;
     Pose current_pose_B_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_MODEL_H */

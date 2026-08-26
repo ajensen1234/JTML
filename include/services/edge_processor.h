@@ -53,7 +53,8 @@ public:
      * override to 3 (the Mahfouz branch preserved byte-identical from
      * UpdateDilationFrames).*/
     static int ResolveDilation(
-        int raw_dilation, const std::string& cost_function_name);
+        int raw_dilation,
+        const std::string& cost_function_name);
 
     /*Apply the parameter-derived edge pipeline to a single frame:
      * SetEdgeImage(aperture, low, high) + SetDilatedImage(resolved
@@ -63,11 +64,14 @@ public:
     /*Apply-all: the same pipeline to every frame in the range (identical to
      * calling ApplyToFrame per frame).*/
     static void ApplyToFrames(
-        const EdgeProcessingParams& params, std::vector<Frame>& frames);
+        const EdgeProcessingParams& params,
+        std::vector<Frame>& frames);
 
 private:
     static void ApplyToFrameInternal(
-        const EdgeProcessingParams& params, int dilation, Frame& frame);
+        const EdgeProcessingParams& params,
+        int dilation,
+        Frame& frame);
 };
 
 }  // namespace jta

@@ -46,13 +46,14 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 /*STL Reader*/
-#include "STLReader.h"    // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
+#include "STLReader.h"  // local Study2Grid STLReader (ns stl_reader), NOT core services/STLReader (stl_reader_BIG)
 
 /*QT*/
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qtextstream.h>
+
 #include <QtCore/QRegularExpression>
 
 /*Study Class*/
@@ -105,8 +106,8 @@ int main() {
     int IMAGE_HEIGHT = 1024;
     int IMAGE_WIDTH = 1024;
     bool USE_PADDING =
-        true; // When resizing images, use padding to maintain aspect ratio
-    bool INVERT_IMAGE = false; // Invert grayscale
+        true;  // When resizing images, use padding to maintain aspect ratio
+    bool INVERT_IMAGE = false;  // Invert grayscale
 
     /*Shuffle images?*/
     bool RAND_SHUFFLE_IMGS = false;
@@ -166,8 +167,9 @@ int main() {
 
                 /*Add these directories to fluoro_dirs*/
                 for (int movement_ind = 0; movement_ind < movement_dirs.size();
-                     movement_ind++)
+                     movement_ind++) {
                     fluoro_study_dirs.push_back(movement_dirs[movement_ind]);
+                }
             }
         }
     }
@@ -179,9 +181,9 @@ int main() {
         std::cout << "Loading study " << i + 1 << " of "
                   << fluoro_study_dirs.size() << std::endl;
         Study temp_study = Study(fluoro_study_dirs[i], GENERATE_KP_DATA);
-        if (temp_study.passed_check_)
+        if (temp_study.passed_check_) {
             studies.push_back(temp_study);
-        else {
+        } else {
             cout << "\nError with study formatting!";
             getchar();
             return 0;
@@ -227,8 +229,9 @@ int main() {
                 calibration_file = CameraCalibration(
                     InputList[1].toDouble(),
                     -1 *
-                        InputList[2].toDouble(), // Negative For Offsets to make
-                                                 // consistent with JointTrack
+                        InputList[2]
+                            .toDouble(),  // Negative For Offsets to make
+                                          // consistent with JointTrack
                     -1 * InputList[3].toDouble(),
                     InputList[4].toDouble());
             }
@@ -246,8 +249,8 @@ int main() {
         vector<vector<Pose>> model_poses_list;
 
         gpu_cost_function::GPUMetrics* gpumet =
-            new GPUMetrics(); // Uncomment as part of edge detection (if you
-                              // want)
+            new GPUMetrics();  // Uncomment as part of edge detection (if you
+                               // want)
         /*For each model type in study*/
         for (int model_types_indx = 0;
              model_types_indx < studies[study_ind].stl_types_.size();
@@ -270,8 +273,8 @@ int main() {
                 &(triangle_information[0])[0],
                 &(triangle_information[1])[0],
                 triangle_information[0].size() / 9,
-                calibration_file); // BACKFACE CULLING APPEARS TO BE GIVING
-                                   // ERRORS
+                calibration_file);  // BACKFACE CULLING APPEARS TO BE GIVING
+                                    // ERRORS
             if (!gpu_mod) {
                 std::cout << " problem here" << std::endl;
             }
@@ -281,9 +284,8 @@ int main() {
                 studies[study_ind].kin_files_[model_types_indx]));
             if (inputFile_kin_mod.open(QIODevice::ReadOnly)) {
                 QTextStream in(&inputFile_kin_mod);
-                QStringList InputList =
-                    in.readAll().split(QRegularExpression("[\\r\\n]"),
-                                       Qt::SkipEmptyParts);
+                QStringList InputList = in.readAll().split(
+                    QRegularExpression("[\\r\\n]"), Qt::SkipEmptyParts);
                 if (InputList.size() == 0) {
                     cout << "\nInvalid "
                          << studies[study_ind].stl_types_[model_types_indx]
@@ -295,7 +297,7 @@ int main() {
                 if (InputList[0] == "JTA_EULER_KINEMATICS" ||
                     InputList[0] == "JT_EULER_312") {
                     for (int i = 2; i < InputList.length() &&
-                                    (i - 2) < studies[study_ind].images_.size();
+                         (i - 2) < studies[study_ind].images_.size();
                          i++) {
                         QStringList LineList = InputList[i].split(
                             QRegularExpression("[,]"), Qt::SkipEmptyParts);
@@ -345,15 +347,13 @@ int main() {
         }*/
                 string labels_dir;
                 if (OS_WINDOWS) {
-                    labels_dir =
-                        studies[study_ind].study_dir_ + "\\Labels\\" +
+                    labels_dir = studies[study_ind].study_dir_ + "\\Labels\\" +
                         studies[study_ind].stl_types_[model_types_indx] +
-                        "\\"; // Windows
+                        "\\";  // Windows
                 } else {
-                    labels_dir =
-                        studies[study_ind].study_dir_ + "/Labels/" +
+                    labels_dir = studies[study_ind].study_dir_ + "/Labels/" +
                         studies[study_ind].stl_types_[model_types_indx] +
-                        "/"; // Linux
+                        "/";  // Linux
                 }
 
                 if (!gpu_mod->WritePrimaryCameraRenderedImage(
@@ -397,15 +397,13 @@ int main() {
                  model_types_indx++) {
                 string labels_dir;
                 if (OS_WINDOWS) {
-                    labels_dir =
-                        studies[study_ind].study_dir_ + "\\Labels\\" +
+                    labels_dir = studies[study_ind].study_dir_ + "\\Labels\\" +
                         studies[study_ind].stl_types_[model_types_indx] +
-                        "\\"; // Windows
+                        "\\";  // Windows
                 } else {
-                    labels_dir =
-                        studies[study_ind].study_dir_ + "/Labels/" +
+                    labels_dir = studies[study_ind].study_dir_ + "/Labels/" +
                         studies[study_ind].stl_types_[model_types_indx] +
-                        "/"; // Linux
+                        "/";  // Linux
                 }
                 label_img_paths_list.push_back(
                     labels_dir +
@@ -422,12 +420,12 @@ int main() {
 
                 /*If Using KP for Model, Read In Key Points*/
                 vector<basic_la::XYPoint>
-                    projected_normalized_KP_; // KP that have been projected to
-                                              // the image plane and are
-                                              // expressed in normalized pixel
-                                              // coordinates where 0,0 is the
-                                              // bottom left and 1,1 is the top
-                                              // right
+                    projected_normalized_KP_;  // KP that have been projected to
+                                               // the image plane and are
+                                               // expressed in normalized pixel
+                                               // coordinates where 0,0 is the
+                                               // bottom left and 1,1 is the top
+                                               // right
                 if (studies[study_ind]
                         .stl_basenames_have_kp_[model_types_indx]) {
                     /*Read in 3-tuple(s) from .kp file*/
@@ -461,8 +459,8 @@ int main() {
                                     kp_transform_pose.y_location_,
                                 rotated_point.Z_ +
                                     kp_transform_pose.z_location_);
-                        double dist_over_pix_pitch =
-                            -1.0 * calibration_file.principal_distance_ /
+                        double dist_over_pix_pitch = -1.0 *
+                            calibration_file.principal_distance_ /
                             calibration_file.pixel_pitch_;
                         double pix_conversion_x =
                             (double)studies[study_ind].width_ / 2.0f -
@@ -488,7 +486,7 @@ int main() {
                                     studies[study_ind].height_ -
                                     not_normalized.Y_)),
                             5,
-                            cv::Scalar(255, 255, 0)); // CIRCLE SCALE IS 5
+                            cv::Scalar(255, 255, 0));  // CIRCLE SCALE IS 5
                         cv::putText(
                             img_kp,
                             QString::number(kp_idx).toStdString(),
@@ -499,7 +497,7 @@ int main() {
                                     not_normalized.Y_)),
                             0,
                             .5,
-                            cv::Scalar(0, 255, 0)); // FONT SCALE is 0.5
+                            cv::Scalar(0, 255, 0));  // FONT SCALE is 0.5
                         /*Save Normalized Points*/
                         projected_normalized_KP_.push_back(basic_la::XYPoint(
                             not_normalized.X_ /
@@ -556,16 +554,17 @@ int main() {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /*Make Grids for Original Images*/
-    for (int grids_ind = 0;
-         grids_ind <
+    for (int grids_ind = 0; grids_ind <
          ceil((float)info_for_imgs.size() / (float)(GRID_WIDTH * GRID_HEIGHT));
          grids_ind++) {
-        if (RAND_INVERT) INVERT_IMAGE = rand() % 2;
-        Mat grid =
-            255 * INVERT_IMAGE +
-            (1 - 2 * INVERT_IMAGE) * Mat(GRID_HEIGHT * IMAGE_HEIGHT,
-                                         GRID_WIDTH * IMAGE_WIDTH,
-                                         CV_8UC1); // 255 - img if inverting
+        if (RAND_INVERT) {
+            INVERT_IMAGE = rand() % 2;
+        }
+        Mat grid = 255 * INVERT_IMAGE +
+            (1 - 2 * INVERT_IMAGE) *
+                Mat(GRID_HEIGHT * IMAGE_HEIGHT,
+                    GRID_WIDTH * IMAGE_WIDTH,
+                    CV_8UC1);  // 255 - img if inverting
         grid.setTo(cv::Scalar::all(0));
 
         /*Progress*/
@@ -582,10 +581,10 @@ int main() {
              image_ind++) {
             /*Read In and Pad*/
             Mat img = 255 * INVERT_IMAGE +
-                      (1 - 2 * INVERT_IMAGE) *
-                          imread(
-                              info_for_imgs[image_ind].image_path_,
-                              CV_8UC1); // PUT 255 - this to invert
+                (1 - 2 * INVERT_IMAGE) *
+                    imread(
+                        info_for_imgs[image_ind].image_path_,
+                        CV_8UC1);  // PUT 255 - this to invert
             Mat padded;
             // string image_path = info_for_imgs[image_ind].image_path_;
             // int image_path_length =
@@ -690,7 +689,7 @@ int main() {
     Type has "n" > 0 KP then if it ever has > 0 KP , it has exactly "n".*/
     std::vector<int> total_kp_points_by_model;
     std::vector<int>
-        number_of_kp_points_in_model_with_kp_file; // Should be consistent
+        number_of_kp_points_in_model_with_kp_file;  // Should be consistent
     for (int unq_indx_mt = 0;
          unq_indx_mt < unique_mod_types_imginfo_list.size();
          unq_indx_mt++) {
@@ -749,36 +748,35 @@ int main() {
     }
 
     /*Clear Output Logs*/
-    vector<string> info_paths; // Vector of info paths for each unique model
+    vector<string> info_paths;  // Vector of info paths for each unique model
     for (int unique_mod_type = 0;
          unique_mod_type < unique_mod_types_imginfo_list.size();
          unique_mod_type++) {
         std::ofstream ofs;
         string info_path = write_grids_dir + "/info_" +
-                           unique_mod_types_imginfo_list[unique_mod_type] +
-                           ".txt";
+            unique_mod_types_imginfo_list[unique_mod_type] + ".txt";
         ofs.open(info_path, std::ofstream::out | std::ofstream::trunc);
         ofs.close();
         info_paths.push_back(info_path);
     }
 
     /*Clear KP Output Logs*/
-    vector<string> kplabel_paths; // Vector of normalized key point info paths
-                                  // for each unique model with key points
+    vector<string> kplabel_paths;  // Vector of normalized key point info paths
+                                   // for each unique model with key points
     for (int unique_mod_type = 0;
          unique_mod_type < unique_mod_types_imginfo_list.size();
          unique_mod_type++) {
         if (total_kp_points_by_model[unique_mod_type] > 0) {
             std::ofstream ofs;
-            string kp_label_path =
-                write_grids_dir + "/" +
+            string kp_label_path = write_grids_dir + "/" +
                 unique_mod_types_imginfo_list[unique_mod_type] +
                 "_KPlabels.txt";
             ofs.open(kp_label_path, std::ofstream::out | std::ofstream::trunc);
             ofs.close();
             kplabel_paths.push_back(kp_label_path);
-        } else
+        } else {
             kplabel_paths.push_back("");
+        }
     }
 
     /*Keep Track of Min/Max for X and Y*/
@@ -818,8 +816,7 @@ int main() {
                 outfile << "grid_" + study_name + "_" + out.str() + ".tif"
                         << endl;
 
-                for (int num_kp_index = 0;
-                     num_kp_index <
+                for (int num_kp_index = 0; num_kp_index <
                      info_for_imgs[image_ind]
                          .norm_KP_points_list_[mod_index_in_imageinfo]
                          .size();
@@ -835,10 +832,18 @@ int main() {
                             .norm_KP_points_list_[mod_index_in_imageinfo]
                                                  [num_kp_index]
                             .Y_;
-                    if (x_val < min_x) min_x = x_val;
-                    if (x_val > max_x) max_x = x_val;
-                    if (y_val < min_y) min_y = y_val;
-                    if (y_val > max_y) max_y = y_val;
+                    if (x_val < min_x) {
+                        min_x = x_val;
+                    }
+                    if (x_val > max_x) {
+                        max_x = x_val;
+                    }
+                    if (y_val < min_y) {
+                        min_y = y_val;
+                    }
+                    if (y_val > max_y) {
+                        max_y = y_val;
+                    }
                     /*Write*/
                     outfile << x_val << "," << y_val << endl;
                 }
@@ -859,10 +864,9 @@ int main() {
          unique_mod_type < unique_mod_types_imginfo_list.size();
          unique_mod_type++) {
         /*Make Grids for %MODEL TYPE% Silhouette Label Images*/
-        for (int grids_ind = 0;
-             grids_ind < ceil(
-                             (float)info_for_imgs.size() /
-                             (float)(GRID_WIDTH * GRID_HEIGHT));
+        for (int grids_ind = 0; grids_ind <
+             ceil((float)info_for_imgs.size() /
+                  (float)(GRID_WIDTH * GRID_HEIGHT));
              grids_ind++) {
             Mat grid = Mat(
                 GRID_HEIGHT * IMAGE_HEIGHT, GRID_WIDTH * IMAGE_WIDTH, CV_8UC1);
@@ -870,8 +874,8 @@ int main() {
 
             /*Progress*/
             cout << "\rCreating " +
-                        unique_mod_types_imginfo_list[unique_mod_type] +
-                        " silhouette image label grid "
+                    unique_mod_types_imginfo_list[unique_mod_type] +
+                    " silhouette image label grid "
                  << grids_ind + 1 << " of "
                  << ceil(
                         (float)info_for_imgs.size() /
@@ -887,8 +891,7 @@ int main() {
                  * model*/
                 bool image_contains_current_model_type = false;
                 int mod_index_in_imageinfo = -1;
-                for (int contain_indx = 0;
-                     contain_indx <
+                for (int contain_indx = 0; contain_indx <
                      info_for_imgs[image_ind].model_types_.size();
                      contain_indx++) {
                     if (info_for_imgs[image_ind].model_types_[contain_indx] ==
@@ -968,7 +971,7 @@ int main() {
                 grid);
         }
         cout << "\nAll " + unique_mod_types_imginfo_list[unique_mod_type] +
-                    " silhouette image label grids created.\n";
+                " silhouette image label grids created.\n";
     }
 
     /*Finished*/

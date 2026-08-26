@@ -7,17 +7,17 @@
 /*Font Manipulation*/
 #include <qfontmetrics.h>
 
-#include <QScreen>
 #include <QRegularExpression>
+#include <QScreen>
 #include <opencv2/highgui.hpp>
 
 /*Settings Constants*/
 #include "compute/curvature_utilities.h"
-#include "domain/settings_constants.h"
-#include "domain/pose_file_io.h"
-#include "domain/optimize_intent_controller.h"
 #include "domain/model_list_builder.h"
+#include "domain/optimize_intent_controller.h"
 #include "domain/pose_copy.h"
+#include "domain/pose_file_io.h"
+#include "domain/settings_constants.h"
 
 /*Size Constants*/
 #include "view/mainscreen_size_constants.h"
@@ -57,15 +57,16 @@
 /* PyTorch 1.0 CPP Torch Script*/
 #include <c10/cuda/CUDACachingAllocator.h>
 #include <c10/cuda/CUDAMacros.h>
-#include <torch/cuda.h> // For torch::cuda::empty_cache()
+#include <torch/cuda.h>  // For torch::cuda::empty_cache()
 #include <torch/script.h>
 #include <torch/torch.h>
 
 #include "domain/ambiguous_pose_processing.h"
 /*Segmentation controller (plan 004 U8 / R12): per-frame segment/estimate ops*/
-#include "services/segmentation_controller.h"
-#include <iostream> // For std::cerr
+#include <iostream>  // For std::cerr
 #include <utility>   // std::move
+
+#include "services/segmentation_controller.h"
 
 using namespace std;
 
@@ -115,40 +116,38 @@ double MainScreen::CalculateViewingAngle(int width, int height, bool CameraA) {
             height * calibration_file_.camera_A_principal_.pixel_pitch_ / 2.0 +
             abs(calibration_file_.camera_A_principal_.principal_y_);
         return 180.0 / pi * 2.0 *
-               atan2(
-                   y,
-                   calibration_file_.camera_A_principal_.principal_distance_);
+            atan2(y, calibration_file_.camera_A_principal_.principal_distance_);
     }
     double y =
         height * calibration_file_.camera_B_principal_.pixel_pitch_ / 2.0 +
         abs(calibration_file_.camera_B_principal_.principal_y_);
     return 180.0 / pi * 2.0 *
-           atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
+        atan2(y, calibration_file_.camera_B_principal_.principal_distance_);
 }
 
 /*Constructor*/
-MainScreen::MainScreen(QWidget* parent)
-    : QMainWindow(parent),
-      /*Plan 006 U6: the shared session-state controller wraps session_state_
-       * (declared before it in the header). The run-in-flight probe (M7) and
-       * the dataset-clear seed drop (H5/M10b) read the run controller via
-       * captured lambdas — invoked only after construction, so the member
-       * init order is safe. The previous-frame/model mirrors default to
-       * -1/empty inside session_state_ (the old previous_frame_index_ = -1
-       * line is gone).*/
-      session_state_controller_(
-          &session_state_,
-          [this] { return optimizer_run_controller_.running(); },
-          [this] { optimizer_run_controller_.clearSeedPose(); }),
-      /*Plan 006 U7: the shared study-load controller wraps session_controller_
-       * (declared before it in the header) and consults the session-state
-       * controller's M7 run-in-flight probe at each load (L17 — the widgets'
-       * DisableAll already covers the load buttons during a run; the shared
-       * check is defense-in-depth). The lambda is invoked only at load time,
-       * never during construction.*/
-      study_load_controller_(
-          &session_controller_,
-          [this] { return session_state_controller_.runInFlight(); }) {
+MainScreen::MainScreen(QWidget* parent) :
+    QMainWindow(parent),
+    /*Plan 006 U6: the shared session-state controller wraps session_state_
+     * (declared before it in the header). The run-in-flight probe (M7) and
+     * the dataset-clear seed drop (H5/M10b) read the run controller via
+     * captured lambdas — invoked only after construction, so the member
+     * init order is safe. The previous-frame/model mirrors default to
+     * -1/empty inside session_state_ (the old previous_frame_index_ = -1
+     * line is gone).*/
+    session_state_controller_(
+        &session_state_,
+        [this] { return optimizer_run_controller_.running(); },
+        [this] { optimizer_run_controller_.clearSeedPose(); }),
+    /*Plan 006 U7: the shared study-load controller wraps session_controller_
+     * (declared before it in the header) and consults the session-state
+     * controller's M7 run-in-flight probe at each load (L17 — the widgets'
+     * DisableAll already covers the load buttons during a run; the shared
+     * check is defense-in-depth). The lambda is invoked only at load time,
+     * never during construction.*/
+    study_load_controller_(&session_controller_, [this] {
+        return session_state_controller_.runInFlight();
+    }) {
     ui.setupUi(this);
 
     /*View-models (plan 004 U2): the lists are passive QListViews over
@@ -159,9 +158,9 @@ MainScreen::MainScreen(QWidget* parent)
     ui.image_list_widget->setModel(&frame_list_model_);
     ui.model_list_widget->setModel(&model_list_model_);
     /*Explicit connects replace the by-name auto-connect that silently stops
-     * connecting on QListView (no itemSelectionChanged signal). selectionChanged
-     * ONLY — currentChanged is deliberately not connected (MultiSelection
-     * arrow-key behavior).*/
+     * connecting on QListView (no itemSelectionChanged signal).
+     * selectionChanged ONLY — currentChanged is deliberately not connected
+     * (MultiSelection arrow-key behavior).*/
     connect(
         ui.image_list_widget->selectionModel(),
         &QItemSelectionModel::selectionChanged,
@@ -364,7 +363,7 @@ MainScreen::MainScreen(QWidget* parent)
     actor_text->GetTextProperty()->SetColor(
         214.0 / 255.0,
         108.0 / 255.0,
-        35.0 / 255.0); // Earth Red
+        35.0 / 255.0);  // Earth Red
 
     /*Set Up Connections*/
     image_mapper->SetInputData(current_background);
@@ -413,8 +412,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*Adjust for Title Height*/
     this->setStyleSheet(
         this->styleSheet() += "QGroupBox { margin-top: " +
-                              QString::number(font_metrics.height() / 2) +
-                              "px; }");
+            QString::number(font_metrics.height() / 2) + "px; }");
     int group_box_to_top_button_y = font_metrics.height() / 2;
 
     /*Preprocessor Width*/
@@ -464,11 +462,9 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     int optimization_group_box_width =
         font_metrics.horizontalAdvance(ui.optimization_box->title());
     if (optimization_group_box_width < 2 * optimizer_button_width +
-                                           BUTTON_TO_BUTTON_PADDING_X +
-                                           2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
         optimization_group_box_width = 2 * optimizer_button_width +
-                                       BUTTON_TO_BUTTON_PADDING_X +
-                                       2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
     }
 
     /*image View Width*/
@@ -494,11 +490,9 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     int image_view_group_box_width =
         font_metrics.horizontalAdvance(ui.image_view_box->title());
     if (image_view_group_box_width < 2 * image_view_button_width +
-                                         BUTTON_TO_BUTTON_PADDING_X +
-                                         2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
         image_view_group_box_width = 2 * image_view_button_width +
-                                     BUTTON_TO_BUTTON_PADDING_X +
-                                     2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
     }
 
     /*image Selection Width*/
@@ -514,12 +508,10 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     image_selection_button_width += INSIDE_RADIO_BUTTON_PADDING_X;
     int image_selection_group_box_width =
         font_metrics.horizontalAdvance(ui.image_selection_box->title());
-    if (image_selection_group_box_width <
-        2 * image_selection_button_width + BUTTON_TO_BUTTON_PADDING_X +
-            2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
+    if (image_selection_group_box_width < 2 * image_selection_button_width +
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
         image_selection_group_box_width = 2 * image_selection_button_width +
-                                          BUTTON_TO_BUTTON_PADDING_X +
-                                          2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
     }
 
     /*Get Largest Width Across Left Side Column*/
@@ -556,7 +548,8 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     ui.load_model_button->setGeometry(QRect(
         (left_column_width - preprocessor_button_width) / 2,
         GROUP_BOX_TO_BUTTON_PADDING_Y +
-            2 * (text_height + INSIDE_BUTTON_PADDING_Y +
+            2 *
+                (text_height + INSIDE_BUTTON_PADDING_Y +
                  BUTTON_TO_BUTTON_PADDING_Y) +
             group_box_to_top_button_y,
         preprocessor_button_width,
@@ -642,16 +635,15 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*image Selection*/
     /*Check Size of Application, If not big enough for listwidget, resize
      * application*/
-    int image_selection_box_height =
-        2 * GROUP_BOX_TO_BUTTON_PADDING_Y + group_box_to_top_button_y +
-        text_height + INSIDE_RADIO_BUTTON_PADDING_Y +
-        RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE;
+    int image_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y +
+        group_box_to_top_button_y + text_height +
+        INSIDE_RADIO_BUTTON_PADDING_Y + RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y +
+        MINIMUM_LIST_WIDGET_SIZE;
 
     int total_box_height = GROUP_BOX_TO_GROUP_BOX_Y +
-                           ui.image_view_box->geometry().bottomLeft().y() +
-                           APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y +
-                           group_box_to_top_button_y + ui.menuBar->height() +
-                           image_selection_box_height;
+        ui.image_view_box->geometry().bottomLeft().y() +
+        APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + group_box_to_top_button_y +
+        ui.menuBar->height() + image_selection_box_height;
 
     /*(total_box_height < this->height()) ? image_selection_box_height =
        this->height() - (GROUP_BOX_TO_GROUP_BOX_Y +
@@ -696,8 +688,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     int edge_detection_box =
         font_metrics.horizontalAdvance(ui.edge_detection_box->title());
     int x_padding = LABEL_TO_SPIN_BOX_PADDING_X +
-                    INSIDE_RADIO_BUTTON_PADDING_X +
-                    font_metrics.horizontalAdvance("888");
+        INSIDE_RADIO_BUTTON_PADDING_X + font_metrics.horizontalAdvance("888");
     if (edge_detection_box <
         font_metrics.horizontalAdvance(ui.aperture_label->text()) + x_padding) {
         edge_detection_box =
@@ -719,12 +710,12 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
             x_padding + SPIN_BOX_TO_GROUP_BOX_PADDING_X;
     }
     if (edge_detection_box < 2 * right_button_bigger +
-                                 BUTTON_TO_BUTTON_PADDING_X +
-                                 2 * INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X) {
+            BUTTON_TO_BUTTON_PADDING_X +
+            2 * INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X) {
         edge_detection_box = 2 * right_button_bigger +
-                             BUTTON_TO_BUTTON_PADDING_X +
-                             2 * INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X +
-                             2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+            BUTTON_TO_BUTTON_PADDING_X +
+            2 * INSIDE_BUTTON_PADDING_RIGHT_COLUMN_X +
+            2 * GROUP_BOX_TO_BUTTON_PADDING_X;
     }
 
     /*model View Width*/
@@ -752,11 +743,9 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     int model_view_group_box_width =
         font_metrics.horizontalAdvance(ui.model_view_box->title());
     if (model_view_group_box_width < 2 * model_view_button_width +
-                                         BUTTON_TO_BUTTON_PADDING_X +
-                                         2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X) {
         model_view_group_box_width = 2 * model_view_button_width +
-                                     BUTTON_TO_BUTTON_PADDING_X +
-                                     2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+            BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
     }
 
     /*model Selection Width*/
@@ -773,8 +762,7 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     int model_selection_group_box_width =
         font_metrics.horizontalAdvance(ui.model_selection_box->title());
     int model_box_pad = 2 * model_selection_button_width +
-                        BUTTON_TO_BUTTON_PADDING_X +
-                        2 * GROUP_BOX_TO_BUTTON_PADDING_X;
+        BUTTON_TO_BUTTON_PADDING_X + 2 * GROUP_BOX_TO_BUTTON_PADDING_X;
 
     if (model_selection_group_box_width < model_box_pad) {
         model_selection_group_box_width = model_box_pad;
@@ -937,16 +925,14 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*model Selection*/
     /*Check Size of Application, If not big enough for listwidget, resize
      * application*/
-    int model_selection_box_height =
-        2 * GROUP_BOX_TO_BUTTON_PADDING_Y + INSIDE_RADIO_BUTTON_PADDING_Y +
-        RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y + MINIMUM_LIST_WIDGET_SIZE +
-        group_box_to_top_button_y + text_height;
+    int model_selection_box_height = 2 * GROUP_BOX_TO_BUTTON_PADDING_Y +
+        INSIDE_RADIO_BUTTON_PADDING_Y + RADIO_BUTTON_TO_LIST_WIDGET_PADDING_Y +
+        MINIMUM_LIST_WIDGET_SIZE + group_box_to_top_button_y + text_height;
 
     total_box_height = GROUP_BOX_TO_GROUP_BOX_Y +
-                       ui.model_view_box->geometry().bottomLeft().y() +
-                       APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y +
-                       ui.menuBar->height() + model_selection_box_height +
-                       group_box_to_top_button_y;
+        ui.model_view_box->geometry().bottomLeft().y() +
+        APPLICATION_BORDER_TO_GROUP_BOX_PADDING_Y + ui.menuBar->height() +
+        model_selection_box_height + group_box_to_top_button_y;
 
     if (total_box_height < this->height()) {
         model_selection_box_height =
@@ -1001,17 +987,16 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     /*Arrange QVTK Widget*/
     /*Check if there is enough room*/
     int widget_detection_width = ui.edge_detection_box->geometry().left() -
-                                 ui.preprocessor_box->geometry().right() -
-                                 2 * GROUP_BOX_TO_QVTK_PADDING_X;
-    int widget_detection_height =
-        ui.model_selection_box->geometry().bottom() -
+        ui.preprocessor_box->geometry().right() -
+        2 * GROUP_BOX_TO_QVTK_PADDING_X;
+    int widget_detection_height = ui.model_selection_box->geometry().bottom() -
         (ui.preprocessor_box->geometry().top() + font_metrics.height() / 2);
 
     if (widget_detection_width > MINIMUM_QVTK_WIDGET_WIDTH) {
         qvtk_side_length =
             ((widget_detection_width) > (widget_detection_height + 1))
-                ? widget_detection_height + 1 // original height
-                : widget_detection_width;
+            ? widget_detection_height + 1  // original height
+            : widget_detection_width;
 
         ui.qvtk_widget->setGeometry(QRect(
             ui.preprocessor_box->geometry().right() +
@@ -1022,8 +1007,8 @@ void MainScreen::ArrangeMainScreenLayout(QFont application_font) {
     } else {
         qvtk_side_length =
             (MINIMUM_QVTK_WIDGET_WIDTH > widget_detection_height + 1)
-                ? widget_detection_height + 1
-                : MINIMUM_QVTK_WIDGET_WIDTH;
+            ? widget_detection_height + 1
+            : MINIMUM_QVTK_WIDGET_WIDTH;
     }
     ui.qvtk_widget->setGeometry(QRect(
         ui.preprocessor_box->geometry().right() + GROUP_BOX_TO_QVTK_PADDING_X,
@@ -1138,8 +1123,7 @@ void MainScreen::on_actionSave_Pose_triggered() {
         ".",
         tr("JTA Pose File (*.jtap);; Pose File (*.txt)"));
     // Persistence is handled by the pure pose_file_io service (plan U7).
-    jta::pose_file::WritePoseFile(SavePoseExtension.toStdString(),
-                                  saved_pose);
+    jta::pose_file::WritePoseFile(SavePoseExtension.toStdString(), saved_pose);
 }
 
 /*Save Kinematics*/
@@ -1182,13 +1166,14 @@ void MainScreen::on_actionSave_Kinematics_triggered() {
         tr("JTA Kinematics File (*.jtak);; Kinematics File (*.txt)"));
     // Persistence is handled by the pure pose_file_io service (plan U7).
     std::vector<Point6D> all_poses;
-    all_poses.reserve(static_cast<size_t>(ui.image_list_widget->model()->rowCount()));
+    all_poses.reserve(
+        static_cast<size_t>(ui.image_list_widget->model()->rowCount()));
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
-        all_poses.push_back(model_locations_.GetPose(
-            i, session_state_.GetPrimaryModelIndex()));
+        all_poses.push_back(
+            model_locations_.GetPose(i, session_state_.GetPrimaryModelIndex()));
     }
-    jta::pose_file::WriteKinematicsFile(SavePoseExtension.toStdString(),
-                                        all_poses);
+    jta::pose_file::WriteKinematicsFile(
+        SavePoseExtension.toStdString(), all_poses);
 }
 
 /*Load Pose*/
@@ -1226,33 +1211,42 @@ void MainScreen::on_actionLoad_Pose_triggered() {
            "File "
            "(*.txt);;"));
     Point6D loaded_pose;
-    jta::pose_file::LoadResult res =
-        jta::pose_file::ReadPoseFile(LoadPoseExtension.toStdString(),
-                                     loaded_pose);
+    jta::pose_file::LoadResult res = jta::pose_file::ReadPoseFile(
+        LoadPoseExtension.toStdString(), loaded_pose);
     if (!res.ok) {
         // NOT_OPTIMIZED is a valid-but-empty pose ("No Pose Exists!"); any
         // other parse failure is an invalid file. Both surface and return,
         // mirroring the previous inline parsing.
         QMessageBox::critical(
-            this, "Error!",
+            this,
+            "Error!",
             res.not_optimized ? "No Pose Exists!" : "Invalid Pose File!",
             QMessageBox::Ok);
         return;
     }
-    model_locations_.SavePose(ui.image_list_widget->currentIndex().row(),
-                              session_state_.GetPrimaryModelIndex(),
-                              loaded_pose);
-    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
-                                    loaded_pose.x, loaded_pose.y,
-                                    loaded_pose.z);
+    model_locations_.SavePose(
+        ui.image_list_widget->currentIndex().row(),
+        session_state_.GetPrimaryModelIndex(),
+        loaded_pose);
+    vw->set_model_position_at_index(
+        session_state_.GetPrimaryModelIndex(),
+        loaded_pose.x,
+        loaded_pose.y,
+        loaded_pose.z);
     vw->set_model_orientation_at_index(
-        session_state_.GetPrimaryModelIndex(), loaded_pose.xa, loaded_pose.ya,
+        session_state_.GetPrimaryModelIndex(),
+        loaded_pose.xa,
+        loaded_pose.ya,
         loaded_pose.za);
     coronal_vw->set_model_position_at_index(
-        session_state_.GetPrimaryModelIndex(), loaded_pose.x, loaded_pose.y,
+        session_state_.GetPrimaryModelIndex(),
+        loaded_pose.x,
+        loaded_pose.y,
         loaded_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        session_state_.GetPrimaryModelIndex(), loaded_pose.xa, loaded_pose.ya,
+        session_state_.GetPrimaryModelIndex(),
+        loaded_pose.xa,
+        loaded_pose.ya,
         loaded_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
@@ -1300,16 +1294,25 @@ void MainScreen::on_actionCopy_Previous_Pose_triggered() {
     Point6D prev_pose =
         model_locations_.GetPose(plan.read_frame, plan.read_model);
     model_locations_.SavePose(plan.write_frame, plan.write_model, prev_pose);
-    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
-                                    prev_pose.x, prev_pose.y, prev_pose.z);
-    vw->set_model_orientation_at_index(session_state_.GetPrimaryModelIndex(),
-                                       prev_pose.xa, prev_pose.ya,
-                                       prev_pose.za);
+    vw->set_model_position_at_index(
+        session_state_.GetPrimaryModelIndex(),
+        prev_pose.x,
+        prev_pose.y,
+        prev_pose.z);
+    vw->set_model_orientation_at_index(
+        session_state_.GetPrimaryModelIndex(),
+        prev_pose.xa,
+        prev_pose.ya,
+        prev_pose.za);
     coronal_vw->set_model_position_at_index(
-        session_state_.GetPrimaryModelIndex(), prev_pose.x, prev_pose.y,
+        session_state_.GetPrimaryModelIndex(),
+        prev_pose.x,
+        prev_pose.y,
         prev_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        session_state_.GetPrimaryModelIndex(), prev_pose.xa, prev_pose.ya,
+        session_state_.GetPrimaryModelIndex(),
+        prev_pose.xa,
+        prev_pose.ya,
         prev_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
@@ -1392,16 +1395,25 @@ void MainScreen::on_actionCopy_Next_Pose_triggered() {
         model_locations_.GetPose(plan.read_frame, plan.read_model);
     model_locations_.SavePose(plan.write_frame, plan.write_model, next_pose);
 
-    vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
-                                    next_pose.x, next_pose.y, next_pose.z);
-    vw->set_model_orientation_at_index(session_state_.GetPrimaryModelIndex(),
-                                       next_pose.xa, next_pose.ya,
-                                       next_pose.za);
+    vw->set_model_position_at_index(
+        session_state_.GetPrimaryModelIndex(),
+        next_pose.x,
+        next_pose.y,
+        next_pose.z);
+    vw->set_model_orientation_at_index(
+        session_state_.GetPrimaryModelIndex(),
+        next_pose.xa,
+        next_pose.ya,
+        next_pose.za);
     coronal_vw->set_model_position_at_index(
-        session_state_.GetPrimaryModelIndex(), next_pose.x, next_pose.y,
+        session_state_.GetPrimaryModelIndex(),
+        next_pose.x,
+        next_pose.y,
         next_pose.z);
     coronal_vw->set_model_orientation_at_index(
-        session_state_.GetPrimaryModelIndex(), next_pose.xa, next_pose.ya,
+        session_state_.GetPrimaryModelIndex(),
+        next_pose.xa,
+        next_pose.ya,
         next_pose.za);
     ui.qvtk_widget->update();
     ui.qvtk_widget->renderWindow()->Render();
@@ -1447,9 +1459,8 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
            "JointTrack Kinematics File (*.jts);; "
            "Kinematics File (*.txt)"));
     std::vector<std::optional<Point6D>> loaded_poses;
-    jta::pose_file::LoadResult res =
-        jta::pose_file::ReadKinematicsFile(LoadPoseExtension.toStdString(),
-                                           loaded_poses);
+    jta::pose_file::LoadResult res = jta::pose_file::ReadKinematicsFile(
+        LoadPoseExtension.toStdString(), loaded_poses);
     if (!res.ok) {
         QMessageBox::critical(
             this, "Error!", "Invalid Kinematics File!", QMessageBox::Ok);
@@ -1460,30 +1471,40 @@ void MainScreen::on_actionLoad_Kinematics_triggered() {
     // malformed rows are std::nullopt and leave that frame unset, so the
     // remaining frames keep their original alignment (no shifting).
     int frame_count = ui.image_list_widget->model()->rowCount();
-    for (size_t i = 0; i < loaded_poses.size() && static_cast<int>(i) < frame_count;
+    for (size_t i = 0;
+         i < loaded_poses.size() && static_cast<int>(i) < frame_count;
          ++i) {
         if (loaded_poses[i].has_value()) {
-            model_locations_.SavePose(static_cast<int>(i),
-                                      ui.model_list_widget->currentIndex().row(),
-                                      *loaded_poses[i]);
+            model_locations_.SavePose(
+                static_cast<int>(i),
+                ui.model_list_widget->currentIndex().row(),
+                *loaded_poses[i]);
         }
     }
     if (ui.image_list_widget->currentIndex().row() >= 0) {
         Point6D loaded_pose = model_locations_.GetPose(
             ui.image_list_widget->currentIndex().row(),
             session_state_.GetPrimaryModelIndex());
-        vw->set_model_position_at_index(session_state_.GetPrimaryModelIndex(),
-                                        loaded_pose.x, loaded_pose.y,
-                                        loaded_pose.z);
+        vw->set_model_position_at_index(
+            session_state_.GetPrimaryModelIndex(),
+            loaded_pose.x,
+            loaded_pose.y,
+            loaded_pose.z);
         vw->set_model_orientation_at_index(
-            session_state_.GetPrimaryModelIndex(), loaded_pose.xa,
-            loaded_pose.ya, loaded_pose.za);
+            session_state_.GetPrimaryModelIndex(),
+            loaded_pose.xa,
+            loaded_pose.ya,
+            loaded_pose.za);
         coronal_vw->set_model_position_at_index(
-            session_state_.GetPrimaryModelIndex(), loaded_pose.x, loaded_pose.y,
+            session_state_.GetPrimaryModelIndex(),
+            loaded_pose.x,
+            loaded_pose.y,
             loaded_pose.z);
         coronal_vw->set_model_orientation_at_index(
-            session_state_.GetPrimaryModelIndex(), loaded_pose.xa,
-            loaded_pose.ya, loaded_pose.za);
+            session_state_.GetPrimaryModelIndex(),
+            loaded_pose.xa,
+            loaded_pose.ya,
+            loaded_pose.za);
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -1714,7 +1735,7 @@ void MainScreen::segmentHelperFunction(
     unsigned int input_height) {
     torch::jit::Module module(
         torch::jit::load(pt_model_location, torch::kCUDA));
-    torch::jit::Module* model = &module; // would this work as a pointer
+    torch::jit::Module* model = &module;  // would this work as a pointer
 
     if (model == nullptr) {
         QMessageBox::critical(
@@ -1747,11 +1768,7 @@ void MainScreen::segmentHelperFunction(
         [this, model, black_sil_used, input_width, input_height](
             const cv::Mat& original) {
             return segmentation_controller_.SegmentFrame(
-                original,
-                black_sil_used,
-                model,
-                input_width,
-                input_height);
+                original, black_sil_used, model, input_width, input_height);
         };
     QList<int> failed_frames;
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
@@ -1780,15 +1797,14 @@ void MainScreen::segmentHelperFunction(
             /*Per-frame segment (plan 006 U8 / R12): same shared op for the
              * camera-B frame (the biplane branch keeps edge + dilation
              * only — the mono distance/curvature tail is skipped).*/
-            const jta::MlSegmentStatus status_b =
-                ml_orchestrator_.SegmentFrame(
-                    loaded_frames_B[i],
-                    ui.aperture_spin_box->value(),
-                    ui.low_threshold_slider->value(),
-                    ui.high_threshold_slider->value(),
-                    dilation_val,
-                    /*full_postprocessing=*/false,
-                    segment_op);
+            const jta::MlSegmentStatus status_b = ml_orchestrator_.SegmentFrame(
+                loaded_frames_B[i],
+                ui.aperture_spin_box->value(),
+                ui.low_threshold_slider->value(),
+                ui.high_threshold_slider->value(),
+                dilation_val,
+                /*full_postprocessing=*/false,
+                segment_op);
             if (status_b != jta::MlSegmentStatus::Ok) {
                 failed_frames.push_back(i);
                 break;
@@ -1796,8 +1812,9 @@ void MainScreen::segmentHelperFunction(
         }
 
         ui.pose_progress->setValue(
-            20 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
+            20 +
+            30 * static_cast<double>(i + 1) /
+                static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -1952,10 +1969,9 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
     ui.qvtk_cpv->update();
     ui.qvtk_cpv->renderWindow()->Render();
     auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(
-        torch::zeros(
-            {1, 1, input_height, input_width},
-            device(torch::kCUDA).dtype(torch::kByte)));
+    torch::Tensor gpu_byte_placeholder(torch::zeros(
+        {1, 1, input_height, input_width},
+        device(torch::kCUDA).dtype(torch::kByte)));
     /*Per-frame estimate context (plan 004 U8 / R12): the estimator is
      * stateless; the slot builds the context once (GPU model, torch pose
      * model, scratch buffers, calibration) and the loop feeds it one
@@ -2005,8 +2021,9 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
             break;
         }
         ui.pose_progress->setValue(
-            65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
+            65 +
+            30 * static_cast<double>(i + 1) /
+                static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -2035,8 +2052,7 @@ void MainScreen::on_actionEstimate_Femoral_Implant_s_triggered() {
         QMessageBox::critical(
             this,
             "Error!",
-            "Pose estimation failed on frame(s): " + indices.join(", ") +
-                ".",
+            "Pose estimation failed on frame(s): " + indices.join(", ") + ".",
             QMessageBox::Ok);
         return;
     }
@@ -2184,10 +2200,9 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
     ui.qvtk_cpv->update();
     ui.qvtk_cpv->renderWindow()->Render();
     auto orientation = new float[3];
-    torch::Tensor gpu_byte_placeholder(
-        torch::zeros(
-            {1, 1, input_height, input_width},
-            device(torch::kCUDA).dtype(torch::kByte)));
+    torch::Tensor gpu_byte_placeholder(torch::zeros(
+        {1, 1, input_height, input_width},
+        device(torch::kCUDA).dtype(torch::kByte)));
     /*Per-frame estimate context (plan 004 U8 / R12): the estimator is
      * stateless; the slot builds the context once (GPU model, torch pose
      * model, scratch buffers, calibration) and the loop feeds it one
@@ -2237,8 +2252,9 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
             break;
         }
         ui.pose_progress->setValue(
-            65 + 30 * static_cast<double>(i + 1) /
-                     static_cast<double>(ui.image_list_widget->model()->rowCount()));
+            65 +
+            30 * static_cast<double>(i + 1) /
+                static_cast<double>(ui.image_list_widget->model()->rowCount()));
         ui.qvtk_widget->update();
         ui.qvtk_widget->renderWindow()->Render();
         ui.qvtk_cpv->update();
@@ -2267,8 +2283,7 @@ void MainScreen::on_actionEstimate_Tibial_Implant_s_triggered() {
         QMessageBox::critical(
             this,
             "Error!",
-            "Pose estimation failed on frame(s): " + indices.join(", ") +
-                ".",
+            "Pose estimation failed on frame(s): " + indices.join(", ") + ".",
             QMessageBox::Ok);
         return;
     }
@@ -2360,7 +2375,8 @@ void MainScreen::on_load_calibration_button_clicked() {
 
     /*Valid Code for Monoplane -- Error Check (the PixelSizeZero/InvalidCode
      * calibrated-flag writes relocated into the controller).*/
-    if (load_result.parse.error == jta::CalibrationParseResult::Error::PixelSizeZero) {
+    if (load_result.parse.error ==
+        jta::CalibrationParseResult::Error::PixelSizeZero) {
         QMessageBox::critical(
             this,
             "Error!",
@@ -2370,7 +2386,8 @@ void MainScreen::on_load_calibration_button_clicked() {
         return;
     }
     /*Invalid Code*/
-    if (load_result.parse.error == jta::CalibrationParseResult::Error::InvalidCode) {
+    if (load_result.parse.error ==
+        jta::CalibrationParseResult::Error::InvalidCode) {
         QMessageBox::critical(
             this, "Error!", "Invalid Configuration File!", QMessageBox::Ok);
         return;
@@ -2387,11 +2404,13 @@ void MainScreen::on_load_calibration_button_clicked() {
      * (branch-dependent writes preserved verbatim: Monoplane writes both
      * globals, Biplane writes interactor_calibration only, Denver writes
      * neither -- the parse result carries the branch kind).*/
-    if (load_result.parse.kind == jta::CalibrationParseResult::Kind::Monoplane ||
+    if (load_result.parse.kind ==
+            jta::CalibrationParseResult::Kind::Monoplane ||
         load_result.parse.kind == jta::CalibrationParseResult::Kind::Biplane) {
         interactor_calibration = calibration_file_;
     }
-    if (load_result.parse.kind == jta::CalibrationParseResult::Kind::Monoplane) {
+    if (load_result.parse.kind ==
+        jta::CalibrationParseResult::Kind::Monoplane) {
         // interactor_calibration.camera_A_principal_.principal_distance_
         // - should return 1198
         interactor_camera_B = false;
@@ -2404,8 +2423,8 @@ void MainScreen::on_load_calibration_button_clicked() {
     /*Monoplane (Left Viewport)*/
     vw->load_renderers_into_render_window(calibration_file_);
     coronal_vw->load_renderers_into_render_window(calibration_file_);
-    if (calibrated_for_monoplane_viewport_) { // I loaded a single-plane
-                                              // calibration
+    if (calibrated_for_monoplane_viewport_) {  // I loaded a single-plane
+                                               // calibration
         vw->setup_camera_calibration(calibration_file_);
         coronal_vw->setup_camera_calibration(calibration_file_);
         coronal_vw->setup_camera_coronal_plane();
@@ -2532,10 +2551,11 @@ void MainScreen::on_load_image_button_clicked() {
         const jta::StudyImageLoadResult load_result =
             study_load_controller_.LoadImages(
                 TiffFileExtensions,
-                jta::ImageLoadParams{ui.aperture_spin_box->value(),
-                                     ui.low_threshold_slider->value(),
-                                     ui.high_threshold_slider->value(),
-                                     dilation_val},
+                jta::ImageLoadParams{
+                    ui.aperture_spin_box->value(),
+                    ui.low_threshold_slider->value(),
+                    ui.high_threshold_slider->value(),
+                    dilation_val},
                 loaded_frames,
                 model_locations_);
         /*Populate Frame List Widget*/
@@ -2557,8 +2577,7 @@ void MainScreen::on_load_image_button_clicked() {
             loaded_frames.size() > 0) {
             ui.image_list_widget->selectionModel()->setCurrentIndex(
                 ui.image_list_widget->model()->index(0, 0),
-                QItemSelectionModel::SelectCurrent |
-                    QItemSelectionModel::Rows);
+                QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
         }
 
         // this->vw->set_loaded_frames(loaded_frames);
@@ -2590,10 +2609,11 @@ void MainScreen::on_load_image_button_clicked() {
             study_load_controller_.LoadBiplaneImages(
                 TiffFileExtensionsCamera_A,
                 TiffFileExtensionsCamera_B,
-                jta::ImageLoadParams{ui.aperture_spin_box->value(),
-                                     ui.low_threshold_slider->value(),
-                                     ui.high_threshold_slider->value(),
-                                     dilation_val},
+                jta::ImageLoadParams{
+                    ui.aperture_spin_box->value(),
+                    ui.low_threshold_slider->value(),
+                    ui.high_threshold_slider->value(),
+                    dilation_val},
                 loaded_frames,
                 loaded_frames_B,
                 model_locations_);
@@ -2624,8 +2644,7 @@ void MainScreen::on_load_image_button_clicked() {
             loaded_frames.size() > 0) {
             ui.image_list_widget->selectionModel()->setCurrentIndex(
                 ui.image_list_widget->model()->index(0, 0),
-                QItemSelectionModel::SelectCurrent |
-                    QItemSelectionModel::Rows);
+                QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
         }
         vw->set_loaded_frames(loaded_frames);
         vw->set_loaded_frames_b(loaded_frames_B);
@@ -2668,8 +2687,8 @@ void MainScreen::on_load_model_button_clicked() {
 
     vw->load_models(
         load_result.file_paths,
-        load_result.unique_names); // Need to change this logic so it only
-                                   // has the new files
+        load_result.unique_names);  // Need to change this logic so it only
+                                    // has the new files
     coronal_vw->load_models(load_result.file_paths, load_result.unique_names);
     for (int i = 0; i < load_result.file_paths.size(); i++) {
         if (vw->are_models_loaded_incorrectly(i)) {
@@ -2694,8 +2713,7 @@ void MainScreen::on_load_model_button_clicked() {
     if (ui.model_list_widget->selectionModel()->selectedRows().size() == 0) {
         ui.model_list_widget->selectionModel()->setCurrentIndex(
             ui.model_list_widget->model()->index(0, 0),
-            QItemSelectionModel::SelectCurrent |
-                QItemSelectionModel::Rows);
+            QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
     }
     if (calibration_file_.type_ == "UF") {
         /*UB guard (plan 004 U6, Key Technical Decisions): this branch reads
@@ -2775,18 +2793,23 @@ void MainScreen::on_camera_A_radio_button_clicked() {
                     rows.push_back(idx.row());
                 }
                 jta::SaveLastPoseToStorage(
-                    session_state_.GetPreviousFrame(), rows,
+                    session_state_.GetPreviousFrame(),
+                    rows,
                     [this](int row) {
-                        double* position =
-                            model_actor_list[row]->GetPosition();
+                        double* position = model_actor_list[row]->GetPosition();
                         double* orientation =
                             model_actor_list[row]->GetOrientation();
                         return Point6D(
-                            position[0], position[1], position[2],
-                            orientation[0], orientation[1], orientation[2]);
+                            position[0],
+                            position[1],
+                            position[2],
+                            orientation[0],
+                            orientation[1],
+                            orientation[2]);
                     },
                     /*camera_is_a=*/true, /* unused by ConvertBToA */
-                    jta::SavePoseConvertRule::ConvertBToA, calibration_file_,
+                    jta::SavePoseConvertRule::ConvertBToA,
+                    calibration_file_,
                     model_locations_);
             }
         }
@@ -2838,36 +2861,30 @@ void MainScreen::on_camera_A_radio_button_clicked() {
                 /*Text Actor if On*/
                 if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
                     std::string infoText = "Location: <";
-                    infoText += std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[0])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[1])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetPosition()[2])) +
-                                ">\nOrientation: <" +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[0])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[1])) +
-                                "," +
-                                std::to_string(
-                                    static_cast<long double>(
-                                        model_actor_list[selected[r].row()]
-                                            ->GetOrientation()[2])) +
-                                ">";
+                    infoText += std::to_string(static_cast<long double>(
+                                    model_actor_list[selected[r].row()]
+                                        ->GetPosition()[0])) +
+                        "," +
+                        std::to_string(static_cast<long double>(
+                            model_actor_list[selected[r].row()]
+                                ->GetPosition()[1])) +
+                        "," +
+                        std::to_string(static_cast<long double>(
+                            model_actor_list[selected[r].row()]
+                                ->GetPosition()[2])) +
+                        ">\nOrientation: <" +
+                        std::to_string(static_cast<long double>(
+                            model_actor_list[selected[r].row()]
+                                ->GetOrientation()[0])) +
+                        "," +
+                        std::to_string(static_cast<long double>(
+                            model_actor_list[selected[r].row()]
+                                ->GetOrientation()[1])) +
+                        "," +
+                        std::to_string(static_cast<long double>(
+                            model_actor_list[selected[r].row()]
+                                ->GetOrientation()[2])) +
+                        ">";
                     actor_text->SetInput(infoText.c_str());
                 }
             }
@@ -2944,17 +2961,23 @@ void MainScreen::on_camera_B_radio_button_clicked() {
                 rows.push_back(idx.row());
             }
             jta::SaveLastPoseToStorage(
-                session_state_.GetPreviousFrame(), rows,
+                session_state_.GetPreviousFrame(),
+                rows,
                 [this](int row) {
                     double* position = vw->get_model_position_at_index(row);
                     double* orientation =
                         vw->get_model_orientation_at_index(row);
                     return Point6D(
-                        position[0], position[1], position[2],
-                        orientation[0], orientation[1], orientation[2]);
+                        position[0],
+                        position[1],
+                        position[2],
+                        orientation[0],
+                        orientation[1],
+                        orientation[2]);
                 },
                 /*camera_is_a=*/false, /* unused by NeverConvert */
-                jta::SavePoseConvertRule::NeverConvert, calibration_file_,
+                jta::SavePoseConvertRule::NeverConvert,
+                calibration_file_,
                 model_locations_);
         }
         /*Update to that frame's canny values*/
@@ -3176,12 +3199,14 @@ void MainScreen::on_image_list_widget_itemSelectionChanged() {
             true));
     } else {
         actor_image->SetPosition(
-            -.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+            -.5 *
+                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                         .GetOriginalImage()
                         .cols +
                 calibration_file_.camera_B_principal_.principal_x_ /
                     calibration_file_.camera_B_principal_.pixel_pitch_,
-            -.5 * loaded_frames_B[ui.image_list_widget->currentIndex().row()]
+            -.5 *
+                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]
                         .GetOriginalImage()
                         .rows +
                 calibration_file_.camera_B_principal_.principal_y_ /
@@ -3323,7 +3348,7 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
 
     /*Save Last Pair Pose if not currently optimizing*/
     if (!currently_optimizing_) {
-        SaveLastPose(); // Needs Work
+        SaveLastPose();  // Needs Work
     }
     /*Advance the previous-selection mirrors + emit the deferred
      * selectionChanged (plan 006 U6): the controller's CommitSelection
@@ -3360,8 +3385,8 @@ void MainScreen::on_model_list_widget_itemSelectionChanged() {
         // background colors for .stl model names
         ui.model_list_widget->setStyleSheet(
             "QListView::item{background-color: rgb("
-            ");}" // Leaving it blank sets unselected items to share the
-                  // background color of JTML
+            ");}"  // Leaving it blank sets unselected items to share the
+                   // background color of JTML
             "QListView::item:selected{background-color: rgb(250, 70, "
             "22);}");
 
@@ -3547,36 +3572,28 @@ void MainScreen::VTKMakePrincipalSignal(vtkActor* new_principal_actor) {
         /*Text Actor if On */
         if (actor_text->GetTextProperty()->GetOpacity() > 0.5) {
             std::string infoText = "Location: <";
-            infoText += std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[0])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[1])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetPosition()[2])) +
-                        ">\nOrientation: <" +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[0])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[1])) +
-                        "," +
-                        std::to_string(
-                            static_cast<long double>(
-                                model_actor_list[index_new_principal]
-                                    ->GetOrientation()[2])) +
-                        ">";
+            infoText +=
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]->GetPosition()[0])) +
+                "," +
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]->GetPosition()[1])) +
+                "," +
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]->GetPosition()[2])) +
+                ">\nOrientation: <" +
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]
+                        ->GetOrientation()[0])) +
+                "," +
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]
+                        ->GetOrientation()[1])) +
+                "," +
+                std::to_string(static_cast<long double>(
+                    model_actor_list[index_new_principal]
+                        ->GetOrientation()[2])) +
+                ">";
             actor_text->SetInput(infoText.c_str());
             actor_text->GetTextProperty()->SetColor(
                 model_actor_list[index_new_principal]
@@ -3625,11 +3642,11 @@ void MainScreen::on_single_model_radio_button_clicked() {
     /*If Multiple Selections Choose First One Selected*/
     QModelIndexList selected =
         ui.model_list_widget->selectionModel()->selectedRows();
-    if (selected.size() > 0)
+    if (selected.size() > 0) {
         ui.model_list_widget->selectionModel()->setCurrentIndex(
             selected[0],
-            QItemSelectionModel::ClearAndSelect |
-                QItemSelectionModel::Rows);
+            QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    }
 };
 
 void MainScreen::on_multiple_model_radio_button_clicked() {
@@ -3900,7 +3917,8 @@ void MainScreen::on_aperture_spin_box_valueChanged() {
                 calibrated_for_biplane_viewport_) {
                 jta::EdgeProcessor::ApplyToFrame(
                     edge_params,
-                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
+                    loaded_frames_B[ui.image_list_widget->currentIndex()
+                                        .row()]);
             }
         }
 
@@ -3990,7 +4008,8 @@ void MainScreen::on_low_threshold_slider_valueChanged() {
                 calibrated_for_biplane_viewport_) {
                 jta::EdgeProcessor::ApplyToFrame(
                     edge_params,
-                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
+                    loaded_frames_B[ui.image_list_widget->currentIndex()
+                                        .row()]);
             }
         }
         /*   Update image based on selected radio button   */
@@ -4079,7 +4098,8 @@ void MainScreen::on_high_threshold_slider_valueChanged() {
                 calibrated_for_biplane_viewport_) {
                 jta::EdgeProcessor::ApplyToFrame(
                     edge_params,
-                    loaded_frames_B[ui.image_list_widget->currentIndex().row()]);
+                    loaded_frames_B[ui.image_list_widget->currentIndex()
+                                        .row()]);
             }
         }
         /*   Update image based on selected radio button   */
@@ -4259,8 +4279,7 @@ void MainScreen::SaveLastPose() {
         session_state_.GetPreviousModelRows(),
         [this](int row) {
             double* position_curr = vw->get_model_position_at_index(row);
-            double* orientation_curr =
-                vw->get_model_orientation_at_index(row);
+            double* orientation_curr = vw->get_model_orientation_at_index(row);
             return Point6D(
                 position_curr[0],
                 position_curr[1],
@@ -4362,8 +4381,7 @@ void MainScreen::LaunchOptimizer(OptimizerRunController::Directive directive) {
         directive == OptimizerRunController::Directive::All) {
         ui.image_list_widget->selectionModel()->setCurrentIndex(
             ui.image_list_widget->model()->index(0, 0),
-            QItemSelectionModel::SelectCurrent |
-                QItemSelectionModel::Rows);
+            QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
     }
 
     /*The shared drive sequence. Gate rejections + the Initialize-failure
@@ -4376,14 +4394,19 @@ void MainScreen::LaunchOptimizer(OptimizerRunController::Directive directive) {
     actor_text->GetTextProperty()->SetColor(
         214.0 / 255.0,
         108.0 / 255.0,
-        35.0 / 255.0); // Set Orange;
+        35.0 / 255.0);  // Set Orange;
     currently_optimizing_ = true;
     DisableAll();
     display_optimizer_settings_ = optimizer_settings_;
 }
 
 void MainScreen::updateOrientationSymTrap_MS(
-    double x, double y, double z, double xa, double ya, double za) {
+    double x,
+    double y,
+    double z,
+    double xa,
+    double ya,
+    double za) {
     // put the update logic here
     //  look at loading kinematics for help
     //  or copy pose
@@ -4428,7 +4451,7 @@ void MainScreen::onUpdateOptimum(
         CurrentPose = calibration_file_.convert_Pose_A_to_Pose_B(CurrentPose);
     }
     if (primary_model_index <
-        loaded_models.size()) { // TODO: Find a better way to represent this
+        loaded_models.size()) {  // TODO: Find a better way to represent this
         vw->set_model_position_at_index(
             primary_model_index, CurrentPose.x, CurrentPose.y, CurrentPose.z);
         vw->set_model_orientation_at_index(
@@ -4508,10 +4531,9 @@ void MainScreen::onOptimizedFrame(
     if (optimizer_directive == "Backward") {
         if (move_next_frame && current_frame_index > 0) {
             ui.image_list_widget->selectionModel()->setCurrentIndex(
-                ui.image_list_widget->model()->index(current_frame_index - 1,
-                                                     0),
-                QItemSelectionModel::SelectCurrent |
-                    QItemSelectionModel::Rows);
+                ui.image_list_widget->model()->index(
+                    current_frame_index - 1, 0),
+                QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
         } else {
             /*Not Currently Optimzing*/
             currently_optimizing_ = false;
@@ -4533,10 +4555,9 @@ void MainScreen::onOptimizedFrame(
                 ui.image_list_widget->model()->rowCount()) {
             /*Bring Up Next Frame*/
             ui.image_list_widget->selectionModel()->setCurrentIndex(
-                ui.image_list_widget->model()->index(current_frame_index + 1,
-                                                     0),
-                QItemSelectionModel::SelectCurrent |
-                    QItemSelectionModel::Rows);
+                ui.image_list_widget->model()->index(
+                    current_frame_index + 1, 0),
+                QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
         } else {
             /*Not Currently Optimzing*/
             currently_optimizing_ = false;
@@ -4563,18 +4584,15 @@ void MainScreen::onControllerMessage(
     const QString& message,
     OptimizerRunController::Severity severity) {
     switch (severity) {
-        case OptimizerRunController::Severity::Info:
-            QMessageBox::information(
-                this, title, message, QMessageBox::Ok);
-            break;
-        case OptimizerRunController::Severity::Warning:
-            QMessageBox::warning(
-                this, title, message, QMessageBox::Ok);
-            break;
-        case OptimizerRunController::Severity::Critical:
-            QMessageBox::critical(
-                this, title, message, QMessageBox::Ok);
-            break;
+    case OptimizerRunController::Severity::Info:
+        QMessageBox::information(this, title, message, QMessageBox::Ok);
+        break;
+    case OptimizerRunController::Severity::Warning:
+        QMessageBox::warning(this, title, message, QMessageBox::Ok);
+        break;
+    case OptimizerRunController::Severity::Critical:
+        QMessageBox::critical(this, title, message, QMessageBox::Ok);
+        break;
     }
 }
 
@@ -4604,8 +4622,7 @@ void MainScreen::onUpdateDisplay(
     if (current_iteration < display_optimizer_settings_.trunk_budget) {
         level << "Trunk";
     } else if (
-        current_iteration <
-        display_optimizer_settings_.trunk_budget +
+        current_iteration < display_optimizer_settings_.trunk_budget +
             display_optimizer_settings_.enable_branch_ *
                 display_optimizer_settings_.number_branches *
                 display_optimizer_settings_.branch_budget) {
@@ -4615,8 +4632,7 @@ void MainScreen::onUpdateDisplay(
                 display_optimizer_settings_.branch_budget);
         level << "Branch " << divresultLevel.quot + 1;
     } else if (
-        current_iteration <
-        display_optimizer_settings_.trunk_budget +
+        current_iteration < display_optimizer_settings_.trunk_budget +
             display_optimizer_settings_.enable_branch_ *
                 display_optimizer_settings_.number_branches *
                 display_optimizer_settings_.branch_budget +
@@ -4641,8 +4657,7 @@ void MainScreen::onUpdateDisplay(
         CurrentPose = calibration_file_.convert_Pose_B_to_Pose_A(CurrentPose);
     }
 
-    infoText +=
-        std::to_string(static_cast<long double>(CurrentPose.x)) + "," +
+    infoText += std::to_string(static_cast<long double>(CurrentPose.x)) + "," +
         std::to_string(static_cast<long double>(CurrentPose.y)) + "," +
         std::to_string(static_cast<long double>(CurrentPose.z)) +
         ">\nOptimum Orientation: <" +
@@ -4701,18 +4716,18 @@ void MainScreen::LoadSettingsBetweenSessions() {
             if (key_codes.size() == 2 && key_codes[1] == "ACTIVE_CF") {
                 if (key_codes[0] == "TRUNK") {
                     trunk_manager_.setActiveCostFunction(
-                        cost_function_settings_keys[i].value
-                            .toString()
+                        cost_function_settings_keys[i]
+                            .value.toString()
                             .toStdString());
                 } else if (key_codes[0] == "BRANCH") {
                     branch_manager_.setActiveCostFunction(
-                        cost_function_settings_keys[i].value
-                            .toString()
+                        cost_function_settings_keys[i]
+                            .value.toString()
                             .toStdString());
                 } else if (key_codes[0] == "LEAF") {
                     leaf_manager_.setActiveCostFunction(
-                        cost_function_settings_keys[i].value
-                            .toString()
+                        cost_function_settings_keys[i]
+                            .value.toString()
                             .toStdString());
                 } else {
                     QMessageBox::critical(
@@ -4728,22 +4743,20 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toDouble());
+                                cost_function_settings_keys[i]
+                                    .value.toDouble());
                     } else if (key_codes[3] == "INT") {
                         trunk_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toInt());
+                                cost_function_settings_keys[i].value.toInt());
                     } else if (key_codes[3] == "BOOL") {
                         trunk_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toBool());
+                                cost_function_settings_keys[i].value.toBool());
                     } else {
                         QMessageBox::critical(
                             this,
@@ -4757,22 +4770,20 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toDouble());
+                                cost_function_settings_keys[i]
+                                    .value.toDouble());
                     } else if (key_codes[3] == "INT") {
                         branch_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toInt());
+                                cost_function_settings_keys[i].value.toInt());
                     } else if (key_codes[3] == "BOOL") {
                         branch_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toBool());
+                                cost_function_settings_keys[i].value.toBool());
                     } else {
                         QMessageBox::critical(
                             this,
@@ -4786,22 +4797,20 @@ void MainScreen::LoadSettingsBetweenSessions() {
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setDoubleParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toDouble());
+                                cost_function_settings_keys[i]
+                                    .value.toDouble());
                     } else if (key_codes[3] == "INT") {
                         leaf_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setIntParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toInt());
+                                cost_function_settings_keys[i].value.toInt());
                     } else if (key_codes[3] == "BOOL") {
                         leaf_manager_
                             .getCostFunctionClass(key_codes[1].toStdString())
                             ->setBoolParameterValue(
                                 key_codes[2].toStdString(),
-                                cost_function_settings_keys[i].value
-                                    .toBool());
+                                cost_function_settings_keys[i].value.toBool());
                     } else {
                         QMessageBox::critical(
                             this,
@@ -4935,9 +4944,8 @@ void MainScreen::onSaveSettings(
     leaf_manager_ = leaf_manager;
 
     /*Save to Registry*/
-    settings_service_.SaveCostFunctionSettings(
-        BuildCostFunctionRegistryEntries(
-            trunk_manager_, branch_manager_, leaf_manager_));
+    settings_service_.SaveCostFunctionSettings(BuildCostFunctionRegistryEntries(
+        trunk_manager_, branch_manager_, leaf_manager_));
     settings_service_.SaveOptimizerSettings(optimizer_settings_);
 
     /*Update Dilation Frames*/
@@ -4950,8 +4958,7 @@ void MainScreen::onSaveSettings(
  * U1 — jta::BuildCostFunctionRegistryEntries in jtml_services, which the QML
  * SettingsBridge calls too); this view method is now a thin wrapper keeping
  * the widgets call sites unchanged.*/
-std::vector<jta::RegistryEntry>
-MainScreen::BuildCostFunctionRegistryEntries(
+std::vector<jta::RegistryEntry> MainScreen::BuildCostFunctionRegistryEntries(
     jta_cost_function::CostFunctionManager& trunk_manager,
     jta_cost_function::CostFunctionManager& branch_manager,
     jta_cost_function::CostFunctionManager& leaf_manager) const {
@@ -5017,13 +5024,11 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
 
     // App-state selection via the service (plan U7): two selected models
     // (tibial = primary/first, femoral = second)
-    std::vector<int> selected_models =
-        session_state_.GetSelectedModels();
+    std::vector<int> selected_models = session_state_.GetSelectedModels();
 
     for (int i = 0; i < ui.image_list_widget->model()->rowCount(); i++) {
         Point6D fem_pose = model_locations_.GetPose(i, selected_models[1]);
-        Point6D tib_pose_orig =
-            model_locations_.GetPose(i, selected_models[0]);
+        Point6D tib_pose_orig = model_locations_.GetPose(i, selected_models[0]);
 
         Point6D tib_pose_final = tibial_pose_selector(fem_pose, tib_pose_orig);
         model_locations_.SavePose(i, selected_models[0], tib_pose_final);
@@ -5031,8 +5036,8 @@ void MainScreen::on_actionAmbiguous_Pose_Processing_triggered() {
     // Need to update the location of the frame that is currently on screen
     int selected_img_idx =
         ui.image_list_widget->selectionModel()->selectedRows()[0].row();
-    Point6D current_img_pos = model_locations_.GetPose(
-        selected_img_idx, selected_models[0]);
+    Point6D current_img_pos =
+        model_locations_.GetPose(selected_img_idx, selected_models[0]);
     model_actor_list[selected_models[0]]->SetPosition(
         current_img_pos.x, current_img_pos.y, current_img_pos.z);
     model_actor_list[selected_models[0]]->SetOrientation(

@@ -10,7 +10,9 @@
 using namespace std;
 
 Model::Model(
-    std::string file_location, std::string model_name, std::string model_type) {
+    std::string file_location,
+    std::string model_name,
+    std::string model_type) {
     /*Set Public File Location string*/
     file_location_ = file_location;
     model_name_ = model_name;

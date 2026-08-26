@@ -59,14 +59,14 @@ public:
     // throw std::invalid_argument. No variant semantics ship here; the
     // divergence branches land with the algorithm plan (R9).
     struct Options {
-        enum class SelectionMode { Original }; // today's Jarvis gift-wrap hull
-        enum class SizeMeasure { L2 };         // sqrt-norm column size
+        enum class SelectionMode { Original };  // today's Jarvis gift-wrap hull
+        enum class SizeMeasure { L2 };          // sqrt-norm column size
         enum class SplitRule {
             OneSide
-        }; // largest-denormalized one-side trisection
+        };  // largest-denormalized one-side trisection
         enum class TieSelection {
             All
-        }; // slope >= highest_slope keeps every tie
+        };  // slope >= highest_slope keeps every tie
 
         // User-provided (empty) so `Options()` is valid as the ctor's default
         // argument below: a defaulted ctor would need this nested class's
@@ -76,13 +76,13 @@ public:
         Options() {}
 
         SelectionMode selection = SelectionMode::Original;
-        double epsilon = 0.0; // 0.0 disables the post-filter entirely
+        double epsilon = 0.0;  // 0.0 disables the post-filter entirely
         bool delta_limit = false;
         SizeMeasure size_measure = SizeMeasure::L2;
         SplitRule split_rule = SplitRule::OneSide;
         TieSelection ties = TieSelection::All;
-        bool hidden_constraints = false; // GLh surrogate, off
-        bool globally_biased = false;    // gb phase switch, off
+        bool hidden_constraints = false;  // GLh surrogate, off
+        bool globally_biased = false;     // gb phase switch, off
     };
 
     explicit DirectOptimizer(

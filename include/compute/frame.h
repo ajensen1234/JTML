@@ -73,8 +73,8 @@ public:
     void setCurvatureHeatmaps();
     std::vector<uchar> getCurvatureHeatmaps();
 
-    std::vector<uchar>
-    flattenVector(const std::vector<std::vector<uchar>>& vecOfVecs);
+    std::vector<uchar> flattenVector(
+        const std::vector<std::vector<uchar>>& vecOfVecs);
     int GetNumCurvatureKeypoints();
 
 private:

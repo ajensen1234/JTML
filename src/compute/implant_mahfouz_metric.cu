@@ -12,8 +12,8 @@
 #include "cuda_launch_parameters.h"
 
 /*Kernels*/
-__global__ void
-ImplantMahfouzMetric_ResetPixelScoreKernel(int* dev_pixel_score) {
+__global__ void ImplantMahfouzMetric_ResetPixelScoreKernel(
+    int* dev_pixel_score) {
     dev_pixel_score[0] = 0;
 }
 
@@ -57,8 +57,9 @@ __global__ void ImplantMahfouzMetric_DilateKernelInverseMahfouzScale(
                     distance_L2 = sqrt(static_cast<float>(k) * k + j * j);
                     unsigned char scaled_dilation_value =
                         (DILATED_PIXEL - distance_L2 * inverse_reduction);
-                    if (pixel == WHITE_PIXEL || pixel < scaled_dilation_value)
+                    if (pixel == WHITE_PIXEL || pixel < scaled_dilation_value) {
                         dev_image[location] = scaled_dilation_value;
+                    }
                 }
             }
         }
@@ -89,9 +90,10 @@ __global__ void ImplantMahfouzMetric_EdgeMahfouzNumeratorKernel(
     if (i < width * height) {
         pixel = dev_image[i];
         if (pixel > BLACK_PIXEL && pixel < WHITE_PIXEL) {
-            if (dev_comparison_image[i] != BLACK_PIXEL)
+            if (dev_comparison_image[i] != BLACK_PIXEL) {
                 atomicAdd(&result[0], 2.55 * pixel); /*Input Image is just Sobel
                                                         edge detected image*/
+            }
         }
     }
 }
@@ -238,8 +240,9 @@ __global__ void ImplantMahfouzMetric_EdgeKernel(
                  sharedSilhouette[bottom - 1] == BLACK_PIXEL ||
                  sharedSilhouette[bottom + 1] == BLACK_PIXEL ||
                  sharedSilhouette[top - 1] == BLACK_PIXEL ||
-                 sharedSilhouette[top + 1] == BLACK_PIXEL))
+                 sharedSilhouette[top + 1] == BLACK_PIXEL)) {
                 dev_image[projectionId] = EDGE_PIXEL;
+            }
         }
     }
 }
@@ -321,11 +324,12 @@ double GPUMetrics::ImplantMahfouzMetric(
      * Projected)/(Sum of Pixel Projected) )*/
     cudaMemcpy(
         pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
-    if (pixel_score_ != 0)
+    if (pixel_score_ != 0) {
         intensity_score =
             intensity_score / static_cast<double>(pixel_score_[0]);
-    else
+    } else {
         intensity_score = 0;
+    }
 
     /*Contour Section*/
     /*Reset the Pixel Score*/
@@ -443,10 +447,11 @@ double GPUMetrics::ImplantMahfouzMetric(
      * Projected)/(Sum of Pixel Projected) )*/
     cudaMemcpy(
         pixel_score_, dev_pixel_score_, sizeof(int), cudaMemcpyDeviceToHost);
-    if (pixel_score_ != 0)
+    if (pixel_score_ != 0) {
         contour_score = contour_score / static_cast<double>(pixel_score_[0]);
-    else
+    } else {
         contour_score = 0;
+    }
     return contour_score * (-2.67) + intensity_score * (-1);
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function

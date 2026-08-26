@@ -9,7 +9,7 @@
 #pragma once
 #include <qabstractitemmodel.h>
 #include <vtkActor.h>
-#include <vtkAutoInit.h> // Added post migration to Banks' lab computer
+#include <vtkAutoInit.h>  // Added post migration to Banks' lab computer
 #include <vtkCamera.h>
 #include <vtkDataSetMapper.h>
 #include <vtkImageActor.h>
@@ -62,7 +62,9 @@ public:
     void setup_camera_calibration(Calibration cal);
     void setup_camera_coronal_plane();
     void place_image_actors_according_to_calibration(
-        Calibration calibration, int img_w, int img_h);
+        Calibration calibration,
+        int img_w,
+        int img_h);
     void load_3d_models_into_actor_and_mapper_list();
     void load_model_actors_and_mappers_with_3d_data();
     std::vector<vtkSmartPointer<vtkPolyDataMapper>> get_model_mapper_list();
@@ -79,7 +81,10 @@ public:
     double* get_model_position_at_index(int index);
     double* get_model_orientation_at_index(int index);
     void set_model_orientation_at_index(
-        int index, double xrot, double yrot, double zrot);
+        int index,
+        double xrot,
+        double yrot,
+        double zrot);
     std::string print_location_and_orientation_of_model_at_index(int index);
     void set_actor_text(std::string desired_text);
     void set_actor_text_color_to_model_color_at_index(int index);
@@ -95,13 +100,17 @@ public:
 
     // Changing Background Functions
     void update_display_background_to_edge_image(
-        int frame_number, bool CameraASelected);
+        int frame_number,
+        bool CameraASelected);
     void update_display_background_to_dilation_image(
-        int frame_number, bool CameraASelected);
+        int frame_number,
+        bool CameraASelected);
     void update_display_background_to_original_image(
-        int frame_number, bool CameraASelected);
+        int frame_number,
+        bool CameraASelected);
     void update_display_background_to_inverted_image(
-        int frame_number, bool CameraASelected);
+        int frame_number,
+        bool CameraASelected);
 
     // Render Window Setup
     void load_renderers_into_render_window(Calibration cal);
@@ -121,15 +130,24 @@ public:
     vtkSmartPointer<vtkRenderWindowInteractor> get_interactor();
 
     void calculate_and_set_window_center_from_calibration(
-        const int w, const int h, const float cx, const float cy);
-    void
-    calculate_and_set_viewing_angle_from_calibration(const int h, const int fy);
+        const int w,
+        const int h,
+        const float cx,
+        const float cy);
+    void calculate_and_set_viewing_angle_from_calibration(
+        const int h,
+        const int fy);
     void calculate_and_set_camera_aspect_from_calibration(
-        const float fx, const float fy);
+        const float fx,
+        const float fy);
     void set_vtk_camera_from_calibration_and_image_size_if_jta(
-        Calibration cal, int w, int h);
+        Calibration cal,
+        int w,
+        int h);
     void set_vtk_camera_from_calibration_and_image_if_camera_matrix(
-        Calibration cal, int w, int h);
+        Calibration cal,
+        int w,
+        int h);
 
     void print_scene_camera_directions();
 

@@ -23,7 +23,8 @@ DRRTool::DRRTool(
     CameraCalibration calibration,
     double model_z_plane,
     QWidget* parent,
-    Qt::WindowFlags flags) : QDialog(parent, flags) {
+    Qt::WindowFlags flags) :
+    QDialog(parent, flags) {
     ui.setupUi(this);
 
     /*Set up VTK*/
@@ -158,8 +159,9 @@ void DRRTool::DrawDRR() {
 
 /*Threshold Changes*/
 void DRRTool::on_minLowerSpinBox_valueChanged() {
-    if (ui.minLowerSpinBox->value() >= ui.minUpperSpinBox->value())
+    if (ui.minLowerSpinBox->value() >= ui.minUpperSpinBox->value()) {
         ui.minUpperSpinBox->setValue(ui.minLowerSpinBox->value());
+    }
     ui.minValue->setText(QString::number(
         ((ui.minUpperSpinBox->value() - ui.minLowerSpinBox->value()) *
              (static_cast<double>(ui.minSlider->value()) / 1000.0) +
@@ -172,10 +174,12 @@ void DRRTool::on_minLowerSpinBox_valueChanged() {
 };
 
 void DRRTool::on_maxLowerSpinBox_valueChanged() {
-    if (ui.maxLowerSpinBox->value() >= ui.maxUpperSpinBox->value())
+    if (ui.maxLowerSpinBox->value() >= ui.maxUpperSpinBox->value()) {
         ui.maxUpperSpinBox->setValue(ui.maxLowerSpinBox->value());
-    if (ui.minUpperSpinBox->value() >= ui.maxLowerSpinBox->value())
+    }
+    if (ui.minUpperSpinBox->value() >= ui.maxLowerSpinBox->value()) {
         ui.minUpperSpinBox->setValue(ui.maxLowerSpinBox->value());
+    }
     ui.minValue->setText(QString::number(
         ((ui.minUpperSpinBox->value() - ui.minLowerSpinBox->value()) *
              (static_cast<double>(ui.minSlider->value()) / 1000.0) +
@@ -188,10 +192,12 @@ void DRRTool::on_maxLowerSpinBox_valueChanged() {
 };
 
 void DRRTool::on_minUpperSpinBox_valueChanged() {
-    if (ui.minLowerSpinBox->value() >= ui.minUpperSpinBox->value())
+    if (ui.minLowerSpinBox->value() >= ui.minUpperSpinBox->value()) {
         ui.minLowerSpinBox->setValue(ui.minUpperSpinBox->value());
-    if (ui.minUpperSpinBox->value() >= ui.maxLowerSpinBox->value())
+    }
+    if (ui.minUpperSpinBox->value() >= ui.maxLowerSpinBox->value()) {
         ui.maxLowerSpinBox->setValue(ui.minUpperSpinBox->value());
+    }
 
     ui.minValue->setText(QString::number(
         ((ui.minUpperSpinBox->value() - ui.minLowerSpinBox->value()) *
@@ -205,8 +211,9 @@ void DRRTool::on_minUpperSpinBox_valueChanged() {
 };
 
 void DRRTool::on_maxUpperSpinBox_valueChanged() {
-    if (ui.maxLowerSpinBox->value() >= ui.maxUpperSpinBox->value())
+    if (ui.maxLowerSpinBox->value() >= ui.maxUpperSpinBox->value()) {
         ui.maxLowerSpinBox->setValue(ui.maxUpperSpinBox->value());
+    }
     ui.minValue->setText(QString::number(
         ((ui.minUpperSpinBox->value() - ui.minLowerSpinBox->value()) *
              (static_cast<double>(ui.minSlider->value()) / 1000.0) +

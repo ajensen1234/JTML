@@ -75,11 +75,17 @@ void Release(MetricBuffers& metrics) {
 // Mirror CostCapacityService helpers: zero-byte allocations succeed with
 // null pointers (documented 0-keypoint/0-work guard).
 bool HostAlloc(void** ptr, std::size_t bytes) {
-    if (bytes == 0) { *ptr = nullptr; return true; }
+    if (bytes == 0) {
+        *ptr = nullptr;
+        return true;
+    }
     return cudaHostAlloc(ptr, bytes, cudaHostAllocDefault) == cudaSuccess;
 }
 bool DeviceAlloc(void** ptr, std::size_t bytes) {
-    if (bytes == 0) { *ptr = nullptr; return true; }
+    if (bytes == 0) {
+        *ptr = nullptr;
+        return true;
+    }
     return cudaMalloc(ptr, bytes) == cudaSuccess;
 }
 
@@ -91,31 +97,37 @@ bool AllocateRender(RenderBuffers& render, const BankFootprintInput& in) {
     if (!DeviceAlloc(&render.output, pixels * sizeof(std::uint8_t)) ||
         !HostAlloc(&render.host_bounding_box, 4 * sizeof(std::int32_t)) ||
         !DeviceAlloc(&render.dev_backface, triangles * sizeof(std::uint8_t)) ||
-        !DeviceAlloc(&render.dev_transformed_vertex_zs,
-                     3 * triangles * sizeof(float)) ||
-        !DeviceAlloc(&render.dev_tangent_triangle,
-                     3 * triangles * sizeof(std::uint8_t)) ||
-        !DeviceAlloc(&render.dev_projected_triangles,
-                     6 * triangles * sizeof(float)) ||
-        !DeviceAlloc(&render.dev_projected_triangles_snapped,
-                     6 * triangles * sizeof(std::int32_t)) ||
-        !DeviceAlloc(&render.dev_bounding_box_triangles,
-                     4 * triangles * sizeof(std::int32_t)) ||
-        !DeviceAlloc(&render.dev_bounding_box_triangles_sizes,
-                     triangles * sizeof(std::int32_t)) ||
-        !DeviceAlloc(&render.dev_bounding_box_triangles_sizes_prefix,
-                     triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(
+            &render.dev_transformed_vertex_zs, 3 * triangles * sizeof(float)) ||
+        !DeviceAlloc(
+            &render.dev_tangent_triangle,
+            3 * triangles * sizeof(std::uint8_t)) ||
+        !DeviceAlloc(
+            &render.dev_projected_triangles, 6 * triangles * sizeof(float)) ||
+        !DeviceAlloc(
+            &render.dev_projected_triangles_snapped,
+            6 * triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(
+            &render.dev_bounding_box_triangles,
+            4 * triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(
+            &render.dev_bounding_box_triangles_sizes,
+            triangles * sizeof(std::int32_t)) ||
+        !DeviceAlloc(
+            &render.dev_bounding_box_triangles_sizes_prefix,
+            triangles * sizeof(std::int32_t)) ||
         !DeviceAlloc(&render.dev_bounding_box, 4 * sizeof(std::int32_t)) ||
         !DeviceAlloc(&render.dev_fragment_fill, sizeof(std::int32_t)) ||
         !HostAlloc(&render.host_fragment_fill, sizeof(std::int32_t)) ||
-        !DeviceAlloc(&render.dev_stride_prefixes,
-                     stride * sizeof(std::int32_t)) ||
+        !DeviceAlloc(
+            &render.dev_stride_prefixes, stride * sizeof(std::int32_t)) ||
         !DeviceAlloc(&render.dev_metric_crop, sizeof(MetricCropParams))) {
         return false;
     }
     std::size_t cub_bytes = in.cub_storage_bytes;
     if (cub_bytes == 0) {
-        // Conservative reserve: legacy engine may report zero from in-place probe.
+        // Conservative reserve: legacy engine may report zero from in-place
+        // probe.
         cub_bytes = std::max<std::size_t>(64, triangles * 64);
     }
     render.cub_storage_bytes = cub_bytes;
@@ -126,21 +138,19 @@ bool AllocateRender(RenderBuffers& render, const BankFootprintInput& in) {
 bool AllocateMetrics(MetricBuffers& metrics, const BankFootprintInput& in) {
     const std::size_t curvature = in.curvature_capacity;
     return HostAlloc(&metrics.host_pixel_score, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_pixel_score, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_intersection, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_union, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_intersection, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_union, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_white_count, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_white_count, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_distance_score, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_distance_score, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_edge_count, sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_edge_count, sizeof(std::int32_t)) &&
-           HostAlloc(&metrics.host_curvature,
-                     curvature * sizeof(std::int32_t)) &&
-           DeviceAlloc(&metrics.dev_curvature,
-                       curvature * sizeof(std::int32_t));
+        DeviceAlloc(&metrics.dev_pixel_score, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_intersection, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_union, sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_intersection, sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_union, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_white_count, sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_white_count, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_distance_score, sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_distance_score, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_edge_count, sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_edge_count, sizeof(std::int32_t)) &&
+        HostAlloc(&metrics.host_curvature, curvature * sizeof(std::int32_t)) &&
+        DeviceAlloc(&metrics.dev_curvature, curvature * sizeof(std::int32_t));
 }
 
 }  // anonymous namespace
@@ -319,12 +329,16 @@ std::size_t EvaluationContextPool::size() const {
 }
 
 EvaluationContext* EvaluationContextPool::context(std::size_t idx) {
-    if (idx >= contexts_.size()) return nullptr;
+    if (idx >= contexts_.size()) {
+        return nullptr;
+    }
     return &contexts_[idx];
 }
 
 const EvaluationContext* EvaluationContextPool::context(std::size_t idx) const {
-    if (idx >= contexts_.size()) return nullptr;
+    if (idx >= contexts_.size()) {
+        return nullptr;
+    }
     return &contexts_[idx];
 }
 
@@ -342,7 +356,9 @@ int EvaluationContextPool::Checkout() {
 }
 
 bool EvaluationContextPool::Recycle(std::size_t idx, bool completion_ready) {
-    if (idx >= checked_out_.size() || !checked_out_[idx] || !completion_ready) return false;
+    if (idx >= checked_out_.size() || !checked_out_[idx] || !completion_ready) {
+        return false;
+    }
     checked_out_[idx] = false;
     contexts_[idx].in_flight = false;
     contexts_[idx].status = EvaluationStatus::Idle;
@@ -351,7 +367,9 @@ bool EvaluationContextPool::Recycle(std::size_t idx, bool completion_ready) {
 }
 
 bool EvaluationContextPool::IsInFlight(std::size_t idx) const {
-    if (idx >= checked_out_.size()) return false;
+    if (idx >= checked_out_.size()) {
+        return false;
+    }
     return checked_out_[idx];
 }
 
@@ -371,8 +389,12 @@ void EvaluationContextPool::InitForTest(std::size_t count) {
 }
 
 bool EvaluationContextPool::ForceRelease(std::size_t idx) {
-    if (idx >= checked_out_.size() || !checked_out_[idx]) return false;
-    if (idx < poisoned_.size() && poisoned_[idx]) return false;
+    if (idx >= checked_out_.size() || !checked_out_[idx]) {
+        return false;
+    }
+    if (idx < poisoned_.size() && poisoned_[idx]) {
+        return false;
+    }
     checked_out_[idx] = false;
     contexts_[idx].in_flight = false;
     contexts_[idx].status = EvaluationStatus::Idle;
@@ -381,7 +403,9 @@ bool EvaluationContextPool::ForceRelease(std::size_t idx) {
 }
 
 bool EvaluationContextPool::LeavePoisoned(std::size_t idx) {
-    if (idx >= checked_out_.size() || !checked_out_[idx]) return false;
+    if (idx >= checked_out_.size() || !checked_out_[idx]) {
+        return false;
+    }
     if (idx >= poisoned_.size()) {
         poisoned_.resize(checked_out_.size(), false);
     }
@@ -391,7 +415,9 @@ bool EvaluationContextPool::LeavePoisoned(std::size_t idx) {
 }
 
 bool EvaluationContextPool::IsPoisoned(std::size_t idx) const {
-    if (idx >= poisoned_.size()) return false;
+    if (idx >= poisoned_.size()) {
+        return false;
+    }
     return poisoned_[idx];
 }
 

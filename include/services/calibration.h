@@ -7,7 +7,7 @@
 #define CALIBRATION_H
 
 /*Includes*/
-#include "compute/camera_calibration.h" //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
+#include "compute/camera_calibration.h"  //*Camera Calibration For Renderer (principal distance, principal x/y, pix pitch)
 // 003 review: explicit compute/ prefix documents the services->compute header
 // reach; moving camera_calibration.h to domain/ is the deferred decouple that
 // would let jtml_services drop its PUBLIC include/compute export.
@@ -89,7 +89,8 @@ struct Matrix_3_3 {
 struct Calibration {
     /* Constructors for Monoplane and Biplane*/
     Calibration(
-        CameraCalibration monoplane_principal, std::string type = "UF") {
+        CameraCalibration monoplane_principal,
+        std::string type = "UF") {
         biplane_calibration = false;
         camera_A_principal_ = monoplane_principal;
         type_ = type;
@@ -237,8 +238,9 @@ struct Calibration {
                 theta_x_B * (180.0 / PI),
                 theta_y_B * (180.0 / PI),
                 theta_z_B * (180.0 / PI));
-        } else
-            return poseA; // Just return the same.
+        } else {
+            return poseA;  // Just return the same.
+        }
     };
 
     /*Camera B Pose to Camera A Pose*/
@@ -323,8 +325,9 @@ struct Calibration {
                 theta_x_B * (180.0 / PI),
                 theta_y_B * (180.0 / PI),
                 theta_z_B * (180.0 / PI));
-        } else
-            return poseA; // Just return the same.
+        } else {
+            return poseA;  // Just return the same.
+        }
     };
 };
 #endif /* CALIBRATION_H */

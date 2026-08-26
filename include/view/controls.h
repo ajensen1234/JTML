@@ -33,4 +33,4 @@ private:
     QGraphicsPixmapItem* center_item;
 };
 
-#endif // CONTROLS_H
+#endif  // CONTROLS_H

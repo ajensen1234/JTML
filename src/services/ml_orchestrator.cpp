@@ -51,8 +51,11 @@ MlSegmentStatus MlOrchestrator::SegmentFrame(
      * biplane branch keeps edge + dilation only
      * (full_postprocessing=false).*/
     segmented.copyTo(frame.GetInvertedImage());
-    frame.SetEdgeImage(aperture, low_threshold, high_threshold,
-                       /*use_reverse=*/true);
+    frame.SetEdgeImage(
+        aperture,
+        low_threshold,
+        high_threshold,
+        /*use_reverse=*/true);
     frame.SetDilatedImage(dilation);
     if (full_postprocessing) {
         frame.SetDistanceMap();

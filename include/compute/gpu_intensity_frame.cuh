@@ -2,8 +2,8 @@
 #define GPU_INTENSITY_FRAME_H
 
 /*GPU Frame Class*/
-#include "domain/preprocessor-defs.h"
 #include "compute/gpu_frame.cuh"
+#include "domain/preprocessor-defs.h"
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -40,6 +40,6 @@ private:
      * Darker?)*/
     bool dark_silhouette_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_INTENSITY_FRAME_H */

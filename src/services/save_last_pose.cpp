@@ -42,8 +42,7 @@ int SaveLastPoseToStorage(
         /*Pinned convert rule (H4): each call site's coordinate-frame rule.
          * ConvertBToA always converts (identity for monoplane); the widgets
          * canonical row converts iff camera B is the active camera.*/
-        const bool convert =
-            convert_rule == SavePoseConvertRule::ConvertBToA ||
+        const bool convert = convert_rule == SavePoseConvertRule::ConvertBToA ||
             (convert_rule == SavePoseConvertRule::ConvertWhenCameraB &&
              !camera_is_a);
         if (convert) {
@@ -56,4 +55,4 @@ int SaveLastPoseToStorage(
     return written;
 }
 
-} // namespace jta
+}  // namespace jta

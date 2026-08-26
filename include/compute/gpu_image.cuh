@@ -2,9 +2,10 @@
 #define GPU_IMAGE_H
 
 /*Standard Library*/
-#include "domain/preprocessor-defs.h"
 #include <iostream>
 #include <string>
+
+#include "domain/preprocessor-defs.h"
 
 /*GPU Cost Function Library Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
@@ -80,6 +81,6 @@ private:
     Default: (0, 0, width - 1, height - 1)*/
     int* bounding_box_;
 };
-} // namespace gpu_cost_function
+}  // namespace gpu_cost_function
 
 #endif /* GPU_IMAGE_H */

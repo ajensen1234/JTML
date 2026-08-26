@@ -7,9 +7,12 @@
 #define COSTFUNCTIONMANAGER_H
 
 /*Class for Storing Cost Function Info*/
-#include "CostFunction.h"
 #include <cstdint>
-namespace gpu_cost_function { struct GraphRecipeCaptureInputs; }
+
+#include "CostFunction.h"
+namespace gpu_cost_function {
+struct GraphRecipeCaptureInputs;
+}
 #include "domain/preprocessor-defs.h"
 
 /*Cost Function Tools Library*/
@@ -24,7 +27,9 @@ namespace gpu_cost_function { struct GraphRecipeCaptureInputs; }
 #include "compute/render_engine.cuh"
 
 // U6 forward declare — CUDA-free, avoids pulling cuda_runtime into this header
-namespace gpu_cost_function { struct EvaluationContext; }
+namespace gpu_cost_function {
+struct EvaluationContext;
+}
 /*Stage Enum*/
 #include "Stage.h"
 #include "compute/gpu_heatmaps.cuh"
@@ -62,9 +67,13 @@ public:
         std::string parameter_name,
         double value);
     JTML_DLL bool updateCostFunctionParameterValues(
-        std::string cost_function_name, std::string parameter_name, int value);
+        std::string cost_function_name,
+        std::string parameter_name,
+        int value);
     JTML_DLL bool updateCostFunctionParameterValues(
-        std::string cost_function_name, std::string parameter_name, bool value);
+        std::string cost_function_name,
+        std::string parameter_name,
+        bool value);
 
     /*Call Initialization for Active Cost Function*/
     JTML_DLL bool InitializeActiveCostFunction(std::string& error_message);
@@ -80,13 +89,15 @@ public:
     JTML_DLL bool TrySetActiveBank(gpu_cost_function::BankState* bank);
     JTML_DLL double EvaluateDirectDilationOnBank(
         gpu_cost_function::BankState& bank);
-    JTML_DLL cudaError_t EnqueueDirectDilationOnBank(
-        gpu_cost_function::BankState& bank);
+    JTML_DLL cudaError_t
+    EnqueueDirectDilationOnBank(gpu_cost_function::BankState& bank);
     JTML_DLL double CompleteDirectDilationOnBank(
         gpu_cost_function::BankState& bank);
 
-    // U6: explicit EvaluationContext overloads — primary design. Legacy BankState remains shim.
-    JTML_DLL bool TrySetActiveEvaluationContext(gpu_cost_function::EvaluationContext* ctx);
+    // U6: explicit EvaluationContext overloads — primary design. Legacy
+    // BankState remains shim.
+    JTML_DLL bool TrySetActiveEvaluationContext(
+        gpu_cost_function::EvaluationContext* ctx);
     JTML_DLL double EvaluateDirectDilationOnEvaluationContext(
         gpu_cost_function::EvaluationContext& ctx);
     JTML_DLL cudaError_t EnqueueDirectDilationOnEvaluationContext(
@@ -111,12 +122,15 @@ public:
     JTML_DLL unsigned int getCurrentFrameIndex() const;
     JTML_DLL void BumpUploadEpoch();
     JTML_DLL std::uint64_t getUploadEpoch() const;
-    JTML_DLL bool GetGraphRecipeCaptureInputs(gpu_cost_function::GraphRecipeCaptureInputs& out) const;
+    JTML_DLL bool GetGraphRecipeCaptureInputs(
+        gpu_cost_function::GraphRecipeCaptureInputs& out) const;
 
     /*Stage accessor — plan 008 U2 second documented wizard-region exception:
     minimal getStage() makes the stage-guard pin observable (stage_ is dead
     constructor state today; cfm_index is the future source of truth).*/
-    Stage getStage() { return stage_; }
+    Stage getStage() {
+        return stage_;
+    }
 
     /*Upload Data (Images,Poses etc.)*/
     JTML_DLL void UploadData(
@@ -202,7 +216,8 @@ private:
     float* prin_dist_;
     /*Current Frame Index (0 based)*/
     unsigned int current_frame_index_ = 0;
-    /* Plan 012 U2: upload epoch bumped when dilated/distance/comparison data are rewritten in place (C7) */
+    /* Plan 012 U2: upload epoch bumped when dilated/distance/comparison data
+     * are rewritten in place (C7) */
     std::uint64_t upload_epoch_ = 0;
 
     /*Pose Matrix*/
@@ -278,6 +293,6 @@ private:
      * *************************/
     /******************************************************************************/
 };
-} // namespace jta_cost_function
+}  // namespace jta_cost_function
 
-#endif // COSTFUNCTIONMANAGER_H
+#endif  // COSTFUNCTIONMANAGER_H
