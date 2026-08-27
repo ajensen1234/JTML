@@ -13,7 +13,7 @@ pub enum Direction {
     ZA_DIR = 5,
 }
 
-const DIRECTIONS: [Direction; 6] = [
+pub const DIRECTIONS: [Direction; 6] = [
     Direction::X_DIR,
     Direction::Y_DIR,
     Direction::Z_DIR,
@@ -32,7 +32,7 @@ pub struct Pose {
     pub za: f64,
 }
 impl Pose {
-    pub fn shift(&mut self, dir: Direction, amount: f64) {
+    pub fn shift(&mut self, dir: &Direction, amount: f64) {
         match dir {
             Direction::X_DIR => self.x += amount,
             Direction::Y_DIR => self.y += amount,
@@ -42,7 +42,7 @@ impl Pose {
             Direction::ZA_DIR => self.za += amount,
         }
     }
-    pub fn to_array(&self) -> [f64; 6] {
+    pub fn to_array(self) -> [f64; 6] {
         return [self.x, self.y, self.z, self.xa, self.ya, self.za];
     }
 }
@@ -64,7 +64,36 @@ pub struct UnscoredHyperbox {
     pub depths: [u32; 6],
 }
 
+#[derive(Clone, Copy)]
+pub struct MinBoxSize {
+    pub values: [Option<f64>; 6],
+}
+
+impl Default for MinBoxSize {
+    fn default() -> Self {
+        Self {
+            values: [
+                Some(0.05),
+                Some(0.05),
+                Some(0.05),
+                Some(0.05),
+                Some(0.05),
+                Some(0.05),
+            ],
+        }
+    }
+}
+
 impl Hyperbox {
+    pub fn longest_axis(&self) -> usize {
+        self.depths
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, depth)| **depth)
+            .map(|(axis, _)| axis)
+            .expect("array is fixed-size and non-empty")
+    }
+
     pub fn size(&self) -> f64 {
         return self
             .depths
@@ -73,39 +102,31 @@ impl Hyperbox {
             .sum::<f64>()
             .sqrt();
     }
-    pub fn trisect(mut self) -> (Hyperbox, [UnscoredHyperbox; 2]) {
-        let (min_idx, _) = self
-            .depths
-            .iter()
-            .enumerate()
-            .min_by_key(|&(_, v)| *v)
-            .expect("array is fixed-size and non-empty");
+    // TODO: how to force usize to be the right size at runtime?
+    pub fn trisect(mut self, axis: usize) -> (Hyperbox, [UnscoredHyperbox; 2]) {
+        if let Some(x) = self.depths.get_mut(axis) {
+            *x += 1;
+        }
 
-        self.depths[min_idx] += 1;
+        let shift = 3f64.powi(-(self.depths[axis] as i32));
 
         let mut posc = self.center;
         let mut negc = self.center;
-        posc.shift(
-            DIRECTIONS[min_idx],
-            3f64.powf(-(self.depths[min_idx] as f64)),
-        );
 
-        negc.shift(
-            DIRECTIONS[min_idx],
-            -3f64.powf(-(self.depths[min_idx] as f64)),
-        );
+        posc.shift(&DIRECTIONS[axis], shift);
+        negc.shift(&DIRECTIONS[axis], -shift);
 
-        let pos_shift: UnscoredHyperbox = UnscoredHyperbox {
+        let pos_shift = UnscoredHyperbox {
             center: posc,
-            depths: self.depths.clone(),
+            depths: self.depths,
         };
 
-        let neg_shift: UnscoredHyperbox = UnscoredHyperbox {
+        let neg_shift = UnscoredHyperbox {
             center: negc,
-            depths: self.depths.clone(),
+            depths: self.depths,
         };
 
-        return (self, [pos_shift, neg_shift]);
+        (self, [pos_shift, neg_shift])
     }
 }
 
@@ -159,10 +180,15 @@ mod tests {
     }
 
     #[test]
-    fn trisect_picks_the_min_depth_axis_and_shrinks() {
+    fn longest_axis_picks_the_min_depth_axis_and_trisect_shrinks() {
         let parent = box_at(splat(0.5), [2, 0, 1, 3, 1, 4]);
         let parent_size = parent.size();
-        let (center, [pos, neg]) = parent.trisect();
+
+        let axis = parent.longest_axis();
+        assert_eq!(axis, 1);
+
+        let (center, [pos, neg]) = parent.trisect(axis);
+
         let changed: Vec<usize> = center
             .depths
             .iter()
@@ -171,7 +197,8 @@ mod tests {
             .filter(|(_, (now, was))| *now != was)
             .map(|(i, _)| i)
             .collect();
-        assert_eq!(changed, vec![1], "must deepen the unique min-depth axis");
+
+        assert_eq!(changed, vec![1]);
         assert_eq!(center.depths[1], 1);
         assert_eq!(pos.depths, center.depths);
         assert_eq!(neg.depths, center.depths);
@@ -183,7 +210,8 @@ mod tests {
     #[test]
     fn trisect_children_sit_on_the_center_lattice() {
         let parent = box_at(splat(0.5), [0; 6]);
-        let (center, [pos, neg]) = parent.trisect();
+        let axis = parent.longest_axis();
+        let (center, [pos, neg]) = parent.trisect(axis);
         for (p, depths) in [
             (center.center, center.depths),
             (pos.center, pos.depths),
@@ -202,7 +230,8 @@ mod tests {
     fn repeated_min_depth_split_keeps_depths_within_one() {
         let mut hb = box_at(splat(0.5), [0; 6]);
         for _ in 0..18 {
-            let (next, _) = hb.trisect();
+            let axis = hb.longest_axis();
+            let (next, _) = hb.trisect(axis);
             hb = next;
             let min = hb.depths.iter().copied().min().unwrap_or(0);
             let max = hb.depths.iter().copied().max().unwrap_or(0);

@@ -1,6 +1,6 @@
 version: 7
 platforms:
-- name: p1
+- name: linux-64-cuda-13-3
   subdir: linux-64
   virtual-packages:
   - __cuda=13.3
@@ -13,7 +13,7 @@ environments:
     channels:
     - url: https://prefix.dev/conda-forge/
     packages:
-      p1:
+      linux-64-cuda-13-3:
       - conda: https://prefix.dev/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://prefix.dev/conda-forge/linux-64/alsa-lib-1.2.16.1-h7cc23a3_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/aom-3.14.1-pl5321h57e6904_2.conda
@@ -407,7 +407,7 @@ environments:
     channels:
     - url: https://prefix.dev/conda-forge/
     packages:
-      p1:
+      linux-64-cuda-13-3:
       - conda: https://prefix.dev/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://prefix.dev/conda-forge/linux-64/alsa-lib-1.2.16.1-h7cc23a3_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/aom-3.14.1-pl5321h57e6904_2.conda
@@ -800,7 +800,7 @@ environments:
     channels:
     - url: https://prefix.dev/conda-forge/
     packages:
-      p1:
+      linux-64-cuda-13-3:
       - conda: https://prefix.dev/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://prefix.dev/conda-forge/linux-64/alsa-lib-1.2.16.1-h7cc23a3_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/aom-3.14.1-pl5321h57e6904_2.conda
@@ -1197,7 +1197,7 @@ environments:
     channels:
     - url: https://prefix.dev/conda-forge/
     packages:
-      p1:
+      linux-64-cuda-13-3:
       - conda: https://prefix.dev/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
       - conda: https://prefix.dev/conda-forge/linux-64/alsa-lib-1.2.16.1-h7cc23a3_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/aom-3.14.1-pl5321h57e6904_2.conda

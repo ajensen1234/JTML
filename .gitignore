@@ -82,3 +82,5 @@ cut0_measurement.scratch.md
 
 
 rust/target/*
+
+rust/direct-rs/plots/

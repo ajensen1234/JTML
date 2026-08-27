@@ -15,13 +15,12 @@
 // out of MainScreen, so a future edit can't silently change what is displayed
 // for duplicate-name loads (R15 / R9).
 
-#include <set>
-#include <string>
-#include <vector>
-
 #include <hegel/hegel.h>
 
 #include <catch2/catch_test_macros.hpp>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "domain/model_list_builder.h"
 
@@ -32,33 +31,39 @@ namespace {
 // Draws a list of model names from a small vocabulary so collisions are likely.
 auto NameVector() {
     auto name_gen = gs::sampled_from<std::string>({
-        "A", "B", "C", "femur", "tibia",
+        "A",
+        "B",
+        "C",
+        "femur",
+        "tibia",
     });
     return gs::vectors(name_gen, {.min_size = 0, .max_size = 6});
 }
 
 }  // namespace
 
-TEST_CASE("ModelListBuilder[PBT]: length preserved per input",
-          "[model_list_builder][pbt]") {
+TEST_CASE(
+    "ModelListBuilder[PBT]: length preserved per input",
+    "[model_list_builder][pbt]") {
     hegel::test([&](hegel::TestCase& tc) {
         auto new_names = tc.draw(NameVector());
         auto existing = tc.draw(NameVector());
 
-        auto out = jta::ModelListBuilder::UniquifyModelNames(new_names,
-                                                              existing);
+        auto out =
+            jta::ModelListBuilder::UniquifyModelNames(new_names, existing);
         REQUIRE(out.size() == new_names.size());  // one name per new file
     });
 }
 
-TEST_CASE("ModelListBuilder[PBT]: no output name collides with existing",
-          "[model_list_builder][pbt]") {
+TEST_CASE(
+    "ModelListBuilder[PBT]: no output name collides with existing",
+    "[model_list_builder][pbt]") {
     hegel::test([&](hegel::TestCase& tc) {
         auto new_names = tc.draw(NameVector());
         auto existing = tc.draw(NameVector());
 
-        auto out = jta::ModelListBuilder::UniquifyModelNames(new_names,
-                                                              existing);
+        auto out =
+            jta::ModelListBuilder::UniquifyModelNames(new_names, existing);
         std::set<std::string> existing_set(existing.begin(), existing.end());
         for (const auto& n : out) {
             REQUIRE(existing_set.count(n) == 0);
@@ -66,16 +71,17 @@ TEST_CASE("ModelListBuilder[PBT]: no output name collides with existing",
     });
 }
 
-TEST_CASE("ModelListBuilder[PBT]: deterministic given the same input",
-          "[model_list_builder][pbt]") {
+TEST_CASE(
+    "ModelListBuilder[PBT]: deterministic given the same input",
+    "[model_list_builder][pbt]") {
     hegel::test([&](hegel::TestCase& tc) {
         auto new_names = tc.draw(NameVector());
         auto existing = tc.draw(NameVector());
 
-        auto out1 = jta::ModelListBuilder::UniquifyModelNames(new_names,
-                                                               existing);
-        auto out2 = jta::ModelListBuilder::UniquifyModelNames(new_names,
-                                                               existing);
+        auto out1 =
+            jta::ModelListBuilder::UniquifyModelNames(new_names, existing);
+        auto out2 =
+            jta::ModelListBuilder::UniquifyModelNames(new_names, existing);
         REQUIRE(out1 == out2);
     });
 }

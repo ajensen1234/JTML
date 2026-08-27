@@ -54,7 +54,6 @@ pub mod ffi {
 
         #[Self=Point6D]
         pub fn new_point(x: f64, y: f64, z: f64, xa: f64, ya: f64, za: f64) -> UniquePtr<Point6D>;
-
     }
 }
 
@@ -69,7 +68,7 @@ impl Cost for CppCost {
             flat_poses.push(pose.ya);
             flat_poses.push(pose.za);
         }
-        self.evaluate_batch(flat_poses)
+        return self.evaluate_batch(flat_poses);
     }
 }
 

@@ -19,7 +19,9 @@
 /*Kernels*/
 __global__ void FastImplantDilationMetric_ResetPixelScoreKernel(
     int* dev_pixel_score) {
-    dev_pixel_score[0] = 0;
+    if ((blockDim.x * blockIdx.x) + threadIdx.x == 0) {
+        dev_pixel_score[0] = 0;
+    }
 }
 
 __global__ void FastImplantDilationMetric_EdgeKernel(

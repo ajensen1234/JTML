@@ -1,11 +1,12 @@
 use crate::cost::Cost;
-use crate::direct_data_storage::Pose;
-use crate::direct_data_storage::{DirectTree, Hyperbox, UnscoredHyperbox};
+use crate::direct_data_storage::{DirectTree, Hyperbox, MinBoxSize, UnscoredHyperbox};
+use crate::direct_data_storage::{Pose, DIRECTIONS};
 use crate::ffi::{CppCost, RunOutcome};
 use ordered_float::OrderedFloat;
 use std::collections::BTreeMap;
 use std::iter::zip;
 use std::time::{self, Duration};
+
 pub struct DirectOptimizer {
     pub boxes: DirectTree,
     current_best: (Pose, f64),
@@ -16,9 +17,12 @@ pub struct DirectOptimizer {
     calls: u32,
     next_box_id: u64,
     poh_selection_strategy: POHSettings,
+    min_box_size: MinBoxSize,
 }
 
+#[derive(Default)]
 pub enum POHSettings {
+    #[default]
     ConvexHull = 0,
     Pareto = 1,
 }
@@ -27,12 +31,6 @@ pub enum POHSettings {
 pub struct POHPoint {
     pub size: f64,
     pub cost: f64,
-}
-
-impl Default for POHSettings {
-    fn default() -> Self {
-        Self::ConvexHull
-    }
 }
 
 impl DirectOptimizer {
@@ -55,6 +53,7 @@ impl DirectOptimizer {
             calls: 0,
             next_box_id: 0,
             poh_selection_strategy: poh_strat,
+            min_box_size: MinBoxSize::default(),
         }
     }
 
@@ -78,7 +77,10 @@ impl DirectOptimizer {
 
         let unit = Self::unit_center();
         let physical = self.denormalize(unit);
-        let seed_cost = cost.eval(&[physical])[0];
+        let seed_cost = *cost
+            .eval(&[physical])
+            .first()
+            .expect("Cost must be returned");
         self.calls += 1;
         let seed = Hyperbox {
             cost_at_center: seed_cost,
@@ -120,6 +122,7 @@ impl DirectOptimizer {
             "{:?} iterations/second for {:?} iterations",
             it_per_sec, self.calls
         );
+        self.print_resolution_summary();
 
         if (self.current_best.1.is_finite()) && (!self.current_best.1.is_nan()) {
             return self.best();
@@ -140,6 +143,49 @@ impl DirectOptimizer {
 
     pub fn best(&self) -> (Pose, f64) {
         self.current_best
+    }
+
+    fn physical_width(&self, hb: &Hyperbox, axis: usize) -> f64 {
+        let ranges = self.range.to_array();
+
+        2.0 * ranges[axis].abs() * 3f64.powi(-(hb.depths[axis] as i32))
+    }
+    fn print_resolution_summary(&self) {
+        let names = ["X", "Y", "Z", "XA", "YA", "ZA"];
+
+        println!("--- DIRECT resolution summary ---");
+
+        for axis in 0..6 {
+            let Some(min_size) = self.min_box_size.values[axis] else {
+                continue;
+            };
+
+            let smallest = self
+                .boxes
+                .values()
+                .flat_map(|row| row.values())
+                .map(|hb| self.physical_width(hb, axis))
+                .fold(f64::INFINITY, f64::min);
+
+            println!(
+                "{:>2}: smallest={:.6}, target={:.6}, ratio={:.2}x",
+                names[axis],
+                smallest,
+                min_size,
+                smallest / min_size,
+            );
+        }
+    }
+    fn split_axis(&self, hb: &Hyperbox) -> Option<usize> {
+        hb.depths
+            .iter()
+            .enumerate()
+            .filter(|(axis, _)| {
+                self.min_box_size.values[*axis]
+                    .is_none_or(|min_size| self.physical_width(hb, *axis) > min_size)
+            })
+            .min_by_key(|(_, depth)| **depth)
+            .map(|(axis, _)| axis)
     }
 
     /// Map a unit-space pose (each axis in [0,1]) to physical space.
@@ -168,16 +214,46 @@ impl DirectOptimizer {
     fn trisect_and_return_unscored(&mut self, boxes: &[POHPoint]) -> Vec<UnscoredHyperbox> {
         let mut unscored: Vec<UnscoredHyperbox> = Vec::new();
         for poh in boxes {
-            let Some(parent) = self
-                .boxes
-                .get_mut(&OrderedFloat(poh.size))
-                .and_then(|row| row.pop_first())
-                .map(|(_key, hb)| hb)
-            else {
+            let size_key = OrderedFloat(poh.size);
+
+            let parent_key = self.boxes.get(&size_key).and_then(|row| {
+                row.iter()
+                    .find(|(_, hb)| self.split_axis(hb).is_some())
+                    .map(|(key, _)| *key)
+            });
+
+            let Some(parent_key) = parent_key else {
                 continue;
             };
 
-            let (center, shifted) = parent.trisect();
+            let parent = self
+                .boxes
+                .get_mut(&size_key)
+                .and_then(|row| row.remove(&parent_key))
+                .expect("selected refinable box must still exist");
+            let axis = self
+                .split_axis(&parent)
+                .expect("selected parent must be refinable");
+
+            let (center, shifted) = {
+                let mut this = parent;
+                this.depths[axis] += 1;
+                let shift = 3f64.powi(-(this.depths[axis] as i32));
+                let mut posc = this.center;
+                let mut negc = this.center;
+                posc.shift(&DIRECTIONS[axis], shift);
+                negc.shift(&DIRECTIONS[axis], -shift);
+                let pos_shift = UnscoredHyperbox {
+                    center: posc,
+                    depths: this.depths,
+                };
+                let neg_shift = UnscoredHyperbox {
+                    center: negc,
+                    depths: this.depths,
+                };
+                (this, [pos_shift, neg_shift])
+            };
+
             let id = self.next_id();
             self.boxes
                 .entry(OrderedFloat(center.size()))
@@ -218,15 +294,17 @@ impl DirectOptimizer {
     }
 
     fn get_potentially_optimal_candidates(&self) -> Vec<POHPoint> {
-        let mut candidates: Vec<POHPoint> = Vec::new();
-        for (size_key, cost_val) in self.boxes.iter() {
-            if let Some((key, _box)) = cost_val.first_key_value() {
+        let mut candidates = Vec::new();
+
+        for (size_key, row) in &self.boxes {
+            if let Some((key, _box)) = row.iter().find(|(_, hb)| self.split_axis(hb).is_some()) {
                 candidates.push(POHPoint {
-                    size: (*size_key).into_inner(),
-                    cost: (key.0).into_inner(),
+                    size: size_key.into_inner(),
+                    cost: key.0.into_inner(),
                 });
-            };
+            }
         }
+
         return candidates;
     }
 
@@ -236,8 +314,8 @@ impl DirectOptimizer {
         settings: &POHSettings,
     ) -> Vec<POHPoint> {
         let poh = match settings {
-            POHSettings::ConvexHull => DirectOptimizer::convex_hull(&candidates),
-            POHSettings::Pareto => DirectOptimizer::pareto_front(&candidates),
+            POHSettings::ConvexHull => DirectOptimizer::convex_hull(candidates),
+            POHSettings::Pareto => DirectOptimizer::pareto_front(candidates),
         };
         return poh;
     }
