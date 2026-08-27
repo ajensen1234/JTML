@@ -828,12 +828,34 @@ __global__ void FillTriangleKernel(
     float* dev_projected_triangles,
     int* dev_stride_prefixes) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ int stridedIndex;
+
+    if (threadIdx.x == 0) {
+        int j = blockIdx.x * blockDim.x;
+
+        int low = 0;
+        int high = triangle_count;
+
+        while (low != high) {
+            int mid = (low + high) / 2;
+
+            if (dev_bounding_box_triangles_sizes_prefix[mid] <= j) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+
+        stridedIndex = high - 1;
+    }
+
+    __syncthreads();
 
     if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
             dev_bounding_box_triangles_sizes[triangle_count - 1]) {
         /*Index of Triangle for the given stride (stride is of size 256 and the
          * stride group is blockIdx.x)*/
-        int stridedIndex = dev_stride_prefixes[blockIdx.x];
+        // int stridedIndex = dev_stride_prefixes[blockIdx.x];
 
         /*Load [stridedIndex, stridedIndex + 255] at most (256) elements to
          * another shared memory (could hit upper bound)*/
@@ -1199,16 +1221,16 @@ cudaError_t RenderEngine::Render() {
      * threads_per_block^2 (the stride-prefix structure). Left UNTOUCHED per the
      * plan's per-kernel policy (capacity is a no-op here -- the formula is
      * structure-specific, not a minimal-covering reshape candidate).*/
-    StridePrefixKernel<<<
-        ceil(
-            static_cast<double>(fragment_fill_[0]) /
-            static_cast<double>(threads_per_block * threads_per_block)),
-        threads_per_block>>>(
-        threads_per_block,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        dev_stride_prefixes_,
-        triangle_count_);
+    // StridePrefixKernel<<<
+    //     ceil(
+    //         static_cast<double>(fragment_fill_[0]) /
+    //         static_cast<double>(threads_per_block * threads_per_block)),
+    //     threads_per_block>>>(
+    //     threads_per_block,
+    //     dev_bounding_box_triangles_sizes_,
+    //     dev_bounding_box_triangles_sizes_prefix_,
+    //     dev_stride_prefixes_,
+    //     triangle_count_);
 
     FillTriangleKernel<<<fill_grid, threads_per_block>>>(
         dev_bounding_box_triangles_sizes_,
