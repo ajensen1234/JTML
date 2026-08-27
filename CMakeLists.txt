@@ -77,7 +77,7 @@ find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL Quick Qml REQUIRED)
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-
+include(FetchContent)
 # JTA_LIBS is defined ONCE below (before add_subdirectory) as the single handle
 # to the merged compute SHARED lib; do not define it twice here (a one-sided
 # edit of a second occurrence would silently diverge every consumer's links).

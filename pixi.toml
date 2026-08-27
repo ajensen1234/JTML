@@ -4,14 +4,14 @@ version = "0.1.0"
 description = "Joint Track Machine Learning Project"
 authors = ["Your Name <your.email@example.com>"]
 channels = ["https://prefix.dev/conda-forge"]
-platforms = [{ platform = "linux-64", cuda = "12.9" }]
+platforms = [{ platform = "linux-64", cuda = "13.3" }]
 
 [dependencies]
 # Core dependencies
 opencv = ">=5.0.0,<6"
 pytorch-gpu = ">=2.13.0,<3"
-cuda-version = ">=12.9,<13"
-cuda = ">=12.9.2,<13"
+cuda-version = ">=13.0,<13.4"
+cuda = ">=13.3.1,<14"
 eigen = ">=5.0.1,<6"
 ninja = ">=1.13.2,<2"
 nvtx = ">=0.2.16,<0.3"
@@ -33,29 +33,25 @@ glew = ">=2.3.0,<3"
 libegl-devel = ">=1.7.0,<2"
 libgles-devel = ">=1.7.0,<2"
 libopengl-devel = ">=1.7.0,<2"
-clang-tools = "19.*"
+clang-tools = "21.*"
 catch2 = ">=3.16.0,<4"
 qt6-main = ">=6.10.2,<7"
 qt6-wayland = ">=6.10.2,<7"
-cuda-toolkit = ">=12.9.2,<13"
+cuda-toolkit = ">=13.3.1,<14"
 bibtexparser = ">=1.4.4,<2"
-clang = ">=19.1.7,<20"
-clangxx = ">=19.1.7,<20"
-cuda-nvtx-dev = ">=12.9.79,<13"
-cuda-nvtx = ">=12.9.79,<13"
+clang = "21.*"
+clangxx = "21.*"
+cuda-nvtx-dev = ">=13.3.29,<14"
+cuda-nvtx = ">=13.3.29,<14"
 pyyaml = ">=6.0.3,<7"
 rust = ">=1.98.0,<1.99"
+llvm = "21.*"
 
 [feature.build.dependencies]
 cmake = ">=4.2.3,<5"
 ninja = ">=1.13.2,<2"
 #gcc = "*"
-cxx-compiler = ">=1.11.0,<2"
 pkg-config = ">=0.29.2,<0.30"
-cuda = ">=12.9.2,<13"
-clang = ">=19.1.7,<20"
-clangxx = ">=19.1.7,<20"
-cuda-nvtx-dev = ">=12.9.79,<13"
 
 # Development dependencies
 [feature.dev.dependencies]
@@ -69,80 +65,36 @@ pkg-config = ">=0.29.2,<0.30"
 
 [tasks.build-vtk]
 cmd = ["./vtk_installer.sh"]
-# inputs/outputs make pixi skip the (long) VTK rebuild unless the installer
-# script changes or the cache disappears (was re-running every invocation).
+default-environment = "default"
 inputs = ["vtk_installer.sh"]
-outputs = ["_deps/vtk/build/CMakeCache.txt"]
+outputs = ["_deps/vtk/install/lib64/cmake/vtk-9.7/VTKConfig.cmake"]
 
 [tasks.configure]
-# Configure CMake with Ninja generator
-cmd = ["cmake",
-    "-GNinja",
-    "-S.", 
-    "-B.build",
-    "-DCMAKE_PREFIX_PATH=$CONDA_PREFIX",
-    "-DCMAKE_IGNORE_PATH=$HOME/.nix-profile/:/nix/:/usr/local/cuda/lib64:/usr/lib64:/usr/lib",
-    "-DCMAKE_BUILD_TYPE=Release",
-    "-DCMAKE_CUDA_COMPILER=$CONDA_PREFIX/bin/nvcc",
-    "-DCUDA_TOOLKIT_ROOT_DIR=$CONDA_PREFIX",
-    "-DCUDA_SDK_ROOT_DIR=$CONDA_PREFIX",
-    "-DCUDA_CUDA_LIB=$CONDA_PREFIX/lib/stubs/libcuda.so",
-    "-DCUDA_NVRTC_LIB=$CONDA_PREFIX/lib/libnvrtc.so",
-    "-DTorch_DIR=$CONDA_PREFIX/lib/cmake/Torch",
-    "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
-    "-DQt6_DIR=$CONDA_PREFIX/lib/cmake/Qt6",
-    "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-    "-DCMAKE_CXX_COMPILER=clang++",
-    "-DCMAKE_C_COMPILER=clang",
-    "-DCMAKE_CUDA_HOST_COMPILER=clang++",
-    "-DCUDA_INCLUDE_DIRS=$CONDA_PREFIX/targets/x86_64-linux/include",
-    "-DUSE_SYSTEM_NVTX:BOOL=ON",
-    "-Dnvtx3_dir=$CONDA_PREFIX/targets/x86_64-linux/include",
-    "-DTORCH_CUDA_ARCH_LIST=8.6 8.9 12.0",
-  "-DCMAKE_CUDA_ARCHITECTURES=native",
-  "-DUSING_CPP_COST=ON",
+# Preset-based configure (pixi-base -> release). Keep depends-on build-vtk so the
+# VTK cache gate still applies; CMakePresets.json owns all -D flags now.
+cmd = ["cmake", "--preset", "release"]
+depends-on = [
+    { task = "build-vtk", environment = "default" }
 ]
-#inputs = ["CMakeLists.txt"]
-depends-on = ["build-vtk"]
 
-# Plan 007 U7: profiling build — same recipe as configure plus QML debugging
-# (-DQT_QML_DEBUG: qmlprofiler needs it for binding/JS/handling-signal
-# events) into a separate .build-prof dir so the normal build stays clean.
-# qmlprofiler: $CONDA_PREFIX/lib/qt6/bin/qmlprofiler (the Qt 6.7.2 binary;
-# the bare `qmlprofiler` on PATH is Qt 5.15.8).
+# (legacy QML profiling note removed — the Widgets app's profile build no longer pulls
+# QT_QML_DEBUG; that concern is a separate QML-profile concern if you ever need it.)
 [tasks.configure-profiling]
-cmd = ["cmake",
-    "-GNinja",
-    "-S.",
-    "-B.build-prof",
-    "-DCMAKE_PREFIX_PATH=$CONDA_PREFIX",
-    "-DCMAKE_IGNORE_PATH=$HOME/.nix-profile/:/nix/:/usr/local/cuda/lib64:/usr/lib64:/usr/lib",
-    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-    "-DCMAKE_CXX_FLAGS=-DQT_QML_DEBUG",
-    "-DCMAKE_CUDA_COMPILER=$CONDA_PREFIX/bin/nvcc",
-    "-DCUDA_TOOLKIT_ROOT_DIR=$CONDA_PREFIX",
-    "-DCUDA_SDK_ROOT_DIR=$CONDA_PREFIX",
-    "-DCUDA_CUDA_LIB=$CONDA_PREFIX/lib/stubs/libcuda.so",
-    "-DCUDA_NVRTC_LIB=$CONDA_PREFIX/lib/libnvrtc.so",
-    "-DCUDA_INCLUDE_DIRS=$CONDA_PREFIX/targets/x86_64-linux/include",
-    "-DTorch_DIR=$CONDA_PREFIX/lib/cmake/Torch",
-    "-DOpenCV_DIR=$CONDA_PREFIX/lib/cmake/opencv4",
-    "-DLIBNVTOOLSEXT=$CONDA_PREFIX/lib/libnvToolsExt.so.1",
-    "-DQt6_DIR=$CONDA_PREFIX/lib/cmake/Qt6",
-    "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-    "-DUSE_SYSTEM_NVTX=ON",
+# Preset-based profiling configure (pixi-base -> profile = RelWithDebInfo + -O3 + frame
+# pointers + CUDA -lineinfo; no tests / no Study2Grid / no experimental QML). So the
+# `.build-prof` tree stays clean and small.
+cmd = ["cmake", "--preset", "profile"]
+depends-on = [
+    { task = "build-vtk", environment = "default" }
 ]
-#inputs = ["CMakeLists.txt"]
-depends-on = ["build-vtk"]
 
 [tasks.build-profiling]
-cmd = ["cmake", "--build", ".build-prof"]
+cmd = ["cmake", "--build", "--preset", "profile"]
+depends-on = ["configure-profiling"]
 
 [tasks.build]
 # Build task that depends on configure
-cmd = ["cmake", "--build", ".build"]
+cmd = ["cmake", "--build", "--preset", "release"]
 depends-on = ["configure", "build-vtk"]
 #inputs = ["CMakeLists.txt", "src/*"]
 
@@ -156,7 +108,7 @@ env = {"QT_QPA_PLATFORM" = "xcb"}
 #set(USE_CUDNN 1)
 #
 [tasks.cargo-build]
-cmd = "cargo build -m rust/Cargo.toml"
+cmd = "cargo build --manifest-path rust/Cargo.toml"
 
 [tasks.test]
 # Run the headless suite: no GUI/display or VTK render window. Fast compute-only
@@ -185,15 +137,73 @@ depends-on = ["configure"]
 [environments]
 build = ["build"]
 dev = ["build", "dev"]
+profile = { features = ["build", "profile"], solve-group = "default" }
 
 [activation.env]
 Qt6_DIR = "${CONDA_PREFIX}/lib/cmake/Qt6"
-VTK_DIR = "${CONDA_PREFIX}/lib/cmake/vtk-9.7"
 Torch_DIR = "${CONDA_PREFIX}/lib/cmake/Torch"
 OpenCV_DIR = "${CONDA_PREFIX}/lib/cmake/opencv4"
+
+# Project-built VTK: intentionally independent of Pixi environment
+VTK_DIR = "${PIXI_PROJECT_ROOT}/_deps/vtk/install/lib64/cmake/vtk-9.7"
+
 CUDA_HOME = "${CONDA_PREFIX}"
 CUDA_TOOLKIT_ROOT_DIR = "${CONDA_PREFIX}"
 CUDACXX = "${CONDA_PREFIX}/bin/nvcc"
-CXX="clang++"
-CC="clang"
 
+CXX = "clang++"
+CC = "clang"
+
+
+
+[feature.profile.activation.env]
+RUSTFLAGS = "-C force-frame-pointers=yes -C debuginfo=1"
+
+[feature.profile.tasks.configure-profile]
+cmd = ["cmake", "--preset", "profile"]
+depends-on = [
+    { task = "build-vtk", environment = "default" }
+]
+
+[feature.profile.tasks.build-profile]
+cmd = ["cmake", "--build", "--preset", "profile"]
+depends-on = ["configure-profile"]
+
+[feature.profile.tasks.run-profile]
+cmd = ".build-prof/bin/joint-track-machine-learning"
+depends-on = ["build-profile"]
+env = { QT_QPA_PLATFORM = "xcb" }
+
+[feature.profile.tasks.nsys-prof]
+cmd = [
+    "nsys", "profile",
+    "--trace=cuda,nvtx,osrt",
+    "--opengl-gpu-workload=false",
+    "--sample=process-tree",
+    "--backtrace=fp",
+    "--resolve-symbols=true",
+    "--stats=true",
+    "--wait=primary",
+    "-o", "profiler/jtml-%n",
+    ".build-prof/bin/joint-track-machine-learning",
+]
+depends-on = ["build-profile"]
+env = { QT_QPA_PLATFORM = "xcb" }
+
+
+
+[feature.profile.tasks.nsys-cpu]
+cmd = [
+    "nsys", "profile",
+    "--trace=nvtx,osrt",
+    "--opengl-gpu-workload=false",
+    "--sample=process-tree",
+    "--backtrace=dwarf",
+    "--resolve-symbols=true",
+    "--stats=true",
+    "--wait=primary",
+    "-o", "profiler/jtml-%n",
+    ".build-prof/bin/joint-track-machine-learning",
+]
+depends-on = ["build-profile"]
+env = { QT_QPA_PLATFORM = "xcb" }

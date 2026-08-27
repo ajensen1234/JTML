@@ -3,12 +3,11 @@ use crate::direct_data_storage::Pose;
 use crate::direct_data_storage::{DirectTree, Hyperbox, UnscoredHyperbox};
 use crate::ffi::{CppCost, RunOutcome};
 use ordered_float::OrderedFloat;
-use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::iter::zip;
 use std::time::{self, Duration};
 pub struct DirectOptimizer {
-    boxes: DirectTree,
+    pub boxes: DirectTree,
     current_best: (Pose, f64),
     budget: u32,
     range: Pose,
@@ -291,13 +290,6 @@ impl DirectOptimizer {
 
     fn cross(o: (f64, f64), p1: (f64, f64), p2: (f64, f64)) -> f64 {
         return (p1.0 - o.0) * (p2.1 - o.1) - (p1.1 - o.1) * (p2.0 - o.0);
-    }
-
-    pub(crate) fn snapshot_boxes(&self) -> Vec<Hyperbox> {
-        self.boxes
-            .values()
-            .flat_map(|row| row.values().copied())
-            .collect()
     }
 }
 

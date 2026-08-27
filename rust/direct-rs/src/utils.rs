@@ -144,6 +144,15 @@ pub fn draw_2d_graph(boxes: &[Hyperbox], path: &Path) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
+impl DirectOptimizer {
+    pub(crate) fn snapshot_boxes(&self) -> Vec<Hyperbox> {
+        self.boxes
+            .values()
+            .flat_map(|row| row.values().copied())
+            .collect()
+    }
+}
+
 pub fn plot_boxes(opt: &DirectOptimizer, name: &str) {
     let path = std::path::PathBuf::from("plots").join(format!("{name}.svg"));
     draw_2d_graph(&opt.snapshot_boxes(), &path)

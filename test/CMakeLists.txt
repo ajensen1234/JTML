@@ -24,11 +24,10 @@ find_package(Catch2 REQUIRED)
 # integration ever headaches the build, drop these two blocks and the
 # jtml.test_hegel_smoke target -- the rest of the suite does not depend on it.
 # ---------------------------------------------------------------------------
-include(FetchContent)
 FetchContent_Declare(
     hegel
     GIT_REPOSITORY https://github.com/hegeldev/hegel-cpp.git
-    GIT_TAG v0.11.1
+    GIT_TAG v0.11.4
 )
 FetchContent_MakeAvailable(hegel)
 

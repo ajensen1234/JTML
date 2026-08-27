@@ -1,0 +1,83 @@
+{
+  "version": 6,
+
+  "configurePresets": [
+    {
+      "name": "pixi-base",
+      "hidden": true,
+      "generator": "Ninja",
+
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}",
+        "CMAKE_IGNORE_PATH": "$env{HOME}/.nix-profile:/nix:/usr/local/cuda/lib64:/usr/lib64:/usr/lib:/usr/local/cuda-12.6/compat",
+        "CUDA_TOOLKIT_ROOT_DIR": "$env{CONDA_PREFIX}",
+        "CUDA_SDK_ROOT_DIR": "$env{CONDA_PREFIX}",
+        "CUDA_CUDA_LIB": "$env{CONDA_PREFIX}/lib/stubs/libcuda.so",
+        "CUDA_NVRTC_LIB": "$env{CONDA_PREFIX}/lib/libnvrtc.so",
+        "CUDA_INCLUDE_DIRS": "$env{CONDA_PREFIX}/targets/x86_64-linux/include",
+        "Torch_DIR": "$env{CONDA_PREFIX}/lib/cmake/Torch",
+        "OpenCV_DIR": "$env{CONDA_PREFIX}/lib/cmake/opencv4",
+        "Qt6_DIR": "$env{CONDA_PREFIX}/lib/cmake/Qt6",
+        "CMAKE_INSTALL_PREFIX": "$env{CONDA_PREFIX}",
+        "CMAKE_C_COMPILER": "$env{CONDA_PREFIX}/bin/clang",
+        "CMAKE_CXX_COMPILER": "$env{CONDA_PREFIX}/bin/clang++",
+        "CMAKE_CUDA_COMPILER": "$env{CONDA_PREFIX}/bin/nvcc",
+        "CMAKE_CUDA_HOST_COMPILER": "$env{CONDA_PREFIX}/bin/clang++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_CUDA_ARCHITECTURES": "native",
+        "TORCH_CUDA_ARCH_LIST": "8.6 8.9 12.0",
+        "USE_SYSTEM_NVTX": true,
+        "nvtx3_dir": "$env{CONDA_PREFIX}/targets/x86_64-linux/include",
+        "USING_CPP_COST": true,
+        "USE_RUST_DIRECT": true
+      }
+    },
+
+    {
+      "name": "release",
+      "inherits": "pixi-base",
+      "binaryDir": "${sourceDir}/.build",
+
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+
+    {
+      "name": "profile",
+      "inherits": "pixi-base",
+      "binaryDir": "${sourceDir}/.build-prof",
+
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+
+        "CMAKE_CXX_FLAGS_RELWITHDEBINFO":
+          "-O3 -g -DNDEBUG -fno-omit-frame-pointer -funwind-tables",
+
+        "CMAKE_C_FLAGS_RELWITHDEBINFO":
+          "-O3 -g -DNDEBUG -fno-omit-frame-pointer -funwind-tables",
+
+        "CMAKE_CUDA_FLAGS_RELWITHDEBINFO":
+          "-O3 -g -DNDEBUG -lineinfo -Xcompiler=-fno-omit-frame-pointer -Xcompiler=-funwind-tables",
+
+        "JTML_BUILD_TESTS": false,
+        "JTML_BUILD_EXPERIMENTAL": false,
+        "JTML_BUILD_STUDY2GRID": false
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "profile",
+      "configurePreset": "profile",
+      "targets": [
+        "joint-track-machine-learning"
+      ]
+    }
+  ]
+}

@@ -82,9 +82,9 @@ cmake "$SOURCE_DIR" \
 	-G Ninja
 
 echo "Building VTK..."
-ninja -j"$NUM_CORES"
+cmake --build "$BUILD_DIR" --parallel "$NUM_CORES"
 
 echo "Installing VTK..."
-ninja install
+cmake --install "$BUILD_DIR" --prefix "$INSTALL_DIR"
 
 echo "VTK build and installation completed successfully!"
