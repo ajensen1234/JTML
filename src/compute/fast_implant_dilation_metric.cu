@@ -415,6 +415,7 @@ __global__ void FastImplantDilationMetric_DifferenceKernel(
         }
     }
 }
+
 __global__ void FastImplantDilationMetric_DifferenceKernel_new(
     unsigned char* dev_image,
     unsigned char* dev_comparison_image,

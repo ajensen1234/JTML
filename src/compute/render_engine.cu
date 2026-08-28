@@ -723,95 +723,142 @@ __global__ void BoundingBoxAndSizesKernel(
     int height,
     int* dev_bounding_box,
     const bool* dev_backface) {
+    /*
+     * IMPORTANT:
+     *
+     * Preserve the original mapping:
+     *
+     *     4 CUDA threads per triangle
+     *
+     * j = 0 -> LX
+     * j = 1 -> BY
+     * j = 2 -> RX
+     * j = 3 -> TY
+     */
     const int i =
         (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 
-    if (i >= triangle_count) {
+    const bool valid = i < 4 * triangle_count;
+
+    /*
+     * Which bbox component does this thread own?
+     */
+    const int j = i & 3;
+
+    const int triangle_index = i >> 2;
+
+    int value = 0;
+
+    if (valid) {
+        const int projected_index = 6 * triangle_index;
+
+        if (j == 0) {
+            /* LX */
+            value = max(
+                min(min(min(dev_projected_triangles_snapped[projected_index],
+                            dev_projected_triangles_snapped
+                                [projected_index + 2]),
+                        dev_projected_triangles_snapped[projected_index + 4]),
+                    width - 1),
+                0);
+
+        } else if (j == 1) {
+            /* BY */
+            value = max(
+                min(min(min(dev_projected_triangles_snapped
+                                [projected_index + 1],
+                            dev_projected_triangles_snapped
+                                [projected_index + 3]),
+                        dev_projected_triangles_snapped[projected_index + 5]),
+                    height - 1),
+                0);
+
+        } else if (j == 2) {
+            /* RX */
+            value = min(
+                max(max(max(dev_projected_triangles_snapped[projected_index],
+                            dev_projected_triangles_snapped
+                                [projected_index + 2]),
+                        dev_projected_triangles_snapped[projected_index + 4]),
+                    0),
+                width - 1);
+
+        } else {
+            /* TY */
+            value = min(
+                max(max(max(dev_projected_triangles_snapped
+                                [projected_index + 1],
+                            dev_projected_triangles_snapped
+                                [projected_index + 3]),
+                        dev_projected_triangles_snapped[projected_index + 5]),
+                    0),
+                height - 1);
+        }
+
+        /*
+         * FillTriangle still needs the bbox array.
+         *
+         * Since i == 4 * triangle_index + j, this is already
+         * exactly the correct output location.
+         */
+        dev_bounding_box_triangles[i] = value;
+    }
+
+    /*
+     * Groups of four threads are always contained inside a warp because
+     * 256-thread blocks and 32-thread warps are both divisible by four.
+     *
+     * Get the active lanes for the final partially-filled warp.
+     */
+    const unsigned mask = __ballot_sync(0xffffffff, valid);
+
+    if (!valid) {
         return;
     }
 
+    const int lane = threadIdx.x & 31;
+
+    const int group_lane = lane & ~3;
+
     /*
-     * Each triangle has three projected vertices:
+     * Each thread in the four-thread group receives all four bbox values
+     * directly from registers in the other lanes.
      *
-     *   x1 y1 x2 y2 x3 y3
+     * No reread from dev_bounding_box_triangles[].
      */
-    const int projected_index = 6 * i;
+    const int left_x = __shfl_sync(mask, value, group_lane);
 
-    const int x1 = dev_projected_triangles_snapped[projected_index];
+    const int bottom_y = __shfl_sync(mask, value, group_lane + 1);
 
-    const int y1 = dev_projected_triangles_snapped[projected_index + 1];
+    const int right_x = __shfl_sync(mask, value, group_lane + 2);
 
-    const int x2 = dev_projected_triangles_snapped[projected_index + 2];
-
-    const int y2 = dev_projected_triangles_snapped[projected_index + 3];
-
-    const int x3 = dev_projected_triangles_snapped[projected_index + 4];
-
-    const int y3 = dev_projected_triangles_snapped[projected_index + 5];
+    const int top_y = __shfl_sync(mask, value, group_lane + 3);
 
     /*
-     * Preserve the exact clamping semantics of the old
-     * BoundingBoxForTrianglesKernel.
+     * Only thread 0 of each four-thread triangle group performs
+     * size calculation + overall bbox atomics.
      */
-    const int left_x = max(min(min(x1, x2), x3), 0);
+    if (j == 0) {
+        if (!dev_backface[triangle_index]) {
+            dev_bounding_box_triangles_sizes[triangle_index] =
+                (1 + right_x - left_x) * (1 + top_y - bottom_y);
 
-    const int bottom_y = max(min(min(y1, y2), y3), 0);
+        } else {
+            /*
+             * Preserve your existing "backfaces have size 1"
+             * behavior.
+             */
+            dev_bounding_box_triangles_sizes[triangle_index] = 1;
+        }
 
-    const int right_x = min(max(max(x1, x2), x3), width - 1);
+        atomicMin(&dev_bounding_box[0], left_x);
 
-    const int top_y = min(max(max(y1, y2), y3), height - 1);
+        atomicMin(&dev_bounding_box[1], bottom_y);
 
-    /*
-     * The old kernel also clamped the minima against width-1 /
-     * height-1 and maxima against zero. Preserve that behavior
-     * for triangles completely outside the image.
-     */
-    const int clamped_left_x = min(left_x, width - 1);
+        atomicMax(&dev_bounding_box[2], right_x);
 
-    const int clamped_bottom_y = min(bottom_y, height - 1);
-
-    const int clamped_right_x = max(right_x, 0);
-
-    const int clamped_top_y = max(top_y, 0);
-
-    /*
-     * FillTriangle still consumes these four values,
-     * so they remain stored globally.
-     */
-    const int bbox_index = 4 * i;
-
-    dev_bounding_box_triangles[bbox_index] = clamped_left_x;
-
-    dev_bounding_box_triangles[bbox_index + 1] = clamped_bottom_y;
-
-    dev_bounding_box_triangles[bbox_index + 2] = clamped_right_x;
-
-    dev_bounding_box_triangles[bbox_index + 3] = clamped_top_y;
-
-    /*
-     * Preserve the weird-but-existing backface behavior:
-     *
-     * backfaces get size 1 rather than zero.
-     */
-    if (!dev_backface[i]) {
-        dev_bounding_box_triangles_sizes[i] =
-            (1 + clamped_right_x - clamped_left_x) *
-            (1 + clamped_top_y - clamped_bottom_y);
-    } else {
-        dev_bounding_box_triangles_sizes[i] = 1;
+        atomicMax(&dev_bounding_box[3], top_y);
     }
-
-    /*
-     * Preserve the old behavior where ALL triangles,
-     * including backfaces, contribute to the overall bbox.
-     */
-    atomicMin(&dev_bounding_box[0], clamped_left_x);
-
-    atomicMin(&dev_bounding_box[1], clamped_bottom_y);
-
-    atomicMax(&dev_bounding_box[2], clamped_right_x);
-
-    atomicMax(&dev_bounding_box[3], clamped_top_y);
 }
 
 __global__ void PrepareLaunchPacketKernel(
@@ -1285,15 +1332,6 @@ cudaError_t RenderEngine::Render() {
     /*Create Error Status*/
     cudaGetLastError();  // Resets Errors (MAYBE DELETE TO SAVE TIME?)
 
-    /*Clear Image*/
-    // cudaMemset(
-    //     renderer_output_->GetDeviceImagePointer(),
-    //     0,
-    //     width_ * height_ * sizeof(unsigned char));
-
-    // /*Reset Launch Packet*/
-    // ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_);
-
     /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
     WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
         dev_triangles_,
@@ -1319,13 +1357,19 @@ cudaError_t RenderEngine::Render() {
         width_,
         height_);
 
-    BoundingBoxAndSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+    BoundingBoxForTrianglesKernel<<<
+        dim_grid_bounding_box_,
+        threads_per_block>>>(
         dev_bounding_box_triangles_,
         dev_projected_triangles_snapped_,
-        dev_bounding_box_triangles_sizes_,
         triangle_count_,
         width_,
-        height_,
+        height_);
+
+    BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+        dev_bounding_box_triangles_,
+        dev_bounding_box_triangles_sizes_,
+        triangle_count_,
         dev_bounding_box_,
         dev_backface_);
 
