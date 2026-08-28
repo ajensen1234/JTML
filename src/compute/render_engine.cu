@@ -2,6 +2,8 @@
 #include "compute/render_engine.cuh"
 
 /*Cub Library (CUDA)*/
+#include <cub/block/block_scan.cuh>
+
 #include "cub/cub.cuh"
 #include "cub/device/device_scan.cuh"
 #include "cub/util_allocator.cuh"
@@ -168,22 +170,35 @@ RenderEngine::RenderEngine(
         ceil(sqrt(
             4.0 * triangle_count_ / static_cast<double>(threads_per_block))));
 
-    cudaGetDevice(&device);
+    cudaError_t err = cudaGetDevice(&device);
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
 
     cudaDeviceProp props{};
-    cudaGetDeviceProperties(&props, device);
+
+    err = cudaGetDeviceProperties(&props, device);
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
 
     int blocks_per_sm = 0;
 
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-        &blocks_per_sm,
-        FillTriangleKernel_new,
-        threads_per_block,  // 256
-        0);                 // no dynamic shared memory
+    err = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &blocks_per_sm, FillTriangleKernel_new, threads_per_block, 0);
+
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
 
     fill_triangle_grid_ = props.multiProcessorCount * blocks_per_sm;
-    std::cout << fill_triangle_grid_ << "\n";
-    std::cout << blocks_per_sm << "\n";
+
+    std::cout << "fill_blocks_per_sm: " << blocks_per_sm << '\n';
+
+    std::cout << "fill_triangle_grid_: " << fill_triangle_grid_ << '\n';
 
     /*Initialize Host Variables*/
     fragment_fill_ = 0;
@@ -627,6 +642,104 @@ __global__ void WorldToPixelKernel(
             static_cast<int>(floorf(sX + 0.5));
         dev_projected_triangles_snapped[(2 * i) + 1] =
             static_cast<int>(floorf(sY + 0.5));
+    }
+}
+
+template <int BLOCK_THREADS>
+__global__ void BoundingBoxSizesAndExclusiveScanKernel(
+    const int* dev_bounding_box_triangles,
+    int* dev_bounding_box_triangles_sizes,
+    int* dev_bounding_box_triangles_sizes_prefix,
+    int triangle_count,
+    int* dev_bounding_box,
+    const bool* dev_backface) {
+    using BlockScan = cub::BlockScan<int, BLOCK_THREADS>;
+
+    __shared__ typename BlockScan::TempStorage scan_storage;
+    __shared__ int running_total;
+
+    if (threadIdx.x == 0) {
+        running_total = 0;
+    }
+
+    __syncthreads();
+
+    /*
+     * This single CUDA block walks the triangle array in
+     * BLOCK_THREADS-sized tiles.
+     *
+     * ~12,500 triangles / 256 threads ≈ 49 iterations.
+     */
+    for (int base = 0; base < triangle_count; base += BLOCK_THREADS) {
+        const int triangle_index = base + threadIdx.x;
+
+        int size = 0;
+
+        if (triangle_index < triangle_count) {
+            const int bbox_index = 4 * triangle_index;
+
+            const int left_x = dev_bounding_box_triangles[bbox_index];
+
+            const int bottom_y = dev_bounding_box_triangles[bbox_index + 1];
+
+            const int right_x = dev_bounding_box_triangles[bbox_index + 2];
+
+            const int top_y = dev_bounding_box_triangles[bbox_index + 3];
+
+            /*
+             * Preserve current behavior exactly:
+             * backfaces contribute one fragment.
+             */
+            if (!dev_backface[triangle_index]) {
+                size = (1 + right_x - left_x) * (1 + top_y - bottom_y);
+            } else {
+                size = 1;
+            }
+
+            dev_bounding_box_triangles_sizes[triangle_index] = size;
+
+            /*
+             * Overall rendered-model bbox.
+             *
+             * Keep this identical to your existing
+             * BoundingBoxSizesKernel for the first benchmark.
+             */
+            atomicMin(&dev_bounding_box[0], left_x);
+
+            atomicMin(&dev_bounding_box[1], bottom_y);
+
+            atomicMax(&dev_bounding_box[2], right_x);
+
+            atomicMax(&dev_bounding_box[3], top_y);
+        }
+
+        int exclusive_prefix = 0;
+        int tile_total = 0;
+
+        /*
+         * Exclusive scan of this 256-element tile.
+         */
+        BlockScan(scan_storage)
+            .ExclusiveSum(size, exclusive_prefix, tile_total);
+
+        const int tile_base = running_total;
+
+        if (triangle_index < triangle_count) {
+            dev_bounding_box_triangles_sizes_prefix[triangle_index] =
+                tile_base + exclusive_prefix;
+        }
+
+        /*
+         * CUB requires synchronization before reusing
+         * scan_storage on the next iteration.
+         */
+        __syncthreads();
+
+        if (threadIdx.x == 0) {
+            running_total = tile_base + tile_total;
+        }
+
+        __syncthreads();
     }
 }
 
@@ -1326,6 +1439,238 @@ __global__ void FillTrianglePersistentKernel(
     // dev_stride_prefixes is read-only in this kernel; kept for interface
     // parity
     (void)dev_stride_prefixes;
+}
+
+__global__ void RasterizeTrianglesWarpKernel(
+    const int* dev_projected_triangles_snapped,
+    const float* dev_projected_triangles,
+    const bool* dev_backface,
+    unsigned char* dev_image,
+    int* dev_bounding_box,
+    int triangle_count,
+    int width,
+    int height) {
+    /*
+     * One warp owns one triangle.
+     *
+     * With a 256-thread block:
+     *
+     * warp 0 -> triangle N + 0
+     * warp 1 -> triangle N + 1
+     * ...
+     * warp 7 -> triangle N + 7
+     */
+    const int warp_in_block = threadIdx.x / warpSize;
+
+    const int lane = threadIdx.x % warpSize;
+
+    const int warps_per_block = blockDim.x / warpSize;
+
+    const int triangle_index = blockIdx.x * warps_per_block + warp_in_block;
+
+    /*
+     * Uniform across the entire warp, so returning here is safe.
+     */
+    if (triangle_index >= triangle_count) {
+        return;
+    }
+
+    constexpr unsigned full_mask = 0xffffffffu;
+
+    /*
+     * Lane zero calculates triangle-level state once.
+     */
+    int left_x = 0;
+    int bottom_y = 0;
+    int right_x = 0;
+    int top_y = 0;
+
+    float x1 = 0.0f;
+    float y1 = 0.0f;
+    float x2 = 0.0f;
+    float y2 = 0.0f;
+    float x3 = 0.0f;
+    float y3 = 0.0f;
+
+    int backface = 0;
+
+    if (lane == 0) {
+        const int snapped_index = 6 * triangle_index;
+
+        /*
+         * Load snapped coordinates for bounding box.
+         */
+        const int sx1 = dev_projected_triangles_snapped[snapped_index];
+
+        const int sy1 = dev_projected_triangles_snapped[snapped_index + 1];
+
+        const int sx2 = dev_projected_triangles_snapped[snapped_index + 2];
+
+        const int sy2 = dev_projected_triangles_snapped[snapped_index + 3];
+
+        const int sx3 = dev_projected_triangles_snapped[snapped_index + 4];
+
+        const int sy3 = dev_projected_triangles_snapped[snapped_index + 5];
+
+        /*
+         * EXACT same bbox clamping rules as
+         * BoundingBoxForTrianglesKernel.
+         */
+        left_x = max(min(min(min(sx1, sx2), sx3), width - 1), 0);
+
+        bottom_y = max(min(min(min(sy1, sy2), sy3), height - 1), 0);
+
+        right_x = min(max(max(max(sx1, sx2), sx3), 0), width - 1);
+
+        top_y = min(max(max(max(sy1, sy2), sy3), 0), height - 1);
+
+        /*
+         * Preserve existing overall model bounding-box semantics.
+         *
+         * BoundingBoxSizesKernel currently updates the global bbox
+         * for every triangle, including backfaces.
+         */
+        atomicMin(&dev_bounding_box[0], left_x);
+
+        atomicMin(&dev_bounding_box[1], bottom_y);
+
+        atomicMax(&dev_bounding_box[2], right_x);
+
+        atomicMax(&dev_bounding_box[3], top_y);
+
+        /*
+         * Load unsnapped triangle coordinates used for the actual
+         * point-in-triangle test.
+         */
+        const int projected_index = 6 * triangle_index;
+
+        x1 = dev_projected_triangles[projected_index];
+
+        y1 = dev_projected_triangles[projected_index + 1];
+
+        x2 = dev_projected_triangles[projected_index + 2];
+
+        y2 = dev_projected_triangles[projected_index + 3];
+
+        x3 = dev_projected_triangles[projected_index + 4];
+
+        y3 = dev_projected_triangles[projected_index + 5];
+
+        backface = dev_backface[triangle_index] ? 1 : 0;
+    }
+
+    /*
+     * Broadcast triangle state from lane zero to the whole warp.
+     */
+    left_x = __shfl_sync(full_mask, left_x, 0);
+
+    bottom_y = __shfl_sync(full_mask, bottom_y, 0);
+
+    right_x = __shfl_sync(full_mask, right_x, 0);
+
+    top_y = __shfl_sync(full_mask, top_y, 0);
+
+    x1 = __shfl_sync(full_mask, x1, 0);
+
+    y1 = __shfl_sync(full_mask, y1, 0);
+
+    x2 = __shfl_sync(full_mask, x2, 0);
+
+    y2 = __shfl_sync(full_mask, y2, 0);
+
+    x3 = __shfl_sync(full_mask, x3, 0);
+
+    y3 = __shfl_sync(full_mask, y3, 0);
+
+    backface = __shfl_sync(full_mask, backface, 0);
+
+    const int bbox_width = right_x - left_x + 1;
+
+    const int bbox_height = top_y - bottom_y + 1;
+
+    if (bbox_width <= 0 || bbox_height <= 0) {
+        return;
+    }
+
+    /*
+     * IMPORTANT:
+     *
+     * Preserve the CURRENT renderer's backface behavior.
+     *
+     * BoundingBoxSizesKernel gives a backface triangle size=1.
+     * FillTriangle_new therefore considers exactly one bbox fragment
+     * for a backface, rather than the whole bbox.
+     *
+     * Keeping that here makes the comparison much closer to bit-identical.
+     */
+    const int fragment_count = backface ? 1 : bbox_width * bbox_height;
+
+    /*
+     * Precompute the denominator once per lane.
+     *
+     * These values are invariant for every pixel in the triangle.
+     */
+    const float denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+
+    /*
+     * Lane 0 processes fragment 0,
+     * lane 1 processes fragment 1,
+     * ...
+     * lane 31 processes fragment 31,
+     *
+     * then each lane advances by 32.
+     */
+    for (int inside_index = lane; inside_index < fragment_count;
+         inside_index += warpSize) {
+        const int px_pixel = left_x + inside_index % bbox_width;
+
+        const int py_pixel = bottom_y + inside_index / bbox_width;
+
+        /*
+         * Bbox is already clamped, but keep this guard while
+         * validating the new rasterizer.
+         */
+        if (px_pixel < 0 || px_pixel >= width || py_pixel < 0 ||
+            py_pixel >= height) {
+            continue;
+        }
+
+        const float px = static_cast<float>(px_pixel) + 0.5f;
+
+        const float py = static_cast<float>(py_pixel) + 0.5f;
+
+        /*
+         * EXACT same barycentric test used by FillTriangleKernel_new.
+         */
+        const float a = (y2 - y3) * (px - x3) + (x3 - x2) * (py - y3);
+
+        if (denominator > 0.0f) {
+            if (0.0f <= a && a <= denominator) {
+                const float b = (y3 - y1) * (px - x3) + (x1 - x3) * (py - y3);
+
+                if (0.0f <= b && b <= denominator) {
+                    const float c = denominator - a - b;
+
+                    if (0.0f <= c && c <= denominator) {
+                        dev_image[py_pixel * width + px_pixel] = 255;
+                    }
+                }
+            }
+
+        } else {
+            if (0.0f >= a && a >= denominator) {
+                const float b = (y3 - y1) * (px - x3) + (x1 - x3) * (py - y3);
+
+                if (0.0f >= b && b >= denominator) {
+                    const float c = denominator - a - b;
+
+                    if (0.0f >= c && c >= denominator) {
+                        dev_image[py_pixel * width + px_pixel] = 255;
+                    }
+                }
+            }
+        }
+    }
 }
 
 cudaError_t RenderEngine::Render() {

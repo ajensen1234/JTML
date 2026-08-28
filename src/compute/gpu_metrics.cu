@@ -121,12 +121,6 @@ GPUMetrics::GPUMetrics() {
 
     edge_grid_ = props.multiProcessorCount * edge_blocks_per_sm;
 
-    /*
-     * Start with two worker blocks / SM for the 1D grid-stride kernels.
-     *
-     * Do not blindly use occupancy-max here: these kernels have relatively
-     * small actual crops and occupancy-max can massively overlaunch.
-     */
     constexpr int metric_blocks_per_sm = 2;
 
     dilate_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
@@ -134,6 +128,16 @@ GPUMetrics::GPUMetrics() {
     difference_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
 
     distance_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
+
+    std::cout << "edge_blocks_per_sm: " << edge_blocks_per_sm << '\n';
+
+    std::cout << "edge_grid_: " << edge_grid_ << '\n';
+
+    std::cout << "dilate_grid_: " << dilate_grid_ << '\n';
+
+    std::cout << "difference_grid_: " << difference_grid_ << '\n';
+
+    std::cout << "distance_grid_: " << distance_grid_ << '\n';
 };
 
 GPUMetrics::~GPUMetrics() {
