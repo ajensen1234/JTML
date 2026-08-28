@@ -49,11 +49,7 @@ public:
         float* triangles,
         float* normals,
         int triangle_count,
-        CameraCalibration camera_calibration_primary_cam,
-        /*plan 010 U10: optional capacity service forwarded to the render
-         * engines (nullptr = pre-unit sizing). Additive -- existing callers
-         * omit it and get pre-unit behavior.*/
-        const CostCapacityService* capacity_service = nullptr);
+        CameraCalibration camera_calibration_primary_cam);
 
     /*Biplane constructor*/
     JTML_DLL GPUModel(
@@ -78,13 +74,6 @@ public:
     /*Render to cache function (returns true if worked correctly)
     Primary is used in monoplane and biplane, Secondary only used in biplane*/
     JTML_DLL bool RenderPrimaryCamera(Pose model_pose);
-    /* U12 Stage 4B: render the current primary pose through an explicit bank.
-     * The bank is caller-owned/non-owning; legacy RenderPrimaryCamera remains
-     * the bank-0 wrapper. */
-    JTML_DLL bool RenderPrimaryCamera(BankState& bank);
-    JTML_DLL bool EnqueueRenderPrimaryCamera(BankState& bank);
-    JTML_DLL bool CompleteRenderPrimaryCamera(BankState& bank);
-    JTML_DLL bool TrySetActiveBank(BankState* bank);
     JTML_DLL bool RenderPrimaryCamera_RotationMatrix(
         RotationMatrix model_pose_matrix);
     JTML_DLL bool RenderSecondaryCamera(Pose model_pose);
@@ -120,7 +109,6 @@ public:
     JTML_DLL int GetPrimaryWidth() const;
     JTML_DLL int GetPrimaryHeight() const;
     JTML_DLL int GetPrimaryTriangleCount() const;
-    JTML_DLL void SetCapacityService(const CostCapacityService* service);
 
     /*Get the cv::Mat output off the GPU and available for analysis
     Mostly used for image analysis that will not happen on the GPU

@@ -77,3 +77,7 @@ target_include_directories(jtml_coordinator PUBLIC
 # The compute + GPU/CUDA surface now lives in the jtml_compute SHARED lib, linked
 # through ${JTA_LIBS}; no per-target CUDA flags or separable compilation are needed
 # here (that is jtml_compute only).
+
+target_link_options(jtml_coordinator PRIVATE
+    "-Wl,--no-undefined"
+)

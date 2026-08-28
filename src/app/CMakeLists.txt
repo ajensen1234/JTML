@@ -65,3 +65,7 @@ target_include_directories(${PROJECT_NAME}
 if(MSVC)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32 _WIN64 JTML_EXPORTS)
 endif()
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    "-Wl,--no-undefined"
+)

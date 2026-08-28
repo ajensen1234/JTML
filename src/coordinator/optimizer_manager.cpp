@@ -14,11 +14,8 @@
 
 #include "compute/batch_outcome.h"
 #include "compute/cuda_launch_parameters.h"
-#include "compute/evaluation_executor.h"
 #include "compute/gpu_heatmaps.cuh"
 #include "compute/gpu_model.cuh"
-#include "compute/graph_admission_policy.h"
-#include "compute/graph_key_assembler.h"
 #include "compute/pose_matrix.h"
 
 OptimizerManager::OptimizerManager(QObject* parent) : QObject(parent) {
@@ -69,7 +66,6 @@ bool OptimizerManager::Initialize(
 
     /*Just In Case Have to Delete*/
     gpu_principal_model_ = 0;
-    capacity_service_ = nullptr;
     gpu_metrics_ = 0;
 
     /*Store Camera Frame Lists Locally and Check That, if Biplane is Enabled ->
@@ -775,39 +771,6 @@ bool OptimizerManager::Initialize(
         succesfull_initialization_ = false;
         return succesfull_initialization_;
     }
-
-    /* Plan 010 U12: configure the service-owned extra-bank pool only for the
-     * supported monoplane principal DIRECT_DILATION path. Bank 0 remains owned
-     * by the model/metrics compatibility objects; unsupported/biplane paths
-     * retain poolSize()==1 and the exact serial adapter. */
-    capacity_service_ = new CostCapacityService();
-    if (!calibration_.biplane_calibration &&
-        capacity_service_->refreshDeviceSnapshot(cuda_device_id)) {
-        gpu_cost_function::BankFootprintInput bank_layout;
-        bank_layout.width = static_cast<std::uint64_t>(width);
-        bank_layout.height = static_cast<std::uint64_t>(height);
-        bank_layout.triangle_count = static_cast<std::uint64_t>(
-            primary_model_.triangle_vertices_.size() / 9);
-        bank_layout.maximum_stride_size = maximum_stride_size;
-        bank_layout.cub_storage_bytes =
-            gpu_principal_model_->GetPrimaryCubStorageBytes();
-        bank_layout.biplane = false;
-        const bool admitted = capacity_service_->ConfigurePool(bank_layout, 3);
-        if (admitted) {
-            const int probe_bank = capacity_service_->CheckoutBank();
-            if (probe_bank >= 0) {
-                capacity_service_->RecycleBank(
-                    static_cast<std::size_t>(probe_bank), true);
-            }
-        }
-        gpu_principal_model_->SetCapacityService(capacity_service_);
-    }
-
-    /* Plan 012 U1 (C10): graph pool is lazy — default-deny means no preparation
-     * attempt and no 8 GiB dummy allocation at manager setup.
-     * evaluation_executor_ stays constructed but uninitialized (poolSize()==0).
-     */
-    evaluation_executor_ = new gpu_cost_function::EvaluationExecutor();
 
     /*Upload Data To CostFunction Managers*/
     trunk_manager_.UploadData(
@@ -1681,14 +1644,6 @@ void OptimizerManager::create_image_indices(
 OptimizerManager::~OptimizerManager() {
     /*GPU Metrics Class*/
     delete gpu_metrics_;
-    /* U12 service-owned extra banks must be destroyed before model/metric
-     * owners. */
-    delete capacity_service_;
-    capacity_service_ = nullptr;
-    // U6: EvaluationExecutor must be destroyed before model/metric owners
-    // (waits for streams/events)
-    delete evaluation_executor_;
-    evaluation_executor_ = nullptr;
 
     /* DESTRUCT CUDA Cost Function Objects (Vector of GPU Models and vector of
     GPU Frames - note Dilated and Intensity must have own vector for each stage

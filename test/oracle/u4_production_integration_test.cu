@@ -25,10 +25,8 @@
 #include <memory>
 #include <vector>
 
-#include "compute/bank_state.cuh"
 #include "compute/camera_calibration.h"
 #include "compute/cost_capacity_service.cuh"
-#include "compute/evaluation_context.h"
 #include "compute/fast_implant_dilation_metric.cuh"
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_frame.cuh"
@@ -72,48 +70,63 @@ struct U4Fixture {
 
     bool setup() {
         int deviceCount = 0;
-        if (cudaGetDeviceCount(&deviceCount) != cudaSuccess || deviceCount == 0)
+        if (cudaGetDeviceCount(&deviceCount) != cudaSuccess ||
+            deviceCount == 0) {
             return false;
+        }
 
         CameraCalibration cal(100.f, 4.f, 4.f, 0.1f);
         engine = std::make_unique<gpu_cost_function::RenderEngine>(
             kW, kH, 0, false, s_triangles, s_normals, kTriangleCount, cal);
-        if (!engine->IsInitializedCorrectly()) return false;
+        if (!engine->IsInitializedCorrectly()) {
+            return false;
+        }
 
         metrics = std::make_unique<gpu_cost_function::GPUMetrics>();
-        if (!metrics->IsInitializedCorrectly()) return false;
+        if (!metrics->IsInitializedCorrectly()) {
+            return false;
+        }
 
         // Create comparison images (same dims as render output).
         // Fill comparisonImage with a known pattern.
         std::vector<unsigned char> hostComp(kW * kH, 0);
         // Put a small white patch in the center.
-        for (int y = kH / 4; y < 3 * kH / 4; ++y)
-            for (int x = kW / 4; x < 3 * kW / 4; ++x)
+        for (int y = kH / 4; y < 3 * kH / 4; ++y) {
+            for (int x = kW / 4; x < 3 * kW / 4; ++x) {
                 hostComp[y * kW + x] = 255;
+            }
+        }
 
         comparisonImage = std::make_unique<gpu_cost_function::GPUImage>(
             kW, kH, 0, hostComp.data());
-        if (!comparisonImage->IsInitializedCorrectly()) return false;
+        if (!comparisonImage->IsInitializedCorrectly()) {
+            return false;
+        }
 
         // GPUDilatedFrame and GPUFrame from the same host data.
         cf = std::make_unique<gpu_cost_function::GPUDilatedFrame>(
             kW, kH, 0, hostComp.data(), kDilation);
-        if (!cf->IsInitializedCorrectly()) return false;
+        if (!cf->IsInitializedCorrectly()) {
+            return false;
+        }
 
         dm = std::make_unique<gpu_cost_function::GPUFrame>(
             kW, kH, 0, hostComp.data());
-        if (!dm->IsInitializedCorrectly()) return false;
+        if (!dm->IsInitializedCorrectly()) {
+            return false;
+        }
 
         // Configure CostCapacityService + bank pool.
-        service.setSnapshot(gpu_cost_function::DeviceCapacitySnapshot{
-            .sm_count = 1,
-            .max_threads_per_sm = 1024,
-            .safe_cap = 1000000LL,
-            .grid_dim_limit = 100000LL,
-            .free_device_bytes = 1024LL * 1024 * 1024,
-            .per_bank_footprint_bytes = 0,
-            .n_max = 0,
-        });
+        service.setSnapshot(
+            gpu_cost_function::DeviceCapacitySnapshot{
+                .sm_count = 1,
+                .max_threads_per_sm = 1024,
+                .safe_cap = 1000000LL,
+                .grid_dim_limit = 100000LL,
+                .free_device_bytes = 1024LL * 1024 * 1024,
+                .per_bank_footprint_bytes = 0,
+                .n_max = 0,
+            });
 
         gpu_cost_function::BankFootprintInput layout{};
         layout.width = kW;
@@ -125,16 +138,24 @@ struct U4Fixture {
         layout.graph_overhead_bytes = 0;
         layout.biplane = false;
 
-        if (!service.ConfigurePool(layout, 2)) return false;
+        if (!service.ConfigurePool(layout, 2)) {
+            return false;
+        }
 
         // Bank 0 is the engine's own; bank 1 is the external bank.
         bank_idx = service.CheckoutBank();
-        if (bank_idx < 1) return false;
+        if (bank_idx < 1) {
+            return false;
+        }
         bank = service.bankState(static_cast<std::size_t>(bank_idx));
-        if (bank == nullptr || bank->stream == nullptr) return false;
+        if (bank == nullptr || bank->stream == nullptr) {
+            return false;
+        }
 
         // Initialize EvaluationContextPool with the same layout.
-        if (!pool.Initialize(layout, 1024ULL * 1024 * 1024, 2)) return false;
+        if (!pool.Initialize(layout, 1024ULL * 1024 * 1024, 2)) {
+            return false;
+        }
 
         // Set a fixed pose.
         gpu_cost_function::Pose pose(0.5f, 0.3f, -5.0f, 0.f, 0.f, 15.f);
@@ -145,9 +166,10 @@ struct U4Fixture {
     }
 
     void teardown() {
-        if (bank_idx >= 0)
+        if (bank_idx >= 0) {
             REQUIRE(
                 service.RecycleBank(static_cast<std::size_t>(bank_idx), true));
+        }
     }
 };
 
@@ -164,8 +186,9 @@ std::vector<unsigned char> copyImageToHost(gpu_cost_function::GPUImage& img) {
 }
 
 // Helper: copy raw device image pointer to host.
-std::vector<unsigned char>
-copyDevicePtrToHost(unsigned char* dev_ptr, std::size_t bytes) {
+std::vector<unsigned char> copyDevicePtrToHost(
+    unsigned char* dev_ptr,
+    std::size_t bytes) {
     std::vector<unsigned char> host(bytes);
     REQUIRE(
         cudaMemcpy(host.data(), dev_ptr, bytes, cudaMemcpyDeviceToHost) ==
@@ -177,28 +200,26 @@ bool hasContextResources(const gpu_cost_function::EvaluationContext& ctx) {
     const auto& r = ctx.primary;
     const auto& m = ctx.metrics;
     return ctx.initialized_correctly && ctx.in_flight &&
-           ctx.stream != nullptr && ctx.completion_event != nullptr &&
-           ctx.dev_nextCandidate != nullptr && ctx.dev_nextChunk != nullptr &&
-           ctx.dev_overflowFlag != nullptr &&
-           ctx.host_overflowFlag != nullptr && r.output != nullptr &&
-           r.host_bounding_box != nullptr && r.dev_backface != nullptr &&
-           r.dev_transformed_vertex_zs != nullptr &&
-           r.dev_tangent_triangle != nullptr &&
-           r.dev_projected_triangles != nullptr &&
-           r.dev_projected_triangles_snapped != nullptr &&
-           r.dev_bounding_box_triangles != nullptr &&
-           r.dev_bounding_box_triangles_sizes != nullptr &&
-           r.dev_bounding_box_triangles_sizes_prefix != nullptr &&
-           r.dev_bounding_box != nullptr && r.dev_fragment_fill != nullptr &&
-           r.host_fragment_fill != nullptr &&
-           r.dev_stride_prefixes != nullptr && r.dev_cub_storage != nullptr &&
-           r.dev_metric_crop != nullptr && m.host_pixel_score != nullptr &&
-           m.dev_pixel_score != nullptr && m.host_distance_score != nullptr &&
-           m.dev_distance_score != nullptr && m.host_edge_count != nullptr &&
-           m.dev_edge_count != nullptr;
+        ctx.stream != nullptr && ctx.completion_event != nullptr &&
+        ctx.dev_nextCandidate != nullptr && ctx.dev_nextChunk != nullptr &&
+        ctx.dev_overflowFlag != nullptr && ctx.host_overflowFlag != nullptr &&
+        r.output != nullptr && r.host_bounding_box != nullptr &&
+        r.dev_backface != nullptr && r.dev_transformed_vertex_zs != nullptr &&
+        r.dev_tangent_triangle != nullptr &&
+        r.dev_projected_triangles != nullptr &&
+        r.dev_projected_triangles_snapped != nullptr &&
+        r.dev_bounding_box_triangles != nullptr &&
+        r.dev_bounding_box_triangles_sizes != nullptr &&
+        r.dev_bounding_box_triangles_sizes_prefix != nullptr &&
+        r.dev_bounding_box != nullptr && r.dev_fragment_fill != nullptr &&
+        r.host_fragment_fill != nullptr && r.dev_stride_prefixes != nullptr &&
+        r.dev_cub_storage != nullptr && r.dev_metric_crop != nullptr &&
+        m.host_pixel_score != nullptr && m.dev_pixel_score != nullptr &&
+        m.host_distance_score != nullptr && m.dev_distance_score != nullptr &&
+        m.host_edge_count != nullptr && m.dev_edge_count != nullptr;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 // ===========================================================================
 // TEST 1: RenderPhase(EvaluationContext&) vs legacy Render() = byte-identical
@@ -215,7 +236,7 @@ TEST_CASE(
     REQUIRE(fix.setup());
 
     // --- Path A: Legacy serial Render() on bank 0 (engine's own buffers) ---
-    fix.engine->SetActiveBank(nullptr); // restore bank 0
+    fix.engine->SetActiveBank(nullptr);  // restore bank 0
     cudaError_t err = fix.engine->Render();
     REQUIRE(err == cudaSuccess);
 

@@ -13,7 +13,10 @@
  * + src/compute/evaluation_executor.cu InstallCudaFeederHooks.
  */
 #include <cuda_runtime.h>
+
 #include <algorithm>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -22,11 +25,7 @@
 #include <string>
 #include <vector>
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
-
 #include "compute/camera_calibration.h"
-#include "compute/evaluation_context.h"
 #include "compute/evaluation_executor.h"
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_frame.cuh"
@@ -57,46 +56,72 @@ struct GraphFixture {
 
     bool loadStl() {
         std::ifstream file(kImplant);
-        if (!file) return false;
+        if (!file) {
+            return false;
+        }
         std::string line;
         while (std::getline(file, line)) {
             std::istringstream facet(line);
             std::string keyword, nk;
             float nx = 0, ny = 0, nz = 0;
             facet >> keyword >> nk >> nx >> ny >> nz;
-            if (keyword != "facet" || nk != "normal") continue;
+            if (keyword != "facet" || nk != "normal") {
+                continue;
+            }
             std::vector<float> vertices;
             while (vertices.size() < 9 && std::getline(file, line)) {
                 std::istringstream vl(line);
                 vl >> keyword;
-                if (keyword != "vertex") continue;
+                if (keyword != "vertex") {
+                    continue;
+                }
                 float x = 0, y = 0, z = 0;
                 vl >> x >> y >> z;
                 vertices.insert(vertices.end(), {x, y, z});
             }
-            if (vertices.size() != 9) return false;
+            if (vertices.size() != 9) {
+                return false;
+            }
             triangles.insert(triangles.end(), vertices.begin(), vertices.end());
             normals.insert(normals.end(), {nx, ny, nz});
         }
-        return triangles.size() == static_cast<std::size_t>(kTriangleCount) * 9 &&
-               normals.size() == static_cast<std::size_t>(kTriangleCount) * 3;
+        return triangles.size() ==
+            static_cast<std::size_t>(kTriangleCount) * 9 &&
+            normals.size() == static_cast<std::size_t>(kTriangleCount) * 3;
     }
 
     bool setup() {
         int device_count = 0;
-        if (cudaGetDeviceCount(&device_count) != cudaSuccess || device_count == 0) return false;
-        if (!loadStl()) return false;
+        if (cudaGetDeviceCount(&device_count) != cudaSuccess ||
+            device_count == 0) {
+            return false;
+        }
+        if (!loadStl()) {
+            return false;
+        }
         const CameraCalibration calibration(1198.0f, 0.0f, 0.0f, 0.373f);
         engine = std::make_unique<gpu_cost_function::RenderEngine>(
-            kWidth, kHeight, 0, false, triangles.data(), normals.data(),
-            kTriangleCount, calibration);
-        if (!engine->IsInitializedCorrectly()) return false;
+            kWidth,
+            kHeight,
+            0,
+            false,
+            triangles.data(),
+            normals.data(),
+            kTriangleCount,
+            calibration);
+        if (!engine->IsInitializedCorrectly()) {
+            return false;
+        }
         metrics = std::make_unique<gpu_cost_function::GPUMetrics>();
-        if (!metrics->IsInitializedCorrectly()) return false;
+        if (!metrics->IsInitializedCorrectly()) {
+            return false;
+        }
         std::vector<unsigned char> host(kWidth * kHeight, 0);
-        for (int y = kHeight / 4; y < 3 * kHeight / 4; ++y)
-            for (int x = kWidth / 4; x < 3 * kWidth / 4; ++x)
+        for (int y = kHeight / 4; y < 3 * kHeight / 4; ++y) {
+            for (int x = kWidth / 4; x < 3 * kWidth / 4; ++x) {
                 host[y * kWidth + x] = 255;
+            }
+        }
         comparison_image = std::make_unique<gpu_cost_function::GPUImage>(
             kWidth, kHeight, 0, host.data());
         comparison_frame = std::make_unique<gpu_cost_function::GPUDilatedFrame>(
@@ -104,12 +129,13 @@ struct GraphFixture {
         distance_map = std::make_unique<gpu_cost_function::GPUFrame>(
             kWidth, kHeight, 0, host.data());
         return comparison_image->IsInitializedCorrectly() &&
-               comparison_frame->IsInitializedCorrectly() &&
-               distance_map->IsInitializedCorrectly();
+            comparison_frame->IsInitializedCorrectly() &&
+            distance_map->IsInitializedCorrectly();
     }
 };
 
-gpu_cost_function::GraphRecipeKey MakeKey(gpu_cost_function::RenderEngine* engine) {
+gpu_cost_function::GraphRecipeKey MakeKey(
+    gpu_cost_function::RenderEngine* engine) {
     gpu_cost_function::GraphRecipeKey k;
     k.recipeId = "direct_dilation_monoplane";
     k.biplane = false;
@@ -118,8 +144,11 @@ gpu_cost_function::GraphRecipeKey MakeKey(gpu_cost_function::RenderEngine* engin
     k.triangle_count = kTriangleCount;
     k.dilation = kDilation;
     k.camera_calib_hash = 0x1198000000000175ULL;
-    if (engine) k.cub_storage_bytes = engine->GetCubStorageBytes();
-    else k.cub_storage_bytes = 4096;
+    if (engine) {
+        k.cub_storage_bytes = engine->GetCubStorageBytes();
+    } else {
+        k.cub_storage_bytes = 4096;
+    }
     k.curvature_capacity = 0;
     k.maximum_stride_size = kMaximumStrideSize;
     k.graph_overhead_bytes = 0;
@@ -127,10 +156,12 @@ gpu_cost_function::GraphRecipeKey MakeKey(gpu_cost_function::RenderEngine* engin
     return k;
 }
 
-} // namespace
+}  // namespace
 
-TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-ordered scores",
-          "[u4][graph][gpu]") {
+TEST_CASE(
+    "U4 real greedy feeder launches real graphs and returns finite "
+    "input-ordered scores",
+    "[u4][graph][gpu]") {
     GraphFixture fix;
     REQUIRE(fix.setup());
 
@@ -140,8 +171,11 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     layout.height = kHeight;
     layout.triangle_count = kTriangleCount;
     layout.maximum_stride_size = kMaximumStrideSize;
-    if (fix.engine) layout.cub_storage_bytes = fix.engine->GetCubStorageBytes();
-    else layout.cub_storage_bytes = 4096;
+    if (fix.engine) {
+        layout.cub_storage_bytes = fix.engine->GetCubStorageBytes();
+    } else {
+        layout.cub_storage_bytes = 4096;
+    }
     layout.curvature_capacity = 0;
     layout.graph_overhead_bytes = 0;
     layout.biplane = false;
@@ -155,7 +189,8 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     const gpu_cost_function::GraphRecipe* rawRecipe = recipePtr.get();
     exec.registry().Register(std::move(recipePtr));
     REQUIRE(exec.registry().FindEligible("DIRECT_DILATION", false) != nullptr);
-    const gpu_cost_function::GraphRecipe* r = exec.registry().FindEligible("DIRECT_DILATION", false);
+    const gpu_cost_function::GraphRecipe* r =
+        exec.registry().FindEligible("DIRECT_DILATION", false);
     REQUIRE(r == rawRecipe);
 
     auto key = MakeKey(fix.engine.get());
@@ -163,27 +198,38 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     // Real prepareHook: per-context capture using the fixture's production
     // inputs (shared engine/metrics/comparison/distance) + the executor's
     // per-context stream (checked out by Prepare, so in_flight==true).
-    exec.InstallPrepareHook([&exec, &fix, r](std::size_t ctxIdx, const gpu_cost_function::GraphRecipeKey& k) -> void* {
-        gpu_cost_function::EvaluationContext* ctx = exec.pool().context(ctxIdx);
-        if (!ctx) return nullptr;
-        gpu_cost_function::GraphRecipeCaptureInputs inputs;
-        inputs.context = ctx;
-        inputs.render = fix.engine.get();
-        inputs.metrics = fix.metrics.get();
-        inputs.rendered_image = fix.comparison_image.get();
-        inputs.comparison_frame = fix.comparison_frame.get();
-        inputs.distance_map = fix.distance_map.get();
-        inputs.dilation = kDilation;
-        void* wrapper = nullptr;
-        // createGraph requires ctx.in_flight (Prepare's Checkout sets it) and
-        // ctx->stream == stream (pass ctx->stream) and initialized_correctly.
-        bool ok = r->createGraph(k, ctx->stream, inputs, &wrapper);
-        if (!ok || !wrapper) return nullptr;
-        return wrapper;
-    });
+    exec.InstallPrepareHook(
+        [&exec, &fix, r](
+            std::size_t ctxIdx,
+            const gpu_cost_function::GraphRecipeKey& k) -> void* {
+            gpu_cost_function::EvaluationContext* ctx =
+                exec.pool().context(ctxIdx);
+            if (!ctx) {
+                return nullptr;
+            }
+            gpu_cost_function::GraphRecipeCaptureInputs inputs;
+            inputs.context = ctx;
+            inputs.render = fix.engine.get();
+            inputs.metrics = fix.metrics.get();
+            inputs.rendered_image = fix.comparison_image.get();
+            inputs.comparison_frame = fix.comparison_frame.get();
+            inputs.distance_map = fix.distance_map.get();
+            inputs.dilation = kDilation;
+            void* wrapper = nullptr;
+            // createGraph requires ctx.in_flight (Prepare's Checkout sets it)
+            // and ctx->stream == stream (pass ctx->stream) and
+            // initialized_correctly.
+            bool ok = r->createGraph(k, ctx->stream, inputs, &wrapper);
+            if (!ok || !wrapper) {
+                return nullptr;
+            }
+            return wrapper;
+        });
     exec.InstallDestroyHook([&exec, r](std::size_t idx) {
         void* w = exec.graphExecAt(idx);
-        if (w) r->destroyGraph(w);
+        if (w) {
+            r->destroyGraph(w);
+        }
     });
 
     // Install real CUDA feeder hooks (enqueue: updateParams+launch+EventRecord,
@@ -191,7 +237,9 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
     gpu_cost_function::InstallCudaFeederHooks(exec);
 
     auto pre = exec.Prepare(key, 2);
-    INFO("Prepare kind=" << static_cast<int>(pre.kind) << " reason=" << pre.reason);
+    INFO(
+        "Prepare kind=" << static_cast<int>(pre.kind)
+                        << " reason=" << pre.reason);
     REQUIRE(pre.isOrderedScores());
     REQUIRE(exec.preparedContextCount() >= 2);
     REQUIRE(exec.graphExecsSize() >= 2);
@@ -204,24 +252,29 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
 
     std::vector<Point6D> poses{
         Point6D(0.0, 0.0, -900.0, 0.0, 0.0, 0.0),
-        Point6D(2.0, 1.0, -900.0, 0.0, 0.0, 0.0)
+        Point6D(2.0, 1.0, -900.0, 0.0, 0.0, 0.0)};
+    auto costWithIndex = [](const Point6D&, std::size_t) -> double {
+        return 0.0;
     };
-    auto costWithIndex = [](const Point6D&, std::size_t) -> double { return 0.0; };
     auto outcome = exec.RunBatchWithCost(poses, costWithIndex);
 
-    INFO("RunBatch kind=" << static_cast<int>(outcome.kind) << " reason=" << outcome.reason);
+    INFO(
+        "RunBatch kind=" << static_cast<int>(outcome.kind)
+                         << " reason=" << outcome.reason);
     REQUIRE(outcome.isOrderedScores());
     REQUIRE(outcome.scores.size() == 2);
     // Anti-stub: scores must be non-zero finite, NOT a constant. The graph
     // path's composition is white_sum + (-pixel_score) + distance/(edge+0.1).
-    // With a real white center patch, both poses produce distinct finite scores.
+    // With a real white center patch, both poses produce distinct finite
+    // scores.
     REQUIRE(std::isfinite(outcome.scores[0]));
     REQUIRE(std::isfinite(outcome.scores[1]));
     REQUIRE(outcome.scores[0] != Catch::Approx(0.0));
     REQUIRE(outcome.scores[1] != Catch::Approx(0.0));
-    // Anti-stub distinctness: the two poses render different silhouettes through
-    // the real RenderEngine, so real metric composition MUST yield different
-    // scores. A constant-returning completeFromPins stub would fail this.
+    // Anti-stub distinctness: the two poses render different silhouettes
+    // through the real RenderEngine, so real metric composition MUST yield
+    // different scores. A constant-returning completeFromPins stub would fail
+    // this.
     REQUIRE(outcome.scores[0] != outcome.scores[1]);
     REQUIRE(exec.firstSubmission());
 
@@ -244,7 +297,9 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
             std::size_t i = 0;
             while (i < src.size()) {
                 if (src[i] == '/' && i + 1 < src.size() && src[i + 1] == '/') {
-                    while (i < src.size() && src[i] != '\n') ++i;
+                    while (i < src.size() && src[i] != '\n') {
+                        ++i;
+                    }
                 } else {
                     code.push_back(src[i]);
                     ++i;
@@ -254,7 +309,8 @@ TEST_CASE("U4 real greedy feeder launches real graphs and returns finite input-o
         REQUIRE(code.find("cudaEventSynchronize") == std::string::npos);
         REQUIRE(code.find("cudaStreamSynchronize") == std::string::npos);
         REQUIRE(code.find("cudaDeviceSynchronize") == std::string::npos);
-        // The feeder must complete via completeFromPins, never the sync'ing complete().
+        // The feeder must complete via completeFromPins, never the sync'ing
+        // complete().
         REQUIRE(code.find("complete(") == std::string::npos);
         REQUIRE(code.find("completeFromPins") != std::string::npos);
     }

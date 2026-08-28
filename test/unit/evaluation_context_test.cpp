@@ -7,20 +7,20 @@
  * Checkout/Recycle. These tests are compute-only and remain headless.
  */
 
-#include <catch2/catch_test_macros.hpp>
 #include <cuda_runtime.h>
 
+#include <catch2/catch_test_macros.hpp>
 #include <cstdint>
-
-#include "compute/bank_state.cuh"
-#include "compute/evaluation_context.h"
 
 using gpu_cost_function::BankFootprintInput;
 using gpu_cost_function::EvaluationContext;
 using gpu_cost_function::EvaluationContextPool;
 using gpu_cost_function::EvaluationStatus;
 
-TEST_CASE("EvaluationContext null-init leaves every destructor-freed pointer null/false", "[evaluation_context]") {
+TEST_CASE(
+    "EvaluationContext null-init leaves every destructor-freed pointer "
+    "null/false",
+    "[evaluation_context]") {
     EvaluationContext ctx;
     REQUIRE(ctx.stream == nullptr);
     REQUIRE(ctx.completion_event == nullptr);
@@ -39,14 +39,18 @@ TEST_CASE("EvaluationContext null-init leaves every destructor-freed pointer nul
     REQUIRE(ctx.index == 0);
 }
 
-TEST_CASE("EvaluationContext secondary empty for monoplane", "[evaluation_context]") {
+TEST_CASE(
+    "EvaluationContext secondary empty for monoplane",
+    "[evaluation_context]") {
     EvaluationContext ctx;
     REQUIRE(ctx.secondary.output == nullptr);
     REQUIRE(ctx.secondary.dev_projected_triangles == nullptr);
     REQUIRE(ctx.secondary.dev_cub_storage == nullptr);
 }
 
-TEST_CASE("BankAdmission half-memory includes graph overhead and device counters", "[evaluation_context]") {
+TEST_CASE(
+    "BankAdmission half-memory includes graph overhead and device counters",
+    "[evaluation_context]") {
     BankFootprintInput in;
     in.width = 512;
     in.height = 512;
@@ -58,8 +62,9 @@ TEST_CASE("BankAdmission half-memory includes graph overhead and device counters
     in.biplane = false;
     auto base = gpu_cost_function::bank_state_math::footprint(in);
     REQUIRE(base.valid);
-    // U1: total includes 3*int device counters + 1*int host overflow + graph_overhead
-    in.graph_overhead_bytes = 1024 * 1024; // 1 MB
+    // U1: total includes 3*int device counters + 1*int host overflow +
+    // graph_overhead
+    in.graph_overhead_bytes = 1024 * 1024;  // 1 MB
     auto with_graph = gpu_cost_function::bank_state_math::footprint(in);
     REQUIRE(with_graph.valid);
     REQUIRE(with_graph.total_bytes == base.total_bytes + 1024 * 1024);
@@ -165,7 +170,9 @@ TEST_CASE(
     REQUIRE_FALSE(pool.IsInFlight(static_cast<std::size_t>(a)));
 }
 
-TEST_CASE("admission falls back to N=1 for insufficient free bytes", "[evaluation_context]") {
+TEST_CASE(
+    "admission falls back to N=1 for insufficient free bytes",
+    "[evaluation_context]") {
     BankFootprintInput in;
     in.width = 512;
     in.height = 512;
@@ -182,7 +189,9 @@ TEST_CASE("admission falls back to N=1 for insufficient free bytes", "[evaluatio
     REQUIRE_FALSE(adm.admitted);
 }
 
-TEST_CASE("ForceRelease makes context checkout-able again; LeavePoisoned does not", "[evaluation_context][lease]") {
+TEST_CASE(
+    "ForceRelease makes context checkout-able again; LeavePoisoned does not",
+    "[evaluation_context][lease]") {
     EvaluationContextPool pool;
     pool.InitForTest(4);
     int a = pool.Checkout();

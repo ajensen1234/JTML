@@ -1,0 +1,1290 @@
+#+TITLE: JTML CUDA Hot-Path / D2H Cleanup Notes
+#+SUBTITLE: DIRECT_DILATION single-pose optimization plan
+#+DATE: 2026-08-28
+#+OPTIONS: toc:3 num:nil
+
+* Purpose
+
+This note collects the concrete recommendations discussed for reducing DIRECT_DILATION
+hot-path overhead, especially device-to-host (D2H) synchronization, kernel-launch count,
+and device/host ping-pong.
+
+Priority:
+
+1. Make one pose evaluation cheap and easy to reason about.
+2. Remove host-visible intermediate state that does not need to be on the host.
+3. Collapse tiny kernels / unnecessary passes.
+4. Only later worry about multi-pose batching, stream concurrency, CUDA graphs, or
+   executor abstractions.
+
+The central profiling observation was:
+
+- ~16 CUDA kernel launches / pose evaluation
+- ~5 D2H copies / pose evaluation
+- ~1 memset / pose evaluation
+- many kernels only ~1--3 us
+- total D2H payload only 32 bytes / evaluation
+
+Therefore PCIe bandwidth is not the problem. The problem is synchronization, launch
+overhead, and repeatedly forcing the CPU to observe tiny pieces of device-side state.
+
+* Current state
+
+** DIRECT_DILATION cost
+
+Current cost is conceptually:
+
+#+begin_src cpp
+RenderPrimaryCamera(...);
+
+metric_score =
+    comparison_white_pixel_constant +
+    FastImplantDilationMetric(...);
+
+// Temporarily commented out while benchmarking:
+//
+// metric_score += DistanceMapMetric(...);
+#+end_src
+
+Temporarily disabling DistanceMapMetric increased throughput from roughly
+13k eval/s to roughly 17k eval/s.
+
+The DistanceMap arithmetic kernel itself was only about 1.7--1.9 us in the
+profile. Therefore a large part of the difference is the orchestration around
+that kernel: two tiny reset launches and two synchronous D2H copies.
+
+** Render path
+
+Current render pipeline is approximately:
+
+#+begin_example
+cudaMemset(render output)
+
+ResetKernel
+WorldToPixelKernel
+BoundingBoxForTrianglesKernel
+BoundingBoxSizesKernel
+
+CUB ExclusiveSum
+  -> CUB init kernel
+  -> CUB scan kernel
+
+PrepareLaunchPacketKernel
+
+D2H bounding_box      16 bytes
+D2H fragment_fill      4 bytes
+
+FillTriangleKernel_new
+#+end_example
+
+The old StridePrefixKernel is disabled.
+
+The old FillTriangleKernel is disabled while FillTriangleKernel_new is being
+validated.
+
+** FillTriangleKernel_new
+
+The new Fill kernel computes:
+
+#+begin_src cpp
+const int total =
+    prefix[triangle_count - 1] +
+    sizes[triangle_count - 1];
+#+end_src
+
+on the GPU.
+
+It then:
+
+- performs one global prefix binary search per block/chunk
+- loads a 256-entry prefix window into shared memory
+- processes 256-fragment chunks
+- uses a grid-stride loop so a fixed number of CUDA blocks can consume an
+  unknown amount of work
+- therefore does not fundamentally require the CPU to know fragment_fill
+
+The fixed grid should be calculated once:
+
+#+begin_src cpp
+int blocks_per_sm = 0;
+
+cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    &blocks_per_sm,
+    FillTriangleKernel_new,
+    threads_per_block,
+    0);
+
+this->fill_triangle_grid_ =
+    props.multiProcessorCount * blocks_per_sm;
+#+end_src
+
+Then the hot path is only:
+
+#+begin_src cpp
+FillTriangleKernel_new<<<fill_triangle_grid_, threads_per_block>>>(...);
+#+end_src
+
+Important C++ issue already found:
+
+#+begin_src cpp
+int fill_triangle_grid_ = ...;
+#+end_src
+
+inside the constructor creates a local variable that shadows the class member.
+
+Correct:
+
+#+begin_src cpp
+this->fill_triangle_grid_ = ...;
+#+end_src
+
+Enable =-Wshadow=.
+
+* Exact D2H accounting
+
+Legacy monoplane DIRECT_DILATION has five tiny D2H calls.
+
+** Render
+
+#+begin_src cpp
+cudaMemcpy(
+    renderer_output_->GetBoundingBox(),
+    dev_bounding_box_,
+    4 * sizeof(int),
+    cudaMemcpyDeviceToHost);
+
+cudaMemcpy(
+    fragment_fill_,
+    dev_fragment_fill_,
+    sizeof(int),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+Payload:
+
+- bounding box: 16 bytes
+- fragment fill: 4 bytes
+
+** Fast dilation metric
+
+#+begin_src cpp
+cudaMemcpy(
+    pixel_score_,
+    dev_pixel_score_,
+    sizeof(int),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+Payload:
+
+- dilation score: 4 bytes
+
+** Distance-map metric
+
+#+begin_src cpp
+cudaMemcpy(
+    distance_map_score_,
+    dev_distance_map_score_,
+    sizeof(int),
+    cudaMemcpyDeviceToHost);
+
+cudaMemcpy(
+    edge_pixels_count_,
+    dev_edge_pixels_count_,
+    sizeof(int),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+Payload:
+
+- distance sum: 4 bytes
+- edge count: 4 bytes
+
+Total = 32 bytes / pose.
+
+The payload is irrelevant. These copies matter because synchronous cudaMemcpy()
+creates host-visible completion points inside the evaluation pipeline.
+
+* Recommendation 1: remove fragment_fill D2H
+
+This should be the first D2H copy removed after FillTriangleKernel_new is proven
+correct.
+
+** Why the host currently reads fragment_fill
+
+Historically the host uses fragment_fill for:
+
+1. overflow check
+2. computing Fill grid size
+
+#+begin_src cpp
+fill_grid = ceil(fragment_fill / 256);
+#+end_src
+
+The new grid-stride Fill no longer needs (2).
+
+It computes total itself:
+
+#+begin_src cpp
+const int total =
+    prefix[triangle_count - 1] +
+    sizes[triangle_count - 1];
+#+end_src
+
+and fixed worker blocks consume chunks until =base >= total=.
+
+** Immediate deletion after correctness validation
+
+Delete:
+
+#+begin_src cpp
+cudaMemcpy(
+    fragment_fill_,
+    dev_fragment_fill_,
+    sizeof(int),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+Do not remove this until old Fill and new Fill produce matching rendered images
+and cost values.
+
+** Then delete PrepareLaunchPacketKernel
+
+PrepareLaunchPacketKernel computes:
+
+#+begin_src cpp
+dev_fragment_fill[0] =
+    sizes[triangle_count - 1] +
+    prefix[triangle_count - 1];
+#+end_src
+
+The new Fill kernel already computes the same value directly.
+
+Therefore, once the host no longer consumes fragment_fill:
+
+#+begin_example
+REMOVE:
+    PrepareLaunchPacketKernel
+    fragment_fill D2H
+#+end_example
+
+This removes one ~1.1 us kernel plus a synchronization/API call.
+
+** Overflow handling
+
+The remaining use of host fragment_fill is:
+
+#+begin_src cpp
+if (fragment_fill_[0] >
+    maximum_stride_size * (threads_per_block - 1)) {
+    ...
+}
+#+end_src
+
+Do not automatically preserve this host dependency.
+
+First determine why maximum_stride_size is still required after removing:
+
+- StridePrefixKernel
+- dev_stride_prefixes
+- host-computed Fill grid
+
+If the historical bound only existed to protect the stride-prefix array, then it
+may no longer be part of the new algorithm.
+
+If a bound is still required, keep it on-device.
+
+Example:
+
+#+begin_src cpp
+__global__ void OverflowCheckKernel(
+    const int* sizes,
+    const int* prefix,
+    int triangle_count,
+    int* overflow_flag,
+    long long max_fragments)
+{
+    if (blockIdx.x == 0 && threadIdx.x == 0) {
+        const long long total =
+            static_cast<long long>(prefix[triangle_count - 1]) +
+            static_cast<long long>(sizes[triangle_count - 1]);
+
+        *overflow_flag =
+            (total < 0 || total > max_fragments) ? 1 : 0;
+    }
+}
+#+end_src
+
+But do not immediately copy overflow_flag back to the host, because that simply
+creates another mid-pipeline sync.
+
+Possible approaches:
+
+- Fill checks overflow_flag itself and returns.
+- Inspect/report overflow only at the final evaluation completion.
+- Eliminate the obsolete capacity restriction entirely if no fixed-size
+  fragment-indexed storage remains.
+
+* Recommendation 2: remove bounding-box D2H
+
+This is the larger architectural cleanup.
+
+Current dependency:
+
+#+begin_example
+GPU computes dev_bounding_box_
+
+        |
+        v
+
+D2H 16 bytes
+SYNC
+
+        |
+        v
+
+CPU derives:
+    crop bounds
+    Edge grid
+    Dilate grid
+    Difference grid
+    DistanceMap grid
+
+        |
+        v
+
+GPU resumes
+#+end_example
+
+The bounding box is already on the GPU.
+
+The copy only exists because the CPU uses it to calculate launch dimensions.
+
+The fix is:
+
+#+begin_quote
+Keep bbox device-resident. Give metric kernels fixed worker grids and let the
+GPU derive the actual crop and actual work count from dev_bounding_box_.
+#+end_quote
+
+** Do not use the old fixed-2048 graph implementation
+
+The old graph path used fixed-max dimensions of at least 2048x2048.
+
+For a 512x512 frame that can launch roughly 16x the full-frame thread count.
+
+That is not necessary.
+
+Use ordinary grid-stride kernels.
+
+** DistanceMap example
+
+Instead of host-side:
+
+#+begin_src cpp
+int left   = max(bbox[0] - dilation, dilation);
+int bottom = max(bbox[1] - dilation, dilation);
+int right  = min(bbox[2] + dilation, width - dilation - 1);
+int top    = min(bbox[3] + dilation, height - dilation - 1);
+
+dim3 grid(...crop size...);
+
+DistanceMapMetric_Kernel<<<grid, 256>>>(...);
+#+end_src
+
+pass the device bbox:
+
+#+begin_src cpp
+__global__ void DistanceMapMetricKernel(
+    const unsigned char* projected,
+    const unsigned char* distance_map,
+    const int* bbox,
+    int* distance_sum,
+    int* edge_count,
+    int width,
+    int height,
+    int dilation)
+{
+    const int left =
+        max(bbox[0] - dilation, dilation);
+
+    const int bottom =
+        max(bbox[1] - dilation, dilation);
+
+    const int right =
+        min(bbox[2] + dilation, width - dilation - 1);
+
+    const int top =
+        min(bbox[3] + dilation, height - dilation - 1);
+
+    const int crop_width =
+        right - left + 1;
+
+    const int crop_height =
+        top - bottom + 1;
+
+    const int count =
+        crop_width * crop_height;
+
+    for (int n =
+             blockIdx.x * blockDim.x + threadIdx.x;
+         n < count;
+         n += blockDim.x * gridDim.x)
+    {
+        const int y =
+            bottom + n / crop_width;
+
+        const int x =
+            left + n % crop_width;
+
+        const int loc =
+            y * width + x;
+
+        if (projected[loc] == EDGE_PIXEL) {
+            atomicAdd(edge_count, 1);
+            atomicAdd(distance_sum, distance_map[loc]);
+        }
+    }
+}
+#+end_src
+
+Launch this with a fixed occupancy-derived worker grid.
+
+Result:
+
+#+begin_example
+REMOVE:
+    bbox D2H dependency for DistanceMap
+    CPU crop derivation
+    CPU dynamic grid calculation
+#+end_example
+
+** Edge kernel
+
+The existing Edge kernel has a useful 16x16 shared-memory tile and operates on a
+14x14 interior tile.
+
+Preserve that.
+
+Instead of using host-derived blockIdx.x/blockIdx.y dimensions, grid-stride over
+logical tiles:
+
+#+begin_src cpp
+const int tiles_x =
+    (crop_width + 13) / 14;
+
+const int tiles_y =
+    (crop_height + 13) / 14;
+
+const int tile_count =
+    tiles_x * tiles_y;
+
+for (int tile = blockIdx.x;
+     tile < tile_count;
+     tile += gridDim.x)
+{
+    const int tile_x = tile % tiles_x;
+    const int tile_y = tile / tiles_x;
+
+    // Translate tile_x/tile_y into the coordinates currently derived
+    // from blockIdx.x/blockIdx.y.
+
+    // Load 16x16 shared tile.
+    // __syncthreads()
+    // Process 14x14 interior.
+    // __syncthreads() before next tile reuses shared memory.
+}
+#+end_src
+
+This preserves the efficient shared-memory implementation while eliminating the
+host's need to know bbox.
+
+** Dilate kernel
+
+Same principle:
+
+- read dev_bounding_box_
+- calculate crop on-device
+- fixed worker grid
+- grid-stride over logical source-pixel/direction work
+
+The current four-search-direction mapping can stay.
+
+** Difference kernel
+
+Same principle:
+
+- read dev_bounding_box_
+- derive diff crop on-device
+- fixed grid
+- grid-stride over diff pixels
+
+A later fusion step can remove this standalone kernel entirely.
+
+* Recommendation 3: reduce three metric D2H copies to one
+
+Current metric returns:
+
+#+begin_example
+Fast:
+    pixel_score D2H
+
+Distance:
+    distance_sum D2H
+    edge_count D2H
+#+end_example
+
+Represent them as one device-side result:
+
+#+begin_src cpp
+struct DirectDilationResult {
+    int dilation_score;
+    int distance_sum;
+    int edge_count;
+};
+#+end_src
+
+Device:
+
+#+begin_src cpp
+DirectDilationResult* dev_result_;
+#+end_src
+
+Host:
+
+#+begin_src cpp
+DirectDilationResult host_result_;
+#+end_src
+
+At the END of all GPU work for one pose:
+
+#+begin_src cpp
+cudaMemcpy(
+    &host_result_,
+    dev_result_,
+    sizeof(DirectDilationResult),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+The benefit is not fewer bytes.
+
+The benefit is:
+
+- one API call
+- one host synchronization point
+- no CPU-visible intermediate score state
+
+* Recommendation 4: collapse reset kernels
+
+Current scalar hot path has approximately:
+
+#+begin_example
+ResetKernel(bbox)
+
+FastImplantDilationMetric_ResetPixelScoreKernel
+
+DistanceMapMetric_ResetPixelScoreKernel(distance_sum)
+DistanceMapMetric_ResetPixelScoreKernel(edge_count)
+#+end_example
+
+Each tiny one-thread reset costs roughly ~1 us in the profile.
+
+Adding a guard like:
+
+#+begin_src cpp
+if ((blockDim.x * blockIdx.x) + threadIdx.x == 0) {
+    dev_pixel_score[0] = 0;
+}
+#+end_src
+
+does not improve a kernel that is already launched as:
+
+#+begin_src cpp
+<<<1, 1>>>
+#+end_src
+
+There is already exactly one thread.
+
+Instead use one common reset:
+
+#+begin_src cpp
+__global__ void ResetDirectDilationEvaluation(
+    int* bbox,
+    DirectDilationResult* result,
+    int width,
+    int height)
+{
+    if (blockIdx.x == 0 && threadIdx.x == 0) {
+        bbox[0] = width - 1;
+        bbox[1] = height - 1;
+        bbox[2] = 0;
+        bbox[3] = 0;
+
+        result->dilation_score = 0;
+        result->distance_sum = 0;
+        result->edge_count = 0;
+    }
+}
+#+end_src
+
+Approximately:
+
+#+begin_example
+4 reset launches -> 1 reset launch
+#+end_example
+
+Later the reset may be fusible into another required kernel, but one explicit
+reset is simple and transparent.
+
+* Recommendation 5: fuse Difference + DistanceMap
+
+This is probably the best literal kernel fusion in the metric path.
+
+Current:
+
+#+begin_example
+DifferenceKernel:
+    scan image
+    read comparison
+    accumulate dilation score
+
+DistanceMapMetric_Kernel:
+    scan image
+    read distance map
+    accumulate distance sum
+    accumulate edge count
+#+end_example
+
+DistanceMap only cares about =EDGE_PIXEL=.
+
+Difference cares about =EDGE_PIXEL= or =DILATED_PIXEL=.
+
+Both can be calculated in one pass over a union crop.
+
+Concept:
+
+#+begin_src cpp
+__global__ void DirectDilationScoreKernel(
+    const unsigned char* image,
+    const unsigned char* comparison,
+    const unsigned char* distance_map,
+    const int* bbox,
+    DirectDilationResult* result,
+    int width,
+    int height,
+    int dilation)
+{
+    // Derive outer/union crop from bbox.
+
+    for (int n =
+             blockIdx.x * blockDim.x + threadIdx.x;
+         n < work_count;
+         n += blockDim.x * gridDim.x)
+    {
+        const int loc = ...;
+
+        const unsigned char pixel =
+            image[loc];
+
+        if (pixel == DILATED_PIXEL ||
+            pixel == EDGE_PIXEL)
+        {
+            if (comparison[loc] == WHITE_PIXEL)
+                atomicAdd(&result->dilation_score, 1);
+            else
+                atomicSub(&result->dilation_score, 1);
+        }
+
+        // Keep the exact original DistanceMap crop semantics.
+        if (inside_distance_crop &&
+            pixel == EDGE_PIXEL)
+        {
+            atomicAdd(
+                &result->distance_sum,
+                distance_map[loc]);
+
+            atomicAdd(
+                &result->edge_count,
+                1);
+        }
+    }
+}
+#+end_src
+
+Important:
+
+Difference and DistanceMap crop regions are not necessarily identical.
+
+Do not change the objective semantics while fusing.
+
+Either:
+
+- iterate over the larger union crop and guard the DistanceMap branch using the
+  original stricter crop, or
+- otherwise preserve both exact regions.
+
+Expected reduction:
+
+#+begin_example
+REMOVE:
+    one kernel launch
+    one separate image/crop traversal
+#+end_example
+
+* Recommendation 6: restore DistanceMap cheaply
+
+Commenting out DistanceMap was a good diagnostic, not necessarily the desired
+final objective.
+
+Profile shape:
+
+#+begin_example
+Distance reset
+Distance reset
+DistanceMap arithmetic kernel    ~1.7--1.9 us
+D2H distance_sum
+D2H edge_count
+#+end_example
+
+Desired shape:
+
+#+begin_example
+common reset already performed
+distance arithmetic fused into final score pass
+distance_sum + edge_count remain device-side
+one final result D2H
+#+end_example
+
+This should preserve the search-landscape benefit of DistanceMap while removing
+most of its orchestration penalty.
+
+* Recommendation 7: occupancy-derived fixed worker grids
+
+For a grid-stride kernel whose work count is device-derived, calculate a fixed
+worker count once during initialization.
+
+#+begin_src cpp
+int blocks_per_sm = 0;
+
+cudaError_t err =
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &blocks_per_sm,
+        SomeKernel,
+        threads_per_block,
+        dynamic_shared_memory_bytes);
+
+kernel_grid_ =
+    props.multiProcessorCount *
+    blocks_per_sm;
+#+end_src
+
+This does NOT launch or benchmark the kernel.
+
+It estimates the maximum resident blocks / SM for the compiled kernel, taking
+into account:
+
+- registers / thread
+- static shared memory / block
+- dynamic shared memory argument
+- threads / block
+- hardware resource limits
+
+Statically declared:
+
+#+begin_src cpp
+__shared__ int x[256];
+#+end_src
+
+is already known to CUDA. The occupancy function's final argument is only for
+dynamic =extern __shared__= memory.
+
+Occupancy maximum is a good first grid size, but maximum occupancy is not
+automatically maximum throughput.
+
+Benchmark:
+
+#+begin_example
+1 x SM count
+2 x SM count
+4 x SM count
+occupancy-max blocks/SM x SM count
+#+end_example
+
+* Recommendation 8: distinguish occupancy / grid coverage / concurrency
+
+These are different.
+
+** Per-SM occupancy
+
+How many blocks/warps can be resident inside one SM?
+
+Controlled by resources such as registers and shared memory.
+
+** Grid-level coverage
+
+Did you launch enough blocks to use all SMs?
+
+Profile examples:
+
+#+begin_example
+StridePrefixKernel     ~3 blocks
+CUB scan               ~7 blocks
+BoundingBoxSizes       ~49 blocks
+WorldToPixel           ~169 blocks
+FillTriangle           ~500+ blocks
+#+end_example
+
+A 3-block grid on an 84-SM GPU is inherently underutilized regardless of the
+internal occupancy of those three SMs.
+
+For these kernels, prefer:
+
+#+begin_quote
+Can this kernel disappear?
+#+end_quote
+
+over:
+
+#+begin_quote
+How can I optimize its occupancy?
+#+end_quote
+
+** Concurrent kernels / streams
+
+Independent kernels on separate streams may coexist.
+
+This is separate from the first two concepts.
+
+Do not add stream/event complexity to hide kernels that can instead be deleted.
+
+* Recommendation 9: possible within-pose concurrency later
+
+Lower priority than removing D2H and deleting kernels.
+
+** Overlap memset
+
+The image memset is independent of projection/bbox/scan until Fill writes into
+the image.
+
+Potential future shape:
+
+#+begin_example
+stream A:
+    memset output ----------------------+
+                                         |
+stream B:                                |
+    projection -> bbox -> scan ----------+-> Fill
+#+end_example
+
+Potentially hides the output clear.
+
+** Edge / Distance branch
+
+After Edge:
+
+#+begin_example
+                   +-> Dilate -> Difference
+Edge --------------+
+                   +-> DistanceMap
+#+end_example
+
+DistanceMap only consumes EDGE_PIXELs.
+
+Dilate preserves original EDGE_PIXEL values while marking neighboring pixels as
+DILATED_PIXEL.
+
+Therefore the branch can be independent after Edge.
+
+However:
+
+#+begin_quote
+Fuse Difference + DistanceMap first.
+#+end_quote
+
+Fusion removes work. Streams merely overlap work.
+
+* Recommendation 10: benchmark deleting the entire prefix/CUB work-balancing scheme
+
+Current raster preparation includes:
+
+#+begin_example
+BoundingBoxSizes
+CUB scan init
+CUB scan
+PrepareLaunchPacket
+(old StridePrefix)
+FillTriangle
+#+end_example
+
+At one point the preparation machinery consumed more aggregate GPU time than
+Fill itself.
+
+That is a reason to benchmark a simpler renderer.
+
+** One-block-per-triangle
+
+Concept:
+
+#+begin_src cpp
+RasterizeTriangles<<<triangle_count, 128>>>(...);
+#+end_src
+
+Each CUDA block owns one triangle.
+
+Within the block:
+
+1. load projected triangle
+2. calculate bbox
+3. threads stride over bbox pixels
+4. point-in-triangle test
+5. write 255 for inside pixels
+
+Overlapping triangles all write the same value, so overlapping output writes are
+benign for this silhouette image.
+
+Potentially remove:
+
+#+begin_example
+BoundingBoxSizes
+CUB init
+CUB scan
+PrepareLaunchPacket
+StridePrefix
+fragment-count work mapping
+#+end_example
+
+Tradeoff:
+
+Triangle bbox sizes vary, so this has worse load balancing.
+
+But the existing load-balancing infrastructure is expensive enough that the
+simple version has room to be less computationally efficient and still win.
+
+Benchmark it rather than theorizing.
+
+** Longer-term projection + bbox + raster fusion
+
+If block-per-triangle wins, a later kernel could potentially:
+
+1. transform/project its triangle vertices
+2. calculate triangle bbox
+3. update global model bbox
+4. rasterize the triangle
+
+That could remove intermediate projected/bbox arrays and several launches.
+
+Do not start here.
+
+* Recommended implementation order
+
+** Phase 0: correctness baseline
+
+Keep both current render D2H copies while validating FillTriangleKernel_new:
+
+- bbox D2H
+- fragment_fill D2H
+- PrepareLaunchPacket
+
+Compare old vs new Fill on:
+
+- rendered image
+- cost
+- optimizer movement
+- CUDA launch errors
+
+Prefer bit-identical rendered images if practical.
+
+Check new launches during debugging:
+
+#+begin_src cpp
+kernel<<<...>>>(...);
+
+cudaError_t err = cudaGetLastError();
+
+if (err != cudaSuccess) {
+    std::cerr << cudaGetErrorString(err) << '\n';
+}
+#+end_src
+
+** Phase 1: validate new fixed-grid Fill
+
+Use:
+
+#+begin_src cpp
+FillTriangleKernel_new<<<fill_triangle_grid_, 256>>>(...);
+#+end_src
+
+while leaving all old D2H data movement intact.
+
+This isolates the new work mapping.
+
+** Phase 2: delete fragment_fill D2H
+
+Once Fill is correct:
+
+#+begin_example
+DELETE:
+    cudaMemcpy(fragment_fill_, ...)
+#+end_example
+
+Verify again.
+
+** Phase 3: delete PrepareLaunchPacketKernel
+
+If no remaining hot-path code requires dev_fragment_fill:
+
+#+begin_example
+DELETE:
+    PrepareLaunchPacketKernel
+#+end_example
+
+Then reevaluate whether these can be deleted entirely:
+
+- fragment_fill_
+- dev_fragment_fill_
+- dev_stride_prefixes_
+- maximum_stride_size related logic
+
+** Phase 4: convert metric kernels to device bbox
+
+One at a time:
+
+1. DistanceMap
+2. Difference
+3. Dilate
+4. Edge
+
+Use fixed/grid-stride work.
+
+Leave bbox D2H in place until no CPU hot-path code consumes it.
+
+** Phase 5: delete bbox D2H
+
+Once all metric crop logic is on-device:
+
+#+begin_example
+DELETE:
+    cudaMemcpy(
+        host_bbox,
+        dev_bbox,
+        16 bytes,
+        cudaMemcpyDeviceToHost);
+#+end_example
+
+At this point render -> metrics remains device-side.
+
+** Phase 6: combine result storage
+
+Introduce:
+
+#+begin_src cpp
+struct DirectDilationResult {
+    int dilation_score;
+    int distance_sum;
+    int edge_count;
+};
+#+end_src
+
+** Phase 7: combine reset kernels
+
+Replace the independent bbox / fast / distance resets with one common reset.
+
+** Phase 8: fuse Difference + DistanceMap
+
+Write all three metric outputs during one final score kernel.
+
+** Phase 9: one final D2H
+
+At the end of the complete GPU evaluation:
+
+#+begin_src cpp
+cudaMemcpy(
+    &host_result,
+    dev_result,
+    sizeof(host_result),
+    cudaMemcpyDeviceToHost);
+#+end_src
+
+This should be the only required D2H synchronization in the monoplane scalar
+cost path.
+
+Rust / the optimizer genuinely needs the final scalar score before making its
+next decision. The intermediate values do not belong on the host.
+
+** Phase 10: re-enable DistanceMap
+
+Compare:
+
+- objective behavior
+- eval/s
+- optimizer convergence
+- kernel count
+- D2H count
+
+** Phase 11: profile again
+
+Target shape:
+
+#+begin_example
+memset
+combined reset
+WorldToPixel
+BBoxTriangles
+BBoxSizes
+CUB scan
+Fill
+Edge
+Dilate
+CombinedScore
+ONE final D2H
+#+end_example
+
+Roughly ~9--10 kernels and 1 D2H versus the legacy ~16 kernels and 5 D2H.
+
+Exact launch count depends on CUB and whether further fusions are worthwhile.
+
+** Phase 12: benchmark simpler rasterizer
+
+Only after the scalar D2H cleanup is stable, decide whether CUB/prefix-based
+raster work scheduling is still justified.
+
+* Desired end state
+
+Conceptually:
+
+#+begin_example
+Host:
+    set pose
+
+GPU:
+    memset output
+
+    ResetDirectDilationEvaluation
+        bbox initial values
+        dilation_score = 0
+        distance_sum = 0
+        edge_count = 0
+
+    WorldToPixel
+    BoundingBoxForTriangles
+    BoundingBoxSizes
+    CUB ExclusiveSum
+
+    FillTriangleGridStride
+        total = prefix[last] + size[last]
+        no fragment-fill host dependency
+
+    EdgeGridStride
+        reads dev bbox
+
+    DilateGridStride
+        reads dev bbox
+
+    DirectDilationScoreKernel
+        dilation score
+        distance sum
+        edge count
+
+Host:
+    ONE DirectDilationResult D2H
+
+    scalar =
+        comparison_white_pixel_constant
+        - dilation_score
+        + distance_sum / (edge_count + 0.1)
+#+end_example
+
+Desired invariant:
+
+#+begin_quote
+There should be no host-visible intermediate state between "submit pose" and
+"return final scalar cost".
+#+end_quote
+
+* What not to prioritize yet
+
+Do not prioritize:
+
+- generic batch adapter architecture
+- EvaluationExecutor
+- GraphRecipeRegistry
+- graph admission policies
+- CUDA graphs
+- many simultaneous poses
+- elaborate multi-stream scheduling
+- Rust DIRECT bookkeeping
+
+until the single-pose path is compact.
+
+Batching comes later, after measuring:
+
+- registers / thread
+- shared memory / block
+- achieved occupancy
+- active warps / SM
+- SM utilization
+- memory bandwidth
+- whether one pose saturates any GPU resource
+- how many independent pose workspaces can coexist
+
+* Next profiling measurements
+
+After each phase, record:
+
+- unprofiled eval/s
+- kernel launches / evaluation
+- D2H calls / evaluation
+- GPU kernel time / evaluation
+- CPU cudaLaunchKernel time
+- CPU cudaMemcpy time
+- grid sizes
+- kernel avg/median duration
+
+For Nsight Compute, concentrate on meaningful kernels:
+
+- FillTriangleKernel_new
+- Dilate
+- CombinedScore
+- WorldToPixel if still significant
+
+Inspect:
+
+- achieved occupancy
+- registers / thread
+- static shared memory / block
+- active warps / SM
+- eligible warps / cycle
+- branch efficiency
+- memory throughput
+- warp stall reasons
+- L1/L2 behavior
+
+Do not spend much time micro-optimizing tiny grid-underutilized kernels that are
+planned for deletion.
+
+* Working checklist
+
+- [ ] New Fill renders identically to old Fill.
+- [ ] New Fill produces identical/scalar-equivalent costs.
+- [ ] Optimizer moves normally with new Fill.
+- [ ] fill_triangle_grid_ is the class member, not a shadowing local.
+- [ ] Enable -Wshadow.
+- [ ] Delete old StridePrefixKernel after final validation.
+- [ ] Delete fragment_fill D2H.
+- [ ] Delete PrepareLaunchPacketKernel.
+- [ ] Reevaluate fragment-fill allocations.
+- [ ] Reevaluate dev_stride_prefixes_ allocation.
+- [ ] Reevaluate maximum_stride_size dependency.
+- [ ] Convert DistanceMap to device-bbox fixed/grid-stride work.
+- [ ] Convert Difference to device-bbox fixed/grid-stride work.
+- [ ] Convert Dilate to device-bbox fixed/grid-stride work.
+- [ ] Convert Edge to device-bbox tile-grid-stride work.
+- [ ] Delete bbox D2H.
+- [ ] Introduce DirectDilationResult.
+- [ ] Combine reset kernels.
+- [ ] Fuse Difference + DistanceMap.
+- [ ] Use exactly one final metric-result D2H.
+- [ ] Re-enable DistanceMap.
+- [ ] Re-profile.
+- [ ] Benchmark block-per-triangle renderer.
+- [ ] Only then investigate multiple simultaneous poses.

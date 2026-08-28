@@ -77,10 +77,10 @@ double CostFunctionManager::costFunctionDIRECT_DILATION() {
              gpu_dilated_frames_A_->at(current_frame_index_),
              DIRECT_DILATION_current_dilation_parameter));
 
-    metric_score += gpu_metrics_->DistanceMapMetric(
-        gpu_principal_model_->GetPrimaryCameraRenderedImage(),
-        gpu_distance_maps_->at(current_frame_index_),
-        DIRECT_DILATION_current_dilation_parameter);
+    // metric_score += gpu_metrics_->DistanceMapMetric(
+    //     gpu_principal_model_->GetPrimaryCameraRenderedImage(),
+    //     gpu_distance_maps_->at(current_frame_index_),
+    //     DIRECT_DILATION_current_dilation_parameter);
 
     /*Biplane Mode Only*/
     if (biplane_mode_) {

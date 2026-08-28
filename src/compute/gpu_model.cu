@@ -14,8 +14,7 @@ GPUModel::GPUModel(
     float* triangles,
     float* normals,
     int triangle_count,
-    CameraCalibration camera_calibration_primary_cam,
-    const CostCapacityService* capacity_service) {
+    CameraCalibration camera_calibration_primary_cam) {
     /*Initialize Model Names, Type, and Primary*/
     model_name_ = model_name;
     principal_model_ = principal_model;
@@ -33,9 +32,6 @@ GPUModel::GPUModel(
         normals,
         triangle_count,
         camera_calibration_primary_cam);
-    /*plan 010 U10: forward the optional capacity service (nullptr =
-     * pre-unit).*/
-    primary_cam_render_engine_->SetCapacityService(capacity_service);
     secondary_cam_render_engine_ = 0;
 
     /*Check to see if Render Engine Initialized Correctly*/
@@ -221,13 +217,6 @@ int GPUModel::GetPrimaryTriangleCount() const {
     return primary_cam_render_engine_->GetTriangleCount();
 }
 
-void GPUModel::SetCapacityService(const CostCapacityService* service) {
-    primary_cam_render_engine_->SetCapacityService(service);
-    if (secondary_cam_render_engine_ != nullptr) {
-        secondary_cam_render_engine_->SetCapacityService(service);
-    }
-}
-
 GPUImage* GPUModel::GetSecondaryCameraRenderedImage() {
     return secondary_cam_render_engine_->GetRenderOutput();
 };
@@ -293,48 +282,4 @@ void GPUModel::SetCurrentSecondaryCameraPose(Pose current_pose) {
     current_pose_B_ = current_pose;
 };
 
-bool GPUModel::TrySetActiveBank(BankState* bank) {
-    if (!initialized_correctly_ || primary_cam_render_engine_ == nullptr) {
-        return false;
-    }
-    primary_cam_render_engine_->SetActiveBank(bank);
-    if (bank != nullptr &&
-        primary_cam_render_engine_->GetActiveBank() != bank) {
-        primary_cam_render_engine_->SetActiveBank(nullptr);
-        return false;
-    }
-    if (biplane_mode_ && secondary_cam_render_engine_ != nullptr) {
-        secondary_cam_render_engine_->SetActiveBank(bank);
-        if (bank != nullptr &&
-            secondary_cam_render_engine_->GetActiveBank() != bank) {
-            primary_cam_render_engine_->SetActiveBank(nullptr);
-            secondary_cam_render_engine_->SetActiveBank(nullptr);
-            return false;
-        }
-    }
-    return true;
-}
-
-bool GPUModel::EnqueueRenderPrimaryCamera(BankState& bank) {
-    if (!TrySetActiveBank(&bank)) {
-        return false;
-    }
-    primary_cam_render_engine_->SetPose(current_pose_A_);
-    const auto error = primary_cam_render_engine_->RenderPhase(bank);
-    return error == cudaSuccess;
-}
-
-bool GPUModel::CompleteRenderPrimaryCamera(BankState& bank) {
-    const auto error = primary_cam_render_engine_->CompleteRenderPhase(bank);
-    if (error != cudaSuccess) {
-        TrySetActiveBank(nullptr);
-        return false;
-    }
-    return true;
-}
-
-bool GPUModel::RenderPrimaryCamera(BankState& bank) {
-    return EnqueueRenderPrimaryCamera(bank) &&
-        CompleteRenderPrimaryCamera(bank);
-}
 }  // namespace gpu_cost_function

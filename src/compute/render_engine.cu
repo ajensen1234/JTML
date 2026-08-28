@@ -1,6 +1,4 @@
 /*Render Engine Header*/
-#include "compute/cost_capacity_service.cuh"  // plan 010 U10
-#include "compute/evaluation_context.h"
 #include "compute/render_engine.cuh"
 
 /*Cub Library (CUDA)*/
@@ -102,6 +100,16 @@ __global__ void StridePrefixPersistentKernel(
     int triangle_count,
     int stride);
 
+__global__ void FillTriangleKernel_new(
+    int* sizes,
+    int* prefix,
+    int* bounding_boxes,
+    unsigned char* image,
+    int triangle_count,
+    int width,
+    int height,
+    float* projected);
+
 RenderEngine::RenderEngine(
     int width,
     int height,
@@ -159,6 +167,23 @@ RenderEngine::RenderEngine(
             4.0 * triangle_count_ / static_cast<double>(threads_per_block))),
         ceil(sqrt(
             4.0 * triangle_count_ / static_cast<double>(threads_per_block))));
+
+    cudaGetDevice(&device);
+
+    cudaDeviceProp props{};
+    cudaGetDeviceProperties(&props, device);
+
+    int blocks_per_sm = 0;
+
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &blocks_per_sm,
+        FillTriangleKernel_new,
+        threads_per_block,  // 256
+        0);                 // no dynamic shared memory
+
+    fill_triangle_grid_ = props.multiProcessorCount * blocks_per_sm;
+    std::cout << fill_triangle_grid_ << "\n";
+    std::cout << blocks_per_sm << "\n";
 
     /*Initialize Host Variables*/
     fragment_fill_ = 0;
@@ -433,122 +458,7 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
         initialized_correctly_ = false;
         FreeCuda();
     }
-    if (cudaStatus == cudaSuccess && !CaptureBank0Pointers()) {
-        initialized_correctly_ = false;
-        FreeCuda();
-        return cudaErrorInvalidValue;
-    }
     return cudaStatus;
-}
-
-bool RenderEngine::CaptureBank0Pointers() {
-    if (renderer_output_ == nullptr || dev_triangles_ == nullptr ||
-        dev_normals_ == nullptr || fragment_fill_ == nullptr) {
-        return false;
-    }
-    bank0_pointers_.z_line_values = dev_z_line_values_;
-    bank0_pointers_.transformed_vertex_zs = dev_transf_vertex_zs_;
-    bank0_pointers_.tangent_triangle = dev_tangent_triangle_;
-    bank0_pointers_.backface = dev_backface_;
-    bank0_pointers_.projected_triangles = dev_projected_triangles_;
-    bank0_pointers_.projected_triangles_snapped =
-        dev_projected_triangles_snapped_;
-    bank0_pointers_.bounding_box_triangles = dev_bounding_box_triangles_;
-    bank0_pointers_.bounding_box_triangles_sizes =
-        dev_bounding_box_triangles_sizes_;
-    bank0_pointers_.bounding_box_triangles_sizes_prefix =
-        dev_bounding_box_triangles_sizes_prefix_;
-    bank0_pointers_.bounding_box = dev_bounding_box_;
-    bank0_pointers_.fragment_fill_device = dev_fragment_fill_;
-    bank0_pointers_.fragment_fill_host = fragment_fill_;
-    bank0_pointers_.stride_prefixes = dev_stride_prefixes_;
-    bank0_pointers_.cub_storage = dev_cub_storage_;
-    bank0_pointers_.cub_storage_bytes = cub_storage_bytes_;
-    bank0_pointers_.output_device = renderer_output_->GetDeviceImagePointer();
-    bank0_pointers_.bounding_box_host = renderer_output_->GetBoundingBox();
-    active_output_device_ = bank0_pointers_.output_device;
-    active_bounding_box_host_ = renderer_output_->GetBoundingBox();
-    bank0_pointers_captured_ = true;
-    active_bank_ = nullptr;
-    execution_stream_ = nullptr;
-    return true;
-}
-
-bool RenderEngine::BindBankPointers(BankState* bank) {
-    if (!bank0_pointers_captured_) {
-        return false;
-    }
-    if (bank == nullptr) {
-        RestoreBank0Pointers();
-        return true;
-    }
-    const auto& r = bank->primary;
-    if (r.output == nullptr || r.host_bounding_box == nullptr ||
-        r.dev_transformed_vertex_zs == nullptr || r.dev_backface == nullptr ||
-        r.dev_projected_triangles == nullptr ||
-        r.dev_projected_triangles_snapped == nullptr ||
-        r.dev_bounding_box_triangles == nullptr ||
-        r.dev_bounding_box_triangles_sizes == nullptr ||
-        r.dev_bounding_box_triangles_sizes_prefix == nullptr ||
-        r.dev_bounding_box == nullptr || r.dev_fragment_fill == nullptr ||
-        r.host_fragment_fill == nullptr || r.dev_stride_prefixes == nullptr ||
-        r.dev_cub_storage == nullptr) {
-        return false;
-    }
-    dev_z_line_values_ = nullptr;
-    dev_transf_vertex_zs_ = static_cast<float*>(r.dev_transformed_vertex_zs);
-    dev_tangent_triangle_ = static_cast<bool*>(r.dev_tangent_triangle);
-    dev_backface_ = static_cast<bool*>(r.dev_backface);
-    dev_projected_triangles_ = static_cast<float*>(r.dev_projected_triangles);
-    dev_projected_triangles_snapped_ =
-        static_cast<int*>(r.dev_projected_triangles_snapped);
-    dev_bounding_box_triangles_ =
-        static_cast<int*>(r.dev_bounding_box_triangles);
-    dev_bounding_box_triangles_sizes_ =
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes);
-    dev_bounding_box_triangles_sizes_prefix_ =
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix);
-    dev_bounding_box_ = static_cast<int*>(r.dev_bounding_box);
-    dev_fragment_fill_ = static_cast<int*>(r.dev_fragment_fill);
-    fragment_fill_ = static_cast<int*>(r.host_fragment_fill);
-    dev_stride_prefixes_ = static_cast<int*>(r.dev_stride_prefixes);
-    dev_cub_storage_ = r.dev_cub_storage;
-    cub_storage_bytes_ = r.cub_storage_bytes;
-    active_output_device_ = static_cast<unsigned char*>(r.output);
-    active_bounding_box_host_ = static_cast<int*>(r.host_bounding_box);
-    active_bank_ = bank;
-    execution_stream_ = bank->stream == nullptr
-        ? nullptr
-        : reinterpret_cast<cudaStream_t>(bank->stream);
-    return true;
-}
-
-void RenderEngine::RestoreBank0Pointers() {
-    if (!bank0_pointers_captured_) {
-        return;
-    }
-    dev_z_line_values_ = bank0_pointers_.z_line_values;
-    dev_transf_vertex_zs_ = bank0_pointers_.transformed_vertex_zs;
-    dev_tangent_triangle_ = bank0_pointers_.tangent_triangle;
-    dev_backface_ = bank0_pointers_.backface;
-    dev_projected_triangles_ = bank0_pointers_.projected_triangles;
-    dev_projected_triangles_snapped_ =
-        bank0_pointers_.projected_triangles_snapped;
-    dev_bounding_box_triangles_ = bank0_pointers_.bounding_box_triangles;
-    dev_bounding_box_triangles_sizes_ =
-        bank0_pointers_.bounding_box_triangles_sizes;
-    dev_bounding_box_triangles_sizes_prefix_ =
-        bank0_pointers_.bounding_box_triangles_sizes_prefix;
-    dev_bounding_box_ = bank0_pointers_.bounding_box;
-    dev_fragment_fill_ = bank0_pointers_.fragment_fill_device;
-    fragment_fill_ = bank0_pointers_.fragment_fill_host;
-    dev_stride_prefixes_ = bank0_pointers_.stride_prefixes;
-    dev_cub_storage_ = bank0_pointers_.cub_storage;
-    cub_storage_bytes_ = bank0_pointers_.cub_storage_bytes;
-    active_output_device_ = bank0_pointers_.output_device;
-    active_bounding_box_host_ = bank0_pointers_.bounding_box_host;
-    active_bank_ = nullptr;
-    execution_stream_ = nullptr;
 }
 
 void RenderEngine::SetPose(Pose model_pose) {
@@ -817,15 +727,162 @@ __global__ void StridePrefixKernel(
     }
 }
 
-__global__ void FillTriangleKernel(
-    int* dev_bounding_box_triangles_sizes,
-    int* dev_bounding_box_triangles_sizes_prefix,
-    int* dev_bounding_box_triangles,
-    unsigned char* dev_image,
+__global__ void FillTriangleKernel_new(
+    int* sizes,
+    int* prefix,
+    int* bounding_boxes,
+    unsigned char* image,
     int triangle_count,
     int width,
     int height,
-    float* dev_projected_triangles,
+    float* projected) {
+    __shared__ int start_triangle;
+    __shared__ int reduced_prefix[256];
+
+    const int total = prefix[triangle_count - 1] + sizes[triangle_count - 1];
+
+    for (int chunk = blockIdx.x;; chunk += gridDim.x) {
+        const int base = chunk * blockDim.x;
+        /*
+         * Uniform for the entire block, so every thread either
+         * continues or breaks together.
+         */
+        if (base >= total) {
+            break;
+        }
+
+        /*
+         * Find the triangle containing the first fragment owned
+         * by this block/chunk.
+         */
+        if (threadIdx.x == 0) {
+            int low = 0;
+            int high = triangle_count;
+
+            while (low != high) {
+                const int mid = (low + high) / 2;
+
+                if (prefix[mid] <= base) {
+                    low = mid + 1;
+                } else {
+                    high = mid;
+                }
+            }
+
+            start_triangle = high - 1;
+        }
+
+        __syncthreads();
+
+        /*
+         * Cache the next <=256 prefix entries into shared memory.
+         */
+        const int prefix_idx = start_triangle + threadIdx.x;
+
+        if (prefix_idx < triangle_count) {
+            reduced_prefix[threadIdx.x] = prefix[prefix_idx];
+        } else {
+            reduced_prefix[threadIdx.x] = INT_MAX;
+        }
+
+        __syncthreads();
+
+        const int i = base + threadIdx.x;
+
+        if (i < total) {
+            int low = 0;
+            int high = min(
+                static_cast<int>(blockDim.x), triangle_count - start_triangle);
+
+            while (low != high) {
+                const int mid = (low + high) / 2;
+
+                if (reduced_prefix[mid] <= i) {
+                    low = mid + 1;
+                } else {
+                    high = mid;
+                }
+            }
+
+            const int triangle_index = high - 1 + start_triangle;
+
+            const int triangle_index4 = 4 * triangle_index;
+
+            const int lx = bounding_boxes[triangle_index4];
+            const int by = bounding_boxes[triangle_index4 + 1];
+            const int rx = bounding_boxes[triangle_index4 + 2];
+
+            const int bbox_width = rx - lx + 1;
+
+            const int inside_index = i - prefix[triangle_index];
+
+            const int px_pixel = lx + inside_index % bbox_width;
+
+            const int py_pixel = by + inside_index / bbox_width;
+
+            const float px = static_cast<float>(px_pixel) + 0.5f;
+            const float py = static_cast<float>(py_pixel) + 0.5f;
+
+            const int triangle_index6 = 6 * triangle_index;
+
+            const float x1 = projected[triangle_index6];
+            const float y1 = projected[triangle_index6 + 1];
+            const float x2 = projected[triangle_index6 + 2];
+            const float y2 = projected[triangle_index6 + 3];
+            const float x3 = projected[triangle_index6 + 4];
+            const float y3 = projected[triangle_index6 + 5];
+
+            const float denominator =
+                (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+
+            const float a = (y2 - y3) * (px - x3) + (x3 - x2) * (py - y3);
+
+            if (denominator > 0.0f) {
+                if (0.0f <= a && a <= denominator) {
+                    const float b =
+                        (y3 - y1) * (px - x3) + (x1 - x3) * (py - y3);
+
+                    if (0.0f <= b && b <= denominator) {
+                        const float c = denominator - a - b;
+
+                        if (0.0f <= c && c <= denominator) {
+                            image[py_pixel * width + px_pixel] = 255;
+                        }
+                    }
+                }
+            } else {
+                if (0.0f >= a && a >= denominator) {
+                    const float b =
+                        (y3 - y1) * (px - x3) + (x1 - x3) * (py - y3);
+
+                    if (0.0f >= b && b >= denominator) {
+                        const float c = denominator - a - b;
+
+                        if (0.0f >= c && c >= denominator) {
+                            image[py_pixel * width + px_pixel] = 255;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+         * Required: no thread may begin the next chunk and overwrite
+         * shared state while another thread is still using it.
+         */
+        __syncthreads();
+    }
+}
+
+__global__ void FillTriangleKernel(
+    int* sizes,
+    int* prefix,
+    int* bounding_boxes,
+    unsigned char* iamges,
+    int triangle_count,
+    int width,
+    int height,
+    float* projected,
     int* dev_stride_prefixes) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     __shared__ int stridedIndex;
@@ -839,7 +896,7 @@ __global__ void FillTriangleKernel(
         while (low != high) {
             int mid = (low + high) / 2;
 
-            if (dev_bounding_box_triangles_sizes_prefix[mid] <= j) {
+            if (prefix[mid] <= j) {
                 low = mid + 1;
             } else {
                 high = mid;
@@ -851,19 +908,16 @@ __global__ void FillTriangleKernel(
 
     __syncthreads();
 
-    if (i < dev_bounding_box_triangles_sizes_prefix[triangle_count - 1] +
-            dev_bounding_box_triangles_sizes[triangle_count - 1]) {
+    if (i < prefix[triangle_count - 1] + sizes[triangle_count - 1]) {
         /*Index of Triangle for the given stride (stride is of size 256 and the
          * stride group is blockIdx.x)*/
         // int stridedIndex = dev_stride_prefixes[blockIdx.x];
 
         /*Load [stridedIndex, stridedIndex + 255] at most (256) elements to
          * another shared memory (could hit upper bound)*/
-        __shared__ int reducedBoundingBoxTrianglesSizePrefix[threads_per_block];
+        __shared__ int reducedPrefix[threads_per_block];
         if (threadIdx.x + stridedIndex < triangle_count) {
-            reducedBoundingBoxTrianglesSizePrefix[threadIdx.x] =
-                dev_bounding_box_triangles_sizes_prefix
-                    [threadIdx.x + stridedIndex];
+            reducedPrefix[threadIdx.x] = prefix[threadIdx.x + stridedIndex];
         }
         __syncthreads();
 
@@ -873,12 +927,9 @@ __global__ void FillTriangleKernel(
         int mid = 0;
         int triangleIndex = -1;
 
-        /*Binary Search Loop*/
         while (low != high) {
-            /*Calculate Mid Index*/
             mid = (low + high) / 2;
-
-            if (reducedBoundingBoxTrianglesSizePrefix[mid] <= i) {
+            if (reducedPrefix[mid] <= i) {
                 low = mid + 1;
             } else {
                 high = mid;
@@ -888,11 +939,10 @@ __global__ void FillTriangleKernel(
 
         /*Calculate the Pixel to Evaluate (Corresponding to Thread)*/
         int triangleIndex4 = 4 * triangleIndex;
-        int Lx = dev_bounding_box_triangles[triangleIndex4];
-        int By = dev_bounding_box_triangles[triangleIndex4 + 1];
-        int Rx = dev_bounding_box_triangles[triangleIndex4 + 2];
-        int insideIndex =
-            i - dev_bounding_box_triangles_sizes_prefix[triangleIndex];
+        int Lx = bounding_boxes[triangleIndex4];
+        int By = bounding_boxes[triangleIndex4 + 1];
+        int Rx = bounding_boxes[triangleIndex4 + 2];
+        int insideIndex = i - prefix[triangleIndex];
         int pxPixel = Lx + insideIndex % (Rx - Lx + 1);
         int pyPixel = By + insideIndex / (Rx - Lx + 1);
         float px = pxPixel + 0.5;
@@ -900,12 +950,12 @@ __global__ void FillTriangleKernel(
 
         /*Load in Triangle Coordinates*/
         int triangleIndex6 = 6 * triangleIndex;
-        float x1 = dev_projected_triangles[triangleIndex6];
-        float y1 = dev_projected_triangles[triangleIndex6 + 1];
-        float x2 = dev_projected_triangles[triangleIndex6 + 2];
-        float y2 = dev_projected_triangles[triangleIndex6 + 3];
-        float x3 = dev_projected_triangles[triangleIndex6 + 4];
-        float y3 = dev_projected_triangles[triangleIndex6 + 5];
+        float x1 = projected[triangleIndex6];
+        float y1 = projected[triangleIndex6 + 1];
+        float x2 = projected[triangleIndex6 + 2];
+        float y2 = projected[triangleIndex6 + 3];
+        float x3 = projected[triangleIndex6 + 4];
+        float y3 = projected[triangleIndex6 + 5];
 
         /*Use Barycentric Coordinates to Check if Point is In Triangle*/
         float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
@@ -917,7 +967,7 @@ __global__ void FillTriangleKernel(
                 if (0 <= b && b <= denominator) {
                     float c = denominator - a - b;
                     if (0 <= c && c <= denominator) {
-                        dev_image[(pyPixel)*width + pxPixel] = 255;
+                        iamges[(pyPixel)*width + pxPixel] = 255;
                     }
                 }
             }
@@ -927,7 +977,7 @@ __global__ void FillTriangleKernel(
                 if (0 >= b && b >= denominator) {
                     float c = denominator - a - b;
                     if (0 >= c && c >= denominator) {
-                        dev_image[(pyPixel)*width + pxPixel] = 255;
+                        iamges[(pyPixel)*width + pxPixel] = 255;
                     }
                 }
             }
@@ -1160,22 +1210,23 @@ cudaError_t RenderEngine::Render() {
     /*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to
     process (last element in dev_boundingBoxTrianglesSizePrefix and last element
     in dev_boundingBoxTrianglesSize)*/
-    PrepareLaunchPacketKernel<<<1, 1>>>(
-        dev_fragment_fill_,
-        dev_bounding_box_triangles_sizes_,
-        dev_bounding_box_triangles_sizes_prefix_,
-        triangle_count_);
+    // PrepareLaunchPacketKernel<<<1, 1>>>(
+    //     dev_fragment_fill_,
+    //     dev_bounding_box_triangles_sizes_,
+    //     dev_bounding_box_triangles_sizes_prefix_,
+    //     triangle_count_);
 
     cudaMemcpy(
         renderer_output_->GetBoundingBox(),
         dev_bounding_box_,
         4 * sizeof(int),
         cudaMemcpyDeviceToHost);
-    cudaMemcpy(
-        fragment_fill_,
-        dev_fragment_fill_,
-        1 * sizeof(int),
-        cudaMemcpyDeviceToHost);
+
+    // cudaMemcpy(
+    //     fragment_fill_,
+    //     dev_fragment_fill_,
+    //     1 * sizeof(int),
+    //     cudaMemcpyDeviceToHost);
 
     /*Because doing a binary search for every fragement on the prefix search
     takes too long, we first do this on every 256th fragment, then load the
@@ -1186,37 +1237,20 @@ cudaError_t RenderEngine::Render() {
     triangle test.*/
 
     /*Error check for too many fragments.*/
-    if (static_cast<double>(fragment_fill_[0]) >
-        static_cast<double>(maximum_stride_size) *
-            static_cast<double>(threads_per_block - 1)) {
-        fprintf(
-            stderr,
-            "Fragment overflow! Please shrink image and/or reduce model "
-            "triangle count!");
-        fragment_overflow_ = true;
-        return cudaErrorMemoryAllocation;
-    }
+    // if (static_cast<double>(fragment_fill_[0]) >
+    //     static_cast<double>(maximum_stride_size) *
+    //         static_cast<double>(threads_per_block - 1)) {
+    //     fprintf(
+    //         stderr,
+    //         "Fragment overflow! Please shrink image and/or reduce model "
+    //         "triangle count!");
+    //     fragment_overflow_ = true;
+    //     return cudaErrorMemoryAllocation;
+    // }
 
-    /*Plan 010 U10: FillTriangleKernel is block-pinned at threads_per_block; its
-     * grid is ceil(fragment_fill_/threads_per_block) -- the minimal covering
-     * grid. When the capacity service is available and the work is within
-     * SAFE_CAP, gridFor(fragment_fill_, 256) returns exactly this value (a
-     * strict bit-identity no-op); otherwise the EXACT pre-unit formula is used
-     * (P2 fallback). This never changes the produced grid, so bit-identity is
-     * preserved by construction. StridePrefixKernel above is left untouched
-     * (its grid divides by threads_per_block^2 -- structure-specific, per the
-     * plan's per-kernel policy).*/
-    int fill_grid = static_cast<int>(ceil(
-        static_cast<double>(fragment_fill_[0]) /
-        static_cast<double>(threads_per_block)));
-    if (capacity_service_ && capacity_service_->available()) {
-        const CapacityGrid cg =
-            capacity_service_->gridFor(fragment_fill_[0], threads_per_block);
-        if (cg.capacity_applicable) {
-            // == ceil(fragment/256) == the pre-unit formula above (no-op).
-            fill_grid = cg.grid_blocks;
-        }
-    }
+    // int fill_grid = static_cast<int>(ceil(
+    //     static_cast<double>(fragment_fill_[0]) /
+    //     static_cast<double>(threads_per_block)));
     /*StridePrefixKernel: block-pinned at threads_per_block; grid divides by
      * threads_per_block^2 (the stride-prefix structure). Left UNTOUCHED per the
      * plan's per-kernel policy (capacity is a no-op here -- the formula is
@@ -1232,7 +1266,18 @@ cudaError_t RenderEngine::Render() {
     //     dev_stride_prefixes_,
     //     triangle_count_);
 
-    FillTriangleKernel<<<fill_grid, threads_per_block>>>(
+    // FillTriangleKernel<<<fill_grid, threads_per_block>>>(
+    //     dev_bounding_box_triangles_sizes_,
+    //     dev_bounding_box_triangles_sizes_prefix_,
+    //     dev_bounding_box_triangles_,
+    //     renderer_output_->GetDeviceImagePointer(),
+    //     triangle_count_,
+    //     width_,
+    //     height_,
+    //     dev_projected_triangles_,
+    //     dev_stride_prefixes_);
+
+    FillTriangleKernel_new<<<fill_triangle_grid_, threads_per_block>>>(
         dev_bounding_box_triangles_sizes_,
         dev_bounding_box_triangles_sizes_prefix_,
         dev_bounding_box_triangles_,
@@ -1240,8 +1285,12 @@ cudaError_t RenderEngine::Render() {
         triangle_count_,
         width_,
         height_,
-        dev_projected_triangles_,
-        dev_stride_prefixes_);
+        dev_projected_triangles_);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "FillTriangleKernel_new launch failed: "
+                  << cudaGetErrorString(err) << '\n';
+    }
 
     /*Check for Errors*/
     return cudaGetLastError();
@@ -1305,30 +1354,6 @@ bool RenderEngine::IsInitializedCorrectly() {
     return initialized_correctly_;
 };
 
-void RenderEngine::SetCapacityService(const CostCapacityService* service) {
-    capacity_service_ = service;
-}
-
-void RenderEngine::SetActiveBank(BankState* bank) {
-    if (bank == nullptr) {
-        RestoreBank0Pointers();
-        return;
-    }
-    (void)BindBankPointers(bank);
-}
-
-void RenderEngine::SetExecutionStream(cudaStream_t stream) {
-    execution_stream_ = stream;
-}
-
-BankState* RenderEngine::GetActiveBank() const {
-    return active_bank_;
-}
-
-cudaStream_t RenderEngine::GetExecutionStream() const {
-    return execution_stream_;
-}
-
 std::size_t RenderEngine::GetCubStorageBytes() const {
     return cub_storage_bytes_;
 }
@@ -1342,488 +1367,4 @@ int RenderEngine::GetHeight() const {
 int RenderEngine::GetTriangleCount() const {
     return triangle_count_;
 }
-
-cudaError_t RenderEngine::RenderPhase(BankState& bank) {
-    if (bank.stream == nullptr) {
-        return cudaErrorInvalidResourceHandle;
-    }
-    if (!BindBankPointers(&bank)) {
-        return cudaErrorInvalidValue;
-    }
-    auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
-    auto& r = bank.primary;
-    auto output = active_output_device_;
-    auto bbox_host = active_bounding_box_host_;
-    auto fragment_host = static_cast<int*>(r.host_fragment_fill);
-    if (output == nullptr || bbox_host == nullptr || fragment_host == nullptr ||
-        r.dev_bounding_box == nullptr || r.dev_fragment_fill == nullptr) {
-        return cudaErrorInvalidValue;
-    }
-
-    cudaError_t err = cudaMemsetAsync(
-        output, 0, width_ * height_ * sizeof(unsigned char), stream);
-    if (err != cudaSuccess) {
-        return err;
-    }
-    ResetKernel<<<1, 1, 0, stream>>>(
-        static_cast<int*>(r.dev_bounding_box), width_, height_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block, 0, stream>>>(
-        dev_triangles_,
-        static_cast<float*>(r.dev_projected_triangles),
-        static_cast<int*>(r.dev_projected_triangles_snapped),
-        3 * triangle_count_,
-        dist_over_pix_pitch_,
-        pix_conversion_x_,
-        pix_conversion_y_,
-        model_pose_.x_location_,
-        model_pose_.y_location_,
-        model_pose_.z_location_,
-        model_rotation_mat_,
-        dev_normals_,
-        static_cast<bool*>(r.dev_backface),
-        use_backface_culling_,
-        fx_,
-        fy_,
-        cx_,
-        cy_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    BoundingBoxForTrianglesKernel<<<
-        dim_grid_bounding_box_,
-        threads_per_block,
-        0,
-        stream>>>(
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        static_cast<int*>(r.dev_projected_triangles_snapped),
-        triangle_count_,
-        width_,
-        height_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    BoundingBoxSizesKernel<<<
-        dim_grid_triangles_,
-        threads_per_block,
-        0,
-        stream>>>(
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        triangle_count_,
-        static_cast<int*>(r.dev_bounding_box),
-        static_cast<bool*>(r.dev_backface));
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    err = cub::DeviceScan::ExclusiveSum(
-        r.dev_cub_storage,
-        r.cub_storage_bytes,
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        triangle_count_,
-        stream);
-    if (err != cudaSuccess) {
-        return err;
-    }
-    PrepareLaunchPacketKernel<<<1, 1, 0, stream>>>(
-        static_cast<int*>(r.dev_fragment_fill),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        triangle_count_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    err = cudaMemcpyAsync(
-        bbox_host,
-        r.dev_bounding_box,
-        4 * sizeof(int),
-        cudaMemcpyDeviceToHost,
-        stream);
-    if (err != cudaSuccess) {
-        return err;
-    }
-    err = cudaMemcpyAsync(
-        fragment_host,
-        r.dev_fragment_fill,
-        sizeof(int),
-        cudaMemcpyDeviceToHost,
-        stream);
-    if (err != cudaSuccess) {
-        return err;
-    }
-    return cudaStreamSynchronize(stream);
-}
-
-cudaError_t RenderEngine::CompleteRenderPhase(BankState& bank) {
-    if (bank.stream == nullptr || bank.primary.host_fragment_fill == nullptr) {
-        return cudaErrorInvalidResourceHandle;
-    }
-    if (!BindBankPointers(&bank)) {
-        return cudaErrorInvalidValue;
-    }
-    auto stream = reinterpret_cast<cudaStream_t>(bank.stream);
-    auto& r = bank.primary;
-    auto output = active_output_device_;
-    if (output == nullptr) {
-        return cudaErrorInvalidValue;
-    }
-    const int fragment_fill = *static_cast<int*>(r.host_fragment_fill);
-    if (static_cast<double>(fragment_fill) >
-        static_cast<double>(maximum_stride_size) *
-            static_cast<double>(threads_per_block - 1)) {
-        fragment_overflow_ = true;
-        return cudaErrorMemoryAllocation;
-    }
-    int fill_grid = static_cast<int>(ceil(
-        static_cast<double>(fragment_fill) /
-        static_cast<double>(threads_per_block)));
-    if (capacity_service_ && capacity_service_->available()) {
-        const CapacityGrid grid =
-            capacity_service_->gridFor(fragment_fill, threads_per_block);
-        if (grid.capacity_applicable) {
-            fill_grid = grid.grid_blocks;
-        }
-    }
-    StridePrefixKernel<<<
-        ceil(
-            static_cast<double>(fragment_fill) /
-            static_cast<double>(threads_per_block * threads_per_block)),
-        threads_per_block,
-        0,
-        stream>>>(
-        threads_per_block,
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        static_cast<int*>(r.dev_stride_prefixes),
-        triangle_count_);
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        return err;
-    }
-    FillTriangleKernel<<<fill_grid, threads_per_block, 0, stream>>>(
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        output,
-        triangle_count_,
-        width_,
-        height_,
-        static_cast<float*>(r.dev_projected_triangles),
-        static_cast<int*>(r.dev_stride_prefixes));
-    return cudaGetLastError();
-}
-}  // namespace gpu_cost_function
-
-// ── U4: EvaluationContext overloads — real kernel launches, no host barrier ──
-//
-// RenderPhase(EvaluationContext&): runs the full render pipeline on ctx.stream
-// using the same kernel chain as the BankState path, then launches the U4
-// persistent workers (StridePrefixPersistent + FillTrianglePersistent) with a
-// fixed grid and device-side overflow predication.  NO D2H copy and NO sync
-// here — that eliminates the host packet barrier (R5).
-//
-// CompleteRenderPhase(EvaluationContext&): syncs the stream, copies the
-// overflow flag D2H, then checks it.  Also copies bbox/fragment_fill D2H so
-// downstream metric kernels have the host-side values they need.
-//
-// Render(EvaluationContext&): synchronous wrapper = RenderPhase +
-// CompleteRenderPhase.
-
-namespace gpu_cost_function {
-
-cudaError_t RenderEngine::Render(EvaluationContext& ctx) {
-    cudaError_t err = EnqueueRenderPhase(ctx);
-    if (err != cudaSuccess) {
-        return err;
-    }
-    return CompleteRenderPhase(ctx);
-}
-
-cudaError_t RenderEngine::EnqueueRenderPhase(EvaluationContext& ctx) {
-    // A context is a checked-out lease, not merely a bag of pointers.  Reject
-    // stale/recycled contexts before rebinding the engine's raw aliases.
-    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.stream == nullptr ||
-        ctx.completion_event == nullptr) {
-        return cudaErrorInvalidResourceHandle;
-    }
-    auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
-
-    // ── Build a temporary BankState view from ctx so we can reuse
-    // BindBankPointers ──
-    BankState view;
-    view.index = ctx.index;
-    view.width = ctx.width;
-    view.height = ctx.height;
-    view.primary = ctx.primary;
-    view.stream = ctx.stream;
-    view.completion_event = ctx.completion_event;
-    view.in_flight = ctx.in_flight;
-
-    if (!BindBankPointers(&view)) {
-        return cudaErrorInvalidValue;
-    }
-    auto& r = view.primary;
-    auto output = active_output_device_;
-    if (output == nullptr) {
-        RestoreBank0Pointers();
-        return cudaErrorInvalidValue;
-    }
-
-    cudaError_t err;
-
-    // 1. Clear image
-    err = cudaMemsetAsync(
-        output, 0, width_ * height_ * sizeof(unsigned char), stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 2. Reset bbox
-    ResetKernel<<<1, 1, 0, stream>>>(
-        static_cast<int*>(r.dev_bounding_box), width_, height_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 3. WorldToPixel
-    WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block, 0, stream>>>(
-        dev_triangles_,
-        static_cast<float*>(r.dev_projected_triangles),
-        static_cast<int*>(r.dev_projected_triangles_snapped),
-        3 * triangle_count_,
-        dist_over_pix_pitch_,
-        pix_conversion_x_,
-        pix_conversion_y_,
-        model_pose_.x_location_,
-        model_pose_.y_location_,
-        model_pose_.z_location_,
-        model_rotation_mat_,
-        dev_normals_,
-        static_cast<bool*>(r.dev_backface),
-        use_backface_culling_,
-        fx_,
-        fy_,
-        cx_,
-        cy_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 4. BoundingBoxForTriangles
-    BoundingBoxForTrianglesKernel<<<
-        dim_grid_bounding_box_,
-        threads_per_block,
-        0,
-        stream>>>(
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        static_cast<int*>(r.dev_projected_triangles_snapped),
-        triangle_count_,
-        width_,
-        height_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 5. BoundingBoxSizes
-    BoundingBoxSizesKernel<<<
-        dim_grid_triangles_,
-        threads_per_block,
-        0,
-        stream>>>(
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        triangle_count_,
-        static_cast<int*>(r.dev_bounding_box),
-        static_cast<bool*>(r.dev_backface));
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 6. CUB exclusive prefix sum
-    err = cub::DeviceScan::ExclusiveSum(
-        r.dev_cub_storage,
-        r.cub_storage_bytes,
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        triangle_count_,
-        stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 7. PrepareLaunchPacket (writes dev_fragment_fill on device)
-    PrepareLaunchPacketKernel<<<1, 1, 0, stream>>>(
-        static_cast<int*>(r.dev_fragment_fill),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        triangle_count_);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // ── U4: persistent workers ──────────────────────────────────────
-    // Clear the per-context atomic counters (stream-ordered, no host sync).
-    auto* nextCandidate = static_cast<int*>(ctx.dev_nextCandidate);
-    auto* nextChunk = static_cast<int*>(ctx.dev_nextChunk);
-    auto* overflowFlag = static_cast<int*>(ctx.dev_overflowFlag);
-
-    if (!nextCandidate || !nextChunk || !overflowFlag) {
-        RestoreBank0Pointers();
-        return cudaErrorInvalidValue;
-    }
-
-    err = cudaMemsetAsync(nextCandidate, 0, sizeof(int), stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-    err = cudaMemsetAsync(nextChunk, 0, sizeof(int), stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-    err = cudaMemsetAsync(overflowFlag, 0, sizeof(int), stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 8. OverflowCheckKernel (device-side: writes overflowFlag)
-    // Use long long to avoid int overflow (10,000,000 * 255 > INT_MAX).
-    const long long maxFragments =
-        static_cast<long long>(maximum_stride_size) * (threads_per_block - 1);
-    OverflowCheckKernel<<<1, 1, 0, stream>>>(
-        static_cast<int*>(r.dev_fragment_fill), overflowFlag, maxFragments);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 9. StridePrefixPersistentKernel — fixed grid, self-retiring,
-    //    predicated on !overflowFlag.
-    StridePrefixPersistentKernel<<<
-        persistent_stride_blocks_,
-        threads_per_block,
-        0,
-        stream>>>(
-        nextChunk,
-        threads_per_block,
-        static_cast<int*>(r.dev_fragment_fill),
-        overflowFlag,
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        static_cast<int*>(r.dev_stride_prefixes),
-        triangle_count_,
-        threads_per_block);
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // 10. FillTrianglePersistentKernel — fixed grid, self-retiring,
-    //     predicated on !overflowFlag.  No shared-memory stride stage;
-    //     each thread does a global binary search on the prefix array.
-    FillTrianglePersistentKernel<<<
-        persistent_fill_blocks_,
-        threads_per_block,
-        0,
-        stream>>>(
-        nextCandidate,
-        threads_per_block,
-        static_cast<int*>(r.dev_fragment_fill),
-        overflowFlag,
-        triangle_count_,
-        static_cast<int*>(r.dev_bounding_box_triangles),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes),
-        static_cast<int*>(r.dev_bounding_box_triangles_sizes_prefix),
-        output,
-        width_,
-        height_,
-        static_cast<float*>(r.dev_projected_triangles),
-        static_cast<int*>(r.dev_stride_prefixes));
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // U4 chain tail: async D2H of overflow flag to pinned host memory.
-    // CompleteRenderPhase will sync then read from the pinned twin — no
-    // blocking cudaMemcpy on the graph path.
-    {
-        auto* host_overflow = static_cast<int*>(ctx.host_overflowFlag);
-        if (overflowFlag && host_overflow) {
-            err = cudaMemcpyAsync(
-                host_overflow,
-                overflowFlag,
-                sizeof(int),
-                cudaMemcpyDeviceToHost,
-                stream);
-            if (err != cudaSuccess) {
-                RestoreBank0Pointers();
-                return err;
-            }
-        }
-    }
-
-    // Restore bank-0 aliases — all GPU work is enqueued, no sync yet.
-    RestoreBank0Pointers();
-    return cudaSuccess;
-}
-
-cudaError_t RenderEngine::RenderPhase(EvaluationContext& ctx) {
-    return EnqueueRenderPhase(ctx);
-}
-
-cudaError_t RenderEngine::CompleteRenderPhase(EvaluationContext& ctx) {
-    if (!ctx.initialized_correctly || !ctx.in_flight || ctx.stream == nullptr ||
-        ctx.completion_event == nullptr || ctx.host_overflowFlag == nullptr) {
-        return cudaErrorInvalidResourceHandle;
-    }
-    auto stream = reinterpret_cast<cudaStream_t>(ctx.stream);
-
-    // Sync: wait for the full render→overflow→persistent chain to finish.
-    cudaError_t err = cudaStreamSynchronize(stream);
-    if (err != cudaSuccess) {
-        RestoreBank0Pointers();
-        return err;
-    }
-
-    // Read overflow flag from pinned host memory (async D2H was enqueued
-    // in RenderPhase at chain tail — no blocking D2H needed here).
-    auto* host_overflow = static_cast<int*>(ctx.host_overflowFlag);
-    // host_overflow is always valid if ctx was properly initialized.
-    // Check overflow (now safe — device value is in host memory).
-    if (*host_overflow) {
-        fragment_overflow_ = true;
-        RestoreBank0Pointers();
-        return cudaErrorMemoryAllocation;
-    }
-
-    RestoreBank0Pointers();
-    return cudaSuccess;
-}
-
 }  // namespace gpu_cost_function

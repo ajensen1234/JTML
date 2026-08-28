@@ -73,12 +73,12 @@ impl Default for MinBoxSize {
     fn default() -> Self {
         Self {
             values: [
-                Some(0.05),
-                Some(0.05),
-                Some(0.05),
-                Some(0.05),
-                Some(0.05),
-                Some(0.05),
+                Some(0.1),
+                Some(0.1),
+                Some(0.1),
+                Some(0.1),
+                Some(0.1),
+                Some(0.1),
             ],
         }
     }

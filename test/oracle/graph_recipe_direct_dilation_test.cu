@@ -8,6 +8,7 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -16,10 +17,7 @@
 #include <string>
 #include <vector>
 
-#include <catch2/catch_test_macros.hpp>
-
 #include "compute/camera_calibration.h"
-#include "compute/evaluation_context.h"
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_frame.cuh"
 #include "compute/gpu_image.cuh"
@@ -68,7 +66,9 @@ struct KneelFixture {
 
     bool loadStl() {
         std::ifstream file(kImplant);
-        if (!file) return false;
+        if (!file) {
+            return false;
+        }
         triangles.reserve(static_cast<std::size_t>(kTriangleCount) * 9);
         normals.reserve(static_cast<std::size_t>(kTriangleCount) * 3);
 
@@ -81,26 +81,32 @@ struct KneelFixture {
             float ny = 0.0f;
             float nz = 0.0f;
             facet >> keyword >> normal_keyword >> nx >> ny >> nz;
-            if (keyword != "facet" || normal_keyword != "normal") continue;
+            if (keyword != "facet" || normal_keyword != "normal") {
+                continue;
+            }
 
             std::vector<float> vertices;
             while (vertices.size() < 9 && std::getline(file, line)) {
                 std::istringstream vertex_line(line);
                 vertex_line >> keyword;
-                if (keyword != "vertex") continue;
+                if (keyword != "vertex") {
+                    continue;
+                }
                 float x = 0.0f;
                 float y = 0.0f;
                 float z = 0.0f;
                 vertex_line >> x >> y >> z;
                 vertices.insert(vertices.end(), {x, y, z});
             }
-            if (vertices.size() != 9) return false;
+            if (vertices.size() != 9) {
+                return false;
+            }
             triangles.insert(triangles.end(), vertices.begin(), vertices.end());
             normals.insert(normals.end(), {nx, ny, nz});
         }
         return triangles.size() ==
-                   static_cast<std::size_t>(kTriangleCount) * 9 &&
-               normals.size() == static_cast<std::size_t>(kTriangleCount) * 3;
+            static_cast<std::size_t>(kTriangleCount) * 9 &&
+            normals.size() == static_cast<std::size_t>(kTriangleCount) * 3;
     }
 
     bool setup() {
@@ -109,7 +115,9 @@ struct KneelFixture {
             device_count == 0) {
             return false;
         }
-        if (!loadStl()) return false;
+        if (!loadStl()) {
+            return false;
+        }
 
         const CameraCalibration calibration(1198.0f, 0.0f, 0.0f, 0.373f);
         engine = std::make_unique<gpu_cost_function::RenderEngine>(
@@ -121,10 +129,14 @@ struct KneelFixture {
             normals.data(),
             kTriangleCount,
             calibration);
-        if (!engine->IsInitializedCorrectly()) return false;
+        if (!engine->IsInitializedCorrectly()) {
+            return false;
+        }
 
         metrics = std::make_unique<gpu_cost_function::GPUMetrics>();
-        if (!metrics->IsInitializedCorrectly()) return false;
+        if (!metrics->IsInitializedCorrectly()) {
+            return false;
+        }
 
         // Match the established U4 fixture: a real non-empty comparison frame
         // with a white center patch, so the dilated white-sum baseline and raw
@@ -184,8 +196,8 @@ struct KneelFixture {
         return value;
     }
 
-    gpu_cost_function::GraphRecipeCaptureInputs
-    inputs(gpu_cost_function::EvaluationContext& context) {
+    gpu_cost_function::GraphRecipeCaptureInputs inputs(
+        gpu_cost_function::EvaluationContext& context) {
         return gpu_cost_function::GraphRecipeCaptureInputs{
             &context,
             engine.get(),
@@ -198,7 +210,8 @@ struct KneelFixture {
 };
 
 void SetPose(
-    gpu_cost_function::EvaluationContext& ctx, const PoseValues& pose) {
+    gpu_cost_function::EvaluationContext& ctx,
+    const PoseValues& pose) {
     ctx.x_location = pose.x;
     ctx.y_location = pose.y;
     ctx.z_location = pose.z;
@@ -209,13 +222,15 @@ void SetPose(
 }
 
 void SetEnginePose(
-    gpu_cost_function::RenderEngine& engine, const PoseValues& pose) {
-    engine.SetPose(gpu_cost_function::Pose(
-        pose.x, pose.y, pose.z, pose.x_angle, pose.y_angle, pose.z_angle));
+    gpu_cost_function::RenderEngine& engine,
+    const PoseValues& pose) {
+    engine.SetPose(
+        gpu_cost_function::Pose(
+            pose.x, pose.y, pose.z, pose.x_angle, pose.y_angle, pose.z_angle));
 }
 
-std::vector<unsigned char>
-CopyImage(const gpu_cost_function::EvaluationContext& ctx) {
+std::vector<unsigned char> CopyImage(
+    const gpu_cost_function::EvaluationContext& ctx) {
     std::vector<unsigned char> image(kWidth * kHeight);
     REQUIRE(
         cudaMemcpy(
@@ -226,8 +241,9 @@ CopyImage(const gpu_cost_function::EvaluationContext& ctx) {
     return image;
 }
 
-EvaluationResult
-ReadResult(const gpu_cost_function::EvaluationContext& ctx, double score) {
+EvaluationResult ReadResult(
+    const gpu_cost_function::EvaluationContext& ctx,
+    double score) {
     REQUIRE(ctx.metrics.host_pixel_score != nullptr);
     REQUIRE(ctx.metrics.host_distance_score != nullptr);
     REQUIRE(ctx.metrics.host_edge_count != nullptr);
@@ -288,8 +304,7 @@ EvaluationResult RunSerial(
         cudaSuccess);
 
     REQUIRE(ctx.comparison_image_white_sum > 0);
-    const double score =
-        static_cast<double>(ctx.comparison_image_white_sum) -
+    const double score = static_cast<double>(ctx.comparison_image_white_sum) -
         static_cast<double>(*static_cast<int*>(ctx.metrics.host_pixel_score)) +
         static_cast<double>(
             *static_cast<int*>(ctx.metrics.host_distance_score)) /
@@ -302,7 +317,8 @@ EvaluationResult RunSerial(
 }
 
 void RequireParity(
-    const EvaluationResult& graph, const EvaluationResult& serial) {
+    const EvaluationResult& graph,
+    const EvaluationResult& serial) {
     REQUIRE(graph.image == serial.image);
     REQUIRE(graph.pixel_score == serial.pixel_score);
     REQUIRE(graph.distance_score == serial.distance_score);
@@ -310,7 +326,7 @@ void RequireParity(
     RequireLayerCEqual(graph.score, serial.score);
 }
 
-} // namespace
+}  // namespace
 
 TEST_CASE(
     "oracle: U5 captures and validates the real Kneel_1 U4 chain",

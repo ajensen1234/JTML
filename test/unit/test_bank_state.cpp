@@ -2,13 +2,11 @@
  * Copyright 2023 Gary J. Miller Orthopaedic Biomechanics Lab
  * SPDX-License-Identifier: AGPL-3.0
  */
-/* Plan 010 U12 Stage 1: allocation-free bank-state contract and footprint math. */
+/* Plan 010 U12 Stage 1: allocation-free bank-state contract and footprint math.
+ */
 #include <catch2/catch_test_macros.hpp>
-
 #include <cstdint>
 #include <limits>
-
-#include "compute/bank_state.cuh"
 
 using gpu_cost_function::BankFootprintInput;
 using gpu_cost_function::BankState;
@@ -30,7 +28,9 @@ BankFootprintInput fixture(bool biplane = false) {
 }
 }  // namespace
 
-TEST_CASE("bank state represents the complete private write-set", "[bank_state]") {
+TEST_CASE(
+    "bank state represents the complete private write-set",
+    "[bank_state]") {
     BankState bank;
     REQUIRE(bank.primary.output == nullptr);
     REQUIRE(bank.primary.host_bounding_box == nullptr);
@@ -63,32 +63,42 @@ TEST_CASE("bank state represents the complete private write-set", "[bank_state]"
     REQUIRE(bank.metrics.dev_curvature == nullptr);
 }
 
-TEST_CASE("shared triangles and normals are excluded from footprint", "[bank_state]") {
+TEST_CASE(
+    "shared triangles and normals are excluded from footprint",
+    "[bank_state]") {
     SharedReadOnlyGeometry geometry;
     geometry.triangles = reinterpret_cast<const void*>(0x1);
     geometry.normals = reinterpret_cast<const void*>(0x2);
     const auto mono = footprint(fixture(false));
     REQUIRE(mono.valid);
     REQUIRE(mono.total_bytes > 0);
-    // The layout has no geometry fields, so changing only shared geometry cannot
-    // affect the pure write-set accounting.
+    // The layout has no geometry fields, so changing only shared geometry
+    // cannot affect the pure write-set accounting.
     REQUIRE(mono.total_bytes == footprint(fixture(false)).total_bytes);
     REQUIRE(geometry.triangles != nullptr);
     REQUIRE(geometry.normals != nullptr);
 }
 
-TEST_CASE("biplane doubles the render write-set but not shared metrics", "[bank_state]") {
+TEST_CASE(
+    "biplane doubles the render write-set but not shared metrics",
+    "[bank_state]") {
     const auto mono = footprint(fixture(false));
     const auto bi = footprint(fixture(true));
     REQUIRE(mono.valid);
     REQUIRE(bi.valid);
     REQUIRE(bi.render_bytes == mono.render_bytes * 2);
     REQUIRE(bi.metric_bytes == mono.metric_bytes);
-    // U1: total includes per-context counters (nextCandidate/nextChunk/overflowFlag) + host overflow + graph overhead
-    REQUIRE(bi.total_bytes == mono.render_bytes * 2 + mono.metric_bytes + 3 * sizeof(std::int32_t) + 1 * sizeof(std::int32_t));
+    // U1: total includes per-context counters
+    // (nextCandidate/nextChunk/overflowFlag) + host overflow + graph overhead
+    REQUIRE(
+        bi.total_bytes ==
+        mono.render_bytes * 2 + mono.metric_bytes + 3 * sizeof(std::int32_t) +
+            1 * sizeof(std::int32_t));
 }
 
-TEST_CASE("footprint arithmetic includes dimensions, scratch, metrics, curvature", "[bank_state]") {
+TEST_CASE(
+    "footprint arithmetic includes dimensions, scratch, metrics, curvature",
+    "[bank_state]") {
     auto base = fixture();
     auto with_curvature = base;
     with_curvature.curvature_capacity = 17;
@@ -124,7 +134,9 @@ TEST_CASE("admission uses half free memory and clamps N_MAX", "[bank_state]") {
     REQUIRE(admitted.admitted);
 }
 
-TEST_CASE("admission falls back to N=1 for unavailable or insufficient capacity", "[bank_state]") {
+TEST_CASE(
+    "admission falls back to N=1 for unavailable or insufficient capacity",
+    "[bank_state]") {
     const auto fp = footprint(fixture());
     REQUIRE(fp.valid);
     REQUIRE(admit(0, fp, 4).bank_count == 1);
@@ -138,7 +150,9 @@ TEST_CASE("admission falls back to N=1 for unavailable or insufficient capacity"
     REQUIRE(admit(fp.total_bytes * 100, fp, 0).bank_count == 1);
 }
 
-TEST_CASE("footprint rejects overflowing dimensions and admission arithmetic", "[bank_state]") {
+TEST_CASE(
+    "footprint rejects overflowing dimensions and admission arithmetic",
+    "[bank_state]") {
     auto in = fixture();
     in.width = std::numeric_limits<std::uint64_t>::max();
     in.height = 2;
@@ -147,13 +161,19 @@ TEST_CASE("footprint rejects overflowing dimensions and admission arithmetic", "
 
     auto valid = footprint(fixture());
     REQUIRE(valid.valid);
-    const auto saturated = admit(std::numeric_limits<std::uint64_t>::max(), valid,
-                                 std::numeric_limits<std::uint64_t>::max());
+    const auto saturated = admit(
+        std::numeric_limits<std::uint64_t>::max(),
+        valid,
+        std::numeric_limits<std::uint64_t>::max());
     REQUIRE(saturated.bank_count >= 1);
-    REQUIRE(saturated.budget_bytes == std::numeric_limits<std::uint64_t>::max() / 2);
+    REQUIRE(
+        saturated.budget_bytes ==
+        std::numeric_limits<std::uint64_t>::max() / 2);
 }
 
-TEST_CASE("bank checkout is unique and recycle waits for completion", "[bank_state]") {
+TEST_CASE(
+    "bank checkout is unique and recycle waits for completion",
+    "[bank_state]") {
     gpu_cost_function::BankCheckoutTracker tracker(2);
     const int first = tracker.checkout();
     const int second = tracker.checkout();

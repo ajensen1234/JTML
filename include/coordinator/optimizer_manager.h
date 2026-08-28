@@ -9,9 +9,7 @@
 #define OPTIMIZER_MANAGER_H
 
 /*Custom CUDA Headers*/
-#include <cost_capacity_service.cuh>
 
-#include "compute/evaluation_executor.h"
 #include "domain/cost.h"
 
 namespace gpu_cost_function {
@@ -232,10 +230,6 @@ private:
 
     /*Models*/
     GPUModel* gpu_principal_model_;
-    CostCapacityService* capacity_service_ = nullptr;
-    // U6: greedy EvaluationExecutor for graph-backed batch (primary), BankState
-    // shim remains for serial
-    gpu_cost_function::EvaluationExecutor* evaluation_executor_ = nullptr;
     std::vector<GPUModel*> gpu_non_principal_models_;
 
     /*Set Search Range*/

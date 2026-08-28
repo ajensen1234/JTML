@@ -25,11 +25,6 @@
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 
-class CostCapacityService;  // plan 010 U10 (defined in
-                            // cost_capacity_service.cuh)
-struct BankState;  // non-owning compatibility view; allocation arrives in a
-                   // later U12 stage
-struct EvaluationContext;  // U1: primary executed type (evaluation_context.h)
 /*Pose Structure to Store Model Pose (6 D.O.F. - orientation and location)*/
 struct Pose {
     JTML_DLL Pose(
@@ -110,35 +105,6 @@ public:
     JTML_DLL int GetWidth() const;
     JTML_DLL int GetHeight() const;
     JTML_DLL int GetTriangleCount() const;
-
-    /*Plan 010 U10: optional capacity service used for capacity-based launch
-     * sizing. nullptr (default) => pure pre-unit behavior (P2 fallback). The
-     * service is owned by the caller and must outlive this engine. Setting this
-     * NEVER changes the produced grid for the 256-pinned fill kernels when the
-     * work is within SAFE_CAP (provably bit-identical -- see Render()).*/
-    JTML_DLL void SetCapacityService(const CostCapacityService* service);
-
-    /* U12 Stage 2: bind non-owning bank metadata and an optional execution
-     * stream.  This slice does not transfer ownership or alter legacy calls. */
-    JTML_DLL void SetActiveBank(BankState* bank);
-    JTML_DLL void SetExecutionStream(cudaStream_t stream);
-    JTML_DLL BankState* GetActiveBank() const;
-    JTML_DLL cudaStream_t GetExecutionStream() const;
-
-    /* U12 Stage 3A: explicit monoplane bank render phases. These APIs are
-     * non-owning views over a caller-owned BankState; legacy Render() remains
-     * the unchanged bank-0 synchronous wrapper. */
-    JTML_DLL cudaError_t RenderPhase(BankState& bank);
-    JTML_DLL cudaError_t CompleteRenderPhase(BankState& bank);
-
-    /* U1: explicit EvaluationContext overloads — primary design. Legacy
-     * BankState remains shim. */
-    JTML_DLL cudaError_t Render(EvaluationContext& ctx);
-    // Enqueue the production U4 render chain without synchronizing. This is
-    // the single enqueue path shared by serial completion and graph capture.
-    JTML_DLL cudaError_t EnqueueRenderPhase(EvaluationContext& ctx);
-    JTML_DLL cudaError_t RenderPhase(EvaluationContext& ctx);
-    JTML_DLL cudaError_t CompleteRenderPhase(EvaluationContext& ctx);
 
 private:
     /*Host (CPU) Variables*/
@@ -266,6 +232,8 @@ private:
     check). */
     int* dev_stride_prefixes_;
 
+    int fill_triangle_grid_;
+
     /*CUB Variables*/
     void* dev_cub_storage_;
     size_t cub_storage_bytes_;
@@ -295,17 +263,6 @@ private:
     dim3 dim_grid_bounding_box_;
     dim3 dim_grid_fill_;
 
-    /*Plan 010 U10: optional capacity service (owned by caller; nullptr =
-     * pre-unit).*/
-    const CostCapacityService* capacity_service_ = nullptr;
-
-    /* U12 Stage 2: non-owning compatibility metadata. */
-    BankState* active_bank_ = nullptr;
-    cudaStream_t execution_stream_ = nullptr;
-
-    /* U12 Stage 3B: raw pointer aliases are rebound to a fully populated
-     * external BankState view, while these captured aliases remain the
-     * RenderEngine-owned bank-0 allocation. */
     struct RenderPointerSet {
         float* z_line_values = nullptr;
         float* transformed_vertex_zs = nullptr;
@@ -327,7 +284,6 @@ private:
     };
 
     bool CaptureBank0Pointers();
-    bool BindBankPointers(BankState* bank);
     void RestoreBank0Pointers();
 
     RenderPointerSet bank0_pointers_;

@@ -59,3 +59,7 @@ target_include_directories(jtml_services PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/compute
     ${OpenCV_INCLUDE_DIRS})
+
+target_link_options(jtml_services PRIVATE
+    "-Wl,--no-undefined"
+)

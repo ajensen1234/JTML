@@ -6,7 +6,7 @@
 #include "device_launch_parameters.h"
 
 /*GPU Frame/Model*/
-#include "compute/bank_state.cuh"
+
 #include "compute/gpu_dilated_frame.cuh"
 #include "compute/gpu_edge_frame.cuh"
 #include "compute/gpu_frame.cuh"
@@ -19,9 +19,6 @@
 
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
-struct BankState;  // non-owning compatibility view; allocation arrives in a
-                   // later U12 stage
-struct EvaluationContext;  // U1: primary executed type
 
 /*Class of GPU Metrics*/
 class GPUMetrics {
@@ -47,13 +44,6 @@ public:
         GPUDilatedFrame* comparison_frame,
         int dilation);
     /* U12 enqueue/complete path. */
-    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(
-        GPUImage* rendered_image,
-        GPUDilatedFrame* comparison_frame,
-        int dilation,
-        cudaStream_t stream);
-    JTML_DLL double CompleteFastImplantDilationMetric(cudaStream_t stream);
-    /* Compatibility explicit-stream wrapper: enqueue + complete. */
     JTML_DLL double FastImplantDilationMetric(
         GPUImage* rendered_image,
         GPUDilatedFrame* comparison_frame,
@@ -119,16 +109,6 @@ public:
         cudaStream_t stream);
 
     /* U1: explicit EvaluationContext overloads — primary design. */
-    JTML_DLL cudaError_t EnqueueFastImplantDilationMetric(
-        GPUImage* rendered_image,
-        GPUDilatedFrame* cf,
-        int dilation,
-        EvaluationContext& ctx);
-    JTML_DLL cudaError_t EnqueueDistanceMapMetric(
-        GPUImage* projected_image,
-        GPUFrame* dm,
-        int dilation,
-        EvaluationContext& ctx);
 
     JTML_DLL double CurvatureHeatmapMetric(
         GPUImage* projected_image,
@@ -139,13 +119,8 @@ public:
     /* U12 Stage 2: bind non-owning bank metadata and an optional execution
      * stream. Legacy metric wrappers remain unchanged in this compatibility
      * slice; later stages consume these seams for explicit bank execution. */
-    JTML_DLL void SetActiveBank(BankState* bank);
     /* Returns false and restores bank 0 when the supplied view is incomplete.
      * SetActiveBank remains void for the Stage 2 compatibility API. */
-    JTML_DLL bool TrySetActiveBank(BankState* bank);
-    JTML_DLL void SetExecutionStream(cudaStream_t stream);
-    JTML_DLL BankState* GetActiveBank() const;
-    JTML_DLL cudaStream_t GetExecutionStream() const;
 
 private:
     /*Integer for Pinned Memory if Metric Counts Pixels on GPU (as in dilation
@@ -189,16 +164,6 @@ private:
     // Curvature heatmap score (going to be min distance)
     int* curvature_hausdorf_score_ = nullptr;
     int* dev_curvature_hausdorf_score_ = nullptr;
-
-    /* U12 Stage 2/4A: non-owning compatibility metadata. */
-    BankState* active_bank_ = nullptr;
-    cudaStream_t execution_stream_ = nullptr;
-    MetricBuffers bank0_metrics_{};
-    bool bank0_metrics_captured_ = false;
-
-    void CaptureBank0Metrics();
-    void RestoreBank0Metrics();
-    bool BindMetricBank(const BankState& bank);
 };
 }  // namespace gpu_cost_function
 #endif /*GPU_METRICS_H*/

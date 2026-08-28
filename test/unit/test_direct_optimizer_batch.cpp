@@ -9,12 +9,11 @@
 // callback) REPLAYS in input order, so the run is observationally identical to
 // the serial path. Headless: pure domain, deterministic, no GPU/Qt.
 //
-// Required (test-first): the batch seam exists in the header, but the batch path
-// is NOT wired into the POH loop => these tests FAIL until the implementation
-// lands in src/domain/direct_optimizer.cpp.
+// Required (test-first): the batch seam exists in the header, but the batch
+// path is NOT wired into the POH loop => these tests FAIL until the
+// implementation lands in src/domain/direct_optimizer.cpp.
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
-
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -22,12 +21,10 @@
 #include <stdexcept>
 #include <vector>
 
-#include "domain/direct_optimizer.h"
-#include "compute/bank_state.cuh"
-#include "compute/evaluation_context.h"
-#include "compute/evaluation_executor.h"
 #include "compute/batch_outcome.h"
+#include "compute/evaluation_executor.h"
 #include "compute/graph_admission_policy.h"
+#include "domain/direct_optimizer.h"
 
 using Catch::Approx;
 
@@ -37,17 +34,23 @@ namespace {
 auto QuadraticCost(const Point6D& c) {
     return [c](const Point6D& p) {
         return (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y) +
-               (p.z - c.z) * (p.z - c.z) + (p.xa - c.xa) * (p.xa - c.xa) +
-               (p.ya - c.ya) * (p.ya - c.ya) + (p.za - c.za) * (p.za - c.za);
+            (p.z - c.z) * (p.z - c.z) + (p.xa - c.xa) * (p.xa - c.xa) +
+            (p.ya - c.ya) * (p.ya - c.ya) + (p.za - c.za) * (p.za - c.za);
     };
 }
 
-Point6D Origin() { return Point6D(0, 0, 0, 0, 0, 0); }
-Point6D UnitSideRange(double r) { return Point6D(r, r, r, r, r, r); }
+Point6D Origin() {
+    return Point6D(0, 0, 0, 0, 0, 0);
+}
+Point6D UnitSideRange(double r) {
+    return Point6D(r, r, r, r, r, r);
+}
 
 // A deterministic recording single-point cost: logs every physical point it is
 // evaluated at, returns the analytic quadratic value.
-auto RecordingSerialCost(const Point6D& c, std::vector<Point6D>& serial_points) {
+auto RecordingSerialCost(
+    const Point6D& c,
+    std::vector<Point6D>& serial_points) {
     return [c, &serial_points](const Point6D& p) {
         serial_points.push_back(p);
         return QuadraticCost(c)(p);
@@ -58,10 +61,12 @@ auto RecordingSerialCost(const Point6D& c, std::vector<Point6D>& serial_points) 
 // (concatenated in arrival order), returns the quadratic value per point in
 // input order. `nan_positions` are 1-based positions (across the whole run's
 // concatenation) at which to return NaN, mirroring the serial NaN probes.
-auto RecordingBatchCost(const Point6D& c, std::vector<Point6D>& batch_points,
-                        const std::vector<unsigned>& nan_positions) {
-    return [c, &batch_points, nan_positions](const std::vector<Point6D>& poses)
-        -> std::vector<double> {
+auto RecordingBatchCost(
+    const Point6D& c,
+    std::vector<Point6D>& batch_points,
+    const std::vector<unsigned>& nan_positions) {
+    return [c, &batch_points, nan_positions](
+               const std::vector<Point6D>& poses) -> std::vector<double> {
         std::vector<double> out;
         out.reserve(poses.size());
         const std::size_t start = batch_points.size();
@@ -69,11 +74,13 @@ auto RecordingBatchCost(const Point6D& c, std::vector<Point6D>& batch_points,
             batch_points.push_back(poses[i]);
             bool nan_here = false;
             for (unsigned np : nan_positions) {
-                if (start + i + 1 == static_cast<std::size_t>(np)) nan_here = true;
+                if (start + i + 1 == static_cast<std::size_t>(np)) {
+                    nan_here = true;
+                }
             }
-            out.push_back(nan_here
-                              ? std::numeric_limits<double>::quiet_NaN()
-                              : QuadraticCost(c)(poses[i]));
+            out.push_back(
+                nan_here ? std::numeric_limits<double>::quiet_NaN()
+                         : QuadraticCost(c)(poses[i]));
         }
         return out;
     };
@@ -94,21 +101,28 @@ struct RunTrace {
 // gives the 0-based changed-center positions (across the whole run) at which to
 // return NaN. In serial, changed index k is eval_points[k+1] (eval 0 is the
 // seed); in batch, changed index k is batch_points[k] (batch has no seed).
-RunTrace RunSerial(const Point6D& target, unsigned int budget,
-                   const std::vector<unsigned>& nan_at) {
+RunTrace RunSerial(
+    const Point6D& target,
+    unsigned int budget,
+    const std::vector<unsigned>& nan_at) {
     RunTrace t;
-    DirectOptimizer opt([target, nan_at, &t](const Point6D& p) {
-        const std::size_t changed_k = t.eval_points.size() >= 1
-                                          ? t.eval_points.size() - 1
-                                          : 0;
-        bool in_nan = false;
-        for (unsigned k : nan_at) {
-            if (changed_k == static_cast<std::size_t>(k)) in_nan = true;
-        }
-        t.eval_points.push_back(p);
-        const double v = QuadraticCost(target)(p);
-        return in_nan ? std::numeric_limits<double>::quiet_NaN() : v;
-    }, UnitSideRange(10.0), Origin(), budget);
+    DirectOptimizer opt(
+        [target, nan_at, &t](const Point6D& p) {
+            const std::size_t changed_k =
+                t.eval_points.size() >= 1 ? t.eval_points.size() - 1 : 0;
+            bool in_nan = false;
+            for (unsigned k : nan_at) {
+                if (changed_k == static_cast<std::size_t>(k)) {
+                    in_nan = true;
+                }
+            }
+            t.eval_points.push_back(p);
+            const double v = QuadraticCost(target)(p);
+            return in_nan ? std::numeric_limits<double>::quiet_NaN() : v;
+        },
+        UnitSideRange(10.0),
+        Origin(),
+        budget);
     opt.SetImprovementCallback(
         [&](const Point6D&, double v) { t.improvement_values.push_back(v); });
     REQUIRE(opt.Run());
@@ -119,13 +133,15 @@ RunTrace RunSerial(const Point6D& target, unsigned int budget,
     return t;
 }
 
-RunTrace RunBatched(const Point6D& target, unsigned int budget,
-                    const std::vector<unsigned>& nan_at) {
+RunTrace RunBatched(
+    const Point6D& target,
+    unsigned int budget,
+    const std::vector<unsigned>& nan_at) {
     RunTrace t;
-    DirectOptimizer opt(QuadraticCost(target), UnitSideRange(10.0), Origin(),
-                        budget);
-    auto batch = [target, nan_at, &t](const std::vector<Point6D>& poses)
-        -> std::vector<double> {
+    DirectOptimizer opt(
+        QuadraticCost(target), UnitSideRange(10.0), Origin(), budget);
+    auto batch = [target, nan_at, &t](
+                     const std::vector<Point6D>& poses) -> std::vector<double> {
         std::vector<double> out;
         out.reserve(poses.size());
         for (std::size_t i = 0; i < poses.size(); ++i) {
@@ -136,9 +152,9 @@ RunTrace RunBatched(const Point6D& target, unsigned int budget,
                 }
             }
             t.eval_points.push_back(poses[i]);
-            out.push_back(nan_here
-                              ? std::numeric_limits<double>::quiet_NaN()
-                              : QuadraticCost(target)(poses[i]));
+            out.push_back(
+                nan_here ? std::numeric_limits<double>::quiet_NaN()
+                         : QuadraticCost(target)(poses[i]));
         }
         return out;
     };
@@ -160,20 +176,23 @@ RunTrace RunBatched(const Point6D& target, unsigned int budget,
 // serial path evaluates the seed + 2 centers per POH box; the batch path
 // evaluates the seed serially (unchanged) and then ONE batch per iteration with
 // exactly the POH changed-center set (A then B per box, POH-column order).
-TEST_CASE("U11 batch cost receives the exact serial eval sequence in order",
-          "[direct_optimizer][batch][replay]") {
+TEST_CASE(
+    "U11 batch cost receives the exact serial eval sequence in order",
+    "[direct_optimizer][batch][replay]") {
     const Point6D target(3, 3, 3, 3, 3, 3);
     const unsigned int kBudget = 5000;
 
     std::vector<Point6D> serial_points;
     std::vector<Point6D> batch_points;
     DirectOptimizer serial_opt(
-        RecordingSerialCost(target, serial_points), UnitSideRange(10.0),
-        Origin(), kBudget);
+        RecordingSerialCost(target, serial_points),
+        UnitSideRange(10.0),
+        Origin(),
+        kBudget);
     REQUIRE(serial_opt.Run());
 
-    DirectOptimizer batched_opt(QuadraticCost(target), UnitSideRange(10.0),
-                                Origin(), kBudget);
+    DirectOptimizer batched_opt(
+        QuadraticCost(target), UnitSideRange(10.0), Origin(), kBudget);
     batched_opt.SetBatchCost(RecordingBatchCost(target, batch_points, {}));
     REQUIRE(batched_opt.Run());
 
@@ -182,20 +201,25 @@ TEST_CASE("U11 batch cost receives the exact serial eval sequence in order",
     REQUIRE(batch_points.size() + 1u == serial_points.size());
     REQUIRE(batch_points.size() >= 2u);  // at least one trisection happened
     for (std::size_t i = 0; i < batch_points.size(); ++i) {
-        Point6D bp = batch_points[i];  // GetDistanceFrom is non-const on Point6D
-        REQUIRE(bp.GetDistanceFrom(serial_points[i + 1]) ==
-                Approx(0.0).margin(1e-12));
+        Point6D bp =
+            batch_points[i];  // GetDistanceFrom is non-const on Point6D
+        REQUIRE(
+            bp.GetDistanceFrom(serial_points[i + 1]) ==
+            Approx(0.0).margin(1e-12));
     }
     // Identical bookkeeping across paths.
-    REQUIRE(batched_opt.GetCostFunctionCalls() == serial_opt.GetCostFunctionCalls());
+    REQUIRE(
+        batched_opt.GetCostFunctionCalls() ==
+        serial_opt.GetCostFunctionCalls());
     REQUIRE(batched_opt.GetNonFiniteCount() == serial_opt.GetNonFiniteCount());
 }
 
 // Happy path (AE2): with the batch sibling set vs unset, the run produces
 // identical cost_function_calls_, the identical optimum sequence, and the
 // identical improvement-callback sequence (the replay pin).
-TEST_CASE("U11 batch set vs unset gives identical observable traces",
-          "[direct_optimizer][batch][replay]") {
+TEST_CASE(
+    "U11 batch set vs unset gives identical observable traces",
+    "[direct_optimizer][batch][replay]") {
     const Point6D target(3, 3, 3, 3, 3, 3);
     const unsigned int kBudget = 5000;
 
@@ -206,9 +230,11 @@ TEST_CASE("U11 batch set vs unset gives identical observable traces",
     REQUIRE(batched.non_finite == serial.non_finite);
     REQUIRE(batched.optimum_value == serial.optimum_value);
     Point6D b_loc = batched.optimum_location;  // GetDistanceFrom is non-const
-    REQUIRE(b_loc.GetDistanceFrom(serial.optimum_location) ==
-            Approx(0.0).margin(1e-12));
-    REQUIRE(batched.improvement_values.size() == serial.improvement_values.size());
+    REQUIRE(
+        b_loc.GetDistanceFrom(serial.optimum_location) ==
+        Approx(0.0).margin(1e-12));
+    REQUIRE(
+        batched.improvement_values.size() == serial.improvement_values.size());
     for (std::size_t i = 0; i < serial.improvement_values.size(); ++i) {
         REQUIRE(batched.improvement_values[i] == serial.improvement_values[i]);
     }
@@ -220,8 +246,9 @@ TEST_CASE("U11 batch set vs unset gives identical observable traces",
 // Edge case: a batch returning a non-finite entry replays that point as
 // infeasible exactly like the serial path, and the rest of the batch is
 // unaffected.
-TEST_CASE("U11 batch non-finite entry replays as infeasible like serial",
-          "[direct_optimizer][batch][replay]") {
+TEST_CASE(
+    "U11 batch non-finite entry replays as infeasible like serial",
+    "[direct_optimizer][batch][replay]") {
     const Point6D target(3, 3, 3, 3, 3, 3);
     const unsigned int kBudget = 5000;
 
@@ -241,10 +268,12 @@ TEST_CASE("U11 batch non-finite entry replays as infeasible like serial",
 
 // Edge case: a budget that exhausts mid-final-iteration. The batch evaluates
 // the FULL final POH set (no truncation) and calls == the serial overshoot.
-TEST_CASE("U11 batch evaluates the full final POH set (no truncation)",
-          "[direct_optimizer][batch][replay]") {
+TEST_CASE(
+    "U11 batch evaluates the full final POH set (no truncation)",
+    "[direct_optimizer][batch][replay]") {
     const Point6D target(3, 3, 3, 3, 3, 3);
-    // Small budget so the guard trips mid-iteration; forces final-POH overshoot.
+    // Small budget so the guard trips mid-iteration; forces final-POH
+    // overshoot.
     const unsigned int kBudget = 13;
 
     const RunTrace serial = RunSerial(target, kBudget, {});
@@ -257,9 +286,11 @@ TEST_CASE("U11 batch evaluates the full final POH set (no truncation)",
 
 // Error path: a batch returning the WRONG vector size is a contract violation.
 // Must fail fast (assert/exception), never silent misbookkeeping.
-TEST_CASE("U11 batch wrong-size result fails fast", "[direct_optimizer][batch][error]") {
-    DirectOptimizer opt(QuadraticCost(Origin()), UnitSideRange(10.0), Origin(),
-                        100);
+TEST_CASE(
+    "U11 batch wrong-size result fails fast",
+    "[direct_optimizer][batch][error]") {
+    DirectOptimizer opt(
+        QuadraticCost(Origin()), UnitSideRange(10.0), Origin(), 100);
     opt.SetBatchCost([](const std::vector<Point6D>& poses) {
         (void)poses;
         return std::vector<double>{};  // deliberately wrong size
@@ -269,12 +300,14 @@ TEST_CASE("U11 batch wrong-size result fails fast", "[direct_optimizer][batch][e
 
 // Edge case: degenerate POH batches (size 1 and size 0) take the batch path
 // harmlessly / fall back -- pinned either way, never a crash or wrong count.
-TEST_CASE("U11 degenerate POH batches are handled harmlessly",
-          "[direct_optimizer][batch][edge]") {
+TEST_CASE(
+    "U11 degenerate POH batches are handled harmlessly",
+    "[direct_optimizer][batch][edge]") {
     // A single POH box => a batch of exactly 2 centers (A then B). Run with a
     // tiny budget so the first iteration is the only one.
     const Point6D target(3, 3, 3, 3, 3, 3);
-    const unsigned int kBudget = 4;  // seed + 1 trisection (2 centers) = 3, then stop
+    const unsigned int kBudget =
+        4;  // seed + 1 trisection (2 centers) = 3, then stop
     const RunTrace serial = RunSerial(target, kBudget, {});
     const RunTrace batched = RunBatched(target, kBudget, {});
     REQUIRE(batched.calls == serial.calls);
@@ -291,108 +324,162 @@ TEST_CASE("U11 degenerate POH batches are handled harmlessly",
 }
 
 // U6: EvaluationExecutor greedy ordering + ordered result assembly (R1,R2,R11)
-TEST_CASE("U6 EvaluationExecutor greedy N=2 keeps input order with out-of-order completion",
-          "[evaluation_executor][greedy][ordering]") {
+TEST_CASE(
+    "U6 EvaluationExecutor greedy N=2 keeps input order with out-of-order "
+    "completion",
+    "[evaluation_executor][greedy][ordering]") {
     // Simulate 2*|POH| batch via executor: 8 poses, N=2 pool, each pose
     // returns its index as cost via serialCost. Even if executor completes
     // out-of-order internally, result must be input-ordered.
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width = 512; layout.height = 512; layout.triangle_count = 1000;
-    layout.maximum_stride_size = 10000; layout.cub_storage_bytes = 1024;
+    layout.width = 512;
+    layout.height = 512;
+    layout.triangle_count = 1000;
+    layout.maximum_stride_size = 10000;
+    layout.cub_storage_bytes = 1024;
     gpu_cost_function::EvaluationExecutor exec;
-    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 4));
+    REQUIRE(exec.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 4));
     REQUIRE(exec.poolSize() >= 2);
     std::vector<Point6D> poses;
-    for (int i=0;i<8;++i) poses.push_back(Point6D(double(i),0,0,0,0,0));
-    auto serial = [](const Point6D& p){ return p.x; };
+    for (int i = 0; i < 8; ++i) {
+        poses.push_back(Point6D(double(i), 0, 0, 0, 0, 0));
+    }
+    auto serial = [](const Point6D& p) { return p.x; };
     auto outcome = exec.RunBatch(poses, serial);
     REQUIRE(outcome.isOrderedScores());
-    REQUIRE(outcome.kind == gpu_cost_function::BatchOutcome::Kind::OrderedScores);
-    REQUIRE(outcome.scores.size()==poses.size());
-    for (int i=0;i<8;++i) REQUIRE(outcome.scores[i]==Approx(double(i)));
+    REQUIRE(
+        outcome.kind == gpu_cost_function::BatchOutcome::Kind::OrderedScores);
+    REQUIRE(outcome.scores.size() == poses.size());
+    for (int i = 0; i < 8; ++i) {
+        REQUIRE(outcome.scores[i] == Approx(double(i)));
+    }
 }
 
-TEST_CASE("U6 EvaluationExecutor degenerate batches size 1 and 0", "[evaluation_executor][greedy][edge]") {
+TEST_CASE(
+    "U6 EvaluationExecutor degenerate batches size 1 and 0",
+    "[evaluation_executor][greedy][edge]") {
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width=64; layout.height=64; layout.triangle_count=10; layout.maximum_stride_size=100;
+    layout.width = 64;
+    layout.height = 64;
+    layout.triangle_count = 10;
+    layout.maximum_stride_size = 100;
     gpu_cost_function::EvaluationExecutor exec;
-    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    REQUIRE(exec.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
     // size 1
     {
-        std::vector<Point6D> poses{Point6D(1,2,3,4,5,6)};
-        auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
+        std::vector<Point6D> poses{Point6D(1, 2, 3, 4, 5, 6)};
+        auto outcome =
+            exec.RunBatch(poses, [](const Point6D& p) { return p.x + p.y; });
         REQUIRE(outcome.isOrderedScores());
-        REQUIRE(outcome.scores.size()==1);
-        REQUIRE(outcome.scores[0]==Approx(3.0));
+        REQUIRE(outcome.scores.size() == 1);
+        REQUIRE(outcome.scores[0] == Approx(3.0));
     }
     // size 0 — empty batch is legal OrderedScores, not NotSubmitted
     {
         std::vector<Point6D> poses;
-        auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+        auto outcome =
+            exec.RunBatch(poses, [](const Point6D& p) { return p.x; });
         REQUIRE(outcome.isOrderedScores());
-        REQUIRE(outcome.kind == gpu_cost_function::BatchOutcome::Kind::OrderedScores);
+        REQUIRE(
+            outcome.kind ==
+            gpu_cost_function::BatchOutcome::Kind::OrderedScores);
         REQUIRE(outcome.scores.empty());
     }
 }
 
-TEST_CASE("U6 EvaluationExecutor batch smaller than N remains ordered", "[evaluation_executor][greedy][edge]") {
+TEST_CASE(
+    "U6 EvaluationExecutor batch smaller than N remains ordered",
+    "[evaluation_executor][greedy][edge]") {
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width=128; layout.height=128; layout.triangle_count=100; layout.maximum_stride_size=1000;
+    layout.width = 128;
+    layout.height = 128;
+    layout.triangle_count = 100;
+    layout.maximum_stride_size = 1000;
     gpu_cost_function::EvaluationExecutor exec;
-    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 4));
-    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0), Point6D(2,0,0,0,0,0)};
-    auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x*2; });
+    REQUIRE(exec.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 4));
+    std::vector<Point6D> poses{
+        Point6D(0, 0, 0, 0, 0, 0),
+        Point6D(1, 0, 0, 0, 0, 0),
+        Point6D(2, 0, 0, 0, 0, 0)};
+    auto outcome =
+        exec.RunBatch(poses, [](const Point6D& p) { return p.x * 2; });
     REQUIRE(outcome.isOrderedScores());
-    REQUIRE(outcome.scores.size()==3);
-    REQUIRE(outcome.scores[0]==Approx(0.0)); REQUIRE(outcome.scores[1]==Approx(2.0)); REQUIRE(outcome.scores[2]==Approx(4.0));
+    REQUIRE(outcome.scores.size() == 3);
+    REQUIRE(outcome.scores[0] == Approx(0.0));
+    REQUIRE(outcome.scores[1] == Approx(2.0));
+    REQUIRE(outcome.scores[2] == Approx(4.0));
 }
 
-TEST_CASE("U6 EvaluationExecutor determinism stress 3x with N=2", "[evaluation_executor][greedy][determinism]") {
+TEST_CASE(
+    "U6 EvaluationExecutor determinism stress 3x with N=2",
+    "[evaluation_executor][greedy][determinism]") {
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width=256; layout.height=256; layout.triangle_count=500; layout.maximum_stride_size=5000;
-    auto runOnce = [&](gpu_cost_function::EvaluationExecutor& ex){
+    layout.width = 256;
+    layout.height = 256;
+    layout.triangle_count = 500;
+    layout.maximum_stride_size = 5000;
+    auto runOnce = [&](gpu_cost_function::EvaluationExecutor& ex) {
         std::vector<Point6D> poses;
-        for(int i=0;i<6;++i) poses.push_back(Point6D(double(i%3), double(i/3),0,0,0,0));
-        return ex.RunBatch(poses, [](const Point6D&p){ return p.x+p.y; });
+        for (int i = 0; i < 6; ++i) {
+            poses.push_back(Point6D(double(i % 3), double(i / 3), 0, 0, 0, 0));
+        }
+        return ex.RunBatch(poses, [](const Point6D& p) { return p.x + p.y; });
     };
-    gpu_cost_function::EvaluationExecutor e1,e2,e3;
-    REQUIRE(e1.Initialize(layout, 8ULL*1024*1024*1024, 2));
-    REQUIRE(e2.Initialize(layout, 8ULL*1024*1024*1024, 2));
-    REQUIRE(e3.Initialize(layout, 8ULL*1024*1024*1024, 2));
-    auto r1 = runOnce(e1); auto r2 = runOnce(e2); auto r3 = runOnce(e3);
-    REQUIRE(r1.isOrderedScores()); REQUIRE(r2.isOrderedScores()); REQUIRE(r3.isOrderedScores());
-    REQUIRE(r1.scores==r2.scores); REQUIRE(r2.scores==r3.scores);
+    gpu_cost_function::EvaluationExecutor e1, e2, e3;
+    REQUIRE(e1.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
+    REQUIRE(e2.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
+    REQUIRE(e3.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
+    auto r1 = runOnce(e1);
+    auto r2 = runOnce(e2);
+    auto r3 = runOnce(e3);
+    REQUIRE(r1.isOrderedScores());
+    REQUIRE(r2.isOrderedScores());
+    REQUIRE(r3.isOrderedScores());
+    REQUIRE(r1.scores == r2.scores);
+    REQUIRE(r2.scores == r3.scores);
 }
 
-TEST_CASE("U6 EvaluationExecutor wrong-sized batch is contract violation", "[evaluation_executor][greedy][error]") {
+TEST_CASE(
+    "U6 EvaluationExecutor wrong-sized batch is contract violation",
+    "[evaluation_executor][greedy][error]") {
     // DirectOptimizer already throws on wrong-sized batch; executor must also
     // guarantee it never returns a mismatched size. Here we test executor's
     // own contract: RunBatch must return size==poses.size() or throw.
     // Simulate by calling RunBatchWithCost that throws wrong size internally.
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width=32; layout.height=32; layout.triangle_count=10; layout.maximum_stride_size=100;
+    layout.width = 32;
+    layout.height = 32;
+    layout.triangle_count = 10;
+    layout.maximum_stride_size = 100;
     gpu_cost_function::EvaluationExecutor exec;
-    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
-    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0), Point6D(1,0,0,0,0,0)};
+    REQUIRE(exec.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
+    std::vector<Point6D> poses{
+        Point6D(0, 0, 0, 0, 0, 0), Point6D(1, 0, 0, 0, 0, 0)};
     // Normal path returns correct size as OrderedScores
-    auto ok = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+    auto ok = exec.RunBatch(poses, [](const Point6D& p) { return p.x; });
     REQUIRE(ok.isOrderedScores());
-    REQUIRE(ok.scores.size()==2);
-    // A batch lambda that would return wrong size is caught at DirectOptimizer layer (U11 test covers it)
+    REQUIRE(ok.scores.size() == 2);
+    // A batch lambda that would return wrong size is caught at DirectOptimizer
+    // layer (U11 test covers it)
 }
 
-TEST_CASE("U6 EvaluationExecutor respects firstSubmission and watchdog", "[evaluation_executor][greedy][lifecycle]") {
+TEST_CASE(
+    "U6 EvaluationExecutor respects firstSubmission and watchdog",
+    "[evaluation_executor][greedy][lifecycle]") {
     gpu_cost_function::BankFootprintInput layout{};
-    layout.width=64; layout.height=64; layout.triangle_count=10; layout.maximum_stride_size=100;
+    layout.width = 64;
+    layout.height = 64;
+    layout.triangle_count = 10;
+    layout.maximum_stride_size = 100;
     gpu_cost_function::EvaluationExecutor exec;
     exec.setWatchdogTimeout(std::chrono::milliseconds(50));
-    REQUIRE(exec.Initialize(layout, 8ULL*1024*1024*1024, 2));
+    REQUIRE(exec.Initialize(layout, 8ULL * 1024 * 1024 * 1024, 2));
     REQUIRE(!exec.firstSubmission());
-    std::vector<Point6D> poses{Point6D(0,0,0,0,0,0)};
-    auto outcome = exec.RunBatch(poses, [](const Point6D&p){ return p.x; });
+    std::vector<Point6D> poses{Point6D(0, 0, 0, 0, 0, 0)};
+    auto outcome = exec.RunBatch(poses, [](const Point6D& p) { return p.x; });
     REQUIRE(exec.firstSubmission());
     REQUIRE(outcome.isOrderedScores());
-    REQUIRE(outcome.scores.size()==1);
+    REQUIRE(outcome.scores.size() == 1);
     exec.resetFirstSubmission();
     REQUIRE(!exec.firstSubmission());
 }
@@ -446,8 +533,9 @@ TEST_CASE("U1 BatchOutcome kinds are distinct", "[u1][batch_outcome]") {
     REQUIRE(!BatchOutcome::Ordered({1.0}).isAbort());
 }
 
-TEST_CASE("U1 MaterializeOrderedScores returns ordered scores",
-          "[u1][batch_outcome][materialize]") {
+TEST_CASE(
+    "U1 MaterializeOrderedScores returns ordered scores",
+    "[u1][batch_outcome][materialize]") {
     using gpu_cost_function::BatchOutcome;
     using gpu_cost_function::CoordinatorBatchAbort;
     using gpu_cost_function::MaterializeOrderedScores;
@@ -468,11 +556,14 @@ TEST_CASE("U1 MaterializeOrderedScores returns ordered scores",
     {
         bool threw = false;
         try {
-            (void)MaterializeOrderedScores(BatchOutcome::NotSubmitted("admission denied"));
+            (void)MaterializeOrderedScores(
+                BatchOutcome::NotSubmitted("admission denied"));
         } catch (const CoordinatorBatchAbort& e) {
             threw = true;
             REQUIRE(e.kind() == BatchOutcome::Kind::NotSubmitted);
-            REQUIRE(std::string(e.what()).find("admission denied") != std::string::npos);
+            REQUIRE(
+                std::string(e.what()).find("admission denied") !=
+                std::string::npos);
         }
         REQUIRE(threw);
     }
@@ -481,18 +572,22 @@ TEST_CASE("U1 MaterializeOrderedScores returns ordered scores",
     {
         bool threw = false;
         try {
-            (void)MaterializeOrderedScores(BatchOutcome::PostLaunchAbort("launch failed"));
+            (void)MaterializeOrderedScores(
+                BatchOutcome::PostLaunchAbort("launch failed"));
         } catch (const CoordinatorBatchAbort& e) {
             threw = true;
             REQUIRE(e.kind() == BatchOutcome::Kind::PostLaunchAbort);
-            REQUIRE(std::string(e.what()).find("launch failed") != std::string::npos);
+            REQUIRE(
+                std::string(e.what()).find("launch failed") !=
+                std::string::npos);
         }
         REQUIRE(threw);
     }
     {
         bool threw = false;
         try {
-            (void)MaterializeOrderedScores(BatchOutcome::WatchdogPoisoned("hang"));
+            (void)MaterializeOrderedScores(
+                BatchOutcome::WatchdogPoisoned("hang"));
         } catch (const CoordinatorBatchAbort& e) {
             threw = true;
             REQUIRE(e.kind() == BatchOutcome::Kind::WatchdogPoisoned);
@@ -541,17 +636,30 @@ TEST_CASE("U1 default-deny GraphAdmissionPolicy", "[u1][admission][policy]") {
 
 namespace {
 struct PermissivePolicy : gpu_cost_function::GraphAdmissionPolicy {
-    bool admit(const gpu_cost_function::GraphAdmissionEvidence&) const override { return true; }
-    std::string denyReason(const gpu_cost_function::GraphAdmissionEvidence&) const override { return ""; }
+    bool admit(
+        const gpu_cost_function::GraphAdmissionEvidence&) const override {
+        return true;
+    }
+    std::string denyReason(
+        const gpu_cost_function::GraphAdmissionEvidence&) const override {
+        return "";
+    }
 };
 struct DenyAllPolicy : gpu_cost_function::GraphAdmissionPolicy {
-    bool admit(const gpu_cost_function::GraphAdmissionEvidence&) const override { return false; }
-    std::string denyReason(const gpu_cost_function::GraphAdmissionEvidence&) const override { return "injected deny"; }
+    bool admit(
+        const gpu_cost_function::GraphAdmissionEvidence&) const override {
+        return false;
+    }
+    std::string denyReason(
+        const gpu_cost_function::GraphAdmissionEvidence&) const override {
+        return "injected deny";
+    }
 };
-}
+}  // namespace
 
-TEST_CASE("U1 DecideGraphAdmission installs only on complete admission",
-          "[u1][admission][decide]") {
+TEST_CASE(
+    "U1 DecideGraphAdmission installs only on complete admission",
+    "[u1][admission][decide]") {
     using gpu_cost_function::DecideGraphAdmission;
     using gpu_cost_function::GraphAdmissionEvidence;
     using gpu_cost_function::GraphAdmissionInputs;
@@ -572,7 +680,8 @@ TEST_CASE("U1 DecideGraphAdmission installs only on complete admission",
         REQUIRE(d.install);
     }
 
-    // Null recipe (recipeFound=false) with permissive policy -> deny, reason mentions recipe
+    // Null recipe (recipeFound=false) with permissive policy -> deny, reason
+    // mentions recipe
     {
         GraphAdmissionInputs in{};
         in.executorReady = true;
@@ -584,7 +693,9 @@ TEST_CASE("U1 DecideGraphAdmission installs only on complete admission",
         REQUIRE(!d.install);
         // case-insensitive check for "recipe"
         std::string lower = d.reason;
-        for (auto& c : lower) c = std::tolower(c);
+        for (auto& c : lower) {
+            c = std::tolower(c);
+        }
         REQUIRE(lower.find("recipe") != std::string::npos);
     }
 
@@ -651,25 +762,32 @@ TEST_CASE("U1 DecideGraphAdmission installs only on complete admission",
     }
 }
 
-TEST_CASE("U1 deny/null-recipe keeps the installed batch adapter (U12 survival)",
-          "[u1][admission][u12_survival]") {
+TEST_CASE(
+    "U1 deny/null-recipe keeps the installed batch adapter (U12 survival)",
+    "[u1][admission][u12_survival]") {
     using gpu_cost_function::DecideGraphAdmission;
     using gpu_cost_function::GraphAdmissionEvidence;
     using gpu_cost_function::GraphAdmissionInputs;
 
     PermissivePolicy permissive;
 
-    // Build a DirectOptimizer with a counting batch adapter (mimics installed U12/serial adapter)
+    // Build a DirectOptimizer with a counting batch adapter (mimics installed
+    // U12/serial adapter)
     unsigned int batchCalls = 0;
     const Point6D target(1, 1, 1, 1, 1, 1);
-    DirectOptimizer opt(QuadraticCost(target), UnitSideRange(10.0), Origin(), 200);
-    opt.SetBatchCost([&batchCalls, target](const std::vector<Point6D>& poses) -> std::vector<double> {
-        ++batchCalls;
-        std::vector<double> out;
-        out.reserve(poses.size());
-        for (auto& p : poses) out.push_back(QuadraticCost(target)(p));
-        return out;
-    });
+    DirectOptimizer opt(
+        QuadraticCost(target), UnitSideRange(10.0), Origin(), 200);
+    opt.SetBatchCost(
+        [&batchCalls,
+         target](const std::vector<Point6D>& poses) -> std::vector<double> {
+            ++batchCalls;
+            std::vector<double> out;
+            out.reserve(poses.size());
+            for (auto& p : poses) {
+                out.push_back(QuadraticCost(target)(p));
+            }
+            return out;
+        });
 
     // Compute decision with null-recipe inputs — must be deny
     GraphAdmissionInputs in{};
@@ -681,23 +799,29 @@ TEST_CASE("U1 deny/null-recipe keeps the installed batch adapter (U12 survival)"
     auto decision = DecideGraphAdmission(in, permissive);
     REQUIRE(!decision.install);
 
-    // Manager must NOT call SetBatchCost again on deny, so the previously-installed adapter survives.
-    // Prove by running the optimizer: the counting batch adapter is still invoked.
+    // Manager must NOT call SetBatchCost again on deny, so the
+    // previously-installed adapter survives. Prove by running the optimizer:
+    // the counting batch adapter is still invoked.
     REQUIRE(opt.Run());
     REQUIRE(batchCalls > 0);
-    // If the adapter had been overwritten by a serial passthrough or cleared, batchCalls would be 0
-    // or the run would have taken the serial path (still would succeed but batchCalls==0 is the signal)
+    // If the adapter had been overwritten by a serial passthrough or cleared,
+    // batchCalls would be 0 or the run would have taken the serial path (still
+    // would succeed but batchCalls==0 is the signal)
     REQUIRE(batchCalls >= 1);
 }
 
-TEST_CASE("U1 coordinator abort propagates through DirectOptimizer::Run",
-          "[u1][abort][direct_optimizer]") {
+TEST_CASE(
+    "U1 coordinator abort propagates through DirectOptimizer::Run",
+    "[u1][abort][direct_optimizer]") {
     using gpu_cost_function::BatchOutcome;
     using gpu_cost_function::CoordinatorBatchAbort;
 
-    DirectOptimizer opt(QuadraticCost(Origin()), UnitSideRange(10.0), Origin(), 100);
+    DirectOptimizer opt(
+        QuadraticCost(Origin()), UnitSideRange(10.0), Origin(), 100);
     opt.SetBatchCost([](const std::vector<Point6D>&) -> std::vector<double> {
-        throw CoordinatorBatchAbort(BatchOutcome::Kind::PostLaunchAbort, "simulated post-launch failure");
+        throw CoordinatorBatchAbort(
+            BatchOutcome::Kind::PostLaunchAbort,
+            "simulated post-launch failure");
         return {};
     });
     REQUIRE_THROWS_AS(opt.Run(), CoordinatorBatchAbort);
@@ -707,9 +831,10 @@ TEST_CASE("U1 coordinator abort propagates through DirectOptimizer::Run",
         FAIL("should have thrown");
     } catch (const CoordinatorBatchAbort& e) {
         REQUIRE(e.kind() == BatchOutcome::Kind::PostLaunchAbort);
-        REQUIRE(std::string(e.what()).find("simulated post-launch failure") != std::string::npos);
+        REQUIRE(
+            std::string(e.what()).find("simulated post-launch failure") !=
+            std::string::npos);
     } catch (...) {
         FAIL("wrong exception type");
     }
 }
-

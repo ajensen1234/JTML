@@ -35,13 +35,7 @@ add_library(jtml_compute SHARED
     registration_metric.cu
     render_drr_engine.cu
     render_engine.cu
-    cost_capacity_service.cu
-    evaluation_context.cpp
     capture_coordinator.cpp
-    evaluation_executor.cpp
-    evaluation_executor.cu
-    graph_preflight.cu
-    graph_recipe_direct_dilation.cu
     distance_map_metric.cu
     fast_implant_dilation_metric.cu
     gpu_heatmaps.cu
@@ -86,4 +80,8 @@ target_include_directories(jtml_compute
       ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
       ${OpenCV_INCLUDE_DIRS}
 
+)
+
+target_link_options(jtml_compute PRIVATE
+    "-Wl,--no-undefined"
 )

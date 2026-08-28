@@ -10,11 +10,8 @@
  * the pool's N in production will be probed via cudaMemGetInfo in U5/U8.
  */
 
-#include <catch2/catch_test_macros.hpp>
 #include <algorithm>
-
-#include "compute/bank_state.cuh"
-#include "compute/evaluation_context.h"
+#include <catch2/catch_test_macros.hpp>
 
 using gpu_cost_function::BankFootprintInput;
 using gpu_cost_function::EvaluationContextPool;
@@ -33,7 +30,7 @@ TEST_CASE(
     in.biplane = false;
     auto base = gpu_cost_function::bank_state_math::footprint(in);
     REQUIRE(base.valid);
-    in.graph_overhead_bytes = 2ULL * 1024 * 1024; // 2 MB
+    in.graph_overhead_bytes = 2ULL * 1024 * 1024;  // 2 MB
     auto with = gpu_cost_function::bank_state_math::footprint(in);
     REQUIRE(with.valid);
     REQUIRE(with.total_bytes == base.total_bytes + 2ULL * 1024 * 1024);
@@ -50,7 +47,7 @@ TEST_CASE(
     layout.maximum_stride_size = 10000000;
     layout.cub_storage_bytes = 4096;
     layout.curvature_capacity = 0;
-    layout.graph_overhead_bytes = 4ULL * 1024 * 1024; // 4 MB per context
+    layout.graph_overhead_bytes = 4ULL * 1024 * 1024;  // 4 MB per context
     layout.biplane = false;
     auto fp = gpu_cost_function::bank_state_math::footprint(layout);
     REQUIRE(fp.valid);
@@ -85,11 +82,13 @@ TEST_CASE(
     REQUIRE(base.total_bytes > 0);
     // Verify that overflow threshold is not in footprint but in logic
     constexpr int64_t maxStride = 10000000;
-    constexpr int64_t threshold = maxStride * 255; // 2.55B
+    constexpr int64_t threshold = maxStride * 255;  // 2.55B
     REQUIRE(threshold == 2550000000LL);
 }
 
-TEST_CASE("oracle: U4 chunk covering never skips or duplicates", "[evaluation_executor][oracle][U4]") {
+TEST_CASE(
+    "oracle: U4 chunk covering never skips or duplicates",
+    "[evaluation_executor][oracle][U4]") {
     const int chunk = 256;
     for (int fill : {0, 1, 255, 256, 257, 512, 100000}) {
         int chunks = (fill + chunk - 1) / chunk;

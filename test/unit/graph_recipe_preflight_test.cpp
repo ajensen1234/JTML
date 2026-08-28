@@ -7,13 +7,10 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-
 #include <fstream>
 
-#include "compute/graph_recipe.h"
 #include "compute/graph_key_assembler.h"
-#include "compute/bank_state.cuh"
-#include "compute/bank_state.cuh"
+#include "compute/graph_recipe.h"
 
 using gpu_cost_function::GraphPreflightResult;
 using gpu_cost_function::GraphRecipeKey;
@@ -42,7 +39,9 @@ TEST_CASE("GraphRecipeKey equality is field-wise", "[graph_recipe]") {
     REQUIRE_FALSE(a == b);
 }
 
-TEST_CASE("GraphRecipeRegistry empty preflight is not capturable", "[graph_recipe]") {
+TEST_CASE(
+    "GraphRecipeRegistry empty preflight is not capturable",
+    "[graph_recipe]") {
     GraphRecipeRegistry reg;
     REQUIRE(reg.size() == 0);
     REQUIRE(reg.FindEligible("DIRECT_DILATION", false) == nullptr);
@@ -56,14 +55,19 @@ TEST_CASE("GraphRecipeRegistry empty preflight is not capturable", "[graph_recip
     REQUIRE(res.reasonCode != 0);
 }
 
-TEST_CASE("GraphRecipeRegistry admits only DIRECT_DILATION monoplane after registration", "[graph_recipe]") {
-    // U1's AddDirectDilationMonoplaneForTesting is currently a no-op shim (U5 lands the real recipe).
-    // For U2 we verify the registry remains empty and that the *interface* is correctly
-    // gated: no eligible recipe means deterministic fallback to serial.
+TEST_CASE(
+    "GraphRecipeRegistry admits only DIRECT_DILATION monoplane after "
+    "registration",
+    "[graph_recipe]") {
+    // U1's AddDirectDilationMonoplaneForTesting is currently a no-op shim (U5
+    // lands the real recipe). For U2 we verify the registry remains empty and
+    // that the *interface* is correctly gated: no eligible recipe means
+    // deterministic fallback to serial.
     GraphRecipeRegistry reg;
     reg.AddDirectDilationMonoplaneForTesting();
-    // Still not admitted until U5 provides the real recipe — this is the R8 fallback.
-    // The test pins that fallback is deterministic, not that the recipe exists yet.
+    // Still not admitted until U5 provides the real recipe — this is the R8
+    // fallback. The test pins that fallback is deterministic, not that the
+    // recipe exists yet.
     REQUIRE(reg.size() == 0);
     REQUIRE_FALSE(reg.IsAdmitted("DIRECT_DILATION", false));
 }
@@ -132,8 +136,9 @@ TEST_CASE(
     REQUIRE(content.find("\"rel\": 1e-9") != std::string::npos);
 }
 
-TEST_CASE("CaptureGeneration default is not equal to an assembled generation",
-          "[graph_recipe]") {
+TEST_CASE(
+    "CaptureGeneration default is not equal to an assembled generation",
+    "[graph_recipe]") {
     using gpu_cost_function::AssembleCaptureGeneration;
     using gpu_cost_function::CaptureGeneration;
     using gpu_cost_function::CaptureGenerationAssemblerInputs;
@@ -152,10 +157,13 @@ TEST_CASE("CaptureGeneration default is not equal to an assembled generation",
     REQUIRE_FALSE(def == g);
 }
 
-TEST_CASE("TEST_IMPACT_MATRIX covers required touching files", "[graph_recipe]") {
+TEST_CASE(
+    "TEST_IMPACT_MATRIX covers required touching files",
+    "[graph_recipe]") {
     std::ifstream m("docs/TEST_IMPACT_MATRIX.md");
     REQUIRE(m.good());
-    std::string c((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+    std::string c(
+        (std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     // Must cover the cost-function/compute touching set per plan
     REQUIRE(c.find("test_direct_optimizer_batch.cpp") != std::string::npos);
     REQUIRE(c.find("test_bank_state.cpp") != std::string::npos);

@@ -6,6 +6,11 @@
 #ifndef CUDA_LAUNCH_PARAMETERS_H
 #define CUDA_LAUNCH_PARAMETERS_H
 
+/*Cub Library (CUDA)*/
+#include <cuda_runtime.h>
+
+#include "cuda_runtime_api.h"
+
 const int threads_per_block = 256;
 const int maximum_stride_size = 10000000;
 

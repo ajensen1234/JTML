@@ -84,27 +84,6 @@ public:
     /*Call Active Cost Function*/
     JTML_DLL double callActiveCostFunction();
 
-    /* U12 Stage 4B: bind one non-owning bank for an in-flight evaluation.
-     * Returns false for incomplete state and restores bank 0 on clear. */
-    JTML_DLL bool TrySetActiveBank(gpu_cost_function::BankState* bank);
-    JTML_DLL double EvaluateDirectDilationOnBank(
-        gpu_cost_function::BankState& bank);
-    JTML_DLL cudaError_t
-    EnqueueDirectDilationOnBank(gpu_cost_function::BankState& bank);
-    JTML_DLL double CompleteDirectDilationOnBank(
-        gpu_cost_function::BankState& bank);
-
-    // U6: explicit EvaluationContext overloads — primary design. Legacy
-    // BankState remains shim.
-    JTML_DLL bool TrySetActiveEvaluationContext(
-        gpu_cost_function::EvaluationContext* ctx);
-    JTML_DLL double EvaluateDirectDilationOnEvaluationContext(
-        gpu_cost_function::EvaluationContext& ctx);
-    JTML_DLL cudaError_t EnqueueDirectDilationOnEvaluationContext(
-        gpu_cost_function::EvaluationContext& ctx);
-    JTML_DLL double CompleteDirectDilationOnEvaluationContext(
-        gpu_cost_function::EvaluationContext& ctx);
-
     /*Get Active Cost Function*/
     JTML_DLL std::string getActiveCostFunction();
 
@@ -225,11 +204,6 @@ private:
 
     /*Biplane Mode?*/
     bool biplane_mode_;
-
-    /* U12 Stage 4B: non-owning active bank for one in-flight evaluation. */
-    gpu_cost_function::BankState* active_bank_ = nullptr;
-    // U6: non-owning active EvaluationContext for graph path (primary design)
-    gpu_cost_function::EvaluationContext* active_evaluation_context_ = nullptr;
 
 /******************************************************************************/
 /************************COST FUNCTION VARIABLES END***************************/
