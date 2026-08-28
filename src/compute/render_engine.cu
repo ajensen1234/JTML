@@ -357,6 +357,7 @@ RenderEngine::InitializeCUDA(float* triangles, float* normals, int device) {
 
     /*Initialize the GPU Image*/
     renderer_output_ = new GPUImage(width_, height_, device);
+    renderer_output_->SetDeviceBoundingBox(dev_bounding_box_);
 
     /*Check for errors*/
     if (!renderer_output_->IsInitializedCorrectly()) {
@@ -522,8 +523,42 @@ __global__ void WorldToPixelKernel(
     float fx,
     float fy,
     float cx,
-    float cy) {
-    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    float cy,
+    unsigned char* dev_image,
+    int* dev_bounding_box,
+    int image_width,
+    int image_height) {
+    const int i =
+        (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+    const int total_threads = gridDim.x * gridDim.y * blockDim.x;
+
+    /*
+     * Clear the previous render.
+     *
+     * For every iteration of this loop, adjacent threads write adjacent
+     * image bytes, so the stores remain coalesced.
+     */
+    for (int pixel = i; pixel < image_width * image_height;
+         pixel += total_threads) {
+        dev_image[pixel] = 0;
+    }
+
+    /*
+     * Reset model bbox.
+     *
+     * WorldToPixelKernel completes before BoundingBoxSizesKernel runs,
+     * so no global synchronization inside this kernel is needed.
+     */
+    if (i == 0) {
+        dev_bounding_box[0] = image_width - 1;
+
+        dev_bounding_box[1] = image_height - 1;
+
+        dev_bounding_box[2] = 0;
+
+        dev_bounding_box[3] = 0;
+    }
 
     if (i < vertex_count) {
         /*Read in Vertices*/
@@ -677,6 +712,106 @@ __global__ void BoundingBoxSizesKernel(
         atomicMax(&dev_bounding_box[2], rightX);
         atomicMax(&dev_bounding_box[3], topY);
     }
+}
+
+__global__ void BoundingBoxAndSizesKernel(
+    int* dev_bounding_box_triangles,
+    const int* dev_projected_triangles_snapped,
+    int* dev_bounding_box_triangles_sizes,
+    int triangle_count,
+    int width,
+    int height,
+    int* dev_bounding_box,
+    const bool* dev_backface) {
+    const int i =
+        (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+
+    if (i >= triangle_count) {
+        return;
+    }
+
+    /*
+     * Each triangle has three projected vertices:
+     *
+     *   x1 y1 x2 y2 x3 y3
+     */
+    const int projected_index = 6 * i;
+
+    const int x1 = dev_projected_triangles_snapped[projected_index];
+
+    const int y1 = dev_projected_triangles_snapped[projected_index + 1];
+
+    const int x2 = dev_projected_triangles_snapped[projected_index + 2];
+
+    const int y2 = dev_projected_triangles_snapped[projected_index + 3];
+
+    const int x3 = dev_projected_triangles_snapped[projected_index + 4];
+
+    const int y3 = dev_projected_triangles_snapped[projected_index + 5];
+
+    /*
+     * Preserve the exact clamping semantics of the old
+     * BoundingBoxForTrianglesKernel.
+     */
+    const int left_x = max(min(min(x1, x2), x3), 0);
+
+    const int bottom_y = max(min(min(y1, y2), y3), 0);
+
+    const int right_x = min(max(max(x1, x2), x3), width - 1);
+
+    const int top_y = min(max(max(y1, y2), y3), height - 1);
+
+    /*
+     * The old kernel also clamped the minima against width-1 /
+     * height-1 and maxima against zero. Preserve that behavior
+     * for triangles completely outside the image.
+     */
+    const int clamped_left_x = min(left_x, width - 1);
+
+    const int clamped_bottom_y = min(bottom_y, height - 1);
+
+    const int clamped_right_x = max(right_x, 0);
+
+    const int clamped_top_y = max(top_y, 0);
+
+    /*
+     * FillTriangle still consumes these four values,
+     * so they remain stored globally.
+     */
+    const int bbox_index = 4 * i;
+
+    dev_bounding_box_triangles[bbox_index] = clamped_left_x;
+
+    dev_bounding_box_triangles[bbox_index + 1] = clamped_bottom_y;
+
+    dev_bounding_box_triangles[bbox_index + 2] = clamped_right_x;
+
+    dev_bounding_box_triangles[bbox_index + 3] = clamped_top_y;
+
+    /*
+     * Preserve the weird-but-existing backface behavior:
+     *
+     * backfaces get size 1 rather than zero.
+     */
+    if (!dev_backface[i]) {
+        dev_bounding_box_triangles_sizes[i] =
+            (1 + clamped_right_x - clamped_left_x) *
+            (1 + clamped_top_y - clamped_bottom_y);
+    } else {
+        dev_bounding_box_triangles_sizes[i] = 1;
+    }
+
+    /*
+     * Preserve the old behavior where ALL triangles,
+     * including backfaces, contribute to the overall bbox.
+     */
+    atomicMin(&dev_bounding_box[0], clamped_left_x);
+
+    atomicMin(&dev_bounding_box[1], clamped_bottom_y);
+
+    atomicMax(&dev_bounding_box[2], clamped_right_x);
+
+    atomicMax(&dev_bounding_box[3], clamped_top_y);
 }
 
 __global__ void PrepareLaunchPacketKernel(
@@ -1151,13 +1286,13 @@ cudaError_t RenderEngine::Render() {
     cudaGetLastError();  // Resets Errors (MAYBE DELETE TO SAVE TIME?)
 
     /*Clear Image*/
-    cudaMemset(
-        renderer_output_->GetDeviceImagePointer(),
-        0,
-        width_ * height_ * sizeof(unsigned char));
+    // cudaMemset(
+    //     renderer_output_->GetDeviceImagePointer(),
+    //     0,
+    //     width_ * height_ * sizeof(unsigned char));
 
-    /*Reset Launch Packet*/
-    ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_);
+    // /*Reset Launch Packet*/
+    // ResetKernel<<<1, 1>>>(dev_bounding_box_, width_, height_);
 
     /*Transform Points (Rotate then Translate) and Project to Screen and Snap*/
     WorldToPixelKernel<<<dim_grid_vertices_, threads_per_block>>>(
@@ -1178,23 +1313,19 @@ cudaError_t RenderEngine::Render() {
         fx_,
         fy_,
         cx_,
-        cy_);
-
-    /*Calculate Bounding Boxes for Each Triangle*/
-    BoundingBoxForTrianglesKernel<<<
-        dim_grid_bounding_box_,
-        threads_per_block>>>(
-        dev_bounding_box_triangles_,
-        dev_projected_triangles_snapped_,
-        triangle_count_,
+        cy_,
+        renderer_output_->GetDeviceImagePointer(),
+        dev_bounding_box_,
         width_,
         height_);
 
-    /*Calculate Sizes of Bounding Boxes and Overall Bounding Box of Model*/
-    BoundingBoxSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
+    BoundingBoxAndSizesKernel<<<dim_grid_triangles_, threads_per_block>>>(
         dev_bounding_box_triangles_,
+        dev_projected_triangles_snapped_,
         dev_bounding_box_triangles_sizes_,
         triangle_count_,
+        width_,
+        height_,
         dev_bounding_box_,
         dev_backface_);
 
@@ -1205,77 +1336,6 @@ cudaError_t RenderEngine::Render() {
         dev_bounding_box_triangles_sizes_,
         dev_bounding_box_triangles_sizes_prefix_,
         triangle_count_);
-
-    /*Prepare Launch Packet and Send it to Host*/
-    /*Contains bounding box on white pixels (LX,BY,RX,TY, and # of fragments to
-    process (last element in dev_boundingBoxTrianglesSizePrefix and last element
-    in dev_boundingBoxTrianglesSize)*/
-    // PrepareLaunchPacketKernel<<<1, 1>>>(
-    //     dev_fragment_fill_,
-    //     dev_bounding_box_triangles_sizes_,
-    //     dev_bounding_box_triangles_sizes_prefix_,
-    //     triangle_count_);
-
-    cudaMemcpy(
-        renderer_output_->GetBoundingBox(),
-        dev_bounding_box_,
-        4 * sizeof(int),
-        cudaMemcpyDeviceToHost);
-
-    // cudaMemcpy(
-    //     fragment_fill_,
-    //     dev_fragment_fill_,
-    //     1 * sizeof(int),
-    //     cudaMemcpyDeviceToHost);
-
-    /*Because doing a binary search for every fragement on the prefix search
-    takes too long, we first do this on every 256th fragment, then load the
-    above 256 prefix values into shared memory and binary search over those. The
-    first part occurrs in the the StridePrefixKernel and the second occurs in
-    the FillTriangleKernel. In the FillTriangleKernel we also shade (or not
-    shade) the fragment based on the results of the point (center of pixel) in
-    triangle test.*/
-
-    /*Error check for too many fragments.*/
-    // if (static_cast<double>(fragment_fill_[0]) >
-    //     static_cast<double>(maximum_stride_size) *
-    //         static_cast<double>(threads_per_block - 1)) {
-    //     fprintf(
-    //         stderr,
-    //         "Fragment overflow! Please shrink image and/or reduce model "
-    //         "triangle count!");
-    //     fragment_overflow_ = true;
-    //     return cudaErrorMemoryAllocation;
-    // }
-
-    // int fill_grid = static_cast<int>(ceil(
-    //     static_cast<double>(fragment_fill_[0]) /
-    //     static_cast<double>(threads_per_block)));
-    /*StridePrefixKernel: block-pinned at threads_per_block; grid divides by
-     * threads_per_block^2 (the stride-prefix structure). Left UNTOUCHED per the
-     * plan's per-kernel policy (capacity is a no-op here -- the formula is
-     * structure-specific, not a minimal-covering reshape candidate).*/
-    // StridePrefixKernel<<<
-    //     ceil(
-    //         static_cast<double>(fragment_fill_[0]) /
-    //         static_cast<double>(threads_per_block * threads_per_block)),
-    //     threads_per_block>>>(
-    //     threads_per_block,
-    //     dev_bounding_box_triangles_sizes_,
-    //     dev_bounding_box_triangles_sizes_prefix_,
-    //     dev_stride_prefixes_,
-    //     triangle_count_);
-
-    // FillTriangleKernel<<<fill_grid, threads_per_block>>>(
-    //     dev_bounding_box_triangles_sizes_,
-    //     dev_bounding_box_triangles_sizes_prefix_,
-    //     dev_bounding_box_triangles_,
-    //     renderer_output_->GetDeviceImagePointer(),
-    //     triangle_count_,
-    //     width_,
-    //     height_,
-    //     dev_projected_triangles_,
-    //     dev_stride_prefixes_);
 
     FillTriangleKernel_new<<<fill_triangle_grid_, threads_per_block>>>(
         dev_bounding_box_triangles_sizes_,

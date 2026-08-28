@@ -122,7 +122,7 @@ impl DirectOptimizer {
             "{:?} iterations/second for {:?} iterations",
             it_per_sec, self.calls
         );
-        self.print_resolution_summary();
+        // self.print_resolution_summary();
 
         if (self.current_best.1.is_finite()) && (!self.current_best.1.is_nan()) {
             return self.best();

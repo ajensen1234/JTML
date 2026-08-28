@@ -17,6 +17,14 @@
 #include "compute/pose_matrix.h"
 #include "domain/preprocessor-defs.h"
 
+__global__ void FastImplantDilationMetric_EdgeKernel_new(
+    unsigned char* dev_image,
+    const int* dev_bounding_box,
+    int* dev_pixel_score,
+    int width,
+    int height,
+    int dilation);
+
 /*CUDA Custom Registration Namespace (Compiling as DLL)*/
 namespace gpu_cost_function {
 
@@ -156,6 +164,15 @@ private:
     /*Counts the number of edge pixels in an image (with GPU counterpart)*/
     int* edge_pixels_count_;
     int* dev_edge_pixels_count_;
+
+    int edge_threads = 16 * 16;
+    size_t edge_shared_bytes = edge_threads * sizeof(unsigned char);
+    int dilate_grid_ = 0;
+    int difference_grid_ = 0;
+    int distance_grid_ = 0;
+
+    int edge_blocks_per_sm = 0;
+    int edge_grid_ = 0;
 
     // Distance map count total (with GPU counterpart)
     int* distance_map_score_;

@@ -43,6 +43,10 @@ public:
 
     /*Get Pointer to Bounding Box*/
     JTML_DLL int* GetBoundingBox();
+    JTML_DLL void SetDeviceBoundingBox(int* dev_bounding_box);
+    JTML_DLL int* GetDeviceBoundingBox() {
+        return dev_bounding_box_;
+    }
 
     /*Is the GPU model properly initialized?*/
     JTML_DLL bool IsInitializedCorrectly();
@@ -80,6 +84,7 @@ private:
     3: Bounding box of image - TY
     Default: (0, 0, width - 1, height - 1)*/
     int* bounding_box_;
+    int* dev_bounding_box_;
 };
 }  // namespace gpu_cost_function
 

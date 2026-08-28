@@ -54,6 +54,7 @@ GPUImage::GPUImage(int width, int height, int gpu_device) {
         }
     }
     /*Correctly Initialized*/
+    dev_bounding_box_ = nullptr;
     initialized_correctly_ = true;
 };
 
@@ -126,6 +127,7 @@ GPUImage::GPUImage(
         cudaFreeHost(bounding_box_);
         return;
     }
+    dev_bounding_box_ = nullptr;
     /*Correctly Initialized*/
     initialized_correctly_ = true;
     image_on_gpu_ = true;
@@ -140,6 +142,7 @@ GPUImage::GPUImage() {
     device_ = -1;
     dev_image_ = 0;
     bounding_box_ = 0;
+    dev_bounding_box_ = nullptr;
 };
 
 GPUImage::~GPUImage() {
@@ -147,6 +150,10 @@ GPUImage::~GPUImage() {
     cudaFree(dev_image_);
     cudaFreeHost(bounding_box_);
 };
+
+void GPUImage::SetDeviceBoundingBox(int* dev_bounding_box) {
+    dev_bounding_box_ = dev_bounding_box;
+}
 
 bool GPUImage::UploadBlankImageToGPU(int width, int height) {
     /*CUDA Error Status*/
@@ -339,11 +346,18 @@ unsigned char* GPUImage::GetDeviceImagePointer() {
 };
 
 int* GPUImage::GetBoundingBox() {
-    if (image_on_gpu_) {
-        return bounding_box_;
+    if (!image_on_gpu_) {
+        return nullptr;
     }
-    cudaFree(bounding_box_);
-    bounding_box_ = 0;
+
+    if (dev_bounding_box_ != nullptr) {
+        cudaMemcpy(
+            bounding_box_,
+            dev_bounding_box_,
+            4 * sizeof(int),
+            cudaMemcpyDeviceToHost);
+    }
+
     return bounding_box_;
 }
 

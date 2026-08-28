@@ -91,6 +91,49 @@ GPUMetrics::GPUMetrics() {
     if (cudaGetLastError() != cudaSuccess) {
         initialized_correctly_ = false;
     }
+
+    int device = 0;
+
+    cudaError_t err = cudaGetDevice(&device);
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
+
+    cudaDeviceProp props{};
+
+    err = cudaGetDeviceProperties(&props, device);
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
+
+    err = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &edge_blocks_per_sm,
+        FastImplantDilationMetric_EdgeKernel_new,
+        edge_threads,
+        edge_shared_bytes);
+
+    if (err != cudaSuccess) {
+        initialized_correctly_ = false;
+        return;
+    }
+
+    edge_grid_ = props.multiProcessorCount * edge_blocks_per_sm;
+
+    /*
+     * Start with two worker blocks / SM for the 1D grid-stride kernels.
+     *
+     * Do not blindly use occupancy-max here: these kernels have relatively
+     * small actual crops and occupancy-max can massively overlaunch.
+     */
+    constexpr int metric_blocks_per_sm = 2;
+
+    dilate_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
+
+    difference_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
+
+    distance_grid_ = props.multiProcessorCount * metric_blocks_per_sm;
 };
 
 GPUMetrics::~GPUMetrics() {
